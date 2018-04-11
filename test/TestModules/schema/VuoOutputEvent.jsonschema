@@ -1,0 +1,14 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+			"pattern": "^[A-Z][A-Za-z0-9+,/() -]+$",
+		},
+		"data": {
+			"type": "string",
+			"pattern": "^[a-z][A-Za-z0-9]+$",
+		},
+	},
+	"additionalProperties": false,
+}

@@ -40,6 +40,37 @@
 		}
 	},
 
+   // Check time running backwards.
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"time" : -0.5,
+			"wave" : "triangle",
+		},
+		"outputPortValues" : {
+			"value" : 1
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"time" : -1.5,
+			"wave" : "sine",
+		},
+		"outputPortValues" : {
+			"value" : 1
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"time" : 1
+		},
+		"outputPortValues" : {
+			"value" : -1
+		}
+	},
+
 	// Check continuity at period changes.
 	{
 		"firingPort" : "refresh",
@@ -193,7 +224,7 @@
 		}
 	},
 
-	// Check scontinuity of awtooth -> sine (first half of phase).
+	// Check continuity of sawtooth -> sine (first half of phase).
 	{
 		"firingPort" : "refresh",
 		"inputPortValues" : {

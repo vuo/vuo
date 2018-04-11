@@ -9,6 +9,11 @@
 
 #pragma once
 
+#if !defined(VUO_STRINGIFY)
+	/// Creates a C string from raw text (saves having to doublequote-escape and/or use backslashes).
+	#define VUO_STRINGIFY(...) #__VA_ARGS__
+#endif
+
 #include "VuoHeap.h"
 
 #if !defined(_json_object_h_) && !defined(DOXYGEN)
@@ -119,7 +124,7 @@ typedef void (*VuoCompositionFiniCallback)(void);
 /**
  * Returns the directory that nodes should use to resolve relative paths.
  */
-char * VuoGetWorkingDirectory(void);
+const char *VuoGetWorkingDirectory(void);
 
 /**
  * Returns the process ID of the runner that started the composition.

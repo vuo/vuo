@@ -1,0 +1,51 @@
+/**
+ * @file
+ * This composition applies the outline effect to an image, and demonstrates how positive and negative intensity affect the image.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages2 [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="75,0" _blendMode="\"normal\"" _replaceOpacity="true"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="-345,510"];
+ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="285,15"];
+FetchImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-330,-135" _url="\"Seagulls.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-510,-165" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="252,221" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="272,251" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="0,225" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.69999998807907104,\"y\":-0.31999999284744263}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="0,345" _text="\"Move the mouse right or left\\nto change the blended image opacity.\\n\\nClick to toggle the intensity.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.69999998807907104,\"y\":-0.10000000149011612}"];
+OutlineImage [type="vuo.image.outline" version="1.0.0" label="Outline Image|<refresh>refresh\l|<image>image\l|<channels>channels\l|<radius>radius\l|<intensity>intensity\l|<range>range\l|<convolvedImage>convolvedImage\r" pos="-105,0" fillcolor="violet" _channels="\"rgb\"" _radius="1" _range="\"unipolar\""];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-735,30" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-735,120" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="300,210" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="-480,120" _start="-1" _end="1" _scaledStart="1" _scaledEnd="0" _limitToRange="true"];
+SelectInput4 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="-330,45" _falseOption="2" _trueOption="-2"];
+SelectInput6 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="-330,225" _falseOption="\"Positive Intensity\"" _trueOption="\"Negative Intensity\""];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="-480,45"];
+
+BlendImages2:blended -> ConvertImageToLayer:image;
+Convert2DPointToReal2:x -> Scale:value;
+ConvertImageToLayer:layer -> MakeList:1;
+FetchImage3:image -> BlendImages2:foreground;
+FetchImage3:image -> OutlineImage:image;
+FireOnStart:started -> FetchImage3:refresh;
+FireOnStart:started -> MakeTextLayer2:refresh;
+FireOnStart:started -> SelectInput6:refresh;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextLayer2:layer -> MakeList:3;
+MakeTextLayer:layer -> MakeList:2;
+OutlineImage:convolvedImage -> BlendImages2:background;
+ReceiveMouseButtons:released -> Toggle:toggle;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+Scale:scaledValue -> BlendImages2:foregroundOpacity;
+SelectInput4:out -> OutlineImage:intensity;
+SelectInput6:out -> MakeTextLayer:text;
+Toggle:value -> SelectInput4:which;
+Toggle:value -> SelectInput6:which;
+}

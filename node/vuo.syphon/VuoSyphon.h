@@ -15,7 +15,6 @@ extern "C"
 #include "node.h"
 #include "VuoSyphonServerDescription.h"
 #include "VuoList_VuoSyphonServerDescription.h"
-#include "VuoGlContext.h"
 
 
 VuoList_VuoSyphonServerDescription VuoSyphon_getAvailableServerDescriptions(void);
@@ -32,7 +31,7 @@ void VuoSyphonClient_disconnectFromServer(VuoSyphonClient syphonClient);
 
 
 typedef void * VuoSyphonServer;  ///< Sends frames via Syphon to a Syphon client.
-VuoSyphonServer VuoSyphonServer_make(const char *serverName, VuoGlContext *glContext);
+VuoSyphonServer VuoSyphonServer_make(const char *serverName);
 void VuoSyphonServer_publishFrame(VuoSyphonServer server, VuoImage frame);
 void VuoSyphonServer_setName(VuoSyphonServer server, const char *serverName);
 

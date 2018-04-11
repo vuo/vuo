@@ -1,6 +1,6 @@
 These nodes are for working with text. 
 
-These nodes use the UTF-8 encoding for the Unicode character set. This means that they can handle ASCII characters (such as the English/Latin alphabet) as well as other characters, such as accented characters and non-Latin alphabets. 
+Almost all Vuo nodes use the UTF-8 encoding for the Unicode character set.  This means that they can handle ASCII characters (such as the English/Latin alphabet) as well as others, such as accented characters, non-Latin alphabets, symbols, and emoji.  Nodes with `ASCII` in the title use just the [ASCII character set](https://en.wikipedia.org/wiki/ASCII) (not full Unicode).
 
 You can enter multiple lines of text into a text input editor by using Option-Return to insert line breaks.
 

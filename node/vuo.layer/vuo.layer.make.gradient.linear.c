@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Linear Gradient Layer",
-					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "rectangle", "square" ],
+					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "rectangle", "square", "shape" ],
 					 "version" : "1.2.1",
 					 "node": {
 						  "exampleCompositions" : [ "CompareLayerGradients.vuo" ]

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert Integer List to Real List",
 					  "description": "Outputs a list containing real number equivalents to the input list's integers.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
@@ -21,8 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoReal) reals
 )
 {
-	*reals = VuoListCreate_VuoReal();
 	unsigned long count = VuoListGetCount_VuoInteger(integers);
-	for (unsigned long i = 1; i <= count; ++i)
-		VuoListAppendValue_VuoReal(*reals, VuoListGetValue_VuoInteger(integers, i));
+	VuoInteger *inputs = VuoListGetData_VuoInteger(integers);
+	*reals = VuoListCreateWithCount_VuoReal(count, 0);
+	VuoReal *outputs = VuoListGetData_VuoReal(*reals);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = inputs[i];
 }

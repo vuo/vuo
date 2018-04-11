@@ -86,7 +86,7 @@ void nodeInstanceEvent
 		VuoRectangle bounds;
 
 		// getRect bounds center includes the layer trs
-		if(!VuoRenderedLayers_getRect(renderedLayers, child, &bounds))
+		if(!VuoRenderedLayers_getRect(renderedLayers, child.sceneObject, &bounds))
 			continue;
 
 		size_x = fmax(size_x, bounds.size.x);
@@ -118,12 +118,12 @@ void nodeInstanceEvent
 							horizontalAlignment == VuoHorizontalAlignment_Left ? size_x * .5 :
 							size_x * -.5;
 
-		VuoReal offset_x = 	anchor.horizontalAlignment == VuoHorizontalAlignment_Left ? (-center_x + (size_x * .5)) :
-							anchor.horizontalAlignment == VuoHorizontalAlignment_Center ? -center_x :
+		VuoReal offset_x =  VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Left ? (-center_x + (size_x * .5)) :
+							VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Center ? -center_x :
 							(-center_x - (size_x * .5));
 
-		VuoReal height = anchor.verticalAlignment == VuoVerticalAlignment_Top ? 0 : fabs(currentPosition.y) - spacing;
-		VuoReal offset_y = anchor.verticalAlignment == VuoVerticalAlignment_Center ? height * .5 : height;
+		VuoReal height = VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Top ? 0 : fabs(currentPosition.y) - spacing;
+		VuoReal offset_y = VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Center ? height * .5 : height;
 
 		unsigned long childCount = VuoListGetCount_VuoLayer(children);
 		VuoLayer* array = VuoListGetData_VuoLayer(children);

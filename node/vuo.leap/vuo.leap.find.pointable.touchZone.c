@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find Pointables by Touch Zone",
-					  "keywords" : [ "hover", "click", "tap", "menu", "plane", "filter" ],
+					  "keywords" : [ "hover", "click", "tap", "menu", "plane", "filter", "search" ],
 					  "version" : "2.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

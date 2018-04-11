@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+RecordAndPlayValues2 [type="vuo.data.record.VuoReal" version="1.0.0" label="Record and Play Values|<refresh>refresh\l|<recordValue>recordValue\l|<time>time\l|<url>url\l|<overwriteUrl>overwriteUrl\l|<mode>mode\l|<finalize>finalize\l|<value>value\r" pos="90,30" _overwriteUrl="true"];
+SelectOutput [type="vuo.select.out.boolean.VuoGenericType1" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-225,165"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-225,-30"];
+SelectOutput3 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-225,-105"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Time>Time\r|<TimeEvent>TimeEvent\r|<RecordEvent>RecordEvent\r|<URL>URL\r|<Mode>Mode\r|<FinalizeEvent>FinalizeEvent\r" _Time_type="VuoReal" _Time="0.0" _TimeEvent_type="VuoBoolean" _TimeEvent="false" _RecordEvent_type="VuoBoolean" _RecordEvent="false" _URL_type="VuoText" _URL="\"\"" _Mode_type="VuoInteger" _Mode="0" _FinalizeEvent_type="VuoBoolean" _FinalizeEvent="false"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<PlayedValue>PlayedValue\l" _PlayedValue_type="VuoReal"];
+
+PublishedInputs:FinalizeEvent -> SelectOutput:which;
+PublishedInputs:Mode -> RecordAndPlayValues2:mode;
+PublishedInputs:RecordEvent -> SelectOutput2:which;
+PublishedInputs:Time -> SelectOutput2:in;
+PublishedInputs:Time -> SelectOutput3:in;
+PublishedInputs:TimeEvent -> SelectOutput3:which;
+PublishedInputs:URL -> RecordAndPlayValues2:url;
+RecordAndPlayValues2:value -> PublishedOutputs:PlayedValue;
+SelectOutput2:trueOption -> RecordAndPlayValues2:recordValue;
+SelectOutput3:trueOption -> RecordAndPlayValues2:time;
+SelectOutput:trueOption -> RecordAndPlayValues2:finalize;
+}

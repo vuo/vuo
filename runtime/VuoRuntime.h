@@ -21,11 +21,11 @@ void vuoInit(int argc, char **argv);
  */
 typedef void (VuoInitInProcessType)(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
 									int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
-									void *compositionBinaryHandle, void *runtimePersistentState);
+									void *compositionBinaryHandle, void *runtimePersistentState, bool doAppInit);
 
 void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
 					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
-					  void *compositionBinaryHandle, void *runtimePersistentState);
+					  void *compositionBinaryHandle, void *previousRuntimeState, bool doAppInit);
 
 /**
  * Type for @ref vuoFini.
@@ -35,9 +35,9 @@ typedef void * (VuoFiniType)(void);
 void * vuoFini(void);
 
 /**
- * Type for @ref vuoFiniRuntimePersistentState.
+ * Type for @ref vuoFiniRuntimeState.
  */
-typedef void (VuoFiniRuntimePersistentStateType)(void *);
+typedef void (VuoFiniRuntimeStateType)(void *);
 
 /**
  * Type for @ref vuoSendError.

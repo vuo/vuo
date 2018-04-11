@@ -19,6 +19,7 @@
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerGenericType.hh"
+#include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
@@ -45,14 +46,24 @@ bool VuoCompiler::isLlvmInitialized = false;
 dispatch_queue_t VuoCompiler::llvmQueue = dispatch_queue_create("org.vuo.compiler.llvm", NULL);
 dispatch_queue_t VuoCompiler::environmentQueue = dispatch_queue_create("org.vuo.compiler.environment", NULL);
 dispatch_queue_t VuoCompiler::cachedResourcesQueue = dispatch_queue_create("org.vuo.compiler.cache", NULL);
-dispatch_queue_t VuoCompiler::hasCleanedCompiledSubcompositionDirQueue = dispatch_queue_create("org.vuo.compiler.clean", NULL);
 const int VuoCompiler::NUM_CACHES = 2;
 bool VuoCompiler::hasTriedCachedResources[2] = { false, false };
 string VuoCompiler::cachedResourceDylib[2];
 set<string> VuoCompiler::cachedResources[2];
 set<string> VuoCompiler::encounteredPremiumModules;
 VuoCompiler::Environment * VuoCompiler::sharedEnvironment = NULL;
-bool VuoCompiler::hasCleanedCompiledSubcompositionDir = false;
+map<string, pair<string, VuoCompilerException> > VuoCompiler::errorsLoadingModules;
+dispatch_queue_t VuoCompiler::errorsLoadingModulesQueue = dispatch_queue_create("org.vuo.compiler.errors", NULL);
+
+/**
+ * Needed so this type can be used in STL sets.
+ */
+bool operator<(const VuoCompiler::ModuleInfo &lhs, const VuoCompiler::ModuleInfo &rhs)
+{
+	return (lhs.searchPath != rhs.searchPath ?
+								  lhs.searchPath < rhs.searchPath :
+								  lhs.moduleKey < rhs.moduleKey);
+}
 
 /**
  * Creates an empty environment.
@@ -164,6 +175,18 @@ VuoCompilerType * VuoCompiler::Environment::getType(const string &moduleKey)
 }
 
 /**
+ * Returns the node sets loaded.
+ */
+map<string, VuoNodeSet *> VuoCompiler::Environment::getNodeSets(void)
+{
+	__block map<string, VuoNodeSet *> ret;
+	dispatch_sync(environmentQueue, ^{
+		ret = nodeSetForName;
+	});
+	return ret;
+}
+
+/**
  * Returns the library modules loaded.
  */
 map<string, VuoCompilerModule *> VuoCompiler::Environment::getLibraryModules(void)
@@ -190,7 +213,43 @@ VuoCompilerModule * VuoCompiler::Environment::getLibraryModule(const string &mod
 }
 
 /**
- * Returns the node set with the given name, or null no such node set been loaded.
+ * Returns the VuoCompilerNodeClass, VuoCompilerType, or VuoCompilerModule with the given name,
+ * or null if no such module has been loaded.
+ */
+VuoCompilerModule * VuoCompiler::Environment::findModule(const string &moduleKey)
+{
+	__block VuoCompilerModule *module;
+	dispatch_sync(environmentQueue, ^{
+					  module = findModuleThreadUnsafe(moduleKey);
+				  });
+	return module;
+}
+
+/**
+ * Returns the VuoCompilerNodeClass, VuoCompilerType, or VuoCompilerModule with the given name,
+ * or null if no such module has been loaded.
+ *
+ * @threadQueue{environmentQueue}
+ */
+VuoCompilerModule * VuoCompiler::Environment::findModuleThreadUnsafe(const string &moduleKey)
+{
+	map<string, VuoCompilerNodeClass *>::iterator nodeClassIter = nodeClasses.find(moduleKey);
+	if (nodeClassIter != nodeClasses.end())
+		return nodeClassIter->second;
+
+	map<string, VuoCompilerType *>::iterator typeIter = types.find(moduleKey);
+	if (typeIter != types.end())
+		return typeIter->second;
+
+	map<string, VuoCompilerModule *>::iterator libraryIter = libraryModules.find(moduleKey);
+	if (libraryIter != libraryModules.end())
+		return libraryIter->second;
+
+	return NULL;
+}
+
+/**
+ * Returns the node set with the given name, or null if no such node set been loaded.
  */
 VuoNodeSet * VuoCompiler::Environment::findNodeSet(const string &name)
 {
@@ -296,150 +355,72 @@ vector<string> VuoCompiler::Environment::getFrameworkSearchPaths(void)
 }
 
 /**
- * Data for loadModulesIntoCombinedEnvironment.
- */
-struct ModuleInfo
-{
-	VuoFileUtilities::File *file;
-	string searchPath;
-	int env;
-};
-
-/**
- * Loads node classes and types from any directories in moduleSearchPaths that have not already been loaded.
+ * Loads each module in @a modulesToLoadArg into the environment specified by its ModuleInfo,
+ * if it has not already been loaded.
  *
  * This function should be called on VuoCompiler::combinedEnvironment.
  */
 void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment,
-																  bool shouldLoadAllModules, set<string> &modulesToLoad)
+																  list<ModuleInfo> modulesToLoadArg)
 {
+	__block list<ModuleInfo> modulesToLoad = modulesToLoadArg;
+
 	dispatch_sync(environmentQueue, ^{
 					  bool wereModulesLoaded = false;
-					  Environment *envs[2] = { sharedEnvironment, myEnvironment };
-
-					  if (shouldLoadAllModules)
-					  {
-						  // Load all modules from all search paths.
-
-						  for (int i = 0; i < 2; ++i)
-						  {
-							  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
-							  {
-								  string path = *j;
-								  if (! envs[i]->isModuleSearchPathLoaded[path])
-								  {
-									  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
-									  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
-									  {
-										  VuoFileUtilities::File *moduleFile = *k;
-										  envs[i]->loadModule(moduleFile, path);
-									  }
-									  envs[i]->isModuleSearchPathLoaded[path] = true;
-									  wereModulesLoaded = true;
-								  }
-							  }
-						  }
-					  }
-
-					  // Load the modules in modulesToLoad and their dependencies.
-
-					  map<long, ModuleInfo> moduleInfo;
 
 					  while (! modulesToLoad.empty())
 					  {
-						  string moduleKey = *modulesToLoad.begin();
-						  modulesToLoad.erase(moduleKey);
+						  ModuleInfo moduleInfo = modulesToLoad.front();
+						  modulesToLoad.pop_front();
 
-						  // Check if the module has already been loaded.
-						  bool alreadyLoadedModule = false;
-						  for (int i = 0; i < 2; ++i)
-						  {
-							  if (envs[i]->nodeClasses.find(moduleKey) != envs[i]->nodeClasses.end() ||
-								  envs[i]->types.find(moduleKey) != envs[i]->types.end() ||
-								  envs[i]->libraryModules.find(moduleKey) != envs[i]->libraryModules.end())
-							  {
-								  alreadyLoadedModule = true;
-							  }
-						  }
-						  if (alreadyLoadedModule)
-						  {
+						  // Skip the module if it's already been loaded.
+						  if (myEnvironment->findModuleThreadUnsafe(moduleInfo.moduleKey) ||
+								  sharedEnvironment->findModuleThreadUnsafe(moduleInfo.moduleKey) ||
+								  encounteredPremiumModules.find(moduleInfo.moduleKey) != encounteredPremiumModules.end())
 							  continue;
-						  }
 
-						  // Lazily initialize a map for looking up module info (to avoid taking the time if no modules need to be loaded).
-						  if (moduleInfo.empty())
+						  vector<string> parts = VuoStringUtilities::split(moduleInfo.moduleKey, '.');
+						  if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(moduleInfo.moduleKey))
 						  {
-							  for (int i = 0; i < 2; ++i)
-							  {
-								  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
-								  {
-									  string path = *j;
-									  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
-									  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
-									  {
-										  VuoFileUtilities::File *moduleFile = *k;
-										  string moduleKey, dir, ext;
-										  VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
-
-										  long hash = VuoStringUtilities::hash(moduleKey);
-										  moduleInfo[hash] = (ModuleInfo){ moduleFile, path, i };
-									  }
-								  }
-							  }
+							  // For a `Make List` node class, also need to load the item and list types.
+							  string itemType = parts.back();
+							  set<string> typeNames;
+							  typeNames.insert(itemType);
+							  typeNames.insert(VuoType::listTypeNamePrefix + itemType);
+							  set<ModuleInfo> typeModuleInfos = sharedEnvironment->listModulesThreadUnsafe(typeNames);
+							  modulesToLoad.insert(modulesToLoad.end(), typeModuleInfos.begin(), typeModuleInfos.end());
 						  }
-
-						  long moduleKeyHash = VuoStringUtilities::hash(moduleKey);
-
-						  map<long, ModuleInfo>::iterator moduleIter = moduleInfo.find(moduleKeyHash);
-						  if (moduleIter == moduleInfo.end())
+						  else
 						  {
-							  if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(moduleKey))
+							  for (int j = parts.size() - 1; j >= 1; --j)
 							  {
-								  // For a `Make List` node class, also need to load the item and list types.
-								  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
-								  string itemType = parts.back();
-								  modulesToLoad.insert(itemType);
-								  modulesToLoad.insert(VuoType::listTypeNamePrefix + itemType);
-								  continue;
-							  }
-							  else
-							  {
-								  bool foundGenericNodeClass = false;
+								  vector<string> firstParts(parts.begin(), parts.begin() + j);
+								  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
 
-								  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
-								  for (int i = parts.size() - 1; i >= 1; --i)
+								  set<string> genericNodeClassSet;
+								  genericNodeClassSet.insert(genericNodeClass);
+								  set<ModuleInfo> genericNodeClassModuleInfos = sharedEnvironment->listModulesThreadUnsafe(genericNodeClassSet);
+
+								  if (! genericNodeClassModuleInfos.empty())
 								  {
-									  vector<string> firstParts(parts.begin(), parts.begin() + i);
-									  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
-									  long genericNodeClassHash = VuoStringUtilities::hash(genericNodeClass);
-
-									  moduleIter = moduleInfo.find(genericNodeClassHash);
-									  if (moduleIter != moduleInfo.end())
-									  {
-										  // For a generic node class, also need to load the types to which it's specialized.
-										  foundGenericNodeClass = true;
-										  modulesToLoad.insert(parts.begin() + i, parts.end());
-										  break;
-									  }
-								  }
-
-								  if (! foundGenericNodeClass)
-								  {
-									  continue;
+									  // For a generic node class, also need to load the types to which it's specialized.
+									  set<string> lastParts(parts.begin() + j, parts.end());
+									  set<ModuleInfo> typeModuleInfos = sharedEnvironment->listModulesThreadUnsafe(lastParts);
+									  modulesToLoad.insert(modulesToLoad.end(), typeModuleInfos.begin(), typeModuleInfos.end());
 								  }
 							  }
 						  }
 
 						  // Actually load the module.
-						  ModuleInfo mi = moduleIter->second;
-						  VuoCompilerModule *module = envs[mi.env]->loadModule(mi.file, mi.searchPath);
+						  VuoCompilerModule *module = moduleInfo.environment->loadModule(moduleInfo);
 
 						  if (module)
 						  {
 							  wereModulesLoaded = true;
 
 							  set<string> dependencies = module->getDependencies();
-							  modulesToLoad.insert(dependencies.begin(), dependencies.end());
+							  set<ModuleInfo> moduleInfos = Environment::listModulesInEnvironmentsThreadUnsafe(myEnvironment, sharedEnvironment, dependencies);
+							  modulesToLoad.insert(modulesToLoad.end(), moduleInfos.begin(), moduleInfos.end());
 						  }
 					  }
 
@@ -517,74 +498,268 @@ void VuoCompiler::Environment::removeNodeClassFromCombinedEnvironment(string nod
 }
 
 /**
- * Returns a list of the all node classes, types, and library modules in the directory at @a path.
+ * Returns a list of all node classes, types, and library modules in the folder at @a path,
  *
- * The top level of the directory is searched for .vuonode, .vuonode+, .bc, and .bc+ files.
+ * The top level of the folder is searched for .vuonode, .vuonode+, .bc, and .bc+ files.
  * A .vuonode file may be either a module or an archive containing modules.
  * In the latter case, the .vuonode archive's top level is searched.
  *
+ * The returned VuoFileUtilities::File objects are owned by the VuoCompiler instances, and
+ * should not be freed by the caller.
+ *
  * @threadQueue{environmentQueue}
  */
-set<VuoFileUtilities::File *> VuoCompiler::Environment::listModules(const string &path)
+map<string, VuoFileUtilities::File *> VuoCompiler::Environment::listModulesAtSearchPath(const string &path)
 {
-	map<string, VuoFileUtilities::File *> moduleFilesMap;
 	map<string, map<string, VuoFileUtilities::File *> >::iterator moduleFilesIter = moduleFilesAtSearchPath.find(path);
 	if (moduleFilesIter != moduleFilesAtSearchPath.end())
-		moduleFilesMap = moduleFilesIter->second;
-	else
+		return moduleFilesIter->second;
+
+	set<string> moduleExtensions;
+	moduleExtensions.insert("vuonode");
+	moduleExtensions.insert("vuonode+");
+	moduleExtensions.insert("bc");
+	moduleExtensions.insert("bc+");
+	set<string> archiveExtensions;
+	archiveExtensions.insert("vuonode");
+	set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(path, moduleExtensions, archiveExtensions);
+
+	map<string, VuoFileUtilities::File *> fileForModuleKey;
+	for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
 	{
-		set<string> moduleExtensions;
-		moduleExtensions.insert("vuonode");
-		moduleExtensions.insert("vuonode+");
-		moduleExtensions.insert("bc");
-		moduleExtensions.insert("bc+");
-		set<string> archiveExtensions;
-		archiveExtensions.insert("vuonode");
-		set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(path, moduleExtensions, archiveExtensions);
+		VuoFileUtilities::File *moduleFile = *i;
 
-		for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
-		{
-			VuoFileUtilities::File *file = *i;
-			moduleFilesMap[file->getRelativePath()] = file;
-		}
+		string dir, moduleKey, ext;
+		VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
 
-		moduleFilesAtSearchPath[path] = moduleFilesMap;
+		fileForModuleKey[moduleKey] = moduleFile;
 	}
 
-	set<VuoFileUtilities::File *> moduleFiles;
-	for (map<string, VuoFileUtilities::File *>::iterator i = moduleFilesMap.begin(); i != moduleFilesMap.end(); ++i)
-		moduleFiles.insert(i->second);
+	moduleFilesAtSearchPath[path] = fileForModuleKey;
 
-	return moduleFiles;
+	if (path == getCachedModulesPath())
+		removeCachedModulesForDeletedSubcompositions();
+
+	return fileForModuleKey;
+}
+
+/**
+ * Returns a list of all compositions in the folder at @a path,
+ *
+ * The top level of the folder is searched for .vuo files.
+ *
+ * The returned VuoFileUtilities::File objects are owned by the VuoCompiler instances, and
+ * should not be freed by the caller.
+ *
+ * @threadQueue{environmentQueue}
+ */
+map<string, VuoFileUtilities::File *> VuoCompiler::Environment::listCompositionsAtSearchPath(const string &path)
+{
+	map<string, map<string, VuoFileUtilities::File *> >::iterator compositionFilesIter = compositionFilesAtSearchPath.find(path);
+	if (compositionFilesIter != compositionFilesAtSearchPath.end())
+		return compositionFilesIter->second;
+
+	set<string> compositionExtensions;
+	compositionExtensions.insert("vuo");
+	set<VuoFileUtilities::File *> compositionFiles = VuoFileUtilities::findFilesInDirectory(path, compositionExtensions, set<string>());
+
+	map<string, VuoFileUtilities::File *> fileForModuleKey;
+	for (set<VuoFileUtilities::File *>::iterator i = compositionFiles.begin(); i != compositionFiles.end(); ++i)
+	{
+		VuoFileUtilities::File *compositionFile = *i;
+
+		string dir, moduleKey, ext;
+		VuoFileUtilities::splitPath(compositionFile->getRelativePath(), dir, moduleKey, ext);
+
+		fileForModuleKey[moduleKey] = compositionFile;
+	}
+
+	compositionFilesAtSearchPath[path] = fileForModuleKey;
+
+	return fileForModuleKey;
+}
+
+/**
+ * Helper function for listModulesThreadUnsafe().
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listFiles(const set<string> &moduleKeys,
+																 map<string, VuoFileUtilities::File *> (VuoCompiler::Environment::*listFiles)(const string &))
+{
+	set<ModuleInfo> moduleInfos;
+
+	for (vector<string>::iterator i = moduleSearchPaths.begin(); i != moduleSearchPaths.end(); ++i)
+	{
+		map<string, VuoFileUtilities::File *> fileForModuleKey = (this->*listFiles)(*i);
+
+		for (set<string>::const_iterator j = moduleKeys.begin(); j != moduleKeys.end(); ++j)
+		{
+			map<string, VuoFileUtilities::File *>::iterator iter = fileForModuleKey.find(*j);
+			if (iter != fileForModuleKey.end())
+			{
+				ModuleInfo moduleInfo = { this, *i, iter->second, iter->first };
+				moduleInfos.insert(moduleInfo);
+			}
+		}
+	}
+
+	return moduleInfos;
+}
+
+/**
+ * Helper function for listAllModulesThreadUnsafe() and listAllSubcompositions().
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listAllFiles(map<string, VuoFileUtilities::File *> (VuoCompiler::Environment::*listFiles)(const string &))
+{
+	set<ModuleInfo> moduleInfos;
+
+	for (vector<string>::iterator i = moduleSearchPaths.begin(); i != moduleSearchPaths.end(); ++i)
+	{
+		map<string, VuoFileUtilities::File *> fileForModuleKey = (this->*listFiles)(*i);
+
+		for ( map<string, VuoFileUtilities::File *>::iterator j = fileForModuleKey.begin(); j != fileForModuleKey.end(); ++j)
+		{
+			ModuleInfo moduleInfo = { this, *i, j->second, j->first };
+			moduleInfos.insert(moduleInfo);
+		}
+	}
+
+	return moduleInfos;
+
+}
+
+/**
+ * Returns info for each of the modules specified by @a moduleKeys that is found in one of the @ref moduleSearchPaths.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listModules(const set<string> &moduleKeys)
+{
+	__block set<ModuleInfo> moduleInfos;
+	dispatch_sync(environmentQueue, ^{
+					  moduleInfos = listModulesThreadUnsafe(moduleKeys);
+				  });
+	return moduleInfos;
+}
+
+/**
+ * Returns info for each of the modules specified by @a moduleKeys that is found in one of the @ref moduleSearchPaths.
+ *
+ * @threadQueue{environmentQueue}
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listModulesThreadUnsafe(const set<string> &moduleKeys)
+{
+	return listFiles(moduleKeys, &VuoCompiler::Environment::listModulesAtSearchPath);
+}
+
+/**
+ * Returns info for all of the modules found in the @ref moduleSearchPaths.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listAllModules(void)
+{
+	__block set<ModuleInfo> moduleInfos;
+	dispatch_sync(environmentQueue, ^{
+					  moduleInfos = listAllModulesThreadUnsafe();
+				  });
+	return moduleInfos;
+}
+
+/**
+ * Returns info for all of the modules found in the @ref moduleSearchPaths.
+ *
+ * @threadQueue{environmentQueue}
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listAllModulesThreadUnsafe(void)
+{
+	return listAllFiles(&VuoCompiler::Environment::listModulesAtSearchPath);
+}
+
+/**
+ * Returns info for each of the compositions specified by @a nodeClassNames that is found in one of the @ref moduleSearchPaths.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listSubcompositions(const set<string> &nodeClassNames)
+{
+	return listFiles(nodeClassNames, &VuoCompiler::Environment::listCompositionsAtSearchPath);
+}
+
+/**
+ * Returns info for all of the compositions found in the @ref moduleSearchPaths.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listAllSubcompositions(void)
+{
+	__block set<ModuleInfo> moduleInfos;
+	dispatch_sync(environmentQueue, ^{
+					  moduleInfos = listAllFiles(&VuoCompiler::Environment::listCompositionsAtSearchPath);
+				  });
+	return moduleInfos;
+}
+
+/**
+ * Returns info for each of the modules specified by @a moduleKeys that is found in the @ref moduleSearchPaths
+ * of @a myEnvironment or @a sharedEnvironment.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listModulesInEnvironments(Environment *myEnvironment, Environment *sharedEnvironment,
+																				  const set<string> &moduleKeys)
+{
+	__block set<ModuleInfo> moduleInfos;
+	dispatch_sync(environmentQueue, ^{
+					  moduleInfos = listModulesInEnvironmentsThreadUnsafe(myEnvironment, sharedEnvironment, moduleKeys);
+				  });
+	return moduleInfos;
+}
+
+/**
+ * Returns info for each of the modules specified by @a moduleKeys that is found in the @ref moduleSearchPaths
+ * of @a myEnvironment or @a sharedEnvironment.
+ *
+ * @threadQueue{environmentQueue}
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listModulesInEnvironmentsThreadUnsafe(Environment *myEnvironment, Environment *sharedEnvironment,
+																							  const set<string> &moduleKeys)
+{
+	set<ModuleInfo> moduleInfos;
+	set<ModuleInfo> moduleInfosInMyEnvironment = myEnvironment->listModulesThreadUnsafe(moduleKeys);
+	set<ModuleInfo> moduleInfosInSharedEnvironment = sharedEnvironment->listModulesThreadUnsafe(moduleKeys);
+	moduleInfos.insert(moduleInfosInMyEnvironment.begin(), moduleInfosInMyEnvironment.end());
+	moduleInfos.insert(moduleInfosInSharedEnvironment.begin(), moduleInfosInSharedEnvironment.end());
+	return moduleInfos;
+}
+
+/**
+ * Returns info for all of the modules found in the @ref moduleSearchPaths of @a myEnvironment or @a sharedEnvironment.
+ */
+set<VuoCompiler::ModuleInfo> VuoCompiler::Environment::listAllModulesInEnvironments(Environment *myEnvironment, Environment *sharedEnvironment)
+{
+	__block set<ModuleInfo> moduleInfos;
+	dispatch_sync(environmentQueue, ^{
+					  set<ModuleInfo> moduleInfosInMyEnvironment = myEnvironment->listAllModulesThreadUnsafe();
+					  set<ModuleInfo> moduleInfosInSharedEnvironment = sharedEnvironment->listAllModulesThreadUnsafe();
+					  moduleInfos.insert(moduleInfosInMyEnvironment.begin(), moduleInfosInMyEnvironment.end());
+					  moduleInfos.insert(moduleInfosInSharedEnvironment.begin(), moduleInfosInSharedEnvironment.end());
+				  });
+	return moduleInfos;
 }
 
 /**
  * Loads a node class, type, or library module from a file, and adds it to the environment.
  *
- * If a module with the same module key as @a moduleFile has already been added to the environment,
- * the module in @a moduleFile replaces it.
+ * Assumes that the module is not already present in the environment.
  *
  * @threadQueue{environmentQueue}
  */
-VuoCompilerModule * VuoCompiler::Environment::loadModule(VuoFileUtilities::File *moduleFile, const string &searchPath)
+VuoCompilerModule * VuoCompiler::Environment::loadModule(const ModuleInfo &moduleInfo)
 {
-	string moduleKey, dir, ext;
-	VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
-
 	// Skip certain LLVM modules that definitely aren't Vuo modules to avoid adding struct types defined in them to the LLVM
 	// context, resulting in mismatched struct types in code generation (e.g. %struct.NodeContext and %struct.NodeContext.1).
-	if (VuoStringUtilities::beginsWith(moduleKey, "libVuo"))
+	if (VuoStringUtilities::beginsWith(moduleInfo.moduleKey, "libVuo"))
 		return NULL;
 
 	size_t inputDataBytes;
 	char *rawInputData;
 	try
 	{
-		rawInputData = moduleFile->getContentsAsRawData(inputDataBytes);
+		rawInputData = moduleInfo.file->getContentsAsRawData(inputDataBytes);
 	}
 	catch (const exception &e)
 	{
-		VUserLog("Warning: Couldn't load module '%s'. Its file may have been deleted. (%s)", moduleKey.c_str(), e.what());
+		VUserLog("Warning: Couldn't load module '%s'. Its file may have been deleted. (%s)", moduleInfo.moduleKey.c_str(), e.what());
 		return NULL;
 	}
 	char *processedInputData = NULL;
@@ -592,15 +767,18 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(VuoFileUtilities::File 
 	bool moduleParseError = false;
 	bool premiumModule = false;
 
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(moduleInfo.file->getRelativePath(), dir, file, ext);
+
 	if ((ext == "vuonode+") || (ext == "bc+"))
 	{
-		encounteredPremiumModules.insert(moduleKey);
+		encounteredPremiumModules.insert(moduleInfo.moduleKey);
 
 #ifdef PREMIUM_NODE_LOADER_ENABLED
 		if (inputDataBytes <= INT_MAX)
 			processedInputData = VuoPremium::getPremiumDataContent(rawInputData,
 																   static_cast<int>(inputDataBytes),
-																   moduleKey.c_str());
+																   moduleInfo.moduleKey.c_str());
 #endif
 
 		if (!processedInputData)
@@ -625,27 +803,31 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(VuoFileUtilities::File 
 		if (!module)
 		{
 			moduleParseError = true;
-			VUserLog("Error: Couldn't parse module '%s': %s.", moduleFile->getRelativePath().c_str(), moduleReadError.c_str());
+			VUserLog("Error: Couldn't parse module '%s': %s.", moduleInfo.file->getRelativePath().c_str(), moduleReadError.c_str());
 		}
 	}
 
 	if (!moduleParseError)
 	{
+		string modulePath;
+		if (! moduleInfo.file->isInArchive())
+			modulePath = moduleInfo.searchPath + "/" + moduleInfo.file->getRelativePath();
+
 		__block VuoCompilerModule *compilerModule;
 		dispatch_sync(llvmQueue, ^{
-						  compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+						  compilerModule = VuoCompilerModule::newModule(moduleInfo.moduleKey, module, modulePath);
 					  });
 
 		if (compilerModule)
 		{
 			if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
-				nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
+				nodeClasses[moduleInfo.moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
 			else if (dynamic_cast<VuoCompilerType *>(compilerModule))
-				types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
+				types[moduleInfo.moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
 			else
-				libraryModules[moduleKey] = compilerModule;
+				libraryModules[moduleInfo.moduleKey] = compilerModule;
 
-			VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
+			VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleInfo.file);
 			if (nodeSet)
 			{
 				map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
@@ -664,7 +846,7 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(VuoFileUtilities::File 
 			compilerModule->setPremium(premiumModule);
 
 			vector<string> builtInModuleSearchPaths = getBuiltInModuleSearchPaths();
-			bool isBuiltIn = (find(builtInModuleSearchPaths.begin(), builtInModuleSearchPaths.end(), searchPath) != builtInModuleSearchPaths.end());
+			bool isBuiltIn = (find(builtInModuleSearchPaths.begin(), builtInModuleSearchPaths.end(), moduleInfo.searchPath) != builtInModuleSearchPaths.end());
 			compilerModule->setBuiltIn(isBuiltIn);
 
 			return compilerModule;
@@ -775,7 +957,8 @@ void VuoCompiler::Environment::updateCombinedEnvironment(Environment *myEnvironm
 	genericTypes.clear();
 	nodeSetForName.clear();
 	libraryModules.clear();
-	isModuleSearchPathLoaded.clear();
+	moduleFilesAtSearchPath.clear();
+	compositionFilesAtSearchPath.clear();
 	moduleSearchPaths.clear();
 	headerSearchPaths.clear();
 	librarySearchPaths.clear();
@@ -789,7 +972,8 @@ void VuoCompiler::Environment::updateCombinedEnvironment(Environment *myEnvironm
 		genericTypes.insert(envs[i]->genericTypes.begin(), envs[i]->genericTypes.end());
 		nodeSetForName.insert(envs[i]->nodeSetForName.begin(), envs[i]->nodeSetForName.end());
 		libraryModules.insert(envs[i]->libraryModules.begin(), envs[i]->libraryModules.end());
-		isModuleSearchPathLoaded.insert(envs[i]->isModuleSearchPathLoaded.begin(), envs[i]->isModuleSearchPathLoaded.end());
+		moduleFilesAtSearchPath.insert(envs[i]->moduleFilesAtSearchPath.begin(), envs[i]->moduleFilesAtSearchPath.end());
+		compositionFilesAtSearchPath.insert(envs[i]->compositionFilesAtSearchPath.begin(), envs[i]->compositionFilesAtSearchPath.end());
 		moduleSearchPaths.insert(moduleSearchPaths.end(), envs[i]->moduleSearchPaths.begin(), envs[i]->moduleSearchPaths.end());
 		headerSearchPaths.insert(headerSearchPaths.end(), envs[i]->headerSearchPaths.begin(), envs[i]->headerSearchPaths.end());
 		librarySearchPaths.insert(librarySearchPaths.end(), envs[i]->librarySearchPaths.begin(), envs[i]->librarySearchPaths.end());
@@ -856,6 +1040,10 @@ vector<string> VuoCompiler::Environment::getBuiltInLibrarySearchPaths(void)
 		builtInLibrarySearchPaths.push_back(OSCPACK_ROOT "/lib");
 		builtInLibrarySearchPaths.push_back(ZXING_ROOT "/lib");
 		builtInLibrarySearchPaths.push_back(LIBXML2_ROOT "/lib");
+		builtInLibrarySearchPaths.push_back(LIBCSV_ROOT "/lib");
+		builtInLibrarySearchPaths.push_back(GETTEXT_ROOT "/lib");
+		builtInLibrarySearchPaths.push_back(GLIB_ROOT "/lib");
+		builtInLibrarySearchPaths.push_back(LIBLQR_ROOT "/lib");
 		builtInLibrarySearchPaths.push_back(VUO_ROOT "/runtime");
 	}
 
@@ -887,6 +1075,7 @@ void VuoCompiler::Environment::addSearchPathsToSharedEnvironment(void)
 		headerSearchPaths.push_back(VUO_ROOT "/type");
 		headerSearchPaths.push_back(VUO_ROOT "/type/list");
 		headerSearchPaths.push_back(VUO_ROOT "/runtime");
+		headerSearchPaths.push_back(JSONC_ROOT "/include");
 
 		frameworkSearchPaths.push_back(SYPHON_ROOT);
 	}
@@ -908,28 +1097,93 @@ void VuoCompiler::Environment::addSearchPathsToSharedEnvironment(void)
 }
 
 /**
- * Adds a module file after VuoCompiler::Environment::listModules() has already cached the list of
- * module files for the cache's Modules folder.
+ * Adds a module file after @ref listModulesAtSearchPath() has already cached the list of module files
+ * for the cache's Modules folder.
  */
-void VuoCompiler::Environment::addCachedModulePathToSharedEnvironment(string moduleFileName)
+void VuoCompiler::Environment::addCachedModuleFileToSharedEnvironment(const string &moduleRelativePath)
 {
 	dispatch_sync(environmentQueue, ^{
-					  string dir = getCachedModulesPath();
-					  VuoFileUtilities::File *moduleFile = new VuoFileUtilities::File(dir, moduleFileName);
-					  moduleFilesAtSearchPath[dir][moduleFile->getRelativePath()] = moduleFile;
+					  string cachedModulesPath = getCachedModulesPath();
+					  VuoFileUtilities::File *moduleFile = new VuoFileUtilities::File(cachedModulesPath, moduleRelativePath);
+
+					  string dir, moduleKey, ext;
+					  VuoFileUtilities::splitPath(moduleRelativePath, dir, moduleKey, ext);
+
+					  moduleFilesAtSearchPath[cachedModulesPath][moduleKey] = moduleFile;
 				  });
 }
 
 /**
- * Removes a module file from the list cached by VuoCompiler::Environment::listModules().
- * This function should be called after a module file is deleted from the cache's Modules folder.
+ * Removes a module file after @ref listModulesAtSearchPath() has already cached the list of module files
+ * for the cache's Modules folder.
  */
-void VuoCompiler::Environment::removeCachedModulePathFromSharedEnvironment(string moduleFileName)
+void VuoCompiler::Environment::removeCachedModuleFileFromSharedEnvironment(const string &moduleKey)
 {
 	dispatch_sync(environmentQueue, ^{
-					  if (moduleFilesAtSearchPath[getCachedModulesPath()].find(moduleFileName) != moduleFilesAtSearchPath[getCachedModulesPath()].end())
-						  moduleFilesAtSearchPath[getCachedModulesPath()].erase(moduleFileName);
+					  string cachedModulesPath = getCachedModulesPath();
+					  moduleFilesAtSearchPath[cachedModulesPath].erase(moduleKey);
 				  });
+}
+
+/**
+ * Adds a composition file after @ref listCompositionsAtSearchPath() has already cached the list of
+ * composition files for the subcomposition's folder.
+ */
+void VuoCompiler::Environment::addSubcompositionFileToSharedEnvironment(const string &subcompositionPath)
+{
+	dispatch_sync(environmentQueue, ^{
+					  string dir, moduleKey, ext;
+					  VuoFileUtilities::splitPath(subcompositionPath, dir, moduleKey, ext);
+					  VuoFileUtilities::canonicalizePath(dir);
+
+					  VuoFileUtilities::File *subcompositionFile = new VuoFileUtilities::File(dir, moduleKey + "." + ext);
+
+					  compositionFilesAtSearchPath[dir][moduleKey] = subcompositionFile;
+				  });
+}
+
+/**
+ * Removes a composition file after @ref listCompositionsAtSearchPath() has already cached the list of
+ * composition files for the subcomposition's folder.
+ */
+void VuoCompiler::Environment::removeSubcompositionFileFromSharedEnvironment(const string &nodeClassName)
+{
+	dispatch_sync(environmentQueue, ^{
+					  set<string> nodeClassNameSet;
+					  nodeClassNameSet.insert(nodeClassName);
+					  set<ModuleInfo> subcompositions = listSubcompositions(nodeClassNameSet);
+
+					  for (set<ModuleInfo>::iterator i = subcompositions.begin(); i != subcompositions.end(); ++i) {
+						  compositionFilesAtSearchPath[(*i).searchPath].erase((*i).moduleKey);
+					  }
+				  });
+}
+
+/**
+ * Checks each module in the cached Modules folder for a corresponding composition (.vuo) file in
+ * the user Modules folder, and if none exists, deletes the module.
+ *
+ * @threadQueue{environmentQueue}
+ */
+void VuoCompiler::Environment::removeCachedModulesForDeletedSubcompositions(void)
+{
+	string moduleSearchPath = getCachedModulesPath();
+
+	map<string, VuoFileUtilities::File *> subcompositionModules = listModulesAtSearchPath(moduleSearchPath);
+	for (map<string, VuoFileUtilities::File *>::iterator i = subcompositionModules.begin(); i != subcompositionModules.end(); ++i)
+	{
+		string moduleKey = i->first;
+		VuoFileUtilities::File *moduleFile = i->second;
+
+		string subcompositionSourcePath = VuoFileUtilities::getUserModulesPath() + "/" + moduleKey + ".vuo";
+		if (! VuoFileUtilities::fileExists(subcompositionSourcePath))
+		{
+			string subcompositionModulePath = moduleSearchPath + "/" + moduleFile->getRelativePath();
+			VuoFileUtilities::deleteFile(subcompositionModulePath);
+
+			moduleFilesAtSearchPath[moduleSearchPath].erase(moduleKey);
+		}
+	}
 }
 
 /**
@@ -977,6 +1231,7 @@ VuoCompiler::VuoCompiler(void)
 	shouldLoadAllModules = true;
 	hasLoadedAllModules = false;
 	isVerbose = false;
+	licenseUsername = "unknownVuoUser";
 
 	Environment *env = getSharedEnvironment();
 	dispatch_sync(environmentQueue, ^{
@@ -1015,198 +1270,239 @@ VuoCompiler::Environment * VuoCompiler::getSharedEnvironment(void)
 }
 
 /**
- * Returns a list of all compositions in the directory at @a path.
+ * Loads node classes, types, and library modules, and compiles and loads subcompositions, if they have not
+ * already been loaded.
  *
- * The top level of the directory is searched for .vuo files.
+ * If this is the first call to this function in which @ref shouldLoadAllModules is true, this function loads
+ * all modules and subcompositions found in the compiler's search paths. Otherwise, this function loads only the
+ * modules listed in @a moduleKeys and their dependencies.
+ *
+ * This function needs to be called before compiling a composition, linking a composition, or getting a listing
+ * of loaded modules. It does not need to be called before compiling a node class.
+ *
+ * If there are any errors compiling subcompositions or loading modules, they are added to @ref errorsLoadingModules.
  */
-set<string> VuoCompiler::listCompositions(const string &path)
+void VuoCompiler::loadModulesIfNeeded(const set<string> &moduleKeys)
 {
-	map<string, set<string> >::iterator compositionPathsIter = compositionPathsAtSearchPath.find(path);
-	if (compositionPathsIter != compositionPathsAtSearchPath.end())
-		return compositionPathsIter->second;
+	set<ModuleInfo> allSubcompositions = getSharedEnvironment()->listAllSubcompositions();
+	map<string, ModuleInfo> moduleInfoForSubcomposition;
+	for (set<ModuleInfo>::iterator i = allSubcompositions.begin(); i != allSubcompositions.end(); ++i)
+		moduleInfoForSubcomposition[(*i).moduleKey] = *i;
 
-	set<string> compositionPaths;
+	__block bool willLoadAllModules = false;
+	__block map< string, set<string> > subcompositionsWithinSubcompositionCopy;
+	dispatch_sync(modulesToLoadQueue, ^{
+					  if (shouldLoadAllModules && ! hasLoadedAllModules)
+					  {
+						  willLoadAllModules = true;
+						  hasLoadedAllModules = true;
+					  }
 
-	set<string> compositionExtensions;
-	compositionExtensions.insert("vuo");
-	set<VuoFileUtilities::File *> compositionFiles = VuoFileUtilities::findFilesInDirectory(path, compositionExtensions, set<string>());
-	for (set<VuoFileUtilities::File *>::iterator i = compositionFiles.begin(); i != compositionFiles.end(); ++i)
+					  updateSubcompositionsWithinSubcomposition(moduleInfoForSubcomposition);
+					  subcompositionsWithinSubcompositionCopy = subcompositionsWithinSubcomposition;
+				  });
+
+	set<ModuleInfo> modulesToLoad;
+	set<string> subcompositionsToCompileUnsorted;
+
+	if (willLoadAllModules)
 	{
-		VuoFileUtilities::File *compositionFile = *i;
+		// Get a list of all module files in all search paths.
 
-		string dir, file, ext;
-		VuoFileUtilities::splitPath(compositionFile->getRelativePath(), dir, file, ext);
-		string compositionPath = path + "/" + file + "." + ext;
-		compositionPaths.insert(compositionPath);
+		modulesToLoad = Environment::listAllModulesInEnvironments(&myEnvironment, getSharedEnvironment());
 
-		delete compositionFile;
+		// Get a list of all subcompositions in all search paths.
+
+		for (map< string, set<string> >::iterator i = subcompositionsWithinSubcompositionCopy.begin(); i != subcompositionsWithinSubcompositionCopy.end(); ++i)
+			subcompositionsToCompileUnsorted.insert(i->first);
+	}
+	else
+	{
+		// Get a list of files for the requested modules.
+
+		modulesToLoad = Environment::listModulesInEnvironments(&myEnvironment, getSharedEnvironment(), moduleKeys);
+
+		// Build a list of subcompositions that need to be compiled — those directly requested and their dependencies.
+
+		list<string> moduleKeysToVisit;
+		for (set<string>::const_iterator i = moduleKeys.begin(); i != moduleKeys.end(); ++i)
+			if (subcompositionsWithinSubcompositionCopy.find(*i) != subcompositionsWithinSubcompositionCopy.end())
+				moduleKeysToVisit.push_back(*i);
+
+		while (! moduleKeysToVisit.empty())
+		{
+			string moduleKey = moduleKeysToVisit.front();
+			moduleKeysToVisit.pop_front();
+
+			subcompositionsToCompileUnsorted.insert(moduleKey);
+
+			map< string, set<string> >::iterator subcompositionsWithin = subcompositionsWithinSubcompositionCopy.find(moduleKey);
+			moduleKeysToVisit.insert(moduleKeysToVisit.end(), subcompositionsWithin->second.begin(), subcompositionsWithin->second.end());
+		}
 	}
 
-	compositionPathsAtSearchPath[path] = compositionPaths;
+	// Load the non=subcomposition modules and their dependencies.
 
-	return compositionPaths;
+	list<ModuleInfo> modulesToLoadList(modulesToLoad.begin(), modulesToLoad.end());
+	combinedEnvironment.loadModulesIntoCombinedEnvironment(&myEnvironment, getSharedEnvironment(), modulesToLoadList);
+
+	// Put the subcompositions in the order they should be compiled — those with no dependencies first,
+	// and the rest after all of their dependencies have been compiled.
+
+	vector<string> subcompositionsToCompile;
+	map< string, set<string> > subcompositionsToVisit = subcompositionsWithinSubcompositionCopy;
+	while (! subcompositionsToVisit.empty())
+	{
+		vector<string> subcompositionsReady;
+		for (map< string, set<string> >::iterator i = subcompositionsToVisit.begin(); i != subcompositionsToVisit.end(); ++i)
+			if (i->second.empty())
+				subcompositionsReady.push_back(i->first);
+
+		for (vector<string>::iterator i = subcompositionsReady.begin(); i != subcompositionsReady.end(); ++i)
+		{
+			string subcomposition = *i;
+
+			if (subcompositionsToCompileUnsorted.find(subcomposition) != subcompositionsToCompileUnsorted.end())
+				subcompositionsToCompile.push_back(subcomposition);
+
+			subcompositionsToVisit.erase(subcomposition);
+			for (map< string, set<string> >::iterator j = subcompositionsToVisit.begin(); j != subcompositionsToVisit.end(); ++j)
+				j->second.erase(subcomposition);
+		}
+	}
+
+	for (vector<string>::iterator i = subcompositionsToCompile.begin(); i != subcompositionsToCompile.end(); ++i)
+	{
+		string moduleKey = *i;
+		ModuleInfo sourceModuleInfo = moduleInfoForSubcomposition[moduleKey];
+
+		string subcompositionPath = sourceModuleInfo.searchPath + "/" + sourceModuleInfo.file->getRelativePath();
+
+		// Compile the subcomposition.
+
+		bool compiled = compileSubcompositionIfNeeded(subcompositionPath);
+		if (compiled)
+		{
+			// Load the subcomposition module.
+
+			set<string> moduleKeySet;
+			moduleKeySet.insert(moduleKey);
+			set<ModuleInfo> compiledModuleInfo = getSharedEnvironment()->listModules(moduleKeySet);
+
+			list<ModuleInfo> compiledModuleInfoList(compiledModuleInfo.begin(), compiledModuleInfo.end());
+			combinedEnvironment.loadModulesIntoCombinedEnvironment(&myEnvironment, getSharedEnvironment(), compiledModuleInfoList);
+
+			// Uninstall any subcompositions that depend on this subcomposition so they'll get recompiled.
+
+			set<string> dirtySubcompositions;
+			dirtySubcompositions.insert(moduleKey);
+
+			set<string> newDirtySubcompositions = dirtySubcompositions;
+			while (! newDirtySubcompositions.empty())
+			{
+				set<string> currDirtySubcomopositions = newDirtySubcompositions;
+				newDirtySubcompositions.clear();
+
+				for (map< string, set<string> >::const_iterator j = subcompositionsWithinSubcompositionCopy.begin(); j != subcompositionsWithinSubcompositionCopy.end(); ++j)
+				{
+					vector<string> dirtySubcompositionsWithin;
+					std::set_intersection(j->second.begin(), j->second.end(),
+										  currDirtySubcomopositions.begin(), currDirtySubcomopositions.end(),
+										  std::back_inserter(dirtySubcompositionsWithin));
+
+					if (! dirtySubcompositionsWithin.empty())
+						newDirtySubcompositions.insert(j->first);
+				}
+
+				dirtySubcompositions.insert(newDirtySubcompositions.begin(), newDirtySubcompositions.end());
+			}
+
+			dirtySubcompositions.erase(moduleKey);
+
+			for (set<string>::iterator j = dirtySubcompositions.begin(); j != dirtySubcompositions.end(); ++j)
+				uninstallSubcompositionModule(*j);
+		}
+	}
 }
 
 /**
- * Loads node classes and types from any directories in the module search paths that have not already been loaded.
- *
- * In this class, the modules for node classes, types, and library modules are loaded lazily.
- * They are loaded the first time they are accessed (by strategically placed calls to this function).
- * Specifically, they are loaded the first time compiling a composition, linking a composition, or otherwise
- * accessing the collections of node classes or types. They are not loaded when compiling a node class.
- *
- * Likewise, subcomposition source (.vuo) files are compiled lazily. They are only compiled just before they
- * need to be loaded as node classes.
+ * Helper function for @ref loadModulesIfNeeded(). Rebuilds the subcomposition dependency graph if it's out-of-date.
  */
-void VuoCompiler::loadModulesIfNeeded(void)
+void VuoCompiler::updateSubcompositionsWithinSubcomposition(const map<string, ModuleInfo> &moduleInfoForSubcomposition)
 {
-	dispatch_sync(hasCleanedCompiledSubcompositionDirQueue, ^{
-					  if (! hasCleanedCompiledSubcompositionDir)
-					  {
-						  // Delete any compiled subcompositions for which the composition source no longer exists.
-						  string compiledSubcompositionDir = getCachedModulesPath();
-						  set<string> extensions;
-						  extensions.insert("vuonode");
-						  set<VuoFileUtilities::File *> compiledSubcompositionFiles = VuoFileUtilities::findFilesInDirectory(compiledSubcompositionDir, extensions, set<string>());
-						  for (set<VuoFileUtilities::File *>::iterator i = compiledSubcompositionFiles.begin(); i != compiledSubcompositionFiles.end(); ++i)
-						  {
-							  VuoFileUtilities::File *compiledSubcompositionFile = *i;
+	if (! subcompositionsWithinSubcomposition.empty())
+		return;
 
-							  string dir, file, ext;
-							  VuoFileUtilities::splitPath(compiledSubcompositionFile->getRelativePath(), dir, file, ext);
-							  string subcompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + file + ".vuo";
+	// Build the subcomposition dependency graph for all subcompositions in all search paths.
 
-							  if (! VuoFileUtilities::fileExists(subcompositionPath))
-							  {
-								  string compiledSubcompositionPath = compiledSubcompositionDir + "/" + compiledSubcompositionFile->getRelativePath();
-								  VuoFileUtilities::deleteFile(compiledSubcompositionPath);
-							  }
-
-							  delete compiledSubcompositionFile;
-						  }
-
-						  hasCleanedCompiledSubcompositionDir = true;
-					  }
-				  });
-
-	// Form a list of subcompositions that need to be compiled in order to fulfill the responsibilities of this call
-	// (based on `shouldLoadAllModules` and `modulesToLoad`).
-	//
-	// Avoid infinite recursion (load modules -> compile subcomposition -> load modules -> ...) by using
-	// subcompositionsBeingCompiled to keep track of the compositions being compiled by this call (last item
-	// in subcompositionsBeingCompiled) and calls higher up the call stack (rest of subcompositionsBeingCompiled).
-
-	__block set<string> subcompositionsToCompile;
-	__block set<string> modulesToLoadThisIteration;
-	dispatch_sync(modulesToLoadQueue, ^{
-					  subcompositionModules.clear();
-
-					  vector<string> moduleSearchPaths = combinedEnvironment.getModuleSearchPaths();
-					  for (vector<string>::iterator i = moduleSearchPaths.begin(); i != moduleSearchPaths.end(); ++i)
-					  {
-						  string searchPath = *i;
-
-						  set<string> subcompositionPaths = listCompositions(searchPath);
-						  for (set<string>::iterator j = subcompositionPaths.begin(); j != subcompositionPaths.end(); ++j)
-						  {
-							  string subcompositionPath = *j;
-
-							  string dir, file, ext;
-							  VuoFileUtilities::splitPath(subcompositionPath, dir, file, ext);
-
-							  if (! VuoFileUtilities::fileExists(subcompositionPath))
-							  {
-								  compositionPathsAtSearchPath[searchPath].erase(subcompositionPath);
-								  continue;
-							  }
-
-							  subcompositionModules.insert(file);
-
-							  if ((subcompositionsBeingCompiled.empty() && shouldLoadAllModules && ! hasLoadedAllModules) || modulesToLoad.find(file) != modulesToLoad.end())
-							  {
-								  if (find(subcompositionsBeingCompiled.begin(), subcompositionsBeingCompiled.end(), subcompositionPath) == subcompositionsBeingCompiled.end())
-								  {
-									  subcompositionsToCompile.insert(subcompositionPath);
-								  }
-							  }
-						  }
-					  }
-
-					  set_difference(modulesToLoad.begin(), modulesToLoad.end(),
-									 subcompositionModules.begin(), subcompositionModules.end(),
-									 std::inserter(modulesToLoadThisIteration, modulesToLoadThisIteration.end()));
-				  });
-
-	// Compile subcompositions and load modules.
-	//
-	// Subcompositions are compiled and loaded one per iteration. Compiling and loading them one at a time ensures that
-	// the current subcomposition is made available as a node class before the next subcomposition is compiled, in case
-	// the next subcomposition contains an instance of the current subcomposition.
-	//
-	// On the first iteration, all non-subcomposition modules for which this call is responsible are also loaded.
-
-	do
+	map<string, string> pathForSubcomposition;
+	for (map<string, ModuleInfo>::const_iterator i = moduleInfoForSubcomposition.begin(); i != moduleInfoForSubcomposition.end(); ++i)
 	{
-		__block string subcompositionChosenToCompile;
-		dispatch_sync(modulesToLoadQueue, ^{
-						  if (! subcompositionsToCompile.empty())
-						  {
-							  set<string>::iterator iter = subcompositionsToCompile.begin();
-							  subcompositionChosenToCompile = *iter;
-							  subcompositionsBeingCompiled.push_back(subcompositionChosenToCompile);
-							  subcompositionsToCompile.erase(iter);
-						  }
-					  });
+		ModuleInfo moduleInfo = i->second;
+		string subcompositionPath = moduleInfo.searchPath + "/" + moduleInfo.file->getRelativePath();
+		pathForSubcomposition[moduleInfo.moduleKey] = subcompositionPath;
 
-		string subcompositionModuleChosenToCompile;
-		bool gotErrorForSubcomposition = false;
-		if (! subcompositionChosenToCompile.empty())
+		try
 		{
-			string dir, ext;
-			VuoFileUtilities::splitPath(subcompositionChosenToCompile, dir, subcompositionModuleChosenToCompile, ext);
+			set<string> nodeClassesWithin = VuoCompilerGraphvizParser::getNodeClassNamesFromCompositionFile(subcompositionPath, this);
 
-			try
-			{
-				bool compiled = compileSubcompositionIfNeeded(subcompositionChosenToCompile);
-				if (compiled)
-					sharedEnvironment->addCachedModulePathToSharedEnvironment(subcompositionModuleChosenToCompile + ".vuonode");
-			}
-			catch (VuoCompilerException &e)
-			{
-				gotErrorForSubcomposition = true;
-			}
+			set<string> subcompositionsWithin;
+			for (set<string>::iterator j = nodeClassesWithin.begin(); j != nodeClassesWithin.end(); ++j)
+				if (moduleInfoForSubcomposition.find(*j) != moduleInfoForSubcomposition.end())
+					subcompositionsWithin.insert(*j);
+
+			subcompositionsWithinSubcomposition[moduleInfo.moduleKey] = subcompositionsWithin;
 		}
+		catch (VuoCompilerException &e)
+		{
+			dispatch_sync(errorsLoadingModulesQueue, ^{
+							  errorsLoadingModules[moduleInfo.moduleKey] = make_pair(subcompositionPath, e);
+						  });
+		}
+		catch (std::runtime_error &e)
+		{
+			VuoCompilerError error(e.what(), "", set<VuoNode *>(), set<VuoCable *>());
+			VuoCompilerException exception(vector<VuoCompilerError>(1, error));
+			dispatch_sync(errorsLoadingModulesQueue, ^{
+							  errorsLoadingModules[moduleInfo.moduleKey] = make_pair(subcompositionPath, exception);
+						  });
+		}
+	}
 
-		dispatch_sync(modulesToLoadQueue, ^{
-						  if (! subcompositionChosenToCompile.empty())
-						  {
-							  subcompositionsBeingCompiled.pop_back();
+	// Check the subcomposition dependency graph for any subcomposition that contains itself, directly or indirectly.
 
-							  if (! gotErrorForSubcomposition)
-							  {
-								  modulesToLoadThisIteration.insert(subcompositionModuleChosenToCompile);
-							  }
-							  else
-							  {
-								  modulesToLoad.erase(subcompositionModuleChosenToCompile);
-							  }
-						  }
+	map< string, set<string> > subcompositionsToVisit = subcompositionsWithinSubcomposition;
+	while (! subcompositionsToVisit.empty())
+	{
+		vector<string> subcompositionsReady;
+		for (map< string, set<string> >::iterator i = subcompositionsToVisit.begin(); i != subcompositionsToVisit.end(); ++i)
+			if (i->second.empty())
+				subcompositionsReady.push_back(i->first);
 
-						  set<string> remainingModulesToLoad;
-						  set_difference(modulesToLoad.begin(), modulesToLoad.end(),
-										 modulesToLoadThisIteration.begin(), modulesToLoadThisIteration.end(),
-										 std::inserter(remainingModulesToLoad, remainingModulesToLoad.end()));
-						  modulesToLoad = remainingModulesToLoad;
+		if (subcompositionsReady.empty())
+			break;
 
-						  combinedEnvironment.loadModulesIntoCombinedEnvironment( &myEnvironment, getSharedEnvironment(), shouldLoadAllModules && ! hasLoadedAllModules, modulesToLoadThisIteration );
+		for (vector<string>::iterator i = subcompositionsReady.begin(); i != subcompositionsReady.end(); ++i)
+		{
+			string subcomposition = *i;
 
-						  if (shouldLoadAllModules)
-						  {
-							  hasLoadedAllModules = true;
-						  }
+			subcompositionsToVisit.erase(subcomposition);
+			for (map< string, set<string> >::iterator j = subcompositionsToVisit.begin(); j != subcompositionsToVisit.end(); ++j)
+				j->second.erase(subcomposition);
+		}
+	}
+
+	for (map< string, set<string> >::iterator i = subcompositionsToVisit.begin(); i != subcompositionsToVisit.end(); ++i)
+	{
+		string subcomposition = i->first;
+		string subcompositionPath = pathForSubcomposition[subcomposition];
+
+		subcompositionsWithinSubcomposition.erase(subcomposition);
+		VuoCompilerError error("Subcomposition contains itself", subcomposition, set<VuoNode *>(), set<VuoCable *>());
+		dispatch_sync(errorsLoadingModulesQueue, ^{
+						  errorsLoadingModules[subcomposition] = make_pair(subcompositionPath, VuoCompilerException(vector<VuoCompilerError>(1, error)));
 					  });
 	}
-	while (! subcompositionsToCompile.empty());
 }
 
 /**
@@ -1217,7 +1513,7 @@ void VuoCompiler::loadModulesIfNeeded(void)
 void VuoCompiler::setLicense(string licenseContent, string licenseSignature)
 {
 #ifdef PREMIUM_NODE_LOADER_ENABLED
-	VuoPremium::initializeWithLicense(licenseContent, licenseSignature);
+	VuoPremium::initializeWithLicense(licenseContent, licenseSignature, licenseUsername);
 #endif
 }
 
@@ -1227,7 +1523,7 @@ void VuoCompiler::setLicense(string licenseContent, string licenseSignature)
 void VuoCompiler::loadStoredLicense(bool showLicenseWarning)
 {
 #ifdef PREMIUM_NODE_LOADER_ENABLED
-	VuoPremium::loadStoredLicense(showLicenseWarning);
+	VuoPremium::loadStoredLicense(showLicenseWarning, licenseUsername);
 #endif
 }
 
@@ -1237,6 +1533,14 @@ void VuoCompiler::loadStoredLicense(bool showLicenseWarning)
 void VuoCompiler::loadStoredLicense(void)
 {
 	VuoCompiler::loadStoredLicense(false);
+}
+
+/**
+ * Returns the username from the active license.
+ */
+string VuoCompiler::getLicenseUsername()
+{
+	return licenseUsername;
 }
 
 /**
@@ -1364,7 +1668,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 
 	string moduleKey = getModuleNameForPath(inputPath);
 	dispatch_sync(llvmQueue, ^{
-					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module, "");
 					  if (! compilerModule)
 					  {
 						  VUserLog("Error: Didn't recognize '%s' as a node class, type, or library.", inputPath.c_str());
@@ -1391,14 +1695,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
  */
 void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition)
 {
-	__block set<string> subcompositionModulesCopy;
-	if (! isTopLevelComposition)
-	{
-		dispatch_sync(modulesToLoadQueue, ^{
-						  subcompositionModulesCopy = subcompositionModules;
-					  });
-	}
-	composition->check(subcompositionModulesCopy);
+	composition->check();
 
 	reifyGenericPortTypes(composition);
 
@@ -1474,79 +1771,52 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
 
 /**
  * Compiles the composition to a node class, unless the node class file already exists and is up-to-date.
- *
- * @throw VuoCompilerException The composition is invalid.
  */
-bool VuoCompiler::compileSubcompositionIfNeeded(string compositionPath)
+bool VuoCompiler::compileSubcompositionIfNeeded(const string &compositionPath)
 {
-	// Check if the subcomposition needs to be (re)compiled.
-
-	if (errorsLoadingModules.find(compositionPath) != errorsLoadingModules.end())
-		return false;
-
 	string cachedModulesPath = getCachedModulesPath();
 
-	string dir, file, ext;
-	VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
-	string compiledCompositionPath = cachedModulesPath + "/" + file + ".vuonode";
+	string dir, nodeClassName, ext;
+	VuoFileUtilities::splitPath(compositionPath, dir, nodeClassName, ext);
+	string compiledCompositionPath = cachedModulesPath + "/" + nodeClassName + ".vuonode";
 
+	// Skip compiling if the subcomposition is known to be invalid.
+	__block bool hasError;
+	dispatch_sync(errorsLoadingModulesQueue, ^{
+					  hasError = (errorsLoadingModules.find(nodeClassName) != errorsLoadingModules.end());
+				  });
+	if (hasError)
+		return false;
+
+	// Skip compiling if the subcomposition is up-to-date.
 	if (VuoFileUtilities::fileExists(compiledCompositionPath) &&
 			VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath) >= VuoFileUtilities::getFileLastModifiedInSeconds(compositionPath))
 		return false;
 
-	VuoFileUtilities::makeDir(cachedModulesPath);
-
-	// Uninstall any other subcompositions that contain the subcomposition about to be compiled,
-	// so that they'll get recompiled the next time they're used (and the subcomposition about to
-	// be compiled won't be able to call them, i.e. call itself recursively).
-
-	__block set<string> subcompositionModulesCopy;
-	dispatch_sync(modulesToLoadQueue, ^{
-					  subcompositionModulesCopy = subcompositionModules;
-				  });
-	list<string> dirtySubcompositions(1, file);
-	while (! dirtySubcompositions.empty())
-	{
-		string dirtySubcomposition = dirtySubcompositions.front();
-		dirtySubcompositions.pop_front();
-
-		for (set<string>::iterator i = subcompositionModulesCopy.begin(); i != subcompositionModulesCopy.end(); ++i)
-		{
-			string nodeClassName = *i;
-
-			VuoCompilerNodeClass *nodeClass = combinedEnvironment.getNodeClass(nodeClassName);
-			if (nodeClass)
-			{
-				set<string> dependencies = nodeClass->getDependencies();
-				if (dependencies.find(dirtySubcomposition) != dependencies.end())
-				{
-					uninstallSubcomposition(nodeClassName);
-					dirtySubcompositions.push_back(nodeClassName);
-				}
-			}
-		}
-	}
-
 	// Compile the subcomposition.
-
 	try
 	{
+		VuoFileUtilities::makeDir(cachedModulesPath);
 		compileComposition(compositionPath, compiledCompositionPath, false);
+
+		getSharedEnvironment()->addCachedModuleFileToSharedEnvironment(nodeClassName + ".vuonode");
+
+		return true;
 	}
 	catch (VuoCompilerException &e)
 	{
-		errorsLoadingModules[compositionPath] = e;
-		throw e;
-	}
+		dispatch_sync(errorsLoadingModulesQueue, ^{
+						  errorsLoadingModules[nodeClassName] = make_pair(compositionPath, e);
+					  });
 
-	return true;
+		return false;
+	}
 }
 
 /**
- * Installs the composition as a node class in the user-specific Vuo Modules folder.
+ * Compiles the .vuo file at @a compositionPath, loads it as a node class, and returns the node class.
  *
- * The file at @a compositionPath is compiled as a node class.
- * The compiled node class is placed in the cached Modules folder. That node class is returned.
+ * The compiled node class is placed in the cached Modules folder.
  *
  * @throw VuoCompilerException The composition could not be compiled.
  */
@@ -1556,21 +1826,23 @@ VuoCompilerNodeClass * VuoCompiler::installSubcomposition(string compositionPath
 	VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
 	string nodeClassName = file;
 
-	uninstallSubcomposition(nodeClassName);
+	if (getSharedEnvironment()->getNodeClass(nodeClassName))
+		uninstallSubcomposition(nodeClassName);
+
+	getSharedEnvironment()->addSubcompositionFileToSharedEnvironment(compositionPath);
 
 	dispatch_sync(modulesToLoadQueue, ^{
-					  modulesToLoad.insert(nodeClassName);
-					  compositionPathsAtSearchPath[VuoFileUtilities::getUserModulesPath()].insert(compositionPath);
+					  subcompositionsWithinSubcomposition.clear();
 				  });
 
 	VuoCompilerNodeClass *nodeClass = getNodeClass(nodeClassName);
 
 	if (! nodeClass)
 	{
-		map<string, VuoCompilerException>::iterator iter = errorsLoadingModules.find(compositionPath);
+		map<string, pair<string, VuoCompilerException> >::iterator iter = errorsLoadingModules.find(nodeClassName);
 		if (iter != errorsLoadingModules.end())
 		{
-			VuoCompilerException e = iter->second;
+			VuoCompilerException e = iter->second.second;
 			errorsLoadingModules.erase(iter);
 			throw e;
 		}
@@ -1580,23 +1852,40 @@ VuoCompilerNodeClass * VuoCompiler::installSubcomposition(string compositionPath
 }
 
 /**
- * Uninstalls the subcomposition node class from the user-specific Vuo Modules folder.
+ * Deletes a compiled subcomposition from the cached Modules folder and unloads the node class.
  */
 void VuoCompiler::uninstallSubcomposition(string nodeClassName)
+{
+	getSharedEnvironment()->removeSubcompositionFileFromSharedEnvironment(nodeClassName);
+	uninstallSubcompositionModule(nodeClassName);
+
+	dispatch_sync(modulesToLoadQueue, ^{
+					  subcompositionsWithinSubcomposition.clear();
+				  });
+}
+
+/**
+ * Deletes a compiled subcomposition from the cached Modules folder and unloads the node class.
+ */
+void VuoCompiler::uninstallSubcompositionModule(string nodeClassName)
 {
 	string compiledSubcompositionPath = getCachedModulesPath() + "/" + nodeClassName + ".vuonode";
 	VuoFileUtilities::deleteFile(compiledSubcompositionPath);
 
-	sharedEnvironment->removeCachedModulePathFromSharedEnvironment(nodeClassName + ".vuonode");
+	getSharedEnvironment()->removeCachedModuleFileFromSharedEnvironment(nodeClassName);
+	combinedEnvironment.removeNodeClassFromCombinedEnvironment(nodeClassName, &myEnvironment, getSharedEnvironment());
 
 	dispatch_sync(cachedResourcesQueue, ^{
-					  combinedEnvironment.removeNodeClassFromCombinedEnvironment(nodeClassName, &myEnvironment, sharedEnvironment);
 					  hasTriedCachedResources[1] = false;
 				  });
 
 	dispatch_sync(dependenciesCacheQueue, ^{
 					  compatibleDependenciesCache.erase(nodeClassName);
 					  incompatibleDependenciesCache.erase(nodeClassName);
+				  });
+
+	dispatch_sync(errorsLoadingModulesQueue, ^{
+					  errorsLoadingModules.erase(nodeClassName);
 				  });
 }
 
@@ -1810,20 +2099,12 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 	string moduleKey = getModuleNameForPath(compiledCompositionPath);
 	Module *module = readModuleFromBitcode(compiledCompositionPath);
 	dispatch_sync(llvmQueue, ^{
-					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module, "");
 					  directDependencies = compilerModule->getDependencies();
 					  delete compilerModule;
 				  });
 
-	dispatch_sync(modulesToLoadQueue, ^{
-					  if (! shouldLoadAllModules)
-					  {
-						  modulesToLoad.clear();
-						  modulesToLoad.insert(directDependencies.begin(), directDependencies.end());
-					  }
-				  });
-
-	loadModulesIfNeeded();
+	loadModulesIfNeeded(directDependencies);
 
 	for (set<string>::iterator i = directDependencies.begin(); i != directDependencies.end(); ++i)
 	{
@@ -2056,7 +2337,13 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies, Optimization 
 		{
 			VuoCompilerModule *module = getModule(dependency);
 			if (module)
-				modules.insert(module->getModule());
+			{
+				string modulePath = module->getModulePath();
+				if (! modulePath.empty() && dynamic_cast<VuoCompilerType *>(module))
+					libraries.insert(modulePath);
+				else
+					modules.insert(module->getModule());
+			}
 			else
 			{
 				if (VuoStringUtilities::endsWith(dependency, ".framework"))
@@ -2753,24 +3040,31 @@ void VuoCompiler::deleteModule(Module *module)
 }
 
 /**
- * Returns the exceptions that were encountered when loading modules (indexed by module file path),
- * and clears the list of stored exceptions.
- */
-map<string, VuoCompilerException> VuoCompiler::flushErrorsLoadingModules(void)
-{
-	map<string, VuoCompilerException> ret = errorsLoadingModules;
-	errorsLoadingModules.clear();
-
-	return ret;
-}
-
-/**
  * Returns the set of premium module names that the compiler has attempted to load,
  * whether or not the loads were successful.
  */
-set<string> VuoCompiler::getEncounteredPremiumModules()
+set<string> VuoCompiler::getEncounteredPremiumModules(void)
 {
 	return encounteredPremiumModules;
+}
+
+/**
+ * Returns the exceptions that were encountered when loading modules (indexed by file path),
+ * and clears the list of stored exceptions.
+ */
+map<string, VuoCompilerException> VuoCompiler::checkForErrorsLoadingModules(void)
+{
+	loadModulesIfNeeded();
+
+	__block map<string, VuoCompilerException> errorsByPath;
+	dispatch_sync(errorsLoadingModulesQueue, ^{
+					  for (map<string, pair<string, VuoCompilerException> >::iterator i = errorsLoadingModules.begin(); i != errorsLoadingModules.end(); ++i)
+						  errorsByPath[i->second.first] = i->second.second;
+
+					  errorsLoadingModules.clear();
+				  });
+
+	return errorsByPath;
 }
 
 /**
@@ -2887,7 +3181,7 @@ VuoNode * VuoCompiler::createPublishedOutputNode(vector<VuoPublishedPort *> publ
 }
 
 /**
- * Looks up the VuoCompilerNodeClass for the node class specified by @a id.
+ * Returns the node class specified by @a nodeClassName, or null if it can't be found or loaded.
  *
  * The node class module is loaded or generated if it hasn't been already.
  *
@@ -2898,26 +3192,32 @@ VuoNode * VuoCompiler::createPublishedOutputNode(vector<VuoPublishedPort *> publ
  *		delete compiler;
  * }
  */
-VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &id)
+VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &nodeClassName)
 {
-	dispatch_sync(modulesToLoadQueue, ^{
-					  modulesToLoad.insert(id);
-				  });
-	loadModulesIfNeeded();
+	if (VuoStringUtilities::endsWith(nodeClassName, ".framework"))
+		return NULL;
 
-	VuoCompilerNodeClass *nodeClass = combinedEnvironment.getNodeClass(id);
+	set<string> nodeClassNameSet;
+	nodeClassNameSet.insert(nodeClassName);
+	loadModulesIfNeeded(nodeClassNameSet);
+
+	VuoCompilerNodeClass *nodeClass = combinedEnvironment.getNodeClass(nodeClassName);
 	if (nodeClass)
 		return nodeClass;
 
-	VuoNodeClass *baseNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(id, this, llvmQueue);
+	set<ModuleInfo> knownModuleInfos = combinedEnvironment.listAllModules();
+	set<string> knownModuleKeys;
+	for (set<ModuleInfo>::iterator i = knownModuleInfos.begin(); i != knownModuleInfos.end(); ++i)
+		knownModuleKeys.insert((*i).moduleKey);
+
+	VuoNodeClass *baseNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(nodeClassName, this, llvmQueue, knownModuleKeys);
 	if (baseNodeClass)
 	{
 		if (static_cast<VuoCompilerSpecializedNodeClass *>(baseNodeClass->getCompiler())->isFullySpecialized())
 			combinedEnvironment.addNodeClassToCombinedEnvironment( baseNodeClass->getCompiler(), &myEnvironment, getSharedEnvironment() );
 
 		set<string> dependencies = baseNodeClass->getCompiler()->getDependencies();
-		modulesToLoad.insert(dependencies.begin(), dependencies.end());
-		loadModulesIfNeeded();
+		loadModulesIfNeeded(dependencies);
 
 		return baseNodeClass->getCompiler();
 	}
@@ -2926,7 +3226,7 @@ VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &id)
 }
 
 /**
- * Returns a map linking a string representation of a node class's name to its VuoCompilerNodeClass instance.
+ * Returns all node classes found and loaded, indexed by node class name.
  *
  * The node class modules are loaded if they haven't been already.
  */
@@ -2938,23 +3238,21 @@ map<string, VuoCompilerNodeClass *> VuoCompiler::getNodeClasses()
 }
 
 /**
- * Looks up the VuoCompilerType for the port type specified by @a id.
+ * Returns the type specified by @a typeName, or null if it can't be found or loaded.
  *
- * The port type module is loaded or generated if it haven't been already.
+ * The type module is loaded or generated if it haven't been already.
  */
-VuoCompilerType * VuoCompiler::getType(const string &id)
+VuoCompilerType * VuoCompiler::getType(const string &typeName)
 {
-	dispatch_sync(modulesToLoadQueue, ^{
-					  if (! shouldLoadAllModules)
-						  modulesToLoad.insert(id);
-				  });
-	loadModulesIfNeeded();
+	set<string> typeNameSet;
+	typeNameSet.insert(typeName);
+	loadModulesIfNeeded(typeNameSet);
 
-	VuoCompilerType *type = combinedEnvironment.getType(id);
+	VuoCompilerType *type = combinedEnvironment.getType(typeName);
 
-	if (! type && VuoGenericType::isGenericTypeName(id))
+	if (! type && VuoGenericType::isGenericTypeName(typeName))
 	{
-		VuoGenericType *genericType = new VuoGenericType(id, vector<string>());
+		VuoGenericType *genericType = new VuoGenericType(typeName, vector<string>());
 		type = VuoCompilerGenericType::newGenericType(genericType, this);
 	}
 
@@ -2962,7 +3260,7 @@ VuoCompilerType * VuoCompiler::getType(const string &id)
 }
 
 /**
- * Returns a map linking a string representation of a type's id to its VuoCompilerType instance.
+ * Returns all types found and loaded, indexed by type name.
  *
  * The type modules are loaded if they haven't been already.
  */
@@ -2974,7 +3272,31 @@ map<string, VuoCompilerType *> VuoCompiler::getTypes()
 }
 
 /**
- * Looks up the VuoNodeSet with the given @c name.
+ * Returns all libraries found and loaded, indexed by key.
+ *
+ * The libraries are loaded if they haven't been already.
+ */
+map<string, VuoCompilerModule *> VuoCompiler::getLibraryModules()
+{
+	loadModulesIfNeeded();
+
+	return combinedEnvironment.getLibraryModules();
+}
+
+/**
+ * Returns all node sets found and loaded, indexed by type name.
+ *
+ * The node class modules are loaded if they haven't been already.
+ */
+map<string, VuoNodeSet *> VuoCompiler::getNodeSets()
+{
+	loadModulesIfNeeded();
+
+	return combinedEnvironment.getNodeSets();
+}
+
+/**
+ * Returns the node set with the given @a name, or null if it can't be found.
  *
  * The node class modules are loaded if they haven't been already.
  */
@@ -2986,29 +3308,11 @@ VuoNodeSet * VuoCompiler::getNodeSetForName(const string &name)
 }
 
 /**
- * Looks up the VuoCompilerNodeClass, VuoCompilerType, or VuoCompilerModule specified by @a id.
+ * Looks up the VuoCompilerNodeClass, VuoCompilerType, or VuoCompilerModule specified by @a moduleKey.
  */
-VuoCompilerModule * VuoCompiler::getModule(const string &id)
+VuoCompilerModule * VuoCompiler::getModule(const string &moduleKey)
 {
-	VuoCompilerModule *module = NULL;
-
-	VuoCompilerNodeClass *nodeClass = combinedEnvironment.getNodeClass(id);
-	if (nodeClass)
-		module = nodeClass;
-	else
-	{
-		VuoCompilerType *type = combinedEnvironment.getType(id);
-		if (type)
-			module = type;
-		else
-		{
-			VuoCompilerModule *libraryModule = combinedEnvironment.getLibraryModule(id);
-			if (libraryModule)
-				module = libraryModule;
-		}
-	}
-
-	return module;
+	return combinedEnvironment.findModule(moduleKey);
 }
 
 /**

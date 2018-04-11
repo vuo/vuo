@@ -87,7 +87,6 @@ private slots:
 		QTest::newRow("Fast-firing enqueue trigger with slow nodes downstream") << "FastEnqueueSlowOutgoing" << "FirePeriodically1" << false;
 		QTest::newRow("Fast-firing drop trigger with slow nodes downstream") << "FastDropSlowOutgoing" << "FirePeriodically1" << true;
 		QTest::newRow("Slow-firing drop trigger with no outgoing cables") << "SlowDropNoOutgoing" << "FirePeriodically1" << false;
-		QTest::newRow("Slow-firing drop trigger not overlapping with other trigger") << "SlowDropNoOverlap" << "FirePeriodically1" << false;
 	}
 	void testWhetherEventsDropped()
 	{

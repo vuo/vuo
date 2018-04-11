@@ -16,6 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "backdrop", "background", "ramp", "interpolate", "color" ],
 					  "version" : "1.0.1",
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "MoveLinearGradient.vuo" ]
 					  }
 				 });
@@ -23,19 +24,12 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_makeLinearGradientShader();
 	VuoRetain(instance->shader);
@@ -55,15 +49,13 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader_setLinearGradientShaderValues((*instance)->shader, colors, start, end, noiseAmount);
+	VuoShader_setLinearGradientShaderValues((*instance)->shader, colors, start, end, 1, noiseAmount);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
+	*image = VuoImageRenderer_render((*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

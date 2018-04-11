@@ -28,8 +28,6 @@ VuoModuleMetadata({
 typedef struct
 {
 	VuoShader shader;
-	VuoGlContext context;
-	VuoImageRenderer imageRenderer;
 } VuoImageBlend_internal;
 
 /**
@@ -39,8 +37,6 @@ void VuoImageBlend_free(void *blend)
 {
 	VuoImageBlend_internal *bi = (VuoImageBlend_internal *)blend;
 	VuoRelease(bi->shader);
-	VuoRelease(bi->imageRenderer);
-	VuoGlContext_disuse(bi->context);
 }
 
 /**
@@ -69,11 +65,6 @@ VuoImageBlend VuoImageBlend_make(void)
 	bi->shader = VuoShader_make("Blend Image Shader");
 	VuoRetain(bi->shader);
 	VuoShader_addSource(bi->shader, VuoMesh_IndividualTriangles, NULL, NULL, shaderSource);
-
-	bi->context = VuoGlContext_use();
-
-	bi->imageRenderer = VuoImageRenderer_make(bi->context);
-	VuoRetain(bi->imageRenderer);
 
 	return (VuoImageBlend)bi;
 }
@@ -115,7 +106,7 @@ VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoList_VuoImage images)
 		factor *= ((double)i - 1.) / i;
 		VuoShader_setUniform_VuoReal (bi->shader, "factor",		factor);
 
-		VuoImage b = VuoImageRenderer_draw(bi->imageRenderer, bi->shader, blendedImage->pixelsWide, blendedImage->pixelsHigh, cd);
+		VuoImage b = VuoImageRenderer_render(bi->shader, blendedImage->pixelsWide, blendedImage->pixelsHigh, cd);
 		VuoRetain(b);
 		VuoRelease(blendedImage);
 		blendedImage = b;

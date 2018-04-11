@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Launch App",
 					 "keywords" : [ "execute", "run", "start", "open", "application" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoAppLaunch"
 					 ],
@@ -26,9 +26,10 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoText, {"name":"URL", "default":"/Applications/Calculator.app"}) url,
-		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent
+		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
+		VuoInputData(VuoBoolean, {"default":true}) activate
 )
 {
 	if (urlEvent)
-		VuoAppLaunch_launch(url);
+		VuoAppLaunch_launch(url, activate);
 }

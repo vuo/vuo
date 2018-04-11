@@ -25,6 +25,7 @@ class VuoCompilerModule
 private:
 	VuoCompilerTargetSet compatibleTargets;  ///< The set of targets with which this module is compatible.
 	bool builtIn;
+	string modulePath;  ///< The file from which the LLVM module was loaded, if any.
 
 	static bool isModule(Module *module, string moduleKey);
 
@@ -51,9 +52,10 @@ protected:
 	void renameGlobalVarsAndFuncs(void);
 
 	friend class TestVuoCompilerModule;
+	friend class TestModules;
 
 public:
-	static VuoCompilerModule * newModule(string moduleKey, Module *module);
+	static VuoCompilerModule * newModule(const string &moduleKey, Module *module, const string &modulePath);
 	virtual ~VuoCompilerModule(void);
 
 	VuoCompilerTargetSet parseTargetSet(json_object *o, string key);
@@ -68,4 +70,5 @@ public:
 	void setPremium(bool premium);
 	bool isBuiltIn(void);
 	void setBuiltIn(bool builtIn);
+	string getModulePath(void);
 };

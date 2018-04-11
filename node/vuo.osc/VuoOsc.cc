@@ -271,6 +271,7 @@ class VuoOscInSocket : public UdpSocket
 	CFNetServiceRef netService;
 	int uses = 0;
 	bool stopping = false;
+	dispatch_queue_t queue;
 
 public:
 	/**
@@ -337,11 +338,13 @@ public:
 
 		mux_.AttachSocketListener(this, listener_);
 
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		netService = VuoOsc_createNetService(name, Port(), true);
+
+		queue = dispatch_queue_create("org.vuo.osc.receive", NULL);
+
+		dispatch_async(queue, ^{
 						   listenForMessages();
 					   });
-
-		netService = VuoOsc_createNetService(name, Port(), true);
 	}
 
 	/**
@@ -386,6 +389,9 @@ public:
 			stopping = true;
 			mux_.AsynchronousBreak();
 			mux_.DetachSocketListener(this, listener_);
+
+			dispatch_sync(queue, ^{});
+			dispatch_release(queue);
 		}
 
 		delete listener_;
@@ -432,7 +438,7 @@ VuoOscIn VuoOscIn_make(const VuoOscInputDevice device)
 	{
 		if (VuoOscInPool.find(oii->device.port) == VuoOscInPool.end())
 		{
-//			VLog("No socket found for port %d; creating one.", oii->device.port);
+//			VLog("No socket found for port %lld; creating one.", oii->device.port);
 			VuoOscInPacketListener *listener = new VuoOscInPacketListener;
 			IpEndpointName endpoint(IpEndpointName::ANY_ADDRESS, oii->device.port==0 ? IpEndpointName::ANY_PORT : oii->device.port);
 			VuoOscInSocket *socket = new VuoOscInSocket(endpoint, listener, (char *)oii->device.name);
@@ -507,7 +513,7 @@ void VuoOscIn_destroy(VuoOscIn oi)
 		VuoOscInPool[oii->device.port]->disuse();
 		if (!VuoOscInPool[oii->device.port]->useCount())
 		{
-//			VLog("Deleting socket for port %d.", oii->port);
+//			VLog("Deleting socket for port %lld.", oii->device.port);
 			std::map<unsigned int, VuoOscInSocket *>::iterator it = VuoOscInPool.find(oii->device.port);
 			delete it->second;
 			VuoOscInPool.erase(it);

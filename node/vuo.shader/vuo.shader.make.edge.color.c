@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Shade Edges with Color",
+					  "title" : "Make Edge Shader",
 					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						  "rim", "glow", "ghost", "trace", "cartoon" ],
 					  "version" : "1.0.0",

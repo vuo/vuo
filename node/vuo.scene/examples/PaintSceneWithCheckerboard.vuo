@@ -22,7 +22,7 @@ MakeList7 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make Lis
 MakeList8 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="189,40" _1="8.000000"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="235,29"];
 RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="930,227" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="279,345" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="279,345" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="254,198" _keepFront="true"];
 
 ChangeAllShaders:shadedObject -> MakeList7:1;

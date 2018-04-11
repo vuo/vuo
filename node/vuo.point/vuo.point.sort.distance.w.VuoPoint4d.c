@@ -8,30 +8,19 @@
  */
 
 #include "node.h"
+#include "VuoSort.h"
 
 VuoModuleMetadata({
 					  "title" : "Sort Points by W Distance",
 					  "keywords" : [ "organize", "order", "nearest" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
+					  "dependencies" : [
+						  "VuoSort"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  }
 				  });
-
-typedef struct
-{
-	int index;
-	float value;
-} sortable_pointValue;
-
-
-static int compare (const void * a, const void * b)
-{
-	sortable_pointValue *x = (sortable_pointValue*)a;
-	sortable_pointValue *y = (sortable_pointValue*)b;
-
-	return (x->value - y->value);
-}
 
 void nodeEvent
 (
@@ -40,17 +29,17 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoPoint4d) sorted
 )
 {
-	*sorted = VuoListCreate_VuoPoint4d();
+	VuoPoint4d *points = VuoListGetData_VuoPoint4d(list);
+	unsigned long count = VuoListGetCount_VuoPoint4d(list);
 
-	int count = VuoListGetCount_VuoPoint4d(list);
+	VuoIndexedFloat *distances = (VuoIndexedFloat *)malloc(count * sizeof(VuoIndexedFloat));
+	for (unsigned long i = 0; i < count; ++i)
+		distances[i] = (VuoIndexedFloat){i, fabs(points[i].w - point.w)};
 
-	sortable_pointValue pointValues[count];
+	*sorted = VuoListCopy_VuoPoint4d(list);
+	VuoPoint4d *sortedPoints = VuoListGetData_VuoPoint4d(*sorted);
 
-	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoPoint4d(list, i+1).w - point.w)};
+	VuoSort_sortArrayByOtherArray(sortedPoints, count, sizeof(VuoPoint4d), distances);
 
-	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
-
-	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoPoint4d(*sorted, VuoListGetValue_VuoPoint4d(list, pointValues[i].index+1) );
+	free(distances);
 }

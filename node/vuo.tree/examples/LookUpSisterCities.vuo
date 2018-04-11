@@ -1,0 +1,58 @@
+/**
+ * @file
+ * Queries a web service that provides information about the sister cities of Honolulu. Information about the data set is at [https://data.honolulu.gov/dataset/Sister-Cities/pvti-pwka](https://data.honolulu.gov/dataset/Sister-Cities/pvti-pwka).
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1185,-15" _separator="\"\\n\""];
+FetchXMLTree [type="vuo.tree.fetch.xml" version="1.0.0" label="Fetch XML Tree|<refresh>refresh\l|<url>url\l|<includeWhitespace>includeWhitespace\l|<tree>tree\r" pos="150,-15" fillcolor="violet" _url="\"https:\\/\\/data.honolulu.gov\\/api\\/views\\/pvti-pwka\\/rows.xml?accessType=DOWNLOAD\"" _includeWhitespace="false"];
+FindSubtreesWithContent [type="vuo.tree.find.content" version="1.0.0" label="Find Subtrees with Content|<refresh>refresh\l|<tree>tree\l|<content>content\l|<comparison>comparison\l|<includeDescendants>includeDescendants\l|<foundTrees>foundTrees\r" pos="690,-15" fillcolor="violet" _comparison="{\"type\":\"contains\",\"isCaseSensitive\":false}" _includeDescendants="true"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-210,-90" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetTreeContent6 [type="vuo.tree.get.content" version="1.0.0" label="Get Tree Content|<refresh>refresh\l|<tree>tree\l|<includeDescendants>includeDescendants\l|<content>content\r" pos="960,90" fillcolor="violet" _includeDescendants="false"];
+MakeButton [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="105,150" _label="\"Japan\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.48546579480171204,\"g\":0.59166854619979858,\"b\":0.016571298241615295,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0,\"y\":0.20000000298023224}" _width="0.4" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeButton2 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="105,345" _label="\"Philippines\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.070679791271686554,\"g\":0.55234605073928833,\"b\":0.53646141290664673,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0.5,\"y\":0.20000000298023224}" _width="0.4" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeButton3 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="105,540" _label="\"Kenya\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":1,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":-0.5,\"y\":0.20000000298023224}" _width="0.4" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1797,-139" fillcolor="green"];
+MakeList29 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1757,-169" fillcolor="green"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="135,-195" _text="\"Honolulu's Sister Cities in:\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":0.5}"];
+MakeTextLayer5 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1575,-120" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.20000000298023224}"];
+ProcessList6 [type="vuo.list.process.VuoTree.VuoText" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="930,-15" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1830,-180" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SelectLatest2 [type="vuo.select.latest.8.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="420,165" _option1="\"*\"" _option2="\"Japan\"" _option3="\"Philippines\"" _option4="\"Kenya\"" _option5="\"\"" _option8="\"\""];
+SelectLatest3 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1350,-120" _option1="\"Downloading…\""];
+
+AppendTexts:compositeText -> SelectLatest3:option2;
+FetchXMLTree:tree -> FindSubtreesWithContent:tree;
+FetchXMLTree:tree -> SelectLatest2:option1 [event=true];
+FindSubtreesWithContent:foundTrees -> ProcessList6:fire;
+FireOnStart:started -> FetchXMLTree:refresh;
+FireOnStart:started -> MakeButton2:refresh;
+FireOnStart:started -> MakeButton3:refresh;
+FireOnStart:started -> MakeButton:refresh;
+FireOnStart:started -> MakeTextLayer3:refresh;
+FireOnStart:started -> SelectLatest3:option1;
+GetTreeContent6:content -> ProcessList6:processedItem;
+MakeButton2:pressed -> SelectLatest2:option3;
+MakeButton2:updatedLayer -> MakeList29:3;
+MakeButton3:pressed -> SelectLatest2:option4;
+MakeButton3:updatedLayer -> MakeList29:4;
+MakeButton:pressed -> SelectLatest2:option2;
+MakeButton:updatedLayer -> MakeList29:2;
+MakeList29:list -> RenderLayersToWindow:layers;
+MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer3:layer -> MakeList29:1;
+MakeTextLayer5:layer -> MakeList29:5;
+ProcessList6:processItem -> GetTreeContent6:tree;
+ProcessList6:processedList -> AppendTexts:texts;
+RenderLayersToWindow:renderedLayers -> MakeButton2:renderedLayers [style=invis];
+RenderLayersToWindow:renderedLayers -> MakeButton3:renderedLayers [style=invis];
+RenderLayersToWindow:renderedLayers -> MakeButton:renderedLayers [style=invis];
+SelectLatest2:latest -> FindSubtreesWithContent:content;
+SelectLatest3:latest -> MakeTextLayer5:text;
+}

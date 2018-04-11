@@ -12,6 +12,8 @@
 #include <string>
 
 #include "VuoSceneRenderer.h"
+
+#include "VuoCglPixelFormat.h"
 #include "VuoSceneObject.h"
 #include "VuoGlPool.h"
 #include "VuoImageText.h"
@@ -43,7 +45,7 @@ VuoModuleMetadata({
 						 "VuoSceneObject",
 						 "VuoText",
 						 "VuoList_VuoSceneObject",
-						 "VuoGLContext"
+						 "VuoGlContext"
 					 ]
 				 });
 #endif
@@ -57,9 +59,8 @@ static bool VuoProfileSort(const VuoProfileEntry &first, const VuoProfileEntry &
 }
 #endif
 
-typedef std::list<GLuint> VuoSceneRendererVAOList;	///< The VAO for each VuoSubmesh
 typedef std::pair<void *, void *> VuoSceneRendererMeshShader;	///< A VuoMesh/VuoShader combination
-typedef std::map<VuoSceneRendererMeshShader, VuoSceneRendererVAOList> VuoSceneRendererMeshShaderVAOs;	///< The VAO for each VuoMesh/VuoShader combination
+typedef std::map<VuoSceneRendererMeshShader, GLuint> VuoSceneRendererMeshShaderVAOs; ///< The VAO for each VuoMesh/VuoShader combination
 
 /**
  * GL Objects corresponding with a VuoSceneObject instance.
@@ -67,7 +68,7 @@ typedef std::map<VuoSceneRendererMeshShader, VuoSceneRendererVAOList> VuoSceneRe
 class VuoSceneRendererInternal_object
 {
 public:
-	VuoSceneRendererVAOList meshItems;	///< VAOs for each submesh.
+	GLuint vao; ///< This VuoSceneObject's VAO.
 
 	VuoMesh overrideMesh;	///< If non-null, this mesh is rendered instead of the actual object's mesh.
 	enum
@@ -77,7 +78,8 @@ public:
 	} overrideIsRealSize;	///< If not Inherit, this overrides the actual object's isRealSize property.
 	VuoShader overrideShader;	///< If non-null, this shader is rendered instead of the actual object's shader.
 
-	std::list<VuoSceneRendererInternal_object> childObjects;	///< Hierarchy
+	unsigned long childObjectCount; ///< Size of `childObjects`
+	VuoSceneRendererInternal_object *childObjects; ///< Hierarchy
 };
 
 /**
@@ -117,29 +119,109 @@ public:
 	VuoList_VuoSceneObject pointLights;
 	VuoList_VuoSceneObject spotLights;
 
-	VuoGlContext glContext;
+	GLint glContextRendererID;
+
+	/**
+	 * Store OpenGL state locally so we can change only when necessary,
+	 * since calling glEnable/Disable marks the state dirty even if the state was unchanged.
+	 */
+	struct glState
+	{
+		bool vGL_DEPTH_MASK;
+		bool vGL_DEPTH_TEST;
+
+		bool vGL_CULL_FACE;
+		GLenum vGL_CULL_FACE_MODE;
+
+		GLenum vGL_BLEND_SRC_RGB;
+		GLenum vGL_BLEND_DST_RGB;
+		GLenum vGL_BLEND_SRC_ALPHA;
+		GLenum vGL_BLEND_DST_ALPHA;
+
+		GLenum vGL_BLEND_EQUATION_RGB;
+		GLenum vGL_BLEND_EQUATION_ALPHA;
+
+		bool vGL_SAMPLE_ALPHA_TO_COVERAGE;
+		bool vGL_SAMPLE_ALPHA_TO_ONE;
+	} glState;
 
 #ifdef PROFILE
 	std::list<VuoProfileEntry> profileTimes;	///< How long each object took to render.
 #endif
 };
 
-void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
+/**
+ * Ensures the specified OpenGL `cap`ability is set to `value` (avoiding a state change if possible).
+ */
+#define VuoSceneRenderer_setGL(cap, value) \
+	do { \
+		if (sceneRenderer->glState.v ## cap != value) \
+		{ \
+			if (value) \
+				glEnable(cap); \
+			else \
+				glDisable(cap); \
+			sceneRenderer->glState.v ## cap = value; \
+		} \
+	} while(0)
 
 /**
- * Configures OpenGL state for the specified context.
- *
- * @threadAnyGL
+ * Ensures the OpenGL depth mask is set to `value` (avoiding a state change if possible).
  */
-static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
-{
-	glEnable(GL_DEPTH_TEST);
+#define VuoSceneRenderer_setGLDepthMask(value) \
+	do { \
+		if (sceneRenderer->glState.vGL_DEPTH_MASK != value) \
+		{ \
+			glDepthMask(value); \
+			sceneRenderer->glState.vGL_DEPTH_MASK = value; \
+		} \
+	} while(0)
 
-	/// @see VuoImageRenderer_make
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glBlendEquation(GL_FUNC_ADD);
-}
+/**
+ * Ensures the OpenGL face culling mode is set to `value` (avoiding a state change if possible).
+ */
+#define VuoSceneRenderer_setGLFaceCulling(value) \
+	do { \
+		if (sceneRenderer->glState.vGL_CULL_FACE_MODE != value) \
+		{ \
+			glCullFace(value); \
+			sceneRenderer->glState.vGL_CULL_FACE_MODE = value; \
+		} \
+	} while(0)
+
+/**
+ * Ensures the OpenGL blend function is set to the specified values (avoiding a state change if possible).
+ */
+#define VuoSceneRenderer_setGLBlendFunction(srcRGB, dstRGB, srcAlpha, dstAlpha) \
+	do { \
+		if (sceneRenderer->glState.vGL_BLEND_SRC_RGB   != srcRGB    \
+		 || sceneRenderer->glState.vGL_BLEND_DST_RGB   != dstRGB    \
+		 || sceneRenderer->glState.vGL_BLEND_SRC_ALPHA != srcAlpha  \
+		 || sceneRenderer->glState.vGL_BLEND_DST_ALPHA != dstAlpha) \
+		{ \
+			glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha); \
+			sceneRenderer->glState.vGL_BLEND_SRC_RGB   = srcRGB;   \
+			sceneRenderer->glState.vGL_BLEND_DST_RGB   = dstRGB;   \
+			sceneRenderer->glState.vGL_BLEND_SRC_ALPHA = srcAlpha; \
+			sceneRenderer->glState.vGL_BLEND_DST_ALPHA = dstAlpha; \
+		} \
+	} while(0)
+
+/**
+ * Ensures the OpenGL blend equation is set to the specified values (avoiding a state change if possible).
+ */
+#define VuoSceneRenderer_setGLBlendEquation(modeRGB, modeAlpha) \
+	do { \
+		if (sceneRenderer->glState.vGL_BLEND_EQUATION_RGB   != modeRGB    \
+		 || sceneRenderer->glState.vGL_BLEND_EQUATION_ALPHA != modeAlpha) \
+		{ \
+			glBlendEquationSeparate(modeRGB, modeAlpha); \
+			sceneRenderer->glState.vGL_BLEND_EQUATION_RGB = modeRGB; \
+			sceneRenderer->glState.vGL_BLEND_EQUATION_ALPHA = modeAlpha; \
+		} \
+	} while(0)
+
+void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
 
 static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache);
 
@@ -152,9 +234,9 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
  *
  * @threadAny
  */
-VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor)
+VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 {
-	VDebugLog("backingScaleFactor=%g", backingScaleFactor);
+//	VDebugLog("backingScaleFactor=%g", backingScaleFactor);
 	VuoSceneRendererInternal *sceneRenderer = new VuoSceneRendererInternal;
 	VuoRegister(sceneRenderer, VuoSceneRenderer_destroy);
 
@@ -166,17 +248,20 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScal
 	sceneRenderer->cameraName = NULL;
 	sceneRenderer->camera = VuoSceneObject_makeDefaultCamera();
 	VuoSceneObject_retain(sceneRenderer->camera);
-	sceneRenderer->glContext = glContext;
 	sceneRenderer->backingScaleFactor = backingScaleFactor;
 	sceneRenderer->viewportWidth = 0;
 	sceneRenderer->viewportHeight = 0;
 
-	sceneRenderer->vignetteShader = NULL;
+	// sceneRenderer->glState gets initialized in VuoSceneRenderer_draw.
+
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		sceneRenderer->vignetteShader = NULL;
 #if LIBRARY_PREMIUM_AVAILABLE
-	VuoSceneRendererPremium_init(sceneRenderer);
+		VuoSceneRendererPremium_init(sceneRenderer, cgl_ctx);
 #endif
 
-	VuoSceneRenderer_prepareContext((CGLContextObj)glContext);
+		CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &sceneRenderer->glContextRendererID);
+	});
 
 	return (VuoSceneRenderer)sceneRenderer;
 }
@@ -191,7 +276,7 @@ static void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRenderer
  */
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sr, unsigned int width, unsigned int height)
 {
-	VDebugLog("%dx%d", width, height);
+//	VDebugLog("%dx%d", width, height);
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
@@ -365,6 +450,104 @@ static void VuoSceneRenderer_addUniformSuffix(char *address, int i, const char *
 }
 
 /**
+ * Checks to ensure the currently-active VBO is correctly configured.
+ *
+ * This is time-consuming (since it downloads data from the GPU), so it should be used sparingly (e.g., in debug mode).
+ */
+void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh, GLuint positionAttribute)
+{
+	GLint enabled = -1;
+	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+	if (enabled != 1)
+	{
+		VUserLog("Error: Vertex attrib array isn't enabled.");
+		return;
+	}
+
+	GLint vaovbo = -1;
+	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &vaovbo);
+	if (vaovbo != (GLint)submesh.glUpload.combinedBuffer)
+		VUserLog("Error: GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING (%d) doesn't match submesh's VBO (%d).", vaovbo, submesh.glUpload.combinedBuffer);
+
+	GLint vertexBufferBound = -1;
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vertexBufferBound);
+	if (vertexBufferBound)
+		VUserLog("Error: GL_ARRAY_BUFFER_BINDING is %d (it should probably be 0, since we're using a VAO).", vertexBufferBound);
+
+	GLint elementBufferBound = -1;
+	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementBufferBound);
+	if (submesh.elementCount && !elementBufferBound)
+		VUserLog("Error: GL_ELEMENT_ARRAY_BUFFER_BINDING is 0 (it should be nonzero, since we're trying to draw elements).");
+
+	GLint combinedBufferSize = -1;
+	glBindBuffer(GL_ARRAY_BUFFER, submesh.glUpload.combinedBuffer);
+	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &combinedBufferSize);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	if (combinedBufferSize < 4)
+		VUserLog("Error: combinedBuffer is unrealistically small (%d bytes).", combinedBufferSize);
+
+	GLint attribStride = -1;
+	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &attribStride);
+
+	GLint attribComponents = -1;
+	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_SIZE, &attribComponents);
+
+	GLint attribType = -1;
+	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_TYPE, &attribType);
+
+	void *attribBase = (void *)0;
+	glGetVertexAttribPointerv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_POINTER, &attribBase);
+
+	unsigned int bytesPerComponent;
+	if (attribType == GL_UNSIGNED_INT)
+		bytesPerComponent = 1;
+	else if (attribType == GL_FLOAT)
+		bytesPerComponent = 4;
+	else
+	{
+		VUserLog("Error: Unknown combinedBuffer type %s.", VuoGl_stringForConstant((GLenum)attribType));
+		return;
+	}
+
+	unsigned int minIndex = 0;
+	unsigned int maxIndex = 0;
+	if (submesh.elementCount)
+	{
+		if (submesh.glUpload.elementBufferSize != submesh.elementCount * sizeof(unsigned int))
+			VUserLog("Error: elementBufferSize doesn't match elementCount.");
+
+		unsigned int *b = (unsigned int *)malloc(submesh.glUpload.elementBufferSize);
+		glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, submesh.glUpload.elementBufferSize, b);
+
+		for (unsigned int i = 0; i < submesh.elementCount; ++i)
+		{
+			if (b[i] > maxIndex)
+				maxIndex = b[i];
+			if (b[i] < minIndex)
+				minIndex = b[i];
+		}
+
+		free(b);
+	}
+	else
+		maxIndex = submesh.vertexCount - 1;
+
+	long startWithinVBO = (long)attribBase + (unsigned int)attribStride * minIndex;
+	long   endWithinVBO = (long)attribBase +(unsigned int) attribStride * maxIndex + (unsigned int)attribComponents * bytesPerComponent;
+
+	if (startWithinVBO < 0)
+		VUserLog("Error: start < 0");
+	if (endWithinVBO < 0)
+		VUserLog("Error: end < 0");
+	if (startWithinVBO > endWithinVBO)
+		VUserLog("Error: start > end");
+	if (endWithinVBO > combinedBufferSize)
+		VUserLog("Error: end > combinedBufferSize");
+
+	VGL();
+}
+
+/**
  * Draws @c so (using the uploaded object names in @c soi).
  * Does not traverse child objects.
  *
@@ -372,7 +555,7 @@ static void VuoSceneRenderer_addUniformSuffix(char *address, int i, const char *
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
+static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
 {
 	// Apply the overrides just within this function's scope.
 	if (soi->overrideMesh)
@@ -390,7 +573,7 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 	if (so.isRealSize && !image)
 		return;
 
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 #ifdef PROFILE
 	GLuint timeElapsedQuery;
@@ -413,9 +596,14 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 	}
 #endif
 
+	GLint positionAttribute;
+	if (VuoIsDebugEnabled())
+		VuoShader_getAttributeLocations(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx, &positionAttribute, NULL, NULL, NULL, NULL);
+
+
 	// All VuoSubmeshes are assumed to have the same elementAssemblyMethod.
 	VuoGlProgram program;
-	if (!VuoShader_activate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, sceneRenderer->glContext, &program))
+	if (!VuoShader_activate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx, &program))
 	{
 		VUserLog("Shader activation failed.");
 		return;
@@ -434,7 +622,7 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		if (so.isRealSize)
 		{
 			float billboardMatrix[16];
-			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, sceneRenderer->backingScaleFactor, billboardMatrix);
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, sceneRenderer->backingScaleFactor, so.mesh->submeshes[0].positions[0].x, billboardMatrix);
 			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, billboardMatrix);
 		}
 		else
@@ -556,47 +744,52 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 			}
 		}
 
-		if (so.shader->isTransparent)
-			glDepthMask(false);
+		VuoSceneRenderer_setGLDepthMask(!so.shader->isTransparent);
 
-		if (so.blendMode != VuoBlendMode_Normal)
+		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_COVERAGE, so.shader->useAlphaAsCoverage);
+		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_ONE,      so.shader->useAlphaAsCoverage);
+
+		if (so.blendMode == VuoBlendMode_Normal)
 		{
-			glDisable(GL_DEPTH_TEST);
+			VuoSceneRenderer_setGL(GL_DEPTH_TEST, true);
+			VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
+		}
+		else
+		{
+			VuoSceneRenderer_setGL(GL_DEPTH_TEST, false);
 
 			if (so.blendMode == VuoBlendMode_Multiply)
 			{
-				glBlendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				glBlendEquation(GL_FUNC_ADD);
+				VuoSceneRenderer_setGLBlendFunction(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_DarkerComponents)
 			{
 				/// @todo https://b33p.net/kosada/node/12014
-				glBlendFunc(GL_ONE, GL_ONE);
-				glBlendEquationSeparate(GL_MIN, GL_FUNC_ADD);
+				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+				VuoSceneRenderer_setGLBlendEquation(GL_MIN, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_LighterComponents)
 			{
-				glBlendFuncSeparate(GL_ZERO, GL_ZERO, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				glBlendEquationSeparate(GL_MAX, GL_FUNC_ADD);
+				VuoSceneRenderer_setGLBlendFunction(GL_ZERO, GL_ZERO, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				VuoSceneRenderer_setGLBlendEquation(GL_MAX, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_LinearDodge)
 			{
-				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				glBlendEquation(GL_FUNC_ADD);
+				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_Subtract)
 			{
-				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				glBlendEquationSeparate(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
+				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 			}
 		}
 
-		unsigned int i = 0;
-		for (VuoSceneRendererVAOList::iterator vi = soi->meshItems.begin(); vi != soi->meshItems.end(); ++vi, ++i)
-		{
-			glBindVertexArray(*vi);
+			glBindVertexArray(soi->vao);
 
-			VuoSubmesh submesh = so.mesh->submeshes[i];
+			VuoSubmesh submesh = so.mesh->submeshes[0];
 			GLenum mode = VuoSubmesh_getGlMode(submesh);
 
 			GLint hasTextureCoordinatesUniform = VuoGlProgram_getUniformLocation(program, "hasTextureCoordinates");
@@ -607,12 +800,15 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 			if (primitiveHalfSizeUniform != -1)
 				glUniform1f(primitiveHalfSizeUniform, submesh.primitiveSize/2);
 
-			if (submesh.faceCullingMode == GL_NONE || so.shader->isTransparent)
-				glDisable(GL_CULL_FACE);
-			else
+			bool enableCulling = submesh.faceCullingMode != GL_NONE && !so.shader->isTransparent;
+			VuoSceneRenderer_setGL(GL_CULL_FACE, enableCulling);
+			if (enableCulling)
+				VuoSceneRenderer_setGLFaceCulling(submesh.faceCullingMode);
+
+			if (VuoIsDebugEnabled())
 			{
-				glEnable(GL_CULL_FACE);
-				glCullFace(submesh.faceCullingMode);
+				VGL();
+				VuoSceneRenderer_checkDataBounds(cgl_ctx, submesh, positionAttribute);
 			}
 
 			unsigned long completeInputElementCount = VuoSubmesh_getCompleteElementCount(submesh);
@@ -622,23 +818,10 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 				glDrawArrays(mode, 0, completeInputElementCount);
 
 			glBindVertexArray(0);
-		}
-
-		if (so.blendMode != VuoBlendMode_Normal)
-		{
-			glEnable(GL_DEPTH_TEST);
-
-			/// @see VuoSceneRenderer_prepareContext
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			glBlendEquation(GL_FUNC_ADD);
-		}
-
-		if (so.shader->isTransparent)
-			glDepthMask(true);
 	}
-	VuoShader_deactivate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, sceneRenderer->glContext);
+	VuoShader_deactivate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx);
 
-#ifdef _PROFILE
+#ifdef PROFILE
 	double seconds;
 	if (macMinorVersion < 9)
 	{
@@ -663,34 +846,62 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 //static void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length);
 
 /**
+ * State for rendering an object at its particular place in the hierarchy.
+ */
+typedef struct
+{
+	VuoSceneObject *so;
+	VuoSceneRendererInternal_object *soi;
+	float modelviewMatrix[16];
+} VuoSceneRenderer_treeRenderState;
+
+/**
  * Draws @c so and its child objects.
  *
  * Must be called while scenegraphSemaphore is locked.
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
+static void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
 {
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-	float compositeModelviewMatrix[16];
-	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, sceneRenderer);
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 0, .08f);	// Normals
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 1, .08f);	// Tangents
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 2, .08f);	// Bitangents
+	VuoSceneRenderer_treeRenderState rootState;
+	rootState.so = &sceneRenderer->rootSceneObject;
+	rootState.soi = &sceneRenderer->rootSceneObjectInternal;
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), rootState.modelviewMatrix);
 
-	unsigned int i = 1;
-	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
+	std::list<VuoSceneRenderer_treeRenderState> objectsToRender(1, rootState);
+	while (!objectsToRender.empty())
 	{
-		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, sceneRenderer);
+		VuoSceneRenderer_treeRenderState currentState = objectsToRender.front();
+		objectsToRender.pop_front();
+
+		float localModelviewMatrix[16];
+		VuoTransform_getMatrix(currentState.so->transform, localModelviewMatrix);
+		float compositeModelviewMatrix[16];
+		VuoTransform_multiplyMatrices4x4(localModelviewMatrix, currentState.modelviewMatrix, compositeModelviewMatrix);
+
+		VuoSceneRenderer_drawSceneObject(*currentState.so, currentState.soi, sceneRenderer->projectionMatrix, compositeModelviewMatrix, sceneRenderer, glContext);
+//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 0, .08f);	// Normals
+//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 1, .08f);	// Tangents
+//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 2, .08f);	// Bitangents
+
+		// Prepend childObjects to the objectsToRender queue.
+		// (Do it in reverse order so the objects end up in forward order after calling ::push_front repeatedly.)
+		VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(currentState.so->childObjects);
+		for (long i = VuoListGetCount_VuoSceneObject(currentState.so->childObjects) - 1; i >= 0; --i)
+		{
+			VuoSceneRenderer_treeRenderState childState;
+			childState.so = &(childObjects[i]);
+			childState.soi = &(currentState.soi->childObjects[i]);
+			memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
+			objectsToRender.push_front(childState);
+		}
 	}
 }
 
 //static void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
 static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
-static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer);
+static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext);
 static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
 
 /**
@@ -705,15 +916,15 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	if (!sceneRenderer->rootSceneObjectPendingValid && !sceneRenderer->rootSceneObjectValid)
 		return;
 
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 	if (sceneRenderer->rootSceneObjectPendingUpdated)
 	{
 		// Release the old scenegraph.
 		if (sceneRenderer->rootSceneObjectValid)
 		{
-			VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
-			VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer);
+			VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
+			VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer, cgl_ctx);
 			VuoSceneObject_release(sceneRenderer->rootSceneObject);
 			VuoRelease(sceneRenderer->pointLights);
 			VuoRelease(sceneRenderer->spotLights);
@@ -722,7 +933,7 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 		// Upload the new scenegraph.
 		sceneRenderer->rootSceneObject = sceneRenderer->rootSceneObjectPending;
 		VuoSceneObject_retain(sceneRenderer->rootSceneObject);
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
 
 		VuoSceneObject_findLights(sceneRenderer->rootSceneObject, &sceneRenderer->ambientColor, &sceneRenderer->ambientBrightness, &sceneRenderer->pointLights, &sceneRenderer->spotLights);
 		VuoRetain(sceneRenderer->pointLights);
@@ -739,16 +950,41 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 		sceneRenderer->needToRegenerateProjectionMatrix = false;
 	}
 
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
-	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, sceneRenderer);
+
+	// Start out with VuoGlContextPool::createContext()'s initial state.
+	bzero(&sceneRenderer->glState, sizeof(sceneRenderer->glState));
+	sceneRenderer->glState.vGL_DEPTH_MASK               = true;
+	sceneRenderer->glState.vGL_DEPTH_TEST               = false;
+	sceneRenderer->glState.vGL_CULL_FACE                = true;
+	sceneRenderer->glState.vGL_CULL_FACE_MODE           = GL_BACK;
+	sceneRenderer->glState.vGL_BLEND_SRC_RGB            = GL_ONE;
+	sceneRenderer->glState.vGL_BLEND_DST_RGB            = GL_ONE_MINUS_SRC_ALPHA;
+	sceneRenderer->glState.vGL_BLEND_SRC_ALPHA          = GL_ONE;
+	sceneRenderer->glState.vGL_BLEND_DST_ALPHA          = GL_ONE_MINUS_SRC_ALPHA;
+	sceneRenderer->glState.vGL_BLEND_EQUATION_RGB       = GL_FUNC_ADD;
+	sceneRenderer->glState.vGL_BLEND_EQUATION_ALPHA     = GL_FUNC_ADD;
+	sceneRenderer->glState.vGL_SAMPLE_ALPHA_TO_COVERAGE = false;
+	sceneRenderer->glState.vGL_SAMPLE_ALPHA_TO_ONE      = false;
+
+	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer, cgl_ctx);
+
+	// Restore the context back to VuoGlContextPool::createContext()'s initial state.
+	VuoSceneRenderer_setGLDepthMask(                    true );
+	VuoSceneRenderer_setGL(GL_DEPTH_TEST,               false);
+	VuoSceneRenderer_setGL(GL_CULL_FACE,                true );
+	VuoSceneRenderer_setGLFaceCulling(GL_BACK);
+	VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
+	VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_COVERAGE, false);
+	VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_ONE,      false);
+
 
 //	VuoSceneRenderer_drawLights(sceneRenderer);
 
 
 #if LIBRARY_PREMIUM_AVAILABLE
 	if (sceneRenderer->camera.type == VuoSceneObjectSubType_FisheyeCamera)
-		VuoSceneRendererPremium_drawVignette(sceneRenderer);
+		VuoSceneRendererPremium_drawVignette(sceneRenderer, cgl_ctx);
 #endif
 
 #ifdef PROFILE
@@ -767,9 +1003,20 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	sceneRenderer->profileTimes.clear();
 #endif
 
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 	glFlushRenderAPPLE();
-	dispatch_semaphore_signal(VuoGlSemaphore);
+
+	if (VuoIsDebugEnabled())
+	{
+		GLint rendererID;
+		CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &rendererID);
+		if (rendererID != sceneRenderer->glContextRendererID)
+		{
+			VUserLog("OpenGL context %p's renderer changed to %s", cgl_ctx, VuoCglRenderer_getText(rendererID));
+			sceneRenderer->glContextRendererID = rendererID;
+		}
+	}
+
+	});
 }
 
 /**
@@ -1039,7 +1286,7 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 	VuoSceneRendererMeshShaderVAOs::iterator i = sceneRenderer->meshShaderItems.find(meshShader);
 	if (cache && i != sceneRenderer->meshShaderItems.end())
 	{
-		soi->meshItems = i->second;
+		soi->vao = i->second;
 		return;
 	}
 
@@ -1053,10 +1300,8 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 	GLint positionAttribute, normalAttribute, tangentAttribute, bitangentAttribute, textureCoordinateAttribute;
 	VuoShader_getAttributeLocations(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, glContext, &positionAttribute, &normalAttribute, &tangentAttribute, &bitangentAttribute, &textureCoordinateAttribute);
 
-	// For each mesh item in the sceneobject...
-	for (unsigned long i = 0; i < so.mesh->submeshCount; ++i)
-	{
-		VuoSubmesh meshItem = so.mesh->submeshes[i];
+
+		VuoSubmesh meshItem = so.mesh->submeshes[0];
 		GLuint vertexArray;
 
 
@@ -1066,53 +1311,53 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 
 
 		// Bind the combined buffer to the Vertex Array Object.
-		glBindBuffer(GL_ARRAY_BUFFER, so.mesh->submeshes[i].glUpload.combinedBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, so.mesh->submeshes[0].glUpload.combinedBuffer);
 
 
 		// Populate the Vertex Array Object with the various vertex attributes.
 
-		int stride = VuoSubmesh_getStride(so.mesh->submeshes[i]);
+		int stride = VuoSubmesh_getStride(so.mesh->submeshes[0]);
 		glEnableVertexAttribArray((GLuint)positionAttribute);
 		glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, (void*)0);
 
 		if (meshItem.glUpload.normalOffset && normalAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)normalAttribute);
-			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.normalOffset);
+			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.normalOffset);
 		}
 
 		if (meshItem.glUpload.tangentOffset && tangentAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)tangentAttribute);
-			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.tangentOffset);
+			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.tangentOffset);
 		}
 
 		if (meshItem.glUpload.bitangentOffset && bitangentAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)bitangentAttribute);
-			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.bitangentOffset);
+			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.bitangentOffset);
 		}
 
 		if (meshItem.glUpload.textureCoordinateOffset && textureCoordinateAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)textureCoordinateAttribute);
-			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.textureCoordinateOffset);
+			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.textureCoordinateOffset);
 		}
 
 
 		// Bind the Element Buffer to the Vertex Array Object
-		if (so.mesh->submeshes[i].elementCount)
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, so.mesh->submeshes[i].glUpload.elementBuffer);
+		if (so.mesh->submeshes[0].elementCount)
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, so.mesh->submeshes[0].glUpload.elementBuffer);
 
 
 		glBindVertexArray(0);
 
-		soi->meshItems.push_back(vertexArray);
-	}
+		soi->vao = vertexArray;
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	if (cache)
-		sceneRenderer->meshShaderItems[meshShader] = soi->meshItems;
+		sceneRenderer->meshShaderItems[meshShader] = soi->vao;
 }
 
 /**
@@ -1127,15 +1372,21 @@ static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInter
 	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, soi, glContext, true);
 
 	if (!so.childObjects)
+	{
+		soi->childObjectCount = 0;
+		soi->childObjects = NULL;
 		return;
+	}
 
 	unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
-	for (unsigned long i = 1; i <= childObjectCount; ++i)
+	VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(so.childObjects);
+	soi->childObjects = new VuoSceneRendererInternal_object[childObjectCount];
+	soi->childObjectCount = childObjectCount;
+	for (unsigned long i = 0; i < childObjectCount; ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRendererInternal_object childObjectInternal;
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObject, &childObjectInternal, glContext);
-		soi->childObjects.push_back(childObjectInternal);
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObjects[i], &childObjectInternal, glContext);
+		soi->childObjects[i] = childObjectInternal;
 	}
 }
 
@@ -1148,33 +1399,28 @@ static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInter
  */
 static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
-	unsigned int i = 1;
-	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
-	{
-		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_cleanupSceneObjectsRecursively(childObject, &(*oi), glContext);
-	}
-
-	soi->meshItems.clear();
+	VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(so.childObjects);
+	for (unsigned int i = 0; i < soi->childObjectCount; ++i)
+		VuoSceneRenderer_cleanupSceneObjectsRecursively(childObjects[i], &(soi->childObjects[i]), glContext);
 
 	if (soi->overrideMesh)
 		VuoRelease(soi->overrideMesh);
 	if (soi->overrideShader)
 		VuoRelease(soi->overrideShader);
 
-	soi->childObjects.clear();
+	if (soi->childObjects)
+		delete[] soi->childObjects;
 }
 
 /**
  * Releases the GPU objects created by @c VuoSceneRenderer_uploadSceneObjectsRecursively.
  */
-static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer)
+static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 	for (VuoSceneRendererMeshShaderVAOs::iterator msi = sceneRenderer->meshShaderItems.begin(); msi != sceneRenderer->meshShaderItems.end(); ++msi)
-		for (VuoSceneRendererVAOList::iterator i = msi->second.begin(); i != msi->second.end(); ++i)
-			glDeleteVertexArrays(1, &(*i));
+			glDeleteVertexArrays(1, &(msi->second));
 
 	sceneRenderer->meshShaderItems.clear();
 }
@@ -1256,19 +1502,17 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
-
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
-
-	VuoShader_cleanupContext(sceneRenderer->glContext);
 
 	if (sceneRenderer->rootSceneObjectPendingValid)
 		VuoSceneObject_release(sceneRenderer->rootSceneObjectPending);
 
 	if (sceneRenderer->rootSceneObjectValid)
 	{
-		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
-		VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
+			VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer, cgl_ctx);
+		});
 		VuoSceneObject_release(sceneRenderer->rootSceneObject);
 
 		VuoRelease(sceneRenderer->pointLights);
@@ -1286,26 +1530,42 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 	dispatch_release(sceneRenderer->scenegraphSemaphore);
 
-	dispatch_semaphore_signal(VuoGlSemaphore);
-
 	free(sceneRenderer);
 }
 
 /**
  * Helper for `VuoSceneRenderer_render*`.
  */
-extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *outputTexture, GLenum target, GLuint imageGlInternalFormat, VuoMultisample multisample, GLuint *outputDepthTexture)
+extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContext glContext, GLuint *outputTexture, GLenum target, GLuint imageGlInternalFormat, VuoMultisample multisample, GLuint *outputDepthTexture)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	static bool force2DDepth = true;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		// If the user set the `force2DDepth` preference, use it.
+		Boolean overridden = false;
+		force2DDepth = (int)CFPreferencesGetAppIntegerValue(CFSTR("force2DDepth"), CFSTR("org.vuo.Editor"), &overridden);
+
+		if (!overridden)
+			// https://b33p.net/kosada/node/13485
+			// On NVIDIA 650M, the texture targets for the color and depth buffers need to match
+			// (otherwise if a window is added via livecoding, it renders the scene with the wrong colors).
+			// On AMD 7970 and AMD M370X, the depth texture target needs to always be GL_TEXTURE_2D
+			// (otherwise it throws GL_INVALID_OPERATION).
+			force2DDepth = (strcmp((const char *)glGetString(GL_RENDERER), "NVIDIA GeForce GT 650M OpenGL Engine") != 0);
+
+		VDebugLog("force2DDepth = %d", force2DDepth);
+	});
 
 	unsigned char colorBytesPerPixel = VuoGlTexture_getBytesPerPixel(imageGlInternalFormat, GL_BGRA);
 	unsigned long requiredBytes = sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * colorBytesPerPixel;
 	if (outputDepthTexture)
 		requiredBytes += sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * VuoGlTexture_getBytesPerPixel(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
 
-	int supportedSamples = VuoGlContext_getMaximumSupportedMultisampling(sceneRenderer->glContext);
+	int supportedSamples = VuoGlContext_getMaximumSupportedMultisampling(glContext);
 	multisample = (VuoMultisample)MIN(multisample, supportedSamples);
 	bool actuallyMultisampling = multisample > 1;
 
@@ -1314,7 +1574,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 	if (multisample)
 		requiredBytes += requiredBytes * multisample * fudge;
 
-	unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(sceneRenderer->glContext);
+	unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(glContext);
 	if (maximumTextureBytes > 0 && requiredBytes > maximumTextureBytes)
 	{
 		VUserLog("Not enough graphics memory for a %dx%d (%d bytes/pixel * %d sample) render%s.  Requires %lu MB, have %lu MB.",
@@ -1328,10 +1588,10 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 
 	// Create a new GL Texture Object and Framebuffer Object.
 	if (!*outputTexture)
-		*outputTexture = VuoGlTexturePool_use(sceneRenderer->glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
+		*outputTexture = VuoGlTexturePool_use(glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
 
 	if (outputDepthTexture)
-		*outputDepthTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
+		*outputDepthTexture = VuoGlTexturePool_use(glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
 
 	if (!*outputTexture || (outputDepthTexture && !*outputDepthTexture))
 		return false;
@@ -1365,7 +1625,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, *outputTexture, 0);
 		if (outputDepthTexture)
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *outputDepthTexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, force2DDepth ? GL_TEXTURE_2D : target, *outputDepthTexture, 0);
 	}
 
 
@@ -1390,7 +1650,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 		{
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, *outputTexture, 0);
 			if (outputDepthTexture)
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *outputDepthTexture, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, force2DDepth ? GL_TEXTURE_2D : target, *outputDepthTexture, 0);
 
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, outputFramebuffer);
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -1402,7 +1662,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
 			if (outputDepthTexture)
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, force2DDepth ? GL_TEXTURE_2D : target, 0, 0);
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1416,7 +1676,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *out
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
 		if (outputDepthTexture)
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, force2DDepth ? GL_TEXTURE_2D : target, 0, 0);
 	}
 
 
@@ -1439,14 +1699,16 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
-	GLuint texture = 0;
-	GLuint depthTexture = 0;
-	if (!VuoSceneRenderer_renderInternal(sr, &texture, GL_TEXTURE_2D, imageGlInternalFormat, multisample, depthImage ? &depthTexture : NULL))
+	__block GLuint texture = 0;
+	__block GLuint depthTexture = 0;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+	if (!VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_2D, imageGlInternalFormat, multisample, depthImage ? &depthTexture : NULL))
 	{
 		*image = NULL;
 		if (depthImage)
 			*depthImage = NULL;
 	}
+	});
 
 	*image = VuoImage_make(texture, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 	if (depthImage)
@@ -1460,11 +1722,19 @@ VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sr, VuoImageCol
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
-	GLuint texture = 0;
-	VuoIoSurface ios = VuoIoSurfacePool_use(sceneRenderer->glContext, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, &texture);
-	GLuint depthTexture = 0;
-	if (!VuoSceneRenderer_renderInternal(sr, &texture, GL_TEXTURE_RECTANGLE_ARB, imageGlInternalFormat, multisample, includeDepthBuffer ? &depthTexture : NULL))
+	__block GLuint texture = 0;
+	__block GLuint depthTexture = 0;
+	__block bool renderSucceeded;
+	__block VuoIoSurface vis;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		vis = VuoIoSurfacePool_use(cgl_ctx, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, &texture);
+		renderSucceeded = VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_RECTANGLE_ARB, imageGlInternalFormat, multisample, includeDepthBuffer ? &depthTexture : NULL);
+	});
+	if (!renderSucceeded)
+	{
+		VuoIoSurfacePool_disuse(vis);
 		return NULL;
+	}
 
 	if (includeDepthBuffer)
 	{
@@ -1473,5 +1743,5 @@ VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sr, VuoImageCol
 		VuoRelease(depthImage);
 	}
 
-	return ios;
+	return vis;
 }

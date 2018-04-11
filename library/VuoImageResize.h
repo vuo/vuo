@@ -20,7 +20,7 @@ extern "C"
 typedef void *VuoImageResize;	///< Resize state data.
 
 VuoImageResize VuoImageResize_make(void);
-VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize resize, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height);
+VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize resize, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height);
 
 #ifdef __cplusplus
 }

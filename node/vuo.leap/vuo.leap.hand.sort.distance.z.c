@@ -10,30 +10,19 @@
 #include "node.h"
 #include "VuoLeapHand.h"
 #include "VuoList_VuoLeapHand.h"
+#include "VuoSort.h"
 
 VuoModuleMetadata({
 					  "title" : "Sort Hands by Z Distance",
 					  "keywords" : [ "organize", "order", "nearest", "point" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
+					  "dependencies" : [
+						  "VuoSort"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo" ]
 					  }
 				  });
-
-typedef struct
-{
-	int index;
-	float value;
-} sortable_pointValue;
-
-
-static int compare (const void * a, const void * b)
-{
-	sortable_pointValue *x = (sortable_pointValue*)a;
-	sortable_pointValue *y = (sortable_pointValue*)b;
-
-	return (x->value - y->value);
-}
 
 void nodeEvent
 (
@@ -42,17 +31,17 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoLeapHand) sortedHands
 )
 {
-	*sortedHands = VuoListCreate_VuoLeapHand();
+	VuoLeapHand *handsData = VuoListGetData_VuoLeapHand(hands);
+	unsigned long count = VuoListGetCount_VuoLeapHand(hands);
 
-	int count = VuoListGetCount_VuoLeapHand(hands);
+	VuoIndexedFloat *distances = (VuoIndexedFloat *)malloc(count * sizeof(VuoIndexedFloat));
+	for (unsigned long i = 0; i < count; ++i)
+		distances[i] = (VuoIndexedFloat){i, fabs(handsData[i].palmPosition.z - target.z)};
 
-	sortable_pointValue pointValues[count];
+	*sortedHands = VuoListCopy_VuoLeapHand(hands);
+	VuoLeapHand *sortedHandsData = VuoListGetData_VuoLeapHand(*sortedHands);
 
-	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoLeapHand(hands, i+1).palmPosition.z - target.z)};
+	VuoSort_sortArrayByOtherArray(sortedHandsData, count, sizeof(VuoLeapHand), distances);
 
-	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
-
-	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoLeapHand(*sortedHands, VuoListGetValue_VuoLeapHand(hands, pointValues[i].index+1) );
+	free(distances);
 }

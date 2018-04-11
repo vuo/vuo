@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find OSC Outputs by Name",
-					  "keywords" : [ "filter" ],
+					  "keywords" : [ "filter", "search" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

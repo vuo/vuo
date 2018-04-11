@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.5
+VUO_VERSION = 1.2.6
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -6,6 +6,11 @@ DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
 BUILD_ID = $$(BUILD_ID)
 isEmpty(BUILD_ID) { VUO_VERSION_AND_BUILD = $${VUO_VERSION}.$$basename(ROOT) }
 else              { VUO_VERSION_AND_BUILD = $${VUO_VERSION}.$$BUILD_ID }
+
+VUO_VERSION_DEFINES += \
+	-DVUO_VERSION=$$VUO_VERSION \
+	-DVUO_VERSION_STRING=\\\"$$VUO_VERSION\\\" \
+	-DVUO_VERSION_AND_BUILD_STRING=\\\"$$VUO_VERSION_AND_BUILD\\\"
 
 # Always build with debug symbols
 CONFIG += debug
@@ -43,8 +48,13 @@ LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.5.3
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
 ZXING_ROOT = /usr/local/Cellar/zxing/2.3.0
 LIBXML2_ROOT = /usr/local/Cellar/libxml2/2.9.2
+LIBCSV_ROOT = /usr/local/Cellar/libcsv/3.0.3
 GHOSTSCRIPT_ROOT = /usr/local/Cellar/ghostscript/9.15
 PNGQUANT_ROOT = /usr/local/Cellar/pngquant/2.3.1
+GETTEXT_ROOT = /usr/local/Cellar/gettext/0.19.8.1
+GLIB_ROOT = /usr/local/Cellar/glib/2.51.1
+LIBLQR_ROOT = /usr/local/Cellar/liblqr/0.4.2
+WJELEMENT_ROOT = /usr/local/Cellar/wjelement/1.2
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
@@ -355,10 +365,6 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	QMAKE_CFLAGS_USE_PRECOMPILE = -Xclang -include-pch -Xclang ${QMAKE_PCH_OUTPUT}
 
 	# Since VUO_VERSION changes frequently, define it when compiling source files, but not when precompiling headers.
-	VUO_VERSION_DEFINES += \
-		-DVUO_VERSION=$$VUO_VERSION \
-		-DVUO_VERSION_STRING=\\\"$$VUO_VERSION\\\" \
-		-DVUO_VERSION_AND_BUILD_STRING=\\\"$$VUO_VERSION_AND_BUILD\\\"
 	QMAKE_CFLAGS_USE_PRECOMPILE += $$VUO_VERSION_DEFINES
 
 	QMAKE_CXXFLAGS_PRECOMPILE += $$FLAGS_ARCH

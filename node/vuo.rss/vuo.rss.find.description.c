@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find RSS Items by Description",
-					  "keywords" : [ "filter", "summary", "teaser", "body", "text" ],
+					  "keywords" : [ "filter", "search", "summary", "teaser", "body", "text" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ ]

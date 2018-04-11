@@ -4,5 +4,6 @@ This node finds the center and size of the layer's bounding rectangle — the sm
 
    - `Rendered Layers` — The group of rendered layers containing the layer.
    - `Layer Name` — The name of the layer.
+   - `Include Children` — Whether the output bounds include the bounds of any child layers.
    - `Center`, `Width`, `Height` — The dimensions of the layer's bounding rectangle, in Vuo Coordinates.
    - `Pixels Wide`, `Pixels High` — The dimensions of the layer's bounding rectangle, in pixels.

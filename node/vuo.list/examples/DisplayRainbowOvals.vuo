@@ -12,7 +12,7 @@ digraph G
 ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="586,42" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="10" _height="1.250000" _rows="10"];
 BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.0" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="291,41" fillcolor="violet" _fire="100" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="95,-45" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="81,18" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="81,18" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
 MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="321,296" _saturation="1.000000" _lightness="0.800000" _opacity="0.500000"];
 MakeList7 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="783,53" fillcolor="green"];
 MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="813,68" fillcolor="green"];
@@ -24,7 +24,7 @@ ArrangeLayersInGrid:griddedLayer -> MakeList7:1;
 BuildList2:buildItem -> MakeRandomValue:refresh;
 BuildList2:builtList -> ArrangeLayersInGrid:layers;
 FireOnStart2:started -> BuildList2:fire;
-FirePeriodically:fired -> BuildList2:fire;
+FirePeriodically:fired -> BuildList2:fire [event=true];
 MakeHSLColor:color -> MakeOvalLayer:color;
 MakeList7:list -> RenderLayersToWindow:layers;
 MakeList9:list -> RenderLayersToWindow:setWindowProperties;

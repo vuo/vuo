@@ -11,7 +11,7 @@ digraph G
 {
 AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="675,120"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="660,270" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="75,105" fillcolor="yellow" _seconds="3" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="75,105" fillcolor="yellow" _seconds="3" _fired_eventThrottling="drop"];
 MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="979,161" fillcolor="green"];
 MakeList6 [type="vuo.list.make.5.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="626,131" _1="\"ASCII character \"" _3="\" is “\"" _5="\"”.\""];
 MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1009,176" fillcolor="green"];
@@ -24,7 +24,7 @@ SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summ
 
 AppendTexts:compositeText -> MakeTextLayer3:text;
 FireOnStart2:started -> MakeTextLayer4:refresh;
-FirePeriodically:fired -> MakeRandomValue4:minimum;
+FirePeriodically:fired -> MakeRandomValue4:minimum [event=true];
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList6:list -> AppendTexts:texts;
 MakeList8:list -> RenderLayersToWindow:setWindowProperties;

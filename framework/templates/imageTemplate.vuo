@@ -1,0 +1,14 @@
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,75" _started_eventThrottling="enqueue"];
+MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="454,161" fillcolor="green"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-45,270" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-30,195" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="495,135" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="45,135" fillcolor="green"];
+
+MakeList7:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> ShareValue2:value [style=invis];
+RenderImageToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+}

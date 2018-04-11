@@ -10,7 +10,7 @@
 digraph G
 {
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="195,-15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="180,75" fillcolor="yellow" _seconds="2.500000" _fired_eventThrottling="drop"];
+FirePeriodically2 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="180,75" fillcolor="yellow" _seconds="2.500000" _fired_eventThrottling="drop"];
 MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="930,0" _color="{\"r\":0.140322,\"g\":0.865263,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.250000}" _width="0.400000" _height="0.400000"];
 MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="930,135" _color="{\"r\":0.693278,\"g\":1.000000,\"b\":0.679789,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.250000}" _width="0.400000" _height="0.400000"];
 MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1174,416" fillcolor="green"];
@@ -24,8 +24,8 @@ FireOnStart2:started -> MakeColorLayer2:refresh;
 FireOnStart2:started -> MakeColorLayer:refresh;
 FireOnStart2:started -> SmoothWithDuration2:setPosition;
 FireOnStart2:started -> SmoothWithDuration2:setTarget;
-FirePeriodically2:fired -> SmoothWithDuration2:setPosition;
-FirePeriodically2:fired -> SmoothWithDuration2:setTarget;
+FirePeriodically2:fired -> SmoothWithDuration2:setPosition [event=true];
+FirePeriodically2:fired -> SmoothWithDuration2:setTarget [event=true];
 MakeColorLayer2:layer -> MakeList:2;
 MakeColorLayer:layer -> MakeList:1;
 MakeList4:list -> RenderLayersToWindow:setWindowProperties;

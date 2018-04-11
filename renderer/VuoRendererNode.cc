@@ -36,6 +36,7 @@ const qreal VuoRendererNode::nodeClassHeight = round(VuoRendererFonts::thickPenW
 const qreal VuoRendererNode::antennaIconWidth = 3*VuoRendererFonts::midPenWidth;
 const qreal VuoRendererNode::iconRightOffset = 12.;
 const qreal VuoRendererNode::intraIconMargin = 6.;
+const qreal VuoRendererNode::nodeHeaderYOffset = -nodeTitleHeight - nodeClassHeight;	///< The vertical offset of the node header's top left corner from the origin.
 
 /**
  * Creates a renderer detail for the specified base node.

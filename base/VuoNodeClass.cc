@@ -154,7 +154,7 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 	/// @todo Temporary workaround. Instead use VuoNode::isCollapsed() elsewhere. (https://b33p.net/kosada/node/5477)
 	string nodeClassName = getClassName();
 	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.data.summarize")
+			|| (VuoStringUtilities::beginsWith(nodeClassName, "vuo.data.summarize") && nodeClassName != "vuo.data.summarize.VuoData")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.count.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.first.")
@@ -166,14 +166,14 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get.")
 			|| nodeClassName == "vuo.audio.mix"
 			|| nodeClassName == "vuo.audio.populated"
+			|| nodeClassName == "vuo.image.get.height"
+			|| nodeClassName == "vuo.image.get.width"
 			|| nodeClassName == "vuo.image.populated"
 			|| nodeClassName == "vuo.layer.populated"
 			|| nodeClassName == "vuo.mesh.populated"
 			|| nodeClassName == "vuo.scene.populated"
 			|| nodeClassName == "vuo.text.populated"
-			|| nodeClassName == "vuo.window.cursor.populated"
-			|| nodeClassName == "vuo.layer.get.child"
-			|| nodeClassName == "vuo.scene.get.child");
+			|| nodeClassName == "vuo.window.cursor.populated");
 
 #if 0
 	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)

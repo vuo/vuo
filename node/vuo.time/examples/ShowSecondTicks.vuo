@@ -13,7 +13,7 @@ CalculateCosine [type="vuo.math.cos" version="1.0.0" label="Calculate Cosine|<re
 CalculateSine [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="450,495"];
 FetchDateTime [type="vuo.time.fetch" version="1.0.0" label="Fetch Date-Time|<refresh>refresh\l|<time>time\r" pos="180,-105" fillcolor="violet"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="450,15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="30,-150" fillcolor="yellow" _seconds="1.0" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="30,-150" fillcolor="yellow" _seconds="1.0" _fired_eventThrottling="drop"];
 FormatDateTime [type="vuo.time.format" version="1.0.0" label="Format Date-Time|<refresh>refresh\l|<time>time\l|<format>format\l|<formattedTime>formattedTime\r" pos="465,-105" fillcolor="violet" _format="\"datetime-long-12\""];
 GetDateTimeValues [type="vuo.time.get" version="1.0.0" label="Get Date-Time Values|<refresh>refresh\l|<time>time\l|<year>year\r|<dayOfYear>dayOfYear\r|<month>month\r|<dayOfMonth>dayOfMonth\r|<week>week\r|<dayOfWeek>dayOfWeek\r|<hour>hour\r|<minute>minute\r|<second>second\r" pos="210,300" fillcolor="violet"];
 Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="615,495"];
@@ -36,7 +36,7 @@ FetchDateTime:time -> RoundDateTime:time;
 FireOnStart2:started -> MakeColorLayer2:refresh;
 FireOnStart2:started -> MakeColorLayer:refresh;
 FireOnStart2:started -> MakeOvalLayer:refresh;
-FirePeriodically:fired -> FetchDateTime:refresh;
+FirePeriodically:fired -> FetchDateTime:refresh [event=true];
 FormatDateTime:formattedTime -> MakeTextLayer:text;
 GetDateTimeValues:second -> Scale2:value;
 Make2DPoint2:point -> ScalePoint2:point;

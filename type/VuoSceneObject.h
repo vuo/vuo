@@ -118,7 +118,7 @@ VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, Vu
 
 void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights);
 
-void VuoSceneObject_visit(VuoSceneObject object, void (^function)(VuoSceneObject currentObject));
+void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const VuoSceneObject *currentObject, float modelviewMatrix[16]));
 void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]));
 
 void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int faceCullingMode);
@@ -137,6 +137,11 @@ void VuoSceneObject_center(VuoSceneObject *so);
 void VuoSceneObject_dump(const VuoSceneObject so);
 
 unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value);
+
+VuoSceneObject VuoSceneObject_flatten(const VuoSceneObject so, bool calculateTangents);
+VuoSceneObject VuoSceneObject_union(VuoList_VuoSceneObject objects, float quality);
+VuoSceneObject VuoSceneObject_subtract(const VuoSceneObject a, const VuoSceneObject b, float quality);
+VuoSceneObject VuoSceneObject_intersect(VuoList_VuoSceneObject objects, float quality);
 
 ///@{
 /**

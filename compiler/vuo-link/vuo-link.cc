@@ -12,7 +12,10 @@
 
 void printHelp(char *argv0)
 {
-	printf("Usage: %s [options] file\n"
+	printf("Links a composition's LLVM bitcode (created by vuo-compile) into an executable or dynamic library.\n"
+		   "\n"
+		   "Usage: %s [options] composition.bc\n"
+		   "\n"
 		   "Options:\n"
 		   "  --help                         Display this information.\n"
 		   "  --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"

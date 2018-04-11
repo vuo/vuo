@@ -17,7 +17,7 @@ ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label=
 CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-571,132" _increment="1" _decrement="1" _setCount="0" _minimum="0" _maximum="1" _wrapMode="\"wrap\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-26,1014" fillcolor="yellow" _started_eventThrottling="enqueue"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-783,168" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-783,110" fillcolor="yellow" _seconds="1.500000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-783,110" fillcolor="yellow" _seconds="1.500000" _fired_eventThrottling="drop"];
 Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="-72,283" _x="-0.200000"];
 Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="-67,434" _x="0.200000"];
 Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="-67,575" _x="0.600000"];
@@ -55,7 +55,7 @@ FireOnStart:started -> MakeTextLayer2:refresh;
 FireOnStart:started -> MakeTextLayer3:refresh;
 FireOnStart:started -> MakeTextLayer4:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
-FirePeriodically:fired -> CountWithinRange:increment;
+FirePeriodically:fired -> CountWithinRange:increment [event=true];
 Make2DPoint2:point -> SmoothWithRate2:setTarget;
 Make2DPoint3:point -> SmoothWithInertia2:setTarget;
 Make2DPoint4:point -> Make2DTransform4:translation;

@@ -42,9 +42,11 @@ SUBDIRS += \
 	vuo.serial \
 	vuo.shader \
 	vuo.syphon \
+	vuo.table \
 	vuo.text \
 	vuo.time \
 	vuo.transform \
+	vuo.tree \
 	vuo.type \
 	vuo.ui \
 	vuo.url \

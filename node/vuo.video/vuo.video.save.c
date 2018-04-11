@@ -68,8 +68,6 @@ struct nodeInstanceData
 	// times this won't be necessary.
 	bool resizeShaderInitialized;
 	VuoImageResize resize;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 #define setWriterState(instance, state) pthread_mutex_lock(&((instance)->writerStateMutex)); \
@@ -80,11 +78,6 @@ static void initResizeShader( struct nodeInstanceData* instance )
 {
 	instance->resizeShaderInitialized = true;
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
-
 	instance->resize = VuoImageResize_make();
 	VuoRetain(instance->resize);
 }
@@ -93,8 +86,6 @@ static void freeResizeShader( struct nodeInstanceData* instance )
 {
 	instance->resizeShaderInitialized = false;
 	VuoRelease(instance->resize);
-	VuoRelease( instance->imageRenderer );
-	VuoGlContext_disuse( instance->glContext );
 }
 
 struct nodeInstanceData* nodeInstanceInit()
@@ -183,6 +174,7 @@ void nodeInstanceEvent(
 			if( (*instance)->firstEvent < 0 )
 				(*instance)->firstEvent = received;
 
+			void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
 			dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
 				double waitForAudioStart = VuoLogGetTime();
 				while ((*instance)->channelCount == -1 && VuoLogGetTime() - waitForAudioStart < APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA)
@@ -200,7 +192,13 @@ void nodeInstanceEvent(
 				setWriterState(*instance, initSuccess ? VuoAvWriterState_Ready : VuoAvWriterState_Failed);
 
 				if (initSuccess)
+				{
+					vuoAddCompositionStateToThreadLocalStorage(compositionState);
 					VuoDisableTermination();
+					vuoRemoveCompositionStateFromThreadLocalStorage();
+				}
+
+				free(compositionState);
 			});
 		}
 
@@ -213,7 +211,6 @@ void nodeInstanceEvent(
 
 				VuoImage resized = VuoImageResize_resize(saveImage,
 														 (*instance)->resize,
-														 (*instance)->imageRenderer,
 														 VuoSizingMode_Fit,
 														 (*instance)->imageWidth,
 														 (*instance)->imageHeight);

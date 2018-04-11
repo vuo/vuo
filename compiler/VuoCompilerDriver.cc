@@ -11,6 +11,7 @@
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerNode.hh"
 #include "VuoCompilerPort.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoComposition.hh"
@@ -89,7 +90,15 @@ void VuoCompilerDriver::applyToComposition(VuoCompilerComposition *composition)
 	for (vector<VuoNode *>::iterator node = nodes.begin(); node != nodes.end(); ++node)
 	{
 		composition->getBase()->addNode(*node);
-		composition->setUniqueGraphvizIdentifierForNode(*node);
+
+		// Give the node an identifier that is different from any nodes in the current composition
+		// and any `Make List` nodes that have just been replaced during a live-coding reload.
+		if ((*node)->hasCompiler())
+		{
+			string nodeIdentifier = (*node)->getCompiler()->getGraphvizIdentifierPrefix() + "_Driver";
+			(*node)->getCompiler()->setGraphvizIdentifier(nodeIdentifier);
+			composition->setUniqueGraphvizIdentifierForNode(*node);
+		}
 	}
 
 	// Add the (non-published) driver cables to the composition.

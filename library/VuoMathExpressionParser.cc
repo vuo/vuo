@@ -30,7 +30,7 @@ VuoModuleMetadata({
 						"VuoList_VuoText",
 						"VuoDictionary_VuoText_VuoReal",
 						"VuoGradientNoiseCommon",
-						"muParser"
+						"muparser"
 					  ]
 				  });
 #endif
@@ -716,6 +716,16 @@ VuoList_VuoReal VuoMathExpressionParser_calculateList(VuoMathExpressionParser m,
 	if (xIterUC != mi->variableNamesAndIndices.end())
 		xUC = &mi->variableValues[xIterUC->second];
 
+	map<string, size_t>::iterator iIterLC = mi->variableNamesAndIndices.find("i");
+	double *iLC = NULL;
+	if (iIterLC != mi->variableNamesAndIndices.end())
+		iLC = &mi->variableValues[iIterLC->second];
+
+	map<string, size_t>::iterator iIterUC = mi->variableNamesAndIndices.find("I");
+	double *iUC = NULL;
+	if (iIterUC != mi->variableNamesAndIndices.end())
+		iUC = &mi->variableValues[iIterUC->second];
+
 	unsigned long xValueCount = VuoListGetCount_VuoReal(xValues);
 	VuoReal *xValueReals = (VuoReal *)VuoListGetData_VuoReal(xValues);
 
@@ -728,6 +738,10 @@ VuoList_VuoReal VuoMathExpressionParser_calculateList(VuoMathExpressionParser m,
 			*xLC = xValueReals[i];
 		if (xUC)
 			*xUC = xValueReals[i];
+		if (iLC)
+			*iLC = i + 1;
+		if (iUC)
+			*iUC = i + 1;
 
 		int outputCount;
 		resultReals[i] = mi->muParser.Eval(outputCount)[0];

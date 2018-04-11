@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find OSC Inputs by Name",
-					  "keywords" : [ "filter" ],
+					  "keywords" : [ "filter", "search" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

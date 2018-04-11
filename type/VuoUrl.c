@@ -72,7 +72,7 @@ json_object *VuoUrl_getJson(const VuoUrl value)
  */
 char *VuoUrl_getSummary(const VuoUrl value)
 {
-	VuoText t = VuoText_truncateWithEllipsis(value, 50, VuoTextTruncation_End);
+	VuoText t = VuoText_truncateWithEllipsis(value, 1024, VuoTextTruncation_End);
 	VuoRetain(t);
 	char *summary = strdup(t);
 	VuoRelease(t);
@@ -91,7 +91,29 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 
 	struct http_parser_url parsedUrl;
 	if (http_parser_parse_url(url, strlen(url), false, &parsedUrl))
+	{
+		// Maybe this is a "data:" URI (which http_parser_parse_url can't parse).
+		if (strncmp(url, "data:", 5) == 0)
+		{
+			if (scheme)
+				*scheme = VuoText_make("data");
+			if (user)
+				*user = NULL;
+			if (host)
+				*host = NULL;
+			if (port)
+				*port = 0;
+			if (path)
+				*path = NULL;
+			if (query)
+				*query = NULL;
+			if (fragment)
+				*fragment = NULL;
+			return true;
+		}
+
 		return false;
+	}
 
 	if (scheme)
 	{
@@ -232,7 +254,7 @@ bool VuoUrl_isLessThan(const VuoText a, const VuoText b)
  */
 static bool VuoUrl_urlContainsScheme(const char *url)
 {
-	const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+-\\.]+://";
+	const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+-\\.]+:";
 	regex_t    urlWithSchemeRegExp;
 	size_t     nmatch = 0;
 	regmatch_t pmatch[0];
@@ -282,11 +304,6 @@ static const char VuoUrl_reservedCharacters[] =
 	// Percent must be last, so we don't escape the escapes.
 	'%'
 };
-
-/**
- * Convert between hex and decimal.
- */
-static const char VuoUrl_decToHex[] = "0123456789abcdef";
 
 /**
  * URL-escapes characters in `path` to make it a valid URL path.
@@ -350,10 +367,8 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 	return escapedUrlVT;
 }
 
-/**
- * `file://`
- */
-static const char *VuoUrl_fileScheme = "file://";
+static const char *VuoUrl_fileScheme = "file://"; ///< URL scheme for local files.
+static const char *VuoUrl_httpScheme = "http://"; ///< URL scheme for HTTP.
 
 /**
  * Resolves `url` (which could be an absolute URL, an absolute Unix file path, a relative Unix file path, or a user-relative Unix file path)
@@ -366,14 +381,11 @@ static const char *VuoUrl_fileScheme = "file://";
  * this function attempts to resolve it into a canonical path
  * by removing ".", "..", and extra slashes, and dereferencing symlinks.
  *
- * If `isSave` is true and this function is called from an exported app, relative file paths will be resolved to Desktop instead
- * of the app resources folder.
- *
  * If `url` is NULL, returns NULL.
  *
- * If `url` is emptystring, returns a file URL for the current working path (Desktop if `isSave` is true).
+ * If `url` is emptystring, returns a file URL for the current working path (or Desktop if VuoUrlNormalize_forSaving is set).
  */
-VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
+VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 {
 	if (!url)
 		return NULL;
@@ -451,10 +463,19 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 		strcat(resolvedUrl, escapedPath);
 	}
 
+	// Case: The url contains a web link without a protocol/scheme.
+	else if (flags & VuoUrlNormalize_assumeHttp)
+	{
+		// Prepend the URL scheme.
+		resolvedUrl = (char *)malloc(strlen(VuoUrl_httpScheme) + strlen(url) + 1);
+		strcpy(resolvedUrl, VuoUrl_httpScheme);
+		strcat(resolvedUrl, url);
+	}
+
 	// Case: The url contains a relative file path.
 	else
 	{
-		char *currentWorkingDir = VuoGetWorkingDirectory();
+		const char *currentWorkingDir = VuoGetWorkingDirectory();
 
 		bool compositionIsExportedApp = false;
 
@@ -490,7 +511,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 			{
 				compositionIsExportedApp = true;
 
-				if (isSave)
+				if (flags & VuoUrlNormalize_forSaving)
 				{
 					char *homeDir = getenv("HOME");
 					const char *desktop = "/Desktop/";
@@ -530,8 +551,6 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
 		strcpy(resolvedUrl, VuoUrl_fileScheme);
 		strcat(resolvedUrl, escapedPath);
-
-		free(currentWorkingDir);
 	}
 
 	// Remove trailing slash, if any.
@@ -543,6 +562,37 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 	free(resolvedUrl);
 
 	return resolvedUrlVT;
+}
+
+/**
+ * Decodes a RFC 3986 section 2.1 URI-encoded string.
+ *
+ * For example, `Hello%20world` becomes `Hello world`.
+ */
+VuoText VuoUrl_decodeRFC3986(const VuoUrl url)
+{
+	unsigned long inLength = strlen(url);
+	char *unescapedUrl = (char *)malloc(inLength + 1);
+	unsigned long outIndex = 0;
+	for (unsigned long inIndex = 0; inIndex < inLength; ++inIndex, ++outIndex)
+	{
+		char c = url[inIndex];
+		if (c == '%')
+		{
+			if (inIndex + 2 >= inLength)
+				break;
+			char highNibbleASCII = url[++inIndex];
+			char lowNibbleASCII = url[++inIndex];
+			unescapedUrl[outIndex] = (VuoInteger_makeFromHexByte(highNibbleASCII) << 4) + VuoInteger_makeFromHexByte(lowNibbleASCII);
+		}
+		else
+			unescapedUrl[outIndex] = c;
+	}
+	unescapedUrl[outIndex] = 0;
+
+	VuoText unescapedUrlVT = VuoText_make(unescapedUrl);
+	free(unescapedUrl);
+	return unescapedUrlVT;
 }
 
 /**

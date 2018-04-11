@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Expected center positions of the vuo.layer.make.oval node under various anchor settings.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	// Circle
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0  ,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"center"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0  ,"y": 0  },"outputChildCount":0}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   },"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0  ,"y":-0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"bottom"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0.5,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"center"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0.5,"y": 0  },"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"top"   },"width":1,"height":1},"outputPortValues":{"outputCenter":{"x": 0.5,"y":-0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"bottom"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x":-0.5,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"center"},"width":1,"height":1},"outputPortValues":{"outputCenter":{"x":-0.5,"y": 0  },"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"top"   },"width":1,"height":1},"outputPortValues":{"outputCenter":{"x":-0.5,"y":-0.5},"outputChildCount":1}},
+
+	// Landscape Oval
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 0,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"center"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 0,"y": 0  },"outputChildCount":0}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   },"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 0,"y":-0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"bottom"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 1,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"center"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 1,"y": 0  },"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"top"   },"width":2,"height":1},"outputPortValues":{"outputCenter":{"x": 1,"y":-0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"bottom"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x":-1,"y": 0.5},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"center"},"width":2,"height":1},"outputPortValues":{"outputCenter":{"x":-1,"y": 0  },"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"top"   },"width":2,"height":1},"outputPortValues":{"outputCenter":{"x":-1,"y":-0.5},"outputChildCount":1}},
+
+	// Portrait Oval
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0  ,"y": 1},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"center"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0  ,"y": 0},"outputChildCount":0}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   },"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0  ,"y":-1},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"bottom"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0.5,"y": 1},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"center"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0.5,"y": 0},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"left"  ,"verticalAlignment":"top"   },"width":1,"height":2},"outputPortValues":{"outputCenter":{"x": 0.5,"y":-1},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"bottom"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x":-0.5,"y": 1},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"center"},"width":1,"height":2},"outputPortValues":{"outputCenter":{"x":-0.5,"y": 0},"outputChildCount":1}},
+	{"firingPort":"anchor","inputPortValues":{"anchor":{"horizontalAlignment":"right" ,"verticalAlignment":"top"   },"width":1,"height":2},"outputPortValues":{"outputCenter":{"x":-0.5,"y":-1},"outputChildCount":1}},
+]}

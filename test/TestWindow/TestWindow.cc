@@ -39,7 +39,7 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 	VuoRunner *runner;
 	VuoRunner::Port *expectedPort;
 	dispatch_semaphore_t fulfilledExpectation;
-	int line;
+	int linenumber;
 
 	string expectedType;
 	union
@@ -58,14 +58,14 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 				QTest::qFail(QString("Expected event on port %1 but got an event on port %2.")
 					  .arg(expectedPort->getName().c_str())
 					  .arg(actualPort->getName().c_str())
-					  .toUtf8().data(), __FILE__, line);
+					  .toUtf8().data(), __FILE__, linenumber);
 
 			if (expectedType != actualPort->getType())
 				QTest::qFail(QString("Expected event on port %1 to have type %2 but got type %3.")
 					  .arg(expectedPort->getName().c_str())
 					  .arg(expectedType.c_str())
 					  .arg(actualPort->getType().c_str())
-					  .toUtf8().data(), __FILE__, line);
+					  .toUtf8().data(), __FILE__, linenumber);
 
 			if (expectedType == "VuoPoint2d")
 			{
@@ -76,7 +76,7 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 						  .arg(expectedPort->getName().c_str())
 						  .arg(VuoPoint2d_getSummary(expectedValue.point2d))
 						  .arg(actualDataSummary.c_str())
-						  .toUtf8().data(), __FILE__, line);
+						  .toUtf8().data(), __FILE__, linenumber);
 			}
 			else if (expectedType == "VuoBoolean")
 			{
@@ -86,12 +86,12 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 						  .arg(expectedPort->getName().c_str())
 						  .arg(VuoBoolean_getSummary(expectedValue.boolean))
 						  .arg(actualDataSummary.c_str())
-						  .toUtf8().data(), __FILE__, line);
+						  .toUtf8().data(), __FILE__, linenumber);
 			}
 			else
 				QTest::qFail(QString("Unknown type %1.")
 					  .arg(expectedType.c_str())
-					  .toUtf8().data(), __FILE__, line);
+					  .toUtf8().data(), __FILE__, linenumber);
 		}
 
 		dispatch_semaphore_signal(fulfilledExpectation);
@@ -110,7 +110,7 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 		if (timeout)
 			QTest::qFail(QString("Timeout while expecting port %1 to receive an event.")
 				  .arg(expectedPort->getName().c_str())
-				  .toUtf8().data(), __FILE__, line);
+				  .toUtf8().data(), __FILE__, linenumber);
 
 		this->expectedPort = NULL;
 	}
@@ -126,27 +126,27 @@ public:
 		dispatch_release(fulfilledExpectation);
 	}
 
-	void expectEventOnPort(int line, VuoRunner::Port *port, VuoPoint2d expectedPoint, void (^action)(void))
+	void expectEventOnPort(int linenumber, VuoRunner::Port *port, VuoPoint2d expectedPoint, void (^action)(void))
 	{
-		this->line = line;
+		this->linenumber = linenumber;
 		this->expectedPort = port;
 		this->expectedType = "VuoPoint2d";
 		this->expectedValue.point2d = expectedPoint;
 		expectEvent(action);
 	}
 
-	void expectEventOnPort(int line, VuoRunner::Port *port, bool expectedBoolean, void (^action)(void))
+	void expectEventOnPort(int linenumber, VuoRunner::Port *port, bool expectedBoolean, void (^action)(void))
 	{
-		this->line = line;
+		this->linenumber = linenumber;
 		this->expectedPort = port;
 		this->expectedType = "VuoBoolean";
 		this->expectedValue.boolean = expectedBoolean;
 		expectEvent(action);
 	}
 
-	void expectAnyEvent(int line, void (^action)(void))
+	void expectAnyEvent(int linenumber, void (^action)(void))
 	{
-		this->line = line;
+		this->linenumber = linenumber;
 		this->expectedPort = NULL;
 
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -155,12 +155,12 @@ public:
 
 		bool timeout = dispatch_semaphore_wait(fulfilledExpectation, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC*6));
 		if (timeout)
-			QTest::qFail("Expected an event but didn't get one.", __FILE__, line);
+			QTest::qFail("Expected an event but didn't get one.", __FILE__, linenumber);
 	}
 
-	void expectNoEvent(int line, void (^action)(void))
+	void expectNoEvent(int linenumber, void (^action)(void))
 	{
-		this->line = line;
+		this->linenumber = linenumber;
 		this->expectedPort = NULL;
 
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -169,7 +169,7 @@ public:
 
 		bool timeout = dispatch_semaphore_wait(fulfilledExpectation, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC));
 		if (!timeout)
-			QTest::qFail("Expected no event, but got an event.", __FILE__, line);
+			QTest::qFail("Expected no event, but got an event.", __FILE__, linenumber);
 	}
 };
 

@@ -38,5 +38,6 @@ MakeScaledLayer:layer -> MakeList6:1;
 MakeTextLayer:layer -> MakeList6:3;
 ReceiveKeyboardButtons:pressed -> Count3:increment;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
 Scale:scaledValue -> MakeHSLColor:hue;
 }

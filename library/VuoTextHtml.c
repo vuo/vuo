@@ -28,11 +28,27 @@ VuoModuleMetadata({
 #endif
 
 /**
+ * Redirect libxml2 errors to Console.
+ */
+static void VuoXmlError(void *unused, xmlError *error)
+{
+	char *message = strdup(error->message);
+	size_t len = strlen(message);
+	if (message[len-1] == '\n')
+		message[len-1] = 0;
+
+	VUserLog("Error: %s (line %i)", message, error->line);
+
+	free(message);
+}
+
+/**
  * Initialize libxml (hopefully just once) for this process.
  */
 static void __attribute__((constructor)) init()
 {
 	xmlInitParser();
+	xmlSetStructuredErrorFunc(NULL, VuoXmlError);
 }
 
 /**

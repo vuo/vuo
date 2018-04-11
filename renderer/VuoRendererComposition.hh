@@ -31,6 +31,7 @@ class VuoRendererComposition : public QGraphicsScene, public VuoBaseDetail<VuoCo
 public:
 	VuoRendererComposition(VuoComposition *baseComposition, bool renderMissingAsPresent = false, bool enableCaching = false);
 
+	void addComponentsInCompositionToCanvas();
 	void setBackgroundTransparent(bool transparent);
 	VuoRendererNode * createRendererNode(VuoNode *baseNode);
 	void addNode(VuoNode *node, bool nodeShouldBeRendered=true);
@@ -48,12 +49,14 @@ public:
 	string getUniquePublishedPortName(string baseName);
 	vector<VuoRendererNode *> collapseTypecastNodes(void);
 	VuoRendererTypecastPort * collapseTypecastNode(VuoRendererNode *rn);
+	void uncollapseTypecastNodes();
 	void uncollapseTypecastNode(VuoRendererNode *typecastNode);
 	VuoRendererNode * uncollapseTypecastNode(VuoRendererTypecastPort *typecast);
 	void clearInternalPortEligibilityHighlighting(void);
 	VuoNode * getPublishedInputNode(void);
 	VuoNode * getPublishedOutputNode(void);
-	bool getRenderActivity(void);
+	bool getRenderNodeActivity(void);
+	bool getRenderPortActivity(void);
 	bool getRenderHiddenCables(void);
 	void setRenderHiddenCables(bool render);
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
@@ -87,7 +90,7 @@ public:
 
 protected:
 	void drawBackground(QPainter *painter, const QRectF &rect);
-	void setRenderActivity(bool render);
+	void setRenderActivity(bool render, bool includePortActivity=true);
 	void setComponentCaching(QGraphicsItem::CacheMode);
 	void updateGeometryForAllComponents();
 	bool isPortPublished(VuoRendererPort *port);
@@ -99,6 +102,9 @@ protected:
 	static bool isSupportedMovieFile(string path);
 	static bool isSupportedSceneFile(string path);
 	static bool isSupportedFeedFile(string path);
+	static bool isSupportedJsonFile(string path);
+	static bool isSupportedXmlFile(string path);
+	static bool isSupportedTableFile(string path);
 	static bool isSupportedDataFile(string path);
 	static bool isSupportedAppFile(string path);
 
@@ -131,6 +137,7 @@ private:
 
 	static int gridLineOpacity; ///< The opacity at which grid lines should be rendered on the canvas.
 	bool renderMissingAsPresent; ///< Should node classes without implementations be rendered as though their implementations are present?
-	bool renderActivity; ///< Should renderings reflect recent component activity (e.g., node executions, event firings)?
+	bool renderNodeActivity; ///< Should renderings reflect recent node activity (e.g., node executions)?
+	bool renderPortActivity; ///< Should renderings reflect recent port activity (e.g., trigger port firings)?
 };
 

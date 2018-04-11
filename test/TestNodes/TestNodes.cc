@@ -12,6 +12,8 @@
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoCompilerNodeClass *);
+Q_DECLARE_METATYPE(VuoNodeSet *);
+Q_DECLARE_METATYPE(string);
 
 /**
  * Tests each node class for common mistakes.
@@ -282,8 +284,6 @@ private slots:
 			}
 		}
 
-		waitForImageTextCacheCleanup();
-
 		runner->stop();
 		delete runner;
 	}
@@ -363,6 +363,29 @@ private slots:
 		compileAndLinkComposition(&composition);
 	}
 
+	void testExampleCompositions_data()
+	{
+		QTest::addColumn<VuoNodeSet *>("nodeSet");
+		QTest::addColumn<string>("exampleComposition");
+
+		map<string, VuoNodeSet *> nodeSets = compiler->getNodeSets();
+		for (map<string, VuoNodeSet *>::iterator i = nodeSets.begin(); i != nodeSets.end(); ++i)
+		{
+			vector<string> examples = i->second->getExampleCompositionFileNames();
+			for (vector<string>::iterator j = examples.begin(); j != examples.end(); ++j)
+				QTest::newRow((i->second->getName() + ":" + *j).c_str()) << i->second << *j;
+		}
+	}
+	void testExampleCompositions()
+	{
+		QFETCH(VuoNodeSet *, nodeSet);
+		QFETCH(string, exampleComposition);
+
+		string compositionContents = nodeSet->getExampleCompositionContents(exampleComposition);
+		VuoCompilerGraphvizParser *graphParser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionContents, compiler);
+		foreach (VuoNode *node, graphParser->getNodes())
+			QVERIFY2(!node->getNodeClass()->getDeprecated(), ("Found deprecated node '" + node->getNodeClass()->getClassName() + "' in example composition.").c_str());
+	}
 };
 
 QTEST_APPLESS_MAIN(TestNodes)

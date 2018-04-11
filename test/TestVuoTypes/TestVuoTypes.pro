@@ -25,10 +25,12 @@ TEST_VUO_TYPES_SOURCES += \
 	TestVuoReal.cc \
 	TestVuoSceneObject.cc \
 	TestVuoShader.cc \
+	TestVuoTable.cc \
 	TestVuoText.cc \
 	TestVuoTime.cc \
 	TestVuoTransform.cc \
 	TestVuoTransform2d.cc \
+	TestVuoTree.cc \
 	TestVuoUrl.cc
 
 OTHER_FILES += $$TEST_VUO_TYPES_SOURCES

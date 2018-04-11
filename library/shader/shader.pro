@@ -3,6 +3,7 @@ TEMPLATE = aux
 SHADERS += \
 	GPUNoiseLib.glsl \
 	VuoGlslAlpha.glsl \
+	VuoGlslBrightness.glsl \
 	VuoGlslProjection.glsl \
 	VuoGlslRandom.glsl \
 	deform.glsl \

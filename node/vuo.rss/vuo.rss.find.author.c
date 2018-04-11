@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find RSS Items by Author",
-					  "keywords" : [ "filter", "name", "creator", "byline" ],
+					  "keywords" : [ "filter", "search", "name", "creator", "byline" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ ]

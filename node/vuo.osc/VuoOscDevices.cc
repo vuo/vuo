@@ -9,6 +9,7 @@
 
 #include "VuoOsc.h"
 #include "VuoTriggerSet.hh"
+#include "VuoOsStatus.h"
 
 #include <CoreServices/CoreServices.h>
 #include <netinet/in.h>
@@ -25,6 +26,7 @@ VuoModuleMetadata({
 						 "CoreServices.framework",
 						 "VuoOscInputDevice",
 						 "VuoOscOutputDevice",
+						 "VuoOsStatus",
 						 "VuoList_VuoOscInputDevice",
 						 "VuoList_VuoOscOutputDevice"
 					 ]
@@ -159,7 +161,18 @@ void VuoOsc_deviceCallback(CFNetServiceBrowserRef browser, CFOptionFlags flags, 
 {
 	if (error->domain || error->error)
 	{
-		VUserLog("Error: %ld:%d", error->domain, error->error);
+		if (error->domain == kCFStreamErrorDomainCustom || error->error == 0)
+		{
+			// Happens occasionally for unknown reasons and seems to be harmless.
+		}
+		else if (error->domain == kCFStreamErrorDomainMacOSStatus)
+		{
+			char *errorText = VuoOsStatus_getText(error->error);
+			VUserLog("Error: %s", errorText);
+			free(errorText);
+		}
+		else
+			VUserLog("Error: %ld:%d", error->domain, error->error);
 		return;
 	}
 

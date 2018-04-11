@@ -5,6 +5,7 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
@@ -12,14 +13,12 @@ digraph G
 AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="435,-15"];
 AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="555,345"];
 ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="750,-225" _width="1.000000" _height="1.000000"];
-ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="510,150"];
-ConvertIntegerToText2 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="510,120"];
 CountItemsInList2 [type="vuo.list.count.VuoRssItem" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="-555,30"];
 CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-90,255" _increment="1" _decrement="1" _setCount="1" _minimum="1" _wrapMode="\"wrap\""];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="615,105"];
 FetchRSSItems [type="vuo.rss.fetch" version="1.1.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="-210,-120" fillcolor="violet" _url="\"https:\\/\\/vuo.org\\/composition\\/feed\"" _fetchImages="false"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-585,-435" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-525,285" fillcolor="yellow" _seconds="5.000000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-525,285" fillcolor="yellow" _seconds="5.000000" _fired_eventThrottling="drop"];
 GetItemFromList2 [type="vuo.list.get.VuoRssItem" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="120,240"];
 GetRSSItemValues [type="vuo.rss.get" version="1.1.0" label="Get RSS Item Values|<refresh>refresh\l|<item>item\l|<title>title\r|<author>author\r|<description>description\r|<categories>categories\r|<url>url\r|<time>time\r|<imageUrl>imageUrl\r|<image>image\r" pos="285,240" fillcolor="violet"];
 MakeList11 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="681,-394" _1="{\"r\":0.424674,\"g\":0.424659,\"b\":0.424674,\"a\":1.000000}" _2="{\"r\":0.191165,\"g\":0.191150,\"b\":0.191165,\"a\":1.000000}"];
@@ -33,25 +32,25 @@ MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer
 MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="810,240" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.800000}"];
 MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="810,-15" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":18.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.600000}"];
 MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="810,-135" _font="{\"fontName\":\"HelveticaNeue-UltraLight\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.800000}"];
-RemoveHTML [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="510,240"];
-RemoveHTML2 [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="300,405"];
-RemoveHTML3 [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="0,-120"];
+RemoveHTML [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="510,240" fillcolor="violet"];
+RemoveHTML2 [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="300,405" fillcolor="violet"];
+RemoveHTML3 [type="vuo.text.removeHtml" version="1.0.0" label="Remove HTML|<refresh>refresh\l|<text>text\l|<modifiedText>modifiedText\r" pos="0,-120" fillcolor="violet"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1095,-15" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 SelectEventOutput2 [type="vuo.select.out.event.2" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="-360,270"];
 SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="435,-135" _option1="\"Loading…\""];
 SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="-375,-150" _spunOff_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="495,105"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="495,135"];
 
 AppendTexts2:compositeText -> MakeTextLayer:text;
 AppendTexts:compositeText -> MakeTextLayer3:text;
 ChangeWindowAspectRatio:property -> MakeList9:1;
-ConvertIntegerToText2:text -> MakeList2:2;
-ConvertIntegerToText:text -> MakeList2:4;
-CountItemsInList2:itemCount -> ConvertIntegerToText:integer;
 CountItemsInList2:itemCount -> CountWithinRange:maximum;
 CountItemsInList2:itemCount -> CountWithinRange:setCount [event=true];
 CountItemsInList2:itemCount -> SelectEventOutput2:which;
-CountWithinRange:count -> ConvertIntegerToText2:integer;
+CountItemsInList2:itemCount -> SummarizeValue2:value;
 CountWithinRange:count -> GetItemFromList2:which;
+CountWithinRange:count -> SummarizeValue:value;
 FetchImage:image -> MakeScaledLayer:image;
 FetchRSSItems:items -> CountItemsInList2:list;
 FetchRSSItems:items -> GetItemFromList2:list;
@@ -82,4 +81,6 @@ RemoveHTML:modifiedText -> MakeTextLayer2:text;
 SelectEventOutput2:option2 -> CountWithinRange:increment;
 SelectLatest2:latest -> MakeTextLayer4:text;
 SpinOffEvent:spunOff -> FetchRSSItems:refresh;
+SummarizeValue2:summary -> MakeList2:4;
+SummarizeValue:summary -> MakeList2:2;
 }

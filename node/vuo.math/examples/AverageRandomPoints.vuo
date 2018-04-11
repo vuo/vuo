@@ -13,7 +13,7 @@ ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Si
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="540,405"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="540,480"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1380,435" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,150" fillcolor="yellow" _seconds="0.250000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,150" fillcolor="yellow" _seconds="0.250000" _fired_eventThrottling="drop"];
 HoldValue4 [type="vuo.data.hold.VuoLayer" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="705,255"];
 KeepAverage4 [type="vuo.math.keep.average.VuoReal" version="1.0.0" label="Keep Average|<refresh>refresh\l|<value>value\l|<reset>reset\l|<average>average\r" pos="405,75" fillcolor="violet"];
 KeepAverage5 [type="vuo.math.keep.average.VuoReal" version="1.0.0" label="Keep Average|<refresh>refresh\l|<value>value\l|<reset>reset\l|<average>average\r" pos="405,150" fillcolor="violet"];
@@ -25,7 +25,7 @@ MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<ref
 MakeList3 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="870,146" _1="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
 MakeList5 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1485,281" fillcolor="green"];
 MakeList7 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="356,386" _1="{\"r\":0.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="930,135" _radius="0.040000" _noiseAmount="0.2" _width="800" _height="800"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="930,135" _radius="0.040000" _noiseAmount="0.2" _width="800" _height="800"];
 MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<gradientNoiseAmount>gradientNoiseAmount\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="420,360" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _gradientNoiseAmount="0.2" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
 MakeRandomValue3 [type="vuo.noise.random.VuoPoint2d" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="165,210" _minimum="{\"x\":-1.000000,\"y\":-1.000000}" _maximum="{\"x\":1.000000,\"y\":1.000000}"];
 RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="930,375" _width="800" _height="800" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
@@ -35,7 +35,7 @@ ChangeWindowSize:property -> MakeList5:1;
 Convert2DPointToReal2:y -> KeepAverage5:value;
 Convert2DPointToReal:x -> KeepAverage4:value;
 FireOnStart2:started -> ChangeWindowSize:refresh;
-FirePeriodically:fired -> MakeRandomValue3:refresh;
+FirePeriodically:fired -> MakeRandomValue3:refresh [event=true];
 HoldValue4:heldValue -> MakeList:1;
 KeepAverage4:average -> Make2DPoint:x;
 KeepAverage5:average -> Make2DPoint:y;

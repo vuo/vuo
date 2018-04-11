@@ -5,6 +5,7 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.file.create.folder.c \
+	vuo.file.exists.c \
 	vuo.file.list.c
 
 HEADERS += \

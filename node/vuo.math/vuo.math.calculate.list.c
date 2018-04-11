@@ -21,9 +21,9 @@ VuoModuleMetadata({
 						"log2", "log10", "log", "ln", "exp", "sqrt", "sign", "rint", "abs", "min", "max", "sum", "avg", "pi",
 						"expression", "equation", "formula", "logic", "trigonometry"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "MoveDotsWithPerlinNoise.vuo" ]
 					  }
 				 });
 

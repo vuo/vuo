@@ -454,13 +454,11 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 	// Download the image data from the GPU.
 	unsigned char *bitmapData = [nbi bitmapData];
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		glBindTexture(GL_TEXTURE_2D, vi->glTextureName);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmapData);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	});
 
 	// Flip the image data (OpenGL returns flipped data, but NSBitmapImageRep assumes it is not flipped).
 	unsigned char *tmp = (unsigned char *)malloc(bytesPerRow);

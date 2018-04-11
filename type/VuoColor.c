@@ -155,15 +155,12 @@ char *VuoColor_getShortSummary(const VuoColor value)
 						  value.r, value.g, value.b, value.a);
 }
 
-/// Creates a C string from raw text (saves having to doublequote-escape and/or use backslashes).
-#define STRINGIFY(...) #__VA_ARGS__
-
 /**
  * Returns a detailed HTML representation of `value`.
  */
 char *VuoColor_getSummary(const VuoColor value)
 {
-	const char *t = STRINGIFY(
+	const char *t = VUO_STRINGIFY(
 		<style>
 			th,td { text-align: right; }
 			td { font-weight: normal; }

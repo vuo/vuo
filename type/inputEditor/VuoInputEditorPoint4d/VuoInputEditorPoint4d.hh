@@ -21,12 +21,12 @@ extern "C" {
  */
 class VuoInputEditorPoint4dFactory : public VuoInputEditorFactory
 {
-   Q_OBJECT
-   Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorPoint4d.json")
-   Q_INTERFACES(VuoInputEditorFactory)
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorPoint4d.json")
+	Q_INTERFACES(VuoInputEditorFactory)
 
 public:
-   virtual VuoInputEditor * newInputEditor(void);
+	virtual VuoInputEditor * newInputEditor(void);
 };
 
 /**
@@ -38,7 +38,7 @@ public:
  *   - "suggestedMin" and "suggestedMax" define the range of the slider (if both are defined)
  *		or spin box (if one is defined) but don't affect the line edit. By default, the dialog
  *      contains a spin box with unbounded range.
- *	 - "suggestedStep" defines the step size of the slider or spin box. By default, the step size is 1.
+ *	 - "suggestedStep" defines the step size of the slider or spin box. By default, the step size is 1/10 of the range.
  *
  * @eg{
  *   {
@@ -63,8 +63,12 @@ protected:
 
 private:
 
-	enum coord {
-		coord_x, coord_y, coord_z, coord_w
+	enum coord
+	{
+		coord_x,
+		coord_y,
+		coord_z,
+		coord_w
 	};
 
 	VuoPoint4d current;							///< The current value.

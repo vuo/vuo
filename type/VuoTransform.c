@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <float.h>
 #include "type.h"
 #include "VuoTransform.h"
 #include "VuoText.h"
@@ -121,28 +119,13 @@ void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatr
 /**
  * Returns the transform's rotation, represented as euler angles in radians (see @ref VuoTransform_makeEuler).
  */
+
 VuoPoint3d VuoTransform_getEuler(const VuoTransform transform)
 {
 	if (transform.type == VuoTransformTypeEuler)
 		return transform.rotationSource.euler;
 
-	// "Euler Angle Conversion" by Ken Shoemake.  Graphics Gems IV, pp. 222–229.
-	VuoPoint3d ea;
-	double cy = sqrt(transform.rotation[0]*transform.rotation[0] + transform.rotation[1]*transform.rotation[1]);
-	if (cy > 16*FLT_EPSILON)
-	{
-		ea.z = atan2(transform.rotation[5], transform.rotation[8]);
-		ea.y = atan2(-transform.rotation[2], cy);
-		ea.x = atan2(transform.rotation[1], transform.rotation[0]);
-	}
-	else
-	{
-		ea.z = atan2(-transform.rotation[7], transform.rotation[4]);
-		ea.y = atan2(-transform.rotation[2], cy);
-		ea.x = 0;
-	}
-
-	return ea;
+	return VuoTransform_eulerFromQuaternion(transform.rotationSource.quaternion);
 }
 
 /**
@@ -153,22 +136,7 @@ VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform)
 	if (transform.type == VuoTransformTypeQuaternion)
 		return transform.rotationSource.quaternion;
 
-	// Convert the euler angles to a quaternion.
-	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/
-	VuoPoint3d eu = transform.rotationSource.euler;
-	double c1 = cos(eu.y/2);
-	double s1 = sin(eu.y/2);
-	double c2 = cos(eu.x/2);
-	double s2 = sin(eu.x/2);
-	double c3 = cos(eu.z/2);
-	double s3 = sin(eu.z/2);
-	double c1c2 = c1*c2;
-	double s1s2 = s1*s2;
-	return VuoPoint4d_make(
-		c1c2*s3 + s1s2*c3,
-		s1*c2*c3 + c1*s2*s3,
-		c1*s2*c3 - s1*c2*s3,
-		c1c2*c3 - s1s2*s3);
+	return VuoTransform_quaternionFromEuler(transform.rotationSource.euler);
 }
 
 /**
@@ -226,26 +194,45 @@ VuoTransform VuoTransform_makeIdentity(void)
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale)
 {
 	VuoTransform t;
-
 	t.type = VuoTransformTypeEuler;
-
 	t.translation = translation;
-
 	t.rotationSource.euler = rotation;
-	// Rotate along the x axis, followed by y, follwed by z.
-	t.rotation[0] = cos(rotation.y)*cos(rotation.z);
-	t.rotation[1] = cos(rotation.y)*sin(rotation.z);
-	t.rotation[2] = -sin(rotation.y);
-	t.rotation[3] = cos(rotation.z)*sin(rotation.x)*sin(rotation.y) - cos(rotation.x)*sin(rotation.z);
-	t.rotation[4] = cos(rotation.x)*cos(rotation.z) + sin(rotation.x)*sin(rotation.y)*sin(rotation.z);
-	t.rotation[5] = cos(rotation.y)*sin(rotation.x);
-	t.rotation[6] = cos(rotation.x)*cos(rotation.z)*sin(rotation.y) + sin(rotation.x)*sin(rotation.z);
-	t.rotation[7] = -cos(rotation.z)*sin(rotation.x) + cos(rotation.x)*sin(rotation.y)*sin(rotation.z);
-	t.rotation[8] = cos(rotation.x)*cos(rotation.y);
-
 	t.scale = scale;
+	VuoTransform_rotationMatrixFromEuler(rotation, t.rotation);
 
 	return t;
+}
+
+/**
+ * Populate a 3x3 matrix with a normalized quaternion.
+ */
+void VuoTransform_rotationMatrixFromQuaternion(const VuoPoint4d quaternion, float* matrix)
+{
+	matrix[0] = 1. - 2. * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+	matrix[1] =      2. * (quaternion.x * quaternion.y + quaternion.w * quaternion.z);
+	matrix[2] =      2. * (quaternion.x * quaternion.z - quaternion.w * quaternion.y);
+	matrix[3] =      2. * (quaternion.x * quaternion.y - quaternion.w * quaternion.z);
+	matrix[4] = 1. - 2. * (quaternion.x * quaternion.x + quaternion.z * quaternion.z);
+	matrix[5] =      2. * (quaternion.y * quaternion.z + quaternion.w * quaternion.x);
+	matrix[6] =      2. * (quaternion.x * quaternion.z + quaternion.w * quaternion.y);
+	matrix[7] =      2. * (quaternion.y * quaternion.z - quaternion.w * quaternion.x);
+	matrix[8] = 1. - 2. * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
+}
+
+/**
+ * Populate a 3x3 matrix with an euler rotation.  Euler values are expressed in radians.
+ */
+void VuoTransform_rotationMatrixFromEuler(const VuoPoint3d euler, float* matrix)
+{
+	matrix[0] = cos(euler.y)*cos(euler.z);
+	matrix[1] = cos(euler.y)*sin(euler.z);
+	matrix[2] = -sin(euler.y);
+	matrix[3] = cos(euler.z)*sin(euler.x)*sin(euler.y) - cos(euler.x)*sin(euler.z);
+	matrix[4] = cos(euler.x)*cos(euler.z) + sin(euler.x)*sin(euler.y)*sin(euler.z);
+	matrix[5] = cos(euler.y)*sin(euler.x);
+	matrix[6] = cos(euler.x)*cos(euler.z)*sin(euler.y) + sin(euler.x)*sin(euler.z);
+	matrix[7] = -cos(euler.z)*sin(euler.x) + cos(euler.x)*sin(euler.y)*sin(euler.z);
+	matrix[8] = cos(euler.x)*cos(euler.y);
 }
 
 /**
@@ -263,16 +250,10 @@ VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rota
 	t.translation = translation;
 
 	VuoPoint4d q = VuoPoint4d_normalize(rotation);
+
 	t.rotationSource.quaternion = q;
-	t.rotation[0] = 1. - 2.*(q.y*q.y + q.z*q.z);
-	t.rotation[1] =      2.*(q.x*q.y + q.w*q.z);
-	t.rotation[2] =      2.*(q.x*q.z - q.w*q.y);
-	t.rotation[3] =      2.*(q.x*q.y - q.w*q.z);
-	t.rotation[4] = 1. - 2.*(q.x*q.x + q.z*q.z);
-	t.rotation[5] =      2.*(q.y*q.z + q.w*q.x);
-	t.rotation[6] =      2.*(q.x*q.z + q.w*q.y);
-	t.rotation[7] =      2.*(q.y*q.z - q.w*q.x);
-	t.rotation[8] = 1. - 2.*(q.x*q.x + q.y*q.y);
+
+	VuoTransform_rotationMatrixFromQuaternion(q, t.rotation);
 
 	t.scale = scale;
 
@@ -360,15 +341,9 @@ VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix)
 	t.rotation[7] = matrix[ 9] / t.scale.z;
 	t.rotation[8] = matrix[10] / t.scale.z;
 
-	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	t.type = VuoTransformTypeQuaternion;
-	t.rotationSource.quaternion.w = sqrt( fmax( 0, 1 + t.rotation[0] + t.rotation[4] + t.rotation[8] ) ) / 2;
-	t.rotationSource.quaternion.x = sqrt( fmax( 0, 1 + t.rotation[0] - t.rotation[4] - t.rotation[8] ) ) / 2;
-	t.rotationSource.quaternion.y = sqrt( fmax( 0, 1 - t.rotation[0] + t.rotation[4] - t.rotation[8] ) ) / 2;
-	t.rotationSource.quaternion.z = sqrt( fmax( 0, 1 - t.rotation[0] - t.rotation[4] + t.rotation[8] ) ) / 2;
-	t.rotationSource.quaternion.x = copysign( t.rotationSource.quaternion.x, t.rotation[5] - t.rotation[4] );
-	t.rotationSource.quaternion.y = copysign( t.rotationSource.quaternion.y, t.rotation[6] - t.rotation[2] );
-	t.rotationSource.quaternion.z = copysign( t.rotationSource.quaternion.z, t.rotation[1] - t.rotation[3] );
+
+	t.rotationSource.quaternion = VuoTransform_quaternionFromMatrix(t.rotation);
 
 	t.translation = VuoPoint3d_make(matrix[12], matrix[13], matrix[14]);
 
@@ -411,7 +386,7 @@ VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle r
 /**
  * Returns a column-major matrix of 16 values that transforms a 1x1 quad so that it renders the specified image at real (pixel-perfect) size.
  */
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, float *billboardMatrix)
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoReal meshX, float *billboardMatrix)
 {
 	VuoReal combinedScaleFactor = 1;
 	if (preservePhysicalSize)
@@ -433,9 +408,15 @@ void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeig
 		billboardMatrix[12] = floor((translationX+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
 		billboardMatrix[13] = floor((translationY+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
 
-		// Account for odd-dimensioned image
-		billboardMatrix[12] += (imageWidth % 2 ? (1./viewportWidth) : 0);
-		billboardMatrix[13] -= (imageHeight % 2 ? (1./viewportWidth) : 0);
+		// Account for odd-dimensioned image with horizontal-center anchor.
+		// (We know from VuoSceneText_make() that the mesh's first X coordinate
+		// is 0.0, -0.5, or -1.0, depending on whether the anchor is left, center, or right, respectively.)
+		bool meshCenteredX = VuoReal_areEqual(meshX, -.5);
+		if (meshCenteredX)
+		{
+			billboardMatrix[12] += (imageWidth  % 2 ? (1./viewportWidth) : 0);
+			billboardMatrix[13] -= (imageHeight % 2 ? (1./viewportWidth) : 0);
+		}
 
 		// Account for odd-dimensioned viewport
 		billboardMatrix[13] += (viewportWidth  % 2 ? (1./viewportWidth) : 0);

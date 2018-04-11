@@ -5,27 +5,27 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
 {
-AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="456,202" fillcolor="violet"];
-ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="501,326"];
-CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="143,201" fillcolor="violet"];
-CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="-76,93" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-280,-26" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-292,32" fillcolor="yellow" _seconds="5.000000" _fired_eventThrottling="drop"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="885,110" fillcolor="green"];
-MakeList3 [type="vuo.list.make.9.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="-146,104" _1="\"Paz e felicidade a todos\"" _2="\"こんにちは。お元気ですか？\"" _3="\"Hello from the children of planet Earth\"" _4="\"درود بر ساکنین ماورای آسمان‌ها\"" _5="\"Herzliche Grüße an alle\"" _6="\"Здравствуйте! Приветствую Вас!\"" _7="\"Üdvözletet küldünk magyar nyelven minden békét szerető lénynek a Világegyetemen\"" _8="\"各位都好吧？我们都很想念你们，有空请到这来玩。\"" _9="\".تحياتنا للأصدقاء في النجوم. يا ليت يجمعنا الزمان\""];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="915,125" fillcolor="green"];
-MakeList9 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="407,213" fillcolor="violet" _2="\" characters\""];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="728,94" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.200000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="729,203" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="956,99" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="450,195" fillcolor="violet"];
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="150,195" fillcolor="violet"];
+CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="-75,90" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-285,-30" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-285,30" fillcolor="yellow" _seconds="5.000000" _fired_eventThrottling="drop"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="912,116" fillcolor="green"];
+MakeList3 [type="vuo.list.make.9.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="-137,101" _1="\"Paz e felicidade a todos\"" _2="\"こんにちは。お元気ですか？\"" _3="\"Hello from the children of planet Earth\"" _4="\"درود بر ساکنین ماورای آسمان‌ها\"" _5="\"Herzliche Grüße an alle\"" _6="\"Здравствуйте! Приветствую Вас!\"" _7="\"Üdvözletet küldünk magyar nyelven minden békét szerető lénynek a Világegyetemen\"" _8="\"各位都好吧？我们都很想念你们，有空请到这来玩。\"" _9="\".تحياتنا للأصدقاء في النجوم. يا ليت يجمعنا الزمان\""];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="932,146" fillcolor="green"];
+MakeList9 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="409,206" fillcolor="violet" _2="\" characters\""];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="735,90" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.200000}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="735,210" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="960,105" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="510,300"];
 
 AppendTexts:compositeText -> MakeTextLayer2:text;
-ConvertIntegerToText:text -> MakeList9:1;
-CountCharacters:characterCount -> ConvertIntegerToText:integer;
+CountCharacters:characterCount -> SummarizeValue:value;
 CycleThroughList2:item -> CountCharacters:text;
 CycleThroughList2:item -> MakeTextLayer:text;
 FireOnStart:started -> CycleThroughList2:goForward;
@@ -36,4 +36,5 @@ MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList9:list -> AppendTexts:texts;
 MakeTextLayer2:layer -> MakeList2:2;
 MakeTextLayer:layer -> MakeList2:1;
+SummarizeValue:summary -> MakeList9:1;
 }

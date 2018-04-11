@@ -45,7 +45,8 @@ bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layer
 								 VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject);
 bool VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers,
 										   VuoList_VuoSceneObject ancestorObjects, VuoSceneObject targetObject,
-										   VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4]);
+										   VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4],
+										   bool includeChildrenInBounds);
 
 bool VuoRenderedLayers_getTransformedPoint(	VuoRenderedLayers renderedLayers,
 											VuoList_VuoSceneObject ancestorObjects,
@@ -59,7 +60,7 @@ bool VuoRenderedLayers_getInverseTransformedPoint(	VuoRenderedLayers renderedLay
 													VuoPoint2d point,
 													VuoPoint2d *inverseTransformedPoint);
 
-bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoLayer layer, VuoRectangle* rect);
+bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, VuoRectangle* rect);
 
 VuoPoint2d VuoRenderedLayers_getTextSize(VuoRenderedLayers renderedLayers, VuoText text, VuoFont font, bool includeTrailingWhiteSpace);
 

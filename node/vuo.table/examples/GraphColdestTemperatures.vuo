@@ -1,0 +1,72 @@
+/**
+ * @file
+ * Draws a graph of temperatures (in Celsius) by location, ordered from warmest to coldest.
+ *
+ * Data source: Coldest recorded temperature on each continent from https://en.wikipedia.org/wiki/List_of_weather_records
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="720,810"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1170,150" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.5}" _width="2" _height="0.10000000000000001" _rows="1"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1170,435" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.40000000596046448}" _width="2" _height="1" _rows="1"];
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="1140,705"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.y" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<y>y\l|<point2d>point2d\r" pos="1020,705"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.y" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<y>y\l|<point2d>point2d\r" pos="1020,915"];
+ConvertTextToReal [type="vuo.type.text.real" version="1.0.1" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<real>real\r" pos="810,705"];
+CountItemsInList [type="vuo.list.count.VuoLayer" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="1200,330"];
+CountItemsInList2 [type="vuo.list.count.VuoLayer" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="1260,615"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetTableColumn [type="vuo.table.get.column.VuoInteger" version="1.0.0" label="Get Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<includeHeader>includeHeader\l|<values>values\r" pos="615,150" fillcolor="violet" _column="1" _includeHeader="false"];
+GetTableColumn2 [type="vuo.table.get.column.VuoInteger" version="1.0.0" label="Get Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<includeHeader>includeHeader\l|<values>values\r" pos="615,435" fillcolor="violet" _column="3" _includeHeader="false"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="687,821" _2="0.050000000000000003"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1107,731"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1437,161" fillcolor="green"];
+MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1457,191" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.1.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="930,600" _color="{\"r\":0.62337684631347656,\"g\":0.73398947715759277,\"b\":0.9990997314453125,\"a\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _rotation="0.0" _width="0.02" _height="0.02" _sharpness="1.0"];
+MakeTableFromText [type="vuo.table.make.text" version="1.0.0" label="Make Table from Text|<refresh>refresh\l|<text>text\l|<format>format\l|<table>table\r" pos="195,150" fillcolor="violet" _text="\"Continent,Country,Temperature,Year\\nAfrica,Morocco,-23.9,1935\\nAntarctica,,-89.2,1983\\nAsia,Russia,-67.8,1933\\nEurope,Russia,-58.1,1978\\nN. America,Greenland,-66.1,1954\\nS. America,Argentina,-32.8,1907\\nOceania,New Zealand,-25.6,1903\"" _format="\"csv\""];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="855,270" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="930,765" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":20,\"underline\":false,\"color\":{\"r\":0.62337332963943481,\"g\":0.7339826226234436,\"b\":0.99909216165542603,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
+ProcessList3 [type="vuo.list.process.VuoText.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="810,150" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList4 [type="vuo.list.process.VuoText.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="810,435" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1485,150" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="720,600" _start="-90" _end="-20" _scaledStart="0" _scaledEnd="1" _limitToRange="false"];
+SortTable [type="vuo.table.sort.VuoInteger" version="1.0.0" label="Sort Table|<refresh>refresh\l|<table>table\l|<column>column\l|<sortType>sortType\l|<sortOrder>sortOrder\l|<firstRowIsHeader>firstRowIsHeader\l|<sortedTable>sortedTable\r" pos="420,150" fillcolor="violet" _column="3" _sortType="\"number\"" _sortOrder="\"descending\"" _firstRowIsHeader="true"];
+
+Add:sum -> ConvertRealTo2DPoint2:y;
+ArrangeLayersInGrid2:griddedLayer -> MakeList4:2;
+ArrangeLayersInGrid:griddedLayer -> MakeList4:1;
+CombineLayers2:layer -> ProcessList4:processedItem;
+ConvertRealTo2DPoint2:point2d -> MakeTextLayer2:center;
+ConvertRealTo2DPoint:point2d -> MakeOvalLayer:center;
+ConvertTextToReal:real -> Scale:value;
+CountItemsInList2:itemCount -> ArrangeLayersInGrid2:columns;
+CountItemsInList:itemCount -> ArrangeLayersInGrid:columns;
+FireOnStart:started -> MakeTableFromText:refresh;
+GetTableColumn2:values -> ProcessList4:fire;
+GetTableColumn:values -> ProcessList3:fire;
+MakeList2:list -> Add:values;
+MakeList3:list -> CombineLayers2:layers;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList7:list -> RenderLayersToWindow:setWindowProperties;
+MakeOvalLayer:layer -> MakeList3:1;
+MakeTableFromText:table -> SortTable:table;
+MakeTextLayer2:layer -> MakeList3:2;
+MakeTextLayer:layer -> ProcessList3:processedItem;
+ProcessList3:processItem -> MakeTextLayer:text;
+ProcessList3:processedList -> ArrangeLayersInGrid:layers;
+ProcessList3:processedList -> CountItemsInList:list;
+ProcessList4:processItem -> ConvertTextToReal:text;
+ProcessList4:processItem -> MakeTextLayer2:text;
+ProcessList4:processedList -> ArrangeLayersInGrid2:layers;
+ProcessList4:processedList -> CountItemsInList2:list;
+Scale:scaledValue -> ConvertRealTo2DPoint:y;
+Scale:scaledValue -> MakeList2:1;
+SortTable:sortedTable -> GetTableColumn2:table;
+SortTable:sortedTable -> GetTableColumn:table;
+}

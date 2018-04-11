@@ -1,0 +1,17 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+			"pattern": "^[A-Z][A-Za-z0-9+,/() -]+$",
+		},
+		"eventThrottling": {
+			"type": "string",
+			"enum": [
+				"enqueue",
+				"drop",
+			],
+		},
+	},
+	"additionalProperties": false,
+}

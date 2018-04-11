@@ -34,7 +34,7 @@ VuoModuleMetadata({
 						"QTKit.framework",
 						"QuartzCore.framework",
 						"Quartz.framework",
-						"VuoGLContext"
+						"VuoGlContext"
 					 ]
 				 });
 #endif
@@ -45,6 +45,7 @@ VuoModuleMetadata({
 @interface VuoQtListener ()
 ///@{
 @property dispatch_queue_t captureQueue;
+@property float firstFrameTime;
 ///@}
 @end
 
@@ -70,9 +71,11 @@ VuoModuleMetadata({
 	}
 
 	/// initialize texture cache for creating gl textures from CVPixelBuffer
-	glContext = VuoGlContext_use();
-	CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
-	CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, (CGLContextObj)glContext, pf, NULL, &textureCache);
+	CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
+	__block CVReturn ret;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
+	});
 	CGLReleasePixelFormat(pf);
 	if (ret != kCVReturnSuccess)
 	{
@@ -86,6 +89,9 @@ VuoModuleMetadata({
 
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(devicesDidChange:) name:QTCaptureDeviceWasConnectedNotification object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(devicesDidChange:) name:QTCaptureDeviceWasDisconnectedNotification object:nil];
+
+	// Fires when the MacBook Pro lid is opened/closed (changing the built-in camera's `suspended` key).
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(devicesDidChange:) name:QTCaptureDeviceAttributeDidChangeNotification object:nil];
 
 	// https://developer.apple.com/library/mac/documentation/quicktime/reference/QTCaptureDecompressedVideoOutput_Ref/DeprecationAppendix/AppendixADeprecatedAPI.html#//apple_ref/occ/instm/QTCaptureDecompressedVideoOutput/pixelBufferAttributes
 	// https://developer.apple.com/library/mac/qa/qa1501/_index.html
@@ -190,8 +196,9 @@ VuoModuleMetadata({
 		[mCaptureDeviceInput release];
 	}
 
-	CVOpenGLTextureCacheRelease(textureCache);
-	VuoGlContext_disuse(glContext);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		CVOpenGLTextureCacheRelease(textureCache);
+	});
 
 	[mMovie release];
 	[mCaptureSession release];
@@ -332,6 +339,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 		mCaptureDeviceInput = [[QTCaptureDeviceInput alloc] initWithDevice:device];
 
 		success = [mCaptureSession addInput:mCaptureDeviceInput error:&error];
+		_firstFrameTime = -INFINITY;
 
 		if (!success)
 		{
@@ -374,15 +382,22 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	userWantsRunning = YES;
 
 	QTCaptureDevice *device = [mCaptureDeviceInput device];
+	if (!device)
+	{
+		VUserLog("Error: No device selected.");
+		return;
+	}
 
 	NSError *error;
 	BOOL success = [device open:&error];
 	if (!success) {
+		VUserLog("Error: %s", [[error localizedDescription] UTF8String]);
 		return;
 	}
 
 	[mMovie setCurrentTime: QTMakeTime(0, 1)];
 
+	_firstFrameTime = -INFINITY;
 	[mCaptureSession startRunning];
 }
 
@@ -396,7 +411,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		VUOLOG_PROFILE_END(mainQueue);
-		[mCaptureSession removeInput:mCaptureDeviceInput];
+//		[mCaptureSession removeInput:mCaptureDeviceInput];
 		[mCaptureSession stopRunning];
 	});
 
@@ -567,9 +582,11 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			firstRun = false;
 		}
 
-		CVOpenGLTextureRef texture;
-		CVReturn ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, imageBuffer, NULL, &texture);
-
+		__block CVOpenGLTextureRef texture;
+		__block CVReturn ret;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, imageBuffer, NULL, &texture);
+		});
 		if (ret != kCVReturnSuccess)
 		{
 			VUserLog("Error: %d", ret);
@@ -586,7 +603,9 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture));
 			CVOpenGLTextureRelease(texture);
 			VuoRelease(rectImage);
-			CVOpenGLTextureCacheFlush(textureCache, 0);
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+				CVOpenGLTextureCacheFlush(textureCache, 0);
+			});
 		}
 	}
 
@@ -594,8 +613,10 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 	{
 		QTTime time = [sampleBuffer presentationTime];
 		float second = (float)time.timeValue / (float)time.timeScale;
+		if (_firstFrameTime == -INFINITY)
+			_firstFrameTime = second;
 
-		callback( VuoVideoFrame_make(image, second, VuoLogGetElapsedTime() - lastFrameReceived) );
+		callback( VuoVideoFrame_make(image, second - _firstFrameTime, VuoLogGetElapsedTime() - lastFrameReceived) );
 	}
 
 	CVBufferRelease(imageBuffer);

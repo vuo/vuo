@@ -8,6 +8,7 @@ SOURCES += \
 	dummy.mm \
 	VuoDialogForInputEditor.cc \
 	VuoInputEditor.cc \
+	VuoInputEditorNamedEnum.cc \
 	VuoInputEditorWithEnumMenu.cc \
 	VuoInputEditorWithMenu.cc \
 	VuoInputEditorWithDialog.cc \
@@ -17,6 +18,7 @@ SOURCES += \
 HEADERS += \
 	VuoDialogForInputEditor.hh \
 	VuoInputEditor.hh \
+	VuoInputEditorNamedEnum.hh \
 	VuoInputEditorWithEnumMenu.hh \
 	VuoInputEditorWithMenu.hh \
 	VuoInputEditorWithDialog.hh \

@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Shade with Frosted Glass",
+					  "title" : "Make Frosted Glass Shader",
 					  "keywords" : [
 						  "texture",
 						  "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",

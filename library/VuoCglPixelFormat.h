@@ -17,6 +17,8 @@ extern "C"
 char *VuoCglPixelFormat_getAttributeText(CGLPixelFormatAttribute a);
 void VuoCglPixelFormat_logDiff(CGLPixelFormatObj a, CGLPixelFormatObj b);
 
+char *VuoCglRenderer_getText(int rendererID);
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,7 +18,11 @@ NODE_INCLUDEPATH += \
 TYPE_SOURCES += \
 	VuoRealRegulation.c
 
+NODE_LIBRARY_SOURCES += \
+	VuoScribbleStrip.c
+
 HEADERS += \
-	VuoRealRegulation.h
+	VuoRealRegulation.h \
+	VuoScribbleStrip.h
 
 include(../../module.pri)

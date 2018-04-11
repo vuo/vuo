@@ -36,6 +36,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
 		VuoData:2 \
+		VuoDiode:0 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
 		VuoDistribution3d:0 \
@@ -92,6 +93,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoOscOutputDevice:2 \
 		VuoOscType:0 \
 		VuoParity:2 \
+		VuoPixelShape:0 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
@@ -109,16 +111,22 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoSerialDevice:2 \
 		VuoShader:1 \
 		VuoSizingMode:0 \
-		VuoSyphonServerDescription:0 \
+		VuoSortOrder:0 \
+		VuoSyphonServerDescription:2 \
+		VuoTable:2 \
+		VuoTableFormat:0 \
 		VuoTempoRange:0 \
 		VuoText:1 \
 		VuoTextCase:0 \
+		VuoTextComparison:0 \
+		VuoTextSort:0 \
 		VuoThresholdType:0 \
 		VuoTime:0 \
 		VuoTimeFormat:0 \
 		VuoTimeUnit:0 \
 		VuoTransform2d:0 \
 		VuoTransform:0 \
+		VuoTree:2 \
 		VuoUrl:2 \
 		VuoVertexAttribute:2 \
 		VuoVerticalAlignment:0 \
@@ -158,8 +166,10 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.serial \
 	$$ROOT/node/vuo.shader \
 	$$ROOT/node/vuo.syphon \
+	$$ROOT/node/vuo.table \
 	$$ROOT/node/vuo.text \
-	$$ROOT/node/vuo.time
+	$$ROOT/node/vuo.time \
+	$$ROOT/node/vuo.type
 
 include(../../module.pri)
 

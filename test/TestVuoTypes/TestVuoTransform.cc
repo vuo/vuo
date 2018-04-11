@@ -235,7 +235,7 @@ private slots:
 		{
 			VuoPoint4d quaternion = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.);
 			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,2,3), quaternion, VuoPoint3d_make(4,5,6));
-			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
+ 			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
 		}
 
 		{
@@ -254,6 +254,7 @@ private slots:
 			QTest::newRow("targeted spotlight direction vector: forward/right") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4)) << VuoPoint3d_make(0, M_PI/4., 0) << quaternion;
 		}
 	}
+
 	void testDirection()
 	{
 		QFETCH(VuoTransform, transform);
@@ -264,27 +265,31 @@ private slots:
 		VuoPoint3d actualDirection = VuoTransform_getDirection(transform);
 
 		// "In the case of comparing floats and doubles, qFuzzyCompare() is used for comparing. This means that comparing to 0 will likely fail."
-		QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
-		QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
-		QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+		// Compare sin() of returned values to avoid 0 != PI failures (not using modulo because 3.1415 % 3.1416 = 3.1415).
+		QCOMPARE(sin(actualDirection.x)+10.f, sin(expectedDirection.x)+10.f);
+		QCOMPARE(sin(actualDirection.y)+10.f, sin(expectedDirection.y)+10.f);
+		QCOMPARE(sin(actualDirection.z)+10.f, sin(expectedDirection.z)+10.f);
 
 		VuoPoint3d actualEuler = VuoTransform_getEuler(transform);
-		QCOMPARE(actualEuler.x+10.f, expectedEuler.x+10.f);
-		QCOMPARE(actualEuler.y+10.f, expectedEuler.y+10.f);
-		QCOMPARE(actualEuler.z+10.f, expectedEuler.z+10.f);
+
+		QCOMPARE(sin(actualEuler.x)+10.f, sin(expectedEuler.x)+10.f);
+		QCOMPARE(sin(actualEuler.y)+10.f, sin(expectedEuler.y)+10.f);
+		QCOMPARE(sin(actualEuler.z)+10.f, sin(expectedEuler.z)+10.f);
 
 		VuoPoint4d actualQuaternion = VuoTransform_getQuaternion(transform);
-		QCOMPARE(actualQuaternion.w+10.f, expectedQuaternion.w+10.f);
-		QCOMPARE(actualQuaternion.x+10.f, expectedQuaternion.x+10.f);
-		QCOMPARE(actualQuaternion.y+10.f, expectedQuaternion.y+10.f);
-		QCOMPARE(actualQuaternion.z+10.f, expectedQuaternion.z+10.f);
+
+		QCOMPARE(sin(actualQuaternion.w)+10.f, sin(expectedQuaternion.w)+10.f);
+		QCOMPARE(sin(actualQuaternion.x)+10.f, sin(expectedQuaternion.x)+10.f);
+		QCOMPARE(sin(actualQuaternion.y)+10.f, sin(expectedQuaternion.y)+10.f);
+		QCOMPARE(sin(actualQuaternion.z)+10.f, sin(expectedQuaternion.z)+10.f);
 
 		{
 			VuoPoint3d initialDirection = (VuoPoint3d){1,0,0};
 			VuoPoint3d actualDirection = VuoTransform_rotateVectorWithQuaternion(initialDirection, expectedQuaternion);
-			QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
-			QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
-			QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+
+			QCOMPARE(sin(actualDirection.x)+10.f, sin(expectedDirection.x)+10.f);
+			QCOMPARE(sin(actualDirection.y)+10.f, sin(expectedDirection.y)+10.f);
+			QCOMPARE(sin(actualDirection.z)+10.f, sin(expectedDirection.z)+10.f);
 		}
 	}
 
@@ -332,6 +337,7 @@ private slots:
 			QTest::newRow("rotate, scale, translate (quaternion)") << t << matrix;
 		}
 	}
+
 	void testMatrixRoundtrip()
 	{
 		QFETCH(VuoTransform, expectedTransform);
@@ -345,6 +351,64 @@ private slots:
 		VuoTransform actualTransform = VuoTransform_makeFromMatrix4x4(expectedMatrix);
 		QEXPECT_FAIL("rotate, scale, translate (quaternion)", "json-c now encodes double-precision, but quaternion is only accurate to float-precision", Continue);
 		QCOMPARE(VuoTransform_getString(actualTransform), VuoTransform_getString(expectedTransform));
+	}
+
+	static float randRad()
+	{
+		return (rand() / (float)(RAND_MAX - 1)) * 1.570796f;
+	}
+
+	static float sinAddTen(float v)
+	{
+		return sin(v) + 10.f;
+	}
+
+	void testRandomRotationConversion()
+	{
+		int runs, eulerSuccess = 0;
+		for (runs = 0; runs < 200000; ++runs)
+		{
+			VuoPoint3d randomEuler = VuoPoint3d_make(randRad(), randRad(), randRad());
+			VuoPoint4d quaternion = VuoTransform_quaternionFromEuler(randomEuler);
+			VuoPoint3d backToEuler = VuoTransform_eulerFromQuaternion(quaternion);
+
+			// euler / quaternion conversion
+			//
+			// Sometimes euler to quaternion round trips can give equivalent rotations that
+			// represented differently in euler format.  However most of the time they are
+			// exactly equivalent, so this tests for matches allowing for a small number
+			// of expected inaccuracies.
+			if( qFuzzyCompare(sinAddTen(randomEuler.x), sinAddTen(backToEuler.x)) &&
+				qFuzzyCompare(sinAddTen(randomEuler.y), sinAddTen(backToEuler.y)) &&
+				qFuzzyCompare(sinAddTen(randomEuler.z), sinAddTen(backToEuler.z)) )
+				eulerSuccess++;
+
+
+			// euler and quaternion matrix representations
+			float eulerMatrix[9], quaternionMatrix[9];
+			VuoTransform_rotationMatrixFromEuler(randomEuler, eulerMatrix);
+			VuoTransform_rotationMatrixFromQuaternion(quaternion, quaternionMatrix);
+
+			for(int i = 0; i < 9; ++i)
+				QCOMPARE(sinAddTen(eulerMatrix[i]), sinAddTen(quaternionMatrix[i]));
+
+			// matrix -> euler
+			VuoPoint3d eulerFromMatrix = VuoTransform_eulerFromMatrix(eulerMatrix);
+
+			QCOMPARE(sinAddTen(randomEuler.x), sinAddTen(eulerFromMatrix.x));
+			QCOMPARE(sinAddTen(randomEuler.y), sinAddTen(eulerFromMatrix.y));
+			QCOMPARE(sinAddTen(randomEuler.z), sinAddTen(eulerFromMatrix.z));
+
+			// matrix -> quaternion
+			VuoPoint4d quaternionFromMatrix = VuoTransform_quaternionFromMatrix(quaternionMatrix);
+
+			QCOMPARE(sinAddTen(quaternion.x), sinAddTen(quaternionFromMatrix.x));
+			QCOMPARE(sinAddTen(quaternion.y), sinAddTen(quaternionFromMatrix.y));
+			QCOMPARE(sinAddTen(quaternion.z), sinAddTen(quaternionFromMatrix.z));
+			QCOMPARE(sinAddTen(quaternion.w), sinAddTen(quaternionFromMatrix.w));
+		}
+
+		QVERIFY2((float)eulerSuccess / runs > .99, "Euler -> Quaternion -> Euler round trip exact match ratio is lower than it should be.");
 	}
 
 	void testSerializationAndSummary_data()

@@ -3,7 +3,7 @@
 Major data types for working with graphics:
 
    - @ref VuoImage
-   - @ref VuoImageRenderer
+   - @ref VuoImageRenderer_render
    - @ref VuoSceneObject
    - @ref VuoSceneRenderer
    - @ref VuoSceneObjectRenderer

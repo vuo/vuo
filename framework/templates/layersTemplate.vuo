@@ -1,0 +1,16 @@
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,75" _started_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="424,146" fillcolor="green"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="454,176" fillcolor="green"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-45,270" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-30,195" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="495,135" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="45,135" fillcolor="green"];
+
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList4:list -> RenderLayersToWindow:setWindowProperties;
+RenderLayersToWindow:requestedFrame -> ShareValue2:value [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+}

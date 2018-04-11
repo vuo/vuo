@@ -5,6 +5,7 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
@@ -17,20 +18,12 @@ Append5 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>ref
 Append6 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1185,480"];
 Append7 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1185,645"];
 Append8 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1185,390"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1695,75" _scaleToFit="false" _center="{\"x\":-0.500000,\"y\":0.000000}" _width="1.000000" _columns="1" _height="0.400000" _rows="4"];
-ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1710,525" _scaleToFit="false" _center="{\"x\":0.500000,\"y\":0.000000}" _width="1.000000" _columns="1" _height="0.400000" _rows="4"];
-ConvertRealToText [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1200,285"];
-ConvertRealToText2 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1245,405"];
-ConvertRealToText3 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1215,300"];
-ConvertRealToText4 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1215,405"];
-ConvertRealToText5 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1170,675"];
-ConvertRealToText6 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1170,780"];
-ConvertRealToText7 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1170,465"];
-ConvertRealToText8 [type="vuo.type.real.text" version="1.1.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="1170,570"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1695,75" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.500000,\"y\":0.000000}" _width="1.000000" _columns="1" _height="0.400000" _rows="4"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1710,525" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.500000,\"y\":0.000000}" _width="1.000000" _columns="1" _height="0.400000" _rows="4"];
 FilterHandsBySide [type="vuo.leap.find.hand.side" version="2.0.0" label="Find Hands by Side|<refresh>refresh\l|<hands>hands\l|<side>side\l|<foundHands>foundHands\r" pos="570,120" fillcolor="violet" _side="\"left\""];
 FilterHandsBySide2 [type="vuo.leap.find.hand.side" version="2.0.0" label="Find Hands by Side|<refresh>refresh\l|<hands>hands\l|<side>side\l|<foundHands>foundHands\r" pos="570,195" fillcolor="violet" _side="\"right\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="600,-345" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.1" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="1110,-255"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.2" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="1110,-255"];
 GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="840,285"];
 GetFirstItemInList2 [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="915,405"];
 GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="345,150"];
@@ -40,17 +33,17 @@ GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>ref
 MakeList11 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1129,191" _1="\"Grab: \""];
 MakeList13 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1129,26" _1="\"Confidence: \""];
 MakeList14 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1129,-79" _1="\"Time visible: \""];
-MakeList24 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1620,86"];
+MakeList24 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1623,86"];
 MakeList25 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1977,56" fillcolor="green"];
-MakeList26 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1638,536"];
+MakeList26 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1641,536"];
 MakeList27 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1144,401" _1="\"Time visible: \""];
 MakeList28 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1144,491" _1="\"Confidence: \""];
 MakeList29 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1144,656" _1="\"Grab: \""];
 MakeList30 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1144,581" _1="\"Pinch: \""];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1997,71" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1997,86" fillcolor="green"];
 MakeList7 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1129,101" _1="\"Pinch: \""];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1350,-405" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1350,-270" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _opacity="1.000000"];
+MakeScaledLayer [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1350,-405" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _opacity="1.000000"];
+MakeScaledLayer3 [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1350,-270" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _opacity="1.000000"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1425,645" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1425,390" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1425,480" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
@@ -60,7 +53,15 @@ MakeTextLayer6 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Laye
 MakeTextLayer7 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1425,90" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 MakeTextLayer8 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1425,-90" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 ReceiveLeapFrame2 [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="150,150" fillcolor="yellow" _receivedFrame_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="2025,45" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="2025,45" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1245,510"];
+SummarizeValue2 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1245,600"];
+SummarizeValue3 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1245,690"];
+SummarizeValue4 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1245,765"];
+SummarizeValue5 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1230,300"];
+SummarizeValue6 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1230,210"];
+SummarizeValue7 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1230,135"];
+SummarizeValue8 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1230,30"];
 
 Append2:compositeText -> MakeTextLayer5:text;
 Append3:compositeText -> MakeTextLayer6:text;
@@ -72,14 +73,6 @@ Append8:compositeText -> MakeTextLayer2:text;
 Append:compositeText -> MakeTextLayer7:text;
 ArrangeLayersInGrid2:griddedLayer -> MakeList25:4;
 ArrangeLayersInGrid:griddedLayer -> MakeList25:3;
-ConvertRealToText2:text -> MakeList11:2;
-ConvertRealToText3:text -> MakeList14:2;
-ConvertRealToText4:text -> MakeList13:2;
-ConvertRealToText5:text -> MakeList30:2;
-ConvertRealToText6:text -> MakeList29:2;
-ConvertRealToText7:text -> MakeList27:2;
-ConvertRealToText8:text -> MakeList28:2;
-ConvertRealToText:text -> MakeList7:2;
 FilterHandsBySide2:foundHands -> GetFirstItemInList2:list;
 FilterHandsBySide:foundHands -> GetFirstItemInList:list;
 FireOnStart:started -> GetHandValues2:refresh;
@@ -90,14 +83,14 @@ GetFirstItemInList2:firstItem -> GetHandValues2:hand;
 GetFirstItemInList:firstItem -> GetHandValues:hand;
 GetFrameValues:hands -> FilterHandsBySide2:hands;
 GetFrameValues:hands -> FilterHandsBySide:hands;
-GetHandValues2:confidence -> ConvertRealToText8:real;
-GetHandValues2:grabAmount -> ConvertRealToText6:real;
-GetHandValues2:pinchAmount -> ConvertRealToText5:real;
-GetHandValues2:timeVisible -> ConvertRealToText7:real;
-GetHandValues:confidence -> ConvertRealToText4:real;
-GetHandValues:grabAmount -> ConvertRealToText2:real;
-GetHandValues:pinchAmount -> ConvertRealToText:real;
-GetHandValues:timeVisible -> ConvertRealToText3:real;
+GetHandValues2:confidence -> SummarizeValue2:value;
+GetHandValues2:grabAmount -> SummarizeValue4:value;
+GetHandValues2:pinchAmount -> SummarizeValue3:value;
+GetHandValues2:timeVisible -> SummarizeValue:value;
+GetHandValues:confidence -> SummarizeValue7:value;
+GetHandValues:grabAmount -> SummarizeValue5:value;
+GetHandValues:pinchAmount -> SummarizeValue6:value;
+GetHandValues:timeVisible -> SummarizeValue8:value;
 GetImage:image -> FlipImageHorizontally:image;
 GetImage:image -> MakeScaledLayer:image;
 MakeList11:list -> Append2:texts;
@@ -123,4 +116,12 @@ MakeTextLayer7:layer -> MakeList24:3;
 MakeTextLayer8:layer -> MakeList24:1;
 MakeTextLayer:layer -> MakeList26:4;
 ReceiveLeapFrame2:receivedFrame -> GetFrameValues:frame;
+SummarizeValue2:summary -> MakeList28:2;
+SummarizeValue3:summary -> MakeList30:2;
+SummarizeValue4:summary -> MakeList29:2;
+SummarizeValue5:summary -> MakeList11:2;
+SummarizeValue6:summary -> MakeList7:2;
+SummarizeValue7:summary -> MakeList13:2;
+SummarizeValue8:summary -> MakeList14:2;
+SummarizeValue:summary -> MakeList27:2;
 }

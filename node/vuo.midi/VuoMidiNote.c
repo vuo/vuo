@@ -99,7 +99,7 @@ char * VuoMidiNote_getSummary(const VuoMidiNote mn)
 {
 	const char *noteNames[] = { "C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B" };
 	const char *noteName = noteNames[mn.noteNumber % 12];
-	unsigned char noteOctave = mn.noteNumber / 12 - 1;
+	char noteOctave = (char)mn.noteNumber / 12 - 1;
 	const char *onOff = mn.isNoteOn ? "on" : "off";
 
 	return VuoText_format("Channel %d: note %s%d (#%d) %s, velocity %d",

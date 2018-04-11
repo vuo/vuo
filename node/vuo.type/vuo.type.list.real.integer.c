@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert Real List to Integer List",
 					  "description": "Outputs a list containing integer approximations of the input list's real numbers.  Real numbers are rounded to the nearest integer.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
@@ -21,8 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoInteger) integers
 )
 {
-	*integers = VuoListCreate_VuoInteger();
 	unsigned long count = VuoListGetCount_VuoReal(reals);
-	for (unsigned long i = 1; i <= count; ++i)
-		VuoListAppendValue_VuoInteger(*integers, lround(VuoListGetValue_VuoReal(reals, i)));
+	VuoReal *inputs = VuoListGetData_VuoReal(reals);
+	*integers = VuoListCreateWithCount_VuoInteger(count, 0);
+	VuoInteger *outputs = VuoListGetData_VuoInteger(*integers);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = lround(inputs[i]);
 }

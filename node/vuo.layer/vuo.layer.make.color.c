@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Color Layer",
 					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "tone", "chroma",
-									"rectangle", "square" ],
+									"rectangle", "square", "shape" ],
 					 "version" : "1.2.0",
 					 "node": {
 						  "exampleCompositions" : [ "DrawShapes.vuo" ]

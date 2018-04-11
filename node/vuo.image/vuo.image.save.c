@@ -25,7 +25,7 @@ VuoModuleMetadata({
 					 ],
 					 "version" : "1.0.2",
 					 "dependencies" : [
-						 "FreeImage",
+						 "freeimage",
 						 "VuoInteger",
 						 "VuoUrl"
 					 ],
@@ -80,7 +80,7 @@ void nodeEvent
 
 	free(validExtensions);
 
-	VuoUrl normalized_url = VuoUrl_normalize(extensioned_url, true);
+	VuoUrl normalized_url = VuoUrl_normalize(extensioned_url, VuoUrlNormalize_forSaving);
 	VuoLocal(normalized_url);
 
 	VuoText absolute_path = VuoUrl_getPosixPath(normalized_url);

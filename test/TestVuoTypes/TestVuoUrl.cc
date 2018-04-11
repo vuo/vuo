@@ -14,6 +14,8 @@ extern "C" {
 #include "VuoUrlFetch.h"
 }
 
+extern dispatch_once_t VuoGetWorkingDirectoryOnce;
+
 /**
  * Tests the VuoUrl type.
  */
@@ -35,15 +37,18 @@ private slots:
 		QString fileScheme = "file://";
 		QString basePath = getcwd(NULL,0);
 		QString baseUrl = fileScheme + basePath;
+		baseUrl.replace("@", "%40");
 		QString homeDir = getenv("HOME");
 
 		QString basePathParent = basePath;
 		basePathParent.truncate(basePath.lastIndexOf("/TestVuoTypes"));
 		QString baseUrlParent = fileScheme + basePathParent;
+		baseUrlParent.replace("@", "%40");
 
 		QString basePathParentParent = basePathParent;
 		basePathParentParent.truncate(basePathParent.lastIndexOf("/test"));
 		QString baseUrlParentParent = fileScheme + basePathParentParent;
+		baseUrlParentParent.replace("@", "%40");
 
 		QString resourcesPath = basePathParent + "/Resources";
 		QString resourcesPathParent = basePathParent;
@@ -53,9 +58,11 @@ private slots:
 
 		//											   url							   expectedNormalizedUrl					   posix?   expectedPosixPath					   expectedAppLoadPath						   expectedAppSavePath
 		QTest::newRow("empty string")				<< ""							<< baseUrl									<< true  << basePath							<< resourcesPath							<< desktopPath;
+		QTest::newRow("assumed HTTP URL")           << "vuo.org"                    << "http://vuo.org"                         << false << ""                                  << ""                                       << "";
 		QTest::newRow("absolute URL")				<< "http://vuo.org"				<< "http://vuo.org"							<< false << ""									<< ""										<< "";
 		QTest::newRow("absolute URL/")				<< "http://vuo.org/"			<< "http://vuo.org"							<< false << ""									<< ""										<< "";
 		QTest::newRow("absolute URL space")			<< "http://vuo.org/a b.png"		<< "http://vuo.org/a%20b.png"				<< false << ""									<< ""										<< "";
+		QTest::newRow("data")                       << "data:;base64,AA=="          << "data:;base64,AA=="                      << false << ""                                  << ""                                       << "";
 		QTest::newRow("relative file")				<< "file"						<< baseUrl + "/file"						<< true  << basePath + "/file"					<< resourcesPath + "/file"					<< desktopPath + "/file";
 		QTest::newRow("relative file ?")			<< "file?.wav"					<< baseUrl + "/file%3f.wav"					<< true  << basePath + "/file?.wav"				<< resourcesPath + "/file?.wav"				<< desktopPath + "/file?.wav";
 		QTest::newRow("relative dir/")				<< "dir/"						<< baseUrl + "/dir"							<< true  << basePath + "/dir"					<< resourcesPath + "/dir"					<< desktopPath + "/dir";
@@ -64,6 +71,7 @@ private slots:
 		QTest::newRow("relative ../file")			<< "../Makefile"				<< baseUrlParent + "/Makefile"				<< true  << basePathParent + "/Makefile"		<< resourcesPathParent + "/Makefile"		<< desktopPath + "/../Makefile" /* Doesn't exist, so ".." remains. */;
 		QTest::newRow("relative ../../file")		<< "../../Makefile"				<< baseUrlParentParent + "/Makefile"		<< true  << basePathParentParent + "/Makefile"	<< resourcesPathParentParent + "/Makefile"	<< desktopPath + "/../../Makefile" /* Doesn't exist, so "../.." remains. */;
 		QTest::newRow("absolute file")				<< "/mach_kernel"				<< fileScheme + "/mach_kernel"				<< true  << "/mach_kernel"						<< "/mach_kernel"							<< "/mach_kernel";
+		QTest::newRow("absolute file @")			<< "/mach_kernel@b"				<< fileScheme + "/mach_kernel%40b"			<< true  << "/mach_kernel@b"					<< "/mach_kernel@b"							<< "/mach_kernel@b";
 		QTest::newRow("absolute colon")				<< "/ScreenShot 09:41:00"		<< fileScheme + "/ScreenShot%2009%3a41%3a00"<< true  << "/ScreenShot 09꞉41꞉00"				<< "/ScreenShot 09꞉41꞉00"					<< "/ScreenShot 09꞉41꞉00";
 		QTest::newRow("absolute dir/")				<< "/usr/include/"				<< fileScheme + "/usr/include"				<< true  << "/usr/include"						<< "/usr/include"							<< "/usr/include";
 		QTest::newRow("absolute dir space")			<< "/Library/Desktop Pictures"	<< "file:///Library/Desktop%20Pictures"		<< true  << "/Library/Desktop Pictures"			<< "/Library/Desktop Pictures"				<< "/Library/Desktop Pictures";
@@ -85,7 +93,7 @@ private slots:
 		QFETCH(QString, expectedAppLoadPath);
 		QFETCH(QString, expectedAppSavePath);
 
-		VuoUrl normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), false);
+		VuoUrl normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), expectedValidPosixPath ? VuoUrlNormalize_default : VuoUrlNormalize_assumeHttp);
 		VuoRetain(normalizedUrl);
 		QCOMPARE(normalizedUrl, expectedNormalizedUrl.toUtf8().data());
 
@@ -117,9 +125,11 @@ private slots:
 
 				char *formerWorkingDir = getcwd(NULL, 0);
 				chdir("/");
+				// Reset process-wide working directory cache.
+				VuoGetWorkingDirectoryOnce = 0;
 
 				{
-					VuoUrl appLoadUrl = VuoUrl_normalize(url.toUtf8().data(), false);
+					VuoUrl appLoadUrl = VuoUrl_normalize(url.toUtf8().data(), VuoUrlNormalize_default);
 					VuoLocal(appLoadUrl);
 
 					VuoText appLoadPath = VuoUrl_getPosixPath(appLoadUrl);
@@ -128,7 +138,7 @@ private slots:
 				}
 
 				{
-					VuoUrl appSaveUrl = VuoUrl_normalize(url.toUtf8().data(), true);
+					VuoUrl appSaveUrl = VuoUrl_normalize(url.toUtf8().data(), VuoUrlNormalize_forSaving);
 					VuoLocal(appSaveUrl);
 
 					VuoText appSavePath = VuoUrl_getPosixPath(appSaveUrl);
@@ -137,6 +147,8 @@ private slots:
 				}
 
 				chdir(formerWorkingDir);
+				// Reset process-wide working directory cache.
+				VuoGetWorkingDirectoryOnce = 0;
 
 				unlink(desktopMakefile.toUtf8().data());
 				QVERIFY(!QFile(desktopMakefile).exists());
@@ -183,6 +195,7 @@ private slots:
 		QTest::newRow("http everything")	<< "http://user@example.com:8080/a?b=c&d=e#f"					<< "http"	<< "user"	<< "example.com"	<< 8080	<< "/a"													<< "b=c&d=e"	<< "f";
 		QTest::newRow("https")				<< "https://example.com/"										<< "https"	<< ""		<< "example.com"	<< 443	<< "/"													<< ""			<< "";
 		QTest::newRow("file")				<< "file:///System/Library/CoreServices/SystemVersion.plist"	<< "file"	<< ""		<< ""				<< 0	<< "/System/Library/CoreServices/SystemVersion.plist"	<< ""			<< "";
+		QTest::newRow("data")               << "data:;base64,AA=="                                          << "data"   << ""       << ""               << 0    << ""                                                   << ""           << "";
 	}
 	void testParts()
 	{
@@ -270,6 +283,59 @@ private slots:
 		QFETCH(bool, expectedBundle);
 
 		QCOMPARE(VuoUrl_isBundle(url.toUtf8().data()), expectedBundle);
+	}
+
+	void testDataUri_data()
+	{
+		QTest::addColumn<QString>("uri");
+		QTest::addColumn<bool>("expectedValid");
+		QTest::addColumn<QByteArray>("expectedData");
+
+		QTest::newRow("empty data")                     << "data:,"            << true  << QByteArray();
+		QTest::newRow("empty data base64")              << "data:;base64,"     << true  << QByteArray();
+
+		QTest::newRow("base64 0")                       << "data:;base64,AA==" << true  << QByteArray(1, 0);
+
+		QTest::newRow("incomplete percent-escape")      << "data:,.%"          << true  << QByteArray(".");
+		QTest::newRow("incomplete percent-escape 2")    << "data:,.%0"         << true  << QByteArray(".");
+		QTest::newRow("bad percent-escape")             << "data:,.%0x"        << true  << QByteArray(".");
+
+		QTest::newRow("no comma")                       << "data:"             << false << QByteArray();
+		QTest::newRow("semicolon but no comma")         << "data:;"            << false << QByteArray();
+		QTest::newRow("semicolon base64 but no comma")  << "data:;base64"      << false << QByteArray();
+
+		// Examples from https://tools.ietf.org/html/rfc2397
+		QTest::newRow("RFC2397: URL encoding") << "data:,A%20brief%20note"                                                  << true << QByteArray("A brief note");
+		QTest::newRow("RFC2397: GIF")          << "data:image/gif;base64,R0lGODdh"                                          << true << QByteArray("GIF87a");
+		QTest::newRow("RFC2397: query")        << "data:application/vnd-xxx-query,select_vcount,fcol_from_fieldtable/local" << true << QByteArray("select_vcount,fcol_from_fieldtable/local");
+
+		// Examples from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
+		QTest::newRow("Mozilla: text")        << "data:,Hello%2C%20World!"                             << true << QByteArray("Hello, World!");
+		QTest::newRow("Mozilla: base64")      << "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D"     << true << QByteArray("Hello, World!");
+		QTest::newRow("Mozilla: base64 HTML") << "data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E" << true << QByteArray("<h1>Hello, World!</h1>");
+		QTest::newRow("Mozilla: script")      << "data:text/html,<script>alert('hi');</script>"        << true << QByteArray("<script>alert('hi');</script>");
+
+		// Examples from https://en.wikipedia.org/wiki/Data_URI_scheme
+		QTest::newRow("Wikipedia: mediatype param") << "data:text/vnd-example+xyz;foo=bar;base64,R0lGODdh"          << true << QByteArray("GIF87a");
+		QTest::newRow("Wikipedia: URL encoding")    << "data:text/plain;charset=UTF-8;page=21,the%20data:1234,5678" << true << QByteArray("the data:1234,5678");
+		QTest::newRow("Wikipedia: PNG")             << "data:image/png;base64,iVBORw0KGgo="                         << true << QByteArray("\x89PNG\r\n\x1A\n");
+		QTest::newRow("Wikipedia: CSS whitespace")  << "data:image/png;base64,iVB\\\nORw0KGgo="                     << true << QByteArray("\x89PNG\r\n\x1A\n");
+	}
+	void testDataUri()
+	{
+		QFETCH(QString, uri);
+		QFETCH(bool, expectedValid);
+		QFETCH(QByteArray, expectedData);
+
+		void *data;
+		unsigned int dataLength;
+		bool valid = VuoUrl_fetch(uri.toUtf8().constData(), &data, &dataLength);
+		QCOMPARE(valid, expectedValid);
+		if (valid)
+		{
+			QCOMPARE(QByteArray((const char *)data, dataLength), expectedData);
+			free(data);
+		}
 	}
 };
 

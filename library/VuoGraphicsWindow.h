@@ -17,6 +17,8 @@
 #endif
 #import <AppKit/AppKit.h>
 
+extern const int VuoGraphicsWindowMinSize; ///< Smallest window width and height that Cocoa can properly render.
+
 typedef void (*VuoGraphicsWindowInitCallback)(void *userData, float backingScaleFactor);          ///< Called by @ref VuoGraphicsView's init method.
 typedef void (*VuoGraphicsWindowUpdateBackingCallback)(void *userData, float backingScaleFactor); ///< Called when the window changes screens (including when the window first appears).
 typedef void (*VuoGraphicsWindowResizeCallback)(void *userData, unsigned int, unsigned int);      ///< Called when the window is resized (including transitioning between fullscreen and windowed).
@@ -72,7 +74,5 @@ extern dispatch_semaphore_t VuoGraphicsWindow_fullScreenTransitionSemaphore;
 
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
 - (void)unlockAspectRatio;
-
-- (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute;
 
 @end

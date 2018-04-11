@@ -68,10 +68,8 @@ private slots:
 		QTest::newRow("empty string")		<< ""									<< "<code>&#0;</code>";
 		QTest::newRow("short")				<< "a"									<< "<code>a</code>";
 		QTest::newRow("borderline")			<< "01234567890123456789012345678901234567890123456789"	<< "<code>01234567890123456789012345678901234567890123456789</code>";
-		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "<code>01234567890123456789012345678901234567890123456789…</code>";
 		QTest::newRow("UTF8 short")			<< QString::fromUtf8("流")				<< QString::fromUtf8("<code>流</code>");
-		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾")	<< QString::fromUtf8("<code>⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾</code>");
-		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿")	<< QString::fromUtf8("<code>⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾…</code>");
+		QTest::newRow("UTF8 long")          << QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿") << QString::fromUtf8("<code>⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿</code>");
 	}
 	void testSummary()
 	{
@@ -409,6 +407,60 @@ private slots:
 		QCOMPARE(VuoText_isLessThan((VuoText)text1, (VuoText)text2), expectedLessThan);
 	}
 
+	void testCompare_data()
+	{
+		QTest::addColumn<void *>("text1");
+		QTest::addColumn<void *>("text2");
+		QTest::addColumn<bool>("expectedEqualsCase");		// case-sensitive
+		QTest::addColumn<bool>("expectedContainsCase");		//
+		QTest::addColumn<bool>("expectedBeginsWithCase");	//
+		QTest::addColumn<bool>("expectedEndsWithCase");		//
+		QTest::addColumn<bool>("expectedEquals");			// not case-sensitive
+		QTest::addColumn<bool>("expectedContains");			//
+		QTest::addColumn<bool>("expectedBeginsWith");		//
+		QTest::addColumn<bool>("expectedEndsWith");			//
+
+		QTest::newRow("both null")						<< (void*)NULL				<< (void *)NULL				<< true << true << true << true << true << true << true << true;
+		QTest::newRow("first null")						<< (void*)NULL				<< (void*)"cat"				<< false << false << false << false << false << false << false << false;
+		QTest::newRow("second null")					<< (void*)"cat"				<< (void*)NULL				<< false << true << true << true << false << true << true << true;
+		QTest::newRow("both empty")						<< (void*)""				<< (void*)""				<< true << true << true << true << true << true << true << true;
+		QTest::newRow("first empty")					<< (void*)""				<< (void*)"cat"				<< false << false << false << false << false << false << false << false;
+		QTest::newRow("second empty")					<< (void*)"cat"				<< (void*)""				<< false << true << true << true << false << true << true << true;
+		QTest::newRow("same")							<< (void *)"Raison d'être"	<< (void *)"Raison d'être"	<< true << true << true << true << true << true << true << true;
+		QTest::newRow("first begins with second")		<< (void *)"你好吗"			<< (void *)"你好"			<< false << true << true << false << false << true << true << false;
+		QTest::newRow("first ends with second")			<< (void *)"nærmiljø"		<< (void *)"miljø"			<< false << true << false << true << false << true << false << true;
+		QTest::newRow("first contains second")			<< (void *)"¿Dónde estás?"	<< (void *)"está"			<< false << true << false << false << false << true << false << false;
+		QTest::newRow("same except case")				<< (void *)"AtÉ AmanhÃ."	<< (void *)"aTé aMANHã."	<< false << false << false << false << true << true << true << true;
+		QTest::newRow("different first character")		<< (void *)"①②③④⑤"			<< (void *)"1②③④⑤"			<< false << false << false << false << false << false << false << false;
+		QTest::newRow("different last character")		<< (void *)"①②③④⑤"			<< (void *)"①②③④5"			<< false << false << false << false << false << false << false << false;
+	}
+	void testCompare()
+	{
+		QFETCH(void *, text1);
+		QFETCH(void *, text2);
+		QFETCH(bool, expectedEqualsCase);
+		QFETCH(bool, expectedContainsCase);
+		QFETCH(bool, expectedBeginsWithCase);
+		QFETCH(bool, expectedEndsWithCase);
+		QFETCH(bool, expectedEquals);
+		QFETCH(bool, expectedContains);
+		QFETCH(bool, expectedBeginsWith);
+		QFETCH(bool, expectedEndsWith);
+
+		bool expected[2][4] = { { expectedEqualsCase, expectedContainsCase, expectedBeginsWithCase, expectedEndsWithCase },
+								{ expectedEquals, expectedContains, expectedBeginsWith, expectedEndsWith } };
+		VuoTextComparisonType types[] = { VuoTextComparison_Equals, VuoTextComparison_Contains, VuoTextComparison_BeginsWith, VuoTextComparison_EndsWith };
+
+		for (int i = 0; i < 2; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				VuoTextComparison comparison = { types[j], 1-i };
+				QVERIFY2(VuoText_compare((VuoText)text1, comparison, (VuoText)text2) == expected[i][j], VuoTextComparison_getSummary(comparison));
+			}
+		}
+	}
+
 	void testTrim_data()
 	{
 		QTest::addColumn<void *>("text");
@@ -546,8 +598,9 @@ private slots:
 		}
 
 		{
+			unsigned char *bad = (unsigned char *)malloc(1);
 			// Byte 0xfe is not allowed in UTF-8.
-			const unsigned char bad[] = { 0xfe };
+			bad[0] = 0xfe;
 
 			VuoData badData = VuoData_make(sizeof(bad), (unsigned char *)bad);
 			VuoData_retain(badData);
@@ -556,8 +609,13 @@ private slots:
 		}
 
 		{
+			unsigned char *bad = (unsigned char *)malloc(1);
 			// Byte 0xff is not allowed in UTF-8.
-			const unsigned char bad[] = { 'h', 'i', 0xff, 'o', 'k' };
+			bad[0] = 'h';
+			bad[1] = 'i';
+			bad[2] = 0xff;
+			bad[3] = 'o';
+			bad[4] = 'k';
 
 			VuoData badData = VuoData_make(sizeof(bad), (unsigned char *)bad);
 			VuoData_retain(badData);

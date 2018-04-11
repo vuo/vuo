@@ -11,11 +11,10 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Unlit Image",
+					 "title" : "Make Unlit Image Shader",
 					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
 					 "version" : "3.0.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node": {
 						  "exampleCompositions" : [ ]

@@ -23,12 +23,12 @@ extern "C"
  */
 class VuoInputEditorAnchorFactory : public VuoInputEditorFactory
 {
-   Q_OBJECT
-   Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorAnchor.json")
-   Q_INTERFACES(VuoInputEditorFactory)
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorAnchor.json")
+	Q_INTERFACES(VuoInputEditorFactory)
 
 public:
-   virtual VuoInputEditor * newInputEditor(void);
+	virtual VuoInputEditor * newInputEditor(void);
 };
 
 /**
@@ -55,17 +55,15 @@ private:
 	// corresponds to the matching button index (0-8)
 	const VuoAnchor ANCHOR_MAP[9] =
 	{
-		{ VuoHorizontalAlignment_Left,		VuoVerticalAlignment_Top },
-		{ VuoHorizontalAlignment_Center,	VuoVerticalAlignment_Top },
-		{ VuoHorizontalAlignment_Right,	 	VuoVerticalAlignment_Top },
-
-		{ VuoHorizontalAlignment_Left,		VuoVerticalAlignment_Center },
-		{ VuoHorizontalAlignment_Center,	VuoVerticalAlignment_Center },
-		{ VuoHorizontalAlignment_Right,	 	VuoVerticalAlignment_Center },
-
-		{ VuoHorizontalAlignment_Left,		VuoVerticalAlignment_Bottom },
-		{ VuoHorizontalAlignment_Center,	VuoVerticalAlignment_Bottom },
-		{ VuoHorizontalAlignment_Right,	 	VuoVerticalAlignment_Bottom }
+		VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Top   ),
+		VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Top   ),
+		VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Top   ),
+		VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Center),
+		VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center),
+		VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Center),
+		VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Bottom),
+		VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Bottom),
+		VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Bottom)
 	};
 
 private slots:

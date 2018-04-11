@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoSceneRenderer.h"
 #include "VuoLayer.h"
 #include "VuoRenderedLayers.h"
@@ -19,7 +18,6 @@ VuoModuleMetadata({
 					 "version" : "1.0.2",
 					 "dependencies" : [
 						 "VuoLayer",
-						 "VuoGlContext",
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
@@ -31,7 +29,6 @@ const float DEG_2_RAD = 0.0174532925;
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
 	VuoSceneRenderer *sceneRenderer;
 };
 
@@ -39,9 +36,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 
-	context->glContext = VuoGlContext_use();
-
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, 1);
+	context->sceneRenderer = VuoSceneRenderer_make(1);
 	VuoRetain(context->sceneRenderer);
 
 	VuoRegister(context, free);
@@ -113,5 +108,4 @@ void nodeInstanceFini
 )
 {
 	VuoRelease((*context)->sceneRenderer);
-	VuoGlContext_disuse((*context)->glContext);
 }

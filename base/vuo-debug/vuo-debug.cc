@@ -55,7 +55,7 @@ void printHelp(char *argv0)
 {
 	printf("Tool for debugging compositions. Runs the given composition executable file and logs telemetry data to the console.\n\n"
 		   "Nodes in the composition use the directory containing the composition executable file to resolve relative paths.\n\n"
-		   "Usage: %s [options] file\n\n"
+		   "Usage: %s [options] CompositionExecutable\n\n"
 		   "Options:\n"
 		   "  --help                       Display this information.\n",
 		   argv0);

@@ -21,6 +21,8 @@ LIBS += \
 	$$ROOT/library/libmodule.o \
 	$$ROOT/node/vuo.keyboard/VuoKey.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
-	$$ROOT/type/list/VuoList_VuoKey.o
+	$$ROOT/type/list/VuoList_VuoKey.o \
+	$$ROOT/type/list/VuoList_VuoReal.o

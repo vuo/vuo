@@ -10,14 +10,14 @@
 digraph G
 {
 Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="405,120" _increment="0.050000" _decrement="1" _setCount="0.000000"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="210,90" fillcolor="yellow" _seconds="0.100000" _fired_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="210,90" fillcolor="yellow" _seconds="0.100000" _fired_eventThrottling="enqueue"];
 MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal.VuoReal" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="570,120" _gradientNoise="\"simplex\"" _scaledStart="36" _scaledEnd="84"];
 MakeMIDINote [type="vuo.midi.make.note" version="1.0.0" label="Make Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<note>note\r" pos="690,270" fillcolor="violet" _channel="1" _isNoteOn="\"true\"" _velocity="127"];
 Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="510,225"];
 SendMIDIEvent [type="vuo.midi.send" version="2.1.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<sendPitchBend>sendPitchBend\l" pos="855,255" fillcolor="violet"];
 
 Count:count -> MakeGradientNoise1D:position;
-FirePeriodically:fired -> Count:increment;
+FirePeriodically:fired -> Count:increment [event=true];
 MakeGradientNoise1D:value -> Round:real;
 MakeMIDINote:note -> SendMIDIEvent:sendNote;
 Round:rounded -> MakeMIDINote:noteNumber;

@@ -83,8 +83,6 @@ private slots:
 		}
 
 		{
-			VuoGlContext glContext = VuoGlContext_use();
-
 			VuoImage image = VuoImage_make(42,0,640,480);
 			VuoShader s = VuoShader_makeUnlitImageShader(image, 1);
 
@@ -98,8 +96,6 @@ private slots:
 			QTest::newRow("quad image")	<< o
 										<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Image Shader (Unlit)</li></ul>"
 										<< "";	// Don't test serialization since it includes object pointers.
-
-			VuoGlContext_disuse(glContext);
 		}
 
 		{
@@ -449,6 +445,68 @@ private slots:
 													<< VuoPoint3d_make(-4.5,2,0) << VuoPoint3d_make(3,2,0)
 													<< true;
 		}
+
+		{
+			VuoSceneObject o = VuoSceneObject_make(
+						VuoMesh_makeEquilateralTriangle(),
+						VuoShader_makeDefaultShader(),
+						VuoTransform_makeIdentity(),
+						VuoListCreate_VuoSceneObject()
+						);
+			double firstY = sin(M_PI/2)/sqrt(3);
+			double secondY = sin(M_PI/2+2*M_PI/3)/sqrt(3);
+			QTest::newRow("triangle at origin")	<< o
+												<< VuoPoint3d_make(0, (firstY+secondY)/2, 0) << VuoPoint3d_make(1, firstY-secondY, 0)
+												<< true;
+		}
+
+		{
+			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_Points, .01);
+			VuoSceneObject o = VuoSceneObject_make(
+						m,
+						VuoShader_makeDefaultShader(),
+						VuoTransform_makeIdentity(),
+						VuoListCreate_VuoSceneObject()
+					);
+			QTest::newRow("points at origin")	<< o
+												<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
+												<< true;
+		}
+
+		{
+			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_IndividualLines, .01);
+			VuoSceneObject o = VuoSceneObject_make(
+						m,
+						VuoShader_makeDefaultShader(),
+						VuoTransform_makeIdentity(),
+						VuoListCreate_VuoSceneObject()
+						);
+			QTest::newRow("line at origin")	<< o
+											<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
+											<< true;
+		}
+
+		{
+			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
+			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_LineStrip, .01);
+			VuoSceneObject o = VuoSceneObject_make(
+						m,
+						VuoShader_makeDefaultShader(),
+						VuoTransform_makeIdentity(),
+						VuoListCreate_VuoSceneObject()
+						);
+			QTest::newRow("line strip at origin")	<< o
+													<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
+													<< true;
+		}
 	}
 	void testBounds()
 	{
@@ -468,6 +526,19 @@ private slots:
 			QCOMPARE(bounds.size.x   + 10, expectedSize.x   + 10);
 			QCOMPARE(bounds.size.y   + 10, expectedSize.y   + 10);
 			QCOMPARE(bounds.size.z   + 10, expectedSize.z   + 10);
+		}
+
+		// Ensure the flattened scene's bounds match the expected bounds.
+		{
+			VuoSceneObject flattened = VuoSceneObject_flatten(scene, true);
+			VuoBox flattenedBounds = VuoSceneObject_bounds(flattened);
+
+			QCOMPARE(flattenedBounds.center.x + 10, expectedCenter.x + 10);
+			QCOMPARE(flattenedBounds.center.y + 10, expectedCenter.y + 10);
+			QCOMPARE(flattenedBounds.center.z + 10, expectedCenter.z + 10);
+			QCOMPARE(flattenedBounds.size.x   + 10, expectedSize.x   + 10);
+			QCOMPARE(flattenedBounds.size.y   + 10, expectedSize.y   + 10);
+			QCOMPARE(flattenedBounds.size.z   + 10, expectedSize.z   + 10);
 		}
 
 		// Once the scene is centered, ensure the center is at the origin.
@@ -507,8 +578,7 @@ private slots:
 
 	void testRenderEmptySceneToImagePerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -530,13 +600,11 @@ private slots:
 		}
 
 		VuoRelease(sr);
-		VuoGlContext_disuse(glContext);
 	}
 
 	void testRenderSphereToImagePerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -557,7 +625,6 @@ private slots:
 		}
 
 		VuoRelease(sr);
-		VuoGlContext_disuse(glContext);
 	}
 
 	/**
@@ -565,8 +632,7 @@ private slots:
 	 */
 	void testRenderCubeToImagePerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -587,7 +653,6 @@ private slots:
 		}
 
 		VuoRelease(sr);
-		VuoGlContext_disuse(glContext);
 	}
 
 	/**
@@ -595,8 +660,7 @@ private slots:
 	 */
 	void testRenderStaticCubeToImagePerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		VuoSceneObject rootSceneObject = makeCube();
@@ -615,7 +679,6 @@ private slots:
 			VuoRelease(i);
 		}
 
-		VuoGlContext_disuse(glContext);
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
 	}
@@ -654,8 +717,7 @@ private slots:
 	 */
 	void testRenderSameShaderPerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		VuoSceneObject rootSceneObject = makeSphereInstances(2000);
@@ -678,7 +740,6 @@ private slots:
 			VuoRelease(i);
 		}
 
-		VuoGlContext_disuse(glContext);
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
 	}
@@ -688,8 +749,7 @@ private slots:
 	 */
 	void testRegenerateProjectionMatrixPerformance()
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		VuoSceneObject rootSceneObject = makeSphereInstances(20000);
@@ -705,7 +765,6 @@ private slots:
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);
 		}
 
-		VuoGlContext_disuse(glContext);
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
 	}
@@ -729,6 +788,112 @@ private slots:
 			VuoSceneObject_normalize(&so);
 		}
 
+		VuoSceneObject_release(so);
+	}
+
+	/**
+	 * Tests finding transformed lights in a scene.
+	 */
+	void testFindLights()
+	{
+		VuoList_VuoSceneObject objects = VuoListCreate_VuoSceneObject();
+		VuoLocal(objects);
+
+		VuoListAppendValue_VuoSceneObject(objects, VuoSceneObject_makePointLight((VuoColor){1,0,0,1}, .4, (VuoPoint3d){1,2,3}, 1, 1));
+
+		{
+			VuoList_VuoSceneObject transformedObjects = VuoListCreate_VuoSceneObject();
+			VuoLocal(transformedObjects);
+
+			VuoListAppendValue_VuoSceneObject(transformedObjects, VuoSceneObject_makePointLight((VuoColor){0,1,0,1}, .4, (VuoPoint3d){1,2,3}, 1, 1));
+
+			VuoTransform transform = VuoTransform_makeEuler(
+				(VuoPoint3d){10,10,10},
+				(VuoPoint3d){0,0,0},
+				(VuoPoint3d){1,1,1});
+
+			{
+				VuoList_VuoSceneObject transformedObjects2 = VuoListCreate_VuoSceneObject();
+				VuoLocal(transformedObjects2);
+
+				VuoListAppendValue_VuoSceneObject(transformedObjects2, VuoSceneObject_makePointLight((VuoColor){0,0,1,1}, .4, (VuoPoint3d){1,2,3}, 1, 1));
+
+				VuoListAppendValue_VuoSceneObject(transformedObjects, VuoSceneObject_makeGroup(transformedObjects2, transform));
+			}
+
+			VuoListAppendValue_VuoSceneObject(objects, VuoSceneObject_makeGroup(transformedObjects, transform));
+		}
+
+		VuoSceneObject so = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
+		VuoSceneObject_retain(so);
+
+		VuoColor ambientColor;
+		float ambientBrightness;
+		VuoList_VuoSceneObject pointLights, spotLights;
+		VuoSceneObject_findLights(so, &ambientColor, &ambientBrightness, &pointLights, &spotLights);
+
+		QVERIFY(VuoColor_areEqual(ambientColor, (VuoColor){0,0,0,0}));
+		QVERIFY(VuoReal_areEqual(ambientBrightness, 0));
+		QCOMPARE(VuoListGetCount_VuoSceneObject(pointLights), 3UL);
+		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 1).transform.translation, (VuoPoint3d){1,2,3}));
+		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 2).transform.translation, (VuoPoint3d){11,12,13}));
+		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 3).transform.translation, (VuoPoint3d){21,22,23}));
+		QCOMPARE(VuoListGetCount_VuoSceneObject(spotLights), 0UL);
+
+		VuoRetain(pointLights);
+		VuoRelease(pointLights);
+		VuoRetain(spotLights);
+		VuoRelease(spotLights);
+		VuoSceneObject_release(so);
+	}
+
+	/**
+	 * Tests performance of finding the lights in a scene with a bunch of objects (including instances).
+	 */
+	void testFindLightsPerformance()
+	{
+		VuoList_VuoSceneObject objects = VuoListCreate_VuoSceneObject();
+		VuoRetain(objects);
+
+		for (int i = 0; i < 20; ++i)
+		{
+			VuoListAppendValue_VuoSceneObject(objects, makeSphereInstances(200));
+
+			if (i % 5 == 0)
+			{
+				VuoSceneObject light;
+				if (i == 5)
+					light = VuoSceneObject_makePointLight((VuoColor){1,0,0,1}, .4, (VuoPoint3d){0,0,0}, 1, 1);
+				else if (i == 10)
+					light = VuoSceneObject_makeSpotlight((VuoColor){0,1,0,1}, .4, VuoTransform_makeIdentity(), 1, 1, 1);
+				else
+					light = VuoSceneObject_makeAmbientLight((VuoColor){0,0,1,1}, .4);
+				VuoListAppendValue_VuoSceneObject(objects, light);
+			}
+		}
+
+		VuoSceneObject so = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
+		VuoSceneObject_retain(so);
+		VuoRelease(objects);
+
+		VuoColor ambientColor;
+		float ambientBrightness;
+		VuoList_VuoSceneObject pointLights, spotLights;
+		QBENCHMARK {
+			VuoSceneObject_findLights(so, &ambientColor, &ambientBrightness, &pointLights, &spotLights);
+		}
+
+		QVERIFY(VuoColor_areEqual(ambientColor, (VuoColor){0,0,1,1}));
+		QVERIFY(VuoReal_areEqual(ambientBrightness, .8));
+		QCOMPARE(VuoListGetCount_VuoSceneObject(pointLights), 1UL);
+		QCOMPARE(VuoListGetValue_VuoSceneObject(pointLights, 1).type, VuoSceneObjectSubType_PointLight);
+		QCOMPARE(VuoListGetCount_VuoSceneObject(spotLights), 1UL);
+		QCOMPARE(VuoListGetValue_VuoSceneObject(spotLights, 1).type, VuoSceneObjectSubType_Spotlight);
+
+		VuoRetain(pointLights);
+		VuoRelease(pointLights);
+		VuoRetain(spotLights);
+		VuoRelease(spotLights);
 		VuoSceneObject_release(so);
 	}
 };

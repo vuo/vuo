@@ -122,21 +122,18 @@ VuoCompilerGraph * VuoCompilerComposition::getCachedGraph(void)
  *
  * @throw VuoCompilerException The composition is invalid.
  */
-void VuoCompilerComposition::check(const set<string> &subcompositions)
+void VuoCompilerComposition::check(void)
 {
-	checkForMissingNodeClasses(subcompositions);
+	checkForMissingNodeClasses();
 	checkFeedback();
 }
 
 /**
  * Checks that all of the nodes in the composition have a node class known to the compiler.
  *
- * @param subcompositions If this is a subcomposition, pass the node class names for all subcompositions
- *		(loaded or not) known to the compiler. Otherwise, pass an empty set.
- *
  * @throw VuoCompilerException One or more nodes have an unknown node class.
  */
-void VuoCompilerComposition::checkForMissingNodeClasses(const set<string> &subcompositions)
+void VuoCompilerComposition::checkForMissingNodeClasses(void)
 {
 	vector<VuoCompilerError> errors;
 	set<string> encounteredProModules = VuoCompiler::getEncounteredPremiumModules();
@@ -147,24 +144,15 @@ void VuoCompilerComposition::checkForMissingNodeClasses(const set<string> &subco
 		VuoNode *node = *i;
 		if (! node->getNodeClass()->hasCompiler())
 		{
-			string summary;
+			string summary = "Node not installed";
 			string details = node->getTitle() + " (" + node->getNodeClass()->getClassName() + ")";
 
-			if (find(subcompositions.begin(), subcompositions.end(), node->getNodeClass()->getClassName()) != subcompositions.end())
-			{
-				summary = "Subcomposition contains itself";
-			}
-			else
-			{
-				summary = "Node not installed";
-
-				// If the error text changes, also need to change the text replacements where the exception is caught in
-				// VuoEditor::createEditorWindow().
-				if (encounteredProModules.find(node->getNodeClass()->getClassName()) != encounteredProModules.end())
-					details += " [pro node]";
-				else if (node->getNodeClass()->getDescription().find("This node was updated or removed in Vuo 0.9 or earlier.") != string::npos)
-					details += " [Vuo 0.9 or earlier]";
-			}
+			// If the error text changes, also need to change the text replacements where the exception is caught in
+			// VuoEditor::createEditorWindow().
+			if (encounteredProModules.find(node->getNodeClass()->getClassName()) != encounteredProModules.end())
+				details += " [pro node]";
+			else if (node->getNodeClass()->getDescription().find("This node was updated or removed in Vuo 0.9 or earlier.") != string::npos)
+				details += " [Vuo 0.9 or earlier]";
 
 			set<VuoNode *> nodeAsSet;
 			nodeAsSet.insert(node);
@@ -506,6 +494,14 @@ void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node)
 
 	nodeGraphvizIdentifierUsed[uniqueIdentifier] = node;
 	node->getCompiler()->setGraphvizIdentifier(uniqueIdentifier);
+}
+
+/**
+ * Clears the map containing the records of previously used Graphviz node identifiers.
+ */
+void VuoCompilerComposition::clearGraphvizNodeIdentifierHistory()
+{
+	nodeGraphvizIdentifierUsed.clear();
 }
 
 /**

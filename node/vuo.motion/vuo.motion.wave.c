@@ -61,47 +61,53 @@ void nodeInstanceEvent
 	(*data)->phase = fmod((*data)->phase, 1);
 	(*data)->priorTime = time;
 
+	double nonNegativePhase = (*data)->phase;
+	if (nonNegativePhase < 0)
+		nonNegativePhase += 1;
+
 	// When changing waveforms, adjust the accumulated phase to make the output value continuous.
+	double adjustedPhase = nonNegativePhase;
 	if ((*data)->priorWave != -1 && (*data)->priorWave != wave)
 	{
 		if ((*data)->priorWave == VuoWave_Sine && wave == VuoWave_Triangle)
 		{
 			// Solve $-cos(2øπ) = [ 4p-1, -4p+3 ]$ for $p$.
-			if ((*data)->phase < 0.5)
-				(*data)->phase = (-cos((*data)->phase * 2. * M_PI) + 1.) / 4.;
+			if (nonNegativePhase < 0.5)
+				adjustedPhase = (-cos(nonNegativePhase * 2. * M_PI) + 1.) / 4.;
 			else
-				(*data)->phase = (-cos((*data)->phase * 2. * M_PI) - 3.) / -4.;
+				adjustedPhase = (-cos(nonNegativePhase * 2. * M_PI) - 3.) / -4.;
 		}
 		else if ((*data)->priorWave == VuoWave_Triangle && wave == VuoWave_Sine)
 		{
 			// Solve $-cos(2øπ) = [ 4p-1, -4p+3 ]$ for $ø$.
-			if ((*data)->phase < 0.5)
-				(*data)->phase = acos((*data)->phase * -4. + 1.) / (2. * M_PI);
+			if (nonNegativePhase < 0.5)
+				adjustedPhase = acos(nonNegativePhase * -4. + 1.) / (2. * M_PI);
 			else
-				(*data)->phase = 1. - acos((*data)->phase * 4. - 3.) / (2. * M_PI);
+				adjustedPhase = 1. - acos(nonNegativePhase * 4. - 3.) / (2. * M_PI);
 		}
 		else if ((*data)->priorWave == VuoWave_Sine && wave == VuoWave_Sawtooth)
 			// Solve $-cos(2øπ) = 2p-1$ for $p$.
-			(*data)->phase = (-cos((*data)->phase * 2. * M_PI) + 1.) / 2.;
+			adjustedPhase = (-cos(nonNegativePhase * 2. * M_PI) + 1.) / 2.;
 		else if ((*data)->priorWave == VuoWave_Sawtooth && wave == VuoWave_Sine)
 			// Solve $-cos(2øπ) = 2p-1$ for $ø$ (always end up on first half of sine phase, to match upward slope of sawtooth).
-			(*data)->phase = acos((*data)->phase * -2. + 1.) / (2. * M_PI);
+			adjustedPhase = acos(nonNegativePhase * -2. + 1.) / (2. * M_PI);
 		else if ((*data)->priorWave == VuoWave_Triangle && wave == VuoWave_Sawtooth)
 		{
 			// Solve $[ 4ø-1, -4ø+3 ] = 2p-1$ for $p$.
-			if ((*data)->phase < 0.5)
-				(*data)->phase = (*data)->phase * 2.;
+			if (nonNegativePhase < 0.5)
+				adjustedPhase = nonNegativePhase * 2.;
 			else
-				(*data)->phase = (*data)->phase * -2. + 2.;
+				adjustedPhase = nonNegativePhase * -2. + 2.;
 		}
 		else if ((*data)->priorWave == VuoWave_Sawtooth && wave == VuoWave_Triangle)
 			// Solve $4ø-1 = 2p-1$ for $ø$ (always end up on first half of triangle phase, to match upward slope of sawtooth).
-			(*data)->phase = (*data)->phase / 2.;
+			adjustedPhase = nonNegativePhase / 2.;
 	}
+	(*data)->phase += adjustedPhase - nonNegativePhase;
 	(*data)->priorWave = wave;
 
 	// Calculate the output value.
-	VuoReal thisPhase = fmod((*data)->phase + phase, 1);
+	VuoReal thisPhase = fmod(adjustedPhase + phase, 1);
 	if (wave == VuoWave_Sine)
 		*value = -cos(thisPhase * 2. * M_PI);
 	else if (wave == VuoWave_Triangle)

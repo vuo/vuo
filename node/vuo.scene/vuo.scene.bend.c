@@ -22,7 +22,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "warp", "curve", "angle", "hook", "bow", "flex", "displace", "filter" ],
 					 "version" : "1.0.1",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoSceneObjectRenderer"
 					 ],
 					 "node": {
@@ -70,8 +69,6 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-
-	VuoGlContext glContext;
 	VuoSceneObjectRenderer sceneObjectRenderer;
 };
 
@@ -86,9 +83,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, vertexShaderSource, NULL, NULL);
 	VuoRetain(instance->shader);
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->glContext, instance->shader);
+	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->shader);
 	VuoRetain(instance->sceneObjectRenderer);
 
 	return instance;
@@ -120,5 +115,4 @@ void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->sceneObjectRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

@@ -11,13 +11,12 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					  "title" : "Shade with Details",
+					  "title" : "Make Image Details Shader",
 					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						  "lighting", "lit", "lighted",
 						  "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
 					  "version" : "2.0.0",
 					  "dependencies" : [
-						  "VuoGlContext"
 					  ],
 					  "node": {
 						  "exampleCompositions" : [ "MoveLightAcrossTile.vuo" ]

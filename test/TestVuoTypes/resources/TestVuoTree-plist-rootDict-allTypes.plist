@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>a</key>
+	<string>aa</string>
+	<key>b</key>
+	<dict>
+		<key>b0</key>
+		<string>b0a</string>
+		<key>b1</key>
+		<string>b1a</string>
+	</dict>
+	<key>c</key>
+	<array>
+		<string>0</string>
+		<string>1</string>
+	</array>
+	<key>d</key>
+	<false/>
+	<key>e</key>
+	<true/>
+	<key>f</key>
+	<data>QUJDRA==</data>
+	<key>g</key>
+	<date>2017-05-12T00:46:00Z</date>
+	<key>h</key>
+	<integer>42</integer>
+	<key>i</key>
+	<real>22.42</real>
+</dict>
+</plist>

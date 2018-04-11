@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert Real List to 3D Point List (X,0,0)",
 					  "description": "Creates a list of 3D points using the input real numbers as the X coordinate, and 0 as the Y and Z coordinates.",
-					  "version": "1.0.1"
+					  "version": "1.0.2"
 				 });
 
 void nodeEvent
@@ -21,8 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoPoint3d, {"name":"(X,0,0)"}) point3d
 )
 {
-	*point3d = VuoListCreate_VuoPoint3d();
 	unsigned long count = VuoListGetCount_VuoReal(x);
-	for (unsigned long i = 1; i <= count; ++i)
-		VuoListAppendValue_VuoPoint3d(*point3d, VuoPoint3d_make(VuoListGetValue_VuoReal(x, i), 0, 0));
+	VuoReal *inputs = VuoListGetData_VuoReal(x);
+	*point3d = VuoListCreateWithCount_VuoPoint3d(count, (VuoPoint3d){0,0,0});
+	VuoPoint3d *outputs = VuoListGetData_VuoPoint3d(*point3d);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = (VuoPoint3d){inputs[i], 0, 0};
 }

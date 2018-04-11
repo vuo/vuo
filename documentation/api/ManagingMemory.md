@@ -15,7 +15,7 @@ Read on to learn how.
 
 ## The reference-counting functions
 
-Vuo provides three functions for reference-counting: 
+Vuo provides four functions for reference-counting:
 
   - VuoRegister() informs the Vuo runtime that the data should be reference counted. When the reference count of the data is decremented back to zero (its original value), the data will be deallocated. This function should be called once on the data. 
   - VuoRetain() increments the data's reference count, informing the Vuo runtime that someone has started using the data. The VuoRegister() function must be called on the data before the first call to VuoRetain(). 

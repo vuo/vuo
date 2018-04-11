@@ -218,7 +218,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 	afi->finishedPlayback = NULL;
 
 	{
-		VuoText normalizedURL = VuoUrl_normalize(url, false);
+		VuoText normalizedURL = VuoUrl_normalize(url, VuoUrlNormalize_default);
 		VuoRetain(normalizedURL);
 		CFStringRef urlCFS = CFStringCreateWithCString(NULL, normalizedURL, kCFStringEncodingUTF8);
 		CFURLRef url = CFURLCreateWithString(NULL, urlCFS, NULL);

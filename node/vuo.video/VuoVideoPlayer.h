@@ -40,10 +40,10 @@ private:
 		failedLoading = false;
 		isReady = false;
 
-		videoPath = VuoUrl_normalize(url, false);
+		videoPath = VuoUrl_normalize(url, VuoUrlNormalize_default);
 		VuoRetain(videoPath);
 
-	    pthread_mutex_init(&decoderMutex, NULL);
+		pthread_mutex_init(&decoderMutex, NULL);
 
 		videoFrameReceivedDelegate = NULL;
 		audioFrameReceivedDelegate = NULL;

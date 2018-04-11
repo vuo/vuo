@@ -19,7 +19,7 @@ MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make Lis
 MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="525,360" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.500000,\"y\":0.500000,\"z\":0.500000}"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="330,375"];
 RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="555,75" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="150,150" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.500000"];
+ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="150,150" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.500000"];
 
 ConvertRealTo3DPoint2:point3d -> MakeTransform:rotation;
 FireonStart:started -> MakeCheckerboardImage:refresh;

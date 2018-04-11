@@ -36,7 +36,7 @@ void nodeEvent
 {
 	if (saveDataEvent)
 	{
-		VuoUrl normalized_url = VuoUrl_normalize(url, true);
+		VuoUrl normalized_url = VuoUrl_normalize(url, VuoUrlNormalize_forSaving);
 		VuoRetain(normalized_url);
 		VuoText absolute_path = VuoUrl_getPosixPath(normalized_url);
 		VuoRetain(absolute_path);

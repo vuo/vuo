@@ -32,6 +32,9 @@ VuoModuleMetadata({
 });
 #endif
 
+/// Mac OS 10.8's Cocoa crashes below 5.
+/// macOS 10.12's Cocoa crashes below 4.
+const int VuoGraphicsWindowMinSize = 5;
 
 /// Serialize making windows fullscreen, since Mac OS X beeps at you (!) if you try to fullscreen two windows too quickly.
 dispatch_semaphore_t VuoGraphicsWindow_fullScreenTransitionSemaphore;
@@ -49,7 +52,6 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  * Private VuoGraphicsWindow data.
  */
 @interface VuoGraphicsWindow ()
-@property(atomic) bool callbacksEnabled;       ///< True if the window can call its trigger callbacks.
 @property(retain) NSMenuItem *recordMenuItem;  ///< The record/stop menu item.
 @end
 
@@ -77,9 +79,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 		_cursor = VuoCursor_Pointer;
 
-		_callbacksEnabled = NO;
-
-		self.contentMinSize = NSMakeSize(16,16);
+		self.contentMinSize = NSMakeSize(VuoGraphicsWindowMinSize, VuoGraphicsWindowMinSize);
 
 		self.acceptsMouseMovedEvents = YES;
 
@@ -223,8 +223,6 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  */
 - (void)enableShowedWindowTrigger:(VuoGraphicsWindowShowedWindowCallback)showedWindow requestedFrameTrigger:(VuoGraphicsWindowRequestedFrameCallback)requestedFrame
 {
-	_callbacksEnabled = YES;
-
 	_showedWindow = showedWindow;
 	_showedWindow(VuoWindowReference_make(self));
 
@@ -243,8 +241,6 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 {
 	VuoGraphicsView *gv = self.contentView;
 	[gv disableTriggers];
-
-	_callbacksEnabled = NO;
 
 	_showedWindow = NULL;
 	_requestedFrame = NULL;
@@ -394,15 +390,20 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 }
 
 /**
- * Constrains the window's aspect ratio to @c pixelsWide/pixelsHigh. Also resizes the
- * window to @c pixelsWide by @c pixelsHigh, unless the user has manually resized the
- * window (in which case the width is preserved) or the requested size is larger than the
- * window's screen (in which case the window is scaled to fit the screen).
+ * Constrains the window's aspect ratio to `pixelsWide/pixelsHigh`. Also resizes the
+ * window to `pixelsWide` by `pixelsHigh`, unless:
+ *
+ * - the user has manually resized the window, in which case the user-set width is preserved
+ * - the requested size is larger than the window's screen, in which case the window is scaled to fit the screen
+ * - the requested size is smaller than Cocoa can properly render, in which case the size is clamped
  *
  * @threadMain
  */
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh
 {
+	pixelsWide = MAX(VuoGraphicsWindowMinSize, pixelsWide);
+	pixelsHigh = MAX(VuoGraphicsWindowMinSize, pixelsHigh);
+
 	NSSize newAspect = NSMakeSize(pixelsWide, pixelsHigh);
 	if (NSEqualSizes([self contentAspectRatio], newAspect))
 		return;
@@ -767,26 +768,6 @@ done:
 - (void)cancelOperation:(id)sender
 {
 	[self setFullScreen:NO onScreen:nil];
-}
-
-/**
- * Executes the specifed block on the window's rootContext, then returns.
- * Ensures that nobody else is using the OpenGL context at that time
- * (by synchronizing with the window's @c drawQueue).
- *
- * @threadAny
- */
-- (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute
-{
-	VuoGraphicsView *gv = self.contentView;
-	CGLContextObj rootContext = gv.rootContext;
-	CGLLockContext(rootContext);
-	CGLSetCurrentContext(rootContext);
-
-	blockToExecute(rootContext);
-
-	CGLSetCurrentContext(NULL);
-	CGLUnlockContext(rootContext);
 }
 
 /**

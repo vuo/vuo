@@ -8,7 +8,7 @@
  */
 
 #include "module.h"
-#include "/usr/include/time.h"
+#include <time.h>
 #include "VuoApp.h"
 #include "VuoQTCapture.h"
 #include "VuoQtListener.h"

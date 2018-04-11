@@ -58,6 +58,8 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 			hasMinMax = false;
 
 		// "suggestedStep"
+		if (hasMinMax)
+			suggestedStep = fmax((suggestedMax - suggestedMin)/10, 1);
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 			suggestedStep = VuoInteger_makeFromJson(suggestedStepValue);

@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					"title" : "Make Random Points Object",
 					"keywords" : [
-						"stars", "starfield",
+						"stars", "starfield", "shape"
 					],
 					"version" : "1.0.0",
 					"genericTypes" : {

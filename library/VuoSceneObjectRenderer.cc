@@ -64,8 +64,6 @@ typedef struct
  */
 struct VuoSceneObjectRendererInternal
 {
-	VuoGlContext glContext;
-
 	VuoShader shader;
 
 	GLuint shamTexture;
@@ -87,7 +85,7 @@ void VuoSceneObjectRenderer_destroy(VuoSceneObjectRenderer sor);
  *
  * @threadAny
  */
-VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoShader shader)
+VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoShader shader)
 {
 	if (!VuoShader_isTransformFeedback(shader))
 	{
@@ -95,10 +93,9 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
 		return NULL;
 	}
 
-	struct VuoSceneObjectRendererInternal *sceneObjectRenderer = (struct VuoSceneObjectRendererInternal *)malloc(sizeof(struct VuoSceneObjectRendererInternal));
+	__block struct VuoSceneObjectRendererInternal *sceneObjectRenderer = (struct VuoSceneObjectRendererInternal *)malloc(sizeof(struct VuoSceneObjectRendererInternal));
 
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-	sceneObjectRenderer->glContext = glContext;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 	// Fetch the shader's attribute locations
 	bool havePoints    = VuoShader_getAttributeLocations(shader, VuoMesh_Points,              cgl_ctx, &sceneObjectRenderer->pointAttributes.position,    &sceneObjectRenderer->pointAttributes.normal,    &sceneObjectRenderer->pointAttributes.tangent,    &sceneObjectRenderer->pointAttributes.bitangent,    &sceneObjectRenderer->pointAttributes.textureCoordinate   );
@@ -108,7 +105,8 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
 	{
 		VUserLog("Error: '%s' is missing programs for: %s %s %s", shader->name, havePoints? "" : "points", haveLines? "" : "lines", haveTriangles? "" : "triangles");
 		free(sceneObjectRenderer);
-		return NULL;
+		sceneObjectRenderer = NULL;
+		return;
 	}
 
 	sceneObjectRenderer->pointAttributes.expectedOutputPrimitiveCount     = VuoShader_getExpectedOutputPrimitiveCount (shader, VuoMesh_Points);
@@ -126,7 +124,6 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
 	VuoRetain(sceneObjectRenderer->shader);
 
 	glGenVertexArrays(1, &sceneObjectRenderer->vertexArray);
-	glBindVertexArray(sceneObjectRenderer->vertexArray);
 
 	// http://stackoverflow.com/questions/24112671/transform-feedback-without-a-framebuffer
 	sceneObjectRenderer->shamTexture = VuoGlTexturePool_use(cgl_ctx, GL_RGBA, 1, 1, GL_BGRA);
@@ -134,10 +131,11 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
 	glGenFramebuffers(1, &sceneObjectRenderer->shamFramebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneObjectRenderer->shamFramebuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneObjectRenderer->shamTexture, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glGenQueries(1, &sceneObjectRenderer->query);
 
-	glEnable(GL_RASTERIZER_DISCARD_EXT);
+	});
 
 	return (VuoSceneObjectRenderer)sceneObjectRenderer;
 }
@@ -188,7 +186,7 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		glBindBuffer(GL_ARRAY_BUFFER, submesh.glUpload.combinedBuffer);
 
 		VuoGlProgram program;
-		if (!VuoShader_activate(sceneObjectRenderer->shader, submesh.elementAssemblyMethod, sceneObjectRenderer->glContext, &program))
+		if (!VuoShader_activate(sceneObjectRenderer->shader, submesh.elementAssemblyMethod, cgl_ctx, &program))
 		{
 			VUserLog("Shader activation failed.");
 			return;
@@ -247,7 +245,7 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		unsigned long outputVertexCount = VuoSubmesh_getSplitVertexCount(submesh) * attributes.expectedOutputPrimitiveCount;
 		unsigned long singleOutputBufferSize = sizeof(VuoPoint4d)*outputVertexCount;
 		unsigned long combinedOutputBufferSize = singleOutputBufferSize*5;
-		GLuint combinedOutputBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, combinedOutputBufferSize);
+		GLuint combinedOutputBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, combinedOutputBufferSize);
 		VuoGlPool_retain(combinedOutputBuffer);
 		glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBuffer);
 //		glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBufferSize, NULL, GL_STATIC_READ);
@@ -327,7 +325,7 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 			glDisableVertexAttribArray(attributes.normal);
 		glDisableVertexAttribArray(attributes.position);
 
-		VuoShader_deactivate(sceneObjectRenderer->shader, submesh.elementAssemblyMethod, sceneObjectRenderer->glContext);
+		VuoShader_deactivate(sceneObjectRenderer->shader, submesh.elementAssemblyMethod, cgl_ctx);
 
 
 		GLuint actualVertexCount = 0;
@@ -386,24 +384,27 @@ VuoSceneObject VuoSceneObjectRenderer_draw(VuoSceneObjectRenderer sor, VuoSceneO
 	if (!sor)
 		return VuoSceneObject_makeEmpty();
 
-	VuoSceneObject sceneObjectCopy = VuoSceneObject_copy(sceneObject);
+	__block VuoSceneObject sceneObjectCopy = VuoSceneObject_copy(sceneObject);
 
 	struct VuoSceneObjectRendererInternal *sceneObjectRenderer = (struct VuoSceneObjectRendererInternal *)sor;
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneObjectRenderer->glContext;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		glEnable(GL_RASTERIZER_DISCARD_EXT);
+		glBindVertexArray(sceneObjectRenderer->vertexArray);
+		glBindFramebuffer(GL_FRAMEBUFFER, sceneObjectRenderer->shamFramebuffer);
 
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+		VuoSceneObject_apply(&sceneObjectCopy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]) {
+			VuoSceneObjectRenderer_drawSingle(cgl_ctx, sceneObjectRenderer, currentObject, modelviewMatrix);
+		});
 
-	VuoSceneObject_apply(&sceneObjectCopy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]) {
-							 VuoSceneObjectRenderer_drawSingle(cgl_ctx, sceneObjectRenderer, currentObject, modelviewMatrix);
-						 });
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindVertexArray(0);
+		glDisable(GL_RASTERIZER_DISCARD_EXT);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// Ensure commands are submitted before we try to use the generated object on another context.
-	// https://b33p.net/kosada/node/10467
-	glFlushRenderAPPLE();
-
-	dispatch_semaphore_signal(VuoGlSemaphore);
+		// Ensure commands are submitted before we try to use the generated object on another context.
+		// https://b33p.net/kosada/node/10467
+		glFlushRenderAPPLE();
+	});
 
 	return sceneObjectCopy;
 }
@@ -417,22 +418,19 @@ void VuoSceneObjectRenderer_destroy(VuoSceneObjectRenderer sor)
 {
 	struct VuoSceneObjectRendererInternal *sceneObjectRenderer = (struct VuoSceneObjectRendererInternal *)sor;
 
-	VuoShader_cleanupContext(sceneObjectRenderer->glContext);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		VuoRelease(sceneObjectRenderer->shader);
 
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneObjectRenderer->glContext;
+		glBindFramebuffer(GL_FRAMEBUFFER, sceneObjectRenderer->shamFramebuffer);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+		VuoGlTexture_release(GL_RGBA, 1, 1, sceneObjectRenderer->shamTexture, GL_TEXTURE_2D);
+//		glBindFramebuffer(GL_FRAMEBUFFER, 0);	// handled by glDeleteFramebuffers
+		glDeleteFramebuffers(1, &sceneObjectRenderer->shamFramebuffer);
 
-	VuoRelease(sceneObjectRenderer->shader);
+		glDeleteVertexArrays(1, &sceneObjectRenderer->vertexArray);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-	VuoGlTexture_release(GL_RGBA, 1, 1, sceneObjectRenderer->shamTexture, GL_TEXTURE_2D);
-//	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// handled by glDeleteFramebuffers
-	glDeleteFramebuffers(1, &sceneObjectRenderer->shamFramebuffer);
-
-	glDeleteVertexArrays(1, &sceneObjectRenderer->vertexArray);
-
-	glDisable(GL_RASTERIZER_DISCARD_EXT);
-
-	glDeleteQueries(1, &sceneObjectRenderer->query);
+		glDeleteQueries(1, &sceneObjectRenderer->query);
+	});
 
 	free(sceneObjectRenderer);
 }

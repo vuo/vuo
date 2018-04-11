@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Subtract",
 					  "keywords" : [ "difference", "minus", "-", "arithmetic", "calculate", "vector", "point" ],
-					  "version" : "1.1.0",
+					  "version" : "1.2.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",

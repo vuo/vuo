@@ -62,12 +62,6 @@ bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *inter
 	if (! isCompatibleAliasWithSpecializationForInternalPort(internalPort, eventOnlyConnection))
 		return false;
 
-	// @todo https://b33p.net/kosada/node/5142 : Until a single cable connection can accomplish both,
-	// port publication and unpublication, don't allow an internal-external port pair to be eligibility-highlighted
-	// within a single cable drag even if their previous connected cable had a different data-carrying status.
-	if (getBase()->getCableConnecting(internalPort->getBase()))
-		return false;
-
 	// If this is a published output port that already has has a connected data-carrying cable,
 	// it cannot accommodate another data-carrying cable.
 	bool isPublishedOutput = getInput();

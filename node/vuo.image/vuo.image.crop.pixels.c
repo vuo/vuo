@@ -38,19 +38,12 @@ static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Crop Image Pixels Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, cropFragmentShader);
@@ -104,12 +97,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "width",   uv_w);
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "height",  uv_h);
 
-	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
+	*croppedImage = VuoImageRenderer_render((*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

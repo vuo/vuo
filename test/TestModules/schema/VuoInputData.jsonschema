@@ -1,0 +1,42 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+		},
+		"default": {},
+		"defaults": {
+			"type": "object",
+			"patternProperties": {
+				"^[A-Z][A-Za-z0-9]+$": {},
+			},
+			"additionalProperties": false,
+		},
+		"suggestedMin": {},
+		"suggestedMax": {},
+		"suggestedStep": {},
+		"includeValues": {
+			"type": "array",
+			"items": {
+				"type": "string",
+			}
+		},
+		"menuItems": {
+			"type": "object",
+			"patternProperties": {
+				"^[0-9]+$": {
+					"type": "string",
+				},
+			},
+			"additionalProperties": false,
+		},
+		"auto": {},
+		"autoSupersedesDefault": { "type": "boolean" },
+		"restrictToOpenGlBlendModes": { "type": "boolean" },
+		"isSave": { "type": "boolean" },
+		"requireMin": { "type": "boolean" },
+		"requireMax": { "type": "boolean" },
+		"isCodeEditor": { "type": "boolean" },
+	},
+	"additionalProperties": false,
+}

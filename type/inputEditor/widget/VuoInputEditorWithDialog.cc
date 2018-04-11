@@ -52,8 +52,18 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 	// Resize dialog to enclose child widgets and margins.
 	dialog.adjustSize();
 
-	// Position the right center of the dialog at the left center of the port.
+	// Position the right center of the dialog at the left center of the port, or wherever required
+	// so that the entire dialog fits within the available screenspace.
+	int availableSpaceLeftBoundary = QApplication::desktop()->availableGeometry(&dialog).left();
 	QPoint dialogTopLeft = portLeftCenter - QPoint(dialog.width() - (showArrow ? 0 : margin.right()), dialog.height()/2.);
+	bool screenSpaceLimitsPos = (availableSpaceLeftBoundary > dialogTopLeft.x());
+	if (screenSpaceLimitsPos)
+	{
+		dialogTopLeft = (screenSpaceLimitsPos? QPoint(availableSpaceLeftBoundary, dialogTopLeft.y()) :
+											   dialogTopLeft);
+		showArrow = false;
+	}
+	dialog.setShowArrow(showArrow);
 	dialog.move(dialogTopLeft);
 
 

@@ -67,6 +67,7 @@ public:
 	};
 
 	static void splitPath(string path, string &dir, string &file, string &extension);
+	static void canonicalizePath(string &path);
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
 	static string makeTmpDirOnSameVolumeAsPath(string path);

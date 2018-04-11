@@ -25,7 +25,6 @@
  * The view maintains its own local (non-shared) OpenGL context.
  */
 @interface VuoGraphicsView : NSView
-@property CGLContextObj rootContext;         ///< @todo https://b33p.net/kosada/node/11554 — remove when contexts are unified.
 @property(atomic) bool needsIOSurfaceRedraw; ///< Callers can set this to true if they want the content to be redrawn the next time the VuoDisplayRefresh fires.
 @property VuoIoSurface ioSurface;             ///< The IOSurface to pass the texture from Vuo's OpenGL context to the window's OpenGL context.
 @property NSRect viewport;                    ///< The position and size of the viewport (subset of the view that we're actually drawing on), in pixels.

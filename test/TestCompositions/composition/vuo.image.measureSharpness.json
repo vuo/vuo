@@ -1,0 +1,70 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.measureSharpness node.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* A 1px-per-square, pixel-aligned, black-and-white checkerboard should output sharpness 1. */
+	{
+		"firingPort": "UpperLeftColor",
+		"inputPortValues": {
+			"UpperLeftColor" : {"r":1, "g":1, "b":1, "a":1},
+			"UpperRightColor": {"r":0, "g":0, "b":0, "a":1},
+			"Coverage"       : {"x":0.5, "y":0.5},
+		},
+		"outputPortValues": {
+			"MaximumSharpness": 1,
+			"AverageSharpness": 1,
+			"MinimumSharpness": 1,
+		}
+	},
+
+	/* Black-and-white stripes should output sharpness 1. */
+	{
+		"firingPort": "UpperLeftColor",
+		"inputPortValues": {
+			"UpperLeftColor" : {"r":1, "g":1, "b":1, "a":1},
+			"UpperRightColor": {"r":0, "g":0, "b":0, "a":1},
+			"Coverage"       : {"x":0.5, "y":0},
+		},
+		"outputPortValues": {
+			"MaximumSharpness": 1,
+			"AverageSharpness": 1,
+			"MinimumSharpness": 0.8,
+		}
+	},
+
+	/* A solid black image should output sharpness 0. */
+	{
+		"firingPort": "UpperLeftColor",
+		"inputPortValues": {
+			"UpperLeftColor" : {"r":0, "g":0, "b":0, "a":1},
+			"UpperRightColor": {"r":0, "g":0, "b":0, "a":1},
+			"Coverage"       : {"x":0.5, "y":0.5},
+		},
+		"outputPortValues": {
+			"MaximumSharpness": 0,
+			"AverageSharpness": 0,
+			"MinimumSharpness": 0,
+		}
+	},
+
+	/* A solid white image should output sharpness 0. */
+	{
+		"firingPort": "UpperLeftColor",
+		"inputPortValues": {
+			"UpperLeftColor":  {"r":1, "g":1, "b":1, "a":1},
+			"UpperRightColor": {"r":1, "g":1, "b":1, "a":1},
+			"Coverage"       : {"x":0.5, "y":0.5},
+		},
+		"outputPortValues": {
+			"MaximumSharpness": 0,
+			"AverageSharpness": 0,
+			"MinimumSharpness": 0,
+		}
+	},
+]}

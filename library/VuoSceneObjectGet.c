@@ -344,9 +344,8 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	if (VuoText_isEmpty(sceneURL))
 		return false;
 
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 	struct aiPropertyStore *props = aiCreatePropertyStore();
-	{
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		GLint maxIndices;
 		glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &maxIndices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, maxIndices/3);
@@ -354,7 +353,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		GLint maxVertices;
 		glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVertices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_VERTEX_LIMIT, maxVertices);
-	}
+	});
 
 	struct aiFileIO fileHandlers;
 	fileHandlers.OpenProc = VuoSceneObjectGet_open;
@@ -382,7 +381,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	if (ais->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
 		VUserLog("Warning: Open Asset Import wasn't able to parse everything in this file.");
 
-	VuoText normalizedSceneURL = VuoUrl_normalize(sceneURL, false);
+	VuoText normalizedSceneURL = VuoUrl_normalize(sceneURL, VuoUrlNormalize_default);
 	VuoRetain(normalizedSceneURL);
 	size_t lastSlashInSceneURL = VuoText_findLastOccurrence(normalizedSceneURL, "/");
 	VuoText sceneURLWithoutFilename = VuoText_substring(normalizedSceneURL, 1, lastSlashInSceneURL);
@@ -576,7 +575,6 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		shadersUsed[i] = false;
 	}
 	VuoRelease(sceneURLWithoutFilename);
-	VuoGlContext_disuse(cgl_ctx);
 
 	convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, shadersUsed, scene);
 

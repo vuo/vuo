@@ -32,7 +32,7 @@ typedef enum
 //	VuoGlPool_VertexArray	///< Cannot be shared between contexts
 } VuoGlPoolType;
 
-GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size);
+GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size);
 
 /**
  * Increments the reference count for @c glBufferName.
@@ -40,15 +40,15 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size);
  * @threadAny
  */
 #define VuoGlPool_retain(glBufferName) VuoGlPool_retainF(glBufferName, __FILE__, __LINE__, __func__);
-void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line, const char *func);
+void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int linenumber, const char *func);
 
 /**
  * Decrements the reference count for @c glBufferName.
  *
  * @threadAny
  */
-#define VuoGlPool_release(type, size, glBufferName) VuoGlPool_releaseF(type, size, glBufferName, __FILE__, __LINE__, __func__);
-void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int line, const char *func);
+#define VuoGlPool_release(glContext, type, size, glBufferName) VuoGlPool_releaseF(glContext, type, size, glBufferName, __FILE__, __LINE__, __func__);
+void VuoGlPool_releaseF(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int linenumber, const char *func);
 
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format);
 GLuint VuoGlTexture_getType(GLuint format);
@@ -85,12 +85,8 @@ typedef struct
 
 VuoGlProgram VuoGlProgram_use(VuoGlContext glContext, const char *description, GLuint vertexShaderName, GLuint geometryShaderName, GLuint fragmentShaderName, VuoMesh_ElementAssemblyMethod assemblyMethod, unsigned int expectedOutputPrimitiveCount);
 int VuoGlProgram_getUniformLocation(VuoGlProgram program, const char *uniformIdentifier);
-void VuoGlProgram_lock(GLuint programName);
-void VuoGlProgram_unlock(GLuint programName);
 
 char *VuoGl_stringForConstant(GLenum constant);
-
-extern dispatch_semaphore_t VuoGlSemaphore;
 
 #ifdef __cplusplus
 }

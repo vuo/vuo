@@ -113,7 +113,7 @@ VuoImageResize VuoImageResize_make(void)
 /**
  * Returns a new image resized from image.  Use with @ref VuoImageResize_make().
  */
-VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height)
+VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height)
 {
 	if (!image)
 		return NULL;
@@ -175,5 +175,5 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoImageRender
 	VuoShader_setUniform_VuoPoint2d( shader, "scale", scale );
 	VuoShader_setUniform_VuoPoint2d( shader, "offset", offset );
 
-	return VuoImageRenderer_draw( renderer, shader, width, height, VuoImage_getColorDepth(image) );
+	return VuoImageRenderer_render(shader, width, height, VuoImage_getColorDepth(image));
 }

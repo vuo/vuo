@@ -26,3 +26,13 @@ If you drag a file from Finder onto a URL port, Vuo will use a relative path to 
 If the file's location starts with `file://` or `/`, then it's treated as an absolute path. If running the composition on a different computer than it was created on, the file needs to exist in the same location on that computer. To get the file's path in the correct format, open the TextEdit application, go to Format > Make Plain Text, drag the file onto the TextEdit window, and copy the path that appears in the TextEdit window. 
 
 If you drag a file from Finder onto a URL port while holding <kbd>Option</kbd>, Vuo will use the file's absolute path.
+
+### Data URIs
+
+You can embed images and other data directly into a Vuo composition (without requiring any external files or web servers) by using the `data:` URI scheme.  For example, if you paste this into the `Fetch Image` node's URL port:
+
+   - `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==`
+
+…it will output a red dot.
+
+To convert a file into a Data URI, you can either use a web-based conversion tool such as [dataurl.net](http://dataurl.net/#dataurlmaker), or launch Terminal.app and enter this command: `echo -n 'data:;base64,' ; base64 <path to image file>` then paste the output into one of Vuo's URL ports.

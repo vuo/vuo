@@ -73,14 +73,21 @@ char * VuoInteger_getSummary(const VuoInteger value)
 /**
  * Returns the minimum of an array of terms, or 0 if the array is empty.
  */
-VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount)
+VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition)
 {
 	if (termsCount == 0)
+	{
+		*outputPosition = 0;
 		return 0;
+	}
 
 	VuoInteger min = LONG_MAX;
 	for (unsigned long i = 0; i < termsCount; ++i)
-		min = MIN(min, terms[i]);
+		if (terms[i] < min)
+		{
+			min = terms[i];
+			*outputPosition = i + 1;
+		}
 
 	return min;
 }
@@ -88,14 +95,21 @@ VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount)
 /**
  * Returns the maximum of an array of terms, or 0 if the array is empty.
  */
-VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount)
+VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition)
 {
 	if (termsCount == 0)
+	{
+		*outputPosition = 0;
 		return 0;
+	}
 
 	VuoInteger max = LONG_MIN;
 	for (unsigned long i = 0; i < termsCount; ++i)
-		max = MAX(max, terms[i]);
+		if (terms[i] > max)
+		{
+			max = terms[i];
+			*outputPosition = i + 1;
+		}
 
 	return max;
 }

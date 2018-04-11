@@ -31,8 +31,8 @@ VuoInteger VuoInteger_makeFromJson(struct json_object * js);
 struct json_object * VuoInteger_getJson(const VuoInteger value);
 char * VuoInteger_getSummary(const VuoInteger value);
 
-VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount);
-VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount);
+VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition);
+VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition);
 
 VuoInteger VuoInteger_wrap(VuoInteger value, VuoInteger minimum, VuoInteger maximum);
 

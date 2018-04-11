@@ -17,7 +17,7 @@ MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label
 MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="559,-79" fillcolor="green"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="589,-49" fillcolor="green"];
 RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="630,-90" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="-15,-75" _opacity="1.000000"];
+ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="-15,-75" _opacity="1.000000"];
 
 Curve3:value -> ExplodeObject:time;
 ExplodeObject:explodedObject -> MakeList:1;

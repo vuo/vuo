@@ -108,7 +108,7 @@ VuoModuleMetadata({
  */
 -(void) syphonServerAnnounced:(NSNotification *)notif
 {
-   [self serversChanged];
+	[self serversChanged];
 }
 
 /**
@@ -116,7 +116,7 @@ VuoModuleMetadata({
  */
 -(void) syphonServerUpdated:(NSNotification *)notif
 {
-   [self serversChanged];
+	[self serversChanged];
 }
 
 /**
@@ -124,7 +124,7 @@ VuoModuleMetadata({
  */
 -(void) syphonServerRetired:(NSNotification *)notif
 {
-   [self serversChanged];
+	[self serversChanged];
 }
 
 /**

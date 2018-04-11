@@ -4,7 +4,6 @@ This node creates a mesh whose vertex positions and texture mapping are defined 
 
 - `Time` — The time at which to calculate the expressions.  (This only affects the output if the `Time` variable is used in the expressions.)
 - `X Expression`, `Y Expression`, `Z Expression` — The math expressions for the (X,Y,Z) position of each vertex. Typically, the values of `X Expression` should increase as *U* increases, and the values of `Y Expression` should increase as *V* increases. (Otherwise, the triangles that make up the mesh may be facing backwards, which means they won't be drawn.) 
-- `U Expression`, `V Expression` — The math expressions for the texture coordinate of each vertex. This defines how an image or other texture will be stretched across the mesh when the mesh is combined with a shader to create a 3D scene object. Typically, the values of these expressions should fall between 0 and 1, and should either always increase or always decrease, as *U* and *V* range from 0 to 1. 
 - `Rows`, `Columns` — Each of the above expressions is calculated for `Rows` number of values of *V* and `Columns` number of values of *U*. The total number of vertices in the mesh is `Rows * Columns`.
 - `U Closed`, `V Closed` — If *true*, then the mesh surface will wrap around from the vertices calculated for *U=1* or *V=1* to the vertices calculated for *U=0* or *V=0*. If *false*, then either the mesh surface won't wrap around or, if the math expressions do cause it to wrap around, any 3D scene object created from the mesh may have a visible seam. 
 

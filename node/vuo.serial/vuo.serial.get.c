@@ -34,7 +34,7 @@ void nodeEvent
 	{
 		VuoSerialDevice_retain(realizedDevice);
 		*name = realizedDevice.name;
-		*url = VuoUrl_normalize(realizedDevice.path, false);
+		*url = VuoUrl_normalize(realizedDevice.path, VuoUrlNormalize_default);
 		VuoRetain(*name);
 		VuoRetain(*url);
 		VuoSerialDevice_release(realizedDevice);

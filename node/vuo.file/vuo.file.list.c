@@ -123,7 +123,7 @@ void nodeEvent
 	if (!folder)
 		return;
 
-	VuoUrl folderUrl = VuoUrl_normalize(folder, false);
+	VuoUrl folderUrl = VuoUrl_normalize(folder, VuoUrlNormalize_default);
 	VuoText folderPath = VuoUrl_getPosixPath(folderUrl);
 	if (!folderPath)
 	{

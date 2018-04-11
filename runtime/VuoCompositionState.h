@@ -39,7 +39,7 @@ void vuoFreeCompositionState(struct VuoCompositionState *compositionState);
 extern pthread_key_t vuoCompositionStateKey;
 void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState *compositionState);
 void vuoRemoveCompositionStateFromThreadLocalStorage(void);
-const void * vuoGetCompositionStateFromThreadLocalStorage(void);
+void * vuoCopyCompositionStateFromThreadLocalStorage(void);
 
 uint64_t vuoGetCompositionUniqueIdentifier(const struct VuoCompositionState *compositionState);
 

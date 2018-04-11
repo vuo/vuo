@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					"title" : "Copy List Item Groups",
-					"keywords" : [ "duplicate", "copy", "clone", "double", "replicate", "expand", "fill", "stretch",
+					"keywords" : [ "duplicate", "copy", "clone", "double", "repeat", "replicate", "expand", "fill", "stretch",
 						"cycle", "stride"
 					],
-					"version" : "1.0.0",
+					"version" : "1.0.1",
 					"node": {
 						"exampleCompositions" : [ "StringAlternatingBeads.vuo" ]
 					}
@@ -28,10 +28,12 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoGenericType1) outputList
 )
 {
+	unsigned long clampedCopies = MAX(0,copies);
+	unsigned long clampedItemsPerGroup = MAX(0,itemsPerGroup);
 	*outputList = VuoListCreate_VuoGenericType1();
 	unsigned long inputCount = VuoListGetCount_VuoGenericType1(list);
 	for (unsigned long i = 1; i <= inputCount; i += itemsPerGroup)
-		for (unsigned long j = 0; j < copies; ++j)
-			for (unsigned long k = 0; k < itemsPerGroup; ++k)
+		for (unsigned long j = 0; j < clampedCopies; ++j)
+			for (unsigned long k = 0; k < clampedItemsPerGroup; ++k)
 				VuoListAppendValue_VuoGenericType1(*outputList, VuoListGetValue_VuoGenericType1(list, i + k));
 }

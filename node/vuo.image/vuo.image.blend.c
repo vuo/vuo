@@ -23,7 +23,6 @@ VuoModuleMetadata({
 						"hue", "saturation", "desaturate", "grayscale", "greyscale", "color", "luminosity", "filter" ],
 					 "version" : "1.2.1",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
@@ -307,8 +306,6 @@ static const char * fragmentShaderSource_blendPower = BLEND_FILTERS(
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 	VuoInteger currentBlendMode;
 };
 
@@ -316,8 +313,6 @@ struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
 
 	instance->currentBlendMode = -1;	// set this to a negative value on initialization, forcing shader init on first event.
 
@@ -332,7 +327,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoBlendMode, {"default":"normal"}) blendMode,
 		VuoInputData(VuoReal, {"default":0.5,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) foregroundOpacity,
 		VuoInputData(VuoBoolean, {"default":true}) replaceOpacity,
-		VuoOutputData(VuoImage) blended
+		VuoOutputData(VuoImage, {"name":"Blended Image"}) blended
 )
 {
 	if (!background && !foreground)
@@ -344,13 +339,6 @@ void nodeInstanceEvent
 	// if the blend mode has changed or is uninitialized, init here
 	if( blendMode != (*instance)->currentBlendMode )
 	{
-		// if this is the first time initializing, need to init the imagerenderer too
-		if( (*instance)->currentBlendMode < 0 )
-		{
-			(*instance)->imageRenderer = VuoImageRenderer_make((*instance)->glContext);
-			VuoRetain((*instance)->imageRenderer);
-		}
-
 		const char *fragmentShaderSource = fragmentShaderSource_blendNormal;
 		switch(blendMode)
 		{
@@ -465,16 +453,11 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "replaceOpacity", replaceOpacity);
 
 	// Render.
-	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, pixelsWide, pixelsHigh, colorDepth);
+	*blended = VuoImageRenderer_render((*instance)->shader, pixelsWide, pixelsHigh, colorDepth);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	if( (*instance)->currentBlendMode >= 0 )
-	{
 		VuoRelease((*instance)->shader);
-		VuoRelease((*instance)->imageRenderer);
-	}
-
-	VuoGlContext_disuse((*instance)->glContext);
 }

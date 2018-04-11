@@ -27,6 +27,8 @@ VuoModuleMetadata({
  */
 char *VuoCglPixelFormat_getAttributeText(CGLPixelFormatAttribute a)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if (a == kCGLPFAAllRenderers)						return strdup("kCGLPFAAllRenderers");
 	if (a == kCGLPFATripleBuffer)						return strdup("kCGLPFATripleBuffer");
 	if (a == kCGLPFADoubleBuffer)						return strdup("kCGLPFADoubleBuffer");
@@ -58,24 +60,12 @@ char *VuoCglPixelFormat_getAttributeText(CGLPixelFormatAttribute a)
 	if (a == kCGLPFAAccumSize)							return strdup("kCGLPFAAccumSize");
 	if (a == kCGLPFAAuxDepthStencil)					return strdup("kCGLPFAAuxDepthStencil");
 	if (a == kCGLPFAStereo)								return strdup("kCGLPFAStereo");
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if (a == kCGLPFAOffScreen)							return strdup("kCGLPFAOffScreen");
-#pragma clang diagnostic pop
-
 	if (a == kCGLPFAWindow)								return strdup("kCGLPFAWindow");
 	if (a == kCGLPFACompliant)							return strdup("kCGLPFACompliant");
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if (a == kCGLPFAPBuffer)							return strdup("kCGLPFAPBuffer");
-#pragma clang diagnostic pop
-
 	if (a == kCGLPFARemotePBuffer)						return strdup("kCGLPFARemotePBuffer");
 	if (a == kCGLPFASingleRenderer)						return strdup("kCGLPFASingleRenderer");
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if (a == kCGLPFARobust)								return strdup("kCGLPFARobust");
 	if (a == kCGLPFAMPSafe)								return strdup("kCGLPFAMPSafe");
 	if (a == kCGLPFAMultiScreen)						return strdup("kCGLPFAMultiScreen");
@@ -93,6 +83,8 @@ char *VuoCglPixelFormat_getAttributeText(CGLPixelFormatAttribute a)
 void VuoCglPixelFormat_logDiff(CGLPixelFormatObj a, CGLPixelFormatObj b)
 {
 	CGLPixelFormatAttribute pfas[] = {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		kCGLPFAAllRenderers,
 		kCGLPFATripleBuffer,
 		kCGLPFADoubleBuffer,
@@ -124,25 +116,12 @@ void VuoCglPixelFormat_logDiff(CGLPixelFormatObj a, CGLPixelFormatObj b)
 		kCGLPFAAccumSize,
 		kCGLPFAAuxDepthStencil,
 		kCGLPFAStereo,
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		kCGLPFAOffScreen,
-#pragma clang diagnostic pop
-
 		kCGLPFAWindow,
 		kCGLPFACompliant,
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		kCGLPFAPBuffer,
-#pragma clang diagnostic pop
-
 		kCGLPFARemotePBuffer,
 		kCGLPFASingleRenderer,
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		kCGLPFARobust,
 		kCGLPFAMPSafe,
 		kCGLPFAMultiScreen,
@@ -183,4 +162,45 @@ void VuoCglPixelFormat_logDiff(CGLPixelFormatObj a, CGLPixelFormatObj b)
 
 	if (!different)
 		VUserLog("	(none)");
+}
+
+/**
+ * Returns a string containing a verbal description of the specified OpenGL rendererID (`kCGLCPCurrentRendererID`).
+ *
+ * The caller is responsible for freeing the returned string.
+ */
+char *VuoCglRenderer_getText(int rendererID)
+{
+	rendererID &= kCGLRendererIDMatchingMask;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	if      (rendererID == kCGLRendererGenericFloatID          ) return strdup("Apple Software Renderer (GenericFloat)");
+	else if (rendererID == kCGLRendererAppleSWID               ) return strdup("Apple Software Renderer (AppleSW)");
+	else if (rendererID == kCGLRendererATIRage128ID            ) return strdup("ATI Rage 128");
+	else if (rendererID == kCGLRendererATIRadeonID             ) return strdup("ATI Radeon");
+	else if (rendererID == kCGLRendererATIRageProID            ) return strdup("ATI Rage Pro");
+	else if (rendererID == kCGLRendererATIRadeon8500ID         ) return strdup("ATI Radeon 8500");
+	else if (rendererID == kCGLRendererATIRadeon9700ID         ) return strdup("ATI Radeon 9700");
+	else if (rendererID == kCGLRendererATIRadeonX1000ID        ) return strdup("ATI Radeon X1xxx");
+	else if (rendererID == kCGLRendererATIRadeonX2000ID        ) return strdup("ATI Radeon HD 2xxx/4xxx");
+	else if (rendererID == kCGLRendererATIRadeonX3000ID        ) return strdup("ATI Radeon HD 5xxx/6xxx");
+	else if (rendererID == /*kCGLRendererATIRadeonX4000ID*/ 0x00021C00) return strdup("ATI Radeon HD 7xxx");
+	else if (rendererID == kCGLRendererGeForce2MXID            ) return strdup("NVIDIA GeForce 2MX/4MX");
+	else if (rendererID == kCGLRendererGeForce3ID              ) return strdup("NVIDIA GeForce 3/4Ti");
+	else if (rendererID == kCGLRendererGeForceFXID             ) return strdup("NVIDIA GeForce 5xxx/6xxx/7xxx or Quadro FX 4500");
+	else if (rendererID == kCGLRendererGeForce8xxxID           ) return strdup("NVIDIA GeForce 8xxx/9xxx/1xx/2xx/3xx or Quadro 4800");
+	else if (rendererID == /*kCGLRendererGeForceID*/ 0x00022700) return strdup("NVIDIA GeForce 6xx or Quadro 4000/K5000");
+	else if (rendererID == kCGLRendererVTBladeXP2ID            ) return strdup("VTBladeXP2");
+	else if (rendererID == kCGLRendererIntel900ID              ) return strdup("Intel GMA 950");
+	else if (rendererID == kCGLRendererIntelX3100ID            ) return strdup("Intel X3100");
+	else if (rendererID == kCGLRendererIntelHDID               ) return strdup("Intel HD 3000");
+	else if (rendererID == kCGLRendererIntelHD4000ID           ) return strdup("Intel HD 4000");
+	else if (rendererID == /*kCGLRendererIntelHD5000ID*/ 0x00024500) return strdup("Intel HD 5000 (Iris)");
+	else if (rendererID == kCGLRendererMesa3DFXID              ) return strdup("Mesa 3DFX");
+#pragma clang diagnostic pop
+
+	char *t;
+	asprintf(&t, "unknown (0x%x)", rendererID);
+	return t;
 }

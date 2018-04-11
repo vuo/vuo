@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					"title" : "Make 3D Square",
-					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle", "grid" ],
+					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle", "grid", "shape" ],
 					"version" : "1.0.1",
 					"genericTypes" : {
 						"VuoGenericType1" : {

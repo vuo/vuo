@@ -21,18 +21,18 @@ template<class CompilerClass, class RendererClass>
 class VuoBase
 {
 public:
-   VuoBase(string id);
+	VuoBase(string id);
 
-   void setCompiler(CompilerClass *compiler);
-   CompilerClass * getCompiler(void) const;
-   bool hasCompiler(void) const;
+	void setCompiler(CompilerClass *compiler);
+	CompilerClass * getCompiler(void) const;
+	bool hasCompiler(void) const;
 
-   void setRenderer(RendererClass *renderer);
-   RendererClass * getRenderer(void) const;
-   bool hasRenderer(void) const;
+	void setRenderer(RendererClass *renderer);
+	RendererClass * getRenderer(void) const;
+	bool hasRenderer(void) const;
 
 private:
-   string id;
-   CompilerClass * compiler; ///< The base class instance's compiler detail class instance.
-   RendererClass * renderer; ///< The base class instance's renderer detail class instance.
+	string id;
+	CompilerClass * compiler; ///< The base class instance's compiler detail class instance.
+	RendererClass * renderer; ///< The base class instance's renderer detail class instance.
 };

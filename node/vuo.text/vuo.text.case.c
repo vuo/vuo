@@ -11,7 +11,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Case",
-					 "keywords" : [ "character", "letter", "substring", "string", "upper", "lower", "toupper", "tolower", "uc", "lc" ],
+					 "keywords" : [
+						 "character", "letter", "substring", "string",
+						 "uppercase", "uc", "toupper", "caps", "capitalize",
+						 "lowercase", "lc", "tolower",
+					 ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ ]

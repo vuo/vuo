@@ -10,30 +10,19 @@
 #include "node.h"
 #include "VuoLeapPointable.h"
 #include "VuoList_VuoLeapPointable.h"
+#include "VuoSort.h"
 
 VuoModuleMetadata({
 					  "title" : "Sort Pointables by Y Distance",
 					  "keywords" : [ "organize", "order", "nearest", "point" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
+					  "dependencies" : [
+						  "VuoSort"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  }
 				  });
-
-typedef struct
-{
-	int index;
-	float value;
-} sortable_pointValue;
-
-
-static int compare (const void * a, const void * b)
-{
-	sortable_pointValue *x = (sortable_pointValue*)a;
-	sortable_pointValue *y = (sortable_pointValue*)b;
-
-	return (x->value - y->value);
-}
 
 void nodeEvent
 (
@@ -42,17 +31,17 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoLeapPointable) sortedPointables
 )
 {
-	*sortedPointables = VuoListCreate_VuoLeapPointable();
+	VuoLeapPointable *pointablesData = VuoListGetData_VuoLeapPointable(pointables);
+	unsigned long count = VuoListGetCount_VuoLeapPointable(pointables);
 
-	int count = VuoListGetCount_VuoLeapPointable(pointables);
+	VuoIndexedFloat *distances = (VuoIndexedFloat *)malloc(count * sizeof(VuoIndexedFloat));
+	for (unsigned long i = 0; i < count; ++i)
+		distances[i] = (VuoIndexedFloat){i, fabs(pointablesData[i].tipPosition.y - target.y)};
 
-	sortable_pointValue pointValues[count];
+	*sortedPointables = VuoListCopy_VuoLeapPointable(pointables);
+	VuoLeapPointable *sortedPointablesData = VuoListGetData_VuoLeapPointable(*sortedPointables);
 
-	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoLeapPointable(pointables, i+1).tipPosition.y - target.y)};
+	VuoSort_sortArrayByOtherArray(sortedPointablesData, count, sizeof(VuoLeapPointable), distances);
 
-	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
-
-	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoLeapPointable(*sortedPointables, VuoListGetValue_VuoLeapPointable(pointables, pointValues[i].index+1) );
+	free(distances);
 }

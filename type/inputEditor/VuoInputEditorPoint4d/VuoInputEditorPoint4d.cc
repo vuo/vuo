@@ -102,6 +102,11 @@ void VuoInputEditorPoint4d::setUpDialog(QDialog &dialog, json_object *originalVa
 			hasMinMax = false;
 
 		// "suggestedStep"
+		if (hasMinMax)
+			suggestedStep = VuoPoint4d_make((suggestedMax.x - suggestedMin.x)/10.,
+											(suggestedMax.y - suggestedMin.y)/10.,
+											(suggestedMax.z - suggestedMin.z)/10.,
+											(suggestedMax.w - suggestedMin.w)/10.);
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 			suggestedStep = VuoPoint4d_makeFromJson(suggestedStepValue);

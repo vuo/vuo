@@ -24,7 +24,6 @@
 #import "VuoFileUtilities.hh"
 #import "VuoImageResize.h"
 extern "C" {
-#import "VuoGlContext.h"
 #import "VuoImage.h"
 #import "VuoImageWatermark.h"
 #import "VuoText.h"
@@ -217,17 +216,8 @@ void VuoMovieExporter::init(NSString *compositionString, std::string name, std::
 
 	outputMovieUrl = [[NSURL alloc] initFileURLWithPath:[NSString stringWithUTF8String:outputMovieFile.c_str()]];
 
-	// Set up resize shader.
-	{
-		resize = VuoImageResize_make();
-		VuoRetain(resize);
-
-		// Needs its own context since VuoImageRenderer changes the glViewport.
-		resizeContext = VuoGlContext_use();
-
-		resizeImageRenderer = VuoImageRenderer_make(resizeContext);
-		VuoRetain(resizeImageRenderer);
-	}
+	resize = VuoImageResize_make();
+	VuoRetain(resize);
 
 	blender = VuoImageBlend_make();
 	VuoRetain(blender);
@@ -295,8 +285,6 @@ VuoMovieExporter::~VuoMovieExporter()
 	[outputMovieUrl release];
 	[generator release];
 
-	VuoRelease(resizeImageRenderer);
-	VuoGlContext_disuse(resizeContext);
 	VuoRelease(resize);
 
 	VuoRelease(blender);
@@ -362,7 +350,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 
 			if (image->pixelsWide != parameters.width || image->pixelsHigh != parameters.height)
 			{
-				VuoImage resizedImage = VuoImageResize_resize(image, resize, resizeImageRenderer, VuoSizingMode_Fit, parameters.width, parameters.height);
+				VuoImage resizedImage = VuoImageResize_resize(image, resize, VuoSizingMode_Fit, parameters.width, parameters.height);
 				if (!resizedImage)
 				{
 					VuoRelease(image);

@@ -8,16 +8,14 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Unlit Color",
+					 "title" : "Make Unlit Color Shader",
 					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "solid", "self illumination", "tone", "chroma" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node": {
 						  "exampleCompositions" : [ ]

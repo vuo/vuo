@@ -5,31 +5,32 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
 {
-Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="375,225" fillcolor="cyan"];
+Add [type="vuo.math.add.VuoReal" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="375,225" fillcolor="cyan"];
 AddNoiseTo3DObject2 [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="1170,630" fillcolor="orange" _scale="1.000000"];
 AddNoiseTo3DObject3 [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="1155,90" fillcolor="cyan" _scale="1.000000"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="510,750" fillcolor="orange" _startPosition="0.000000" _endPosition="10.000000" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
-Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="495,225" fillcolor="cyan" _startPosition="0.000000" _endPosition="10.000000" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="510,750" fillcolor="orange" _startPosition="0.000000" _endPosition="10.000000" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="495,225" fillcolor="cyan" _startPosition="0.000000" _endPosition="10.000000" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
 Explode3DObject6 [type="vuo.scene.explode" version="1.0.0" label="Explode 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<translationAmount>translationAmount\l|<rotationAmount>rotationAmount\l|<chaos>chaos\l|<center>center\l|<range>range\l|<gravity>gravity\l|<explodedObject>explodedObject\r" pos="1515,705" fillcolor="orange" _translationAmount="1.000000" _rotationAmount="1.000000" _chaos="1.500000" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _range="2.000000" _gravity="{\"x\":0,\"y\":-1,\"z\":0}"];
 Explode3DObject7 [type="vuo.scene.explode" version="1.0.0" label="Explode 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<translationAmount>translationAmount\l|<rotationAmount>rotationAmount\l|<chaos>chaos\l|<center>center\l|<range>range\l|<gravity>gravity\l|<explodedObject>explodedObject\r" pos="1500,165" fillcolor="cyan" _translationAmount="1.000000" _rotationAmount="1.000000" _chaos="1.500000" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _range="2.000000" _gravity="{\"x\":0,\"y\":-1,\"z\":0}"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,-225" fillcolor="yellow" _started_eventThrottling="enqueue"];
 HoldValue4 [type="vuo.data.hold.VuoSceneObject" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1380,690" fillcolor="orange"];
 HoldValue5 [type="vuo.data.hold.VuoSceneObject" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1365,150" fillcolor="cyan"];
-IsGreaterThan7 [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="660,720" fillcolor="orange"];
-IsGreaterThan8 [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="645,195" fillcolor="cyan"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1834,116" fillcolor="green"];
-MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="329,236" fillcolor="cyan" _2="5.000000"];
-MakeList11 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1804,86" fillcolor="green"];
-MakeList5 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1025,-184" _1="{\"r\":0.573007,\"g\":0.572976,\"b\":0.572992,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="1095,-195" _center="{\"x\":0,\"y\":0}" _radius="1.800000" _noiseAmount="0.2" _width="1024" _height="2048"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="315,90" fillcolor="cyan" _rows="32" _columns="32"];
-MakeSphere3 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="330,630" fillcolor="orange" _rows="32" _columns="32"];
+IsGreaterThan2 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="645,195" fillcolor="cyan"];
+IsGreaterThan4 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="660,720" fillcolor="orange"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1847,131" fillcolor="green"];
+MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="342,236" fillcolor="cyan" _2="5.000000"];
+MakeList11 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1827,86" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1032,-184" _1="{\"r\":0.573007,\"g\":0.572976,\"b\":0.572992,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="1095,-195" _center="{\"x\":0,\"y\":0}" _radius="1.800000" _noiseAmount="0.2" _width="1024" _height="2048"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="315,90" fillcolor="cyan" _rows="32" _columns="32"];
+MakeSphere3 [type="vuo.scene.make.sphere.VuoShader" version="1.0.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="330,630" fillcolor="orange" _rows="32" _columns="32"];
 MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="1365,-195" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":-2.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="6.000000" _opacity="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1875,75" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.3.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1875,75" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 ScalePoint2 [type="vuo.point.multiply.scalar.VuoPoint3d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="975,120" fillcolor="cyan" _point="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
 ScalePoint3 [type="vuo.point.multiply.scalar.VuoPoint3d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="990,660" fillcolor="orange" _point="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
 SelectLatest2 [type="vuo.select.latest.2.VuoSceneObject" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1680,630" fillcolor="orange"];
@@ -38,13 +39,13 @@ SelectOutput12 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Sel
 SelectOutput13 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="825,195" fillcolor="cyan"];
 SelectOutput14 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="840,270" fillcolor="cyan"];
 SelectOutput9 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="840,720" fillcolor="orange"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="135,105" fillcolor="cyan" _color="{\"r\":0.215686,\"g\":0.647059,\"b\":0.996078,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
-ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="135,645" fillcolor="orange" _color="{\"r\":0.882353,\"g\":0.219608,\"b\":0.294118,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="135,105" fillcolor="cyan" _color="{\"r\":0.215686,\"g\":0.647059,\"b\":0.996078,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="135,645" fillcolor="orange" _color="{\"r\":0.882353,\"g\":0.219608,\"b\":0.294118,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
 ShareValue6 [type="vuo.data.share.VuoReal" version="1.0.0" label="Detonation Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="105,-165" _value="2.500000"];
 ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="510,630" fillcolor="orange" _keepFront="true"];
 ShowBackOf3DObject2 [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="495,90" fillcolor="cyan" _keepFront="true"];
-Subtract [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1320,765" fillcolor="orange"];
-Subtract2 [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1305,240" fillcolor="cyan"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1320,765" fillcolor="orange"];
+Subtract2 [type="vuo.math.subtract.VuoReal" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1305,240" fillcolor="cyan"];
 Time2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="315,450" fillcolor="yellow"];
 
 Add:sum -> Curve3:time;
@@ -52,9 +53,9 @@ AddNoiseTo3DObject2:noisedObject -> HoldValue4:newValue;
 AddNoiseTo3DObject2:noisedObject -> SelectLatest2:option1;
 AddNoiseTo3DObject3:noisedObject -> HoldValue5:newValue;
 AddNoiseTo3DObject3:noisedObject -> SelectLatest3:option1;
-Curve2:value -> IsGreaterThan7:a;
+Curve2:value -> IsGreaterThan4:a;
 Curve2:value -> SelectOutput9:in;
-Curve3:value -> IsGreaterThan8:a;
+Curve3:value -> IsGreaterThan2:a;
 Curve3:value -> SelectOutput13:in;
 Explode3DObject6:explodedObject -> SelectLatest2:option2;
 Explode3DObject7:explodedObject -> SelectLatest3:option2;
@@ -64,10 +65,10 @@ FireOnStart:started -> ShadeWithColor:refresh;
 FireOnStart:started -> ShareValue6:refresh;
 HoldValue4:heldValue -> Explode3DObject6:object;
 HoldValue5:heldValue -> Explode3DObject7:object;
-IsGreaterThan7:greaterThan -> SelectOutput12:which;
-IsGreaterThan7:greaterThan -> SelectOutput9:which;
-IsGreaterThan8:greaterThan -> SelectOutput13:which;
-IsGreaterThan8:greaterThan -> SelectOutput14:which;
+IsGreaterThan2:greaterThan -> SelectOutput13:which;
+IsGreaterThan2:greaterThan -> SelectOutput14:which;
+IsGreaterThan4:greaterThan -> SelectOutput12:which;
+IsGreaterThan4:greaterThan -> SelectOutput9:which;
 MakeList0:list -> RenderSceneToWindow:setWindowProperties;
 MakeList10:list -> Add:values;
 MakeList11:list -> RenderSceneToWindow:objects;
@@ -91,8 +92,8 @@ SelectOutput9:trueOption -> HoldValue4:refresh;
 SelectOutput9:trueOption -> Subtract:a;
 ShadeWithColor4:shader -> MakeSphere3:material;
 ShadeWithColor:shader -> MakeSphere2:material;
-ShareValue6:sameValue -> IsGreaterThan7:b [style=invis];
-ShareValue6:sameValue -> IsGreaterThan8:b [style=invis];
+ShareValue6:sameValue -> IsGreaterThan2:b [style=invis];
+ShareValue6:sameValue -> IsGreaterThan4:b [style=invis];
 ShareValue6:sameValue -> Subtract2:b [style=invis];
 ShareValue6:sameValue -> Subtract:b [style=invis];
 ShowBackOf3DObject2:backObject -> AddNoiseTo3DObject3:object;

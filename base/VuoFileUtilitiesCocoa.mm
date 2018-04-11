@@ -25,9 +25,13 @@
 void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath)
 {
 	NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath.c_str()]];
-	bool success = [[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:nil];
+	if (!url)
+		throw std::runtime_error("Couldn't move file '" + filePath + "' to the trash: Couldn't create NSURL.");
+
+	NSError *error = nil;
+	bool success = [[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error];
 	if (!success)
-		throw std::runtime_error("Couldn't move file '" + filePath + "' to the trash.");
+		throw std::runtime_error(string("Couldn't move file '" + filePath + "' to the trash: ") + [[error localizedDescription] UTF8String]);
 }
 
 /**

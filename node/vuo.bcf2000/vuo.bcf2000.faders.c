@@ -10,13 +10,15 @@
 #include "node.h"
 #include "VuoMidi.h"
 #include "VuoRealRegulation.h"
+#include "VuoScribbleStrip.h"
 
 VuoModuleMetadata({
 					 "title" : "Receive BCF2000 Faders",
 					 "keywords" : [ "controller", "slider", "Behringer", "BCF-2000", "device" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
-						 "VuoMidi"
+						 "VuoMidi",
+						 "VuoScribbleStrip"
 					 ],
 					 "node": {
 						 "isInterface" : true,
@@ -96,6 +98,8 @@ struct nodeInstanceData *nodeInstanceInit(
 		VuoRealRegulation_retain(context->fader[i]);
 
 		resetFader(context->outputManager, 81+i, faders[i]);
+
+		VuoScribbleStrip_set(VuoScribbleStrip_Faders, i, faders[i].name);
 	}
 
 	return context;
@@ -173,6 +177,11 @@ void nodeInstanceEvent
 			VuoSmoothInertia_setDuration((*context)->faderSmooth[i], faders[i].smoothDuration);
 			*faderValueEvents[i] = VuoSmoothInertia_step((*context)->faderSmooth[i], time, faderValues[i]);
 		}
+
+	if ((timeEvent && (*context)->mostRecentTime == 0)
+	 || reset)
+		for (int i = 0; i < 8; ++i)
+			VuoScribbleStrip_set(VuoScribbleStrip_Faders, i, faders[i].name);
 }
 
 void nodeInstanceTriggerStop

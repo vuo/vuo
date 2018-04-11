@@ -5,6 +5,8 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.app.launch.c \
+	vuo.app.openDocument.c \
+	vuo.app.openUrl.c \
 	vuo.app.stopComposition.c
 
 NODE_LIBRARY_SOURCES += \

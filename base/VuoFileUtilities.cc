@@ -63,6 +63,23 @@ void VuoFileUtilities::splitPath(string path, string &dir, string &file, string 
 }
 
 /**
+ * Transforms @a path to a standard format. The returned path is absolute if @a path is absolute,
+ * relative if @a path is relative.
+ */
+void VuoFileUtilities::canonicalizePath(string &path)
+{
+	// Remove repeated file separators.
+	for (int i = 0; i < path.length(); ++i)
+		if (path[i] == '/')
+			while (i+1 < path.length() && path[i+1] == '/')
+				path.erase(i+1, 1);
+
+	// Remove trailing file separator.
+	if (path.length() > 1 && VuoStringUtilities::endsWith(path, "/"))
+		path.erase(path.length()-1);
+}
+
+/**
  * Creates a new temporary file, avoiding any name conflicts with existing files.
  * Creates the file in the specified @c directory if one is provided, or in "/tmp" otherwise.
  *
@@ -153,29 +170,16 @@ void VuoFileUtilities::makeDir(string path)
 string VuoFileUtilities::getVuoFrameworkPath(void)
 {
 	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
-	const char *frameworkDylibRelativePath = "Vuo.framework/Versions/" VUO_VERSION_STRING "/Vuo";
-	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.5.0.7.
-	const char *framework111DylibRelativePath = "Vuo.framework/Versions/1.1.1/Vuo";
-	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.6.0.6.
-	const char *framework123DylibRelativePath = "Vuo.framework/Versions/1.2.3/Vuo";
-	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.6.1.1.
-	const char *framework124DylibRelativePath = "Vuo.framework/Versions/1.2.4/Vuo";
+	const char *frameworkPathFragment = "/Vuo.framework/Versions/";
 	for(unsigned int i=0; i<_dyld_image_count(); ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
-		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath)
-		 || VuoStringUtilities::endsWith(dylibPath, framework111DylibRelativePath)
-		 || VuoStringUtilities::endsWith(dylibPath, framework123DylibRelativePath)
-		 || VuoStringUtilities::endsWith(dylibPath, framework124DylibRelativePath))
+		char *found = strstr(dylibPath, frameworkPathFragment);
+		if (found)
 		{
-			string path = dylibPath;
-			string dir, file, ext;
-			splitPath(path, dir, file, ext);		// remove "Vuo"
-			path = dir.substr(0, dir.length() - 1);	// remove "/"
-			splitPath(path, dir, file, ext);		// remove VUO_VERSION_STRING
-			path = dir.substr(0, dir.length() - 1);	// remove "/"
-			splitPath(path, dir, file, ext);		// remove "Versions"
-			path = dir.substr(0, dir.length() - 1);	// remove "/"
+			char *pathC = strndup(dylibPath, found - dylibPath);
+			string path = string(pathC) + "/Vuo.framework";
+			free(pathC);
 			if (fileExists(path))
 				return path;
 		}

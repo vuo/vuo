@@ -25,72 +25,30 @@ VuoCompilerChain::VuoCompilerChain(vector<VuoCompilerNode *> nodes, bool lastNod
 
 /**
  * Generates code to create a context that can be passed to chain worker functions.
- * The context contains an event ID and an array of dispatch groups.
- * Each dispatch group has a block count of 1.
+ * The context contains the composition state and the event ID.
  */
-Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue,
-											  const vector<VuoCompilerChain *> &chains,
-											  const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream)
+Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue)
 {
-	Type *dispatchGroupType = VuoCompilerCodeGenUtilities::getDispatchGroupType(module);
 	PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(64, 1));
-
-	// size_t chainGroupsBytes = 3 * sizeof(dispatch_group_t);
-	// dispatch_group_t *chainGroups = (dispatch_group_t *)malloc(chainGroupsBytes);
-
-	ConstantInt *chainGroupsArrayLength = ConstantInt::get(module->getContext(), APInt(64, chains.size()));
-	Value *chainGroupsArrayValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dispatchGroupType, chainGroupsArrayLength);
-
-	// chainGroups[0] = dispatch_group_create();
-	// dispatch_group_enter(chainGroups[0]);
-	// chainGroups[1] = dispatch_group_create();
-	// dispatch_group_enter(chainGroups[1]);
-	// ...
-
-	for (size_t i = 0; i < chains.size(); ++i)
-	{
-		Value *chainGroupValue = VuoCompilerCodeGenUtilities::generateCreateDispatchGroup(module, block);
-		ConstantInt *iValue = ConstantInt::get(module->getContext(), APInt(64, i));
-		Value *chainGroupVariable = GetElementPtrInst::Create(chainGroupsArrayValue, iValue, "", block);
-		new StoreInst(chainGroupValue, chainGroupVariable, false, block);
-		VuoCompilerCodeGenUtilities::generateEnterDispatchGroup(module, block, chainGroupValue);
-
-		// Increment the retain count to equal the number of scheduled chains that will release the dispatch group —
-		// 1 for each downstream chain that will wait on the dispatch group, plus 1 for this chain.
-		// The retain count is 1 after dispatch_group_create(), so increment it by 1 less than the above sum.
-		map<VuoCompilerChain *, vector<VuoCompilerChain *> >::const_iterator downstreamIter = chainsImmediatelyDownstream.find(chains[i]);
-		if (downstreamIter != chainsImmediatelyDownstream.end())
-		{
-			size_t numChainsImmediatelyDownstream = downstreamIter->second.size();
-			for (size_t j = 0; j < numChainsImmediatelyDownstream; ++j)
-				VuoCompilerCodeGenUtilities::generateRetainForDispatchObject(module, block, chainGroupVariable);
-		}
-	}
 
 	// unsigned long *eventIdPtr = (unsigned long *)malloc(sizeof(unsigned long));
 	// *eventIdPtr = eventId;
 
-	Value *eventIdPtrValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, eventIdValue->getType(), oneValue);
+	Value *eventIdPtrValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, eventIdValue->getType(), 1);
 	new StoreInst(eventIdValue, eventIdPtrValue, "", block);
 
 	// size_t contextBytes = 2 * sizeof(void *);
 	// void **context = (void **)malloc(contextBytes);
 	// context[0] = (void *)compositionState;
 	// context[1] = (void *)eventIdPtr;
-	// context[2] = (void *)chainGroups;
 
-	ConstantInt *contextArrayLength = ConstantInt::get(module->getContext(), APInt(64, 3));
-	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointerType, contextArrayLength);
+	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointerType, 2);
 
 	BitCastInst *compositionStateAsVoidPointer = new BitCastInst(compositionStateValue, voidPointerType, "", block);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionStateAsVoidPointer);
 
 	BitCastInst *eventIdPtrValueAsVoidPointer = new BitCastInst(eventIdPtrValue, voidPointerType, "", block);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 1, eventIdPtrValueAsVoidPointer);
-
-	BitCastInst *chainGroupsAsVoidPointer = new BitCastInst(chainGroupsArrayValue, voidPointerType, "", block);
-	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 2, chainGroupsAsVoidPointer);
 
 	// VuoRegister(context, vuoFreeChainWorkerContext);
 
@@ -138,23 +96,6 @@ Value * VuoCompilerChain::generateEventIdValue(Module *module, BasicBlock *block
 }
 
 /**
- * Generates code that retrieves the array of dispatch groups from the context argument of a chain worker function.
- */
-Value * VuoCompilerChain::generateChainGroupsValue(Module *module, BasicBlock *block, Value *contextValue)
-{
-	Type *dispatchGroupType = VuoCompilerCodeGenUtilities::getDispatchGroupType(module);
-	Type *dispatchGroupPointerType =  PointerType::get(dispatchGroupType, 0);
-	Type *voidPointerType = contextValue->getType();
-	Type *voidPointerPointerType = PointerType::get(voidPointerType, 0);
-
-	// dispatch_group_t *chainGroups = (dispatch_group_t *)((void **)context)[2]);
-
-	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *chainGroupsValueAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 2);
-	return new BitCastInst(chainGroupsValueAsVoidPointer, dispatchGroupPointerType, "", block);
-}
-
-/**
  * Generates code that deallocates the context argument of a chain worker function.
  */
 Function * VuoCompilerChain::getFreeContextFunction(Module *module)
@@ -163,7 +104,6 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 	// {
 	//   VuoRelease(((void **)context)[0]);
 	//   free(((void **)context)[1]);
-	//   free(((void **)context)[2]);
 	//   free(context);
 	// }
 
@@ -175,7 +115,6 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 		PointerType *voidPointerPointerType = PointerType::get(voidPointerType, 0);
 		ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(64, 0));
 		ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(64, 1));
-		ConstantInt *twoValue = ConstantInt::get(module->getContext(), APInt(64, 2));
 
 		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
 
@@ -191,11 +130,8 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, compositionStateValue);
 
 		Value *eventIdPtrVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, oneValue, "", block);
-		Value *chainGroupsVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, twoValue, "", block);
 		Value *eventIdPtrValue = new LoadInst(eventIdPtrVariable, "", block);
-		Value *chainGroupsValue = new LoadInst(chainGroupsVariable, "", block);
 		CallInst::Create(freeFunction, eventIdPtrValue, "", block);
-		CallInst::Create(freeFunction, chainGroupsValue, "", block);
 
 		CallInst::Create(freeFunction, contextValue, "", block);
 
@@ -233,67 +169,6 @@ Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *
 															 eventIdValue, compositionStateValue, chainIndex, upstreamChainIndices);
 
 	return workerFunction;
-}
-
-/**
- * Generates code that waits on the dispatch groups for all chains immediately upstream of this chain.
- */
-void VuoCompilerChain::generateWaitForUpstreamChains(Module *module, BasicBlock *block, Value *contextValue,
-													 const vector<size_t> &chainIndices)
-{
-	Type *dispatchGroupType = VuoCompilerCodeGenUtilities::getDispatchGroupType(module);
-
-	// dispatch_group_t *chainGroups = (dispatch_group_t *)((void **)context)[2]);
-	// dispatch_group_wait(chainGroups[chainIndex0]);
-	// dispatch_release(chainGroups[chainIndex0]);
-	// dispatch_group_wait(chainGroups[chainIndex1]);
-	// dispatch_release(chainGroups[chainIndex1]);
-	// ...
-
-	Value *chainGroupsArrayValue = generateChainGroupsValue(module, block, contextValue);
-
-	for (vector<size_t>::const_iterator i = chainIndices.begin(); i != chainIndices.end(); ++i)
-	{
-		ConstantInt *iValue = ConstantInt::get(module->getContext(), APInt(64, *i));
-		Value *chainGroupVariable = GetElementPtrInst::Create(chainGroupsArrayValue, iValue, "", block);
-		Value *chainGroupValueAsVoidPointer = new LoadInst(chainGroupVariable, "", block);
-		Value *chainGroupValue = new BitCastInst(chainGroupValueAsVoidPointer, dispatchGroupType, "", block);
-
-		VuoCompilerCodeGenUtilities::generateWaitForDispatchGroup(module, block, chainGroupValue);
-
-		VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, chainGroupVariable);
-	}
-}
-
-/**
- * Generates code that decrements the block count of the chain's dispatch group (indicating that other chains
- * no longer need to wait on it) and releases memory.
- */
-void VuoCompilerChain::generateCleanupForWorkerFunction(Module *module, BasicBlock *block, Value *contextValue,
-														size_t chainIndex, bool hasDownstreamChains)
-{
-	Type *dispatchGroupType = VuoCompilerCodeGenUtilities::getDispatchGroupType(module);
-
-	// dispatch_group_t *chainGroups = (dispatch_group_t *)((void **)context)[2]);
-	// dispatch_group_t chainGroup = chainGroups[chainIndex];
-
-	Value *chainGroupsArrayValue = generateChainGroupsValue(module, block, contextValue);
-	ConstantInt *iValue = ConstantInt::get(module->getContext(), APInt(64, chainIndex));
-	Value *chainGroupVariable = GetElementPtrInst::Create(chainGroupsArrayValue, iValue, "", block);
-	Value *chainGroupValueAsVoidPointer = new LoadInst(chainGroupVariable, "", block);
-	Value *chainGroupValue = new BitCastInst(chainGroupValueAsVoidPointer, dispatchGroupType, "", block);
-
-	// dispatch_group_leave(chainGroup);
-
-	VuoCompilerCodeGenUtilities::generateLeaveDispatchGroup(module, block, chainGroupValue);
-
-	// dispatch_release(chainGroup);
-
-	VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, chainGroupVariable);
-
-	// VuoRelease(context);
-
-	VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, contextValue);
 }
 
 /**

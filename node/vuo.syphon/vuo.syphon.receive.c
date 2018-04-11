@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoSyphon.h"
 #include <string.h>
 

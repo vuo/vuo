@@ -10,7 +10,6 @@
 #include "VuoFfmpegDecoder.h"
 #include <OpenGL/CGLMacro.h>
 #include <CoreFoundation/CoreFoundation.h>
-#include "VuoGlContext.h"
 #include "VuoGlPool.h"
 #include "VuoReal.h"
 #include "VuoFfmpegUtility.h"
@@ -68,7 +67,7 @@ VuoFfmpegDecoder::VuoFfmpegDecoder(VuoUrl url)
 	});
 
 	mPlaybackRate = 1.;
-	mVideoPath = VuoUrl_normalize(url, false);
+	mVideoPath = VuoUrl_normalize(url, VuoUrlNormalize_default);
 	VuoRetain(mVideoPath);
 }
 

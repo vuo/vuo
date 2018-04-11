@@ -30,9 +30,9 @@ VuoInputEditorMenuItem * VuoInputEditorScreen::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	VuoScreen mainScreen      = {VuoScreenType_Active,     0,"",false,{0,0},0,0,0,0};
-	VuoScreen primaryScreen   = {VuoScreenType_Primary,  0,"",false,{0,0},0,0,0,0};
-	VuoScreen secondaryScreen = {VuoScreenType_Secondary,0,"",false,{0,0},0,0,0,0};
+	VuoScreen mainScreen      = {VuoScreenType_Active,   -1,-1,"",false,{0,0},0,0,0,0};
+	VuoScreen primaryScreen   = {VuoScreenType_Primary,  -1,-1,"",false,{0,0},0,0,0,0};
+	VuoScreen secondaryScreen = {VuoScreenType_Secondary,-1,-1,"",false,{0,0},0,0,0,0};
 
 	optionsTree->addItem(new VuoInputEditorMenuItem("Screen with Active Window", VuoScreen_getJson(mainScreen)));
 	optionsTree->addItem(new VuoInputEditorMenuItem("Primary Screen", VuoScreen_getJson(primaryScreen)));

@@ -666,8 +666,9 @@ void VuoRuntimeCommunicator::startListeningForControl(void)
 			{
 				int timeoutInSeconds = vuoReceiveInt(zmqControl, NULL);
 				bool isBeingReplaced = vuoReceiveBool(zmqControl, NULL);
+				bool isLastEverInProcess = vuoReceiveBool(zmqControl, NULL);
 
-				persistentState->runtimeState->stopCompositionAsOrderedByRunner(isBeingReplaced, timeoutInSeconds);
+				persistentState->runtimeState->stopCompositionAsOrderedByRunner(isBeingReplaced, timeoutInSeconds, isLastEverInProcess);
 
 				sendControlReply(VuoControlReplyCompositionStopping,NULL,0);
 				break;

@@ -34,7 +34,7 @@ VuoModuleMetadata({
 						"VuoImageRenderer",
 						"CoreVideo.framework",
 						"CoreMedia.framework",
-						"VuoGLContext",
+						"VuoGlContext",
 						"Accelerate.framework",
 						"VuoOsStatus",
 
@@ -109,8 +109,9 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	{
 		if (isHap)
 		{
-			NSBundle *f = [NSBundle bundleWithPath:[[NSString stringWithUTF8String:VuoApp_getVuoFrameworkPath()]
-									stringByAppendingString:@"/Vuo.framework/Frameworks/HapInAVFoundation.framework"]];
+			NSBundle *f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/Vuo.framework/Versions/%s/Frameworks/HapInAVFoundation.framework",
+				VuoApp_getVuoFrameworkPath(),
+				VUO_VERSION_STRING]];
 			if (!f)
 			{
 				VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
@@ -197,9 +198,11 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 	if (self)
 	{
-		glContext = VuoGlContext_use();
-		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
-		CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, (CGLContextObj)glContext, pf, NULL, &textureCache);
+		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
+		__block CVReturn ret;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
+		});
 		CGLReleasePixelFormat(pf);
 		if (ret != kCVReturnSuccess)
 		{
@@ -253,8 +256,9 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	readyToPlayCallback = NULL;
 	avDecoderCppObject = NULL;
 
-	CVOpenGLTextureCacheRelease(textureCache);
-	VuoGlContext_disuse(glContext);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		CVOpenGLTextureCacheRelease(textureCache);
+	});
 
 	[self clearFrameQueue];
 
@@ -658,29 +662,6 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 			{
 				return false;
 			}
-			else
-			{
-				/// this shouldn't ever happen, but if it does realloc samples and
-				/// change the audioChannelCount size
-				if(audioChannelCount != audioBufferChannelCount)
-				{
-					VuoRelease(frame->channels);
-					frame->channels = NULL;
-					frame->channels = VuoListCreate_VuoAudioSamples();
-					VuoRetain(frame->channels);
-
-					for(int i = 0; i < audioBufferChannelCount; i++)
-					{
-						VuoAudioSamples audioSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
-						audioSamples.samplesPerSecond = VuoAudioSamples_sampleRate;
-						VuoListAppendValue_VuoAudioSamples(frame->channels, audioSamples);
-					}
-
-					audioChannelCount = audioBufferChannelCount;
-
-					sampleIndex = 0;
-				}
-			}
 		}
 
 		unsigned int copyLength = MIN(sampleCapacity - sampleIndex, audioBufferSamplesPerChannel - audioBufferSampleIndex);
@@ -732,8 +713,11 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 
 		CVPixelBufferRef buffer = (CVPixelBufferRef) CMSampleBufferGetImageBuffer(sampleBuffer);
 
-		CVOpenGLTextureRef texture;
-		CVReturn ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, buffer, NULL, &texture);
+		__block CVOpenGLTextureRef texture;
+		__block CVReturn ret;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, buffer, NULL, &texture);
+		});
 		if (ret != kCVReturnSuccess)
 		{
 			VUserLog("Error: %d", ret);
@@ -751,7 +735,9 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 		VuoImage image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture));
 		CVOpenGLTextureRelease(texture);
 		VuoRelease(rectImage);
-		CVOpenGLTextureCacheFlush(textureCache, 0);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			CVOpenGLTextureCacheFlush(textureCache, 0);
+		});
 
 		CMSampleBufferInvalidate(sampleBuffer);
 		CFRelease(sampleBuffer);
@@ -878,6 +864,18 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 
 		free(audioBufferList);
 		CFRelease(audioSampleBuffer);
+
+
+		// Sometimes AVFoundation says the movie has a certain number of audio channels,
+		// but actually decodes a different number of audio channels.
+		// https://b33p.net/kosada/node/12952
+		if (audioChannelCount != audioBufferChannelCount)
+		{
+			VUserLog("Warning: AVFoundation reported %d audio channel%s, but actually decoded %d channel%s.",
+					 audioChannelCount, audioChannelCount == 1 ? "" : "s",
+					 audioBufferChannelCount, audioBufferChannelCount == 1 ? "" : "s");
+			audioChannelCount = audioBufferChannelCount;
+		}
 
 		return true;
 	}

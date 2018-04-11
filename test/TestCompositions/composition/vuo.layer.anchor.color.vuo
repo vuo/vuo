@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+CountItemsInList2 [type="vuo.list.count.VuoLayer" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="750,165"];
+GetChildLayers [type="vuo.layer.get.child" version="1.0.0" label="Get Child Layers|<refresh>refresh\l|<layer>layer\l|<childLayers>childLayers\r" pos="570,165"];
+GetRenderedLayerBounds [type="vuo.layer.bounds.rendered" version="1.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="750,15" _layerName="\"layer\"" _includeChildren="true"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="300,0" _name="\"layer\"" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="462,-34"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="525,-45" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<anchor>anchor\r|<width>width\r|<height>height\r" _anchor_type="VuoAnchor" _width_type="VuoReal" _width_suggestedMin="0.0" _width_suggestedMax="2.0" _width_suggestedStep="0.1" _width="1" _height_type="VuoReal" _height_suggestedMin="0.0" _height_suggestedMax="2.0" _height_suggestedStep="0.1" _height="1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputCenter>outputCenter\l|<outputChildCount>outputChildCount\l" _outputCenter_type="VuoPoint2d" _outputChildCount_type="VuoInteger"];
+
+CountItemsInList2:itemCount -> PublishedOutputs:outputChildCount;
+GetChildLayers:childLayers -> CountItemsInList2:list;
+GetRenderedLayerBounds:center -> PublishedOutputs:outputCenter;
+MakeColorLayer:layer -> GetChildLayers:layer;
+MakeColorLayer:layer -> MakeList3:1;
+MakeList3:list -> RenderLayersToImage:layers;
+PublishedInputs:anchor -> MakeColorLayer:anchor;
+PublishedInputs:height -> MakeColorLayer:height;
+PublishedInputs:width -> MakeColorLayer:width;
+RenderLayersToImage:renderedLayers -> GetRenderedLayerBounds:renderedLayers;
+}

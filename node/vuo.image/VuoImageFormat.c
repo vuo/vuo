@@ -19,7 +19,7 @@
 VuoModuleMetadata({
 					 "title" : "Image Format",
 					 "description" : "Available formats when exporting images from Vuo.",
-					 "keywords" : [ "" ],
+					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						"VuoList_VuoImageFormat"

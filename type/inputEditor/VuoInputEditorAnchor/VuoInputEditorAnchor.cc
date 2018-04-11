@@ -106,8 +106,8 @@ VuoInputEditor * VuoInputEditorAnchorFactory::newInputEditor()
 
 int VuoInputEditorAnchor::VuoAnchorToIndex(const VuoAnchor anchor)
 {
-	int r = anchor.verticalAlignment == VuoVerticalAlignment_Top ? 0 : (anchor.verticalAlignment == VuoVerticalAlignment_Center ? 1 : 2);
-	int c = anchor.horizontalAlignment == VuoHorizontalAlignment_Left ? 0 : (anchor.horizontalAlignment == VuoHorizontalAlignment_Center ? 1 : 2);
+	int r = VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Top ? 0 : (VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Center ? 1 : 2);
+	int c = VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Left ? 0 : (VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Center ? 1 : 2);
 	return r * 3 + c;
 }
 

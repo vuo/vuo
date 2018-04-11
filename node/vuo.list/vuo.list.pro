@@ -30,10 +30,4 @@ GENERIC_NODE_SOURCES += \
 	vuo.list.spread.group.c \
 	vuo.list.take.c
 
-TYPE_SOURCES += \
-	VuoListPosition.c
-
-HEADERS += \
-	VuoListPosition.h
-
 include(../../module.pri)

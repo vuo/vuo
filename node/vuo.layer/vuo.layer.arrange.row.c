@@ -86,7 +86,7 @@ void nodeInstanceEvent
 		VuoRectangle bounds;
 
 		// getRect bounds center includes the layer trs
-		if(!VuoRenderedLayers_getRect(renderedLayers, child, &bounds))
+		if(!VuoRenderedLayers_getRect(renderedLayers, child.sceneObject, &bounds))
 			continue;
 
 		VuoPoint3d translation = VuoPoint3d_make(
@@ -114,16 +114,16 @@ void nodeInstanceEvent
 	// apply anchor
 	{
 		// if horizontal anchor isn't left, offset
-		VuoReal width = anchor.horizontalAlignment != VuoHorizontalAlignment_Left ? currentPosition.x - spacing : 0.;
-		VuoReal offsetX = anchor.horizontalAlignment == VuoHorizontalAlignment_Center ? width * .5 : width;
+		VuoReal width = VuoAnchor_getHorizontal(anchor) != VuoHorizontalAlignment_Left ? currentPosition.x - spacing : 0.;
+		VuoReal offsetX = VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Center ? width * .5 : width;
 
 		// if vertical anchor isn't center, offset
 		VuoReal center_y =  verticalAlignment == VuoVerticalAlignment_Center ? 0 :
 							verticalAlignment == VuoVerticalAlignment_Top ? -size_y * .5 :
 							size_y * .5;
 
-		VuoReal offsetY = 	anchor.verticalAlignment == VuoVerticalAlignment_Center ? -center_y :
-							anchor.verticalAlignment == VuoVerticalAlignment_Top ? (-center_y - (size_y * .5)) :
+		VuoReal offsetY =   VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Center ? -center_y :
+							VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Top ? (-center_y - (size_y * .5)) :
 							(-center_y + (size_y * .5));
 
 		unsigned long childCount = VuoListGetCount_VuoLayer(children);

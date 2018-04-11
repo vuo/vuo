@@ -22,6 +22,7 @@ EXAMPLE_SOURCES += \
 	MoveBeadsOnString.vuo \
 	MoveSpinningSphere.vuo \
 #	MoveThroughTubeWithFisheye.vuo \
+	OperateOn3DObjects.vuo \
 	PaintSceneWithCheckerboard.vuo \
 	PinchRectangles.vuo \
 	PinchSphere.vuo \

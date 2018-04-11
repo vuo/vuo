@@ -13,7 +13,6 @@ extern "C"
 #endif
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoMultisample.h"
 
 /**
@@ -21,7 +20,7 @@ extern "C"
  */
 typedef void * VuoSceneRenderer;
 
-VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor);
+VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
 
 void VuoSceneRenderer_renderToImage(VuoSceneRenderer sceneRenderer, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage);

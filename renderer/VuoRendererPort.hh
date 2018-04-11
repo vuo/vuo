@@ -53,7 +53,7 @@ public:
 	bool canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
 	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
 	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection, VuoRendererPort **portToSpecialize, string &specializedTypeName);
-	VuoCable * getCableConnectedTo(VuoRendererPort *toPort);
+	VuoCable * getCableConnectedTo(VuoRendererPort *toPort, bool includePublishedCables);
 	bool getInput(void) const;
 	bool getOutput(void) const;
 	bool getRefreshPort(void) const;

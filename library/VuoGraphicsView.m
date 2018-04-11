@@ -10,6 +10,7 @@
 #import "VuoGraphicsView.h"
 #import "VuoApp.h"
 #import "VuoCompositionState.h"
+#import "VuoCglPixelFormat.h"
 
 #import <OpenGL/gl3.h>
 #import <OpenGL/gl3ext.h>
@@ -19,6 +20,7 @@
 VuoModuleMetadata({
 	"title" : "VuoGraphicsView",
 	"dependencies" : [
+		"VuoCglPixelFormat",
 		"VuoDisplayRefresh",
 		"OpenGL.framework"
 	]
@@ -53,7 +55,7 @@ GLuint CompileShader(GLenum type, const char *source)
  */
 CGLContextObj createContext(void)
 {
-	CGLPixelFormatObj pixelFormat = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, true);
+	CGLPixelFormatObj pixelFormat = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, true, -1);
 	CGLContextObj context;
 	CGLError error = CGLCreateContext(pixelFormat, NULL, &context);
 	CGLDestroyPixelFormat(pixelFormat);
@@ -113,9 +115,7 @@ static void VuoGraphicsView_frameRequestCallback(VuoReal time, void *userData)
 
 	view.needsIOSurfaceRedraw = false;
 
-	dispatch_sync(view.drawQueue, ^{
-		VuoGraphicsView_drawOnIOSurface(view);
-	});
+	dispatch_sync_f(view.drawQueue, view, (dispatch_function_t)VuoGraphicsView_drawOnIOSurface);
 
 	// `needsDisplay` is slow, and it disrupts moving/sizing the window via the accessibility API.
 	// Instead, just call `drawRect:` ourself.
@@ -264,13 +264,9 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
 		self.wantsBestResolutionOpenGLSurface = YES;
 		self.focusRingType = NSFocusRingTypeNone;
 
-		_rootContext = VuoGlContext_use();
-
-		{
-			CGLSetCurrentContext(_rootContext);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 			_initCallback(_userData, backingScaleFactor);
-			CGLSetCurrentContext(NULL);
-		}
+		});
 
 
 		CGLContextObj context = createContext();
@@ -383,7 +379,21 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
 
 - (void)frameDidChange:(NSNotification*)notification
 {
+	CGLContextObj context = _localOpenGLContext.CGLContextObj;
+	GLint oldRendererID;
+	CGLGetParameter(context, kCGLCPCurrentRendererID, &oldRendererID);
+	GLint oldVirtualScreen = _localOpenGLContext.currentVirtualScreen;
+
 	[_localOpenGLContext update];
+
+	GLint rendererID;
+	CGLGetParameter(context, kCGLCPCurrentRendererID, &rendererID);
+	if (rendererID != oldRendererID)
+		VDebugLog("OpenGL context %p's renderer changed to %s", context, VuoCglRenderer_getText(rendererID));
+	GLint virtualScreen = _localOpenGLContext.currentVirtualScreen;
+	if (virtualScreen != oldVirtualScreen)
+		VDebugLog("OpenGL context %p's virtual screen changed from %d to %d", context, oldVirtualScreen, virtualScreen);
+
 //	_needsIOSurfaceRedraw = true;
 	_redrawIOSurfaceDuringDrawRect = true;
 }
@@ -420,7 +430,10 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
 
 
 	if (_localOpenGLContext.view != self)
+	{
 		_localOpenGLContext.view = self;
+		VDebugLog("OpenGL context %p's virtual screen changed to %d", _localOpenGLContext.CGLContextObj, _localOpenGLContext.currentVirtualScreen);
+	}
 
 	if (!_ioSurface)
 		return;
@@ -506,13 +519,9 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
 
 		gw.backingScaleFactorCached = backingScaleFactor;
 
-		CGLLockContext(_rootContext);
-		CGLSetCurrentContext(_rootContext);
-
-		_updateBackingCallback(_userData, backingScaleFactor);
-
-		CGLSetCurrentContext(NULL);
-		CGLUnlockContext(_rootContext);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			_updateBackingCallback(_userData, backingScaleFactor);
+		});
 
 		if (gw.maintainsPixelSizeWhenBackingChanges)
 		{
@@ -585,7 +594,6 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
  */
 - (void)dealloc
 {
-	VuoGlContext_disuse(_rootContext);
 	VuoRelease(_displayRefresh);
 	dispatch_release(_drawQueue);
 	if (_ioSurface)

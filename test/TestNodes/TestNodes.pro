@@ -6,7 +6,10 @@ TARGET = TestNodes
 include(../../vuo.pri)
 include(../test.pri)
 
-QMAKE_RPATHDIR = $$ROOT/framework
+# Use Vuo Editor.app's framework, since Jenkins now removes descriptions from the redistributable framework before this test runs.
+#QMAKE_RPATHDIR = $$ROOT/framework
+QMAKE_LFLAGS -= -Wl,-rpath,$$ROOT/framework
+QMAKE_RPATHDIR = "$$ROOT/editor/VuoEditorApp/Vuo Editor.app/Contents/Frameworks"
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
 
 SOURCES += \

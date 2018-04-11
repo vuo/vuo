@@ -26,10 +26,24 @@ void nodeEvent
 	VuoOutputData(VuoSceneObject) shadedObject
 )
 {
+	VuoShader s = shader;
+	if (!s)
+		s = VuoShader_makeDefaultShader();
+
+	if (!object.childObjects)
+	{
+		*shadedObject = object;
+		shadedObject->shader = s;
+		return;
+	}
+
 	VuoSceneObject copy = VuoSceneObject_copy(object);
 
 	VuoSceneObject_apply(&copy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-							currentObject->shader = shader;
+							if (!currentObject->shader)
+								return;
+
+							currentObject->shader = s;
 						 });
 
 	*shadedObject = copy;

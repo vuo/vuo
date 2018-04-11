@@ -22,7 +22,7 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoMeshParametric",
 					 "dependencies" : [
-						 "muParser",
+						 "muparser",
 						 "VuoMathExpressionParser",
 						 "VuoMeshUtility"
 					 ]

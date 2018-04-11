@@ -1,0 +1,95 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Vuo Module",
+	"type": "object",
+	"properties": {
+		"title": {
+			"type": "string",
+			"pattern": "^[A-Z][A-Za-z0-9+:,/() -]+$",
+		},
+		"description": {
+			"type": "string",
+			"pattern": ".+",
+		},
+		"keywords": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"pattern": ".+",
+			},
+		},
+		"version": {
+			"type": "string",
+			"pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+		},
+		"dependencies": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"pattern": ".+",
+			},
+		},
+		"genericTypes": {
+			"type": "object",
+			"patternProperties": {
+				"^VuoGenericType[0-9]+$": {
+					"type": "object",
+					"properties": {
+						"defaultType": {
+							"type": "string",
+							"pattern": "^[A-Z][A-Za-z0-9]+$",
+						},
+						"compatibleTypes": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"pattern": "^[A-Z][A-Za-z0-9]+$",
+							},
+						},
+					},
+					"additionalProperties": false,
+				},
+			},
+			"additionalProperties": false,
+		},
+		"node": {
+			"type": "object",
+			"properties": {
+				"isDeprecated": {
+					"type": "boolean",
+				},
+				"isInterface": {
+					"type": "boolean",
+				},
+				"exampleCompositions": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"pattern": "^(vuo-example://vuo\\.[a-z]+/)?[A-Z][A-Za-z0-9]+\\.vuo$",
+					},
+				},
+			},
+			"additionalProperties": false,
+		},
+		"compatibleOperatingSystems": {
+			"type": "object",
+			"properties": {
+				"macosx": {
+					"type": "object",
+					"patternProperties": {
+						"(min|max)": {
+							"type": "string",
+							"pattern": "^10\\.(9|10|11|12)$",
+						},
+					},
+				},
+			},
+			"additionalProperties": false,
+		},
+	},
+	"required": [
+		"title",
+		"version",
+	],
+	"additionalProperties": false,
+}

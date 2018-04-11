@@ -85,15 +85,18 @@ bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layer
 
 /**
  * Apply a list of sceneobject transforms in reverse order, taking into account realSize objects.
+ * Optionally include or omit applying target transform.  Useful in situations where the local
+ * transform has already been applied (VuoRenderedLayers_getRect for example).
  */
 void VuoRenderedLayers_applyTransforms(	VuoRenderedLayers renderedLayers,
 										VuoList_VuoSceneObject ancestorObjects,
 										VuoSceneObject targetObject,
 										VuoPoint3d* layerCenter3d,
-										VuoPoint3d layerCorners3d[4])
+										VuoPoint3d layerCorners3d[4],
+										bool applyTargetTransform)
 {
 	float matrix[16];
-	VuoPoint3d center = VuoPoint3d_make(0,0,0);
+	VuoPoint3d center = *layerCenter3d;
 	bool isText = targetObject.type == VuoSceneObjectSubType_Text && targetObject.text != NULL;
 
 	if (targetObject.isRealSize || isText)
@@ -103,8 +106,11 @@ void VuoRenderedLayers_applyTransforms(	VuoRenderedLayers renderedLayers,
 		unsigned long ancestorObjectCount = VuoListGetCount_VuoSceneObject(ancestorObjects);
 
 		// apply local transform first
-		VuoTransform_getMatrix(targetObject.transform, matrix);
-		center = VuoTransform_transformPoint(matrix, center);
+		if(applyTargetTransform)
+		{
+			VuoTransform_getMatrix(targetObject.transform, matrix);
+			center = VuoTransform_transformPoint(matrix, center);
+		}
 
 		for (unsigned long i = ancestorObjectCount; i >= 1; --i)
 		{
@@ -112,6 +118,7 @@ void VuoRenderedLayers_applyTransforms(	VuoRenderedLayers renderedLayers,
 			VuoTransform_getMatrix(ancestorObject.transform, matrix);
 			center = VuoTransform_transformPoint(matrix, center);
 		}
+
 		if(layerCorners3d != NULL)
 		{
 			float widthScale = 1, heightScale = 1;
@@ -158,10 +165,15 @@ void VuoRenderedLayers_applyTransforms(	VuoRenderedLayers renderedLayers,
 		unsigned long ancestorObjectCount = VuoListGetCount_VuoSceneObject(ancestorObjects);
 
 		// local transform first
-		VuoTransform_getMatrix(targetObject.transform, matrix);
-		for(int i = 0; i < 4; i++)
-			layerCorners3d[i] = VuoTransform_transformPoint(matrix, layerCorners3d[i]);
-		center = VuoTransform_transformPoint(matrix, center);
+		if(applyTargetTransform)
+		{
+			VuoTransform_getMatrix(targetObject.transform, matrix);
+
+			for(int i = 0; i < 4; i++)
+				layerCorners3d[i] = VuoTransform_transformPoint(matrix, layerCorners3d[i]);
+
+			center = VuoTransform_transformPoint(matrix, center);
+		}
 
 		for (unsigned long i = ancestorObjectCount; i >= 1; --i)
 		{
@@ -181,13 +193,14 @@ void VuoRenderedLayers_applyTransforms(	VuoRenderedLayers renderedLayers,
 
 /**
  * Returns a set of 4 points representing the corners of targetObject.  If targetObject is a quad, this will be the
- * vertex positions.  If targetObject does not have a mesh (or is not a quad) no points are returned.
+ * vertex positions.  If targetObject does not have a mesh (or is not a quad) and includeChildrenInBounds is false
+ * no points are returned.
  */
 bool VuoRenderedLayers_getLayerCorners(const VuoSceneObject targetObject, VuoPoint3d layerCorners3d[4])
 {
 	if( targetObject.mesh == NULL ||
 		targetObject.mesh->submeshCount < 1 ||
-		targetObject.mesh->submeshes[0].vertexCount < 3 )
+		targetObject.mesh->submeshes[0].vertexCount < 3)
 		return false;
 
 	VuoSubmesh layerQuad = targetObject.mesh->submeshes[0];
@@ -202,22 +215,116 @@ bool VuoRenderedLayers_getLayerCorners(const VuoSceneObject targetObject, VuoPoi
 }
 
 /**
+ * Returns the center of the 4 coordinates (ignoring Z).
+ */
+VuoPoint3d VuoRenderedLayers_getQuadCenter(VuoPoint3d layerCorners3d[4])
+{
+	VuoPoint3d c = layerCorners3d[0];
+
+	for(int i = 1; i < 4; i++)
+	{
+		c.x += layerCorners3d[i].x;
+		c.y += layerCorners3d[i].y;
+	}
+
+	return VuoPoint3d_multiply(c, .25);
+}
+
+/**
+ * Helper for @ref VuoRenderedLayers_getRect.
+ */
+bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers renderedLayers, float compositeMatrix[16], VuoSceneObject targetObject, VuoRectangle* rect, bool rectIsInitialized)
+{
+	bool foundRect = rectIsInitialized;
+	VuoPoint2d layerCenter;
+	VuoPoint2d layerCorners[4];
+
+	// apply targetObject transform
+	float localToWorldMatrix[16];
+	float modelMatrix[16];
+
+	VuoTransform_getMatrix(targetObject.transform, modelMatrix);
+	VuoTransform_multiplyMatrices4x4(modelMatrix, compositeMatrix, localToWorldMatrix);
+
+	if( VuoRenderedLayers_getTransformedLayer2(renderedLayers, localToWorldMatrix, targetObject, &layerCenter, layerCorners) )
+	{
+		VuoRectangle thisRect = VuoRenderedLayers_getBoundingBox(layerCorners);
+
+		if(rectIsInitialized)
+			*rect = VuoPoint2d_rectangleUnion(*rect, thisRect);
+		else
+			*rect = thisRect;
+
+		foundRect = true;
+	}
+
+	int children = VuoListGetCount_VuoSceneObject(targetObject.childObjects);
+
+	for(int i = 1; i <= children; i++)
+	{
+		VuoSceneObject child = VuoListGetValue_VuoSceneObject(targetObject.childObjects, i);
+
+		if( VuoRenderedLayers_getRectRecursive(renderedLayers, localToWorldMatrix, child, rect, foundRect) )
+			foundRect = true;
+	}
+
+	return foundRect;
+}
+
+/**
+ * Get a axis-aligned bounding rect in model space (transformed by `layer`) in Vuo coordinates for a layer and its children.
+ */
+bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, VuoRectangle* rect)
+{
+	float identity[16] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	};
+
+	return VuoRenderedLayers_getRectRecursive(renderedLayers, identity, layer, rect, false);
+}
+
+/**
  * Outputs the center and corner points of the layer with the given name, as transformed in @a renderedLayers.
  */
-bool VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject targetObject, VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4])
+bool VuoRenderedLayers_getTransformedLayer(
+	VuoRenderedLayers renderedLayers,
+	VuoList_VuoSceneObject ancestorObjects,
+	VuoSceneObject targetObject,
+	VuoPoint2d *layerCenter,
+	VuoPoint2d layerCorners[4],
+	bool includeChildrenInBounds)
 {
 	// Get the layer's corner points.
 	VuoPoint3d layerCorners3d[4];
 
-	if( !VuoRenderedLayers_getLayerCorners(targetObject, layerCorners3d) )
-		return false;
+	if(includeChildrenInBounds)
+	{
+		VuoRectangle rect;
+
+		if(!VuoRenderedLayers_getRect(renderedLayers, targetObject, &rect))
+			return false;
+
+		VuoPoint2d c = rect.center;
+		VuoPoint2d e = VuoPoint2d_multiply(rect.size, .5);
+
+		layerCorners3d[0] = VuoPoint3d_make( c.x - e.x, c.y - e.y, 0. );
+		layerCorners3d[1] = VuoPoint3d_make( c.x + e.x, c.y - e.y, 0. );
+		layerCorners3d[2] = VuoPoint3d_make( c.x - e.x, c.y + e.y, 0. );
+		layerCorners3d[3] = VuoPoint3d_make( c.x + e.x, c.y + e.y, 0. );
+	}
+	else
+	{
+		if( !VuoRenderedLayers_getLayerCorners(targetObject, layerCorners3d) )
+			return false;
+	}
 
 	bool isText = targetObject.type = VuoSceneObjectSubType_Text && targetObject.text != NULL;
 
-	if(targetObject.shader == NULL && !isText)
-		return false;
-
-	if(!isText)
+	// if includeChildren is true VuoRenderedLayers_getRect will have already applied scale
+	if(!includeChildrenInBounds && !isText && targetObject.shader != NULL)
 	{
 		for (int i = 0; i < 4; ++i)
 		{
@@ -227,9 +334,9 @@ bool VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 	}
 
 	// Transform the layer to the rendered layers' coordinate space.
-	VuoPoint3d layerCenter3d = VuoPoint3d_make(0,0,0);
+	VuoPoint3d layerCenter3d = VuoRenderedLayers_getQuadCenter(layerCorners3d);
 
-	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &layerCenter3d, layerCorners3d);
+	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &layerCenter3d, layerCorners3d, !includeChildrenInBounds);
 
 	for (int i = 0; i < 4; ++i)
 		layerCorners[i] = VuoPoint2d_make(layerCorners3d[i].x, layerCorners3d[i].y);
@@ -253,7 +360,7 @@ bool VuoRenderedLayers_getTransformedPoint(VuoRenderedLayers renderedLayers, Vuo
 	tp.y *= targetObject.shader->objectScale;
 
 	// Transform the layer to the rendered layers' coordinate space.
-	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &tp, NULL);
+	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &tp, NULL, true);
 
 	*transformedPoint = VuoPoint2d_make(tp.x, tp.y);
 
@@ -302,62 +409,6 @@ bool VuoRenderedLayers_getInverseTransformedPoint(VuoRenderedLayers renderedLaye
 }
 
 /**
- * Helper for @ref VuoRenderedLayers_getRect.
- */
-bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers renderedLayers, float compositeMatrix[16], VuoSceneObject targetObject, VuoRectangle* rect, bool rectIsInitialized)
-{
-	bool foundRect = rectIsInitialized;
-	VuoPoint2d layerCenter;
-	VuoPoint2d layerCorners[4];
-
-	// apply targetObject transform
-	float localToWorldMatrix[16];
-	float modelMatrix[16];
-
-	VuoTransform_getMatrix(targetObject.transform, modelMatrix);
-	VuoTransform_multiplyMatrices4x4(modelMatrix, compositeMatrix, localToWorldMatrix);
-
-	if( VuoRenderedLayers_getTransformedLayer2(renderedLayers, localToWorldMatrix, targetObject, &layerCenter, layerCorners) )
-	{
-		VuoRectangle thisRect = VuoRenderedLayers_getBoundingBox(layerCorners);
-
-		if(rectIsInitialized)
-			*rect = VuoPoint2d_rectangleUnion(*rect, thisRect);
-		else
-			*rect = thisRect;
-
-		foundRect = true;
-	}
-
-	int children = VuoListGetCount_VuoSceneObject(targetObject.childObjects);
-
-	for(int i = 1; i <= children; i++)
-	{
-		VuoSceneObject child = VuoListGetValue_VuoSceneObject(targetObject.childObjects, i);
-
-		if( VuoRenderedLayers_getRectRecursive(renderedLayers, localToWorldMatrix, child, rect, foundRect) )
-			foundRect = true;
-	}
-
-	return foundRect;
-}
-
-/**
- * Get a axis-aligned bounding rect in model space in Vuo coordinates for a layer and its children.
- */
-bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoLayer layer, VuoRectangle* rect)
-{
-	float identity[16] = {
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	};
-
-	return VuoRenderedLayers_getRectRecursive(renderedLayers, identity, layer.sceneObject, rect, false);
-}
-
-/**
  * Outputs the center and corner points of the layer.  localToWorldMatrix should be composite all ancestor transforms and targetObject.transform.
  */
 bool VuoRenderedLayers_getTransformedLayer2(VuoRenderedLayers renderedLayers, float localToWorldMatrix[16], VuoSceneObject targetObject, VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4])
@@ -383,7 +434,6 @@ bool VuoRenderedLayers_getTransformedLayer2(VuoRenderedLayers renderedLayers, fl
 	}
 
 	// Transform the layer to the rendered layers' coordinate space.
-	VuoPoint3d layerCenter3d = VuoPoint3d_make(0,0,0);
 	VuoPoint3d center = VuoPoint3d_make(0,0,0);
 
 	if (targetObject.isRealSize || isText)
@@ -440,7 +490,7 @@ bool VuoRenderedLayers_getTransformedLayer2(VuoRenderedLayers renderedLayers, fl
 	for (int i = 0; i < 4; ++i)
 		layerCorners[i] = VuoPoint2d_make(layerCorners3d[i].x, layerCorners3d[i].y);
 
-	*layerCenter = VuoPoint2d_make(layerCenter3d.x, layerCenter3d.y);
+	*layerCenter = VuoPoint2d_make(center.x, center.y);
 
 	return true;
 }

@@ -19,7 +19,7 @@
 VuoModuleMetadata({
 					 "title" : "Duration Type",
 					 "description" : "Duration Enum.",
-					 "keywords" : [ "" ],
+					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						"VuoList_VuoDurationType"

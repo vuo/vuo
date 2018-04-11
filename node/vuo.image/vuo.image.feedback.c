@@ -16,7 +16,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "combine", "mix", "fade", "merge", "layer", "composite", "feedback" ],
 					 "version" : "1.1.0",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoLayer",
 						 "VuoSceneRenderer"
 					 ],
@@ -27,7 +26,6 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
 	VuoSceneRenderer *sceneRenderer;
 	VuoImage previousFeedbackImage;
 };
@@ -38,8 +36,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoRegister(instance, free);
 
 	instance->previousFeedbackImage = NULL;
-	instance->glContext = VuoGlContext_use();
-	instance->sceneRenderer = VuoSceneRenderer_make(instance->glContext, 1);
+	instance->sceneRenderer = VuoSceneRenderer_make(1);
 	VuoRetain(instance->sceneRenderer);
 
 	return instance;
@@ -145,6 +142,4 @@ void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 
 	if ((*instance)->previousFeedbackImage)
 		VuoRelease((*instance)->previousFeedbackImage);
-
-	VuoGlContext_disuse((*instance)->glContext);
 }

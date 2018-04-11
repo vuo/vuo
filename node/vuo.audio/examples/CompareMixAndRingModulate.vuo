@@ -38,7 +38,7 @@ RingModulateAudio [type="vuo.audio.ringModulate" version="1.0.0" label="Ring Mod
 SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,210" _falseOption="\"Mixing (adding)\"" _trueOption="\"Ring modulating (multiplying)\""];
 SelectInput5 [type="vuo.select.in.boolean.VuoAudioSamples" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,120"];
 SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="900,105" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="1665,240" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="1665,240" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
 Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="360,165"];
 Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-90,90" _wave="\"sine\"" _period="2" _center="220" _amplitude="110" _phase="0"];
 

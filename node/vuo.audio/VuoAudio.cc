@@ -39,7 +39,7 @@ VuoModuleMetadata({
 						 "VuoList_VuoAudioSamples",
 						 "VuoList_VuoAudioInputDevice",
 						 "VuoList_VuoAudioOutputDevice",
-						 "RtAudio",
+						 "rtaudio",
 						 "CoreAudio.framework"
 					 ]
 				 });

@@ -55,8 +55,6 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 	VuoShader shader;
 };
 
@@ -64,11 +62,6 @@ struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Tile Image Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
@@ -101,12 +94,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "reflectOddRows",    reflectOddRows);
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "reflectOddColumns", reflectOddColumns);
 
-	*tiledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*tiledImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

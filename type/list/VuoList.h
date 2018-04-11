@@ -9,6 +9,11 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * @ingroup VuoTypes
  * @defgroup LIST_TYPE LIST_TYPE
@@ -201,3 +206,7 @@ char * LIST_TYPE_getString(const LIST_TYPE value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

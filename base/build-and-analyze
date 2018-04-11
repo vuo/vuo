@@ -1,23 +1,164 @@
-#!/bin/bash
+#!/usr/bin/env php
+<?php
 
-CLANG=$1
-ROOT=$2
-shift 2
+array_shift($argv);
+$clang = array_shift($argv);
+$root = array_shift($argv);
+$clangArgs = '';
+foreach ($argv as $arg)
+	if (strpos($arg, '"') !== FALSE
+	 || strpos($arg, ' ') !== FALSE)
+		// Add extra quotes, to keep the shell from removing the double-quotes and breaking on spaces.
+		$clangArgs .= "'" . $arg . "' ";
+	else
+		$clangArgs .= $arg . ' ';
 
-[[ "$@" != *"-x c"*"-header"* ]] \
-&& [[ "$@" != *"miniz.c"* ]] \
-&& $CLANG \
-	--analyze \
-	-Xanalyzer -analyzer-eagerly-assume \
-	-Xanalyzer -analyzer-opt-analyze-nested-blocks \
-	-Xanalyzer -analyzer-checker=alpha,core,deadcode,llvm,osx,security,unix \
-	-Xanalyzer -analyzer-output=html \
-	"$@" \
-	-o $ROOT/analysis \
-	2>&1 \
-	| egrep -v "^clang: warning: .+ 'linker' input unused$" \
-	| egrep -v "^clang: warning: argument unused during compilation: '-dynamiclib'$" \
-	| egrep -v "^clang: warning: argument unused during compilation: '-Xanalyzer -analyzer-output=html'"
 
-# Run the actual clang build command last, so the shell script exits with its status
-$CLANG "$@"
+$runAnalyzers = true;
+$skipRegexes = array(
+	'@-x c.*-header@', // Don't need to analyze precompiled headers.
+	'@miniz\.c@', // Not our code.
+	'@-o VuoCompositionLoader @', // Just linking.
+	'@-o Vuo.+\.o Vuo.+\.bc@', // Don't bother checking .bc -> .o conversions.
+	'@moc_.+\.cpp@',
+	'@qrc_.+\.cpp@',
+);
+foreach ($skipRegexes as $regex)
+	if (preg_match($regex, $clangArgs))
+	{
+		$runAnalyzers = false;
+		break;
+	}
+
+if ($runAnalyzers)
+{
+/*
+	if (preg_match('/[A-Za-z]+\.c\b/', $clangArgs))
+	{
+		echo "\tsplint:\n";
+		$splintCommand = "splint \
+			-badflag \
+			-fileextensions \
+			-preproc \
+			$clangArgs
+		";
+
+		squashPrecompiledHeaders($splintCommand, $root);
+
+		system($splintCommand, $ret);
+		if ($ret)
+			echo 'Failed command: ' . $splintCommand;
+exit(0);
+	}
+*/
+
+
+	$filenameRegex = '/\b[A-Za-z-]+\.(c|cc|m|mm)\b/';
+	if (preg_match($filenameRegex, $clangArgs, $matches))
+	{
+		$filename = $matches[0];
+		$clangArgsMinusFilename = preg_replace($filenameRegex, '', $clangArgs);
+		$clangArgsMinusFilename = preg_replace('/-emit-llvm/', '$0.o', $clangArgsMinusFilename);
+
+		echo "\toclint:\n";
+		$oclintCommand = "oclint \
+			-disable-rule LongVariableName \
+			-disable-rule ShortVariableName \
+			$filename \
+			-- \
+			$clangArgsMinusFilename \
+			2>&1 \
+			| egrep -v \"^$\" \
+			| egrep -v \"llvm\.framework\" \
+			| egrep -v \"^oclint: error: violations exceed threshold$\" \
+			| egrep -v \"^P1=.+ P2=.+ P3=\" \
+			| egrep -v \"^OCLint Report$\" \
+			| egrep -v \"^Compiler Warnings:\" \
+			| egrep -v \"^Summary: \" \
+			| egrep -v \"^\[OCLint .+\]$\" \
+			| egrep -v '^/Applications/Xcode\.app/' \
+			| egrep -v '^/usr/local/' \
+			|| true
+		";
+
+		squashPrecompiledHeaders($oclintCommand, $root);
+
+		system($oclintCommand, $ret);
+		if ($ret)
+			echo 'Failed command: ' . $oclintCommand;
+	}
+
+
+	echo "\tclang analyzer:\n";
+	$clangAnalyzerCommand = "$clang \
+		--analyze \
+		-Xanalyzer -analyzer-eagerly-assume \
+		-Xanalyzer -analyzer-opt-analyze-nested-blocks \
+		-Xanalyzer -analyzer-checker=alpha,core,deadcode,llvm,osx,security,unix \
+		$clangArgs \
+		2>&1 \
+		| egrep -v \"^clang: warning: .+ 'linker' input unused$\" \
+		| egrep -v \"^clang: warning: argument unused during compilation:\" \
+		| egrep -v \"^/Applications/Xcode\.app/.+: warning: \" \
+		| egrep -v \"^/usr/local/Cellar/.+: warning: \" \
+		| egrep -v \"^Leap/.+: warning: \" \
+		| egrep -v \"^\d+ warnings? generated.$\" \
+		|| true
+	";
+
+	system($clangAnalyzerCommand, $ret);
+	if ($ret)
+		echo 'Failed command: ' . $clangAnalyzerCommand;
+
+
+	echo "\tinfer:\n";
+	$inferCommand = "infer \
+		--no-progress-bar \
+		--cxx \
+		--headers \
+		--infer-blacklist-path-regex '/usr/local/Cellar/.+' \
+		--infer-blacklist-path-regex '.+/llvm\.framework/.+' \
+		--infer-blacklist-path-regex '.+/infer-osx-v.+/.+' \
+		--results-dir $root/infer \
+		-- $clang $clangArgs \
+		-I/usr/local/Cellar/graphviz/2.28.0/include \
+		-I/usr/local/Cellar/json-c/0.12/include \
+		-I/usr/local/Cellar/zeromq/2.2.0/include \
+		-I/usr/local/Cellar/openssl/1.0.1g/include \
+		-I/usr/local/Cellar/discount/2.1.6/include \
+		-I/usr/local/Cellar/json-c/0.12/include \
+		-I$root/library \
+		| egrep -v \"^Capturing in make/cc mode\" \
+		| egrep -v \"^Starting analysis\" \
+		| egrep -v \"^$\" \
+		| egrep -v \"^legend:\" \
+		| egrep -v \" analyzing a (file|procedure)$\" \
+		| egrep -v \"^Found \d+ source files in\" \
+		| egrep -v \"^  No issues found  $\" \
+		|| true
+	";
+	// @todo replace with dependency paths from build system
+
+	squashPrecompiledHeaders($inferCommand, $root);
+
+	system($inferCommand, $ret);
+	if ($ret)
+		echo 'Failed command: ' . $inferCommand;
+}
+
+
+echo "\tclang:\n";
+$clangCommand = "$clang $clangArgs";
+system($clangCommand, $ret);
+if ($ret)
+{
+	echo 'Failed command: ' . $clangCommand;
+	exit($ret);
+}
+
+
+function squashPrecompiledHeaders(&$command, $root)
+{
+	// Disable the precompiled header, since infer's version of clang doesn't support precompiled headers from Vuo's version of clang.
+	$command = preg_replace('@-Xclang -include-pch -Xclang \'?(.+/)?pch/.+/(c|c\+\+|objective-c|objective-c\+\+)\.pch\'?@', "-include $root/vuo.pch", $command);
+}

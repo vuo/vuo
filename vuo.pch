@@ -116,4 +116,10 @@ using namespace llvm;
 
 #include <dispatch/dispatch.h>
 
+/// Creates a C string from raw text (saves having to doublequote-escape and/or use backslashes).
+#define VUO_STRINGIFY(...) #__VA_ARGS__
+
+/// Creates a QString from raw text (saves having to doublequote-escape and/or use backslashes).
+#define VUO_QSTRINGIFY(...) QString(#__VA_ARGS__)
+
 #include "VuoLog.h"

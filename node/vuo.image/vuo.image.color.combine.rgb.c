@@ -70,8 +70,6 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 	VuoShader shader;
 };
 
@@ -79,11 +77,6 @@ struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Combine Image RGB Colors Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
@@ -127,12 +120,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoImage((*instance)->shader, "alphaTexture",  opacityImage);
 	VuoShader_setUniform_VuoInteger((*instance)->shader, "alphaExists", opacityImage?1:0);
 
-	*combinedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, provokingImage->pixelsWide, provokingImage->pixelsHigh, VuoImage_getColorDepth(provokingImage));
+	*combinedImage = VuoImageRenderer_render((*instance)->shader, provokingImage->pixelsWide, provokingImage->pixelsHigh, VuoImage_getColorDepth(provokingImage));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

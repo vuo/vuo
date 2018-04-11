@@ -498,7 +498,7 @@ VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness)
  *
  * When sharpness = 0, the rounded rectangle's edge is blurred to take up the entire texture coordinate area.
  *
- * `aspect` specifies the aspect ratio of the rectangle.  `aspect < 1` causes artifacts; instead, reciprocate the aspect and rotate the geometry 90°.
+ * `aspect` specifies the aspect ratio of the rectangle.
  *
  * @threadAny
  */
@@ -513,8 +513,8 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 
 		void main(void)
 		{
-			float roundness2 = min(aspect, roundness);
-			roundness2 = max(1. - sharpness, roundness2);
+			float roundness2 = max(1. - sharpness, roundness);
+			roundness2 = min(aspect, roundness2);
 			float diameter = roundness2 / 2.;
 			diameter = max(diameter, 0.001);
 			float radius = diameter / 2.;
@@ -545,7 +545,10 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 				dist = distance((fragmentTextureCoordinate.xy - cornerCircleCenter) * vec2(aspect, 1.) + cornerCircleCenter, cornerCircleCenter) / diameter;
 			else
 			{
-				float n = (fragmentTextureCoordinate.x - 0.5) / aspect * (aspect * (1. - (1. - sharpness) * (1. - sharpness)));
+				float f = 1. - (1. - sharpness) * (1. - sharpness);
+				if (aspect < 1.)
+					f = 1./f;
+				float n = (fragmentTextureCoordinate.x - 0.5) * f;
 
 				if (fragmentTextureCoordinate.y < 0.5 + n)
 				{
@@ -572,8 +575,7 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 			float delta = fwidth(dist) / 2.;
 
 			// fwidth() seems to sometimes output invalid results; this hides most of it.
-			if ((roundness2 < 0.1 && delta > 3.)
-			 || (roundness2 > 0.1 && delta > 0.1))
+			if (delta > 0.1)
 				delta = 0.;
 
 			gl_FragColor = mix(color, vec4(0.), smoothstep(sharpness / 2. - delta, 1. - sharpness / 2. + delta, dist));
@@ -917,6 +919,7 @@ VuoShader VuoShader_makeLinearGradientShader(void)
 		uniform sampler2D gradientStrip;
 		uniform vec2 start;
 		uniform vec2 end;
+		uniform float aspect;
 		uniform float noiseAmount;
 
 		varying vec4 fragmentTextureCoordinate;
@@ -943,7 +946,12 @@ VuoShader VuoShader_makeLinearGradientShader(void)
 
 		void main(void)
 		{
-			vec2 pol = nearest_point_on_line(start, end, fragmentTextureCoordinate.xy);
+			vec2 tcAspect = fragmentTextureCoordinate.xy;
+			tcAspect.y -= .5;
+			tcAspect.y *= aspect;
+			tcAspect.y += .5;
+
+			vec2 pol = nearest_point_on_line(start, end, tcAspect);
 			float x = dot(pol-start, end-start) > 0 ? distance(start, pol)/ distance(start, end) : 0;
 
 			// Give x a smooth second-derivative, to reduce the ridges between colors.
@@ -1019,11 +1027,12 @@ static void VuoShader_setGradientStrip(VuoShader shader, VuoList_VuoColor colors
  * Sets parameters for the linear gradient shader using the provided colors and start and end coordinates.
  * Coordinates should be passed in Vuo scene coordinates (-1,-1) to (1,1).
  */
-void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount)
+void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal aspect, VuoReal noiseAmount)
 {
 	VuoShader_setGradientStrip(shader, colors);
 	VuoShader_setUniform_VuoPoint2d(shader, "start", VuoPoint2d_make((start.x+1)/2, (start.y+1)/2));
 	VuoShader_setUniform_VuoPoint2d(shader, "end", VuoPoint2d_make((end.x+1)/2, (end.y+1)/2));
+	VuoShader_setUniform_VuoReal   (shader, "aspect", 1./aspect);
 	VuoShader_setUniform_VuoReal   (shader, "noiseAmount", MAX(0.,noiseAmount/10.));
 }
 
@@ -1241,7 +1250,7 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 		}
 	);
 
-	VuoShader s = VuoShader_make("Shade with Frosted Glass");
+	VuoShader s = VuoShader_make("Frosted Glass Shader");
 	s->isTransparent = true;
 
 	VuoShader_addSource                      (s, VuoMesh_Points,              vertexShaderSourceForGeometry, pointGeometryShaderSource, fragmentShaderSourceForGeometry);

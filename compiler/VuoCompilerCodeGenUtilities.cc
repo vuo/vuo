@@ -1635,6 +1635,45 @@ void VuoCompilerCodeGenUtilities::generateScheduleChainWorker(Module *module, Ba
 }
 
 /**
+ * Generates a call to `vuoGrantThreadsToChain`.
+ */
+void VuoCompilerCodeGenUtilities::generateGrantThreadsToChain(Module *module, BasicBlock *block,
+															  int minThreadsNeeded, int maxThreadsNeeded,
+															  Value *eventIdValue, Value *compositionStateValue,
+															  size_t chainIndex)
+{
+	Type *intType = IntegerType::get(module->getContext(), 64);
+	Type *eventIdType = generateNoEventIdConstant(module)->getType();
+
+	const char *functionName = "vuoGrantThreadsToChain";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
+		params.push_back(intType);
+		params.push_back(intType);
+		params.push_back(eventIdType);
+		params.push_back(eventIdType);
+
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	Value *minThreadsNeededValue = ConstantInt::get(intType, minThreadsNeeded);
+	Value *maxThreadsNeededValue = ConstantInt::get(intType, maxThreadsNeeded);
+	Value *chainIndexValue = ConstantInt::get(eventIdType, chainIndex);
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(minThreadsNeededValue);
+	args.push_back(maxThreadsNeededValue);
+	args.push_back(eventIdValue);
+	args.push_back(chainIndexValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
  * Generates a call to `vuoGrantThreadsToSubcomposition`.
  */
 void VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(Module *module, BasicBlock *block,

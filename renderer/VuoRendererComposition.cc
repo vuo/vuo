@@ -74,7 +74,8 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 
 	setBackgroundTransparent(false);
 	this->renderMissingAsPresent = renderMissingAsPresent;
-	this->renderActivity = false;
+	this->renderNodeActivity = false;
+	this->renderPortActivity = false;
 	this->renderHiddenCables = false;
 	this->cachingEnabled = enableCaching;
 	this->publishedInputNode = createPublishedInputNode();
@@ -84,8 +85,14 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 
 	signaler = new VuoRendererSignaler();
 
-	// Add any nodes, cables, published ports, and published cables that are already in the base composition.
+	addComponentsInCompositionToCanvas();
+}
 
+/**
+ * Add any nodes, cables, published ports, and published cables that are already in the base composition.
+ */
+void VuoRendererComposition::addComponentsInCompositionToCanvas()
+{
 	set<VuoNode *> nodes = getBase()->getNodes();
 	foreach (VuoNode *node, nodes)
 		addNodeInCompositionToCanvas(node);
@@ -465,7 +472,7 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
  * Extracts the input variables from the provided "inputVariables" @c constant
  * and returns the variables in an ordered list.
  *
- * Excludes variables that shouldn't be presented in the UI ("x" in the `Calculate List` node).
+ * Excludes variables that shouldn't be presented in the UI ("x" and "i" in the `Calculate List` node).
  */
 vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsConstant(string constant, string nodeClassName)
 {
@@ -486,7 +493,8 @@ vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsCo
 				{
 					const char *variableName = json_object_get_string(itemObject);
 					if (nodeClassName == "vuo.math.calculate.list"
-							&& strcasecmp(variableName, "x") == 0)
+							&& (strcasecmp(variableName, "x") == 0
+							 || strcasecmp(variableName, "i") == 0))
 						continue;
 
 					inputVariables.push_back(json_object_get_string(itemObject));
@@ -783,6 +791,22 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 }
 
 /**
+ * Convert all collapsed typecast mini-nodes in the composition back into freestanding form.
+ */
+void VuoRendererComposition::uncollapseTypecastNodes()
+{
+	foreach (VuoNode *node, getBase()->getNodes())
+	{
+		if (node->isTypecastNode())
+		{
+			VuoRendererTypecastPort *collapsedPort = collapseTypecastNode(node->getRenderer());
+			if (collapsedPort)
+				uncollapseTypecastNode(node->getRenderer());
+		}
+	}
+}
+
+/**
  * Convert the collapsed typecast mini-node associated with the
  * input @c typecastNode back into freestanding form.
  */
@@ -938,12 +962,22 @@ void VuoRendererComposition::updateGeometryForAllComponents()
 
 /**
  * Returns the boolean indicating whether recent activity (e.g., node executions,
- * event firings) by components within this composition should be reflected in
+ * search spotlighting) by nodes within this composition should be reflected in
  * the rendering of the composition.
  */
-bool VuoRendererComposition::getRenderActivity(void)
+bool VuoRendererComposition::getRenderNodeActivity(void)
 {
-	return this->renderActivity;
+	return this->renderNodeActivity;
+}
+
+/**
+ * Returns the boolean indicating whether recent activity (e.g., trigger port
+ * executions) by ports within this composition should be reflected in
+ * the rendering of the composition.
+ */
+bool VuoRendererComposition::getRenderPortActivity(void)
+{
+	return (this->renderNodeActivity && this->renderPortActivity);
 }
 
 /**
@@ -990,12 +1024,13 @@ void VuoRendererComposition::drawBackground(QPainter *painter, const QRectF &rec
  * if toggling from 'false' to 'true', resets the time of last activity
  * for each component.
  */
-void VuoRendererComposition::setRenderActivity(bool render)
+void VuoRendererComposition::setRenderActivity(bool render, bool includePortActivity)
 {
-	if (this->renderActivity == render)
+	if ((this->renderNodeActivity == render) && (this->renderPortActivity == includePortActivity))
 		return;
 
-	this->renderActivity = render;
+	this->renderNodeActivity = render;
+	this->renderPortActivity = includePortActivity;
 
 	if (render)
 	{
@@ -1003,11 +1038,14 @@ void VuoRendererComposition::setRenderActivity(bool render)
 		{
 			node->getRenderer()->resetTimeLastExecuted();
 
-			foreach (VuoPort *port, node->getInputPorts())
-				port->getRenderer()->resetTimeLastEventFired();
+			if (includePortActivity)
+			{
+				foreach (VuoPort *port, node->getInputPorts())
+					port->getRenderer()->resetTimeLastEventFired();
 
-			foreach (VuoPort *port, node->getOutputPorts())
-				port->getRenderer()->resetTimeLastEventFired();
+				foreach (VuoPort *port, node->getOutputPorts())
+					port->getRenderer()->resetTimeLastEventFired();
+			}
 		}
 
 		foreach (VuoCable *cable, getBase()->getCables())
@@ -1068,7 +1106,7 @@ void VuoRendererComposition::setComponentCaching(QGraphicsItem::CacheMode cacheM
  */
 QGraphicsItem::CacheMode VuoRendererComposition::getCurrentDefaultCacheMode()
 {
-	return ((cachingEnabled && !renderActivity)? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
+	return ((cachingEnabled && !renderNodeActivity)? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
 }
 
 /**
@@ -1131,6 +1169,7 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	plist += "<key>NSHighResolutionCapable</key><true/>";
 	plist += "<key>CFBundleExecutable</key><string>" + file + "</string>";
 	plist += "<key>CFBundleIconFile</key><string>" + file + ".icns</string>";
+	plist += "<key>CFBundleIdentifier</key><string>" + compiler->getLicenseUsername() + "." + file + "</string>";
 	plist += "<key>ATSApplicationFontsPath</key><string>Fonts</string>";
 	plist += "</dict></plist>";
 	VuoFileUtilities::writeStringToFile(plist, tmpAppPath + "/Contents/Info.plist");
@@ -1690,6 +1729,8 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 		{
 			if (subframeworksToExclude.find(subframeworkDirName.toUtf8().constData()) == subframeworksToExclude.end())
 			{
+				VDebugLog("Copying \"%s\"", subframeworkDirName.toUtf8().constData());
+
 				// Vuo.framework/Frameworks/<x>.framework
 				QDir targetVuoSubframeworkPath(targetVuoSubframeworksPath.filePath(subframeworkDirName));
 				VuoFileUtilities::makeDir(targetVuoSubframeworkPath.absolutePath().toUtf8().constData());
@@ -1702,6 +1743,32 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 					VuoFileUtilities::copyFile(
 								sourceVuoSubframeworkPath.filePath(subframeworkTopLevelFile).toUtf8().constData(),
 								targetVuoSubframeworkPath.filePath(subframeworkTopLevelFile).toUtf8().constData());
+
+				// Vuo.framework/Frameworks/<x>.framework/Versions/Current/Frameworks/*
+				QDir sourceSubsubframeworkPath(sourceVuoSubframeworksPath.filePath(subframeworkDirName + "/Versions/Current/Frameworks/"));
+				if (sourceSubsubframeworkPath.exists())
+				{
+					QDir targetSubsubframeworkPath(targetVuoSubframeworkPath.absolutePath() + "/Frameworks");
+					VuoFileUtilities::makeDir(targetSubsubframeworkPath.absolutePath().toUtf8().constData());
+					QStringList subsubframeworkContents = sourceSubsubframeworkPath.entryList(QDir::Files|QDir::Readable);
+					foreach (QString subsubframework, subsubframeworkContents)
+						VuoFileUtilities::copyFile(
+							sourceSubsubframeworkPath.filePath(subsubframework).toUtf8().constData(),
+							targetSubsubframeworkPath.filePath(subsubframework).toUtf8().constData());
+				}
+
+				// Vuo.framework/Frameworks/<x>.framework/Versions/Current/Resources/*
+				QDir sourceSubframeworkResourcesPath(sourceVuoSubframeworksPath.filePath(subframeworkDirName + "/Versions/Current/Resources/"));
+				if (sourceSubframeworkResourcesPath.exists())
+				{
+					QDir targetSubframeworkResourcesPath(targetVuoSubframeworkPath.absolutePath() + "/Resources");
+					VuoFileUtilities::makeDir(targetSubframeworkResourcesPath.absolutePath().toUtf8().constData());
+					QStringList subframeworkResourcesContents = sourceSubframeworkResourcesPath.entryList(QDir::Files|QDir::Readable);
+					foreach (QString subframeworkResource, subframeworkResourcesContents)
+						VuoFileUtilities::copyFile(
+							sourceSubframeworkResourcesPath.filePath(subframeworkResource).toUtf8().constData(),
+							targetSubframeworkResourcesPath.filePath(subframeworkResource).toUtf8().constData());
+				}
 			}
 		}
 	}
@@ -1759,6 +1826,33 @@ bool VuoRendererComposition::isSupportedSceneFile(string path)
 bool VuoRendererComposition::isSupportedFeedFile(string path)
 {
 	return VuoFileFormat_isSupportedFeedFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported JSON file.
+ */
+bool VuoRendererComposition::isSupportedJsonFile(string path)
+{
+	return VuoFileFormat_isSupportedJsonFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported XML file.
+ */
+bool VuoRendererComposition::isSupportedXmlFile(string path)
+{
+	return VuoFileFormat_isSupportedXmlFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported table file.
+ */
+bool VuoRendererComposition::isSupportedTableFile(string path)
+{
+	return VuoFileFormat_isSupportedTableFile(path.c_str());
 }
 
 /**

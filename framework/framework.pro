@@ -27,6 +27,7 @@ MODULE_LIBRARY_OBJECTS += \
 	$$ROOT/runtime/*\\.bc \
 	$$ROOT/base/VuoCompositionStub.dylib \
 	$$ROOT/compiler/binary/crt1.o \
+	$$ROOT/library/libcsgjs.a \
 	$$ZMQ_ROOT/lib/libzmq.a \
 	$$JSONC_ROOT/lib/libjson-c.a \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
@@ -49,7 +50,11 @@ MODULE_LIBRARY_OBJECTS += \
 	$$OSCPACK_ROOT/lib/liboscpack.a \
 	$$ZXING_ROOT/lib/libzxing.a \
 	$$LIBXML2_ROOT/lib/libxml2.a \
+	$$LIBCSV_ROOT/lib/libcsv.dylib \
 	$$ASSIMP_ROOT/lib/libassimp.dylib \
+	$$GETTEXT_ROOT/lib/libintl.dylib \
+	$$GLIB_ROOT/lib/libglib-2.0.dylib \
+	$$LIBLQR_ROOT/lib/liblqr-1.0.dylib \
 	$$ROOT/node/vuo.leap/Leap/libLeap.dylib
 
 
@@ -71,16 +76,18 @@ POST_TARGETDEPS += $${HEADERS_DEST_DIR}/Vuo.h
 QMAKE_EXTRA_TARGETS += createHeadersDir
 
 
-# Create Resources directory; populate it with Info.plist and drivers
+# Create Resources directory; populate it with Info.plist, drivers, and templates
 RESOURCES_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Resources"
 createResourcesDir.commands += rm -rf $${RESOURCES_DEST_DIR}
 createResourcesDir.commands += && mkdir -p $${RESOURCES_DEST_DIR}
 createResourcesDir.commands += && cat Info.plist
 createResourcesDir.commands += | sed '"s/@SHORT_VERSION@/$$VUO_VERSION \\(r`svnversion -n` on `date +%Y.%m.%d`\\)/"'
 createResourcesDir.commands += > $${RESOURCES_DEST_DIR}/Info.plist &&
-createResourcesDir.commands += cp drivers/* $${RESOURCES_DEST_DIR}
+createResourcesDir.commands += cp drivers/* $${RESOURCES_DEST_DIR} &&
+createResourcesDir.commands += cp templates/* $${RESOURCES_DEST_DIR}
 createResourcesDir.depends += Info.plist
 createResourcesDir.depends += drivers/*
+createResourcesDir.depends += templates/*
 createResourcesDir.target = $${RESOURCES_DEST_DIR}
 POST_TARGETDEPS += $${RESOURCES_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createResourcesDir
@@ -170,6 +177,10 @@ copyLibraryModules.commands = \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libfreeimage.dylib" "$$MODULES_DEST_DIR/libfreeimage.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libassimp.dylib" "$$MODULES_DEST_DIR/libassimp.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libintl.dylib" "$$MODULES_DEST_DIR/libintl.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libglib-2.0.dylib" "$$MODULES_DEST_DIR/libglib-2.0.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/liblqr-1.0.dylib" "$$MODULES_DEST_DIR/liblqr-1.0.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libcsv.dylib" "$$MODULES_DEST_DIR/libcsv.dylib" \
 	&& chmod -w "$$MODULES_DEST_DIR/*.dylib"
 copyLibraryModules.depends += $$MODULE_LIBRARY_OBJECTS
 copyLibraryModules.target = $$MODULES_DEST_DIR/libLeap.dylib
@@ -219,21 +230,22 @@ QMAKE_EXTRA_TARGETS += copyJsonHeaders
 
 
 # Copy system headers installed by XCode Command Line Tools to the Headers directory
+MACOS_HEADERS_DIR = "$${QMAKE_MAC_SDK.macosx.path}/usr/include"
 MACOS_HEADERS_DEST_DIR = "$$HEADERS_DEST_DIR/macos"
 copyMacOsHeaders.commands += rm -rf $${MACOS_HEADERS_DEST_DIR} &&
 copyMacOsHeaders.commands += mkdir -p $${MACOS_HEADERS_DEST_DIR}/OpenGL &&
-copyMacOsHeaders.commands += cp /usr/include/*.h $${MACOS_HEADERS_DEST_DIR} &&
-copyMacOsHeaders.commands += ( [ -d /usr/include/_types ] && cp -r /usr/include/_types $${MACOS_HEADERS_DEST_DIR}/ ) ;
-copyMacOsHeaders.commands += cp -r /usr/include/architecture $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/dispatch $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/i386 $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/libkern $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/mach $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/machine $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/os $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/secure $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp -r /usr/include/sys $${MACOS_HEADERS_DEST_DIR}/ ;
-copyMacOsHeaders.commands += cp /System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/*.h $${MACOS_HEADERS_DEST_DIR}/OpenGL
+copyMacOsHeaders.commands += cp $$MACOS_HEADERS_DIR/*.h $${MACOS_HEADERS_DEST_DIR} &&
+copyMacOsHeaders.commands += ( [ -d $$MACOS_HEADERS_DIR/_types ] && cp -r $$MACOS_HEADERS_DIR/_types $${MACOS_HEADERS_DEST_DIR}/ ) ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/architecture $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/dispatch $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/i386 $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/libkern $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/mach $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/machine $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/os $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/secure $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r $$MACOS_HEADERS_DIR/sys $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp $${QMAKE_MAC_SDK.macosx.path}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/*.h $${MACOS_HEADERS_DEST_DIR}/OpenGL
 copyMacOsHeaders.target = $${MACOS_HEADERS_DEST_DIR}
 copyMacOsHeaders.depends = $${HEADERS_DEST_DIR}/Vuo.h
 POST_TARGETDEPS += $${MACOS_HEADERS_DEST_DIR}
@@ -348,6 +360,8 @@ LIBS += \
 	-Wl,-reexport_framework,llvm \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$MODULES_DEST_DIR/libfreeimage.dylib \
+	$$MODULES_DEST_DIR/libcsv.dylib \
+	$$LIBXML2_ROOT/lib/libxml2.a \
 	$$CURL_ROOT/lib/libcurl.a \
 	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoBase64.o \
@@ -360,11 +374,13 @@ LIBS += \
 	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
+	$$ROOT/library/VuoMeshUtility.o \
 	$$ROOT/library/VuoOsStatus.o \
 	$$ROOT/library/VuoPnpId.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/VuoUrlParser.o \
+	$$ROOT/library/libcsgjs.a \
 	$$ROOT/library/libmodule.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
@@ -493,10 +509,10 @@ QMAKE_EXTRA_TARGETS += createLinks
 
 # Some other project files depend on Vuo.framework.
 # If qmake was run before Vuo.framework was created, the other projects don't calculate dependencies properly.
-# As a litmus test, we know that vuo-link should depend on Vuo.framework's Vuo.h, so re-run qmake if it doesn't.
+# As a litmus test, we know that Vuo Editor should depend on Vuo.framework's Vuo.h, so re-run qmake if it doesn't.
 fixOtherProjects.commands = \
 	( \
-		grep -q framework/Vuo.framework/Headers/Vuo/Vuo.h ../compiler/vuo-link/Makefile \
+		fgrep -q framework/Vuo.framework/Headers/Vuo/Vuo.h ../editor/VuoEditorApp/Makefile \
 		|| (cd .. && /usr/local/bin/qmake -spec macx-clang CONFIG+="'$$VUO_QMAKE_CONFIG'" -r) \
 	) \
 	&& rm -Rf $$ROOT/editor/VuoEditorApp/pch \

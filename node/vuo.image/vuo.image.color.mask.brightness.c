@@ -21,63 +21,38 @@ VuoModuleMetadata({
 						  "magic", "wand",
 						  "filter"
 					  ],
-					  "version" : "1.1.2",
+					  "version" : "1.2.0",
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
 					  }
 				 });
 
-static const char *thresholdFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	include(VuoGlslAlpha)
-	include(hsl)
+	include(VuoGlslBrightness)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float threshold;
 	uniform float sharpness;
+	uniform int brightnessType;
 
 	void main(void)
 	{
 		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 		color.rgb /= color.a > 0. ? color.a : 1.;
 
-		vec3 hsl = rgbToHsl(color.rgb);
-
-		color *= smoothstep(threshold*sharpness, threshold*(2-sharpness), hsl.z);
+		color *= smoothstep(threshold*sharpness, threshold*(2-sharpness), VuoGlsl_brightness(color, brightnessType));
 		color.rgb *= color.a;
 
 		gl_FragColor = color;
 	}
 );
 
-static const char *colorFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(hsl)
-
-	varying vec4 fragmentTextureCoordinate;
-	uniform sampler2D texture;
-	uniform float threshold;
-	uniform float sharpness;
-	uniform vec4 mask;
-
-	void main(void)
-	{
-		vec4 rgb = texture2D(texture, fragmentTextureCoordinate.xy);
-		rgb.rgb /= rgb.a > 0. ? rgb.a : 1.;
-		vec4 val = rgb*mask;
-
-		rgb *= smoothstep(threshold*sharpness, threshold*(2-sharpness), max(max(val.x, val.y), max(val.z, val.a)));
-		rgb.rgb *= rgb.a;
-
-		gl_FragColor = rgb;
-	}
-);
-
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
-	int thresholdTypeCurrent;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
@@ -85,12 +60,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
-
-	instance->thresholdTypeCurrent = -1;
+	instance->shader = VuoShader_make("Mask Image by Brightness");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -100,7 +72,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0, "suggestedMax":1}) threshold,
-		VuoInputData(VuoThresholdType, {"default":"luminance"}) thresholdType,
+		VuoInputData(VuoThresholdType, {"default":"rec709", "includeValues":["rec601","rec709","desaturate","rgb-average","rgb-minimum","rgb-maximum","red","green","blue","alpha"]}) thresholdType, // Hide "rgb" since it isn't relevant to this node.
 		VuoInputData(VuoReal, {"default":0.9, "suggestedMin":0, "suggestedMax":1}) sharpness,
 		VuoOutputData(VuoImage) maskedImage
 )
@@ -113,59 +85,15 @@ void nodeInstanceEvent
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 
-	if( (int)thresholdType != (*instance)->thresholdTypeCurrent )
-	{
-		if( (*instance)->shader != NULL)
-			VuoRelease( (*instance)->shader );
-
-		switch(thresholdType)
-		{
-			case VuoThresholdType_Luminance:
-				(*instance)->shader = VuoShader_make("Threshold Shader (Luminance)");
-				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, thresholdFragmentShader);
-				break;
-
-			case VuoThresholdType_Red:
-				(*instance)->shader = VuoShader_make("Threshold Shader (Red)");
-				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 1, 0, 0, 0 } );
-				break;
-
-			case VuoThresholdType_Green:
-				(*instance)->shader = VuoShader_make("Threshold Shader (Green)");
-				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 1, 0, 0 } );
-				break;
-
-			case VuoThresholdType_Blue:
-				(*instance)->shader = VuoShader_make("Threshold Shader (Blue)");
-				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 0, 1, 0 } );
-				break;
-
-			case VuoThresholdType_Alpha:
-				(*instance)->shader = VuoShader_make("Threshold Shader (Alpha)");
-				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 0, 0, 1 } );
-				break;
-		}
-
-		(*instance)->thresholdTypeCurrent = (int)thresholdType;
-		VuoRetain( (*instance)->shader );
-	}
-
 	VuoShader_setUniform_VuoImage((*instance)->shader, "texture",   image);
+	VuoShader_setUniform_VuoInteger((*instance)->shader, "brightnessType", thresholdType);
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "threshold", MAX(threshold,0));
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "sharpness", MAX(MIN(sharpness,1),0));
 
-	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
+	*maskedImage = VuoImageRenderer_render((*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
-	if((*instance)->shader != NULL)
-		VuoRelease((*instance)->shader);
-
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
+	VuoRelease((*instance)->shader);
 }

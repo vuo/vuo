@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find Hands by Side",
-					  "keywords" : [ "controller", "motion", "hand", "palm", "handedness", "direction", "southpaw", "sort", "filter" ],
+					  "keywords" : [ "controller", "motion", "hand", "palm", "handedness", "direction", "southpaw", "sort", "filter", "search" ],
 					  "version" : "2.0.0",
 					  "node": {
 						  "exampleCompositions" : [ "ShowHandStatus.vuo" ]

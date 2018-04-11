@@ -16,6 +16,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoImageResize.c \
 	VuoImageBlend.c \
 	VuoImageBlur.c \
+	VuoImageConvolve.c \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
@@ -33,6 +34,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoPointsParametric.cc \
 	VuoScreenCapture.m \
 	VuoScreenCommon.m \
+	VuoSort.c \
 	VuoTextHtml.c \
 	VuoWindow.m \
 	VuoWindowRecorder.m \
@@ -48,6 +50,7 @@ SOURCES += \
 	VuoImageResize.c \
 	VuoImageBlend.c \
 	VuoImageBlur.c \
+	VuoImageConvolve.c \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
@@ -61,6 +64,7 @@ SOURCES += \
 	VuoPointsParametric.cc \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
+	VuoTextHtml.c \
 	VuoUrlFetch.c \
 	VuoUrlParser.c \
 	libmodule.c
@@ -88,6 +92,7 @@ HEADERS += \
 	VuoImageGet.h \
 	VuoImageBlend.h \
 	VuoImageBlur.h \
+	VuoImageConvolve.h \
 	VuoImageRenderer.h \
 	VuoImageText.h \
 	VuoLog.h \
@@ -104,6 +109,7 @@ HEADERS += \
 	VuoScreenCapture.h \
 	VuoScreenCommon.h \
 	VuoSmooth.h \
+	VuoSort.h \
 	VuoTextHtml.h \
 	VuoUrlFetch.h \
 	VuoWindow.h \
@@ -136,6 +142,7 @@ INCLUDEPATH += \
 
 NODE_LIBRARY_INCLUDEPATH = \
 	shader \
+	../node/vuo.image \
 	../node/vuo.mouse \
 	../node/vuo.noise \
 	../node/vuo.scene \
@@ -180,9 +187,32 @@ NODE_LIBRARY_SHARED_GL_SOURCES += \
 OTHER_FILES += $$NODE_LIBRARY_SHARED_GL_SOURCES
 
 CLANG_NODE_LIBRARY_SHARED_GL_FLAGS = \
+	VuoCglPixelFormat.o \
+	VuoPnpId.o \
+	VuoScreenCommon.o \
 	$$CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS \
+	$$JSONC_ROOT/lib/libjson-c.a \
+	../type/VuoInteger.o \
+	../type/VuoPoint2d.o \
+	../type/VuoReal.o \
+	../type/VuoScreen.o \
+	../type/VuoText.o \
+	../type/list/VuoList_VuoInteger.o \
+	../type/list/VuoList_VuoReal.o \
+	../type/list/VuoList_VuoScreen.o \
+	-L . \
+	-lVuoHeap \
+	-framework ApplicationServices \
+	-framework Cocoa \
+	-framework CoreFoundation \
+	-framework IOKit \
+	-framework IOSurface \
 	-framework OpenGL
 node_library_shared_gl.input = NODE_LIBRARY_SHARED_GL_SOURCES
+node_library_shared_gl.depends = \
+	VuoCglPixelFormat.o \
+	VuoPnpId.o \
+	VuoScreenCommon.o
 node_library_shared_gl.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library_shared_gl.output = lib${QMAKE_FILE_IN_BASE}.dylib
 node_library_shared_gl.commands = $$QMAKE_CXX $$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} \
@@ -200,21 +230,11 @@ NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT += \
 OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS = \
-	../runtime/VuoEventLoop.o \
-	../type/VuoInteger.o \
-	../type/VuoText.o \
-	../type/list/VuoList_VuoInteger.o
+	../runtime/VuoEventLoop.o
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS \
 	$$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS \
-	-framework ApplicationServices \
-	-framework Cocoa \
-	-framework CoreFoundation \
-	-framework IOSurface \
-	$$JSONC_ROOT/lib/libjson-c.a \
-	-L . \
-	-lVuoGlContext \
-	-lVuoHeap
+	-lVuoGlContext
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 node_library_shared_dependent_on_context.depends = libVuoGlContext.dylib $$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS
 node_library_shared_dependent_on_context.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
@@ -225,3 +245,13 @@ coverage {
 	node_library_shared_dependent_on_context.commands += && install_name_tool -change @executable_path/../lib/libprofile_rt.dylib $$LLVM_ROOT/lib/libprofile_rt.dylib ${QMAKE_FILE_OUT}
 }
 QMAKE_EXTRA_COMPILERS += node_library_shared_dependent_on_context
+
+
+
+CSGJS_SOURCES = csgjs.cc
+OTHER_FILES += $$CSGJS_SOURCES
+csgjs.input = CSGJS_SOURCES
+csgjs.output = lib${QMAKE_FILE_IN_BASE}.a
+csgjs.commands = $$QMAKE_CXX -Oz -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_IN_BASE}.o \
+	&& ar -r lib${QMAKE_FILE_IN_BASE}.a ${QMAKE_FILE_IN_BASE}.o
+QMAKE_EXTRA_COMPILERS += csgjs

@@ -10,13 +10,15 @@
 #include "node.h"
 #include "VuoMidi.h"
 #include "VuoRealRegulation.h"
+#include "VuoScribbleStrip.h"
 
 VuoModuleMetadata({
 					 "title" : "Receive BCF2000 Buttons Row 1",
 					 "keywords" : [ "controller", "Behringer", "BCF-2000", "device" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
-						 "VuoMidi"
+						 "VuoMidi",
+						 "VuoScribbleStrip"
 					 ],
 					 "node": {
 						 "isInterface" : true,
@@ -96,6 +98,8 @@ struct nodeInstanceData *nodeInstanceInit(
 		VuoRealRegulation_retain(context->button[i]);
 
 		resetbutton(context->outputManager, 65+i, buttons[i]);
+
+		VuoScribbleStrip_set(VuoScribbleStrip_ButtonRow1, i, buttons[i].name);
 	}
 
 	return context;
@@ -149,7 +153,10 @@ void nodeInstanceEvent
 		VuoOutputData(VuoReal) button7Value,
 		VuoOutputEvent({"data":"button7Value"}) button7ValueEvent,
 		VuoOutputData(VuoReal) button8Value,
-		VuoOutputEvent({"data":"button8Value"}) button8ValueEvent
+		VuoOutputEvent({"data":"button8Value"}) button8ValueEvent,
+
+		VuoOutputData(VuoList_VuoText) names,
+		VuoOutputEvent({"data":"names"}) namesEvent
 	)
 {
 	(*context)->mostRecentTime = time;
@@ -167,6 +174,7 @@ void nodeInstanceEvent
 
 	// Calculate the next time-step.
 	if (timeEvent)
+	{
 		for (int i = 0; i < 8; ++i)
 		{
 			VuoRealRegulation_release((*context)->button[i]);
@@ -176,6 +184,20 @@ void nodeInstanceEvent
 			VuoSmoothInertia_setDuration((*context)->buttonSmooth[i], buttons[i].smoothDuration);
 			*buttonValueEvents[i] = VuoSmoothInertia_step((*context)->buttonSmooth[i], time, buttonValues[i]);
 		}
+
+		if ((*context)->mostRecentTime == 0)
+		{
+			*names = VuoListCreate_VuoText();
+			for (int i = 0; i < 8; ++i)
+				VuoListAppendValue_VuoText(*names, buttons[i].name);
+			*namesEvent = true;
+		}
+	}
+
+	if ((timeEvent && (*context)->mostRecentTime == 0)
+	 || reset)
+		for (int i = 0; i < 8; ++i)
+			VuoScribbleStrip_set(VuoScribbleStrip_ButtonRow1, i, buttons[i].name);
 }
 
 void nodeInstanceTriggerStop

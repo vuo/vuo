@@ -48,14 +48,15 @@ VuoModuleMetadata({
  */
 struct VuoImageRendererInternal
 {
-	VuoGlContext glContext;
-
 	GLuint outputFramebuffer;
 
 	GLuint vertexArray;
 	GLuint triDataBuffer;
-	GLuint triElementBuffer;
 };
+/**
+ * Internal state data for a VuoImageRenderer instance.
+ */
+static VuoImageRendererInternal VuoImageRendererGlobal;
 
 /**
  * Positions and texture coordinates for a full-screen triangle.
@@ -71,7 +72,6 @@ static const GLfloat triData[] = {
 	2, 0, 0, 0,
 	0, 2, 0, 0,
 };
-static const GLushort triElements[] = { 0, 1, 2 };	///< The order of `triData`'s elements.
 /**
  * An identity matrix.
  */
@@ -82,63 +82,62 @@ static const GLfloat unityMatrix[16] = {
 	0,0,0,1
 };
 
-void VuoImageRenderer_destroy(VuoImageRenderer ir);
+static void VuoImageRenderer_fini(void);
 
 /**
- * Creates a reference-counted object for rendering a @ref VuoImage.
- *
- * @threadAny
+ * Initializes global state for rendering a @ref VuoImage.
  */
-VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
+static void VuoImageRenderer_init(void)
 {
-	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)malloc(sizeof(struct VuoImageRendererInternal));
-	VuoRegister(imageRenderer, VuoImageRenderer_destroy);
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			glGenVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
+			glBindVertexArray(VuoImageRendererGlobal.vertexArray);
+			{
+				VuoImageRendererGlobal.triDataBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, sizeof(triData));
+				VuoGlPool_retain(VuoImageRendererGlobal.triDataBuffer);
+				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.triDataBuffer);
+				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(triData), triData);
+			}
+			glBindVertexArray(0);
 
-	imageRenderer->glContext = glContext;
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+			glFlushRenderAPPLE();
 
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+			glGenFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);
+		});
 
-	glGenVertexArrays(1, &imageRenderer->vertexArray);
-	glBindVertexArray(imageRenderer->vertexArray);
-	{
-		imageRenderer->triDataBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, sizeof(triData));
-		VuoGlPool_retain(imageRenderer->triDataBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->triDataBuffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(triData), triData);
+		VuoAddCompositionFiniCallback(VuoImageRenderer_fini);
+	});
+}
 
-		imageRenderer->triElementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer, sizeof(triElements));
-		VuoGlPool_retain(imageRenderer->triElementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->triElementBuffer);
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(triElements), triElements);
-	}
-	glBindVertexArray(0);
+/**
+ * Deprecated.  This shim exists to enable old 3rd-party nodes to continue working.
+ */
+extern "C" VuoImage VuoImageRenderer_draw(void *ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth)
+{
+	return VuoImageRenderer_render(shader, pixelsWide, pixelsHigh, imageColorDepth);
+}
 
-	glFlushRenderAPPLE();
-	dispatch_semaphore_signal(VuoGlSemaphore);
-
-	glGenFramebuffers(1, &imageRenderer->outputFramebuffer);
-
-	/// @see VuoSceneRenderer_prepareContext
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glBlendEquation(GL_FUNC_ADD);
-
-	return (VuoImageRenderer)imageRenderer;
+/**
+ * Deprecated. This shim exists to enable old 3rd-party nodes to continue working.
+ */
+extern "C" void *VuoImageRenderer_make(void *)
+{
+	return NULL;
 }
 
 /**
  * Produces a new @c VuoImage by rendering @c shader.
  *
- * @threadAnyGL
- * (Additionally, the caller is responsible for ensuring that the same @c VuoImageRenderer is not used simultaneously on multiple threads.)
+ * @threadAny
  */
-VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth)
+VuoImage VuoImageRenderer_render(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth)
 {
 	if (pixelsWide < 1 || pixelsHigh < 1)
 		return NULL;
 
-	GLuint outputTexture = VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0);
+	GLuint outputTexture = VuoImageRenderer_draw_internal(shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0);
 	if (!outputTexture)
 		return NULL;
 
@@ -146,19 +145,17 @@ VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned i
 }
 
 /**
- * Helper for VuoImageRenderer_draw().
+ * Helper for VuoImageRenderer_render().
  *
  * If @c outputToGlTextureRectangle is true, the caller is responsible for deleting the texture (it should not be thrown into the GL texture pool).
  */
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture)
+unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture)
 {
-	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
+	VuoImageRenderer_init();
 
-	GLuint outputTexture;
-	IOSurfaceID surfID;
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)imageRenderer->glContext;
-
+	__block GLuint outputTexture = 0;
+	__block IOSurfaceID surfID = 0;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		glViewport(0, 0, pixelsWide, pixelsHigh);
 
 		// Create a new GL Texture Object.
@@ -188,20 +185,18 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 			}
 			else
-				outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_BGRA);
+				outputTexture = VuoGlTexturePool_use(cgl_ctx, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_BGRA);
 		}
 
 		if (!outputTexture)
-			return 0;
+			return;
 
-		glBindFramebuffer(GL_FRAMEBUFFER, imageRenderer->outputFramebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, VuoImageRendererGlobal.outputFramebuffer);
 //		VLog("glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, %s, %d, 0);", VuoGl_stringForConstant(textureTarget), outputTexture);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, outputTexture, 0);
 
 		glClearColor(0,0,0,0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
 
 		// Execute the shader.
 		{
@@ -226,18 +221,22 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 						VuoGlTexture_release(textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture, outputToGlTextureRectangle ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D);
 					}
 				}
-				return 0;
+				outputTexture = 0;
+				surfID = 0;
+				return;
 			}
 
 			VuoGlProgram program;
 			if (!VuoShader_activate(shader, VuoMesh_IndividualTriangles, cgl_ctx, &program))
 			{
 				VUserLog("Shader activation failed.");
-				return 0;
+				outputTexture = 0;
+				surfID = 0;
+				return;
 			}
 
 			{
-				glBindVertexArray(imageRenderer->vertexArray);
+				glBindVertexArray(VuoImageRendererGlobal.vertexArray);
 
 				GLint projectionMatrixUniform = VuoGlProgram_getUniformLocation(program, "projectionMatrix");
 				glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, unityMatrix);
@@ -259,7 +258,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				if (viewportSizeUniform != -1)
 					glUniform2f(viewportSizeUniform, (float)pixelsWide, (float)pixelsHigh);
 
-				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->triDataBuffer);
+				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.triDataBuffer);
 
 				glEnableVertexAttribArray(positionAttribute);
 				glVertexAttribPointer(positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)0);
@@ -291,7 +290,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 	}
 #endif
 
-				glDrawElements(GL_TRIANGLE_STRIP, 3, GL_UNSIGNED_SHORT, (void*)0);
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 
 #ifdef PROFILE
 	double seconds;
@@ -318,6 +317,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 
 				glDisableVertexAttribArray(positionAttribute);
 
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				glBindVertexArray(0);
 			}
 			VuoShader_deactivate(shader, VuoMesh_IndividualTriangles, cgl_ctx);
@@ -333,8 +333,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		}
 
 		glFlushRenderAPPLE();
-		dispatch_semaphore_signal(VuoGlSemaphore);
-	}
+	});
 
 	if (outputToIOSurface)
 		return surfID;
@@ -347,20 +346,14 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
  *
  * @threadAny
  */
-void VuoImageRenderer_destroy(VuoImageRenderer ir)
+static void VuoImageRenderer_fini(void)
 {
-	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	VuoShader_cleanupContext(imageRenderer->glContext);
+		VuoGlPool_release(cgl_ctx, VuoGlPool_ArrayBuffer, sizeof(triData), VuoImageRendererGlobal.triDataBuffer);
 
-	CGLContextObj cgl_ctx = (CGLContextObj)imageRenderer->glContext;
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, sizeof(triElements), imageRenderer->triElementBuffer);
-	VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(triData), imageRenderer->triDataBuffer);
-
-	glDeleteVertexArrays(1, &imageRenderer->vertexArray);
-	glDeleteFramebuffers(1, &imageRenderer->outputFramebuffer);
-	free(imageRenderer);
+		glDeleteVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
+		glDeleteFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);
+	});
 }

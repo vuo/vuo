@@ -26,7 +26,9 @@ LIBS += \
 	$$ROOT/node/vuo.artnet/VuoArtNetOutputDevice.o \
 	$$ROOT/runtime/VuoEventLoop.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoArtNetInputDevice.o \
 	$$ROOT/type/list/VuoList_VuoArtNetOutputDevice.o \
-	$$ROOT/type/list/VuoList_VuoInteger.o
+	$$ROOT/type/list/VuoList_VuoInteger.o \
+	$$ROOT/type/list/VuoList_VuoReal.o

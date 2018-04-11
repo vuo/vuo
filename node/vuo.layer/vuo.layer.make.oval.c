@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Oval Layer",
-					 "keywords" : [ "circle", "rounded", "ellipse" ],
+					 "keywords" : [ "circle", "rounded", "ellipse", "shape" ],
 					 "version" : "1.1.0",
 					 "node": {
 						  "exampleCompositions" : [ "DrawShapes.vuo" ]

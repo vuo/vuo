@@ -5,32 +5,33 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="414,352" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="10" _height="1.800000" _rows="10"];
-ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.0" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="543,553" _width="1.000000" _height="1.000000"];
-Enqueue2 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="239,352" _maxItemCount="100"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="367,583" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-57,97" fillcolor="yellow" _seconds="0.250000" _fired_eventThrottling="drop"];
-IsGreaterThan [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="339,134" _b="4.000000"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="43,365" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="30.000000" _width="2.000000" _height="2.000000"];
-MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="617,364" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="655,379" fillcolor="green"];
-MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="142,133" fillcolor="violet" _minimum="0.000000" _maximum="5.000000"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="701,353" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectInput2 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="530,134" _falseOption="{\"r\":0.264439,\"g\":0.258656,\"b\":0.435966,\"a\":1.000000}" _trueOption="{\"r\":0.890517,\"g\":0.898283,\"b\":0.556344,\"a\":1.000000}"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="420,345" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="10" _height="1.800000" _rows="10"];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="540,555" _width="1.000000" _height="1.000000"];
+Enqueue2 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="240,345" _maxItemCount="100"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="360,585" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-60,90" fillcolor="yellow" _seconds="0.250000" _fired_eventThrottling="drop"];
+IsGreaterThan3 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="345,135" _b="4"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="45,360" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="30.000000" _width="2.000000" _height="2.000000"];
+MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="639,371" fillcolor="green"];
+MakeList5 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="672,401" fillcolor="green"];
+MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="135,135" fillcolor="violet" _minimum="0.000000" _maximum="5.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="705,360" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SelectInput2 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="525,135" _falseOption="{\"r\":0.264439,\"g\":0.258656,\"b\":0.435966,\"a\":1.000000}" _trueOption="{\"r\":0.890517,\"g\":0.898283,\"b\":0.556344,\"a\":1.000000}"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList4:1;
 ChangeWindowAspectRatio:property -> MakeList5:1;
 Enqueue2:list -> ArrangeLayersInGrid:layers;
 FireOnStart2:started -> ChangeWindowAspectRatio:refresh;
 FirePeriodically:fired -> MakeRandomValue:refresh;
-IsGreaterThan:greaterThan -> SelectInput2:which;
+IsGreaterThan3:greaterThan -> SelectInput2:which;
 MakeColorLayer:layer -> Enqueue2:addItem;
 MakeList4:list -> RenderLayersToWindow:layers;
 MakeList5:list -> RenderLayersToWindow:setWindowProperties;
-MakeRandomValue:value -> IsGreaterThan:a;
+MakeRandomValue:value -> IsGreaterThan3:a;
 SelectInput2:out -> MakeColorLayer:color;
 }

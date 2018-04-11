@@ -19,9 +19,8 @@
 VuoModuleMetadata({
 					 "title" : "Displace 3D Object with Image",
 					 "keywords" : [ "filter", "heightmap", "rutt", "etra", "normal", "bump", "topology", "morph" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoSceneObjectRenderer"
 					 ],
 					 "node": {
@@ -35,10 +34,11 @@ VuoModuleMetadata({
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	include(deform)
+	include(VuoGlslBrightness)
 
 	// Inputs
 	uniform float amount;
-	uniform vec4 channel;
+	uniform int brightnessType;
 	uniform sampler2D heightmap;
 	attribute vec4 normal;
 
@@ -53,8 +53,7 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		vec3 nrm = normalize( mat4to3(modelviewMatrix) * normal.xyz );
 
 		vec4 pixel = texture2D(heightmap, textureCoordinate.xy);
-		float mask_sum = sum(channel.rgb);
-		float grayscale = mask_sum > 0 ? sum((pixel.rgb * pixel.a) * channel.rgb) / mask_sum : pixel.a / 1.;
+		float grayscale = VuoGlsl_brightness(pixel, brightnessType);
 
 		vec3 transformed = position + (nrm * grayscale * amount);
 
@@ -65,8 +64,6 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-
-	VuoGlContext glContext;
 	VuoSceneObjectRenderer sceneObjectRenderer;
 };
 
@@ -81,9 +78,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, vertexShaderSource, NULL, NULL);
 	VuoRetain(instance->shader);
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->glContext, instance->shader);
+	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->shader);
 	VuoRetain(instance->sceneObjectRenderer);
 
 	return instance;
@@ -94,7 +89,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoSceneObject) object,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoThresholdType, {"default":"luminance"}) channel,
+		VuoInputData(VuoThresholdType, {"default":"rec709", "name":"Brightness Type", "includeValues":["rec601","rec709","desaturate","rgb-average","rgb-minimum","rgb-maximum","red","green","blue","alpha"]}) channel, // Hide "rgb" since it isn't relevant to this node.
 		VuoInputData(VuoReal, {"default":1,"suggestedMin":-2.0,"suggestedMax":2.0,"suggestedStep":0.1}) distance,
 		VuoOutputData(VuoSceneObject) deformedObject
 )
@@ -106,12 +101,7 @@ void nodeInstanceEvent
 	}
 
 	// Feed parameters to the shader.
-	VuoPoint4d mask = VuoPoint4d_make( 	channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Red ? 1 : 0,
-										channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Green ? 1 : 0,
-										channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Blue ? 1 : 0,
-										channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Alpha ? 1 : 0 );
-
-	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "channel", mask);
+	VuoShader_setUniform_VuoInteger((*instance)->shader, "brightnessType", channel);
 	VuoShader_setUniform_VuoReal((*instance)->shader, "amount", distance);
 	VuoShader_setUniform_VuoImage((*instance)->shader, "heightmap", image);
 
@@ -122,5 +112,4 @@ void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->sceneObjectRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

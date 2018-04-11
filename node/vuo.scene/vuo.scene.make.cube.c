@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Cube with Materials",
-					 "keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
+					 "keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square", "shape", "object" ],
 					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]

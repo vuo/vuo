@@ -38,7 +38,8 @@ void nodeEvent
 	void *dataPointer;
 	unsigned int dataLength;
 	if (VuoUrl_fetch(url, &dataPointer, &dataLength))
-		*data = VuoData_make(dataLength, dataPointer);
+		// Include the NULL terminating byte allocated and initialized by VuoUrl_fetch().
+		*data = VuoData_make(dataLength + 1, dataPointer);
 	else
 		*data = VuoData_make(0, NULL);
 }

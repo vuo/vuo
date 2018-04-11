@@ -116,6 +116,7 @@ struct ChainSort
 {
 	VuoCompilerGraph *graph;  ///< Used by operator().
 	VuoCompilerTriggerPort *trigger;  ///< Used by operator().
+	set<VuoCompilerNode *> lastNodeInLoop;  ///< Used by operator().
 
 	/**
 	 * Sort camparator for two chains.
@@ -125,11 +126,16 @@ struct ChainSort
 		// If the chains have an upstream-downstream relationship, return whether chainNodes1 is upstream of chainNodes2.
 
 		vector<VuoCompilerNode *> downstreamOfChain1 = graph->getNodesDownstream(chainNodes1.back(), trigger);
-		if (find(downstreamOfChain1.begin(), downstreamOfChain1.end(), chainNodes2.front()) != downstreamOfChain1.end())
-			return true;
-
 		vector<VuoCompilerNode *> downstreamOfChain2 = graph->getNodesDownstream(chainNodes2.back(), trigger);
-		if (find(downstreamOfChain2.begin(), downstreamOfChain2.end(), chainNodes1.front()) != downstreamOfChain2.end())
+
+		bool isNode2DownstreamOfNode1 = find(downstreamOfChain1.begin(), downstreamOfChain1.end(), chainNodes2.front()) != downstreamOfChain1.end();
+		bool isNode1DownstreamOfNode2 = find(downstreamOfChain2.begin(), downstreamOfChain2.end(), chainNodes1.front()) != downstreamOfChain2.end();
+
+		if (isNode2DownstreamOfNode1 && isNode1DownstreamOfNode2)
+			return (lastNodeInLoop.find(chainNodes1.front()) != lastNodeInLoop.end());
+		else if (isNode2DownstreamOfNode1)
+			return true;
+		else if (isNode1DownstreamOfNode2)
 			return false;
 
 		// If at least one of the chains contains a trigger port, return the chain containing the trigger port with
@@ -192,13 +198,19 @@ void VuoCompilerBitcodeGenerator::makeOrderedNodes(void)
 			chains = chainsIter->second;
 
 		vector< vector<VuoCompilerNode *> > chainNodeLists;
+		set<VuoCompilerNode *> lastNodeInLoop;
 		for (vector<VuoCompilerChain *>::iterator j = chains.begin(); j != chains.end(); ++j)
+		{
 			if (! (*j)->isLastNodeInLoop() )
 				chainNodeLists.push_back( (*j)->getNodes() );
+			else
+				lastNodeInLoop.insert( (*j)->getNodes().front() );
+		}
 
 		ChainSort c;
 		c.graph = graph;
 		c.trigger = trigger;
+		c.lastNodeInLoop = lastNodeInLoop;
 		sort(chainNodeLists.begin(), chainNodeLists.end(), c);
 
 		vector<VuoCompilerNode *> orderedNodeList;
@@ -3604,25 +3616,13 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *
  *   // Schedule the chains immediately downstream of the trigger.
  *
- *   size_t chainGroupsBytes = 3 * sizeof(dispatch_group_t);
- *   dispatch_group_t *chainGroups = (dispatch_group_t *)malloc(chainGroupsBytes);
- *   chainGroups[0] = dispatch_group_create();  // TwirlImage
- *   chainGroups[1] = dispatch_group_create();  // RippleImage
- *   chainGroups[2] = dispatch_group_create();  // BlendImages
- *   dispatch_group_enter(chainGroups[0]);
- *   dispatch_group_enter(chainGroups[1]);
- *   dispatch_group_enter(chainGroups[2]);
- *   dispatch_retain(chainGroups[0]);
- *   dispatch_retain(chainGroups[1]);
- *
  *   unsigned long *eventIdPtr = (unsigned long *)malloc(sizeof(unsigned long));
  *   *eventIdPtr = eventId;
  *
- *   size_t contextBytes = 3 * sizeof(void *);
+ *   size_t contextBytes = 2 * sizeof(void *);
  *   void **chainContext = (void **)malloc(contextBytes);
  *   chainContext[0] = (void *)compositionIdentifier;
  *   chainContext[1] = (void *)eventIdPtr;
- *   chainContext[2] = (void *)chainGroups;
  *   VuoRegister(chainContext, vuoFreeChainWorkerContext);
  *
  *   dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -3635,8 +3635,8 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *
  * void vuoFreeChainWorkerContext(void *context)
  * {
+ *   VuoRelease(((void **)context)[0]);
  *   free(((void **)context)[1]);
- *   free(((void **)context)[2]);
  *   free(context);
  * }
  *
@@ -3677,15 +3677,9 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *   VuoRetain(context);
  *   vuoScheduleChainWorker(globalQueue, context, PlayMovie_decodedImage__BlendImages__worker, 1, 1, eventId, compositionIdentifier, 3);
  *
- *   dispatch_group_t *chainGroups = (dispatch_group_t *)((void **)context)[2];
- *
  *   // Clean up.
  *
  *   vuoReturnThreadsForChainWorker(eventId, compositionIdentifier, 0);
- *
- *   dispatch_group_leave(chainGroups[0]);
- *   dispatch_release(chainGroups[0]);
- *
  *   VuoRelease(context);
  * }
  *
@@ -3704,31 +3698,18 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *   // Clean up.
  *
  *   vuoReturnThreadsForChainWorker(eventId, compositionIdentifier, 1);
- *
- *   dispatch_group_leave(chainGroups[1]);
- *   dispatch_release(chainGroups[1]);
- *
  *   VuoRelease(context);
  * }
  *
  * void PlayMovie_decodedImage__BlendImages__worker(void *context)
  * {
- *   // Wait for the chains immediately upstream to complete.
- *
- *   dispatch_group_wait(chainGroups[0]);     // TwirlImage
- *   dispatch_release(chainGroups[0]);
- *   dispatch_group_wait(chainGroups[1]);     // RippleImage
- *   dispatch_release(chainGroups[1]);
+ *   // VuoThreadManager waits to call this function until the chains upstream have completed.
  *
  *   ...
  *
  *   // Clean up.
  *
  *   vuoReturnThreadsForChainWorker(eventId, compositionIdentifier, 2);
- *
- *   dispatch_group_leave(chainGroups[2]);
- *   dispatch_release(chainGroups[2]);
- *
  *   VuoRelease(context);
  * }
  * }
@@ -3811,7 +3792,6 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	map<VuoCompilerChain *, vector<VuoCompilerChain *> > chainsImmediatelyDownstream;
 	map<VuoCompilerChain *, vector<VuoCompilerChain *> > chainsImmediatelyUpstream;
 	set<VuoCompilerChain *> chainsScheduled;
-	set<VuoCompilerNode *> nodesScheduled;
 
 	vector<VuoCompilerChain *> allChains = chainsForTrigger[trigger];
 
@@ -3841,8 +3821,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 		}
 
 		// Create the context to pass to the chain workers.
-		Value *contextValue = VuoCompilerChain::generateMakeContext(module, triggerBlock, compositionStateValue,
-																	eventIdValue, allChains, chainsImmediatelyDownstream);
+		Value *contextValue = VuoCompilerChain::generateMakeContext(module, triggerBlock, compositionStateValue, eventIdValue);
 
 		// Find all chains immediately downstream of the trigger (i.e., chains that have no other chains upstream).
 		vector<VuoCompilerChain *> firstChains;
@@ -3854,9 +3833,27 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 				firstChains.push_back(chain);
 		}
 
-		// Schedule those chains.
-		generateAndScheduleChainWorkerFunctions(triggerBlock, compositionStateValue, contextValue, firstChains, trigger, allChains,
-												chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled, nodesScheduled);
+		// Choose one chain to execute in the trigger worker, to reduce overhead creating/destroying threads.
+		VuoCompilerChain *chainToExecute = firstChains.back();
+		firstChains.pop_back();
+		chainsScheduled.insert(chainToExecute);
+		size_t chainIndex = find(allChains.begin(), allChains.end(), chainToExecute) - allChains.begin();
+		VuoCompilerCodeGenUtilities::generateRetainCall(module, triggerBlock, contextValue);
+
+		// Call `vuoGrantThreadsToChain()` for the chosen chain.
+		int minThreadsNeeded, maxThreadsNeeded;
+		graph->getWorkerThreadsNeeded(chainToExecute, minThreadsNeeded, maxThreadsNeeded);
+		VuoCompilerCodeGenUtilities::generateGrantThreadsToChain(module, triggerBlock, minThreadsNeeded, maxThreadsNeeded,
+																 eventIdValue, compositionStateValue, chainIndex);
+
+		// Schedule the rest of the chains immediately downstream of the trigger.
+		generateAndScheduleChainWorkerFunctions(triggerBlock, compositionStateValue, contextValue, firstChains, trigger,
+												allChains, chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled);
+
+		// Execute the chosen chain.
+		generateChainExecution(function, triggerBlock, compositionStateValue, contextValue, eventIdValue, chainToExecute, trigger,
+							   allChains, chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled);
+		VuoCompilerCodeGenUtilities::generateReleaseCall(module, triggerBlock, contextValue);
 	}
 	else
 	{
@@ -3891,7 +3888,7 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunctions(BasicB
 																		  const vector<VuoCompilerChain *> &allChains,
 																		  const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream,
 																		  const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
-																		  set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled)
+																		  set<VuoCompilerChain *> &chainsScheduled)
 {
 	// Find the chains in chainsToSchedule that haven't already been scheduled.
 	vector<VuoCompilerChain *> uniqueChainsToSchedule;
@@ -3915,12 +3912,12 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunctions(BasicB
 		VuoCompilerChain *chain = *i;
 		generateAndScheduleChainWorkerFunction(schedulerBlock, compositionStateValueInScheduler, contextValueInScheduler,
 											   chain, trigger, allChains, chainsImmediatelyDownstream, chainsImmediatelyUpstream,
-											   chainsScheduled, nodesScheduled);
+											   chainsScheduled);
 	}
 }
 
 /**
- * Generates a chain worker function, which executes each node in the chain, and schedules the function to run.
+ * Generates and schedules a chain worker function.
  */
 void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock,
 																		 Value *compositionStateValueInScheduler, Value *contextValueInScheduler,
@@ -3928,10 +3925,8 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 																		 const vector<VuoCompilerChain *> &allChains,
 																		 const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream,
 																		 const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
-																		 set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled)
+																		 set<VuoCompilerChain *> &chainsScheduled)
 {
-	// Schedule the following:
-
 	int minThreadsNeeded, maxThreadsNeeded;
 	graph->getWorkerThreadsNeeded(chain, minThreadsNeeded, maxThreadsNeeded);
 
@@ -3946,6 +3941,7 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 	for (vector<VuoCompilerChain *>::iterator i = upstreamChains.begin(); i != upstreamChains.end(); ++i)
 		upstreamChainIndices.push_back( find(allChains.begin(), allChains.end(), *i) - allChains.begin() );
 
+	// Call `vuoScheduleChainWorker` for the worker function implemented below.
 	Function *chainWorker = chain->generateScheduleWorker(module, schedulerBlock, compositionStateValueInScheduler, contextValueInScheduler,
 														  trigger->getIdentifier(), minThreadsNeeded, maxThreadsNeeded, chainIndex,
 														  upstreamChainIndices);
@@ -3954,18 +3950,36 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 	Value *contextValueInChainWorker = chainWorker->arg_begin();
 	Value *compositionStateValueInChainWorker = chain->generateCompositionStateValue(module, chainBlock, contextValueInChainWorker);
 	Value *eventIdValue = chain->generateEventIdValue(module, chainBlock, contextValueInChainWorker);
+
+	// Execute the chain.
+	generateChainExecution(chainWorker, chainBlock, compositionStateValueInChainWorker, contextValueInChainWorker, eventIdValue, chain, trigger,
+						   allChains, chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled);
+
+	// Release the chain worker's context.
+	VuoCompilerCodeGenUtilities::generateReleaseCall(module, chainBlock, contextValueInChainWorker);
+
+	ReturnInst::Create(module->getContext(), chainBlock);
+}
+
+/**
+ * Generates code to execute each node that got an event in the given chain.
+ */
+void VuoCompilerBitcodeGenerator::generateChainExecution(Function *function, BasicBlock *&block,
+														 Value *compositionStateValue, Value *contextValue,
+														 Value *eventIdValue, VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger,
+														 const vector<VuoCompilerChain *> &allChains,
+														 const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream,
+														 const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
+														 set<VuoCompilerChain *> &chainsScheduled)
+{
+	size_t chainIndex = find(allChains.begin(), allChains.end(), chain) - allChains.begin();
 	Value *chainIndexValue = ConstantInt::get(eventIdValue->getType(), chainIndex);
-
-
-	// Wait for any chains immediately upstream to complete.
-	if (! upstreamChains.empty())
-		chain->generateWaitForUpstreamChains(module, chainBlock, contextValueInChainWorker, upstreamChainIndices);
 
 	// For each node in the chain...
 	vector<VuoCompilerNode *> chainNodes = chain->getNodes();
-	for (vector<VuoCompilerNode *>::iterator j = chainNodes.begin(); j != chainNodes.end(); ++j)
+	for (vector<VuoCompilerNode *>::iterator i = chainNodes.begin(); i != chainNodes.end(); ++i)
 	{
-		VuoCompilerNode *node = *j;
+		VuoCompilerNode *node = *i;
 
 		Function *nodeExecutionFunction = executionFunctionForNode[node];
 		if (! nodeExecutionFunction)
@@ -3983,23 +3997,23 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 
 		// If the event hit the node, call its event function and send telemetry.
 		vector<Value *> nodeExecutionArgs;
-		nodeExecutionArgs.push_back(compositionStateValueInChainWorker);
+		nodeExecutionArgs.push_back(compositionStateValue);
 		nodeExecutionArgs.push_back(eventIdValue);
 		nodeExecutionArgs.push_back(chainIndexValue);
-		CallInst *isHitValue = CallInst::Create(nodeExecutionFunction, nodeExecutionArgs, "", chainBlock);
+		CallInst *isHitValue = CallInst::Create(nodeExecutionFunction, nodeExecutionArgs, "", block);
 
 		// Whether or not the event hit the node, wait on any necessary downstream nodes.
 		if (! (graph->isRepeatedInFeedbackLoop(node, trigger) && chain->isLastNodeInLoop()))
 		{
 			vector<VuoCompilerNode *> outputNodes = getNodesToWaitOnBeforeTransmission(trigger, node);
-			generateWaitForNodes(module, chainWorker, chainBlock, compositionStateValueInChainWorker, outputNodes, eventIdValue);
+			generateWaitForNodes(module, function, block, compositionStateValue, outputNodes, eventIdValue);
 		}
 
 		// If the event hit the node, transmit events and data through its output cables and send telemetry.
 		vector<Value *> nodeTransmissionArgs;
-		nodeTransmissionArgs.push_back(compositionStateValueInChainWorker);
+		nodeTransmissionArgs.push_back(compositionStateValue);
 		nodeTransmissionArgs.push_back(isHitValue);
-		CallInst::Create(nodeTransmissionFunction, nodeTransmissionArgs, "", chainBlock);
+		CallInst::Create(nodeTransmissionFunction, nodeTransmissionArgs, "", block);
 
 		// Whether or not the event hit the node, if this was the last time this event could reach the node,
 		// signal the node's semaphore.
@@ -4008,10 +4022,8 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 			// Special case: If this is the published output node in a subcomposition and the event came from
 			// `nodeEvent()`/`nodeInstanceEvent()`, the node's semaphore is signaled by that function.
 			if (! (! isTopLevelComposition && node->getBase() == publishedOutputNode && trigger == getPublishedInputTrigger()))
-				generateSignalForNodes(module, chainBlock, compositionStateValueInChainWorker, vector<VuoCompilerNode *>(1, node));
+				generateSignalForNodes(module, block, compositionStateValue, vector<VuoCompilerNode *>(1, node));
 		}
-
-		nodesScheduled.insert(node);
 	}
 
 	// Schedule any chains immediately downstream, if this chain is the one responsible for doing so.
@@ -4032,17 +4044,12 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 			nextChains.push_back(downstreamChain);
 		}
 
-		generateAndScheduleChainWorkerFunctions(chainBlock, compositionStateValueInChainWorker, contextValueInChainWorker, nextChains, trigger, allChains,
-												chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled, nodesScheduled);
+		generateAndScheduleChainWorkerFunctions(block, compositionStateValue, contextValue, nextChains, trigger, allChains,
+												chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled);
 	}
 
-	// Return the threads used by this chain worker to the thread pool.
-	VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(module, chainBlock, eventIdValue, compositionStateValueInChainWorker, chainIndexValue);
-
-	// Leave and release the chain's dispatch group. Release the context.
-	chain->generateCleanupForWorkerFunction(module, chainBlock, contextValueInChainWorker, chainIndex, ! downstreamChains.empty());
-
-	ReturnInst::Create(module->getContext(), chainBlock);
+	// Return the threads used by this chain to the thread pool.
+	VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(module, block, eventIdValue, compositionStateValue, chainIndexValue);
 }
 
 /**

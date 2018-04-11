@@ -16,6 +16,9 @@ VuoModuleMetadata({
 						 "stretch", "fill", "shrink", "blow up", "enlarge", "magnify" ],
 					 "version" : "1.0.0",
 					 "node": {
+						  "exampleCompositions" : [ "vuo-example://vuo.audio/ShowStabilizedAudioWaveform.vuo",
+									    "vuo-example://vuo.image/CompareNoiseTypes.vuo",
+									    "vuo-example://vuo.image/SimulateMotionBlur.vuo" ]
 					 }
 				 });
 

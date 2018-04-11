@@ -552,7 +552,7 @@ private slots:
 		CVOpenGLTextureRef inputCVOGLT;
 		{
 			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, false);
+			CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, false, -1);
 			CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
 			CGLReleasePixelFormat(pf);
 			QVERIFY(ret == kCVReturnSuccess);

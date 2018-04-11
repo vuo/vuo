@@ -20,6 +20,8 @@ INCLUDEPATH += \
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/library/libmodule.o \
+	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoIoReturn.o \
 	$$ROOT/node/vuo.hid/VuoHidControl.o \
 	$$ROOT/node/vuo.hid/VuoHidDevice.o \
@@ -29,8 +31,10 @@ LIBS += \
 	$$ROOT/node/vuo.hid/VuoUsbVendor.o \
 	$$ROOT/runtime/VuoEventLoop.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoHidControl.o \
 	$$ROOT/type/list/VuoList_VuoHidDevice.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
+	$$ROOT/type/list/VuoList_VuoReal.o \
 	-framework IOKit

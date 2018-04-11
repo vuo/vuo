@@ -22,12 +22,12 @@ extern "C"
  */
 class VuoInputEditorKeyFactory : public VuoInputEditorFactory
 {
-   Q_OBJECT
-   Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorKey.json")
-   Q_INTERFACES(VuoInputEditorFactory)
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorKey.json")
+	Q_INTERFACES(VuoInputEditorFactory)
 
 public:
-   VuoInputEditor * newInputEditor(void);
+	VuoInputEditor * newInputEditor(void);
 };
 
 /**

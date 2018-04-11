@@ -26,12 +26,15 @@ Some video encodings (**delivery codecs**) are designed for playing back and sha
 
 The table below summarizes some of the video codecs supported by this node set.
 
-Encoding    | Purpose      | Notes
-------------|------------- | -----
-H.264       | Delivery    
-JPEG        | Intermediate
-ProRes 422  | Intermediate | Only available on systems with Final Cut Pro installed.
-ProRes 4444 | Intermediate | Only available on systems with Final Cut Pro installed.
+Encoding    | File size | Non-forward playback | Supports transparency? | Supported by `Save Images/Frames to Movie`? | Notes
+----------- | --------- | -------------------- | ---------------------- | ------------------------------------------- | -----
+H.264       | Smaller   | Less efficient       | No                     | Yes                                         |
+H.265/HEVC  | Smaller   | Less efficient       | No                     | No                                          |
+JPEG        | Larger    | More efficient       | No                     | Yes                                         |
+ProRes 422  | Larger    | More efficient       | No                     | Yes                                         | Only available on systems with Final Cut Pro installed.
+ProRes 4444 | Larger    | More efficient       | Yes                    | Yes                                         | Only available on systems with Final Cut Pro installed.
+Hap         | Larger    | Less efficient       | No                     | No                                          | Hap Q has the same characteristics.
+Hap Alpha   | Larger    | Less efficient       | Yes                    | No                                          | Hap Q Alpha has the same characteristics.
 
 Audio is encoded separately from video. Similarly to video encodings, audio encodings have a tradeoff between quality and file size. **Lossless** encodings preserve the original audio at the expense of larger file sizes. **Lossy** encodings tend to produce smaller file sizes but may reduce the audio quality.
 

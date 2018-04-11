@@ -15,6 +15,7 @@ extern "C" {
 #include <unistd.h>
 #include <dispatch/dispatch.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include <objc/runtime.h>
 #include <objc/message.h>
 #include <pthread.h>
@@ -64,11 +65,18 @@ VuoIsCurrentCompositionStoppedType *isStopped = isStoppedInitially;  ///< Refere
 } // extern "C"
 
 /**
- * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ * Get a reference to the main thread, so we can perform runtime thread assertions.
  */
 static void __attribute__((constructor)) VuoCompositionLoader_init(void)
 {
 	VuoApp_mainThread = (void *)pthread_self();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// Calls _TSGetMainThread().
+	// https://b33p.net/kosada/node/12944
+	YieldToAnyThread();
+#pragma clang diagnostic pop
 }
 
 /**
@@ -388,7 +396,7 @@ bool replaceComposition(const char *dylibPath, char *compositionDiff)
 		}
 
 		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid, runnerPipe, continueIfRunnerDies,
-						 trialRestrictionsEnabled, "", dylibHandle, runtimePersistentState);
+						 trialRestrictionsEnabled, "", dylibHandle, runtimePersistentState, false);
 	}
 
 	isReplacing = false;
@@ -404,10 +412,11 @@ void stopComposition(void)
 	vuoMemoryBarrier();
 
 	const int timeoutInSeconds = -1;
-	zmq_msg_t messages[2];
+	zmq_msg_t messages[3];
 	vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
-	vuoInitMessageWithBool(&messages[1], true);
-	vuoControlRequestSend(VuoControlRequestCompositionStop,messages,2);
+	vuoInitMessageWithBool(&messages[1], true ); // isBeingReplaced
+	vuoInitMessageWithBool(&messages[2], false); // isLastEverInProcess
+	vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 3);
 	vuoControlReplyReceive(VuoControlReplyCompositionStopping);
 }
 

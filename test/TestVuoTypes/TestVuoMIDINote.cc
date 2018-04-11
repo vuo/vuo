@@ -35,6 +35,10 @@ private slots:
 											<< true
 											<< "Channel 1: note C4 (#60) on, velocity 127";
 
+		QTest::newRow("note on, lowest C")  << "{\"channel\":1,\"isNoteOn\":true,\"velocity\":127,\"noteNumber\":0}"
+											<< true
+											<< "Channel 1: note C-1 (#0) on, velocity 127";
+
 		QTest::newRow("note off, A♯0")		<< "{\"channel\":16,\"isNoteOn\":false,\"velocity\":127,\"noteNumber\":22}"
 											<< true
 											<< "Channel 16: note A♯0 (#22) off, velocity 127";

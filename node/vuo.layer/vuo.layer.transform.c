@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "scenegraph", "composite", "rotate", "scale", "translate" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ ]
+						 "exampleCompositions" : [ "vuo-example://vuo.layer/ShowArrangedLayers.vuo", "vuo-example://vuo.list/SelectLayerFromList.vuo" ]
 					 }
 				 });
 

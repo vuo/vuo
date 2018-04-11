@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object (TRS)",
-					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
+					 "keywords" : [ "duplicate", "clone", "repeat", "replicate", "array", "instance", "instantiate", "populate" ],
 					 "version" : "2.0.2",
 					 "node": {
 						 "exampleCompositions" : [ "DisplayRowOfSpheres.vuo" ]
@@ -67,12 +67,9 @@ void nodeEvent
 				);
 
 		// VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale)
-		VuoListAppendValue_VuoSceneObject(copies->childObjects, VuoSceneObject_make(
-			object.mesh,
-			object.shader,
-			VuoTransform_composite(object.transform,
-								   VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale)),
-			object.childObjects
-			));
+		VuoSceneObject so = object;
+		so.transform = VuoTransform_composite(object.transform,
+											  VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale));
+		VuoListAppendValue_VuoSceneObject(copies->childObjects, so);
 	}
 }

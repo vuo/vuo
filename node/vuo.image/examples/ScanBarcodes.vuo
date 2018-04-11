@@ -5,6 +5,7 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
@@ -24,7 +25,7 @@ GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>ref
 GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="0,225" _url="\"datamatrix-2_02.png\""];
 GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="0,120" _url="\"qrcode-4_36.png\""];
 HoldValue3 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1125,105"];
-IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="-285,585" _b="2.000000"];
+IsLessThan3 [type="vuo.data.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="-285,585" _b="2"];
 MakeDictionary9 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="255,615"];
 MakeLayer4 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,90" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
 MakeLayer5 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,210" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
@@ -78,7 +79,7 @@ GetImage3:image -> MakeLayer4:image;
 GetImage:image -> MakeLayer8:image;
 HoldValue3:heldValue -> FindBarcodeInImage:image;
 HoldValue3:heldValue -> SelectLatest2:option2 [event=true];
-IsLessThan:lessThan -> BecameFalse:value;
+IsLessThan3:lessThan -> BecameFalse:value;
 MakeDictionary9:dictionary -> Calculate:values;
 MakeLayer4:layer -> MakeList7:1;
 MakeLayer5:layer -> MakeList7:2;
@@ -94,7 +95,7 @@ MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList7:list -> ArrangeLayersInGrid:layers;
 MakeList9:list -> RenderLayersToImage:layers;
 MakeTextImage:image -> MakeLayer6:image;
-MeasureTime:elapsedTime -> IsLessThan:a;
+MeasureTime:elapsedTime -> IsLessThan3:a;
 PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
 RenderLayersToImage:image -> CropImage:image;
 RenderLayersToWindow:requestedFrame -> ShareValue5:value;

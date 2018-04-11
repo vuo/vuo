@@ -59,7 +59,7 @@ bool VuoFileFormat_isSupportedAudioFile(const char *path)
 bool VuoFileFormat_isSupportedImageFile(const char *path)
 {
 	const char *formats[] = {"png", "jpeg", "jpg", "gif", "bmp", "exr", "hdr", "psd", "raw", "cr2",
-							 "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp"};
+							 "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp", "pct"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }
@@ -89,7 +89,7 @@ bool VuoFileFormat_isSupportedMovieFile(const char *path)
  */
 bool VuoFileFormat_isSupportedSceneFile(const char *path)
 {
-	const char *formats[] = {"3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
+	const char *formats[] = {"3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn",
 							 "irr", "irrmesh", "mdl", "md2", "md3", "pk3", "mdc", "md5", "m3", "smd", "ter",
 							 "raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo", "fbx", "blend", "stl"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
@@ -107,11 +107,41 @@ bool VuoFileFormat_isSupportedFeedFile(const char *path)
 }
 
 /**
+ * Returns true if the file is of the JSON file format.
+ */
+bool VuoFileFormat_isSupportedJsonFile(const char *path)
+{
+	const char *formats[] = {"json"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
+/**
+ * Returns true if the file is of the XML file format.
+ */
+bool VuoFileFormat_isSupportedXmlFile(const char *path)
+{
+	const char *formats[] = {"xml"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
+/**
+ * Returns true if the file is of one of the supported table file formats.
+ */
+bool VuoFileFormat_isSupportedTableFile(const char *path)
+{
+	const char *formats[] = {"csv", "tsv"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
+/**
  * Returns true if the file is of one of the supported data file formats.
  */
 bool VuoFileFormat_isSupportedDataFile(const char *path)
 {
-	const char *formats[] = {"txt", "csv"};
+	const char *formats[] = {"txt", "json", "xml", "csv", "tsv"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }

@@ -10,7 +10,6 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoImage.h"
-#include "VuoGlContext.h"
 #include "VuoShader.h"
 #include "VuoImageGet.h"
 #include "VuoImageRenderer.h"
@@ -268,16 +267,12 @@ private slots:
 	{
 		unsigned int width = 1920;
 		unsigned int height = 1080;
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoImageRenderer ir = VuoImageRenderer_make(glContext);
-		VuoRetain(ir);
 
 		VuoShader s = VuoShader_make("Solid Color Shader");
 		VuoShader_addSource(s, VuoMesh_IndividualTriangles, solidColorVertexShaderSource, NULL, solidColorFragmentShaderSource);
 		VuoRetain(s);
 
-		VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_8);
+		VuoImage i = VuoImageRenderer_render(s, width, height, VuoImageColorDepth_8);
 		VuoRetain(i);
 		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
 		QCOMPARE(imageBuffer[0], (unsigned char)255);
@@ -287,29 +282,23 @@ private slots:
 		VuoRelease(i);
 
 		QBENCHMARK {
-			VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_8);
+			VuoImage i = VuoImageRenderer_render(s, width, height, VuoImageColorDepth_8);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
 		VuoRelease(s);
-		VuoRelease(ir);
-		VuoGlContext_disuse(glContext);
 	}
 
 	void testImageRendererPerformance16bpc()
 	{
 		unsigned int width = 1920;
 		unsigned int height = 1080;
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoImageRenderer ir = VuoImageRenderer_make(glContext);
-		VuoRetain(ir);
 
 		VuoShader s = VuoShader_make("Solid Color Shader");
 		VuoShader_addSource(s, VuoMesh_IndividualTriangles, solidColorVertexShaderSource, NULL, solidColorFragmentShaderSource);
 		VuoRetain(s);
 
-		VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_16);
+		VuoImage i = VuoImageRenderer_render(s, width, height, VuoImageColorDepth_16);
 		VuoRetain(i);
 		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
 		QCOMPARE(imageBuffer[0], (unsigned char)255);
@@ -319,13 +308,11 @@ private slots:
 		VuoRelease(i);
 
 		QBENCHMARK {
-			VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_16);
+			VuoImage i = VuoImageRenderer_render(s, width, height, VuoImageColorDepth_16);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
 		VuoRelease(s);
-		VuoRelease(ir);
-		VuoGlContext_disuse(glContext);
 	}
 
 	void testImageRendererRipplePerformance()
@@ -335,11 +322,6 @@ private slots:
 		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
 		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 		VuoRetain(sourceImage);
-
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoImageRenderer ir = VuoImageRenderer_make(glContext);
-		VuoRetain(ir);
 
 		VuoShader s = VuoShader_make("Ripple Shader");
 		VuoShader_addSource(s, VuoMesh_IndividualTriangles, NULL, NULL,rippleFragmentShaderSource);
@@ -353,13 +335,11 @@ private slots:
 		VuoShader_setUniform_VuoReal(s, "phase", 0.*M_PI*2.);
 
 		QBENCHMARK {
-			VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_8);
+			VuoImage i = VuoImageRenderer_render(s, width, height, VuoImageColorDepth_8);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
 		VuoRelease(s);
-		VuoRelease(ir);
-		VuoGlContext_disuse(glContext);
 		VuoRelease(sourceImage);
 	}
 
@@ -554,8 +534,7 @@ private slots:
 
 
 		// Create a color image and a depth image.
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), VuoListCreate_VuoSceneObject());
@@ -580,7 +559,6 @@ private slots:
 		VuoRelease(colorImage);
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
-		VuoGlContext_disuse(glContext);
 	}
 
 	/**

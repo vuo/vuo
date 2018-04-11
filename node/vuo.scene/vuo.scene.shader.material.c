@@ -27,18 +27,19 @@ void nodeEvent
 	VuoOutputData(VuoSceneObject) shadedObject
 )
 {
-	if (!material)
-		return;
-
 	VuoSceneObject copy = VuoSceneObject_copy(object);
 
-	bool applyToAll = (strlen(material) == 0);
+	VuoShader s = shader;
+	if (!s)
+		s = VuoShader_makeDefaultShader();
+
+	bool applyToAll = !material || strlen(material) == 0;
 	VuoSceneObject_apply(&copy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
 							if (!currentObject->shader)
 								return;
 
 							if (applyToAll || strstr(currentObject->shader->name, material))
-								currentObject->shader = shader;
+								currentObject->shader = s;
 						 });
 
 	*shadedObject = copy;

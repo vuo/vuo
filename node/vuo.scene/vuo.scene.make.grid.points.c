@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					"title" : "Make Grid Points Object",
-					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle" ],
+					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle", "shape" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {

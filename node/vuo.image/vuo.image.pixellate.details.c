@@ -73,19 +73,12 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Pixellate with Details Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, pixelFragmentShader);
@@ -127,6 +120,4 @@ void nodeInstanceEvent
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

@@ -27,19 +27,12 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoImageResize resize;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->resize = VuoImageResize_make();
 	VuoRetain(instance->resize);
@@ -66,12 +59,10 @@ void nodeInstanceEvent
 	if(image->pixelsWide == width && image->pixelsHigh == height)
 		*resizedImage = image;
 	else
-		*resizedImage = VuoImageResize_resize(image, (*instance)->resize, (*instance)->imageRenderer, sizingMode, width, height);
+		*resizedImage = VuoImageResize_resize(image, (*instance)->resize, sizingMode, width, height);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->resize);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

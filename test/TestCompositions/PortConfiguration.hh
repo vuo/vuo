@@ -26,6 +26,7 @@
 class PortConfiguration
 {
 private:
+	int itemIndex;          ///< The index of this test datum in the array of test data.
 	string itemName;		///< The display name of this test datum.
 	string firingPortName;  ///< The name of the published input port to fire an event through.
 	map<string, string> valueForInputPortName;  ///< The value to set for each published input port.
@@ -34,7 +35,7 @@ private:
 	string toString(void);
 
 public:
-	PortConfiguration(string itemName, string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName);
+	PortConfiguration(string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName);
 	void setInputValuesAndFireEvent(VuoRunner *runner);
 	void checkOutputValue(VuoRunner *runner, VuoRunner::Port *port);
 	bool isDoneChecking(void);

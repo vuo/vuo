@@ -43,7 +43,6 @@ extern "C" {
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "List of ELEMENT_TYPE elements",
-					 "description" : "",
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -113,7 +112,9 @@ char * LIST_TYPE_getSummary(const LIST_TYPE value)
 	for (i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
-		std::string itemSummary = ELEMENT_TYPE_getSummary(item);
+		char *itemSummaryCstr = ELEMENT_TYPE_getSummary(item);
+		std::string itemSummary = itemSummaryCstr;
+		free(itemSummaryCstr);
 		if (itemSummary.length() && itemSummary.find_first_not_of(' ') != std::string::npos)
 			summary << "<li>" << itemSummary << "</li>";
 		else

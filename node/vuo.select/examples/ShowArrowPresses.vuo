@@ -33,6 +33,10 @@ ReceiveKeyboardButtons4:pressed -> SelectLatest2:option1;
 ReceiveKeyboardButtons4:released -> SelectLatest2:option8;
 ReceiveKeyboardButtons5:pressed -> SelectLatest2:option3;
 ReceiveKeyboardButtons5:released -> SelectLatest2:option8;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons2:window [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons3:window [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons4:window [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons5:window [style=invis];
 SelectLatest2:latest -> SelectLatest5:option2;
 SelectLatest5:latest -> MakeTextLayer:text;
 }

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert 2D Point List to 3D Point List (X,Y,0)",
 					  "description": "Expands a list of 2D points (X,Y) to a list of 3D points (X,Y,0).",
-					  "version": "1.0.1"
+					  "version": "1.0.2"
 				 });
 
 void nodeEvent
@@ -21,11 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoPoint3d, {"name":"(X,Y,0)"}) xyz
 )
 {
-	*xyz = VuoListCreate_VuoPoint3d();
 	unsigned long count = VuoListGetCount_VuoPoint2d(xy);
-	for (unsigned long i = 1; i <= count; ++i)
-	{
-		VuoPoint2d p = VuoListGetValue_VuoPoint2d(xy, i);
-		VuoListAppendValue_VuoPoint3d(*xyz, VuoPoint3d_make(p.x, p.y, 0));
-	}
+	VuoPoint2d *inputs = VuoListGetData_VuoPoint2d(xy);
+	*xyz = VuoListCreateWithCount_VuoPoint3d(count, (VuoPoint3d){0,0,0});
+	VuoPoint3d *outputs = VuoListGetData_VuoPoint3d(*xyz);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = (VuoPoint3d){inputs[i].x, inputs[i].y, 0};
 }

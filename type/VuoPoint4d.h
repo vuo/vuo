@@ -10,6 +10,7 @@
 #pragma once
 
 #include <math.h>
+#include "VuoReal.h"
 
 /**
  * @ingroup VuoTypes
@@ -248,6 +249,19 @@ static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoi
 		};
 }
 
+
+/**
+ * Limits `point` to values between `limitA` and `limitB`, inclusive.
+ */
+static inline VuoPoint4d VuoPoint4d_clampn(VuoPoint4d point, VuoPoint4d limitA, VuoPoint4d limitB)
+{
+	return (VuoPoint4d){
+		(float)VuoReal_clamp(point.x, limitA.x, limitB.x),
+		(float)VuoReal_clamp(point.y, limitA.y, limitB.y),
+		(float)VuoReal_clamp(point.z, limitA.z, limitB.z),
+		(float)VuoReal_clamp(point.w, limitA.w, limitB.w)
+	};
+}
 
 /**
  * @}
