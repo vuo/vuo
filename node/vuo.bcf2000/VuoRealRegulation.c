@@ -2,7 +2,7 @@
  * @file
  * VuoRealRegulation implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -101,19 +101,7 @@ VuoRealRegulation VuoRealRegulation_make(VuoText name, VuoReal minimumValue, Vuo
 	value.minimumValue = minimumValue;
 	value.maximumValue = maximumValue;
 
-	// …but put them in the right order in order to clamp the default value.
-	VuoReal actualMin, actualMax;
-	if (minimumValue < maximumValue)
-	{
-		actualMin = minimumValue;
-		actualMax = maximumValue;
-	}
-	else
-	{
-		actualMin = maximumValue;
-		actualMax = minimumValue;
-	}
-	value.defaultValue = VuoReal_clamp(defaultValue, actualMin, actualMax);
+	value.defaultValue = VuoReal_clamp(defaultValue, minimumValue, maximumValue);
 
 	value.smoothDuration = smoothDuration;
 

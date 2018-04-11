@@ -2,13 +2,14 @@
  * @file
  * VuoScreenCommon implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include "module.h"
 #include "VuoScreenCommon.h"
+#include "VuoPnpId.h"
 
 #include <IOKit/graphics/IOGraphicsLib.h>
 #ifndef NS_RETURNS_INNER_POINTER
@@ -20,6 +21,7 @@
 VuoModuleMetadata({
 					  "title" : "VuoScreenCommon",
 					  "dependencies" : [
+						  "VuoPnpId",
 						  "VuoScreen",
 						  "VuoList_VuoScreen",
 						  "IOKit.framework",
@@ -51,12 +53,74 @@ VuoModuleMetadata({
 	#pragma clang diagnostic pop
 
 	NSDictionary *deviceInfo = (NSDictionary *)IODisplayCreateInfoDictionary(port, kIODisplayOnlyPreferredName);
-	[deviceInfo autorelease];
-	NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
-	if ([localizedNames count] > 0)
-		return [localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]];
 
-	return @"";
+	NSData *edid = [deviceInfo objectForKey:@kIODisplayEDIDKey];
+	NSString *displayLocation = [deviceInfo objectForKey:@kIODisplayLocationKey];
+	NSString *manufacturerName = nil;
+	uint32_t serialNumber = 0;
+	uint8_t manufacturedWeek = 0;
+	uint16_t manufacturedYear = 0;
+	if (edid)
+	{
+		const unsigned char *bytes = [edid bytes];
+
+		uint16_t manufacturerId = (bytes[8] << 8) + bytes[9];
+		char *manufacturer = VuoPnpId_getString(manufacturerId);
+		manufacturerName = [NSString stringWithUTF8String:manufacturer];
+		free(manufacturer);
+
+		serialNumber = (bytes[15] << 24) + (bytes[14] << 16) + (bytes[13] << 8) + bytes[12];
+
+		manufacturedWeek = bytes[16];
+		manufacturedYear = bytes[17] + 1990;
+	}
+	else
+	{
+		// If no EDID manufacturer is provided, inspect the device path for some known unique keys.
+		if ([displayLocation rangeOfString:@"SRXDisplayCard" options:0].location != NSNotFound)
+			manufacturerName = @"Splashtop XDisplay";
+		else if ([displayLocation rangeOfString:@"info_ennowelbers_proxyframebuffer_fbuffer" options:0].location != NSNotFound)
+			manufacturerName = @"GoodDual Display";
+	}
+
+	// Yam Display reports "DIS" as its EDID manufacturer.
+	// I assume they meant that as short for "Display"
+	// but it's actually the apparently-unrelated company "Diseda S.A.", so ignore it.
+	if ([displayLocation rangeOfString:@"com_yamstu_YamDisplayDriver" options:0].location != NSNotFound)
+		manufacturerName = nil;
+
+
+	[deviceInfo autorelease];
+	NSDictionary *localizedNames = [deviceInfo objectForKey:@kDisplayProductName];
+	NSString *name = nil;
+	if ([localizedNames count] > 0)
+	{
+		NSString *modelName = [localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]];
+		if ([modelName length] > 0)
+		{
+			if (manufacturerName)
+				name = [NSString stringWithFormat:@"%@: %@", manufacturerName, modelName];
+			else
+				name = modelName;
+		}
+	}
+
+	if (!name)
+	{
+		if (manufacturerName)
+			name = manufacturerName;
+		else
+			name = @"";
+	}
+
+	if (serialNumber && manufacturedYear)
+		return [NSString stringWithFormat:@"%@ (%d, %d-W%02d)", name, serialNumber, manufacturedYear, manufacturedWeek];
+	else if (serialNumber)
+		return [NSString stringWithFormat:@"%@ (%d)", name, serialNumber];
+	else if (manufacturedYear)
+		return [NSString stringWithFormat:@"%@ (%d-W%02d)", name, manufacturedYear, manufacturedWeek];
+	else
+		return name;
 }
 
 /**

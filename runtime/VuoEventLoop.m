@@ -2,13 +2,14 @@
  * @file
  * VuoEventLoop implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoEventLoop.h"
 #include "VuoLog.h"
+#include "VuoCompositionState.h"
 
 #ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
@@ -108,10 +109,6 @@ void VuoEventLoop_switchToAppMode(void)
  */
 bool VuoEventLoop_mayBeTerminated(void)
 {
-	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
-	if (terminationDisabledCount && *terminationDisabledCount > 0)
-		return false;
-
 	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
 	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
 	if (!nsAppGlobal || !*nsAppGlobal)
@@ -125,36 +122,6 @@ bool VuoEventLoop_mayBeTerminated(void)
 			return false;
 
 	return true;
-}
-
-/**
- * Temporarily disables automatic termination.
- *
- * When a composition is asked to shut down, a watchdog timer waits a few seconds
- * then force-quits if it hasn't cleanly shut down by then.  This disables that
- * watchdog.
- *
- * Call this before entering a section where it would be undesirable
- * to have the composition automatically force-quit,
- * such as when saving a movie file that needs to be finalized.
- *
- * When the work is over, call @ref VuoEventLoop_enableTermination.
- */
-void VuoEventLoop_disableTermination(void)
-{
-	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
-	if (terminationDisabledCount)
-		++(*terminationDisabledCount);
-}
-
-/**
- * Resumes automatic termination after a call to @ref VuoEventLoop_disableTermination.
- */
-void VuoEventLoop_enableTermination(void)
-{
-	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
-	if (__sync_sub_and_fetch(terminationDisabledCount, 1) < 0)
-		*terminationDisabledCount = 0;
 }
 
 /**
@@ -182,11 +149,11 @@ unsigned long VuoEventLoop_getDispatchStrictMask(void)
  */
 void VuoEventLoop_signalHandler(int signum)
 {
-	typedef void (*vuoStopCompositionType)(void);
+	typedef void (*vuoStopCompositionType)(struct VuoCompositionState *);
 	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
 	if (!vuoStopComposition)
 		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
-	vuoStopComposition();
+	vuoStopComposition(NULL);
 }
 
 /**

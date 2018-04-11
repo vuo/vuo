@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -147,6 +147,8 @@ void VuoFileUtilities::makeDir(string path)
 /**
  * Returns the absolute path of Vuo.framework (without a trailing slash),
  * or an empty string if Vuo.framework cannot be located.
+ *
+ * For a C version accessible from nodes and libraries, see @ref VuoApp_getVuoFrameworkPath.
  */
 string VuoFileUtilities::getVuoFrameworkPath(void)
 {
@@ -156,12 +158,15 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 	const char *framework111DylibRelativePath = "Vuo.framework/Versions/1.1.1/Vuo";
 	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.6.0.6.
 	const char *framework123DylibRelativePath = "Vuo.framework/Versions/1.2.3/Vuo";
+	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.6.1.1.
+	const char *framework124DylibRelativePath = "Vuo.framework/Versions/1.2.4/Vuo";
 	for(unsigned int i=0; i<_dyld_image_count(); ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
 		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath)
 		 || VuoStringUtilities::endsWith(dylibPath, framework111DylibRelativePath)
-		 || VuoStringUtilities::endsWith(dylibPath, framework123DylibRelativePath))
+		 || VuoStringUtilities::endsWith(dylibPath, framework123DylibRelativePath)
+		 || VuoStringUtilities::endsWith(dylibPath, framework124DylibRelativePath))
 		{
 			string path = dylibPath;
 			string dir, file, ext;

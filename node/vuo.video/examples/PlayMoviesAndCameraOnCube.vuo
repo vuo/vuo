@@ -1,16 +1,16 @@
 /**
-* @file
-* Plays three different movies, including one with sound, on the faces of a spinning cube. One side shows live input from your default video device, usually your Mac's iSight camera. 
-*
-* @copyright Copyright © 2012–2016 Kosada Incorporated.
-* This code may be modified and distributed under the terms of the MIT License.
-* For more information, see http://vuo.org/license.
-*/
+ * @file
+ * Plays three different movies, including one with sound, on the faces of a spinning cube. One side shows live input from your default video device, usually your Mac's iSight camera. 
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
 
 digraph G
 {
 AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="364,787"];
-BecameFalse [type="vuo.event.becameFalse" version="1.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="-101,650"];
+BecameFalse [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="-101,650"];
 BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="-92,745"];
 ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="629,935"];
 ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="576,465"];

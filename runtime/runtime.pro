@@ -7,12 +7,19 @@ VUO_INFO_PLIST_GENERATED = VuoCompositionLoader-Info-generated.plist
 include(../vuo.pri)
 
 RUNTIME_CXX_SOURCES += \
+	VuoCompositionDiff.cc \
 	VuoLog.cc \
+	VuoNodeRegistry.cc \
 	VuoRuntime.cc \
-	VuoRuntimeHelper.cc
+	VuoRuntimeCommunicator.cc \
+	VuoRuntimePersistentState.cc \
+	VuoRuntimeState.cc \
+	VuoRuntimeUtilities.cc \
+	VuoThreadManager.cc
 RUNTIME_OBJC_SOURCES += \
 	VuoEventLoop.m
 RUNTIME_C_SOURCES += \
+	VuoCompositionState.c \
 	VuoRuntimeContext.c \
 	VuoRuntimeMain.c \
 	../base/VuoTelemetry.c
@@ -21,8 +28,17 @@ RUNTIME_LOADER_SOURCES += \
 OTHER_FILES += $$RUNTIME_CXX_SOURCES $$RUNTIME_C_SOURCES $$RUNTIME_OBJC_SOURCES $$RUNTIME_LOADER_SOURCES
 
 HEADERS += \
+	VuoCompositionDiff.hh \
+	VuoCompositionState.h \
 	VuoEventLoop.h \
-	VuoRuntime.h
+	VuoNodeRegistry.hh \
+	VuoRuntime.h \
+	VuoRuntimeCommunicator.hh \
+	VuoRuntimeContext.h \
+	VuoRuntimePersistentState.hh \
+	VuoRuntimeState.hh \
+	VuoRuntimeUtilities.hh \
+	VuoThreadManager.hh
 
 QMAKE_CFLAGS += \
 	-I$$ROOT/library \

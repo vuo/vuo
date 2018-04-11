@@ -2,7 +2,7 @@
  * @file
  * vuo.leap.get.frame node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -15,7 +15,7 @@
 #include "VuoList_VuoLeapPointable.h"
 
 VuoModuleMetadata({
-					  "title" : "Get Frame Values",
+					  "title" : "Get Frame Values (Leap)",
 					  "keywords" : [ "gesture", "controller", "motion", "hand", "palm", "pointable", "finger", "tool" ],
 					  "version" : "1.0.0",
 					  "node": {

@@ -29,6 +29,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoMeshParametric.cc \
 	VuoMeshUtility.cc \
 	VuoOsStatus.c \
+	VuoPnpId.c \
 	VuoPointsParametric.cc \
 	VuoScreenCapture.m \
 	VuoScreenCommon.m \
@@ -36,7 +37,8 @@ NODE_LIBRARY_SOURCES += \
 	VuoWindow.m \
 	VuoWindowRecorder.m \
 	VuoWindowTextInternal.m \
-	VuoUrlParser.c
+	VuoUrlParser.c \
+	libmodule.c
 
 SOURCES += \
 	VuoBase64.cc \
@@ -55,11 +57,13 @@ SOURCES += \
 	VuoMeshParametric.cc \
 	VuoMeshUtility.cc \
 	VuoOsStatus.c \
+	VuoPnpId.c \
 	VuoPointsParametric.cc \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
 	VuoUrlFetch.c \
-	VuoUrlParser.c
+	VuoUrlParser.c \
+	libmodule.c
 
 OBJECTIVE_SOURCES += \
 	VuoApp.m \
@@ -91,6 +95,7 @@ HEADERS += \
 	VuoMeshParametric.h \
 	VuoMeshUtility.h \
 	VuoOsStatus.h \
+	VuoPnpId.h \
 	VuoPointsParametric.h \
 	VuoPool.hh \
 	VuoSceneObjectGet.h \
@@ -105,6 +110,8 @@ HEADERS += \
 	VuoUrlParser.h
 
 OTHER_FILES += \
+	../node/module.h \
+	../node/node.h \
 	VuoGraphicsView.h \
 	VuoGraphicsWindow.h \
 	VuoGraphicsWindowDelegate.h \

@@ -2,7 +2,7 @@
  * @file
  * VuoPoint3d C type definition.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -264,14 +264,26 @@ static inline VuoPoint3d VuoPoint3d_spring(VuoReal timeSinceDrop, VuoPoint3d dro
 }
 
 /**
- * Limits @c point to values between @c min and @c max, inclusive.
+ * Limits `point` to values between `limitA` and `limitB`, inclusive.
  */
-static inline VuoPoint3d VuoPoint3d_clamp(VuoPoint3d point, VuoReal min, VuoReal max)
+static inline VuoPoint3d VuoPoint3d_clamp(VuoPoint3d point, VuoReal limitA, VuoReal limitB)
 {
-	return (VuoPoint3d) {
-		fmin(fmax(point.x,min),max),
-		fmin(fmax(point.y,min),max),
-		fmin(fmax(point.z,min),max)
+	return (VuoPoint3d){
+		VuoReal_clamp(point.x, limitA, limitB),
+		VuoReal_clamp(point.y, limitA, limitB),
+		VuoReal_clamp(point.z, limitA, limitB)
+	};
+}
+
+/**
+ * Limits `point` to values between `limitA` and `limitB`, inclusive.
+ */
+static inline VuoPoint3d VuoPoint3d_clampn(VuoPoint3d point, VuoPoint3d limitA, VuoPoint3d limitB)
+{
+	return (VuoPoint3d){
+		VuoReal_clamp(point.x, limitA.x, limitB.x),
+		VuoReal_clamp(point.y, limitA.y, limitB.y),
+		VuoReal_clamp(point.z, limitA.z, limitB.z)
 	};
 }
 

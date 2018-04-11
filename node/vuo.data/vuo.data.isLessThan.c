@@ -2,7 +2,7 @@
  * @file
  * vuo.data.isLessThan node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [
-								  /* Sync with vuo.event.decreased */
+								  /* Sync with vuo.event.decreased2 */
 								  "VuoInteger", /* VuoInteger first, so this node can be compiled when unspecialized, since it's a core type */
 								  "VuoArtNetInputDevice",
 								  "VuoArtNetOutputDevice",

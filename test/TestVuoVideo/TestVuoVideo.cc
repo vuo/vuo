@@ -2,13 +2,14 @@
  * @file
  * TestVuoVideo interface and implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include <stdio.h>
 #include <QtTest/QtTest>
+#include <CoreServices/CoreServices.h>
 
 extern "C" {
 #include "type.h"
@@ -51,6 +52,7 @@ private slots:
 		QTest::addColumn<int>("expectedAudioChannels");	// negative if expected to contain some packets that are completely silent; 999 to decode audio but skip checking the number of channels
 		QTest::addColumn<int>("optimize");	// test both AvFoundation and Ffmpeg (either can fall back on the other - this tests that too)
 
+		//																																																  duration    frames  width   height  audio
 		QTest::newRow(VuoText_format("Apple ProRes 4444 opt=%d",optimize))						<< "/MovieGauntlet/rugged_terrain_prores4444.mov"														<<  30.		<<  899	<< 1280 <<  720 <<  0 	<< optimize;
 		QTest::newRow(VuoText_format("Animated GIF opt=%d",optimize))							<< "/MovieGauntlet/count.gif"																			<<  10.1	<<  85	<<  748 <<  491	<<  0 	<< optimize;
 		QTest::newRow(VuoText_format("DIF DV NTSC opt=%d",optimize))							<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.dv"											<<  19.9	<<  596	<<  720 <<  480	<<  2 	<< optimize;
@@ -69,6 +71,22 @@ private slots:
 		// avfoundation seems to lock up and wreck subsequent instances of AVAssetReader when trying to load/unload this file
 		// QTest::newRow(VuoText_format("QuickTime - Photo JPEG - PCM LR opt=%d",optimize))		<< "/MovieGauntlet/pbourke/2.mov"																		<<   3.3	<<  100	<< 4096 << 2048	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("WebM opt=%d",optimize))									<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.webmhd.webm"								<<  19.9	<<  474	<<  320 <<  240	<<  2 	<< optimize;
+
+		// HapInAVFoundation.framework only works on OS X 10.10 or later.
+		SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
+		if (macMinorVersion >= 10)
+		{
+		QTest::newRow(VuoText_format("QuickTime - AVFBatch - HapM opt=%d",optimize))			<< "/MovieGauntlet/Hap/crawling-avfbatch-HapM.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - AVFBatch - HapM 12 chunks opt=%d",optimize))	<< "/MovieGauntlet/Hap/crawling-avfbatch-HapM-12chunks.mov"												<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap1 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap1.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap1 12 chunks opt=%d",optimize))	<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap1-12chunks.mov"												<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap5 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap5.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - QT7 - HapY opt=%d",optimize))					<< "/MovieGauntlet/Hap/crawling-qt7-HapY.mov"															<<  10.5	<<  315	<<  320 <<  240	<<  0 	<< optimize;
+		}
 	}
 
 	void testInfoPerformance_data()

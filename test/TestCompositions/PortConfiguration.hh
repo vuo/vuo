@@ -2,7 +2,7 @@
  * @file
  * PortConfiguration interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -32,8 +32,6 @@ private:
 	map<string, string> valueForOutputPortName;  ///< The expected value to result for each published output port.
 
 	string toString(void);
-	void checkEqual(string type, json_object *actualValue, json_object *expectedValue);
-	const char *getJsonTypeDescription(enum json_type);
 
 public:
 	PortConfiguration(string itemName, string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName);

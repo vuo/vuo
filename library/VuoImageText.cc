@@ -2,7 +2,7 @@
  * @file
  * VuoImageText implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -107,8 +107,8 @@ typedef std::pair<VuoImage, double> VuoImageTextCacheEntry;	///< An image and th
 typedef std::map<VuoImageTextCacheDescriptor, VuoImageTextCacheEntry> VuoImageTextCacheType;	///< A pool of images.
 static VuoImageTextCacheType *VuoImageTextCache;	///< A pool of images.
 static dispatch_semaphore_t VuoImageTextCache_semaphore;	///< Serializes access to VuoImageTextCache.
-static dispatch_semaphore_t VuoImageTextCache_canceledAndCompleted;	///< Signals when the last VuoImageTextCache cleanup has completed.
-static dispatch_source_t VuoImageTextCache_timer;	///< Periodically cleans up VuoImageTextCache.
+static dispatch_semaphore_t VuoImageTextCache_canceledAndCompleted;     ///< Signals when the last VuoImageTextCache cleanup has completed.
+static dispatch_source_t VuoImageTextCache_timer = NULL;	///< Periodically cleans up VuoImageTextCache.
 static double VuoImageTextCache_timeout = 1.0;	///< Seconds an image can remain in the cache unused, before it gets purged.
 
 /**
@@ -150,23 +150,26 @@ static void VuoImageTextCache_init(void)
 	dispatch_source_set_timer(VuoImageTextCache_timer, dispatch_walltime(NULL, 0), NSEC_PER_SEC * VuoImageTextCache_timeout, NSEC_PER_SEC * VuoImageTextCache_timeout);
 	dispatch_source_set_event_handler_f(VuoImageTextCache_timer, VuoImageTextCache_cleanup);
 	dispatch_source_set_cancel_handler(VuoImageTextCache_timer, ^ {
-		dispatch_semaphore_signal(VuoImageTextCache_canceledAndCompleted);
-	});
+					dispatch_semaphore_signal(VuoImageTextCache_canceledAndCompleted);
+			});
 	dispatch_resume(VuoImageTextCache_timer);
 }
 
 /**
  * Destroys the cache.
  */
-static void VuoImageTextCache_fini(void)
+static void __attribute__((destructor)) VuoImageTextCache_fini(void)
 {
+	if (! VuoImageTextCache_timer)
+		return;
+
 	dispatch_source_cancel(VuoImageTextCache_timer);
 
 	// Wait for the last cleanup to complete.
 	dispatch_semaphore_wait(VuoImageTextCache_canceledAndCompleted, DISPATCH_TIME_FOREVER);
 
 	// Clean up anything that still remains.
-	//	VLog("cache:");
+	//      VLog("cache:");
 	for (VuoImageTextCacheType::iterator item = VuoImageTextCache->begin(); item != VuoImageTextCache->end(); ++item)
 	{
 		// VLog("\t\"%s\" %s backingScaleFactor=%g", item->first.first.c_str(), item->first.second.first.f.fontName, item->first.second.second);
@@ -540,7 +543,6 @@ VuoImage VuoImage_makeText(VuoText text, VuoFont font, float backingScaleFactor)
 	static dispatch_once_t initCache = 0;
 	dispatch_once(&initCache, ^ {
 		VuoImageTextCache_init();
-		VuoAddCompositionFiniCallback(VuoImageTextCache_fini);
 	});
 	VuoFontClass fc(font);
 	VuoImageTextCacheDescriptor descriptor(text, std::make_pair(font, backingScaleFactor));

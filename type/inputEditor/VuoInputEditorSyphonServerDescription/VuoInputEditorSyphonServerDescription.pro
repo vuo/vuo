@@ -31,10 +31,12 @@ LIBS += \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageResize.o \
 	$$ROOT/library/VuoImageText.o \
+	$$ROOT/library/VuoPnpId.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoWindow.o \
 	$$ROOT/library/VuoWindowRecorder.o \
 	$$ROOT/library/VuoWindowTextInternal.o \
+	$$ROOT/library/libmodule.o \
 	$$ROOT/node/vuo.syphon/VuoSyphon.o \
 	$$ROOT/node/vuo.syphon/VuoSyphonSender.o \
 	$$ROOT/node/vuo.syphon/VuoSyphonServerDescription.o \

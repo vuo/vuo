@@ -2,7 +2,7 @@
  * @file
  * VuoList implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -109,7 +109,8 @@ char * LIST_TYPE_getSummary(const LIST_TYPE value)
 
 	std::ostringstream summary;
 	summary << "List containing " << itemCount << " item" << (itemCount == 1 ? "" : "s") << ": <ul>";
-	for (unsigned long i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
+	unsigned long i;
+	for (i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
 		std::string itemSummary = ELEMENT_TYPE_getSummary(item);
@@ -120,7 +121,7 @@ char * LIST_TYPE_getSummary(const LIST_TYPE value)
 		characterCount += itemSummary.length();
 	}
 
-	if (itemCount > maxItems || characterCount > maxCharacters)
+	if (i <= itemCount)
 		summary << "<li>…</li>";
 
 	summary << "</ul>";

@@ -2,7 +2,7 @@
  * @file
  * VuoRendererComposition implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -1264,13 +1264,14 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 
 		// Modify port constants that contain relative paths so that the paths will be
 		// resolved correctly relative to the "Resources" directory within the app bundle.
-		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compiledCompositionToExport->getGraphvizDeclaration(), compiler)->getBase());
+		VuoComposition *compositionCopy = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compiledCompositionToExport->getGraphvizDeclaration(), compiler)->getBase();
+		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(compositionCopy);
 		rendererCompositionToExport->modifyAllRelativeResourcePathsForAppBundle();
 		delete rendererCompositionToExport;
 
 		string pathOfCompiledCompositionToExport = VuoFileUtilities::makeTmpFile(compiledCompositionToExport->getBase()->getName(), "bc");
 
-		compiler->compileComposition(compiledCompositionToExport, pathOfCompiledCompositionToExport);
+		compiler->compileComposition(compositionCopy->getCompiler(), pathOfCompiledCompositionToExport);
 
 		string rPath = "@loader_path/../Frameworks";
 		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, VuoCompiler::Optimization_SmallBinary, true, rPath);

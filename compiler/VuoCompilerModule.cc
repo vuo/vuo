@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerModule implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -225,6 +225,12 @@ VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string versi
 		return VuoCompilerTargetSet::MacVersion_10_8;
 	if (version == "10.9")
 		return VuoCompilerTargetSet::MacVersion_10_9;
+	if (version == "10.10")
+		return VuoCompilerTargetSet::MacVersion_10_10;
+	if (version == "10.11")
+		return VuoCompilerTargetSet::MacVersion_10_11;
+	if (version == "10.12")
+		return VuoCompilerTargetSet::MacVersion_10_12;
 
 	return VuoCompilerTargetSet::MacVersion_Any;
 }

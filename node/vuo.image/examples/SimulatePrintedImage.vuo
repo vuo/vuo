@@ -2,7 +2,7 @@
  * @file
  * Uses the CMYK halftone image filter to make an image look like it was printed in a newspaper.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -14,18 +14,16 @@ Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Conv
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="795,1200"];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="570,720" _url="\"Buttes.jpg\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="375,615" fillcolor="yellow" _started_eventThrottling="enqueue"];
-LimitToRange [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="780,1095" _minimum="0" _maximum="0.10000000000000001" _wrapMode="\"saturate\""];
-LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="780,960" _minimum="0" _maximum="2" _wrapMode="\"saturate\""];
 MakeCMYKHalftoneImage [type="vuo.image.halftone.cmyk" version="1.0.0" label="Make CMYK Halftone Image|<refresh>refresh\l|<image>image\l|<center>center\l|<scale>scale\l|<cyanAmount>cyanAmount\l|<magentaAmount>magentaAmount\l|<yellowAmount>yellowAmount\l|<blackAmount>blackAmount\l|<undercolorRemoval>undercolorRemoval\l|<splotchiness>splotchiness\l|<colorOffset>colorOffset\l|<colorOffsetAngle>colorOffsetAngle\l|<halftoneImage>halftoneImage\r" pos="1020,960" fillcolor="violet" _center="{\"x\":0.0,\"y\":0.0}" _cyanAmount="0.5" _magentaAmount="0.5" _yellowAmount="0.5" _blackAmount="0.5" _undercolorRemoval="0.5" _splotchiness="1.0" _colorOffsetAngle="0.0"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1260,945" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1260,945" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
 MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1437,761" fillcolor="green"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1457,791" fillcolor="green"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="960,600" _text="\"Move the mouse left and right to change the size of the pattern.\\nMove the mouse up and down to change the color offset.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="360,960" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1485,750" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="540,960" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1485,750" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="705,720" _sizingMode="\"fit\"" _width="550" _height="412"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="615,1095" _start="-0.5" _end="0.500000" _scaledStart="0" _scaledEnd="0.10000000000000001"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="615,960" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="2"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="795,1095" _start="-0.5" _end="0.500000" _scaledStart="0" _scaledEnd="0.10000000000000001" _limitToRange="true"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="795,960" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="2" _limitToRange="true"];
 
 AlignLayerToWindow:alignedLayer -> MakeList:1;
 Convert2DPointToReal2:y -> Scale:value;
@@ -33,8 +31,6 @@ Convert2DPointToReal:x -> Scale2:value;
 FetchImage:image -> ResizeImage:image;
 FireOnStart:started -> FetchImage:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
-LimitToRange2:limitedValue -> MakeCMYKHalftoneImage:scale;
-LimitToRange:limitedValue -> MakeCMYKHalftoneImage:colorOffset;
 MakeCMYKHalftoneImage:halftoneImage -> MakeLayer:image;
 MakeLayer:layer -> MakeList:2;
 MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
@@ -45,6 +41,6 @@ ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
 RenderLayersToWindow2:showedWindow -> AlignLayerToWindow:window;
 RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window;
 ResizeImage:resizedImage -> MakeCMYKHalftoneImage:image;
-Scale2:scaledValue -> LimitToRange2:value;
-Scale:scaledValue -> LimitToRange:value;
+Scale2:scaledValue -> MakeCMYKHalftoneImage:scale;
+Scale:scaledValue -> MakeCMYKHalftoneImage:colorOffset;
 }

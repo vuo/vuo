@@ -2,7 +2,7 @@
  * @file
  * vuo.test.firePeriodically node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -34,6 +34,8 @@ struct nodeInstanceData
 {
 	dispatch_source_t timer;
 	dispatch_semaphore_t timerCanceled;
+	bool timerEnabled;
+	dispatch_queue_t timerEnabledQueue;
 	int eventCount;
 };
 
@@ -47,6 +49,13 @@ static void cancelRepeatingTimer(struct nodeInstanceData *ctx)
 
 static void setRepeatingTimer(struct nodeInstanceData *ctx, const int milliseconds, VuoOutputTrigger(fired,VuoText), int maxEventCount, const VuoText nodeTitle)
 {
+	__block bool te;
+	dispatch_sync(ctx->timerEnabledQueue, ^{
+					  te = ctx->timerEnabled;
+				  });
+	if (! te)
+		return;
+
 	if (ctx->timer)
 		cancelRepeatingTimer(ctx);
 
@@ -61,6 +70,9 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const int millisecon
 										  {
 											  outString = VuoText_make(SENTINEL);
 											  dispatch_source_cancel(ctx->timer);
+											  dispatch_sync(ctx->timerEnabledQueue, ^{
+												  ctx->timerEnabled = false;
+											  });
 										  }
 										  else
 										  {
@@ -84,8 +96,20 @@ struct nodeInstanceData * nodeInstanceInit()
 	VuoRegister(ctx, free);
 	ctx->timer = NULL;
 	ctx->timerCanceled = dispatch_semaphore_create(0);
+	ctx->timerEnabled = false;
+	ctx->timerEnabledQueue = dispatch_queue_create("org.vuo.test.firePeriodically", DISPATCH_QUEUE_PRIORITY_DEFAULT);
 	ctx->eventCount = 0;
 	return ctx;
+}
+
+void nodeInstanceTriggerStart
+(
+		VuoInstanceData(struct nodeInstanceData *) ctx
+)
+{
+	dispatch_sync((*ctx)->timerEnabledQueue, ^{
+					  (*ctx)->timerEnabled = true;
+				  });
 }
 
 void nodeInstanceEvent
@@ -117,8 +141,10 @@ void nodeInstanceTriggerStop
 		VuoInstanceData(struct nodeInstanceData *) ctx
 )
 {
-	if ((*ctx)->timer)
-		cancelRepeatingTimer(*ctx);
+	dispatch_sync((*ctx)->timerEnabledQueue, ^{
+					  (*ctx)->timerEnabled = false;
+				  });
+	cancelRepeatingTimer(*ctx);
 }
 
 void nodeInstanceFini

@@ -1,0 +1,58 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.scale node.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+    // forward domain, forward range
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":0, "end":1, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":0, "end":1, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":0, "end":1, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":0, "end":1, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":0, "end":1, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":0, "end":1, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":0, "end":1, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": -50}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":0, "end":1, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":0, "end":1, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 200}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":0, "end":1, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+
+    // reverse domain, forward range
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":1, "end":0, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":1, "end":0, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":1, "end":0, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":1, "end":0, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":1, "end":0, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":1, "end":0, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":1, "end":0, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 150}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":1, "end":0, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":1, "end":0, "limitToRange":false, "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":-100}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":1, "end":0, "limitToRange":true , "scaledStart":0, "scaledEnd":100}, "outputPortValues":{"scaledValue":   0}},
+
+    // forward domain, reverse range
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":0, "end":1, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":0, "end":1, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":0, "end":1, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":0, "end":1, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":0, "end":1, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":0, "end":1, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":0, "end":1, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 150}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":0, "end":1, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":0, "end":1, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":-100}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":0, "end":1, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+
+    // reverse domain, reverse range
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":1, "end":0, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 0  , "start":1, "end":0, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":1, "end":0, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 0.5, "start":1, "end":0, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":  50}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":1, "end":0, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value": 1.0, "start":1, "end":0, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":1, "end":0, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": -50}},
+    {"firingPort":"value", "inputPortValues":{"value":-0.5, "start":1, "end":0, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue":   0}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":1, "end":0, "limitToRange":false, "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 200}},
+    {"firingPort":"value", "inputPortValues":{"value": 2  , "start":1, "end":0, "limitToRange":true , "scaledStart":100, "scaledEnd":0}, "outputPortValues":{"scaledValue": 100}},
+]}

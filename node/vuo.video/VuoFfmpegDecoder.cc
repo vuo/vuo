@@ -2,7 +2,7 @@
  * @file
  * VuoFfmpegDecoder implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -112,14 +112,14 @@ bool VuoFfmpegDecoder::Initialize()
 
 	if(!success)
 	{
-		VUserLog("VuoFfempgDecoder Error: FFMPEG could not find path \"%s\"", path);
+		VUserLog("Error: FFmpeg could not find path \"%s\"", path);
 		return false;
 	}
 
 	// Load video context
 	if(avformat_find_stream_info(container.formatCtx, NULL) < 0)
 	{
-		VUserLog("VuoFfempgDecoder Error: FFMPEG could not find video stream information in file \"%s\".", mVideoPath);
+		VUserLog("Error: FFmpeg could not find video stream information in file \"%s\".", mVideoPath);
 		return false;
 	}
 
@@ -139,7 +139,7 @@ bool VuoFfmpegDecoder::Initialize()
 	// Set metadata
 	if( !InitializeVideoInfo() )
 	{
-		VUserLog("VuoFfempgDecoder Error: FFMPEG failed to decode the first video frame.");
+		VUserLog("Error: FFmpeg failed to decode the first video frame.");
 		return false;
 	}
 
@@ -153,7 +153,7 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 {
 	if(container.videoStreamIndex < 0)
 	{
-		VUserLog("VuoFfempgDecoder Error: FFMPEG could not find a video stream in file \"%s\".", mVideoPath);
+		VUserLog("Error: FFmpeg could not find a video stream in file \"%s\".", mVideoPath);
 		return false;
 	}
 
@@ -167,7 +167,7 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 
 	if(videoCodec == NULL)
 	{
-		VUserLog("VuoFfempgDecoder Error: FFMPEG could not find a suitable decoder for file \"%s\".", mVideoPath);
+		VUserLog("Error: FFmpeg could not find a suitable decoder for file \"%s\".", mVideoPath);
 		return false;
 	}
 
@@ -187,7 +187,7 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 	// Open codec
 	if(avcodec_open2(container.videoCodecCtx, videoCodec, NULL) < 0)
 	{
-		VUserLog("VuoFfmepgDecoder Error: FFMPEG could not find the codec for \"%s\".", mVideoPath);
+		VUserLog("Error: FFmpeg could not find the codec for \"%s\".", mVideoPath);
 		return false;
 	}
 
@@ -219,7 +219,7 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 	int ret = -1;
 	if (audioCodec == NULL || (ret = avcodec_open2(container.audioCodecCtx, audioCodec, NULL)) < 0)
 	{
-		VUserLog("VuoFfmpegDecoder: Unsupported audio codec %s: %s", VuoFfmpegUtility::AVCodecIDToString(container.audioCodecCtx->codec_id), av_err2str(ret));
+		VUserLog("Error: Unsupported audio codec %s: %s", VuoFfmpegUtility::AVCodecIDToString(container.audioCodecCtx->codec_id), av_err2str(ret));
 		// container.audioStreamIndex = -1;
 		audio_channels = 0;
 		return false;
@@ -232,7 +232,7 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 
 		if (!container.swr_ctx)
 		{
-			VUserLog("VuoFfempgDecoder:: Ffmpeg could not allocate resampler context.\n");
+			VUserLog("Error: FFmpeg could not allocate resampler context.\n");
 			container.audioStreamIndex = -1;
 			audio_channels = 0;
 			return false;
@@ -281,7 +281,7 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 
 			if ((ret = swr_init(container.swr_ctx)) < 0)
 			{
-				VUserLog("VuoFfempgDecoder error: Could not initialize audio converter context.  The audio track may be corrupt, or empty.\n%s", av_err2str(ret));
+				VUserLog("Error: Could not initialize audio converter context.  The audio track may be corrupt, or empty.\n%s", av_err2str(ret));
 				audio_channels = 0;
 				container.audioStreamIndex = -1;
 				return false;
@@ -977,7 +977,7 @@ bool VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 	int ret = av_seek_frame(container.formatCtx, container.videoStreamIndex, target_pts, AVSEEK_FLAG_BACKWARD);
 
 	if(ret < 0)
-		DEBUG_LOG("VuoFfmpegDecoder: Failed seeking video - ?");
+		DEBUG_LOG("Failed seeking video - ?");
 
 //	seeking = true;
 

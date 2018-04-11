@@ -15,3 +15,5 @@ When you select an easing curve, you pick from two sets of options that control 
       - <img src="easingOut.png" height=16> **Out** — The curve is shallowest near the end and steepest near the start.
       - <img src="easingIn+Out.png" height=16> **In + Out** — The curve is shallowest near the start and end, and steepest near the middle.
       - <img src="easingMiddle.png" height=16> **Middle** — The curve is shallowest in the middle and steepest near the start and end.
+
+See [this page](http://robertpenner.com/easing/) for more information on easing curves.

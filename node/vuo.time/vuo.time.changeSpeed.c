@@ -2,7 +2,7 @@
  * @file
  * vuo.time.changeSpeed node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Change Speed",
 					  "keywords" : [ "retime", "faster", "fast forward", "slower", "slow motion", "reverse", "backwards", "rewind",
-							 "multiply", "adjust", "accelerate", "decelerate" ],
+							 "multiply", "adjust", "accelerate", "decelerate", "speed up", "slow down" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ "ChangeSpeedWithMouse.vuo" ]

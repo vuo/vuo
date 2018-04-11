@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNode interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -31,7 +31,7 @@ private:
 	VuoCompilerConstantStringCache *constantStrings;
 	size_t indexInOrderedNodes;
 
-	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeContextValue,
+	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeContextValue,
 									const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	bool isArgumentInFunction(VuoCompilerNodeArgument *argument, Function *function);
 	size_t getArgumentIndexInFunction(VuoCompilerNodeArgument *argument, Function *function);
@@ -43,16 +43,16 @@ public:
 	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
 	Value * generateIdentifierValue(Module *module);
 	Value * generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionIdentifierValue, const vector<VuoCompilerType *> &orderedTypes);
-	Value * generateCreateContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateDestroyContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeContextValue);
-	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue);
-	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateCallbackStopFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, const vector<VuoCompilerType *> &orderedTypes);
+	Value * generateCreateContext(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateDestroyContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeContextValue);
+	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *compositionStateValue);
+	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
+	void generateCallbackStopFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue);
 	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue, vector<VuoPort *> selectedInputPorts,
 										   const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));

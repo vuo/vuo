@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.4
+VUO_VERSION = 1.2.5
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -283,7 +283,7 @@ qtGui {
 qtGuiIncludes {
 	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
 	INCLUDEPATH += $$QT_ROOT/lib/QtCore.framework/Headers
-	DEFINES += QT_GUI_LIB
+	DEFINES += QT_GUI_LIB QT_WIDGETS_LIB
 }
 
 qtNetwork {

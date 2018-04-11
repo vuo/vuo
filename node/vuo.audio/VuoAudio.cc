@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -55,9 +55,14 @@ const VuoInteger VuoAudio_queueSize = 8;	///< The number of buffers that must be
  */
 static void __attribute__((constructor)) VuoAudio_init()
 {
-	CFRunLoopRef theRunLoop =  NULL;
-	AudioObjectPropertyAddress theAddress = { kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-	AudioObjectSetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
+	// Some audio drivers (such as Jack) assume that they're being initialized on the main thread,
+	// so our first audio-related call (which initializes the drivers) should be on the main thread.
+	// https://b33p.net/kosada/node/12798
+	dispatch_async(dispatch_get_main_queue(), ^{
+		CFRunLoopRef theRunLoop = NULL;
+		AudioObjectPropertyAddress theAddress = { kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+		AudioObjectSetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
+	});
 }
 
 /**

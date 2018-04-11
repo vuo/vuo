@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorSyphonServerDescription implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -65,4 +65,19 @@ VuoInputEditorMenuItem * VuoInputEditorSyphonServerDescription::setUpMenuTree()
 		optionsTree->addItem(new VuoInputEditorMenuItem("      (no servers found)", NULL, NULL, false));
 
 	return optionsTree;
+}
+
+extern "C"
+{
+
+//@{
+/**
+ * Dummy definitions of functions not actually used by this input editor but needed for it to build.
+ */
+void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState *compositionState) {}
+void vuoRemoveCompositionStateFromThreadLocalStorage(void) {}
+const void * vuoGetCompositionStateFromThreadLocalStorage(void) { return NULL; }
+uint64_t vuoGetCompositionUniqueIdentifier(const struct VuoCompositionState *compositionState) { return 0; }
+//@}
+
 }

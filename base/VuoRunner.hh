@@ -2,7 +2,7 @@
  * @file
  * VuoRunner interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -147,7 +147,6 @@ private:
 	bool shouldContinueIfRunnerDies;  ///< True if the composition should keep running if the runner process ends.
 	bool shouldDeleteBinariesWhenFinished;  ///< True if the composition binary file(s) should be deleted when the runner is finished using them.
 	string sourceDir;  ///< The directory containing the composition's .vuo source file.
-	string originalWorkingDir;  ///< The working directory before the composition was started, if running in the current process.
 	bool paused;  ///< True if the composition is in a paused state.
 	bool stopped;	///< True if the composition is in a stopped state (either never started or started then stopped).
 	bool lostContact;   ///< True if the runner stopped receiving communication from the composition.
@@ -202,7 +201,9 @@ private:
 	bool isInCurrentProcess(void);
 	bool isUsingCompositionLoader(void);
 	void stopBecauseLostContact(string errorMessage);
+	void copyDylibAndChangeId(string dylibPath, string &outputDylibPath);
 
+	friend class TestControlAndTelemetry;
 	friend class TestVuoRunner;
 };
 

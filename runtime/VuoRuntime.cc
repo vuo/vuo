@@ -2,154 +2,44 @@
  * @file
  * VuoRuntime implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include <getopt.h>
-#include <CoreServices/CoreServices.h>
-#include <CoreFoundation/CoreFoundation.h>
-#include <dispatch/dispatch.h>
-#include <objc/runtime.h>
-#include <objc/message.h>
 #include <mach-o/dyld.h> // for _NSGetExecutablePath()
 #include <libgen.h> // for dirname()
 #include <dirent.h>
-#include <fcntl.h>
-#include <sys/mman.h>
 #include <dlfcn.h>
+#include <stdexcept>
+#include <sys/mman.h>
 
 #include "VuoRuntime.h"
-#include "VuoEventLoop.h"
-#include "VuoHeap.h"
+#include "VuoRuntimeCommunicator.hh"
+#include "VuoRuntimePersistentState.hh"
+#include "VuoRuntimeState.hh"
 
 extern "C"
 {
-
-bool hasZMQConnection = false;   ///< True if the @ref ZMQControl and @ref ZMQTelemetry sockets are connected to something.
-
-static dispatch_queue_t VuoControlQueue;	///< Dispatch queue for protecting access to the @c ZMQControl socket.
-static dispatch_queue_t VuoTelemetryQueue;	///< Dispatch queue for protecting access to the @c ZMQTelemetry socket.
-
-static void *ZMQContext;	///< The context used to initialize sockets.
-static void *ZMQControl;	///< The control socket. Use only on VuoControlQueue.
-static void *ZMQSelfReceive = 0;	///< Used to break out of a ZMQControl poll.
-static void *ZMQSelfSend = 0;		///< Used to break out of a ZMQControl poll.
-static void *ZMQTelemetry = 0;		///< The telemetry socket. Use only on VuoTelemetryQueue.
-
-static bool hasBeenUnpaused;  ///< True if node execution was unpaused initially, or if it has since been unpaused.
-bool isStopped; ///< True if composition execution has stopped.
-bool isStopRequested;  ///< True if vuoStopComposition() has been called.
 
 #ifndef DOXYGEN
 bool *VuoTrialRestrictionsEnabled;	///< If true, some nodes may restrict how they can be used.
 #endif
 
-static dispatch_source_t telemetryTimer;  ///< Timer for sending telemetry messages.
-static dispatch_source_t controlTimer;  ///< Timer for receiving control messages.
-static dispatch_source_t waitForStopTimer = NULL;  ///< Timer for checking if the runner will stop the composition.
-static dispatch_semaphore_t telemetryCanceledSemaphore;  ///< Signaled when telemetry events are no longer being processed.
-static dispatch_semaphore_t controlCanceledSemaphore;  ///< Signaled when control events are no longer being processed.
-static dispatch_semaphore_t waitForStopCanceledSemaphore;  ///< Signaled when no longer checking if the runner will stop the composition.
-
-static bool isSendingAllTelemetry = false;  ///< True if all telemetry should be sent.
-static bool isSendingEventTelemetry = false;  ///< True if all telemetry about events (not including data) should be sent.
-static set<string> portsSendingDataTelemetry;  ///< Port identifiers for which data-and-event telemetry should be sent.
-
-pid_t VuoApp_runnerPid = 0;  ///< Process ID of the runner that started the composition.
-static void stopComposition(bool isBeingReplaced, int timeoutInSeconds);
-void vuoStopComposition(void);
-char * getInputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
-char * getOutputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
-static char * getInputPortSummary(char *portIdentifier);
-static char * getOutputPortSummary(char *portIdentifier);
-
-typedef void (*VuoCompositionFiniCallback)(void);	///< Callback prototype.
-typedef std::list<VuoCompositionFiniCallback> VuoCompositionFiniCallbackListType;	///< Type for fini callback list.
-VuoCompositionFiniCallbackListType *VuoCompositionFiniCallbackList;	///< Fini callbacks to invoke upon composition shutdown.  Non-static, so that VuoCompositionLoader can fetch and restore it during live-coding reloads.
-static dispatch_queue_t VuoCompositionFiniCallbackQueue = NULL;	///< Serializes access to the list of fini callbacks.
-
-static dispatch_queue_t VuoCompositionStopQueue = NULL;	///< Ensures stops happen serially.
-static bool wasStopCompositionCalled = false;  ///< Prevents the composition from being finalized twice.
-
+static VuoRuntimeState *runtimeState = NULL;  ///< Runtime instance specific to this composition, keeping it separate from any other compositions running in the current process.
+void *vuoRuntimeState = NULL;  ///< Casted version of `runtimeState` for use by generated bitcode.
 
 /**
- * @threadQueue{VuoControlQueue}
- */
-static void vuoControlReplySend(enum VuoControlReply reply, zmq_msg_t *messages, unsigned int messageCount)
-{
-	vuoSend("VuoControl",ZMQControl,reply,messages,messageCount,false,NULL);
-}
-
-/**
- * @threadAny
- */
-void vuoTelemetrySend(enum VuoTelemetry type, zmq_msg_t *messages, unsigned int messageCount)
-{
-	/// @todo https://b33p.net/kosada/node/5567
-	if (!ZMQTelemetry)
-		return;
-
-	dispatch_sync(VuoTelemetryQueue, ^{
-		vuoMemoryBarrier();
-		vuoSend("VuoTelemetry",ZMQTelemetry,type,messages,messageCount,true,NULL);
-	});
-}
-
-
-//@{
-/**
- * @internal
- * Defined in VuoRuntimeHelper. Declared 'extern' here to avoid duplicate symbol errors between VuoRuntime and VuoRuntimeHelper.
- */
-extern bool isPaused;
-extern dispatch_group_t vuoTriggerWorkersScheduled;
-extern char *compositionDiff;
-extern void vuoInitWorkerThreadPool(void);
-extern void vuoFiniWorkerThreadPool(void);
-//@}
-
-//@{
-/**
- * @internal
- * Defined in the composition's generated code.
- */
-extern void vuoSetup(void);
-extern void vuoCleanup(void);
-extern void vuoInstanceInit(void);
-extern void vuoInstanceFini(void);
-extern void vuoInstanceTriggerStart(void);
-extern void vuoInstanceTriggerStop(void);
-extern void vuoSetInputPortValue(char *portIdentifier, char *valueAsString);
-extern void fireTriggerPortEvent(char *portIdentifier);
-extern char * vuoGetPortValue(char *portIdentifier, int serializationType);
-extern unsigned int getPublishedInputPortCount(void);
-extern unsigned int getPublishedOutputPortCount(void);
-extern char ** getPublishedInputPortNames(void);
-extern char ** getPublishedOutputPortNames(void);
-extern char ** getPublishedInputPortTypes(void);
-extern char ** getPublishedOutputPortTypes(void);
-extern char ** getPublishedInputPortDetails(void);
-extern char ** getPublishedOutputPortDetails(void);
-extern void firePublishedInputPortEvent(char *name);
-extern void setPublishedInputPortValue(char *portIdentifier, char *valueAsString);
-extern char * getPublishedInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
-extern char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
-extern void VuoHeap_report();
-//@}
-
-
-/**
- * Parses command-line arguments, then calls @c vuoInitInProcess().
+ * Parses command-line arguments, then calls @ref vuoInitInProcess().
  */
 void vuoInit(int argc, char **argv)
 {
 	bool doAppInit = false;
 	char *controlURL = NULL;
 	char *telemetryURL = NULL;
-	bool _isPaused = false;
-	pid_t _runnerPid = 0;
+	bool isPaused = false;
+	pid_t runnerPid = 0;
 	int runnerPipe = -1;
 	bool continueIfRunnerDies = false;
 	bool doPrintHelp = false;
@@ -208,7 +98,7 @@ void vuoInit(int argc, char **argv)
 					strcpy(telemetryURL, optarg);
 					break;
 				case 3:  // --vuo-pause
-					_isPaused = true;
+					isPaused = true;
 					break;
 				case 4:  // --vuo-loader (ignored, but added here to avoid "unrecognized option" warning)
 					break;
@@ -225,12 +115,17 @@ void vuoInit(int argc, char **argv)
 					trialRestrictionsEnabled = true;
 					break;
 				case 9:  // --vuo-runner-pid
-					_runnerPid = atoi(optarg);
+					runnerPid = atoi(optarg);
 					break;
 			}
 		}
 		free(getoptArgV);
 	}
+
+	// Get the exported executable path.
+	char rawExecutablePath[PATH_MAX+1];
+	uint32_t size = sizeof(rawExecutablePath);
+	_NSGetExecutablePath(rawExecutablePath, &size);
 
 	if (doPrintHelp)
 	{
@@ -245,11 +140,6 @@ void vuoInit(int argc, char **argv)
 	else if (doPrintLicenses)
 	{
 		printf("This composition may include software licensed under the following terms:\n\n");
-
-		// Get the exported executable path.
-		char rawExecutablePath[PATH_MAX+1];
-		uint32_t size = sizeof(rawExecutablePath);
-		_NSGetExecutablePath(rawExecutablePath, &size);
 
 		char cleanedExecutablePath[PATH_MAX+1];
 		realpath(rawExecutablePath, cleanedExecutablePath);
@@ -304,9 +194,6 @@ void vuoInit(int argc, char **argv)
 		exit(0);
 	}
 
-	VuoCompositionFiniCallbackQueue = dispatch_queue_create("vuo.runtime.finiCallback", NULL);
-	VuoCompositionFiniCallbackList = new VuoCompositionFiniCallbackListType;
-
 	if (doAppInit)
 	{
 		typedef void (*vuoAppInitType)(void);
@@ -315,183 +202,57 @@ void vuoInit(int argc, char **argv)
 			vuoAppInit();
 	}
 
-	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused, _runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, VuoCompositionFiniCallbackList);
+	void *executableHandle = dlopen(rawExecutablePath, 0);
+	if (! executableHandle)
+	{
+		VUserLog("The composition couldn't be started because a handle to the executable couldn't be obtained : %s", dlerror());
+		free(controlURL);
+		free(telemetryURL);
+		return;
+	}
+
+	vuoInitInProcess(NULL, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, "",
+					 executableHandle, NULL);
+
+	dlclose(executableHandle);
+
 	free(controlURL);
 	free(telemetryURL);
 }
 
 /**
- * If `type` is an enum, merges the allowed enum values into `details` and returns it (caller responsible for freeing).
+ * Starts a composition running in the current process.
  *
- * Otherwise, returns NULL.
+ * @param ZMQContext A ØMQ context shared with the runner (since ØMQ only allows one context per process). If not needed, pass null.
+ * @param controlURL The URL to which the runtime should bind the ØMQ socket that it uses to receive control requests and send replies.
+ * @param telemetryURL The URL to which the runtime should bind the ØMQ socket that it uses to publish telemetry.
+ * @param isPaused If true, the composition starts out paused, and it's up to the runner to unpause it.
+ * @param runnerPid The process ID of the runner.
+ * @param runnerPipe The file descriptor of the pipe that the runtime should use to check if the runner process has ended.
+ *     If not needed, pass -1.
+ * @param continueIfRunnerDies If true, the runtime should allow the composition to keep running if @a runnerPipe indicates that the
+ *     runner process has ended. If false, the runtime should instead stop the composition.
+ * @param trialRestrictionsEnabled If true, the composition should run in free-trial mode.
+ * @param workingDirectory The directory that the composition should use to resolve relative paths.
+ * @param compositionBinaryHandle The handle of the composition's dynamic library or executable returned by `dlopen()`.
+ * @param runtimePersistentState If the composition is restarting for a live-coding reload, pass the value returned by the previous
+ *     call to @ref vuoFini(). Otherwise, pass null.
  */
-char *VuoRuntime_mergeEnumDetails(string type, char *details)
+void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
+					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
+					  void *compositionBinaryHandle, void *runtimePersistentState)
 {
-	string allowedValuesFunctionName = type + "_getAllowedValues";
-	typedef void *(*allowedValuesFunctionType)(void);
-	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
-	if (!allowedValuesFunction)
-		return NULL;
-
-	string getJsonFunctionName = type + "_getJson";
-	typedef json_object *(*getJsonFunctionType)(int);
-	getJsonFunctionType getJsonFunction = (getJsonFunctionType)dlsym(RTLD_SELF, getJsonFunctionName.c_str());
-	if (!getJsonFunction)
-		return NULL;
-
-	string summaryFunctionName = type + "_getSummary";
-	typedef char *(*summaryFunctionType)(int);
-	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.c_str());
-	if (!summaryFunction)
-		return NULL;
-
-	string listCountFunctionName = "VuoListGetCount_" + type;
-	typedef unsigned long (*listCountFunctionType)(void *);
-	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.c_str());
-	if (!listCountFunction)
-		return NULL;
-
-	string listValueFunctionName = "VuoListGetValue_" + type;
-	typedef int (*listValueFunctionType)(void *, unsigned long);
-	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.c_str());
-	if (!listValueFunction)
-		return NULL;
-
-	json_object *detailsJson = json_tokener_parse(details);
-	if (!detailsJson)
-		return NULL;
-
-	void *allowedValues = allowedValuesFunction();
-	VuoRetain(allowedValues);
-	unsigned long listCount = listCountFunction(allowedValues);
-	json_object *menuItems = json_object_new_array();
-	for (unsigned long i = 1; i <= listCount; ++i)
+	try
 	{
-		int value = listValueFunction(allowedValues, i);
-		json_object *js = getJsonFunction(value);
-		if (!json_object_is_type(js, json_type_string))
-			continue;
-		const char *key = json_object_get_string(js);
-		char *summary = summaryFunction(value);
-
-		json_object *menuItem = json_object_new_object();
-		json_object_object_add(menuItem, "value", json_object_new_string(key));
-		json_object_object_add(menuItem, "name", json_object_new_string(summary));
-		json_object_array_add(menuItems, menuItem);
-
-		free(summary);
+		runtimeState = new VuoRuntimeState(ZMQContext, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies,
+										   workingDirectory, compositionBinaryHandle, (VuoRuntimePersistentState *)runtimePersistentState);
+		vuoRuntimeState = (void *)runtimeState;
 	}
-	VuoRelease(allowedValues);
-
-	json_object_object_add(detailsJson, "menuItems", menuItems);
-	char *newDetails = strdup(json_object_to_json_string(detailsJson));
-	json_object_put(detailsJson);
-
-	return newDetails;
-}
-
-/**
- * If the composition is not stopped within the timeout, kills this process.
- */
-void VuoRuntime_watchdog(int timeoutInSeconds)
-{
-	if (timeoutInSeconds < 0)
-		return;
-
-	if (VuoApp_runnerPid == getpid())
-		// If the runner is in the same process as the composition (and possibly other current-process compositions),
-		// it would be overkill to kill all of it.
-		return;
-
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC),
-				   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		if (VuoEventLoop_mayBeTerminated())
-		{
-			vuoControlReplySend(VuoControlReplyCompositionStopping, NULL, 0);
-			zmq_close(ZMQControl);  // wait until message fully sends
-			VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds);
-			kill(getpid(), SIGKILL);
-		}
-	});
-}
-
-/**
- * Sets up ZMQ control and telemetry sockets, then calls the generated function @c vuoSetup().
- * If the composition is not paused, also calls @c vuoInstanceInit() and @c vuoInstanceTriggerStart().
- */
-void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid,
-					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, void *_VuoCompositionFiniCallbackList)
-{
-	if (controlURL && telemetryURL)
+	catch (std::runtime_error &e)
 	{
-		hasZMQConnection = true;
-		ZMQContext = (_ZMQContext ? _ZMQContext : zmq_init(1));
-
-		ZMQControl = zmq_socket(ZMQContext,ZMQ_REP);
-		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_PUB);
-
-		bool connectionError = false;
-
-		if(zmq_bind(ZMQControl,controlURL))
-		{
-			VUserLog("The composition couldn't start because it couldn't establish communication to be controlled by the runner : %s", strerror(errno));
-			connectionError = true;
-		}
-
-		/// @todo When running multiple compositions in the same process, do we need separate pairs? https://b33p.net/kosada/node/10374
-		ZMQSelfReceive = zmq_socket(ZMQContext, ZMQ_PAIR);
-		if (zmq_bind(ZMQSelfReceive, "inproc://vuo-runtime-self") != 0)
-		{
-			VUserLog("Couldn't bind self-receive socket: %s (%d)", strerror(errno), errno);
-			connectionError = true;
-		}
-
-		ZMQSelfSend = zmq_socket(ZMQContext, ZMQ_PAIR);
-		if (zmq_connect(ZMQSelfSend, "inproc://vuo-runtime-self") != 0)
-		{
-			VUserLog("Couldn't connect self-send socket: %s (%d)", strerror(errno), errno);
-			connectionError = true;
-		}
-
-		if(zmq_bind(ZMQTelemetry,telemetryURL))
-		{
-			VUserLog("The composition couldn't start because it couldn't establish communication to be listened to by the runner : %s", strerror(errno));
-			connectionError = true;
-		}
-
-		if (connectionError)
-		{
-			zmq_close(ZMQSelfSend);
-			ZMQSelfSend = NULL;
-			zmq_close(ZMQSelfReceive);
-			ZMQSelfReceive = NULL;
-			zmq_close(ZMQControl);
-			ZMQControl = NULL;
-			zmq_close(ZMQTelemetry);
-			ZMQTelemetry = NULL;
-			return;
-		}
-
-		VuoTelemetryQueue = dispatch_queue_create("org.vuo.runtime.telemetry", NULL);
+		VUserLog("%s", e.what());
+		return;
 	}
-
-	VuoControlQueue = dispatch_queue_create("org.vuo.runtime.control", NULL);
-
-	hasBeenUnpaused = false;
-	isPaused = _isPaused;
-	isStopped = false;
-	isStopRequested = false;
-	vuoTriggerWorkersScheduled = dispatch_group_create();
-
-	if (!VuoCompositionFiniCallbackQueue)
-		VuoCompositionFiniCallbackQueue = dispatch_queue_create("vuo.runtime.finiCallback", NULL);
-
-	VuoCompositionFiniCallbackList = (VuoCompositionFiniCallbackListType *)_VuoCompositionFiniCallbackList;
-	if (!_VuoCompositionFiniCallbackList)
-		VuoCompositionFiniCallbackList = new VuoCompositionFiniCallbackListType;
-
-	VuoCompositionStopQueue = dispatch_queue_create("vuo.runtime.stop", NULL);
-	wasStopCompositionCalled = false;
 
 	// Set the `VuoTrialRestrictionsEnabled` global, and protect it.
 	{
@@ -519,790 +280,118 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 		}
 	}
 
+	runtimeState->startComposition();
 
-	VuoApp_runnerPid = _runnerPid;
-	waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
-
-	// set up composition
-	{
-		vuoInitWorkerThreadPool();
-
-		vuoSetup();
-
-		if (! isPaused)
-		{
-			// Wait to call vuoInstanceInit() until the first time the composition enters an unpaused state.
-			// If vuoInstanceInit() were called immediately when the composition is started in a paused state(),
-			// then the vuo.event.fireOnStart node's fired event would be ignored.
-
-			hasBeenUnpaused = true;
-			__block bool initDone = false;
-			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-							   vuoInstanceInit();
-							   vuoInstanceTriggerStart();
-							   initDone = true;
-							   VuoEventLoop_break();
-						   });
-			while (! initDone)
-				VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
-		}
-	}
-
-
-	// launch VuoTelemetryStats probe
-	if (hasZMQConnection)
-	{
-		telemetryCanceledSemaphore = dispatch_semaphore_create(0);
-		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-		telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
-		dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
-		dispatch_source_set_event_handler(telemetryTimer, ^{
-
-			struct rusage r;
-			if(getrusage(RUSAGE_SELF,&r))
-			{
-				VUserLog("The composition couldn't get the information to send for VuoTelemetryStats : %s", strerror(errno));
-				return;
-			}
-
-			zmq_msg_t messages[2];
-
-			{
-				uint64_t utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
-				zmq_msg_init_size(&messages[0], sizeof utime);
-				memcpy(zmq_msg_data(&messages[0]), &utime, sizeof utime);
-			}
-
-			{
-				uint64_t stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
-				zmq_msg_init_size(&messages[1], sizeof stime);
-				memcpy(zmq_msg_data(&messages[1]), &stime, sizeof stime);
-			}
-
-			vuoTelemetrySend(VuoTelemetryStats, messages, 2);
-
-		});
-		dispatch_source_set_cancel_handler(telemetryTimer, ^{
-			dispatch_semaphore_signal(telemetryCanceledSemaphore);
-		});
-		dispatch_resume(telemetryTimer);
-	}
-
-
-	// launch control responder
-	if (hasZMQConnection)
-	{
-		controlCanceledSemaphore = dispatch_semaphore_create(0);
-		controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), VuoControlQueue);
-		dispatch_source_set_timer(controlTimer, dispatch_walltime(NULL,0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
-		dispatch_source_set_event_handler(controlTimer, ^{
-
-			vuoMemoryBarrier();
-
-			zmq_pollitem_t items[]=
-			{
-				{ZMQControl,0,ZMQ_POLLIN,0},
-				{ZMQSelfReceive,0,ZMQ_POLLIN,0},
-			};
-			int itemCount = 2;
-			long timeout = -1;  // Wait forever (VuoStopComposition will send a message ZMQSelfReceive when it's time to stop).
-			zmq_poll(items,itemCount,timeout);
-			if(!(items[0].revents & ZMQ_POLLIN))
-				return;
-
-			enum VuoControlRequest control = (enum VuoControlRequest) vuoReceiveInt(ZMQControl, NULL);
-
-			switch (control)
-			{
-				case VuoControlRequestSlowHeartbeat:
-				{
-					dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/2, NSEC_PER_SEC/100);
-					vuoControlReplySend(VuoControlReplyHeartbeatSlowed,NULL,0);
-					break;
-				}
-				case VuoControlRequestCompositionStop:
-				{
-					int timeoutInSeconds = vuoReceiveInt(ZMQControl, NULL);
-					bool isBeingReplaced = vuoReceiveBool(ZMQControl, NULL);
-
-					if (! isBeingReplaced)
-					{
-						free(compositionDiff);
-						compositionDiff = NULL;
-					}
-
-					stopComposition(isBeingReplaced, timeoutInSeconds);
-
-					if (timeoutInSeconds >= 0)
-					{
-						VUOLOG_PROFILE_BEGIN(mainQueue);
-						dispatch_sync(dispatch_get_main_queue(), ^{
-							VUOLOG_PROFILE_END(mainQueue);
-							VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
-						});
-						VuoHeap_report();
-					}
-
-					vuoControlReplySend(VuoControlReplyCompositionStopping,NULL,0);
-
-					break;
-				}
-				case VuoControlRequestCompositionPause:
-				{
-					isPaused = true;
-					vuoInstanceTriggerStop();
-					vuoControlReplySend(VuoControlReplyCompositionPaused,NULL,0);
-					break;
-				}
-				case VuoControlRequestCompositionUnpause:
-				{
-					isPaused = false;
-
-					if (! hasBeenUnpaused)
-					{
-						hasBeenUnpaused = true;
-						vuoInstanceInit();
-					}
-					vuoInstanceTriggerStart();
-
-					vuoControlReplySend(VuoControlReplyCompositionUnpaused,NULL,0);
-					break;
-				}
-				case VuoControlRequestInputPortValueRetrieve:
-				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = getInputPortString(portIdentifier, shouldUseInterprocessSerialization);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], valueAsString);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyInputPortValueRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestOutputPortValueRetrieve:
-				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = getOutputPortString(portIdentifier, shouldUseInterprocessSerialization);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], valueAsString);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyOutputPortValueRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestInputPortSummaryRetrieve:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *summary = getInputPortSummary(portIdentifier);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], summary);
-					free(summary);
-					vuoControlReplySend(VuoControlReplyInputPortSummaryRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestOutputPortSummaryRetrieve:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *summary = getOutputPortSummary(portIdentifier);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], summary);
-					free(summary);
-					vuoControlReplySend(VuoControlReplyOutputPortSummaryRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestTriggerPortFireEvent:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					fireTriggerPortEvent(portIdentifier);
-					free(portIdentifier);
-					vuoControlReplySend(VuoControlReplyTriggerPortFiredEvent,NULL,0);
-					break;
-				}
-				case VuoControlRequestInputPortValueModify:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = vuoReceiveAndCopyString(ZMQControl, NULL);
-					vuoSetInputPortValue(portIdentifier, valueAsString);
-					free(portIdentifier);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyInputPortValueModified,NULL,0);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortNamesRetrieve:
-				{
-					int count = getPublishedInputPortCount();
-					char **names = getPublishedInputPortNames();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-						vuoInitMessageWithString(&messages[i], names[i]);
-
-					vuoControlReplySend(VuoControlReplyPublishedInputPortNamesRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedOutputPortNamesRetrieve:
-				{
-					int count = getPublishedOutputPortCount();
-					char **names = getPublishedOutputPortNames();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-						vuoInitMessageWithString(&messages[i], names[i]);
-
-					vuoControlReplySend(VuoControlReplyPublishedOutputPortNamesRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortTypesRetrieve:
-				{
-					int count = getPublishedInputPortCount();
-					char **names = getPublishedInputPortTypes();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-						vuoInitMessageWithString(&messages[i], names[i]);
-
-					vuoControlReplySend(VuoControlReplyPublishedInputPortTypesRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedOutputPortTypesRetrieve:
-				{
-					int count = getPublishedOutputPortCount();
-					char **names = getPublishedOutputPortTypes();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-						vuoInitMessageWithString(&messages[i], names[i]);
-
-					vuoControlReplySend(VuoControlReplyPublishedOutputPortTypesRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortDetailsRetrieve:
-				{
-					int count = getPublishedInputPortCount();
-					char **types = getPublishedInputPortTypes();
-					char **names = getPublishedInputPortDetails();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-					{
-						char *newDetails = VuoRuntime_mergeEnumDetails(types[i], names[i]);
-						if (newDetails)
-							names[i] = newDetails;
-						vuoInitMessageWithString(&messages[i], names[i]);
-						if (newDetails)
-							free(newDetails);
-					}
-
-					vuoControlReplySend(VuoControlReplyPublishedInputPortDetailsRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedOutputPortDetailsRetrieve:
-				{
-					int count = getPublishedOutputPortCount();
-					char **names = getPublishedOutputPortDetails();
-
-					zmq_msg_t messages[count];
-					for (int i = 0; i < count; ++i)
-					vuoInitMessageWithString(&messages[i], names[i]);
-
-					vuoControlReplySend(VuoControlReplyPublishedOutputPortDetailsRetrieved,messages,count);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortFireEvent:
-				{
-					char *name = vuoReceiveAndCopyString(ZMQControl, NULL);
-					firePublishedInputPortEvent(name);
-					free(name);
-
-					vuoControlReplySend(VuoControlReplyPublishedInputPortFiredEvent,NULL,0);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortValueModify:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = vuoReceiveAndCopyString(ZMQControl, NULL);
-					setPublishedInputPortValue(portIdentifier, valueAsString);
-					free(portIdentifier);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyPublishedInputPortValueModified,NULL,0);
-					break;
-				}
-				case VuoControlRequestPublishedInputPortValueRetrieve:
-				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = getPublishedInputPortValue(portIdentifier, shouldUseInterprocessSerialization);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], valueAsString);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyPublishedInputPortValueRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestPublishedOutputPortValueRetrieve:
-				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					char *valueAsString = getPublishedOutputPortValue(portIdentifier, shouldUseInterprocessSerialization);
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], valueAsString);
-					free(valueAsString);
-					vuoControlReplySend(VuoControlReplyPublishedOutputPortValueRetrieved,messages,1);
-					break;
-				}
-				case VuoControlRequestInputPortTelemetrySubscribe:
-				case VuoControlRequestOutputPortTelemetrySubscribe:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					portsSendingDataTelemetry.insert(portIdentifier);
-					bool isInput = (control == VuoControlRequestInputPortTelemetrySubscribe);
-					char *summary = (isInput ? getInputPortSummary(portIdentifier) : getOutputPortSummary(portIdentifier));
-					zmq_msg_t messages[1];
-					vuoInitMessageWithString(&messages[0], summary);
-					free(portIdentifier);
-					free(summary);
-					vuoControlReplySend(isInput ? VuoControlReplyInputPortTelemetrySubscribed : VuoControlReplyOutputPortTelemetrySubscribed,messages,1);
-					break;
-				}
-				case VuoControlRequestInputPortTelemetryUnsubscribe:
-				case VuoControlRequestOutputPortTelemetryUnsubscribe:
-				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
-					portsSendingDataTelemetry.erase(portIdentifier);
-					free(portIdentifier);
-					bool isInput = (control == VuoControlRequestInputPortTelemetryUnsubscribe);
-					vuoControlReplySend(isInput ? VuoControlReplyInputPortTelemetryUnsubscribed : VuoControlReplyOutputPortTelemetryUnsubscribed,NULL,0);
-					break;
-				}
-				case VuoControlRequestEventTelemetrySubscribe:
-				{
-					isSendingEventTelemetry = true;
-					vuoControlReplySend(VuoControlReplyEventTelemetrySubscribed,NULL,0);
-					break;
-				}
-				case VuoControlRequestEventTelemetryUnsubscribe:
-				{
-					isSendingEventTelemetry = false;
-					vuoControlReplySend(VuoControlReplyEventTelemetryUnsubscribed,NULL,0);
-					break;
-				}
-				case VuoControlRequestAllTelemetrySubscribe:
-				{
-					isSendingAllTelemetry = true;
-					vuoControlReplySend(VuoControlReplyAllTelemetrySubscribed,NULL,0);
-					break;
-				}
-				case VuoControlRequestAllTelemetryUnsubscribe:
-				{
-					isSendingAllTelemetry = false;
-					vuoControlReplySend(VuoControlReplyAllTelemetryUnsubscribed,NULL,0);
-					break;
-				}
-			}
-		});
-		dispatch_source_set_cancel_handler(controlTimer, ^{
-			isStopped = true;
-			VuoEventLoop_break();
-			dispatch_semaphore_signal(controlCanceledSemaphore);
-		});
-		dispatch_resume(controlTimer);
-	}
-
-
-	// If the composition process should end if the runner's process ends, listen through the composition-runner
-	// pipe to detect if the runner's process ends. If it does, stop the composition.
-	if (! continueIfRunnerDies && runnerPipe >= 0)
-	{
-		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		dispatch_async(queue, ^{
-						   char buf[1];
-						   int ret;
-						   do {
-							   ret = read(runnerPipe, &buf, 1);
-						   } while (ret < 0);
-						   hasZMQConnection = false;
-						   vuoStopComposition();
-					   });
-	}
-}
-
-
-/**
- * Returns a string representation of the input port's current value.
- */
-char * getInputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization)
-{
-	return vuoGetPortValue(portIdentifier, shouldUseInterprocessSerialization ? 2 : 1);
+	// If the composition had a pending call to vuoStopComposition() when it was stopped, call it again.
+	if (runtimeState->persistentState->isStopRequested())
+		runtimeState->stopCompositionAsOrderedByComposition();
 }
 
 /**
- * Returns a string representation of the output port's current value.
- */
-char * getOutputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization)
-{
-	return vuoGetPortValue(portIdentifier, shouldUseInterprocessSerialization ? 2 : 1);
-}
-
-/**
- * Returns a summary of the input port's current value.
- */
-char * getInputPortSummary(char *portIdentifier)
-{
-	return vuoGetPortValue(portIdentifier, 0);
-}
-
-/**
- * Returns a summary of the output port's current value.
- */
-char * getOutputPortSummary(char *portIdentifier)
-{
-	return vuoGetPortValue(portIdentifier, 0);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that a node has started execution.
- */
-void sendNodeExecutionStarted(char *nodeIdentifier)
-{
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry))
-		return;
-
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], nodeIdentifier);
-
-	vuoTelemetrySend(VuoTelemetryNodeExecutionStarted, messages, 1);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that a node has finished execution.
- */
-void sendNodeExecutionFinished(char *nodeIdentifier)
-{
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry))
-		return;
-
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], nodeIdentifier);
-
-	vuoTelemetrySend(VuoTelemetryNodeExecutionFinished, messages, 1);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that an input port has received an event or data.
- */
-void sendInputPortsUpdated(char *portIdentifier, bool receivedEvent, bool receivedData, char *portDataSummary)
-{
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
-		return;
-
-	zmq_msg_t messages[4];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-	vuoInitMessageWithBool(&messages[1], receivedEvent);
-	vuoInitMessageWithBool(&messages[2], receivedData);
-	vuoInitMessageWithString(&messages[3], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
-
-	vuoTelemetrySend(VuoTelemetryInputPortsUpdated, messages, 4);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that an output port has transmitted or fired an event.
- */
-void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataSummary)
-{
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
-		return;
-
-	zmq_msg_t messages[3];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-	vuoInitMessageWithBool(&messages[1], sentData);
-	vuoInitMessageWithString(&messages[2], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
-
-	vuoTelemetrySend(VuoTelemetryOutputPortsUpdated, messages, 3);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that a published output port has transmitted an event.
- */
-void sendPublishedOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataSummary)
-{
-	zmq_msg_t messages[3];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-	vuoInitMessageWithBool(&messages[1], sentData);
-	vuoInitMessageWithString(&messages[2], (portDataSummary ? portDataSummary : ""));
-
-	vuoTelemetrySend(VuoTelemetryPublishedOutputPortsUpdated, messages, 3);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that a trigger port has dropped an event.
- */
-void sendEventDropped(char *portIdentifier)
-{
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
-		return;
-
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-
-	vuoTelemetrySend(VuoTelemetryEventDropped, messages, 1);
-}
-
-/**
- * Constructs and sends a message on the telemetry socket, indicating that an uncaught error has occurred.
- */
-void sendError(const char *message)
-{
-	if (! hasZMQConnection)
-		return;
-
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], message);
-
-	vuoTelemetrySend(VuoTelemetryError, messages, 1);
-}
-
-/**
- * Returns true if telemetry containing the port data summary should be sent for this port.
- */
-bool vuoShouldSendPortDataTelemetry(const char *portIdentifier)
-{
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	return (isSendingAllTelemetry || isSendingPortTelemetry);
-}
-
-/**
- * Serializes the variables controlling telemetry-sending to a JSON-formatted string.
- */
-char * vuoSerializeTelemetryState(void)
-{
-	json_object *js = json_object_new_object();
-
-	json_object *allObject = json_object_new_boolean(isSendingAllTelemetry);
-	json_object_object_add(js, "isSendingAllTelemetry", allObject);
-
-	json_object *eventObject = json_object_new_boolean(isSendingEventTelemetry);
-	json_object_object_add(js, "isSendingEventTelemetry", eventObject);
-
-	json_object *portsObject = json_object_new_array();
-	for (set<string>::iterator i = portsSendingDataTelemetry.begin(); i != portsSendingDataTelemetry.end(); ++i)
-	{
-		string port = *i;
-		json_object *portObject = json_object_new_string(port.c_str());
-		json_object_array_add(portsObject, portObject);
-	}
-	json_object_object_add(js, "portsSendingDataTelemetry", portsObject);
-
-	char *serialized = strdup(json_object_to_json_string_ext(js, JSON_C_TO_STRING_PLAIN));
-	json_object_put(js);
-	return serialized;
-}
-
-/**
- * Unserializes the variables controlling telemetry-sending from a JSON-formatted string.
- */
-void vuoUnserializeTelemetryState(char *serialized)
-{
-	if (! serialized)
-		return;
-
-	json_object *js = json_tokener_parse(serialized);
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "isSendingAllTelemetry", &o))
-		isSendingAllTelemetry = json_object_get_boolean(o);
-
-	if (json_object_object_get_ex(js, "isSendingEventTelemetry", &o))
-		isSendingEventTelemetry = json_object_get_boolean(o);
-
-	if (json_object_object_get_ex(js, "portsSendingDataTelemetry", &o))
-	{
-		int portCount = json_object_array_length(o);
-		for (int i = 0; i < portCount; ++i)
-		{
-			json_object *portObject = json_object_array_get_idx(o, i);
-			string port = json_object_get_string(portObject);
-			portsSendingDataTelemetry.insert(port);
-		}
-	}
-}
-
-
-/**
- * This function is called when the composition receives a stop request (@ref VuoControlRequestCompositionStop),
- * or when the a node or library requests a clean shutdown (@ref VuoStopComposition).
+ * Cleans up the ØMQ connections. To be called after the composition has stopped.
  *
- * Stop requests are sent both when @ref VuoRunner::stop is called, and during live-coding reloads
- * (so, in the latter case, the composition process will resume after this function is called).
- *
- * @threadQueue{VuoControlQueue}
+ * Returns a data structure containing runtime state that should persist across a live-coding reload.
+ * If this function is called for a live-coding reload, pass the return value to the next call to @ref vuoInitInProcess().
+ * Otherwise, pass it to @ref vuoFiniRuntimePersistentState().
  */
-void stopComposition(bool isBeingReplaced, int timeoutInSeconds)
+void * vuoFini(void)
 {
-	dispatch_sync(VuoCompositionStopQueue, ^{
+	VuoRuntimePersistentState *persistentState = runtimeState->persistentState;
+	delete runtimeState;
+	return (void *)persistentState;
+}
 
-	// If we're stopping due to a user request, and we've already stopped, don't try to stop again.
-	// (The 2-second timer in vuoStopComposition might ding while the previous call is still in progress.)
-	if (wasStopCompositionCalled)
-		return;
-	wasStopCompositionCalled = true;
+/**
+ * Deallocates the return value of @ref vuoFini().
+ */
+void vuoFiniRuntimePersistentState(void *runtimePersistentState)
+{
+	delete (VuoRuntimePersistentState *)runtimePersistentState;
+}
 
-	VuoRuntime_watchdog(timeoutInSeconds);
+/**
+ * Callback prototype for @ref vuoAddCompositionFiniCallback.
+ */
+typedef void (*VuoCompositionFiniCallback)(void);
 
-	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		if (hasBeenUnpaused)
-		{
-			if (!isPaused)
-			{
-				isPaused = true;
-				vuoInstanceTriggerStop();
-			}
-
-			vuoInstanceFini();  // Called on a non-main thread to avoid deadlock with vuoTelemetrySend.
-		}
-	});
-
-	if (!isBeingReplaced)
-		dispatch_sync(VuoCompositionFiniCallbackQueue, ^{
-						  for (VuoCompositionFiniCallbackListType::iterator i = VuoCompositionFiniCallbackList->begin(); i != VuoCompositionFiniCallbackList->end(); ++i)
-							  (*i)();
-					  });
-
-	vuoCleanup();
-
-	vuoFiniWorkerThreadPool();
-
-	if (controlTimer)
-		dispatch_source_cancel(controlTimer);
+/**
+ * Calls @ref VuoRuntimePersistentState::getWorkingDirectory() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise returns null.
+ */
+char * vuoGetWorkingDirectory(VuoCompositionState *compositionState)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		return r->persistentState->getWorkingDirectory();
 	else
-	{
-		isStopped = true;
-		VuoEventLoop_break();
-	}
-
-	});
+		return strdup(VuoRuntimePersistentState::getCurrentWorkingDirectory().c_str());
 }
 
 /**
- * Registers a callback to be invoked when the composition is shutting down,
- * after all nodes have been fini'd.
+ * Calls @ref VuoRuntimeState::getRunnerPid() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise returns -1.
+ */
+pid_t vuoGetRunnerPid(VuoCompositionState *compositionState)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		return r->getRunnerPid();
+	else
+		return -1;
+}
+
+/**
+ * Calls @ref VuoRuntimeState::stopCompositionAsOrderedByComposition() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise does nothing.
+ */
+void vuoStopComposition(VuoCompositionState *compositionState)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		r->stopCompositionAsOrderedByComposition();
+}
+
+/**
+ * Calls @ref VuoRuntimePersistentState::addFiniCallback() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise does nothing.
+ */
+void vuoAddCompositionFiniCallback(VuoCompositionState *compositionState, VuoCompositionFiniCallback fini)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		r->persistentState->addFiniCallback(fini);
+}
+
+/**
+ * Calls @ref VuoRuntimeState::disableTermination() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise does nothing.
+ */
+void vuoDisableTermination(VuoCompositionState *compositionState)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		r->disableTermination();
+}
+
+/**
+ * Calls @ref VuoRuntimeState::enableTermination() on the given runtime state if any,
+ * otherwise on the current runtime state if any, otherwise does nothing.
+ */
+void vuoEnableTermination(VuoCompositionState *compositionState)
+{
+	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
+	if (r)
+		r->enableTermination();
+}
+
+/**
+ * Returns true if the composition has not yet started or if it has stopped.
  *
- * Libraries should call the wrapper @ref VuoAddCompositionFiniCallback.
+ * Assumes that just one composition is running in the process.
  */
-void vuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini)
+bool vuoIsCurrentCompositionStopped(void)
 {
-	if (!VuoCompositionFiniCallbackQueue)
-		return;
-
-	dispatch_sync(VuoCompositionFiniCallbackQueue, ^{
-					  VuoCompositionFiniCallbackList->push_back(fini);
-				  });
-}
-
-/**
- * Nodes/libraries can call this function (via its wrapper, @ref VuoStopComposition)
- * to initiate a clean shutdown of the composition.
- *
- * It's also called if the VuoRunner dies, the composition is still running,
- * and VuoRunner has requested that the composition be stopped when it dies.
- */
-void vuoStopComposition(void)
-{
-	isStopRequested = true;
-	dispatch_async(VuoControlQueue, ^{
-					   if (hasZMQConnection)
-					   {
-						   vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
-
-						   // If we haven't received a response to VuoTelemetryStopRequested within 2 seconds, stop anyway.
-						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), VuoControlQueue);
-						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.), NSEC_PER_SEC * 2, NSEC_PER_SEC/10);
-						   dispatch_source_set_event_handler(waitForStopTimer, ^{
-							   stopComposition(false, 5);
-							   dispatch_source_cancel(waitForStopTimer);
-						   });
-						   dispatch_source_set_cancel_handler(waitForStopTimer, ^{
-							   dispatch_semaphore_signal(waitForStopCanceledSemaphore);
-						   });
-						   dispatch_resume(waitForStopTimer);
-					   }
-					   else
-					   {
-						   stopComposition(false, 5);
-					   }
-				   });
-
-	// Break out of zmq_poll().
-	if (ZMQSelfSend)
-	{
-		char z = 0;
-		zmq_msg_t message;
-		zmq_msg_init_size(&message, sizeof z);
-		memcpy(zmq_msg_data(&message), &z, sizeof z);
-		if (zmq_send(ZMQSelfSend, &message, 0) != 0)
-			VUserLog("Couldn't break: %s (%d)", strerror(errno), errno);
-		zmq_msg_close(&message);
-	}
-}
-
-
-/**
- * Cleans up composition execution: closes the ZMQ sockets and dispatch source and queues.
- * Assumes the composition has received and replied to a @c VuoControlRequestCompositionStop message.
- */
-void vuoFini(void)
-{
-	if (! hasZMQConnection)
-		return;
-
-	vuoMemoryBarrier();
-
-	if (ZMQTelemetry)
-	{
-		// Cancel telemetryTimer, wait for it to stop, and clean up.
-		dispatch_source_cancel(telemetryTimer);
-		dispatch_semaphore_wait(telemetryCanceledSemaphore, DISPATCH_TIME_FOREVER);
-		dispatch_release(telemetryCanceledSemaphore);
-		dispatch_release(telemetryTimer);
-		dispatch_sync(VuoTelemetryQueue, ^{
-						  zmq_close(ZMQTelemetry);
-					  });
-		dispatch_release(VuoTelemetryQueue);
-	}
-
-	if (ZMQControl)
-	{
-		// Wait for controlTimer to stop, and clean up.
-		dispatch_semaphore_wait(controlCanceledSemaphore, DISPATCH_TIME_FOREVER);
-		dispatch_release(controlCanceledSemaphore);
-		dispatch_release(controlTimer);
-		dispatch_sync(VuoControlQueue, ^{
-						  zmq_close(ZMQControl);
-					  });
-		dispatch_release(VuoControlQueue);
-	}
-
-	if (ZMQSelfSend)
-	{
-		zmq_close(ZMQSelfSend);
-		ZMQSelfSend = NULL;
-	}
-	if (ZMQSelfReceive)
-	{
-		zmq_close(ZMQSelfReceive);
-		ZMQSelfReceive = NULL;
-	}
-
-	if (waitForStopTimer)
-	{
-		dispatch_source_cancel(waitForStopTimer);
-		dispatch_semaphore_wait(waitForStopCanceledSemaphore, DISPATCH_TIME_FOREVER);
-		dispatch_release(waitForStopCanceledSemaphore);
-		dispatch_release(waitForStopTimer);
-	}
-
-	zmq_term(ZMQContext);
+	return runtimeState->isStopped();
 }
 
 }  // extern "C"

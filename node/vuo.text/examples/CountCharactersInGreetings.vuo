@@ -2,7 +2,7 @@
  * @file
  * Displays some greetings in various languages, along with a count of the characters in each one. These greetings were among those launched into space in 1977 on the [Voyager Golden Record](http://en.wikipedia.org/wiki/Contents_of_the_Voyager_Golden_Record).
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */

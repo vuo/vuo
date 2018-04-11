@@ -2,7 +2,7 @@
  * @file
  * VuoDoubleSpinBox implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -67,10 +67,10 @@ void VuoDoubleSpinBox::stepBy(int steps)
  */
 QString VuoDoubleSpinBox::textFromValue(double value) const
 {
-	QString newLineEditText = QLocale::system().toString(value, 'g');
+	QString newLineEditText = QLocale().toString(value, 'g');
 
 	if (qAbs(value) >= 1000.0)
-		newLineEditText.remove(QLocale::system().groupSeparator());
+		newLineEditText.remove(QLocale().groupSeparator());
 
 	return newLineEditText;
 }

@@ -7,6 +7,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.point.distance.c \
 	vuo.point.length.c \
 	vuo.point.make.curve.c \
+	vuo.point.make.spline.c \
 	vuo.point.multiply.scalar.c \
 	vuo.point.normalize.c \
 	vuo.point.sort.distance.c \

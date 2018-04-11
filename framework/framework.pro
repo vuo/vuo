@@ -252,6 +252,18 @@ POST_TARGETDEPS += $${SYPHON_LIBS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copySyphonLibs
 
 
+# Copy HapInAVFoundation to the Frameworks directory
+HAP_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/HapInAVFoundation.framework"
+copyHap.commands = \
+	   rm -rf $${HAP_DEST_DIR} \
+	&& mkdir -p $$HAP_DEST_DIR \
+	&& cp -a $$ROOT/node/vuo.video/HapInAVFoundation.framework $${FRAMEWORKS_DEST_DIR} \
+	&& install_name_tool -id "@rpath/$$HAP_DEST_DIR/HapInAVFoundation" "$$HAP_DEST_DIR/HapInAVFoundation"
+copyHap.target = $${HAP_DEST_DIR}
+POST_TARGETDEPS += $${HAP_DEST_DIR}
+QMAKE_EXTRA_TARGETS += copyHap
+
+
 # Copy input editor SDK, fonts, Qt frameworks, and Qt plugins to the resources folder (to be bundled as part of the SDK, but not Vuo.framework)
 RESOURCES_SUBDIR = resources
 
@@ -349,9 +361,11 @@ LIBS += \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoOsStatus.o \
+	$$ROOT/library/VuoPnpId.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/VuoUrlParser.o \
+	$$ROOT/library/libmodule.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \

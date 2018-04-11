@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+TemporarilyDisableTermination [type="vuo.test.temporarilyDisableTermination" version="1.0.0" label="Temporarily Disable Termination|<refresh>refresh\l|<shouldDelay>shouldDelay\l|<shouldDisable>shouldDisable\l" pos="180,105"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<ShouldDelay>ShouldDelay\r|<ShouldDisable>ShouldDisable\r" _ShouldDelay_type="VuoBoolean" _ShouldDelay="false" _ShouldDisable_type="VuoBoolean" _ShouldDisable="false"];
+
+PublishedInputs:ShouldDelay -> TemporarilyDisableTermination:shouldDelay;
+PublishedInputs:ShouldDisable -> TemporarilyDisableTermination:shouldDisable;
+}

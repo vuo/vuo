@@ -48,9 +48,18 @@ test_runner.commands = \
 		-c ${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_IN_BASE}.bc && \
 	$$LLVM_LINK \
+		$$ROOT/runtime/libVuoCompositionDiff.bc \
+		$$ROOT/runtime/libVuoCompositionState.bc \
 		$$ROOT/runtime/libVuoEventLoop.bc \
+		$$ROOT/runtime/libVuoNodeRegistry.bc \
 		$$ROOT/runtime/libVuoRuntime.bc \
+		$$ROOT/runtime/libVuoRuntimeCommunicator.bc \
+		$$ROOT/runtime/libVuoRuntimeContext.bc \
+		$$ROOT/runtime/libVuoRuntimePersistentState.bc \
+		$$ROOT/runtime/libVuoRuntimeState.bc \
+		$$ROOT/runtime/libVuoRuntimeUtilities.bc \
 		$$ROOT/runtime/libVuoTelemetry.bc \
+		$$ROOT/runtime/libVuoThreadManager.bc \
 		${QMAKE_FILE_IN_BASE}.bc \
 		-o ${QMAKE_FILE_IN_BASE}-linked.bc && \
 	$$QMAKE_CC \

@@ -242,7 +242,7 @@ void VuoInputEditorEdgeBlend::setCropSlider(int newSliderValue)
 
 void VuoInputEditorEdgeBlend::setCutoff(QString newLineEditText)
 {
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
+	double newLineEditValue = QLocale().toDouble(newLineEditText);
 
 	if(slider_cutoff != NULL)
 	{
@@ -258,7 +258,7 @@ void VuoInputEditorEdgeBlend::setCutoff(QString newLineEditText)
 
 void VuoInputEditorEdgeBlend::setGamma(QString newLineEditText)
 {
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
+	double newLineEditValue = QLocale().toDouble(newLineEditText);
 
 	if(slider_gamma != NULL)
 	{
@@ -275,7 +275,7 @@ void VuoInputEditorEdgeBlend::setGamma(QString newLineEditText)
 
 void VuoInputEditorEdgeBlend::setCrop(QString newLineEditText)
 {
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
+	double newLineEditValue = QLocale().toDouble(newLineEditText);
 
 	if(slider_crop != NULL)
 	{

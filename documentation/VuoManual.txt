@@ -119,7 +119,7 @@ Let's say you're creating a composition that displays a 3D model. You might use 
 \vuoNodeClassImage{vuo.scene.fetch}
 \vuoNodeClassImage{vuo.scene.render.window}
 
-Or suppose you're creating a composition that applies a color effect to a movie. You might use the \vuoNode{Play Movie} node to bring the movie into the composition, the \vuoNode{Adjust Image Colors} node to change the movie's color, and the \vuoNode{Save to Movie} node to save the color-changed movie to a file.
+Or suppose you're creating a composition that applies a color effect to a movie. You might use the \vuoNode{Play Movie} node to bring the movie into the composition, the \vuoNode{Adjust Image Colors} node to change the movie's color, and the \vuoNode{Save Images to Movie} node to save the color-changed movie to a file.
 
 \vuoNodeClassImage{vuo.video.play}
 \vuoNodeClassImage{vuo.image.color.adjust}
@@ -643,7 +643,7 @@ Besides documentation, many nodes also come with example compositions, which dem
 
 If you plan to share a composition that contains pro nodes, keep in mind that Vuo users without Vuo Pro can't run the composition. If you want others to be able to use your composition even if they don't have Vuo Pro, consider [exporting it to an app](#exporting-an-application).
 
-Currently, pro nodes aren't available when [using compositions in other applications](#using-compositions-in-other-applications).
+Pro nodes can be used when [running compositions in another application](#using-compositions-in-other-applications), as long as Vuo Pro has been activated on the computer running the application.
 
 
 ## The built-in nodes
@@ -1114,7 +1114,7 @@ Vuo offers several ways to create a movie from a composition:
 
    - For an easy way to record the graphics displayed in a window, in the composition's menu go to \menu{File > Start Recording}.
    - For the highest-quality rendering, make your composition use the [Image Generator protocol](#making-a-composition-input-and-output-specific-data-using-protocols), and in the Vuo Editor go to \menu{File > Export > Movie...}.
-   - To control the movie export from within your composition, use the \vuoNode{Save to Movie} node. (See that node's description for details.)
+   - To control the movie export from within your composition, use the \vuoNode{Save Images to Movie} node or the \vuoNode{Save Frames to Movie} node. (See each node's description for details.)
    - To control the movie export from the command line, use the `vuo-export` command-line tool. (See [Exporting a composition on the command line](#exporting-a-composition-on-the-command-line) for details.)
 
 ### Recording the graphics in a window
@@ -1429,6 +1429,7 @@ In the keyboard shortcuts below, these symbols represent keys in macOS:
 | ---:| --- |
 | ⌘. | Stop |
 | ⌘R | Run |
+| ⇧⌘R | Restart |
 | ⌘ Click | Do this on an input port or a trigger port to manually fire an event. |
 | ⌘T | Re-fire Event |
 

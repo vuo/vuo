@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTriggerPort interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -24,7 +24,7 @@ class VuoCompilerTriggerPort : public VuoCompilerPort
 public:
 	VuoCompilerTriggerPort(VuoPort * basePort);
 	Value * generateCreatePortContext(Module *module, BasicBlock *block);
-	static void generateScheduleWorker(Module *module, Function *function, BasicBlock *block, Value *compositionIdentifierValue, Value *eventIdValue, Value *portContextValue, VuoType *dataType, int minThreadsNeeded, int maxThreadsNeeded, int chainCount, Function *workerFunction);
+	static void generateScheduleWorker(Module *module, Function *function, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue, Value *portContextValue, VuoType *dataType, int minThreadsNeeded, int maxThreadsNeeded, int chainCount, Function *workerFunction);
 	Function * generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, Value *nodeContextValue, string workerFunctionName, Value *workerFunctionArg=NULL);
 	Function * getWorkerFunction(Module *module, string functionName, bool isExternal=false);
 	static Value * generateNonBlockingWaitForSemaphore(Module *module, BasicBlock *block, Value *portContextValue);
@@ -33,7 +33,7 @@ public:
 	void generateStoreFunction(Module *module, BasicBlock *block, Value *nodeContextValue, Value *functionValue);
 	Value * generateLoadPreviousData(Module *module, BasicBlock *block, Value *nodeContextValue);
 	void generateFreeContext(Module *module, BasicBlock *block, Function *workerFunction);
-	Value * generateCompositionIdentifierValue(Module *module, BasicBlock *block, Function *workerFunction);
+	Value * generateCompositionStateValue(Module *module, BasicBlock *block, Function *workerFunction);
 	Value * generateDataValue(Module *module, BasicBlock *block, Function *workerFunction);
 	Value * generateEventIdValue(Module *module, BasicBlock *block, Function *workerFunction);
 	Value * generateDataValueUpdate(Module *module, BasicBlock *block, Function *workerFunction, Value *nodeContextValue);

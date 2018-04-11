@@ -2,7 +2,7 @@
  * @file
  * vuo.math.scale node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -22,7 +22,8 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node" : {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "vuo-example://vuo.image/MakeStainedGlassImage.vuo",
+									    "vuo-example://vuo.image/SimulatePrintedImage.vuo" ]
 					  }
 				  });
 
@@ -33,11 +34,13 @@ void nodeEvent
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":1.}}}) end,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":0., "VuoPoint2d":{"x":0.,"y":0.}, "VuoPoint3d":{"x":0.,"y":0.,"z":0.}}}) scaledStart,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":100., "VuoPoint2d":{"x":100.,"y":100.}, "VuoPoint3d":{"x":100.,"y":100.,"z":100.}}}) scaledEnd,
+		VuoInputData(VuoBoolean, {"default":false, "name":"Limit to Range"}) limitToRange,
 		VuoOutputData(VuoGenericType1) scaledValue
 )
 {
+	VuoGenericType1 clampedValue = limitToRange ? VuoGenericType1_clampn(value, start, end) : value;
 	VuoGenericType1 range = VuoGenericType1_subtract(end, start);
 	range = VuoGenericType1_makeNonzero(range);
 	VuoGenericType1 scaledRange = VuoGenericType1_subtract(scaledEnd, scaledStart);
-	*scaledValue = VuoGenericType1_add( VuoGenericType1_divide( VuoGenericType1_scale( VuoGenericType1_subtract(value, start), scaledRange), range), scaledStart);
+	*scaledValue = VuoGenericType1_add( VuoGenericType1_divide( VuoGenericType1_scale( VuoGenericType1_subtract(clampedValue, start), scaledRange), range), scaledStart);
 }

@@ -1,21 +1,21 @@
 #!/usr/bin/env php
 <?php
 
-function convertTexStringToHtml($s)
+function convertTexStringToHtml($s, $insideCode = false)
 {
 	$texToHtml = array(
 		'\doublequote' => '"',
 		'\textbackslash' => '\\',
-		'\textgreater' => '&gt;',
+		'\textgreater' => $insideCode ? '>' : '&gt;',
 		'\textasciitilde' => '~',
 		'\textunderscore' => '_',
 		'\$' => '$',
 		'\ ' => ' ',
-		'``' => '&ldquo;',
-		"''" => '&rdquo;',
-		'<' => '&lt;',
-		'>' => '&gt;',
-		' --- ' => ' &mdash; '
+		'``' => $insideCode ? '“' : '&ldquo;',
+		"''" => $insideCode ? '”' : '&rdquo;',
+		'<' => $insideCode ? '<' : '&lt;',
+		'>' => $insideCode ? '>' : '&gt;',
+		' --- ' => $insideCode ? ' — ' : ' &mdash; '
 	);
 	foreach ($texToHtml as $tex => $html)
 	{
@@ -65,7 +65,7 @@ function processJSON(&$book)
 			else if (strpos($tex, '\code{') === 0)
 			{
 				$text = rtrim(substr($tex, strlen('\code{')), '}');
-				$v = array('Code' => array(array("",array(),array()), convertTexStringToHtml($text)));
+				$v = array('Code' => array(array("",array(),array()), convertTexStringToHtml($text, true)));
 			}
 			else if (strpos($tex, '\vuoNode{') === 0)
 			{

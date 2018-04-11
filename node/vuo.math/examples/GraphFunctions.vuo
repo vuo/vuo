@@ -2,7 +2,7 @@
  * @file
  * Plots several mathematical functions on a coordinate plane. 
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -16,9 +16,9 @@ Calculate2 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>
 Calculate3 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="390,585" fillcolor="violet" _expression="{\"expressions\":[\"x^3\"],\"inputVariables\":[\"x\"],\"outputVariables\":[\"result\"]}"];
 Calculate4 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="390,765" fillcolor="violet" _expression="{\"expressions\":[\"exp(x) - 1\"],\"inputVariables\":[\"x\"],\"outputVariables\":[\"result\"]}"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="90,390" _startPosition="-1.000000" _endPosition="1.000000" _duration="20.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\""];
-Decreased [type="vuo.event.decreased.VuoReal" version="1.1.0" label="Decreased|<refresh>refresh\l|<value>value\l|<decreased>decreased\r" pos="465,915"];
+Decreased [type="vuo.event.decreased2.VuoReal" version="2.0.0" label="Decreased|<refresh>refresh\l|<value>value\l|<decreased>decreased\r" pos="465,915"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="645,990" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Increased2 [type="vuo.event.increased.VuoReal" version="1.1.0" label="Increased|<refresh>refresh\l|<value>value\l|<increased>increased\r" pos="465,855"];
+Increased2 [type="vuo.event.increased2.VuoReal" version="2.0.0" label="Increased|<refresh>refresh\l|<value>value\l|<increased>increased\r" pos="465,855"];
 Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="540,210"];
 Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="540,390"];
 Make2DPoint4 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="540,570"];

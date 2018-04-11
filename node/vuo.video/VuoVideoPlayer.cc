@@ -2,7 +2,7 @@
  * @file
  * VuoVideoPlayer implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -71,7 +71,7 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 			if(player->preferFfmpeg)
 				VDebugLog("Using AvFoundation video decoder despite optimization preference.");
 			else
-				VDebugLog("Using Ffmpeg video decoder despite optimization preference.");
+				VDebugLog("Using FFmpeg video decoder despite optimization preference.");
 		}
 		else
 		{
@@ -216,17 +216,17 @@ void VuoVideoPlayer::OnDecoderPlaybackReady(bool canPlayMedia)
 
 				isReady = true;
 
-				VUserLog("On second thought, AVFoundation decided it couldn't play this video.  Fell back on FFMPEG successfully.");
+				VUserLog("On second thought, AVFoundation decided it couldn't play this video.  Fell back on FFmpeg successfully.");
 			}
 			else
 			{
-				VUserLog("Both AvFoundation and Ffmpeg failed to load this video.  Try using a different video or audio codec.");
+				VUserLog("Both AvFoundation and FFmpeg failed to load this video.  Try using a different video or audio codec.");
 				failedLoading = true;
 			}
 		}
 		else
 		{
-			VUserLog("Both AvFoundation and Ffmpeg failed to load this video.  Try using a different video or audio codec.");
+			VUserLog("Both AvFoundation and FFmpeg failed to load this video.  Try using a different video or audio codec.");
 			failedLoading = true;
 		}
 	}

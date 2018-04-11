@@ -2,7 +2,7 @@
  * @file
  * VuoApp implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -19,8 +19,10 @@
 #import <AppKit/AppKit.h>
 #undef NS_RETURNS_INNER_POINTER
 
+#include <dlfcn.h>
 #include <pthread.h>
 #include <libproc.h>
+#include <mach-o/dyld.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -63,6 +65,10 @@ bool VuoApp_isMainThread(void)
  * Executes the specified block on the main thread, then returns.
  *
  * Can be called from any thread, including the main thread (avoids deadlock).
+ *
+ * Don't call this from `__attribute__((constructor))` functions,
+ * since this function depends on initialization
+ * which might not happen before your constructor is called.
  */
 void VuoApp_executeOnMainThread(void (^block)(void))
 {
@@ -119,13 +125,11 @@ char *VuoApp_getName(void)
 			return name;
 		}
 
-	pid_t *runnerPid = (pid_t *)dlsym(RTLD_SELF, "VuoApp_runnerPid");
-	if (!runnerPid)
-		runnerPid = (pid_t *)dlsym(RTLD_DEFAULT, "VuoApp_runnerPid");
-	if (runnerPid && *runnerPid)
+	pid_t runnerPid = VuoGetRunnerPid();
+	if (runnerPid > 0)
 	{
 		char *runnerName = (char *)malloc(2*MAXCOMLEN);
-		proc_name(*runnerPid, runnerName, 2*MAXCOMLEN);
+		proc_name(runnerPid, runnerName, 2*MAXCOMLEN);
 		return runnerName;
 	}
 
@@ -142,4 +146,28 @@ char *VuoApp_getName(void)
 		return strdup([name UTF8String]);
 	else
 		return strdup("");
+}
+
+/**
+ * Returns the path of the folder containing `Vuo.framework`.
+ *
+ * See also @ref VuoFileUtilities::getVuoFrameworkPath.
+ */
+const char *VuoApp_getVuoFrameworkPath(void)
+{
+	static char frameworkPath[PATH_MAX+1] = "";
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		for(unsigned int i=0; i<_dyld_image_count(); ++i)
+		{
+			const char *dylibPath = _dyld_get_image_name(i);
+			char *pos;
+			if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
+			{
+				strncpy(frameworkPath, dylibPath, pos-dylibPath);
+				break;
+			}
+		}
+	});
+	return frameworkPath;
 }

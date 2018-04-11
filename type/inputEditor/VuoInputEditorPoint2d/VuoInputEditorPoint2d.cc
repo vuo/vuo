@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorPoint2d implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -222,7 +222,7 @@ void VuoInputEditorPoint2d::onSpinboxUpdate(QString spinboxValue)
 	if(!getCoordFromQObject(QObject::sender(), &whichCoord))
 		return;
 
-	double value = QLocale::system().toDouble(spinboxValue);
+	double value = QLocale().toDouble(spinboxValue);
 	setCoord(whichCoord, value);
 
 	QSlider *targetSlider =	sliderForCoord[whichCoord];

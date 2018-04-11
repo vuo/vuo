@@ -19,6 +19,7 @@ INCLUDEPATH += \
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/library/VuoPnpId.o \
 	$$ROOT/library/VuoScreenCommon.bc \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoInteger.o \

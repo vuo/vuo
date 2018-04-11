@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -110,22 +110,21 @@ private:
 	void generateCompositionCreateNodeContextFunction(void);
 	void generateCompositionDestroyNodeContextFunction(void);
 	void generateCompositionReleasePortDataFunction(void);
-	void generateSetInputDataFromNodeFunctionArguments(Function *function, BasicBlock *block, Value *compositionIdentifierValue, map<VuoPort *, size_t> indexOfParameter, bool shouldUpdateTriggers);
+	void generateSetInputDataFromNodeFunctionArguments(Function *function, BasicBlock *block, Value *compositionStateValue, map<VuoPort *, size_t> indexOfParameter, bool shouldUpdateTriggers);
 	void generateNodeEventFunction(bool isStatefulComposition);
 	void generateNodeInstanceInitFunction(void);
 	void generateNodeInstanceFiniFunction(void);
 	void generateNodeInstanceTriggerStartFunction(void);
 	void generateNodeInstanceTriggerStopFunction(void);
 	void generateNodeInstanceTriggerUpdateFunction(void);
-	Value * generateGetNextEventID(Module *module, BasicBlock *block);
-	Value * generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, Value *compositionIdentifierValue, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL, bool shouldBlock = true);
+	Value * generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL, bool shouldBlock = true);
 	void generateCompositionWaitForNodeFunction(void);
-	void generateSignalForNodes(Module *module, BasicBlock *block, Value *compositionIdentifierValue, vector<VuoCompilerNode *> nodes);
+	void generateSignalForNodes(Module *module, BasicBlock *block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes);
 	void generateCompositionGetPortValueFunction(void);
 	void generateCompositionSetPortValueFunction(void);
 	void generateGetPortValueFunction(void);
 	void generateSetInputPortValueFunction(void);
-	void generateInitialEventlessTransmissions(Function *function, BasicBlock *&block, Value *compositionIdentifierValue);
+	void generateInitialEventlessTransmissions(Function *function, BasicBlock *&block, Value *compositionStateValue);
 	void generateFireTriggerPortEventFunction(void);
 	void generateGetPublishedPortCountFunction(bool input);
 	void generateGetPublishedPortNamesFunction(bool input);
@@ -135,15 +134,15 @@ private:
 	void generateFirePublishedInputPortEventFunction(void);
 	void generateGetPublishedPortValueFunction(bool input);
 	void generateSetPublishedInputPortValueFunction(void);
-	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue, VuoCompilerPort *outputPort, Value *eventValue, Value *dataValue, bool requiresEvent = true, bool shouldSendTelemetry = true);
-	void generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue, Value *nodeContextValue, VuoCompilerNode *node, bool requiresEvent = true, bool shouldSendTelemetry = true);
-	void generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *nodeContextValue, VuoCompilerNode *node);
-	void generateEventlessTransmission(Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue, VuoCompilerNode *firstNode, bool isCompositionStarted);
-	void generateNodeExecution(Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue, VuoCompilerNode *node, bool shouldSendTelemetry = true);
-	void generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *receivedDataValue, Value *dataSummaryValue);
-	void generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
-	void generateSendPublishedOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
-	void generateSendEventDropped(BasicBlock *block, string portIdentifier);
+	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerPort *outputPort, Value *eventValue, Value *dataValue, bool requiresEvent = true, bool shouldSendTelemetry = true);
+	void generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node, bool requiresEvent = true, bool shouldSendTelemetry = true);
+	void generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node);
+	void generateEventlessTransmission(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *firstNode, bool isCompositionStarted);
+	void generateNodeExecution(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *node, bool shouldSendTelemetry = true);
+	void generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *compositionStateValue, Value *receivedDataValue, Value *dataSummaryValue);
+	void generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *compositionStateValue, Value *sentDataValue, Value *outputDataSummaryValue);
+	void generateSendPublishedOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *compositionStateValue, Value *sentDataValue, Value *outputDataSummaryValue);
+	void generateSendEventDropped(BasicBlock *block, string portIdentifier, Value *compositionStateValue);
 	void generateAllocation(void);
 	void generateSetupFunction(void);
 	void generateCleanupFunction(void);
@@ -156,10 +155,10 @@ private:
 												string portIdentifier, int portContextIndex, bool canDropEvents, bool isNodeEventForSubcomposition, int minThreadsNeeded, int maxThreadsNeeded, int chainCount,
 												Function *workerFunction);
 	Function * generateTriggerWorkerFunction(VuoCompilerTriggerPort *trigger);
-	void generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock, Value *contextValueInScheduler, const vector<VuoCompilerChain *> &chainsToSchedule, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
+	void generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock, Value *compositionStateValueInScheduler, Value *contextValueInScheduler, const vector<VuoCompilerChain *> &chainsToSchedule, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
 												const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
 												set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled);
-	void generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock, Value *contextValueInScheduler, VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
+	void generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock, Value *compositionStateValueInScheduler, Value *contextValueInScheduler, VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
 												const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
 												set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled);
 	Function * generateNodeExecutionFunction(Module *module, VuoCompilerNode *node);

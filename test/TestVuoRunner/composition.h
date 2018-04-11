@@ -2,28 +2,20 @@
  * @file
  * composition interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoRuntime.h"
 
-extern bool isStopped;
-
-//@{
-/**
- * Normally defined in VuoRuntimeHelper. Defined here to prevent link errors.
- */
-bool isPaused = false;
-char *compositionDiff = NULL;
-dispatch_group_t vuoTriggerWorkersScheduled;
-//@}
-
 //@{
 /**
  * Normally defined in the composition's generated code. Defined here to prevent link errors.
  */
+
+const char *vuoTopLevelCompositionIdentifier = "Top";
+
 int VuoRelease(void *heapPointer)
 {
 	return 0;
@@ -43,14 +35,14 @@ void vuoInstanceTriggerStart(void)
 void vuoInstanceTriggerStop(void)
 {
 }
-char * vuoGetPortValue(char *portIdentifier, int serializationType)
+char * vuoGetPortValue(const char *portIdentifier, int serializationType)
 {
 	return NULL;
 }
-void vuoSetInputPortValue(char *portIdentifier, char *valueAsString)
+void vuoSetInputPortValue(const char *portIdentifier, char *valueAsString)
 {
 }
-void fireTriggerPortEvent(char *portIdentifier)
+void fireTriggerPortEvent(const char *portIdentifier)
 {
 }
 unsigned int getPublishedInputPortCount(void)
@@ -85,41 +77,35 @@ char ** getPublishedOutputPortDetails(void)
 {
 	return NULL;
 }
-int getPublishedInputPortConnectedIdentifierCount(char *name)
+int getPublishedInputPortConnectedIdentifierCount(const char *name)
 {
 	return 0;
 }
-int getPublishedOutputPortConnectedIdentifierCount(char *name)
+int getPublishedOutputPortConnectedIdentifierCount(const char *name)
 {
 	return 0;
 }
-char ** getPublishedInputPortConnectedIdentifiers(char *name)
+char ** getPublishedInputPortConnectedIdentifiers(const char *name)
 {
 	return NULL;
 }
-char ** getPublishedOutputPortConnectedIdentifiers(char *name)
+char ** getPublishedOutputPortConnectedIdentifiers(const char *name)
 {
 	return NULL;
 }
-void firePublishedInputPortEvent(char *name)
+void firePublishedInputPortEvent(const char *name)
 {
 }
-void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
+void setPublishedInputPortValue(const char *portIdentifier, const char *valueAsString)
 {
 }
-char * getPublishedInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
+char * getPublishedInputPortValue(const char *portIdentifier, int shouldUseInterprocessSerialization)
 {
 	return NULL;
 }
-char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
+char * getPublishedOutputPortValue(const char *portIdentifier, int shouldUseInterprocessSerialization)
 {
 	return NULL;
-}
-void vuoInitWorkerThreadPool(void)
-{
-}
-void vuoFiniWorkerThreadPool(void)
-{
 }
 
 //@}

@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorTransform implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -356,7 +356,7 @@ void VuoInputEditorTransform::onSpinboxUpdate(QString spinboxValue)
 {
 	coord whichCoord = getCoordFromQObject(QObject::sender());
 
-	double value = QLocale::system().toDouble(spinboxValue);
+	double value = QLocale().toDouble(spinboxValue);
 	setTransformProperty(whichCoord, value);
 
 	QSlider *targetSlider =	sliderForCoord[whichCoord];

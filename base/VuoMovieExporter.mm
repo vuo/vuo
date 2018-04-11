@@ -2,7 +2,7 @@
  * @file
  * VuoMovieExporter implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -184,10 +184,11 @@ void VuoMovieExporter::init(NSString *compositionString, std::string name, std::
 {
 	if (parameters.imageFormat == VuoMovieExporterParameters::H264)
 	{
-		// H.264 Level 5.1 (highest available as of 2015.07.15) only supports up to 36,864 macroblocks.
+		// H.264 Level 5.1 (highest available on macOS) only supports up to 36,864 macroblocks.
 		// Instead of letting AVFoundation throw a nondescript "-6661 invalid argument" error,
 		// try to catch it ourselves and provide a more helpful message.
 		// https://en.wikipedia.org/wiki/H.264/MPEG-4_AVC#Levels
+		// 2016.10.22 update: macOS 10.12.0 is still limited to H.264 Level 5.1.
 		int widthRoundedToMacroblock  = ceil((double)parameters.width /16.)*16.;
 		int heightRoundedToMacroblock = ceil((double)parameters.height/16.)*16.;
 		if (widthRoundedToMacroblock * heightRoundedToMacroblock > 36864*(16*16))

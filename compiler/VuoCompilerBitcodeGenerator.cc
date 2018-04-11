@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -629,21 +629,21 @@ void VuoCompilerBitcodeGenerator::generateCompositionMetadata(void)
  * Generates the `compositionContextInit()` function, which returns a data structure containing all information
  * specific to a composition instance (node).
  *
- * \eg{struct NodeContext * compositionContextInit(const char *compositionIdentifier);}
+ * \eg{struct NodeContext * compositionContextInit(VuoCompositionState *compositionState);}
  */
 void VuoCompilerBitcodeGenerator::generateCompositionContextInitFunction(bool isStatefulComposition)
 {
 	Function *function = VuoCompilerCodeGenUtilities::getCompositionContextInitFunction(module, moduleKey);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
 
 		node->setConstantStringCache(&constantStrings);
-		node->generateAddMetadata(module, block, compositionIdentifierValue, orderedTypes);
+		node->generateAddMetadata(module, block, compositionStateValue, orderedTypes);
 	}
 
 	size_t publishedOutputPortCount = (publishedInputNode ?
@@ -653,14 +653,14 @@ void VuoCompilerBitcodeGenerator::generateCompositionContextInitFunction(bool is
 	Function *destroyNodeContextFunction = VuoCompilerCodeGenUtilities::getCompositionDestroyNodeContextFunction(module);
 	Function *setPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
 
-	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(module, block, compositionIdentifierValue,
+	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(module, block, compositionStateValue,
 																									   isStatefulComposition,
 																									   publishedOutputPortCount,
 																									   createNodeContextsFunction,
 																									   destroyNodeContextFunction,
 																									   setPortValueFunction);
 
-	generateInitialEventlessTransmissions(function, block, compositionIdentifierValue);
+	generateInitialEventlessTransmissions(function, block, compositionStateValue);
 
 	ReturnInst::Create(module->getContext(), compositionContextValue, block);
 }
@@ -668,19 +668,19 @@ void VuoCompilerBitcodeGenerator::generateCompositionContextInitFunction(bool is
 /**
  * Generates the `compositionContextFini()` function, which deallocates the data structure created by `compositionContextInit()`.
  *
- * \eg{void compositionContextFini(const char *compositionIdentifier);}
+ * \eg{void compositionContextFini(VuoCompositionState *compositionState);}
  */
 void VuoCompilerBitcodeGenerator::generateCompositionContextFiniFunction(void)
 {
 	Function *function = VuoCompilerCodeGenUtilities::getCompositionContextFiniFunction(module, moduleKey);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	Function *destroyNodeContextFunction = VuoCompilerCodeGenUtilities::getCompositionDestroyNodeContextFunction(module);
 	Function *releasePortDataFunction = VuoCompilerCodeGenUtilities::getCompositionReleasePortDataFunction(module);
 
-	VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(module, block, compositionIdentifierValue,
+	VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(module, block, compositionStateValue,
 																	  destroyNodeContextFunction, releasePortDataFunction);
 
 	ReturnInst::Create(module->getContext(), block);
@@ -689,7 +689,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionContextFiniFunction(void)
 /**
  * Generates the `compositionCreateNodeContext()` function, a helper function for `compositionContextInit()`.
  *
- * \eg{NodeContext * compositionCreateNodeContext(const char *compositionIdentifierValue, unsigned long nodeIndex);}
+ * \eg{NodeContext * compositionCreateNodeContext(VuoCompositionState *compositionState, unsigned long nodeIndex);}
  */
 void VuoCompilerBitcodeGenerator::generateCompositionCreateNodeContextFunction(void)
 {
@@ -698,8 +698,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionCreateNodeContextFunction(v
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *nodeIndexValue = args++;
 	nodeIndexValue->setName("nodeIndex");
 
@@ -713,7 +713,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionCreateNodeContextFunction(v
 		VuoCompilerNode *node = orderedNodes[i];
 
 		BasicBlock *block = BasicBlock::Create(module->getContext(), node->getIdentifier(), function, NULL);
-		Value *nodeContextValue = node->generateCreateContext(module, block, compositionIdentifierValue);
+		Value *nodeContextValue = node->generateCreateContext(module, block, compositionStateValue);
 		new StoreInst(nodeContextValue, nodeContextVariable, block);
 
 		blocksForIndex.push_back(make_pair(block, block));
@@ -729,7 +729,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionCreateNodeContextFunction(v
  * Generates the `compositionDestroyNodeContext()` function, a helper function for `compositionContextInit()`
  * and `compositionContextFini()`.
  *
- * \eg{void compositionDestroyNodeContext(const char *compositionIdentifier, const char *nodeIdentifier, NodeContext *nodeContext);}
+ * \eg{void compositionDestroyNodeContext(VuoCompositionState *compositionState, const char *nodeIdentifier, NodeContext *nodeContext);}
  */
 void VuoCompilerBitcodeGenerator::generateCompositionDestroyNodeContextFunction(void)
 {
@@ -738,8 +738,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionDestroyNodeContextFunction(
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *nodeIdentifierValue = args++;
 	nodeIdentifierValue->setName("nodeIdentifier");
 	Value *nodeContextValue = args++;
@@ -752,7 +752,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionDestroyNodeContextFunction(
 		VuoCompilerNode *node = *i;
 
 		BasicBlock *block = BasicBlock::Create(module->getContext(), node->getIdentifier(), function, NULL);
-		node->generateDestroyContext(module, block, compositionIdentifierValue, nodeContextValue);
+		node->generateDestroyContext(module, block, compositionStateValue, nodeContextValue);
 
 		blocksForString[node->getIdentifier()] = make_pair(block, block);
 	}
@@ -802,10 +802,10 @@ void VuoCompilerBitcodeGenerator::generateCompositionReleasePortDataFunction(voi
 /**
  * Generates code to set the composition's published input port values from the corresponding arguments in a node function.
  */
-void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(Function *function, BasicBlock *block, Value *compositionIdentifierValue,
+void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(Function *function, BasicBlock *block, Value *compositionStateValue,
 																				map<VuoPort *, size_t> indexOfParameter, bool shouldUpdateTriggers)
 {
-	Value *publishedNodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, block, compositionIdentifierValue);
+	Value *publishedNodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, block, compositionStateValue);
 
 	vector<VuoPublishedPort *> publishedInputPorts = composition->getBase()->getPublishedInputPorts();
 	for (size_t i = 0; i < publishedInputPorts.size(); ++i)
@@ -849,12 +849,12 @@ void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(
 				if (connectedCable->getCompiler()->carriesData())
 				{
 					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>( connectedCable->getToPort()->getCompiler() );
-					Value *nodeContextValue = connectedCable->getToNode()->getCompiler()->generateGetContext(module, block, compositionIdentifierValue);
+					Value *nodeContextValue = connectedCable->getToNode()->getCompiler()->generateGetContext(module, block, compositionStateValue);
 
 					eventPort->generateReplaceData(module, block, nodeContextValue, arg);
 
 					if (shouldUpdateTriggers)
-						connectedCable->getToNode()->getCompiler()->generateCallbackUpdateFunctionCall(module, block, compositionIdentifierValue);
+						connectedCable->getToNode()->getCompiler()->generateCallbackUpdateFunctionCall(module, block, compositionStateValue);
 				}
 			}
 		}
@@ -865,9 +865,9 @@ void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(
  * Generates the @c nodeEvent() or @c nodeInstanceEvent() function, which handles each event into the
  * composition's published input ports.
  *
- * \eg{void nodeEvent( const char *compositionIdentifier, ...);}
+ * \eg{void nodeEvent( VuoCompositionState *compositionState, ...);}
  *
- * \eg{void nodeInstanceEvent( const char *compositionIdentifier, VuoInstanceData(InstanceDataType *) instanceData, ... );}
+ * \eg{void nodeInstanceEvent( VuoCompositionState *compositionState, VuoInstanceData(InstanceDataType *) instanceData, ... );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulComposition)
 {
@@ -924,8 +924,8 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 																		   indexOfParameter, indexOfEventParameter, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
-	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, block, compositionIdentifierValue);
+	Value *compositionStateValue = function->arg_begin();
+	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, block, compositionStateValue);
 
 	// Get the event ID passed down from the composition containing this subcomposition node.
 
@@ -935,11 +935,11 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 
 	VuoCompilerTriggerPort *trigger = getPublishedInputTrigger();
 	vector<VuoCompilerNode *> triggerWaitNodes = getNodesToWaitOnBeforeTransmission(trigger);
-	generateWaitForNodes(module, function, block, compositionIdentifierValue, triggerWaitNodes, eventIdValue);
+	generateWaitForNodes(module, function, block, compositionStateValue, triggerWaitNodes, eventIdValue);
 
 	// Set each published input port value from the input arguments.
 
-	generateSetInputDataFromNodeFunctionArguments(function, block, compositionIdentifierValue, indexOfParameter, false);
+	generateSetInputDataFromNodeFunctionArguments(function, block, compositionStateValue, indexOfParameter, false);
 
 	// Wait for the event to reach the published output node (if any) and all other leaf nodes — part 1.
 
@@ -948,7 +948,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 
 	// Fire an event from the published input node's trigger.
 
-	Value *publishedInputNodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, block, compositionIdentifierValue);
+	Value *publishedInputNodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, block, compositionStateValue);
 	Value *triggerFunctionValue = trigger->generateLoadFunction(module, block, publishedInputNodeContextValue);
 	CallInst::Create(triggerFunctionValue, "", block);
 
@@ -958,7 +958,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 
 	// Set each output argument from the published output port values.
 
-	Value *publishedOutputNodeContext = publishedOutputNode->getCompiler()->generateGetContext(module, block, compositionIdentifierValue);
+	Value *publishedOutputNodeContext = publishedOutputNode->getCompiler()->generateGetContext(module, block, compositionStateValue);
 	vector<VuoPort *> publishedOutputPortsOnNode = publishedOutputNode->getInputPorts();
 	for (size_t i = 0; i < modelOutputPorts.size(); ++i)
 	{
@@ -1009,7 +1009,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 
 	// Signal the published output node.
 
-	generateSignalForNodes(module, block, compositionIdentifierValue, vector<VuoCompilerNode *>(1, publishedOutputNode->getCompiler()));
+	generateSignalForNodes(module, block, compositionStateValue, vector<VuoCompilerNode *>(1, publishedOutputNode->getCompiler()));
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -1017,7 +1017,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 /**
  * Generates the @c nodeInstanceInit() function, which calls the corresponding function for all stateful nodes.
  *
- * \eg{InstanceDataType * nodeInstanceInit( const char *compositionIdentifier, ... );}
+ * \eg{InstanceDataType * nodeInstanceInit( VuoCompositionState *compositionState, ... );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeInstanceInitFunction(void)
 {
@@ -1030,10 +1030,10 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceInitFunction(void)
 																				  indexOfParameter, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	if (! isTopLevelComposition)
-		generateSetInputDataFromNodeFunctionArguments(function, block, compositionIdentifierValue, indexOfParameter, false);
+		generateSetInputDataFromNodeFunctionArguments(function, block, compositionStateValue, indexOfParameter, false);
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
@@ -1047,12 +1047,12 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceInitFunction(void)
 
 			if (isTopLevelComposition)
 				VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(module, function, node->getCompiler()->getIdentifier(),
-																					 block, initBlock, nextBlock,
+																					 compositionStateValue, block, initBlock, nextBlock,
 																					 constantStrings, replacementJsonValue);
 			else
 				initBlock = block;
 
-			node->getCompiler()->generateInitFunctionCall(module, initBlock, compositionIdentifierValue);
+			node->getCompiler()->generateInitFunctionCall(module, initBlock, compositionStateValue);
 
 			if (isTopLevelComposition)
 			{
@@ -1073,14 +1073,14 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceInitFunction(void)
  * Generates the @c nodeInstanceFini() function, which calls the corresponding function for all stateful nodes,
  * except nodes being carried across a live-coding reload.
  *
- * \eg{void nodeInstanceFini( const char *compositionIdentifier, VuoInstanceData(InstanceDataType *) instanceData );}
+ * \eg{void nodeInstanceFini( VuoCompositionState *compositionState, VuoInstanceData(InstanceDataType *) instanceData );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeInstanceFiniFunction(void)
 {
 	Function *function = VuoCompilerCodeGenUtilities::getNodeInstanceFiniFunction(module, moduleKey, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
@@ -1094,12 +1094,12 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceFiniFunction(void)
 
 			if (isTopLevelComposition)
 				VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(module, function, node->getCompiler()->getIdentifier(),
-																					   block, finiBlock, nextBlock,
+																					   compositionStateValue, block, finiBlock, nextBlock,
 																					   constantStrings, replacementJsonValue);
 			else
 				finiBlock = block;
 
-			node->getCompiler()->generateFiniFunctionCall(module, finiBlock, compositionIdentifierValue);
+			node->getCompiler()->generateFiniFunctionCall(module, finiBlock, compositionStateValue);
 
 			if (isTopLevelComposition)
 			{
@@ -1119,7 +1119,7 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceFiniFunction(void)
  *
  * Assumes the trigger function for each node's trigger port has been generated and associated with the port.
  *
- * \eg{void nodeInstanceTriggerStart( const char *compositionIdentifier, VuoInstanceData(InstanceDataType *) instanceData, ... );}
+ * \eg{void nodeInstanceTriggerStart( VuoCompositionState *compositionState, VuoInstanceData(InstanceDataType *) instanceData, ... );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStartFunction(void)
 {
@@ -1132,14 +1132,14 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStartFunction(void)
 																						  indexOfParameter, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	if (! isTopLevelComposition)
-		generateSetInputDataFromNodeFunctionArguments(function, block, compositionIdentifierValue, indexOfParameter, false);
+		generateSetInputDataFromNodeFunctionArguments(function, block, compositionStateValue, indexOfParameter, false);
 
 	// Since a node's nodeInstanceTriggerStart() function can generate an event,
 	// make sure trigger functions wait until all nodes' init functions have completed.
-	generateWaitForNodes(module, function, block, compositionIdentifierValue, orderedNodes);
+	generateWaitForNodes(module, function, block, compositionStateValue, orderedNodes);
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
@@ -1148,11 +1148,11 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStartFunction(void)
 		if (node->getNodeClass()->getCompiler()->isStateful())
 		{
 			// { /* call nodeInstanceTriggerStart() for node */ }
-			node->getCompiler()->generateCallbackStartFunctionCall(module, block, compositionIdentifierValue);
+			node->getCompiler()->generateCallbackStartFunctionCall(module, block, compositionStateValue);
 		}
 	}
 
-	generateSignalForNodes(module, block, compositionIdentifierValue, orderedNodes);
+	generateSignalForNodes(module, block, compositionStateValue, orderedNodes);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -1160,35 +1160,35 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStartFunction(void)
 /**
  * Generates the @c nodeInstanceTriggerStop() function, which calls the corresponding function for all stateful nodes.
  *
- * \eg{void nodeInstanceTriggerStop( const char *compositionIdentifier, VuoInstanceData(InstanceDataType *) instanceData );}
+ * \eg{void nodeInstanceTriggerStop( VuoCompositionState *compositionState, VuoInstanceData(InstanceDataType *) instanceData );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStopFunction(void)
 {
 	Function *function = VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStopFunction(module, moduleKey, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	// Stop all triggers from firing events — call nodeInstanceTriggerStop() for each stateful node.
-	generateWaitForNodes(module, function, block, compositionIdentifierValue, orderedNodes);
+	generateWaitForNodes(module, function, block, compositionStateValue, orderedNodes);
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
 		if (node->getNodeClass()->getCompiler()->isStateful())
-			node->getCompiler()->generateCallbackStopFunctionCall(module, block, compositionIdentifierValue);
+			node->getCompiler()->generateCallbackStopFunctionCall(module, block, compositionStateValue);
 	}
-	generateSignalForNodes(module, block, compositionIdentifierValue, orderedNodes);
+	generateSignalForNodes(module, block, compositionStateValue, orderedNodes);
 
 	if (isTopLevelComposition)
 	{
 		// Wait for any scheduled trigger workers to launch events into the composition.
-		Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, block);
+		Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, block, compositionStateValue);
 		VuoCompilerCodeGenUtilities::generateWaitForDispatchGroup(module, block, triggerWorkersScheduledValue);
 
 		// Wait for any in-progress events to travel through the composition.
-		generateWaitForNodes(module, function, block, compositionIdentifierValue, orderedNodes);
-		generateSignalForNodes(module, block, compositionIdentifierValue, orderedNodes);
+		generateWaitForNodes(module, function, block, compositionStateValue, orderedNodes);
+		generateSignalForNodes(module, block, compositionStateValue, orderedNodes);
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -1197,7 +1197,7 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerStopFunction(void)
 /**
  * Generates the @c nodeInstanceTriggerUpdate() function, which calls the corresponding function in all stateful nodes.
  *
- * \eg{void nodeInstanceTriggerUpdate( const char *compositionIdentifier, VuoInstanceData(InstanceDataType *) instanceData );}
+ * \eg{void nodeInstanceTriggerUpdate( VuoCompositionState *compositionState, VuoInstanceData(InstanceDataType *) instanceData );}
  */
 void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerUpdateFunction(void)
 {
@@ -1206,30 +1206,17 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerUpdateFunction(void
 																						   indexOfParameter, constantStrings);
 	BasicBlock *block = &(function->getEntryBlock());
 
-	Value *compositionIdentifierValue = function->arg_begin();
+	Value *compositionStateValue = function->arg_begin();
 
 	VuoCompilerTriggerPort *trigger = getPublishedInputTrigger();
 	vector<VuoCompilerNode *> triggerWaitNodes = getNodesToWaitOnBeforeTransmission(trigger);
-	generateWaitForNodes(module, function, block, compositionIdentifierValue, triggerWaitNodes);
+	generateWaitForNodes(module, function, block, compositionStateValue, triggerWaitNodes);
 
-	generateSetInputDataFromNodeFunctionArguments(function, block, compositionIdentifierValue, indexOfParameter, true);
+	generateSetInputDataFromNodeFunctionArguments(function, block, compositionStateValue, indexOfParameter, true);
 
-	generateSignalForNodes(module, block, compositionIdentifierValue, triggerWaitNodes);
+	generateSignalForNodes(module, block, compositionStateValue, triggerWaitNodes);
 
 	ReturnInst::Create(module->getContext(), block);
-}
-
-/**
- * Generates code to get a unique event ID.
- *
- * @eg{
- * unsigned long eventId = vuoGetNextEventId();
- * }
- */
-Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, BasicBlock *block)
-{
-	Function *getLastEventIdFunction = VuoCompilerCodeGenUtilities::getGetNextEventIdFunction(module);
-	return CallInst::Create(getLastEventIdFunction, "", block);
 }
 
 /**
@@ -1245,9 +1232,9 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
  * @eg{
  * // shouldBlock=true
  *
- * compositionWaitForNode(compositionIdentifier, 2, eventId, true);  // orderedNodes[2]
- * compositionWaitForNode(compositionIdentifier, 4, eventId, true);  // orderedNodes[4]
- * compositionWaitForNode(compositionIdentifier, 5, eventId, true);  // orderedNodes[5]
+ * compositionWaitForNode(compositionState, 2, eventId, true);  // orderedNodes[2]
+ * compositionWaitForNode(compositionState, 4, eventId, true);  // orderedNodes[4]
+ * compositionWaitForNode(compositionState, 5, eventId, true);  // orderedNodes[5]
  * }
  *
  * @eg{
@@ -1255,15 +1242,15 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
  *
  * bool keepTrying;
  *
- * keepTrying = compositionWaitForNode(compositionIdentifier, 2, eventId, false);  // orderedNodes[2]
+ * keepTrying = compositionWaitForNode(compositionState, 2, eventId, false);  // orderedNodes[2]
  * if (! keepTrying)
  *    goto SIGNAL0;
  *
- * keepTrying = compositionWaitForNode(compositionIdentifier, 4, eventId, false);  // orderedNodes[4]
+ * keepTrying = compositionWaitForNode(compositionState, 4, eventId, false);  // orderedNodes[4]
  * if (! keepTrying)
  *    goto SIGNAL1;
  *
- * keepTrying = compositionWaitForNode(compositionIdentifier, 5, eventId, false);  // orderedNodes[5]
+ * keepTrying = compositionWaitForNode(compositionState, 5, eventId, false);  // orderedNodes[5]
  * if (! keepTrying)
  *    goto SIGNAL2:
  *
@@ -1277,13 +1264,13 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
  * }
  */
 Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function *function, BasicBlock *&block,
-														  Value *compositionIdentifierValue, vector<VuoCompilerNode *> nodes,
+														  Value *compositionStateValue, vector<VuoCompilerNode *> nodes,
 														  Value *eventIdValue, bool shouldBlock)
 {
 	sortNodes(nodes);
 
 	if (! eventIdValue)
-		eventIdValue = generateGetNextEventID(module, block);
+		eventIdValue = VuoCompilerCodeGenUtilities::generateGetNextEventId(module, block, compositionStateValue);
 
 	Function *waitForNodeFunction = VuoCompilerCodeGenUtilities::getWaitForNodeFunction(module, moduleKey);
 	Type *unsignedLongType = waitForNodeFunction->getFunctionType()->getParamType(1);
@@ -1305,7 +1292,7 @@ Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Functi
 			Constant *orderedNodeIndexValue = ConstantInt::get(unsignedLongType, orderedNodeIndex);
 
 			vector<Value *> args;
-			args.push_back(compositionIdentifierValue);
+			args.push_back(compositionStateValue);
 			args.push_back(orderedNodeIndexValue);
 			args.push_back(eventIdValue);
 			args.push_back(trueValue);
@@ -1334,7 +1321,7 @@ Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Functi
 			Value *orderedNodeIndexValue = ConstantInt::get(unsignedLongType, orderedNodeIndex);
 
 			vector<Value *> args;
-			args.push_back(compositionIdentifierValue);
+			args.push_back(compositionStateValue);
 			args.push_back(orderedNodeIndexValue);
 			args.push_back(eventIdValue);
 			args.push_back(falseValue);
@@ -1361,7 +1348,7 @@ Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Functi
 			BasicBlock *signalBlock = signalBlocks[i];
 			VuoCompilerNode *nodeToSignal = nodes[i-1];
 
-			generateSignalForNodes(module, signalBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, nodeToSignal));
+			generateSignalForNodes(module, signalBlock, compositionStateValue, vector<VuoCompilerNode *>(1, nodeToSignal));
 
 			BranchInst::Create(signalBlocks[i-1], signalBlock);
 		}
@@ -1383,14 +1370,14 @@ Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Functi
  * // semaphore, the rest of the edges for the same event need to recognize this and also stop waiting.
  * // Hence the checking of event IDs and the limited-time wait.
  *
- * bool compositionWaitForNode(char *compositionIdentifier, unsigned long indexInOrderedNodes, unsigned long eventId, bool shouldBlock)
+ * bool compositionWaitForNode(VuoCompositionState *compositionState, unsigned long indexInOrderedNodes, unsigned long eventId, bool shouldBlock)
  * {
  *    bool keepTrying = true;
  *
  *    int64_t timeoutDelta = (shouldBlock ? ... : 0);
  *    dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, timeoutDelta);
  *
- *    NodeContext *nodeContext = vuoGetNodeContext(compositionIdentifier, indexInOrderedNodes);
+ *    NodeContext *nodeContext = vuoGetNodeContext(compositionState, indexInOrderedNodes);
  *
  *    while (nodeContext->claimingEventId != eventId && keepTrying)
  *    {
@@ -1409,8 +1396,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionWaitForNodeFunction(void)
 {
 	Function *function = VuoCompilerCodeGenUtilities::getWaitForNodeFunction(module, moduleKey);
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *indexInOrderedNodesValue = args++;
 	indexInOrderedNodesValue->setName("indexInOrderedNodes");
 	Value *eventIdValue = args++;
@@ -1452,10 +1439,10 @@ void VuoCompilerBitcodeGenerator::generateCompositionWaitForNodeFunction(void)
 	Value *timeoutValue = VuoCompilerCodeGenUtilities::generateCreateDispatchTime(module, checkEventIdBlock, timeoutDeltaValue);
 
 
-	// NodeContext *nodeContext = vuoGetNodeContext(compositionIdentifier, indexInOrderedNodes);
+	// NodeContext *nodeContext = vuoGetNodeContext(compositionState, indexInOrderedNodes);
 
 	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, checkEventIdBlock,
-																				  compositionIdentifierValue, indexInOrderedNodesValue);
+																				  compositionStateValue, indexInOrderedNodesValue);
 
 
 	// while (nodeContext->claimingEventId != eventId && keepTrying)
@@ -1516,14 +1503,14 @@ void VuoCompilerBitcodeGenerator::generateCompositionWaitForNodeFunction(void)
  * dispatch_semaphore_signal(vuo_math_count__Count__semaphore);
  * }
  */
-void VuoCompilerBitcodeGenerator::generateSignalForNodes(Module *module, BasicBlock *block, Value *compositionIdentifierValue,
+void VuoCompilerBitcodeGenerator::generateSignalForNodes(Module *module, BasicBlock *block, Value *compositionStateValue,
 														 vector<VuoCompilerNode *> nodes)
 {
 	for (vector<VuoCompilerNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
 
-		Value *nodeContextValue = node->generateGetContext(module, block, compositionIdentifierValue);
+		Value *nodeContextValue = node->generateGetContext(module, block, compositionStateValue);
 
 		ConstantInt *noEventIdConstant = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module);
 		VuoCompilerCodeGenUtilities::generateSetNodeContextClaimingEventId(module, block, nodeContextValue, noEventIdConstant);
@@ -1552,16 +1539,16 @@ void VuoCompilerBitcodeGenerator::generateSignalForNodes(Module *module, BasicBl
  * // serializationType=1 : getString
  * // serializationType=2 : getInterprocessString
  *
- * char * compositionGetPortValue(const char *compositionIdentifier, const char *portIdentifier, int serializationType, bool isThreadSafe)
+ * char * compositionGetPortValue(VuoCompositionState *compositionState, const char *portIdentifier, int serializationType, bool isThreadSafe)
  * {
  *	 char *ret = NULL;
  *
- *   void *portAddress = vuoGetDataForPort(compositionIdentifier, portIdentifier);
+ *   void *portAddress = vuoGetDataForPort(compositionState, portIdentifier);
  *
  *   if (portAddress != NULL)
  *   {
- *     dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionIdentifier, portIdentifier);
- *     unsigned long typeIndex = vuoGetTypeIndexForPort(compositionIdentifier, portIdentifier);
+ *     dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionState, portIdentifier);
+ *     unsigned long typeIndex = vuoGetTypeIndexForPort(compositionState, portIdentifier);
  *
  *     if (isThreadSafe)
  *       dispatch_semaphore_wait(nodeSemaphore, DISPATCH_TIME_FOREVER);
@@ -1599,8 +1586,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 	Function *function = VuoCompilerCodeGenUtilities::getCompositionGetPortValueFunction(module);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *portIdentifierValue = args++;
 	portIdentifierValue->setName("portIdentifier");
 	Value *serializationTypeValue = args++;
@@ -1618,9 +1605,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 	ConstantPointerNull *nullPointerToChar = ConstantPointerNull::get(pointerToCharType);
 	new StoreInst(nullPointerToChar, retVariable, false, initialBlock);
 
-	// void *portAddress = vuoGetDataForPort(compositionIdentifier, portIdentifier);
+	// void *portAddress = vuoGetDataForPort(compositionState, portIdentifier);
 
-	Value *portAddressAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetDataForPort(module, initialBlock, compositionIdentifierValue, portIdentifierValue);
+	Value *portAddressAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetDataForPort(module, initialBlock, compositionStateValue, portIdentifierValue);
 
 	// if (portAddress != NULL)
 
@@ -1631,11 +1618,11 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 	ICmpInst *portAddressNotEqualsNull = new ICmpInst(*initialBlock, ICmpInst::ICMP_NE, portAddressAsVoidPointer, nullPortAddress, "");
 	BranchInst::Create(checkWaitBlock, finalBlock, portAddressNotEqualsNull, initialBlock);
 
-	// dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionIdentifier, portIdentifier);
-	// unsigned long typeIndex = vuoGetTypeIndexForPort(compositionIdentifier, portIdentifier);
+	// dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionState, portIdentifier);
+	// unsigned long typeIndex = vuoGetTypeIndexForPort(compositionState, portIdentifier);
 
-	Value *nodeSemaphoreValue = VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(module, checkWaitBlock, compositionIdentifierValue, portIdentifierValue);
-	Value *typeIndexValue = VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(module, checkWaitBlock, compositionIdentifierValue, portIdentifierValue);
+	Value *nodeSemaphoreValue = VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
+	Value *typeIndexValue = VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
 
 	// if (isThreadSafe)
 	//   dispatch_semaphore_wait(nodeSemaphore, DISPATCH_TIME_FOREVER);
@@ -1761,16 +1748,16 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
  * Example:
  *
  * @eg{
- * void compositionSetPortValue(const char *compositionIdentifier, const char *portIdentifier, const char *valueAsString,
+ * void compositionSetPortValue(VuoCompositionState *compositionState, const char *portIdentifier, const char *valueAsString,
  *								bool isThreadSafe, bool shouldUpdateTriggers, bool shouldSendTelemetry, bool hasOldValue, bool hasNewValue)
  * {
- *   void *portAddress = vuoGetDataForPort(compositionIdentifier, portIdentifier);
+ *   void *portAddress = vuoGetDataForPort(compositionState, portIdentifier);
  *
  *   if (portAddress != NULL)
  *   {
- *     dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionIdentifier, portIdentifier);
- *     unsigned long typeIndex = vuoGetTypeIndexForPort(compositionIdentifier, portIdentifier);
- *     unsigned long nodeIndex = vuoGetNodeIndexForPort(compositionIdentifier, portIdentifier);
+ *     dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionState, portIdentifier);
+ *     unsigned long typeIndex = vuoGetTypeIndexForPort(compositionState, portIdentifier);
+ *     unsigned long nodeIndex = vuoGetNodeIndexForPort(compositionState, portIdentifier);
  *     char *summary = NULL;
  *
  *     if (isThreadSafe)
@@ -1830,8 +1817,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	Function *function = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *portIdentifierValue = args++;
 	portIdentifierValue->setName("portIdentifier");
 	Value *valueAsStringValue = args++;
@@ -1848,10 +1835,10 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	hasNewValue->setName("hasNewValue");
 
 
-	// void *portAddress = vuoGetDataForPort(compositionIdentifier, portIdentifier);
+	// void *portAddress = vuoGetDataForPort(compositionState, portIdentifier);
 
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
-	Value *portAddressAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetDataForPort(module, initialBlock, compositionIdentifierValue, portIdentifierValue);
+	Value *portAddressAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetDataForPort(module, initialBlock, compositionStateValue, portIdentifierValue);
 
 	// if (portAddress != NULL)
 
@@ -1862,14 +1849,14 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	ICmpInst *portAddressNotEqualsNull = new ICmpInst(*initialBlock, ICmpInst::ICMP_NE, portAddressAsVoidPointer, nullPortAddress, "");
 	BranchInst::Create(checkWaitBlock, finalBlock, portAddressNotEqualsNull, initialBlock);
 
-	// dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionIdentifier, portIdentifier);
-	// unsigned long typeIndex = vuoGetTypeIndexForPort(compositionIdentifier, portIdentifier);
-	// unsigned long nodeIndex = vuoGetNodeIndexForPort(compositionIdentifier, portIdentifier);
+	// dispatch_semaphore_t nodeSemaphore = vuoGetNodeSemaphoreForPort(compositionState, portIdentifier);
+	// unsigned long typeIndex = vuoGetTypeIndexForPort(compositionState, portIdentifier);
+	// unsigned long nodeIndex = vuoGetNodeIndexForPort(compositionState, portIdentifier);
 	// char *summary = NULL;
 
-	Value *nodeSemaphoreValue = VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(module, checkWaitBlock, compositionIdentifierValue, portIdentifierValue);
-	Value *typeIndexValue = VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(module, checkWaitBlock, compositionIdentifierValue, portIdentifierValue);
-	Value *nodeIndexValue = VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(module, checkWaitBlock, compositionIdentifierValue, portIdentifierValue);
+	Value *nodeSemaphoreValue = VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
+	Value *typeIndexValue = VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
+	Value *nodeIndexValue = VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
 
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 	AllocaInst *summaryVariable = new AllocaInst(pointerToCharType, "summary", checkWaitBlock);
@@ -2004,9 +1991,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), node->getIdentifier(), function, 0);
 		BasicBlock *origCurrentBlock = currentBlock;
 
-		node->generateCallbackUpdateFunctionCall(module, currentBlock, compositionIdentifierValue);
+		node->generateCallbackUpdateFunctionCall(module, currentBlock, compositionStateValue);
 
-		generateEventlessTransmission(function, currentBlock, compositionIdentifierValue, node, true);
+		generateEventlessTransmission(function, currentBlock, compositionStateValue, node, true);
 
 		blocksForNodeIndex.push_back( make_pair(origCurrentBlock, currentBlock) );
 	}
@@ -2038,17 +2025,11 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 
 	if (isTopLevelComposition)  // sendInputPortsUpdated() is only available to the top-level composition
 	{
-		Function *sendInputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(module);
-		Type *boolType = sendInputPortsUpdatedFunction->getFunctionType()->getParamType(1);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
 		Constant *falseValue = ConstantInt::get(boolType, 0);
 		Constant *trueValue = ConstantInt::get(boolType, 1);
-
-		vector<Value *> sendInputPortsUpdatedArgs;
-		sendInputPortsUpdatedArgs.push_back(portIdentifierValue);
-		sendInputPortsUpdatedArgs.push_back(falseValue);
-		sendInputPortsUpdatedArgs.push_back(trueValue);
-		sendInputPortsUpdatedArgs.push_back(summaryValue);
-		CallInst::Create(sendInputPortsUpdatedFunction, sendInputPortsUpdatedArgs, "", sendBlock);
+		VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(module, sendBlock, compositionStateValue, portIdentifierValue,
+																   falseValue, trueValue, summaryValue);
 	}
 
 	VuoCompilerCodeGenUtilities::generateFreeCall(module, sendBlock, summaryValue);
@@ -2075,17 +2056,20 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueFunction(void)
 
 	Function *compositionGetPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionGetPortValueFunction(module);
 
-	Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-	Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+	Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+	Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 	Value *trueValue = ConstantInt::get(compositionGetPortValueFunction->getFunctionType()->getParamType(3), 1);
 
 	vector<Value *> compositionArgs;
-	compositionArgs.push_back(topLevelCompositionIdentifierValue);
+	compositionArgs.push_back(compositionStateValue);
 	compositionArgs.push_back(portIdentifierValue);
 	compositionArgs.push_back(serializationTypeValue);
 	compositionArgs.push_back(trueValue);
 	Value *ret = CallInst::Create(compositionGetPortValueFunction, compositionArgs, "", block);
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, compositionStateValue);
 
 	ReturnInst::Create(module->getContext(), ret, block);
 }
@@ -2108,13 +2092,14 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 
 	Function *compositionSetPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
 
-	Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-	Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+	Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+	Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 	Value *trueValue = ConstantInt::get(compositionSetPortValueFunction->getFunctionType()->getParamType(3), 1);
 
 	vector<Value *> compositionArgs;
-	compositionArgs.push_back(topLevelCompositionIdentifierValue);
+	compositionArgs.push_back(compositionStateValue);
 	compositionArgs.push_back(portIdentifierValue);
 	compositionArgs.push_back(valueAsStringValue);
 	compositionArgs.push_back(trueValue);
@@ -2124,6 +2109,8 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 	compositionArgs.push_back(trueValue);
 	CallInst::Create(compositionSetPortValueFunction, compositionArgs, "", block);
 
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, compositionStateValue);
+
 	ReturnInst::Create(module->getContext(), block);
 }
 
@@ -2132,13 +2119,13 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
  *
  * Assumes all other input ports' values have already been initialized.
  */
-void VuoCompilerBitcodeGenerator::generateInitialEventlessTransmissions(Function *function, BasicBlock *&block, Value *compositionIdentifierValue)
+void VuoCompilerBitcodeGenerator::generateInitialEventlessTransmissions(Function *function, BasicBlock *&block, Value *compositionStateValue)
 {
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = (*i)->getCompiler();
-		generateEventlessTransmission(function, block, compositionIdentifierValue, node, false);
+		generateEventlessTransmission(function, block, compositionStateValue, node, false);
 	}
 }
 
@@ -2183,8 +2170,9 @@ void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
 
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 
-	Value *compositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-	Value *compositionIdentifierValue = new LoadInst(compositionIdentifierVariable, "", false, initialBlock);
+	Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, initialBlock);
+	Value *compositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, initialBlock, runtimeStateValue, compositionIdentifierValue);
 
 	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
 	map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = graph->getNodesForTriggerPorts();
@@ -2203,9 +2191,9 @@ void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
 		bool hasData = trigger->getDataVuoType();
 		if (hasData)
 		{
-			generateWaitForNodes(module, function, currentBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, triggerNode));
+			generateWaitForNodes(module, function, currentBlock, compositionStateValue, vector<VuoCompilerNode *>(1, triggerNode));
 
-			Value *nodeContextValue = triggerNode->generateGetContext(module, currentBlock, compositionIdentifierValue);
+			Value *nodeContextValue = triggerNode->generateGetContext(module, currentBlock, compositionStateValue);
 
 			Value *arg = trigger->generateLoadPreviousData(module, currentBlock, nodeContextValue);
 			Value *secondArg = NULL;
@@ -2219,12 +2207,15 @@ void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
 		CallInst::Create(triggerFunction, triggerArgs, "", currentBlock);
 
 		if (hasData)
-			generateSignalForNodes(module, currentBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, triggerNode));
+			generateSignalForNodes(module, currentBlock, compositionStateValue, vector<VuoCompilerNode *>(1, triggerNode));
 
 		blocksForString[currentPortIdentifier] = make_pair(origCurrentBlock, currentBlock);
 	}
 
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, finalBlock, compositionStateValue);
+
 	ReturnInst::Create(module->getContext(), finalBlock);
 
 	VuoCompilerCodeGenUtilities::generateStringMatchingCode(module, function, initialBlock, finalBlock, portIdentifierValue, blocksForString, constantStrings);
@@ -2476,11 +2467,11 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
  *
  *   if (! strcmp(portIdentifier, "firstName"))
  *   {
- *     ret = getInputPortString("vuo_in__PublishedInputs__firstName", shouldUseInterprocessSerialization);
+ *     ret = vuoGetInputPortString("vuo_in__PublishedInputs__firstName", shouldUseInterprocessSerialization);
  *   }
  *   else if (! strcmp(portIdentifier, "secondName"))
  *   {
- *     ret = getInputPortString("vuo_in__PublishedInputs__secondName", shouldUseInterprocessSerialization);
+ *     ret = vuoGetInputPortString("vuo_in__PublishedInputs__secondName", shouldUseInterprocessSerialization);
  *   }
  *
  *   return ret;
@@ -2494,11 +2485,11 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
  *
  *   if (! strcmp(portIdentifier, "firstName"))
  *   {
- *     ret = getInputPortString("vuo_out__PublishedOutputs__firstName", shouldUseInterprocessSerialization);
+ *     ret = vuoGetInputPortString("vuo_out__PublishedOutputs__firstName", shouldUseInterprocessSerialization);
  *   }
  *   else if (! strcmp(portIdentifier, "secondName"))
  *   {
- *     ret = getInputPortString("vuo_out__PublishedOutputs__secondName", shouldUseInterprocessSerialization);
+ *     ret = vuoGetInputPortString("vuo_out__PublishedOutputs__secondName", shouldUseInterprocessSerialization);
  *   }
  *
  *   return ret;
@@ -2517,13 +2508,16 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedPortValueFunction(bool inp
 	Value *shouldUseInterprocessSerializationValue = args++;
 	shouldUseInterprocessSerializationValue->setName("shouldUseInterprocessSerialization");
 
-	Function *getValueFunction = VuoCompilerCodeGenUtilities::getGetInputPortStringFunction(module);
-
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 	PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 	AllocaInst *retVariable = new AllocaInst(pointerToChar, "ret", initialBlock);
 	ConstantPointerNull *nullValue = ConstantPointerNull::get(pointerToChar);
 	new StoreInst(nullValue, retVariable, false, initialBlock);
+
+	Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, initialBlock);
+	Value *compositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, initialBlock, runtimeStateValue,
+																							   compositionIdentifierValue);
 
 	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
 	if (publishedInputNode)
@@ -2540,17 +2534,18 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedPortValueFunction(bool inp
 			string currentIdentifier = static_cast<VuoCompilerEventPort *>(port->getCompiler())->getIdentifier();
 			Constant *currentIdentifierValue = constantStrings.get(module, currentIdentifier);
 
-			vector<Value *> args;
-			args.push_back(currentIdentifierValue);
-			args.push_back(shouldUseInterprocessSerializationValue);
-			CallInst *getValueResult = CallInst::Create(getValueFunction, args, "", currentBlock);
-			new StoreInst(getValueResult, retVariable, currentBlock);
+			Value *retValue = VuoCompilerCodeGenUtilities::generateGetInputPortString(module, currentBlock, compositionStateValue,
+																					  currentIdentifierValue, shouldUseInterprocessSerializationValue);
+			new StoreInst(retValue, retVariable, currentBlock);
 
 			blocksForString[currentName] = make_pair(currentBlock, currentBlock);
 		}
 	}
 
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, finalBlock, compositionStateValue);
+
 	LoadInst *retValue = new LoadInst(retVariable, "", false, finalBlock);
 	ReturnInst::Create(module->getContext(), retValue, finalBlock);
 
@@ -2614,16 +2609,19 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
 
+	Value *compositionStateValue = NULL;
+
 	if (publishedInputNode)
 	{
-		Value *compositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-		Value *compositionIdentifierValue = new LoadInst(compositionIdentifierVariable, "", false, initialBlock);
+		Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, initialBlock);
+		Value *compositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+		compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, initialBlock, runtimeStateValue, compositionIdentifierValue);
 
 		VuoCompilerTriggerPort *trigger = getPublishedInputTrigger();
 
 		Function *setValueFunction = VuoCompilerCodeGenUtilities::getSetInputPortValueFunction(module);
 
-		Value *nodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, initialBlock, compositionIdentifierValue);
+		Value *nodeContextValue = publishedInputNode->getCompiler()->generateGetContext(module, initialBlock, compositionStateValue);
 
 		vector<VuoPublishedPort *> publishedPorts = composition->getBase()->getPublishedInputPorts();
 		for (size_t i = 0; i < publishedPorts.size(); ++i)
@@ -2673,6 +2671,10 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
 	}
 
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+
+	if (publishedInputNode)
+		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, finalBlock, compositionStateValue);
+
 	ReturnInst::Create(module->getContext(), finalBlock);
 
 	VuoCompilerCodeGenUtilities::generateStringMatchingCode(module, function, initialBlock, finalBlock, portIdentifierValue, blocksForString, constantStrings);
@@ -2683,13 +2685,12 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
  * and send telemetry indicating that these output and input ports have been updated.
  */
 void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock,
-																	 Value *compositionIdentifierValue, VuoCompilerPort *outputPort,
+																	 Value *compositionStateValue, VuoCompilerPort *outputPort,
 																	 Value *eventValue, Value *dataValue,
 																	 bool requiresEvent, bool shouldSendTelemetry)
 {
-	Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
-	Type *boolType = sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(1);
-	PointerType *pointerToCharType = static_cast<PointerType *>(sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(2));
+	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 	set<VuoCompilerCable *> outgoingCables = (requiresEvent ?
 												  graph->getCablesImmediatelyDownstream(outputPort) :
@@ -2716,13 +2717,19 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 			VuoCompilerCable *cable = *i;
 
 			VuoCompilerPort *inputPort = static_cast<VuoCompilerPort *>(cable->getBase()->getToPort()->getCompiler());
-			ICmpInst *shouldSendDataForInput = VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(module, currentBlock, inputPort->getIdentifier(), constantStrings);
+			ICmpInst *shouldSendDataForInput = VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(module, currentBlock,
+																													  inputPort->getIdentifier(),
+																													  compositionStateValue,
+																													  constantStrings);
 			shouldSummarizeInput[inputPort] = shouldSendDataForInput;
 		}
 
 		if (dataValue)
 		{
-			Value *shouldSummarizeOutput = VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(module, currentBlock, outputPort->getIdentifier(), constantStrings);
+			Value *shouldSummarizeOutput = VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(module, currentBlock,
+																												  outputPort->getIdentifier(),
+																												  compositionStateValue,
+																												  constantStrings);
 
 			for (set<VuoCompilerCable *>::iterator i = outgoingCables.begin(); i != outgoingCables.end(); ++i)
 			{
@@ -2753,7 +2760,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 
 		Value *sentDataValue = new LoadInst(sentDataVariable, "", false, currentBlock);
 		Value *dataSummaryValue = new LoadInst(dataSummaryVariable, "", false, currentBlock);
-		generateSendOutputPortUpdated(currentBlock, outputPort, sentDataValue, dataSummaryValue);
+		generateSendOutputPortUpdated(currentBlock, outputPort, compositionStateValue, sentDataValue, dataSummaryValue);
 	}
 
 	// If the output port should transmit an event...
@@ -2780,7 +2787,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 		VuoCompilerCable *cable = *i;
 
 		VuoCompilerNode *inputNode = cable->getBase()->getToNode()->getCompiler();
-		Value *inputNodeContextValue = inputNode->generateGetContext(module, transmissionBlock, compositionIdentifierValue);
+		Value *inputNodeContextValue = inputNode->generateGetContext(module, transmissionBlock, compositionStateValue);
 		VuoCompilerInputEventPort *inputPort = static_cast<VuoCompilerInputEventPort *>( cable->getBase()->getToPort()->getCompiler() );
 		Value *inputPortContextValue = inputPort->generateGetPortContext(module, transmissionBlock, inputNodeContextValue);
 
@@ -2828,7 +2835,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 
 			Value *receivedDataValue = new LoadInst(receivedDataVariable, "", false, transmissionBlock);
 			Value *inputDataSummaryValue = new LoadInst(inputDataSummaryVariable, "", false, transmissionBlock);
-			generateSendInputPortUpdated(transmissionBlock, inputPort, receivedDataValue, inputDataSummaryValue);
+			generateSendInputPortUpdated(transmissionBlock, inputPort, compositionStateValue, receivedDataValue, inputDataSummaryValue);
 
 			if (inputDataType && ! transmittedDataValue)
 			{
@@ -2862,7 +2869,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
  * and to send telemetry indicating that the output and input ports on these cables have been updated.
  */
 void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock,
-															   Value *compositionIdentifierValue, Value *nodeContextValue,
+															   Value *compositionStateValue, Value *nodeContextValue,
 															   VuoCompilerNode *node, bool requiresEvent, bool shouldSendTelemetry)
 {
 	shouldSendTelemetry = shouldSendTelemetry && isTopLevelComposition;
@@ -2900,7 +2907,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *functio
 		Value *outputDataValue = (outputData ?
 									  outputEventPort->generateLoadData(module, telemetryBlock, nodeContextValue, portContextValue) :
 									  NULL);
-		generateTransmissionFromOutputPort(function, telemetryBlock, compositionIdentifierValue,
+		generateTransmissionFromOutputPort(function, telemetryBlock, compositionStateValue,
 										   outputEventPort, outputEventValue, outputDataValue, requiresEvent, shouldSendTelemetry);
 
 		if (requiresEvent)
@@ -2919,12 +2926,11 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *functio
  * Generates code to send telemetry indicating that the published output ports corresponding to the
  * input ports of @a node (of node class VuoCompilerPublishedOutputNodeClass) have been updated.
  */
-void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock,
+void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue,
 																		   Value *nodeContextValue, VuoCompilerNode *node)
 {
-	Function *sendPublishedOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendPublishedOutputPortsUpdatedFunction(module);
-	Type *boolType = sendPublishedOutputPortsUpdatedFunction->getFunctionType()->getParamType(1);
-	PointerType *pointerToCharType = static_cast<PointerType *>(sendPublishedOutputPortsUpdatedFunction->getFunctionType()->getParamType(2));
+	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 	vector<VuoPort *> inputPorts = node->getBase()->getInputPorts();
 	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
@@ -2965,7 +2971,7 @@ void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Funct
 			dataSummaryValue = ConstantPointerNull::get(pointerToCharType);
 		}
 
-		generateSendPublishedOutputPortUpdated(telemetryBlock, inputEventPort, sentDataValue, dataSummaryValue);
+		generateSendPublishedOutputPortUpdated(telemetryBlock, inputEventPort, compositionStateValue, sentDataValue, dataSummaryValue);
 
 		BranchInst::Create(noTelemetryBlock, telemetryBlock);
 		currentBlock = noTelemetryBlock;
@@ -2978,7 +2984,7 @@ void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Funct
  *
  * If @a isCompositionStarted is true, assumes that the semaphore for @a firstNode has already been claimed.
  */
-void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue,
+void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue,
 																VuoCompilerNode *firstNode, bool isCompositionStarted)
 {
 	if (! graph->mayTransmitEventlessly(firstNode))
@@ -2988,7 +2994,7 @@ void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *functi
 	if (isCompositionStarted)
 	{
 		// Claim the nodes downstream via eventless transmission.
-		generateWaitForNodes(module, function, currentBlock, compositionIdentifierValue, downstreamNodes, NULL, true);
+		generateWaitForNodes(module, function, currentBlock, compositionStateValue, downstreamNodes, NULL, true);
 	}
 
 	// For this node and each node downstream via eventless transmission...
@@ -3001,15 +3007,15 @@ void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *functi
 		if (graph->mayTransmitEventlessly(node))
 		{
 			// Call the node's event function, and send telemetry if needed.
-			generateNodeExecution(function, currentBlock, compositionIdentifierValue, node, isCompositionStarted);
+			generateNodeExecution(function, currentBlock, compositionStateValue, node, isCompositionStarted);
 
 			// Transmit data through the node's outgoing cables, and send telemetry for port updates if needed.
-			Value *nodeContextValue = node->generateGetContext(module, currentBlock, compositionIdentifierValue);
-			generateTransmissionFromNode(function, currentBlock, compositionIdentifierValue, nodeContextValue, node, false, isCompositionStarted);
+			Value *nodeContextValue = node->generateGetContext(module, currentBlock, compositionStateValue);
+			generateTransmissionFromNode(function, currentBlock, compositionStateValue, nodeContextValue, node, false, isCompositionStarted);
 		}
 
 		if (isCompositionStarted && node != firstNode)
-			generateSignalForNodes(module, currentBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, node));
+			generateSignalForNodes(module, currentBlock, compositionStateValue, vector<VuoCompilerNode *>(1, node));
 	}
 }
 
@@ -3017,7 +3023,7 @@ void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *functi
  * Generates code to call the node's event function, sending telemetry indicating that execution has started and finished.
  */
 void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, BasicBlock *&currentBlock,
-														Value *compositionIdentifierValue, VuoCompilerNode *node,
+														Value *compositionStateValue, VuoCompilerNode *node,
 														bool shouldSendTelemetry)
 {
 	shouldSendTelemetry = shouldSendTelemetry && isTopLevelComposition;
@@ -3027,89 +3033,68 @@ void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, Basi
 	if (shouldSendTelemetry)
 	{
 		// Send telemetry indicating that the node's execution has started.
-		Function *sendNodeExecutionStartedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(module);
-		CallInst::Create(sendNodeExecutionStartedFunction, nodeIdentifierValue, "", currentBlock);
+		VuoCompilerCodeGenUtilities::generateSendNodeExecutionStarted(module, currentBlock, compositionStateValue, nodeIdentifierValue);
 	}
 
 	// Call the node's event function.
 	if (debugMode)
 		VuoCompilerCodeGenUtilities::generatePrint(module, currentBlock, node->getBase()->getTitle() + "\n");
-	node->generateEventFunctionCall(module, function, currentBlock, compositionIdentifierValue);
+	node->generateEventFunctionCall(module, function, currentBlock, compositionStateValue);
 
 	if (shouldSendTelemetry)
 	{
 		// Send telemetry indicating that the node's execution has finished.
-		Function *sendNodeExecutionFinishedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionFinishedFunction(module);
-		CallInst::Create(sendNodeExecutionFinishedFunction, nodeIdentifierValue, "", currentBlock);
+		VuoCompilerCodeGenUtilities::generateSendNodeExecutionFinished(module, currentBlock, compositionStateValue, nodeIdentifierValue);
 	}
 }
 
 /**
- * Generates a call to @c sendInputPortsUpdated() to send telemetry.
+ * Generates a call to `vuoSendInputPortsUpdated()` to send telemetry.
  */
-void VuoCompilerBitcodeGenerator::generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort,
+void VuoCompilerBitcodeGenerator::generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *compositionStateValue,
 															   Value *receivedDataValue, Value *dataSummaryValue)
 {
 	Constant *inputPortIdentifierValue = constantStrings.get(module, inputPort->getIdentifier());
-	Function *sendInputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(module);
 
-	// sendInputPortsUpdated(inputPortIdentifier, true, sentData, inputDataSummary);
-	Type *boolType = sendInputPortsUpdatedFunction->getFunctionType()->getParamType(1);
+	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
 	Constant *trueValue = ConstantInt::get(boolType, 1);
-	vector<Value *> sendInputPortsUpdatedArgs;
-	sendInputPortsUpdatedArgs.push_back(inputPortIdentifierValue);
-	sendInputPortsUpdatedArgs.push_back(trueValue);
-	sendInputPortsUpdatedArgs.push_back(receivedDataValue);
-	sendInputPortsUpdatedArgs.push_back(dataSummaryValue);
-	CallInst::Create(sendInputPortsUpdatedFunction, sendInputPortsUpdatedArgs, "", block);
+
+	VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(module, block, compositionStateValue, inputPortIdentifierValue,
+															   trueValue, receivedDataValue, dataSummaryValue);
 }
 
 /**
- * Generates a call to @c sendOutputPortsUpdated() to send telemetry.
+ * Generates a call to `vuoSendOutputPortsUpdated()` to send telemetry.
  */
-void VuoCompilerBitcodeGenerator::generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort,
+void VuoCompilerBitcodeGenerator::generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *compositionStateValue,
 																Value *sentDataValue, Value *dataSummaryValue)
 {
 	Constant *outputPortIdentifierValue = constantStrings.get(module, outputPort->getIdentifier());
-	Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
 
-	// sendOutputPortsUpdated(outputPortIdentifier, sentData, outputDataSummary);
-	vector<Value *> sendOutputPortsUpdatedArgs;
-	sendOutputPortsUpdatedArgs.push_back(outputPortIdentifierValue);
-	sendOutputPortsUpdatedArgs.push_back(sentDataValue);
-	sendOutputPortsUpdatedArgs.push_back(dataSummaryValue);
-	CallInst::Create(sendOutputPortsUpdatedFunction, sendOutputPortsUpdatedArgs, "", block);
+	VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(module, block, compositionStateValue, outputPortIdentifierValue,
+																sentDataValue, dataSummaryValue);
 }
 
 /**
- * Generates a call to @c sendPublishedOutputPortsUpdated() to send telemetry.
+ * Generates a call to `vuoSendPublishedOutputPortsUpdated()` to send telemetry.
  */
-void VuoCompilerBitcodeGenerator::generateSendPublishedOutputPortUpdated(BasicBlock *block, VuoCompilerPort *port,
+void VuoCompilerBitcodeGenerator::generateSendPublishedOutputPortUpdated(BasicBlock *block, VuoCompilerPort *port, Value *compositionStateValue,
 																		 Value *sentDataValue, Value *dataSummaryValue)
 {
 	Constant *portIdentifierValue = constantStrings.get(module, port->getBase()->getClass()->getName());
-	Function *sendPublishedOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendPublishedOutputPortsUpdatedFunction(module);
 
-	// sendPublishedOutputPortsUpdated(outputPortIdentifier, sentData, outputDataSummary);
-	vector<Value *> sendPublishedOutputPortsUpdatedArgs;
-	sendPublishedOutputPortsUpdatedArgs.push_back(portIdentifierValue);
-	sendPublishedOutputPortsUpdatedArgs.push_back(sentDataValue);
-	sendPublishedOutputPortsUpdatedArgs.push_back(dataSummaryValue);
-	CallInst::Create(sendPublishedOutputPortsUpdatedFunction, sendPublishedOutputPortsUpdatedArgs, "", block);
+	VuoCompilerCodeGenUtilities::generateSendPublishedOutputPortsUpdated(module, block, compositionStateValue, portIdentifierValue,
+																		 sentDataValue, dataSummaryValue);
 }
 
 /**
- * Generates a call to @c sendEventDropped() to send telemetry.
+ * Generates a call to `vuoSendEventDropped()` to send telemetry.
  */
-void VuoCompilerBitcodeGenerator::generateSendEventDropped(BasicBlock *block, string portIdentifier)
+void VuoCompilerBitcodeGenerator::generateSendEventDropped(BasicBlock *block, string portIdentifier, Value *compositionStateValue)
 {
 	Constant *portIdentifierValue = constantStrings.get(module, portIdentifier);
 
-	// sendEventDropped(triggerPortIdentifier);
-	Function *sendEventDroppedFunction = VuoCompilerCodeGenUtilities::getSendEventDroppedFunction(module);
-	vector<Value *> sendEventDroppedArgs;
-	sendEventDroppedArgs.push_back(portIdentifierValue);
-	CallInst::Create(sendEventDroppedFunction, sendEventDroppedArgs, "", block);
+	VuoCompilerCodeGenUtilities::generateSendEventDropped(module, block, compositionStateValue, portIdentifierValue);
 }
 
 /**
@@ -3128,6 +3113,12 @@ void VuoCompilerBitcodeGenerator::generateAllocation(void)
 					   GlobalValue::ExternalLinkage,
 					   proEnabledConstant,
 					   "VuoProEnabled");
+
+
+	{
+		Constant *value = constantStrings.get(module, topLevelCompositionIdentifier);
+		new GlobalVariable(*module, value->getType(), true, GlobalValue::ExternalLinkage, value, "vuoTopLevelCompositionIdentifier");
+	}
 }
 
 /**
@@ -3142,12 +3133,12 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 	Function *function = VuoCompilerCodeGenUtilities::getSetupFunction(module);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
+	Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
 	Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
-	Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-	new StoreInst(topLevelCompositionIdentifierValue, topLevelCompositionIdentifierVariable, false, block);
+	Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 	Function *compositionContextInitFunction = VuoCompilerCodeGenUtilities::getCompositionContextInitFunction(module, moduleKey);
-	CallInst::Create(compositionContextInitFunction, topLevelCompositionIdentifierValue, "", block);
+	CallInst::Create(compositionContextInitFunction, topLevelCompositionStateValue, "", block);
 
 	for (map<VuoCompilerTriggerPort *, Function *>::iterator i = topLevelTriggerFunctions.begin(); i != topLevelTriggerFunctions.end(); ++i)
 	{
@@ -3155,7 +3146,7 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 		Function *function = i->second;
 
 		VuoCompilerNode *node = graph->getNodesForTriggerPorts()[trigger];
-		Value *nodeContextValue = node->generateGetContext(module, block, topLevelCompositionIdentifierValue);
+		Value *nodeContextValue = node->generateGetContext(module, block, topLevelCompositionStateValue);
 		trigger->generateStoreFunction(module, block, nodeContextValue, function);
 	}
 
@@ -3172,14 +3163,20 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 				VuoCompilerTriggerDescription *trigger = k->first;
 				Function *function = k->second;
 
-				int portContextIndex = trigger->getPortContextIndex();
 				Value *compositionIdentifierValue = constantStrings.get(module, compositionIdentifier);
-				Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, compositionIdentifierValue, nodeIndex);
+				Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, compositionIdentifierValue);
+
+				int portContextIndex = trigger->getPortContextIndex();
+				Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, compositionStateValue, nodeIndex);
 				Value *portContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, block, nodeContextValue, portContextIndex);
 				VuoCompilerCodeGenUtilities::generateSetPortContextTriggerFunction(module, block, portContextValue, function);
+
+				VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, compositionStateValue);
 			}
 		}
 	}
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -3194,11 +3191,15 @@ void VuoCompilerBitcodeGenerator::generateCleanupFunction(void)
 	Function *function = VuoCompilerCodeGenUtilities::getCleanupFunction(module);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-	Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-	Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+	Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+	Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+	Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 	Function *compositionContextFiniFunction = VuoCompilerCodeGenUtilities::getCompositionContextFiniFunction(module, moduleKey);
-	CallInst::Create(compositionContextFiniFunction, topLevelCompositionIdentifierValue, "", block);
+	CallInst::Create(compositionContextFiniFunction, topLevelCompositionStateValue, "", block);
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
+
 	ReturnInst::Create(module->getContext(), block);
 }
 
@@ -3219,10 +3220,13 @@ void VuoCompilerBitcodeGenerator::generateInstanceInitFunction(bool isStatefulCo
 																									  vector<VuoPort *>(),
 																									  indexOfParameter, constantStrings);
 
-		Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-		Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+		Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+		Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+		Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
-		CallInst::Create(nodeInstanceInitFunction, topLevelCompositionIdentifierValue, "", block);
+		CallInst::Create(nodeInstanceInitFunction, topLevelCompositionStateValue, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -3242,16 +3246,19 @@ void VuoCompilerBitcodeGenerator::generateInstanceFiniFunction(bool isStatefulCo
 	{
 		Function *nodeInstanceFiniFunction = VuoCompilerCodeGenUtilities::getNodeInstanceFiniFunction(module, moduleKey, constantStrings);
 
-		Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-		Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+		Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+		Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+		Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 		PointerType *instanceDataType = static_cast<PointerType *>( nodeInstanceFiniFunction->getFunctionType()->getParamType(1) );
 		ConstantPointerNull *nullInstanceDataValue = ConstantPointerNull::get(instanceDataType);
 
 		vector<Value *> args;
-		args.push_back(topLevelCompositionIdentifierValue);
+		args.push_back(topLevelCompositionStateValue);
 		args.push_back(nullInstanceDataValue);
 		CallInst::Create(nodeInstanceFiniFunction, args, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -3275,16 +3282,19 @@ void VuoCompilerBitcodeGenerator::generateInstanceTriggerStartFunction(bool isSt
 																													  indexOfParameter,
 																													  constantStrings);
 
-		Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-		Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+		Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+		Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+		Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 		PointerType *instanceDataType = static_cast<PointerType *>( nodeInstanceTriggerStartFunction->getFunctionType()->getParamType(1) );
 		ConstantPointerNull *nullInstanceDataValue = ConstantPointerNull::get(instanceDataType);
 
 		vector<Value *> args;
-		args.push_back(topLevelCompositionIdentifierValue);
+		args.push_back(topLevelCompositionStateValue);
 		args.push_back(nullInstanceDataValue);
 		CallInst::Create(nodeInstanceTriggerStartFunction, args, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -3304,16 +3314,19 @@ void VuoCompilerBitcodeGenerator::generateInstanceTriggerStopFunction(bool isSta
 		Function *nodeInstanceTriggerStopFunction = VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStopFunction(module, moduleKey,
 																													constantStrings);
 
-		Value *topLevelCompositionIdentifierVariable = VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(module);
-		Value *topLevelCompositionIdentifierValue = new LoadInst(topLevelCompositionIdentifierVariable, "", false, block);
+		Value *topLevelRuntimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, block);
+		Value *topLevelCompositionIdentifierValue = constantStrings.get(module, topLevelCompositionIdentifier);
+		Value *topLevelCompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, topLevelRuntimeStateValue, topLevelCompositionIdentifierValue);
 
 		PointerType *instanceDataType = static_cast<PointerType *>( nodeInstanceTriggerStopFunction->getFunctionType()->getParamType(1) );
 		ConstantPointerNull *nullInstanceDataValue = ConstantPointerNull::get(instanceDataType);
 
 		vector<Value *> args;
-		args.push_back(topLevelCompositionIdentifierValue);
+		args.push_back(topLevelCompositionStateValue);
 		args.push_back(nullInstanceDataValue);
 		CallInst::Create(nodeInstanceTriggerStopFunction, args, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, topLevelCompositionStateValue);
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -3436,14 +3449,14 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctions(void)
  *     VuoImage *dataCopy = (VuoImage *)malloc(sizeof(VuoImage));
  *     *dataCopy = image;
  *
- *     dispatch_group_enter(vuoTriggerWorkersScheduled);
+ *     dispatch_group_enter(vuoGetTriggerWorkersScheduled());
  *
  *     unsigned long eventId = vuoGetNextEventId();
  *     unsigned long *eventIdCopy = (unsigned long *)malloc(sizeof(unsigned long));
  *     *eventIdCopy = eventId;
  *
  *     void **context = (void **)malloc(3 * sizeof(void *));
- *     context[0] = (void *)compositionIdentifier;  // "Top"
+ *     context[0] = (void *)compositionState;  // {vuoRuntimeState, "Top"}
  *     context[1] = (void *)dataCopy;
  *     context[2] = (void *)eventIdCopy;
  *     vuoScheduleTriggerWorker(PlayMovie_decodedImage_queue, (void *)context, PlayMovie_decodedImage, 1, 2, eventId, compositionIdentifier, 3);
@@ -3478,8 +3491,14 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 	BasicBlock *scheduleBlock = BasicBlock::Create(module->getContext(), "schedule", function, NULL);
 
+	Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateRuntimeStateValue(module, initialBlock);
 	Value *compositionIdentifierValue = constantStrings.get(module, compositionIdentifier);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, initialBlock, compositionIdentifierValue, nodeIndex);
+
+	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, initialBlock, runtimeStateValue, compositionIdentifierValue);
+	VuoCompilerCodeGenUtilities::generateRegisterCall(module, initialBlock, compositionStateValue, VuoCompilerCodeGenUtilities::getFreeFunction(module));
+	VuoCompilerCodeGenUtilities::generateRetainCall(module, initialBlock, compositionStateValue);
+
+	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, initialBlock, compositionStateValue, nodeIndex);
 	Value *portContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, initialBlock, nodeContextValue, portContextIndex);
 
 	if (canDropEvents)
@@ -3500,7 +3519,9 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
 
 		// Send telemetry that the event has been dropped.
 		if (isTopLevelComposition)
-			generateSendEventDropped(dropEventBlock, portIdentifier);
+			generateSendEventDropped(dropEventBlock, portIdentifier, compositionStateValue);
+
+		VuoCompilerCodeGenUtilities::generateReleaseCall(module, dropEventBlock, compositionStateValue);
 
 		BranchInst::Create(finalBlock, dropEventBlock);
 	}
@@ -3510,25 +3531,25 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
 	}
 
 	// Enter the trigger's dispatch group for tracking workers scheduled.
-	Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, scheduleBlock);
+	Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, scheduleBlock, compositionStateValue);
 	VuoCompilerCodeGenUtilities::generateEnterDispatchGroup(module, scheduleBlock, triggerWorkersScheduledValue);
 
 	Value *eventIdValue;
 	if (! isNodeEventForSubcomposition)
 	{
 		// Get a unique ID for this event.
-		eventIdValue = generateGetNextEventID(module, scheduleBlock);
+		eventIdValue = VuoCompilerCodeGenUtilities::generateGetNextEventId(module, scheduleBlock, compositionStateValue);
 	}
 	else
 	{
 		// Use the event ID from the parent composition.
-		Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, scheduleBlock, compositionIdentifierValue);
+		Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, scheduleBlock, compositionStateValue);
 		eventIdValue = VuoCompilerCodeGenUtilities::generateGetNodeContextExecutingEventId(module, scheduleBlock, compositionContextValue);
 	}
 
 	// Schedule the trigger's worker function via `vuoScheduleTriggerWorker()`.
 	VuoCompilerTriggerPort::generateScheduleWorker(module, function, scheduleBlock,
-												   compositionIdentifierValue, eventIdValue, portContextValue, dataType,
+												   compositionStateValue, eventIdValue, portContextValue, dataType,
 												   minThreadsNeeded, maxThreadsNeeded, chainCount, workerFunction);
 	BranchInst::Create(finalBlock, scheduleBlock);
 
@@ -3542,19 +3563,19 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *
  * void PlayMovie_decodedImage(void *context)
  * {
- *   char *compositionIdentifier = (char *)((void **)context)[0];
+ *   VuoCompositionState *compositionState = (VuoCompositionState *)((void **)context)[0];
  *   VuoImage dataCopy = (VuoImage)((void **)context)[1];
  *   unsigned long *eventIdCopy = (unsigned long *)((void **)context)[2];
  *   unsigned long eventId = *eventIdCopy;
  *
  *   // If paused, ignore this event. Not checked for the published input trigger of a subcomposition.
- *   if (isPaused)
+ *   if (vuoIsPaused())
  *   {
  *     free(dataCopy);
  *     free(context);
  *     vuoReturnThreadsForTriggerWorker(eventId);
  *     dispatch_semaphore_signal(PlayMovie_decodedImage_semaphore);
- *     dispatch_group_leave(vuoTriggerWorkersScheduled);
+ *     dispatch_group_leave(vuoGetTriggerWorkersScheduled());
  *     return;
  *   }
  *   // Otherwise...
@@ -3572,7 +3593,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *   free(context);
  *   signalNodeSemaphore(PlayMovie);
  *   dispatch_semaphore_signal(PlayMovie_decodedImage_semaphore);
- *   dispatch_group_leave(vuoTriggerWorkersScheduled);
+ *   dispatch_group_leave(vuoGetTriggerWorkersScheduled());
  *
  *   // Send telemetry indicating that the trigger port value may have changed.
  *   sendTelemetry(PortHadEvent, PlayMovie_decodedImage, TwirlImage_image);
@@ -3720,13 +3741,13 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	BasicBlock *triggerBlock = BasicBlock::Create(module->getContext(), "trigger", function, NULL);
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 
-	Value *compositionIdentifierValue = trigger->generateCompositionIdentifierValue(module, initialBlock, function);
-	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, initialBlock, compositionIdentifierValue);
+	Value *compositionStateValue = trigger->generateCompositionStateValue(module, initialBlock, function);
+	Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, initialBlock, compositionStateValue);
 	Value *eventIdValue = trigger->generateEventIdValue(module, initialBlock, function);
 
 	VuoCompilerNode *triggerNode = graph->getNodesForTriggerPorts()[trigger];
-	Value *triggerNodeContextValue = triggerNode->generateGetContext(module, initialBlock, compositionIdentifierValue);
-	Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, initialBlock);
+	Value *triggerNodeContextValue = triggerNode->generateGetContext(module, initialBlock, compositionStateValue);
+	Value *triggerWorkersScheduledValue = VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(module, initialBlock, compositionStateValue);
 	bool canDropEvents = (trigger->getBase()->getEventThrottling() == VuoPortClass::EventThrottling_Drop);
 
 	bool isNodeEventForSubcomposition = (! isTopLevelComposition && trigger == getPublishedInputTrigger());
@@ -3735,17 +3756,14 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	{
 		// Check if `isPaused` is true. If so...
 		BasicBlock *isPausedBlock = BasicBlock::Create(module->getContext(), "isPaused", function, NULL);
-		ICmpInst *isPausedValueIsTrue = VuoCompilerCodeGenUtilities::generateIsPausedComparison(module, initialBlock);
+		ICmpInst *isPausedValueIsTrue = VuoCompilerCodeGenUtilities::generateIsPausedComparison(module, initialBlock, compositionStateValue);
 		BranchInst::Create(isPausedBlock, triggerBlock, isPausedValueIsTrue, initialBlock);
 
 		// Release the data value.
 		trigger->generateDataValueDiscardFromWorker(module, isPausedBlock, function);
 
-		// Free the context.
-		trigger->generateFreeContext(module, isPausedBlock, function);
-
 		// Call `vuoReturnThreadsForTriggerWorker()`.
-		VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(module, isPausedBlock, eventIdValue);
+		VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(module, isPausedBlock, eventIdValue, compositionStateValue);
 
 		if (canDropEvents)
 			// Signal the trigger's semaphore for event dropping.
@@ -3766,22 +3784,19 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	{
 		// Claim the semaphores of all necessary downstream nodes.
 		vector<VuoCompilerNode *> triggerWaitNodes = getNodesToWaitOnBeforeTransmission(trigger);
-		generateWaitForNodes(module, function, triggerBlock, compositionIdentifierValue, triggerWaitNodes, eventIdValue);
+		generateWaitForNodes(module, function, triggerBlock, compositionStateValue, triggerWaitNodes, eventIdValue);
 	}
 
 	// Update the trigger's data value.
 	Value *triggerDataValue = trigger->generateDataValueUpdate(module, triggerBlock, function, triggerNodeContextValue);
 
-	// Free the context.
-	trigger->generateFreeContext(module, triggerBlock, function);
-
 	// Transmit events and data (if any) out of the trigger port, and send telemetry for port updates.
-	generateTransmissionFromOutputPort(function, triggerBlock, compositionIdentifierValue, trigger, NULL, triggerDataValue);
+	generateTransmissionFromOutputPort(function, triggerBlock, compositionStateValue, trigger, NULL, triggerDataValue);
 
 	// If the trigger node isn't downstream of the trigger, signal the trigger node's semaphore.
 	vector<VuoCompilerNode *> downstreamNodes = graph->getNodesDownstream(trigger);
 	if (find(downstreamNodes.begin(), downstreamNodes.end(), triggerNode) == downstreamNodes.end())
-		generateSignalForNodes(module, triggerBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, triggerNode));
+		generateSignalForNodes(module, triggerBlock, compositionStateValue, vector<VuoCompilerNode *>(1, triggerNode));
 
 	if (canDropEvents)
 		// Signal the trigger's semaphore for event dropping.
@@ -3826,7 +3841,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 		}
 
 		// Create the context to pass to the chain workers.
-		Value *contextValue = VuoCompilerChain::generateMakeContext(module, triggerBlock, compositionIdentifierValue,
+		Value *contextValue = VuoCompilerChain::generateMakeContext(module, triggerBlock, compositionStateValue,
 																	eventIdValue, allChains, chainsImmediatelyDownstream);
 
 		// Find all chains immediately downstream of the trigger (i.e., chains that have no other chains upstream).
@@ -3840,13 +3855,13 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 		}
 
 		// Schedule those chains.
-		generateAndScheduleChainWorkerFunctions(triggerBlock, contextValue, firstChains, trigger, allChains,
+		generateAndScheduleChainWorkerFunctions(triggerBlock, compositionStateValue, contextValue, firstChains, trigger, allChains,
 												chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled, nodesScheduled);
 	}
 	else
 	{
 		// Call `vuoReturnThreadsForTriggerWorker()`.
-		VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(module, triggerBlock, eventIdValue);
+		VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(module, triggerBlock, eventIdValue, compositionStateValue);
 
 		if (isNodeEventForSubcomposition)
 		{
@@ -3857,6 +3872,11 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	}
 
 	BranchInst::Create(finalBlock, triggerBlock);
+
+	// Free the trigger worker's context.
+	trigger->generateFreeContext(module, finalBlock, function);
+	VuoCompilerCodeGenUtilities::generateReleaseCall(module, finalBlock, compositionStateValue);
+
 	ReturnInst::Create(module->getContext(), finalBlock);
 
 	return function;
@@ -3865,7 +3885,8 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 /**
  * Generates and schedules a chain worker function for each of @a chainsToSchedule.
  */
-void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock, Value *contextValueInScheduler,
+void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock,
+																		  Value *compositionStateValueInScheduler, Value *contextValueInScheduler,
 																		  const vector<VuoCompilerChain *> &chainsToSchedule, VuoCompilerTriggerPort *trigger,
 																		  const vector<VuoCompilerChain *> &allChains,
 																		  const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream,
@@ -3892,15 +3913,17 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunctions(BasicB
 	for (vector<VuoCompilerChain *>::const_iterator i = uniqueChainsToSchedule.begin(); i != uniqueChainsToSchedule.end(); ++i)
 	{
 		VuoCompilerChain *chain = *i;
-		generateAndScheduleChainWorkerFunction(schedulerBlock, contextValueInScheduler, chain, trigger, allChains,
-											   chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled, nodesScheduled);
+		generateAndScheduleChainWorkerFunction(schedulerBlock, compositionStateValueInScheduler, contextValueInScheduler,
+											   chain, trigger, allChains, chainsImmediatelyDownstream, chainsImmediatelyUpstream,
+											   chainsScheduled, nodesScheduled);
 	}
 }
 
 /**
  * Generates a chain worker function, which executes each node in the chain, and schedules the function to run.
  */
-void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock, Value *contextValueInScheduler,
+void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock,
+																		 Value *compositionStateValueInScheduler, Value *contextValueInScheduler,
 																		 VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger,
 																		 const vector<VuoCompilerChain *> &allChains,
 																		 const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream,
@@ -3923,13 +3946,13 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 	for (vector<VuoCompilerChain *>::iterator i = upstreamChains.begin(); i != upstreamChains.end(); ++i)
 		upstreamChainIndices.push_back( find(allChains.begin(), allChains.end(), *i) - allChains.begin() );
 
-	Function *chainWorker = chain->generateScheduleWorker(module, schedulerBlock, contextValueInScheduler,
+	Function *chainWorker = chain->generateScheduleWorker(module, schedulerBlock, compositionStateValueInScheduler, contextValueInScheduler,
 														  trigger->getIdentifier(), minThreadsNeeded, maxThreadsNeeded, chainIndex,
 														  upstreamChainIndices);
 
 	BasicBlock *chainBlock = BasicBlock::Create(module->getContext(), "", chainWorker, 0);
 	Value *contextValueInChainWorker = chainWorker->arg_begin();
-	Value *compositionIdentifierValue = chain->generateCompositionIdentifierValue(module, chainBlock, contextValueInChainWorker);
+	Value *compositionStateValueInChainWorker = chain->generateCompositionStateValue(module, chainBlock, contextValueInChainWorker);
 	Value *eventIdValue = chain->generateEventIdValue(module, chainBlock, contextValueInChainWorker);
 	Value *chainIndexValue = ConstantInt::get(eventIdValue->getType(), chainIndex);
 
@@ -3960,7 +3983,7 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 
 		// If the event hit the node, call its event function and send telemetry.
 		vector<Value *> nodeExecutionArgs;
-		nodeExecutionArgs.push_back(compositionIdentifierValue);
+		nodeExecutionArgs.push_back(compositionStateValueInChainWorker);
 		nodeExecutionArgs.push_back(eventIdValue);
 		nodeExecutionArgs.push_back(chainIndexValue);
 		CallInst *isHitValue = CallInst::Create(nodeExecutionFunction, nodeExecutionArgs, "", chainBlock);
@@ -3969,12 +3992,12 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 		if (! (graph->isRepeatedInFeedbackLoop(node, trigger) && chain->isLastNodeInLoop()))
 		{
 			vector<VuoCompilerNode *> outputNodes = getNodesToWaitOnBeforeTransmission(trigger, node);
-			generateWaitForNodes(module, chainWorker, chainBlock, compositionIdentifierValue, outputNodes, eventIdValue);
+			generateWaitForNodes(module, chainWorker, chainBlock, compositionStateValueInChainWorker, outputNodes, eventIdValue);
 		}
 
 		// If the event hit the node, transmit events and data through its output cables and send telemetry.
 		vector<Value *> nodeTransmissionArgs;
-		nodeTransmissionArgs.push_back(compositionIdentifierValue);
+		nodeTransmissionArgs.push_back(compositionStateValueInChainWorker);
 		nodeTransmissionArgs.push_back(isHitValue);
 		CallInst::Create(nodeTransmissionFunction, nodeTransmissionArgs, "", chainBlock);
 
@@ -3985,7 +4008,7 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 			// Special case: If this is the published output node in a subcomposition and the event came from
 			// `nodeEvent()`/`nodeInstanceEvent()`, the node's semaphore is signaled by that function.
 			if (! (! isTopLevelComposition && node->getBase() == publishedOutputNode && trigger == getPublishedInputTrigger()))
-				generateSignalForNodes(module, chainBlock, compositionIdentifierValue, vector<VuoCompilerNode *>(1, node));
+				generateSignalForNodes(module, chainBlock, compositionStateValueInChainWorker, vector<VuoCompilerNode *>(1, node));
 		}
 
 		nodesScheduled.insert(node);
@@ -4009,12 +4032,12 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 			nextChains.push_back(downstreamChain);
 		}
 
-		generateAndScheduleChainWorkerFunctions(chainBlock, contextValueInChainWorker, nextChains, trigger, allChains,
+		generateAndScheduleChainWorkerFunctions(chainBlock, compositionStateValueInChainWorker, contextValueInChainWorker, nextChains, trigger, allChains,
 												chainsImmediatelyDownstream, chainsImmediatelyUpstream, chainsScheduled, nodesScheduled);
 	}
 
 	// Return the threads used by this chain worker to the thread pool.
-	VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(module, chainBlock, eventIdValue, compositionIdentifierValue, chainIndexValue);
+	VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(module, chainBlock, eventIdValue, compositionStateValueInChainWorker, chainIndexValue);
 
 	// Leave and release the chain's dispatch group. Release the context.
 	chain->generateCleanupForWorkerFunction(module, chainBlock, contextValueInChainWorker, chainIndex, ! downstreamChains.empty());
@@ -4026,7 +4049,7 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
  * Generates a function that executes the node if the node received an event.
  *
  * @eg{
- * bool vuo_math_subtract__Subtract__execute(char *compositionIdentifier, unsigned long eventId, unsigned long chainIndex)
+ * bool vuo_math_subtract__Subtract__execute(VuoCompositionState *compositionState, unsigned long eventId, unsigned long chainIndex)
  * {
  *   bool isHit = vuo_math_subtract__Subtract__refresh_event ||
  *                vuo_math_subtract__Subtract__a_event ||
@@ -4044,19 +4067,19 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
  *   return isHit;
  * }
  *
- * bool my_subcomposition__Subcomposition__execute(char *compositionIdentifier, unsigned long eventId, unsigned long chainIndex)
+ * bool my_subcomposition__Subcomposition__execute(VuoCompositionState *compositionState, unsigned long eventId, unsigned long chainIndex)
  * {
  *   ...
  *   if (isHit)
  *   {
  *     vuoSetNodeContextExecutingEventId(nodeContext, eventId);
- *     vuoGrantThreadsToSubcomposition(eventId, compositionIdentifier, chainIndex, "my_subcomposition__Subcomposition");
+ *     vuoGrantThreadsToSubcomposition(runtimeState, eventId, compositionIdentifier, chainIndex, "my_subcomposition__Subcomposition");
  *     ...
  *   }
  *   return isHit
  * }
  *
- * bool vuo_out__PublishedOutputs__execute(char *compositionIdentifier, unsigned long eventId, unsigned long chainIndex)
+ * bool vuo_out__PublishedOutputs__execute(VuoCompositionState *compositionState, unsigned long eventId, unsigned long chainIndex)
  * {
  *   bool isHit = vuo_out__PublishedOutputs__a_event;
  *
@@ -4070,19 +4093,19 @@ void VuoCompilerBitcodeGenerator::generateAndScheduleChainWorkerFunction(BasicBl
 Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *module, VuoCompilerNode *node)
 {
 	string functionName = node->getIdentifier() + "__execute";
-	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+	PointerType *pointerToCompositionStateType = PointerType::get(VuoCompilerCodeGenUtilities::getCompositionStateType(module), 0);
 	Type *boolType = IntegerType::get(module->getContext(), 1);
 	Type *eventIdType = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module)->getType();
 	vector<Type *> params;
-	params.push_back(pointerToCharType);
+	params.push_back(pointerToCompositionStateType);
 	params.push_back(eventIdType);
 	params.push_back(eventIdType);
 	FunctionType *functionType = FunctionType::get(boolType, params, false);
 	Function *function = Function::Create(functionType, GlobalValue::InternalLinkage, functionName, module);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *eventIdValue = args++;
 	eventIdValue->setName("eventId");
 	Value *chainIndexValue = args++;
@@ -4091,7 +4114,7 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, NULL);
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 
-	Value *nodeContextValue = node->generateGetContext(module, initialBlock, compositionIdentifierValue);
+	Value *nodeContextValue = node->generateGetContext(module, initialBlock, compositionStateValue);
 	Value *isHitValue = node->generateReceivedEventCondition(module, initialBlock, nodeContextValue);
 
 	if (node->getBase() == publishedOutputNode)
@@ -4102,7 +4125,7 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 
 			BasicBlock *currBlock = initialBlock;
 
-			Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, currBlock, compositionIdentifierValue);
+			Value *compositionContextValue = VuoCompilerCodeGenUtilities::generateGetCompositionContext(module, currBlock, compositionStateValue);
 
 			vector<VuoPort *> publishedOutputPortsOnNode = publishedOutputNode->getInputPorts();
 			for (size_t i = VuoNodeClass::unreservedInputPortStartIndex; i < publishedOutputPortsOnNode.size(); ++i)
@@ -4185,15 +4208,16 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 			VuoCompilerCodeGenUtilities::generateSetNodeContextExecutingEventId(module, executeBlock, nodeContextValue, eventIdValue);
 
 			// Pass the chain's reserved threads to the subcomposition.
+			Value *compositionIdentifierValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateCompositionIdentifier(module, executeBlock, compositionStateValue);
 			Value *subcompositionIdentifierValue = node->generateSubcompositionIdentifierValue(module, executeBlock, compositionIdentifierValue);
 			VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(module, executeBlock,
-																			  eventIdValue, compositionIdentifierValue, chainIndexValue,
+																			  eventIdValue, compositionStateValue, chainIndexValue,
 																			  subcompositionIdentifierValue);
 			VuoCompilerCodeGenUtilities::generateFreeCall(module, executeBlock, subcompositionIdentifierValue);
 		}
 
 		// Call the node's event function, and send telemetry that the node's execution has started and finished.
-		generateNodeExecution(function, executeBlock, compositionIdentifierValue, node);
+		generateNodeExecution(function, executeBlock, compositionStateValue, node);
 		BranchInst::Create(finalBlock, executeBlock);
 	}
 
@@ -4206,7 +4230,7 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
  * Generates a function that transmits data and events from the node's output ports after the node has executed.
  *
  * @eg{
- * void vuo_math_subtract__Subtract__transmit(char *compositionIdentifier, bool isHit)
+ * void vuo_math_subtract__Subtract__transmit(VuoCompositionState *compositionState, bool isHit)
  * {
  *   if (isHit)
  *   {
@@ -4229,17 +4253,17 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 Function * VuoCompilerBitcodeGenerator::generateNodeTransmissionFunction(Module *module, VuoCompilerNode *node)
 {
 	string functionName = node->getIdentifier() + "__transmit";
-	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+	PointerType *pointerToCompositionStateType = PointerType::get(VuoCompilerCodeGenUtilities::getCompositionStateType(module), 0);
 	Type *boolType = IntegerType::get(module->getContext(), 1);
 	vector<Type *> params;
-	params.push_back(pointerToCharType);
+	params.push_back(pointerToCompositionStateType);
 	params.push_back(boolType);
 	FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
 	Function *function = Function::Create(functionType, GlobalValue::InternalLinkage, functionName, module);
 
 	Function::arg_iterator args = function->arg_begin();
-	Value *compositionIdentifierValue = args++;
-	compositionIdentifierValue->setName("compositionIdentifier");
+	Value *compositionStateValue = args++;
+	compositionStateValue->setName("compositionState");
 	Value *isHitValue = args++;
 	isHitValue->setName("isHit");
 
@@ -4250,17 +4274,17 @@ Function * VuoCompilerBitcodeGenerator::generateNodeTransmissionFunction(Module 
 	// If the node received an event, then...
 	BranchInst::Create(transmitBlock, finalBlock, isHitValue, initialBlock);
 
-	Value *nodeContextValue = node->generateGetContext(module, transmitBlock, compositionIdentifierValue);
+	Value *nodeContextValue = node->generateGetContext(module, transmitBlock, compositionStateValue);
 
 	if (node->getBase() == publishedOutputNode)
 	{
 		if (isTopLevelComposition)
-			generateTelemetryFromPublishedOutputNode(function, transmitBlock, nodeContextValue, node);
+			generateTelemetryFromPublishedOutputNode(function, transmitBlock, compositionStateValue, nodeContextValue, node);
 	}
 	else
 	{
 		// Transmit events and data through the node's outgoing cables, and send telemetry for port updates.
-		generateTransmissionFromNode(function, transmitBlock, compositionIdentifierValue, nodeContextValue, node);
+		generateTransmissionFromNode(function, transmitBlock, compositionStateValue, nodeContextValue, node);
 	}
 
 	// Reset the node's event inputs and outputs.

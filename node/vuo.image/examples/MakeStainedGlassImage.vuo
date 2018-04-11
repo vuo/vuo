@@ -2,7 +2,7 @@
  * @file
  * Demonstrates the stained glass image filter, with tile and border sizes controlled by the mouse.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -14,17 +14,15 @@ Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Conv
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="435,930"];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="15,510" _url="\"Simon.jpg\""];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,0" fillcolor="yellow" _started_eventThrottling="enqueue"];
-LimitToRange [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="420,825" _minimum="0" _maximum="0.080000000000000002" _wrapMode="\"saturate\""];
-LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="420,690" _minimum="0" _maximum="0.20000000000000001" _wrapMode="\"saturate\""];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="405,495" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="405,495" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,386" fillcolor="green"];
 MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,356" fillcolor="green"];
 MakeStainedGlassImage [type="vuo.image.stainedGlass" version="1.0.0" label="Make Stained Glass Image|<refresh>refresh\l|<image>image\l|<tileSize>tileSize\l|<center>center\l|<chaos>chaos\l|<borderColor>borderColor\l|<borderWidth>borderWidth\l|<stainedGlassImage>stainedGlassImage\r" pos="165,510" fillcolor="violet" _center="{\"x\":0.0,\"y\":0.0}" _chaos="0.69999999999999996" _borderColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="195,195" _text="\"Move the mouse up and down to change the tile size.\\nMove the mouse left and right to change the border width.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="0,690" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="660,345" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="255,825" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="0.080000000000000002"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="255,690" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="0.20000000000000001"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="630,345" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="255,825" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="0.080000000000000002" _limitToRange="true"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="255,690" _start="-0.500000" _end="0.500000" _scaledStart="0" _scaledEnd="0.20000000000000001" _limitToRange="true"];
 
 AlignLayerToWindow:alignedLayer -> MakeList2:1;
 Convert2DPointToReal2:y -> Scale:value;
@@ -32,8 +30,6 @@ Convert2DPointToReal:x -> Scale2:value;
 FetchImage:image -> MakeStainedGlassImage:image;
 FireOnStart2:started -> FetchImage:refresh;
 FireOnStart2:started -> MakeTextLayer:refresh;
-LimitToRange2:limitedValue -> MakeStainedGlassImage:borderWidth;
-LimitToRange:limitedValue -> MakeStainedGlassImage:tileSize;
 MakeLayer:layer -> MakeList2:2;
 MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList2:list -> RenderLayersToWindow2:layers;
@@ -44,6 +40,6 @@ ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
 RenderLayersToWindow2:requestedFrame -> MakeTextLayer:refresh [style=invis];
 RenderLayersToWindow2:showedWindow -> AlignLayerToWindow:window [style=invis];
 RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window [style=invis];
-Scale2:scaledValue -> LimitToRange2:value;
-Scale:scaledValue -> LimitToRange:value;
+Scale2:scaledValue -> MakeStainedGlassImage:borderWidth;
+Scale:scaledValue -> MakeStainedGlassImage:tileSize;
 }

@@ -2,7 +2,7 @@
  * @file
  * Prototypes for node class, type, and library module implementations.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -111,72 +111,66 @@
 #endif
 #include <dispatch/dispatch.h>
 
-#include <dlfcn.h>
+/**
+ * Callback prototype for @ref VuoAddCompositionFiniCallback().
+ */
+typedef void (*VuoCompositionFiniCallback)(void);
+
+/**
+ * Returns the directory that nodes should use to resolve relative paths.
+ */
+char * VuoGetWorkingDirectory(void);
+
+/**
+ * Returns the process ID of the runner that started the composition.
+ */
+pid_t VuoGetRunnerPid(void);
 
 /**
  * Asynchronously stops the composition.
  */
-static inline void VuoStopComposition(void)
-{
-	typedef void (*vuoStopCompositionType)(void);
-	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
-	if (!vuoStopComposition)
-		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
-	vuoStopComposition();
-}
+void VuoStopComposition(void);
+
+/**
+ * Asynchronously stops the composition.
+ *
+ * @ref VuoStopComposition() is typically preferable to this function, since this function
+ * doesn't handle multiple compositions running in the process.
+ */
+void VuoStopCurrentComposition(void);
+
+/**
+ * Registers a callback to be invoked when the composition is shutting down,
+ * after `nodeInstanceFini()` has been called for all nodes.
+ *
+ * `VuoCompositionFiniCallback`s are not called during livecoding reloads.
+ */
+void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini);
+
+/**
+ * Temporarily disables automatic termination.
+ *
+ * When a composition is asked to shut down, a watchdog timer waits a few seconds then force-quits
+ * if it hasn't cleanly shut down by then. This disables that watchdog.
+ *
+ * Call this before entering a section where it would be undesirable to have the composition
+ * automatically force-quit, such as when saving a movie file that needs to be finalized.
+ *
+ * When the work is over, call @ref VuoEnableTermination().
+ */
+void VuoDisableTermination(void);
+
+/**
+ * Resumes automatic termination after a call to @ref VuoDisableTermination().
+ */
+void VuoEnableTermination(void);
 
 /**
  * Returns true if nodes should apply free trial restrictions.
  */
-static inline bool VuoIsTrial(void)
-{
-	bool **trialRestrictionsEnabled = (bool **) dlsym(RTLD_SELF, "VuoTrialRestrictionsEnabled");
-	if (!trialRestrictionsEnabled)
-		trialRestrictionsEnabled = (bool **) dlsym(RTLD_DEFAULT, "VuoTrialRestrictionsEnabled");
-	if (!trialRestrictionsEnabled)
-	{
-//		VLog("Warning: Couldn't find symbol VuoTrialRestrictionsEnabled.");
-		return true;
-	}
-	if (!*trialRestrictionsEnabled)
-	{
-//		VLog("Warning: VuoTrialRestrictionsEnabled isn't allocated.");
-		return true;
-	}
-//	VLog("trialRestrictionsEnabled = %d",**trialRestrictionsEnabled);
-	return **trialRestrictionsEnabled;
-}
+bool VuoIsTrial(void);
 
 /**
  * Returns true if nodes/libraries should enable Pro features.
  */
-static inline bool VuoIsPro(void)
-{
-	bool *proEnabled = (bool *) dlsym(RTLD_SELF, "VuoProEnabled");
-	if (!proEnabled)
-		proEnabled = (bool *) dlsym(RTLD_DEFAULT, "VuoProEnabled");
-	if (!proEnabled)
-	{
-//		VLog("Warning: Couldn't find symbol VuoProEnabled.");
-		return true;
-	}
-	return *proEnabled;
-}
-
-typedef void (*VuoCompositionFiniCallback)(void);	///< Callback prototype.
-
-/**
- * Registers a callback to be invoked when the composition is shutting down,
- * after all nodes have been fini'd.
- *
- * `VuoCompositionFiniCallback`s are not called during livecoding reloads.
- */
-static inline void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini)
-{
-	typedef void (*vuoAddCompositionFiniCallbackType)(VuoCompositionFiniCallback);
-	vuoAddCompositionFiniCallbackType vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_SELF, "vuoAddCompositionFiniCallback");
-	if (!vuoAddCompositionFiniCallback)
-		vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_DEFAULT, "vuoAddCompositionFiniCallback");
-	if (vuoAddCompositionFiniCallback)
-		vuoAddCompositionFiniCallback(fini);
-}
+bool VuoIsPro(void);
