@@ -2,7 +2,7 @@
  * @file
  * TestVuoUrl implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -62,9 +62,11 @@ private slots:
 		QTest::newRow("absolute URL")				<< "http://vuo.org"				<< "http://vuo.org"							<< false << ""									<< ""										<< "";
 		QTest::newRow("absolute URL/")				<< "http://vuo.org/"			<< "http://vuo.org"							<< false << ""									<< ""										<< "";
 		QTest::newRow("absolute URL space")			<< "http://vuo.org/a b.png"		<< "http://vuo.org/a%20b.png"				<< false << ""									<< ""										<< "";
+		QTest::newRow("absolute URL UTF-8")         << "https://de.wikipedia.org/wiki/Franzbrötchen" << "https://de.wikipedia.org/wiki/Franzbr%C3%B6tchen" << false << ""       << ""                                       << "";
 		QTest::newRow("data")                       << "data:;base64,AA=="          << "data:;base64,AA=="                      << false << ""                                  << ""                                       << "";
 		QTest::newRow("relative file")				<< "file"						<< baseUrl + "/file"						<< true  << basePath + "/file"					<< resourcesPath + "/file"					<< desktopPath + "/file";
-		QTest::newRow("relative file ?")			<< "file?.wav"					<< baseUrl + "/file%3f.wav"					<< true  << basePath + "/file?.wav"				<< resourcesPath + "/file?.wav"				<< desktopPath + "/file?.wav";
+		QTest::newRow("relative file UTF-8")        << "ƒile"                       << baseUrl + "/%C6%92ile"                   << true  << basePath + "/ƒile"                  << resourcesPath + "/ƒile"                  << desktopPath + "/ƒile";
+		QTest::newRow("relative file ?")            << "file?.wav"                  << baseUrl + "/file%3F.wav"                 << true  << basePath + "/file?.wav"             << resourcesPath + "/file?.wav"             << desktopPath + "/file?.wav";
 		QTest::newRow("relative dir/")				<< "dir/"						<< baseUrl + "/dir"							<< true  << basePath + "/dir"					<< resourcesPath + "/dir"					<< desktopPath + "/dir";
 		QTest::newRow("relative dir/file")			<< "dir/file"					<< baseUrl + "/dir/file"					<< true  << basePath + "/dir/file"				<< resourcesPath + "/dir/file"				<< desktopPath + "/dir/file";
 		QTest::newRow("relative ./file")			<< "./Makefile"					<< baseUrl + "/Makefile"					<< true  << basePath + "/Makefile"				<< resourcesPath + "/Makefile"				<< desktopPath + "/Makefile";
@@ -72,7 +74,7 @@ private slots:
 		QTest::newRow("relative ../../file")		<< "../../Makefile"				<< baseUrlParentParent + "/Makefile"		<< true  << basePathParentParent + "/Makefile"	<< resourcesPathParentParent + "/Makefile"	<< desktopPath + "/../../Makefile" /* Doesn't exist, so "../.." remains. */;
 		QTest::newRow("absolute file")				<< "/mach_kernel"				<< fileScheme + "/mach_kernel"				<< true  << "/mach_kernel"						<< "/mach_kernel"							<< "/mach_kernel";
 		QTest::newRow("absolute file @")			<< "/mach_kernel@b"				<< fileScheme + "/mach_kernel%40b"			<< true  << "/mach_kernel@b"					<< "/mach_kernel@b"							<< "/mach_kernel@b";
-		QTest::newRow("absolute colon")				<< "/ScreenShot 09:41:00"		<< fileScheme + "/ScreenShot%2009%3a41%3a00"<< true  << "/ScreenShot 09꞉41꞉00"				<< "/ScreenShot 09꞉41꞉00"					<< "/ScreenShot 09꞉41꞉00";
+		QTest::newRow("absolute colon")             << "/ScreenShot 09:41:00"       << fileScheme + "/ScreenShot%2009%3A41%3A00"<< true  << "/ScreenShot 09꞉41꞉00"              << "/ScreenShot 09꞉41꞉00"                   << "/ScreenShot 09꞉41꞉00";
 		QTest::newRow("absolute dir/")				<< "/usr/include/"				<< fileScheme + "/usr/include"				<< true  << "/usr/include"						<< "/usr/include"							<< "/usr/include";
 		QTest::newRow("absolute dir space")			<< "/Library/Desktop Pictures"	<< "file:///Library/Desktop%20Pictures"		<< true  << "/Library/Desktop Pictures"			<< "/Library/Desktop Pictures"				<< "/Library/Desktop Pictures";
 		QTest::newRow("absolute dir/file")			<< "/usr/include/stdio.h"		<< fileScheme + "/usr/include/stdio.h"		<< true  << "/usr/include/stdio.h"				<< "/usr/include/stdio.h"					<< "/usr/include/stdio.h";
@@ -104,7 +106,7 @@ private slots:
 		{
 			QCOMPARE(posixPath, expectedPosixPath.toUtf8().data());
 
-			VuoText escapedPosixPath = VuoUrl_escapePosixPath(expectedPosixPath.toUtf8().data());
+			VuoText escapedPosixPath = VuoUrl_escapeUTF8(VuoUrl_escapePosixPath(expectedPosixPath.toUtf8().data()));
 			QCOMPARE(QString("file://") + escapedPosixPath, QString(expectedNormalizedUrl));
 
 

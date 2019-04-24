@@ -2,7 +2,7 @@
  * @file
  * vuo.rss.fetch node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -266,6 +266,9 @@ void nodeEvent
 							}
 							rssItem.imageUrl = VuoText_makeFromXmlContent(imgCur);
 						}
+
+					if (!rssItem.imageUrl)
+						rssItem.imageUrl = VuoText_makeFromXmlContent(itemCur);
 				}
 				else if(!itemCur->ns && strcmp((const char*)itemCur->name, "category") == 0)
 					VuoListAppendValue_VuoText(rssItem.categories, VuoText_makeFromXmlContent(itemCur));

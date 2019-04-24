@@ -2,7 +2,7 @@
  * @file
  * TestVuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoSceneObject.h"
+#include "VuoSceneObjectGet.h"
 #include "VuoSceneRenderer.h"
 #include "VuoMeshParametric.h"
 #include "VuoList_VuoSceneObject.h"
@@ -53,7 +54,8 @@ class TestVuoSceneObject : public QObject
 											   false,		// close u
 											   0, 1,
 											   false,		// close v
-											   0, 1);
+											   0, 1,
+											   NULL);
 		return VuoSceneObject_make(m, VuoShader_makeDefaultShader(), VuoTransform_makeIdentity(), NULL);
 	}
 
@@ -321,7 +323,7 @@ private slots:
 		}
 
 		{
-			VuoMesh m = VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6);
+			VuoMesh m = VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL);
 			VuoSceneObject o = VuoSceneObject_make(
 						m,
 						VuoShader_makeDefaultShader(),
@@ -335,7 +337,7 @@ private slots:
 
 		{
 			VuoSceneObject o = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						VuoListCreate_VuoSceneObject()
@@ -347,7 +349,7 @@ private slots:
 
 		{
 			VuoSceneObject child = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						VuoListCreate_VuoSceneObject()
@@ -357,7 +359,7 @@ private slots:
 			VuoListAppendValue_VuoSceneObject(childObjects, child);
 
 			VuoSceneObject parent = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6),
+						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						childObjects
@@ -370,7 +372,7 @@ private slots:
 
 		{
 			VuoSceneObject grandchild = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						VuoListCreate_VuoSceneObject()
@@ -380,7 +382,7 @@ private slots:
 			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchild);
 
 			VuoSceneObject child = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						grandchildObjects
@@ -390,7 +392,7 @@ private slots:
 			VuoListAppendValue_VuoSceneObject(childObjects, child);
 
 			VuoSceneObject parent = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6),
+						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						childObjects
@@ -403,7 +405,7 @@ private slots:
 
 		{
 			VuoSceneObject grandchild = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						VuoListCreate_VuoSceneObject()
@@ -413,7 +415,7 @@ private slots:
 			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchild);
 
 			VuoSceneObject child = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1),
+						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 						grandchildObjects
@@ -423,7 +425,7 @@ private slots:
 			VuoListAppendValue_VuoSceneObject(childObjects, child);
 
 			VuoSceneObject parent = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6),
+						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(2,2,2)),
 						childObjects
@@ -436,7 +438,7 @@ private slots:
 
 		{
 			VuoSceneObject o = VuoSceneObject_make(
-						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6),
+						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
 						VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0,0,M_PI/2), VuoPoint3d_make(1,1,1)),
 						VuoListCreate_VuoSceneObject()
@@ -895,6 +897,48 @@ private slots:
 		VuoRetain(spotLights);
 		VuoRelease(spotLights);
 		VuoSceneObject_release(so);
+	}
+
+	void testFetch_data()
+	{
+		QTest::addColumn<QString>("file");
+		QTest::addColumn<unsigned long>("expectedDescendants");
+		QTest::addColumn<unsigned long>("expectedVertices");
+		QTest::addColumn<unsigned long>("expectedElements");
+
+		// https://vuo.org/node/2064
+		// https://b33p.net/kosada/node/13962
+		QTest::newRow("scene with large mesh") << "vuoorg-2064.obj" << 3UL << 196608UL << 196608UL;
+	}
+	void testFetch()
+	{
+		QFETCH(QString, file);
+		QFETCH(unsigned long, expectedDescendants);
+		QFETCH(unsigned long, expectedVertices);
+		QFETCH(unsigned long, expectedElements);
+
+		VuoSceneObject scene;
+		bool successfullyLoaded = VuoSceneObject_get(QString("resources/mesh/%1").arg(file).toUtf8().data(), &scene, false, false, false);
+		QVERIFY(successfullyLoaded);
+
+		unsigned long descendantCount = 0;
+		unsigned long totalVertexCount = 0;
+		unsigned long totalElementCount = 0;
+		VuoSceneObject_getStatistics(scene, &descendantCount, &totalVertexCount, &totalElementCount);
+		QCOMPARE(descendantCount, expectedDescendants);
+		QCOMPARE(totalVertexCount, expectedVertices);
+		QCOMPARE(totalElementCount, expectedElements);
+
+		__block bool hasMultipleSubmeshes = false;
+		VuoSceneObject_visit(scene, ^bool(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+			if (currentObject->mesh && currentObject->mesh->submeshCount > 1)
+			{
+				hasMultipleSubmeshes = true;
+				return false;
+			}
+			return true;
+		});
+		QVERIFY2(hasMultipleSubmeshes == false, "An object has multiple submeshes, but the multiple submesh feature is deprecated.");
 	}
 };
 

@@ -17,7 +17,7 @@ HTML_FOOTER            = DoxygenFooter.html
 HTML_STYLESHEET        = Doxygen.css
 GENERATE_LATEX         = NO
 GENERATE_TODOLIST      = YES
-ALIASES                = "eg{1}=@par Example:\n@code \1 @endcode"
+ALIASES                = "eg{1}=@par Example:^^@code \1 @endcode"
 ALIASES               += "term{1}=<span style='color:rgb(66,153,0); font-weight: bold'>\1</span>"
 ALIASES               += "vuoPort{1}=<b>\1</b>"
 ALIASES               += "vuoNode{1}=<b>\1</b>"
@@ -70,6 +70,7 @@ EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.vuonode+
 EXCLUDE_PATTERNS      += */node/vuo.*/descriptions/*
 EXCLUDE_PATTERNS      += */node/vuo.*/examples/*
 EXCLUDE_PATTERNS      += */node/vuo.audio/VuoBeatDetektor.*
+EXCLUDE_PATTERNS      += */node/vuo.blackmagic/blackmagic-decklink-sdk/*.h
 EXCLUDE_PATTERNS      += */node/vuo.leap/Leap/*.h
 EXCLUDE_PATTERNS      += */node/vuo.*/*.framework
 EXCLUDE_PATTERNS      += */node-Test*/*

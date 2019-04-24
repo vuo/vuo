@@ -1,6 +1,3 @@
-![](https://tokei.rs/b1/github/vuo/vuo) ![](https://tokei.rs/b1/github/vuo/vuo?category=comments)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ca246f89ad984204a5ba66698c9b3228)](https://www.codacy.com/app/smokris/vuo?utm_source=github.com&utm_medium=referral&utm_content=vuo/vuo&utm_campaign=badger)
-
 These instructions are for building Vuo Base, Vuo Compiler, Vuo Renderer, Vuo Runtime, and the built-in Vuo Nodes and Types from source code.
 
 Vuo's source code is available so you can learn about how Vuo works, tinker with it, and maybe even help develop Vuo.
@@ -356,6 +353,7 @@ If you're running any version of macOS:
     cd ffmpeg-2.1
     ./configure --prefix=/usr/local/Cellar/ffmpeg/2.1 \
         --disable-programs --disable-doc \
+        --enable-openssl \
         --disable-runtime-cpudetect --disable-ssse3 --disable-sse4 --disable-sse42 --disable-avx \
         --enable-shared --disable-stripping --disable-static --enable-pthreads --enable-yasm --disable-debug \
         --enable-demuxer=mpegts --enable-demuxer=mpegtsraw \
@@ -575,9 +573,8 @@ Install [Pandoc](https://github.com/jgm/pandoc/releases/).
 
 ### Doxygen
 
-Install Doxygen 1.8.1.2:
+Install Doxygen:
 
-    (cd /usr/local && git checkout af32cda Library/Formula/doxygen.rb)
     brew install doxygen
 
 ### Docbook

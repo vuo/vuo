@@ -17,8 +17,7 @@ OTHER_FILES += \
 INCLUDEPATH += $$ROOT/node/vuo.keyboard
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/library/VuoApp.o \
-	$$ROOT/library/libmodule.o \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/node/vuo.keyboard/VuoKey.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \

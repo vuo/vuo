@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -306,7 +306,7 @@ static const char VuoUrl_reservedCharacters[] =
 };
 
 /**
- * URL-escapes characters in `path` to make it a valid URL path.
+ * URL-escapes characters in `path` to make it a valid IRI path.
  */
 VuoText VuoUrl_escapePosixPath(const VuoText path)
 {
@@ -328,7 +328,7 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 	// Escape the string.
 	char *escapedUrl = (char *)malloc(escapedLength + 1);
 	unsigned long outIndex = 0;
-	const char *hexCharSet = "0123456789abcdef";
+	const char *hexCharSet = "0123456789ABCDEF";  // Uppercase per https://tools.ietf.org/html/rfc3987#section-3.1
 	for (unsigned long inIndex = 0; inIndex < inLength; ++inIndex)
 	{
 		unsigned char c = path[inIndex];
@@ -367,6 +367,45 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 	return escapedUrlVT;
 }
 
+/**
+ * URL-escapes UTF-8 bytes greater than 0x7F.
+ */
+VuoText VuoUrl_escapeUTF8(const VuoText url)
+{
+	// Figure out how many characters we need to allocate for the escaped string.
+	unsigned long inLength = strlen(url);
+	unsigned long escapedLength = 0;
+	for (unsigned long i = 0; i < inLength; ++i)
+	{
+		if ((unsigned char)url[i] > 0x7f)
+			escapedLength += 2;  // Expanding 1 character to "%xx"
+		++escapedLength;
+	}
+
+	// Escape the string.
+	char *escapedUrl = (char *)malloc(escapedLength + 1);
+	unsigned long outIndex = 0;
+	const char *hexCharSet = "0123456789ABCDEF";  // Uppercase per https://tools.ietf.org/html/rfc3987#section-3.1
+	for (unsigned long inIndex = 0; inIndex < inLength; ++inIndex)
+	{
+		unsigned char c = url[inIndex];
+		if (c > 0x7f)
+		{
+			escapedUrl[outIndex++] = '%';
+			escapedUrl[outIndex++] = hexCharSet[c >> 4];
+			escapedUrl[outIndex++] = hexCharSet[c & 0x0f];
+		}
+		else
+			escapedUrl[outIndex++] = c;
+	}
+	escapedUrl[outIndex] = 0;
+
+	VuoText escapedUrlVT = VuoText_make(escapedUrl);
+	free(escapedUrl);
+
+	return escapedUrlVT;
+}
+
 static const char *VuoUrl_fileScheme = "file://"; ///< URL scheme for local files.
 static const char *VuoUrl_httpScheme = "http://"; ///< URL scheme for HTTP.
 
@@ -384,6 +423,10 @@ static const char *VuoUrl_httpScheme = "http://"; ///< URL scheme for HTTP.
  * If `url` is NULL, returns NULL.
  *
  * If `url` is emptystring, returns a file URL for the current working path (or Desktop if VuoUrlNormalize_forSaving is set).
+ *
+ * Additionally, this function maps Internationalized Resource Identifiers (IRIs) to URLs;
+ * that is, it percent-escapes UTF-8 bytes greater than 0x7F (RFC 3987).
+ * (However, currently, no Unicode normalization is performed.)
  */
 VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 {
@@ -559,9 +602,12 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		resolvedUrl[lastIndex] = 0;
 
 	VuoText resolvedUrlVT = VuoText_make(resolvedUrl);
+	VuoRetain(resolvedUrlVT);
 	free(resolvedUrl);
 
-	return resolvedUrlVT;
+	VuoText escapedUrl = VuoUrl_escapeUTF8(resolvedUrlVT);
+	VuoRelease(resolvedUrlVT);
+	return escapedUrl;
 }
 
 /**

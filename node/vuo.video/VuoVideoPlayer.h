@@ -2,7 +2,7 @@
  * @file
  * VuoVideoPlayer interface.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -47,6 +47,7 @@ private:
 
 		videoFrameReceivedDelegate = NULL;
 		audioFrameReceivedDelegate = NULL;
+		videoPlaybackFinishedDelegate = NULL;
 	}
 
 	/// Private destructor.  Use VuoVideoPlayer::Destroy() instead.
@@ -67,7 +68,10 @@ private:
 	/// the dispatch time that playback began
 	dispatch_time_t playbackStart;
 
-	/// the timestamp that playback began on (from video stream, converted to seconds)
+	/**
+	 * The timestamp that playback began on (from video stream, converted to seconds).
+	 * Updated at the end of each loop / mirror bounce.
+	 */
 	double timestampStart;
 
 	/// Timer for video thread
@@ -175,6 +179,11 @@ public:
 	/// Delegate to call when a new audio frame is available
 	void (* audioFrameReceivedDelegate)(VuoList_VuoAudioSamples);
 
+	/// Delegate to call when video playback completes or loops.
+	/// Note that this is only called when making use of the VuoVideoPlayer playback functionality -
+	/// that is, if you're stepping and seeking frames manually this event will not fire.
+	void (* videoPlaybackFinishedDelegate)(void);
+
 	/// What to do when playback is finished
 	VuoLoopType loop;
 
@@ -191,6 +200,14 @@ public:
 	 */
 	void SetAudioDelegate(void(*func)(VuoList_VuoAudioSamples)) {
 		audioFrameReceivedDelegate = func;
+	}
+
+	/**
+	 * Set the pointer to the static function that will be called when playback reaches the final frame
+	 * (or first frame if playback rate is negative).
+	 */
+	void SetFinishedDelegate(void(*func)()) {
+		videoPlaybackFinishedDelegate = func;
 	}
 
 	/// Set the playback speed.  Can be negative or positive.  Events to videoFrameReceivedDelegate will be sent at a rate of `video fps * rate`.

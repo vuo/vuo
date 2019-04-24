@@ -154,25 +154,25 @@ copyLibraryModules.commands = \
 	&& install_name_tool -change "$$LIBUSB_ROOT/lib/libusb-1.0.0.dylib" "@rpath/$$MODULES_DEST_DIR/libusb.dylib" "$$MODULES_DEST_DIR/libfreenect.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libusb.dylib" "$$MODULES_DEST_DIR/libusb.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavdevice.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavfilter.3.dylib" "@rpath/$$MODULES_DEST_DIR/libavfilter.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavformat.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "@rpath/libavfilter.dylib" "@rpath/$$MODULES_DEST_DIR/libavfilter.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "@rpath/libavformat.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "@rpath/libavcodec.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavfilter.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavformat.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libswresample.0.dylib" "@rpath/$$MODULES_DEST_DIR/libswresample.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libswscale.2.dylib" "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "@rpath/libavformat.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "@rpath/libavcodec.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "@rpath/libswresample.dylib" "@rpath/$$MODULES_DEST_DIR/libswresample.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "@rpath/libswscale.dylib" "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
+	&& install_name_tool -change "@rpath/libavcodec.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswresample.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
-	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
+	&& install_name_tool -change "@rpath/libavutil.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libfreeimage.dylib" "$$MODULES_DEST_DIR/libfreeimage.dylib" \
@@ -363,7 +363,6 @@ LIBS += \
 	$$MODULES_DEST_DIR/libcsv.dylib \
 	$$LIBXML2_ROOT/lib/libxml2.a \
 	$$CURL_ROOT/lib/libcurl.a \
-	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoIOReturn.o \
 	$$ROOT/library/VuoImageRenderer.o \
@@ -381,7 +380,7 @@ LIBS += \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/VuoUrlParser.o \
 	$$ROOT/library/libcsgjs.a \
-	$$ROOT/library/libmodule.o \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
@@ -475,6 +474,7 @@ linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	$$LLVM_DYLIB_DEST \
 	$$MODULES_DEST_DIR/libLeap.dylib \
+	../library/libVuoApp.dylib \
 	../library/libVuoGlContext.dylib \
 	../library/libVuoGlPool.dylib \
 	../library/libVuoHeap.dylib \
@@ -513,7 +513,7 @@ QMAKE_EXTRA_TARGETS += createLinks
 fixOtherProjects.commands = \
 	( \
 		fgrep -q framework/Vuo.framework/Headers/Vuo/Vuo.h ../editor/VuoEditorApp/Makefile \
-		|| (cd .. && /usr/local/bin/qmake -spec macx-clang CONFIG+="'$$VUO_QMAKE_CONFIG'" -r) \
+		|| (cd .. && /usr/local/Cellar/qt/5.6.2/bin/qmake -spec macx-clang CONFIG+="'$$VUO_QMAKE_CONFIG'" -r) \
 	) \
 	&& rm -Rf $$ROOT/editor/VuoEditorApp/pch \
 	&& touch fixedOtherProjects

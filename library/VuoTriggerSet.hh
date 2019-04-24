@@ -2,7 +2,7 @@
  * @file
  * VuoTriggerSet interface and implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -17,7 +17,7 @@
  *
  * It's safe for multiple threads to call @ref addTrigger(), @ref removeTrigger(), @ref size(), and @ref fire() on the same set.
  */
-template<typename TriggerDataType>
+template<typename TriggerDataType, typename TriggerContextType = void *>
 class VuoTriggerSet
 {
 public:
@@ -28,21 +28,24 @@ public:
 	~VuoTriggerSet();
 
 	void addTrigger(TriggerFunctionType trigger);
+	void addTrigger(TriggerFunctionType trigger, TriggerContextType context);
 	void removeTrigger(TriggerFunctionType trigger);
 	unsigned int size(void);
 
 	void fire(TriggerDataType data);
+	void fire(void (^)(TriggerFunctionType trigger, TriggerContextType context));
 
 private:
 	dispatch_queue_t queue;	///< Serializes access to the following trigger method.
 	std::set<TriggerFunctionType> triggers;
+	std::set< std::pair<TriggerFunctionType, TriggerContextType> > triggersWithContext;
 };
 
 /**
  * Creates a new trigger set.
  */
-template<typename TriggerDataType>
-VuoTriggerSet<TriggerDataType>::VuoTriggerSet()
+template<typename TriggerDataType, typename TriggerContextType>
+VuoTriggerSet<TriggerDataType, TriggerContextType>::VuoTriggerSet()
 {
 	this->queue = dispatch_queue_create("VuoTriggerSet", NULL);
 }
@@ -50,8 +53,8 @@ VuoTriggerSet<TriggerDataType>::VuoTriggerSet()
 /**
  * Destroys the trigger set.
  */
-template<typename TriggerDataType>
-VuoTriggerSet<TriggerDataType>::~VuoTriggerSet()
+template<typename TriggerDataType, typename TriggerContextType>
+VuoTriggerSet<TriggerDataType, TriggerContextType>::~VuoTriggerSet()
 {
 	dispatch_release(this->queue);
 }
@@ -61,12 +64,25 @@ VuoTriggerSet<TriggerDataType>::~VuoTriggerSet()
  *
  * @threadAny
  */
-template<typename TriggerDataType>
-void VuoTriggerSet<TriggerDataType>::addTrigger(TriggerFunctionType trigger)
+template<typename TriggerDataType, typename TriggerContextType>
+void VuoTriggerSet<TriggerDataType, TriggerContextType>::addTrigger(TriggerFunctionType trigger)
 {
 	dispatch_sync(queue, ^{
-					  triggers.insert(trigger);
-				  });
+		triggers.insert(trigger);
+	});
+}
+
+/**
+ * Adds a trigger method, with caller-defined context data, to the trigger set.
+ *
+ * @threadAny
+ */
+template<typename TriggerDataType, typename TriggerContextType>
+void VuoTriggerSet<TriggerDataType, TriggerContextType>::addTrigger(TriggerFunctionType trigger, TriggerContextType context)
+{
+	dispatch_sync(queue, ^{
+		triggersWithContext.insert(std::make_pair(trigger, context));
+	});
 }
 
 /**
@@ -74,12 +90,18 @@ void VuoTriggerSet<TriggerDataType>::addTrigger(TriggerFunctionType trigger)
  *
  * @threadAny
  */
-template<typename TriggerDataType>
-void VuoTriggerSet<TriggerDataType>::removeTrigger(TriggerFunctionType trigger)
+template<typename TriggerDataType, typename TriggerContextType>
+void VuoTriggerSet<TriggerDataType, TriggerContextType>::removeTrigger(TriggerFunctionType trigger)
 {
 	dispatch_sync(queue, ^{
-					  triggers.erase(trigger);
-				  });
+		triggers.erase(trigger);
+
+		for (typename std::set< std::pair<TriggerFunctionType, TriggerContextType> >::iterator it = triggersWithContext.begin(); it != triggersWithContext.end(); )
+			if (it->first == trigger)
+				triggersWithContext.erase(it++);
+			else
+				++it;
+	});
 }
 
 /**
@@ -87,23 +109,23 @@ void VuoTriggerSet<TriggerDataType>::removeTrigger(TriggerFunctionType trigger)
  *
  * @threadAny
  */
-template<typename TriggerDataType>
-unsigned int VuoTriggerSet<TriggerDataType>::size(void)
+template<typename TriggerDataType, typename TriggerContextType>
+unsigned int VuoTriggerSet<TriggerDataType, TriggerContextType>::size(void)
 {
 	__block unsigned int size;
 	dispatch_sync(queue, ^{
-					  size = triggers.size();
-				  });
+		size = triggers.size() + triggersWithContext.size();
+	});
 	return size;
 }
 
 /**
- * Fires all the triggers in the trigger set, passing them @c data.
+ * Fires the contextless triggers in the trigger set, passing them @c data.
  *
  * @threadAny
  */
-template<typename TriggerDataType>
-void VuoTriggerSet<TriggerDataType>::fire(TriggerDataType data)
+template<typename TriggerDataType, typename TriggerContextType>
+void VuoTriggerSet<TriggerDataType, TriggerContextType>::fire(TriggerDataType data)
 {
 	dispatch_sync(queue, ^{
 					   for (typename std::set<TriggerFunctionType>::iterator it = triggers.begin(); it != triggers.end(); ++it)
@@ -111,3 +133,16 @@ void VuoTriggerSet<TriggerDataType>::fire(TriggerDataType data)
 				   });
 }
 
+/**
+ * Fires the context-having triggers in the trigger set, passing them @c data.
+ *
+ * @threadAny
+ */
+template<typename TriggerDataType, typename TriggerContextType>
+void VuoTriggerSet<TriggerDataType, TriggerContextType>::fire(void (^block)(TriggerFunctionType trigger, TriggerContextType context))
+{
+	dispatch_sync(queue, ^{
+		for (typename std::set< std::pair<TriggerFunctionType, TriggerContextType> >::iterator it = triggersWithContext.begin(); it != triggersWithContext.end(); ++it)
+			block(it->first, it->second);
+	});
+}

@@ -2,7 +2,7 @@
  * @file
  * VuoOsStatus implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,6 +11,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#include <CoreVideo/CVReturn.h>
+#include <CoreMediaIO/CMIOHardware.h>
 
 #include "module.h"
 
@@ -65,6 +67,44 @@ char *VuoOsStatus_getText(OSStatus error)
 	else if (error == kLSNoExecutableErr)                            return strdup("The executable is missing");
 	else if (error == kLSNoClassicEnvironmentErr)                    return strdup("The Classic environment was required but is not available");
 	else if (error == kLSMultipleSessionsNotSupportedErr)            return strdup("The app cannot run simultaneously in two different sessions");
+
+	// CVReturn.h
+	else if (error == kCVReturnInvalidArgument)                         return strdup("At least one of the arguments passed in is not valid. Either out of range or the wrong type.");
+	else if (error == kCVReturnAllocationFailed)                        return strdup("The allocation for a buffer or buffer pool failed. Most likely because of lack of resources.");
+	else if (error == -6663 /*kCVReturnUnsupported*/)                   return strdup("Unsupported.");
+	else if (error == kCVReturnInvalidDisplay)                          return strdup("A CVDisplayLink cannot be created for the given DisplayRef.");
+	else if (error == kCVReturnDisplayLinkAlreadyRunning)               return strdup("The CVDisplayLink is already started and running.");
+	else if (error == kCVReturnDisplayLinkNotRunning)                   return strdup("The CVDisplayLink has not been started.");
+	else if (error == kCVReturnDisplayLinkCallbacksNotSet)              return strdup("The output callback is not set.");
+	else if (error == kCVReturnInvalidPixelFormat)                      return strdup("The requested pixelformat is not supported for the CVBuffer type.");
+	else if (error == kCVReturnInvalidSize)                             return strdup("The requested size (most likely too big) is not supported for the CVBuffer type.");
+	else if (error == kCVReturnInvalidPixelBufferAttributes)            return strdup("A CVBuffer cannot be created with the given attributes.");
+	else if (error == kCVReturnPixelBufferNotOpenGLCompatible)          return strdup("The Buffer cannot be used with OpenGL as either its size, pixelformat or attributes are not supported by OpenGL.");
+	else if (error == -6684 /*kCVReturnPixelBufferNotMetalCompatible*/) return strdup("The Buffer cannot be used with Metal as either its size, pixelformat or attributes are not supported by Metal.");
+	else if (error == kCVReturnWouldExceedAllocationThreshold)          return strdup("The allocation request failed because it would have exceeded a specified allocation threshold (see kCVPixelBufferPoolAllocationThresholdKey).");
+	else if (error == kCVReturnPoolAllocationFailed)                    return strdup("The allocation for the buffer pool failed. Most likely because of lack of resources. Check if your parameters are in range.");
+	else if (error == kCVReturnInvalidPoolAttributes)                   return strdup("A CVBufferPool cannot be created with the given attributes.");
+	else if (error == -6692 /*kCVReturnRetry*/)                         return strdup("A scan hasn't completely traversed the CVBufferPool due to a concurrent operation. The client can retry the scan.");
+
+	// CMIOHardware.h
+	// AudioHardwareBase.h
+	else if (error == kCMIOHardwareNotStoppedError)           return strdup("The function call requires that the hardware be stopped but it isn't.");
+	else if (error == kCMIOHardwareNotRunningError)           return strdup("The function call requires that the hardware be running but it isn't.");
+	else if (error == kCMIOHardwareUnspecifiedError)          return strdup("The function call failed while doing something that doesn't provide any error messages.");
+	else if (error == kCMIOHardwareUnknownPropertyError)      return strdup("The object doesn't know about the property at the given address.");
+	else if (error == kCMIOHardwareBadPropertySizeError)      return strdup("An improperly sized buffer was provided when accessing the data of a property.");
+	else if (error == kCMIOHardwareIllegalOperationError)     return strdup("The requested operation couldn't be completed.");
+	else if (error == kCMIOHardwareBadObjectError)            return strdup("The CMIOObjectID passed to the function doesn't map to a valid CMIOObject.");
+	else if (error == kCMIOHardwareBadDeviceError)            return strdup("The CMIODeviceID passed to the function doesn't map to a valid CMIODevice.");
+	else if (error == kCMIOHardwareBadStreamError)            return strdup("The CMIODeviceID passed to the function doesn't map to a valid CMIOStream.");
+	else if (error == kCMIOHardwareUnsupportedOperationError) return strdup("The device doesn't support the requested operation.");
+	else if (error == kCMIOHardwareSuspendedBySystemError)    return strdup("The function call failed because because access been suspended by the system.");
+	else if (error == kCMIODeviceUnsupportedFormatError)      return strdup("The CMIOStream doesn't support the requested format.");
+	else if (error == kCMIODevicePermissionsError)            return strdup("The requested operation can't be completed because the process doesn't have permission.");
+
+	// AudioCodec.h
+	else if (error == 561214580 /*kAudioCodecStateError*/)                return strdup("Codec state error.");
+	else if (error == 560100710 /*kAudioCodecNotEnoughBufferSpaceError*/) return strdup("Not enough buffer space.");
 
 	char *errorString = (char *)calloc(1, 12);  // ceil(log10(INT_MAX)) + 1 (optional negative sign) + 1 (null terminator)
 

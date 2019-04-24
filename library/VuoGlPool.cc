@@ -2,7 +2,7 @@
  * @file
  * VuoGlPool implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -1229,6 +1229,8 @@ char *VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_QUADS);
 	RETURN_STRING_IF_EQUAL(GL_QUAD_STRIP);
 	RETURN_STRING_IF_EQUAL(GL_POLYGON);
+	RETURN_STRING_IF_EQUAL(GL_R8);
+	RETURN_STRING_IF_EQUAL(GL_RED);
 	RETURN_STRING_IF_EQUAL(GL_RGB);
 	RETURN_STRING_IF_EQUAL(GL_RGB16);
 	RETURN_STRING_IF_EQUAL(GL_RGB16F_ARB);

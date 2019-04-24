@@ -2,7 +2,7 @@
  * @file
  * Draws a series of dots arranged in a circle, with each dot moving independently toward and away from the center of the circle.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * @license This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */

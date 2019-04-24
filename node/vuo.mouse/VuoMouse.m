@@ -2,7 +2,7 @@
  * @file
  * VuoMouse implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -21,7 +21,6 @@
 VuoModuleMetadata({
 					"title" : "VuoMouse",
 					"dependencies" : [
-						"VuoApp",
 						"VuoBoolean",
 						"VuoGraphicsView",
 						"VuoGraphicsWindow",
@@ -43,12 +42,11 @@ VuoModuleMetadata({
  */
 void VuoMouse_GetScreenDimensions(int64_t *width, int64_t *height)
 {
-	__block NSScreen *screen = nil;
+	__block NSSize displayPixelSize;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  screen = [NSScreen mainScreen];
+					  NSDictionary *description = [[NSScreen mainScreen] deviceDescription];
+					  displayPixelSize = [description[NSDeviceSize] sizeValue];
 				  });
-	NSDictionary *description = [screen deviceDescription];
-	NSSize displayPixelSize = [[description objectForKey:NSDeviceSize] sizeValue];
 
 	*width = (int)displayPixelSize.width;
 	*height = (int)displayPixelSize.height;

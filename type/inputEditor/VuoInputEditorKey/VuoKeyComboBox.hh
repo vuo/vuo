@@ -2,10 +2,12 @@
  * @file
  * VuoKeyComboBox implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
+
+#include "VuoComboBox.hh"
 
 extern "C"
 {
@@ -15,7 +17,7 @@ extern "C"
 /**
  * A combo box that displays a list of VuoKeys and reacts to keypresses by selecting the corresponding VuoKey.
  */
-class VuoKeyComboBox : public QComboBox
+class VuoKeyComboBox : public VuoComboBox
 {
 	Q_OBJECT
 
@@ -111,7 +113,7 @@ public:
 	 * Creates a combo box populated with a list of all VuoKey values.
 	 */
 	VuoKeyComboBox(QWidget *parent)
-		: QComboBox(parent)
+		: VuoComboBox(parent)
 	{
 		view()->installEventFilter(this);
 

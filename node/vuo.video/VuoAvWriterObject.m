@@ -1,6 +1,7 @@
 #include "module.h"
 #include "VuoAvWriterObject.h"
 #include "VuoImageWatermark.h"
+#include "VuoOsStatus.h"
 #include <CoreVideo/CoreVideo.h>
 #import <AVFoundation/AVFoundation.h>
 #include <OpenGL/CGLMacro.h>
@@ -15,6 +16,7 @@ VuoModuleMetadata({
 						"VuoImageText",
 						"VuoAudioSamples",
 						"VuoImageRenderer",
+						"VuoOsStatus",
 						"AVFoundation.framework",
 						"CoreMedia.framework",
 						"CoreVideo.framework"
@@ -104,7 +106,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	}
 
 	// allocate the writer object with our output file URL
-	self.assetWriter = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:AVFileTypeQuickTimeMovie error:&error];
+	self.assetWriter = [[[AVAssetWriter alloc] initWithURL:fileUrl fileType:AVFileTypeQuickTimeMovie error:&error] autorelease];
 	_assetWriter.movieFragmentInterval = CMTimeMake(TIMEBASE*10, TIMEBASE);
 
 	if (error) {
@@ -128,7 +130,8 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		[videoOutputSettings setObject:@{AVVideoAverageBitRateKey: [NSNumber numberWithDouble:(MAX(format.imageQuality, 0.01) * width * height * 60. * fudge)]} forKey:AVVideoCompressionPropertiesKey];
 	}
 
-	self.videoInput = [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSettings];
+	self.videoInput = [[[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSettings] autorelease];
+	[videoOutputSettings release];
 	[self.videoInput setExpectsMediaDataInRealTime:YES];
 
 	NSDictionary *pa = @{
@@ -146,9 +149,6 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	else
 	{
 		VUserLog("Failed adding a video input to the AVWriter.");
-		[self.assetWriter release];
-		[self.videoInput release];
-		[self.avAdaptor release];
 		self.assetWriter = nil;
 		self.videoInput	= nil;
 		self.avAdaptor = nil;
@@ -233,7 +233,6 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		else
 		{
 			VUserLog("Could not add audio input.");
-			[self.audioInput release];
 			self.audioInput = nil;
 		}
 	}
@@ -390,6 +389,12 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 												 buflen,
 												 0,
 												 &tmp);
+	if (status != noErr) {
+		char *s = VuoOsStatus_getText(status);
+		VUserLog("CMBlockBufferCreateWithMemoryBlock error: %s", s);
+		free(s);
+		return;
+	}
 
 	status = CMBlockBufferCreateContiguous(kCFAllocatorDefault, tmp, kCFAllocatorDefault, NULL, 0,
 										   buflen, kCMBlockBufferAlwaysCopyDataFlag, &bbuf);
@@ -397,7 +402,9 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	CFRelease(tmp);
 
 	if (status != noErr) {
-		VUserLog("CMBlockBufferCreateWithMemoryBlock error");
+		char *s = VuoOsStatus_getText(status);
+		VUserLog("CMBlockBufferCreateContiguous error: %s", s);
+		free(s);
 		return;
 	}
 
@@ -461,8 +468,6 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 		// deprecated @ 10.9
 		[self.assetWriter finishWriting];
-		[self.assetWriter release];
-
 		self.assetWriter = nil;
 		self.videoInput  = nil;
 		self.audioInput = nil;
@@ -478,4 +483,3 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 }
 
 @end
-

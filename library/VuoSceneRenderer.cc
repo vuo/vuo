@@ -2,7 +2,7 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -1550,12 +1550,20 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 		force2DDepth = (int)CFPreferencesGetAppIntegerValue(CFSTR("force2DDepth"), CFSTR("org.vuo.Editor"), &overridden);
 
 		if (!overridden)
+		{
 			// https://b33p.net/kosada/node/13485
-			// On NVIDIA 650M, the texture targets for the color and depth buffers need to match
-			// (otherwise if a window is added via livecoding, it renders the scene with the wrong colors).
+			// https://b33p.net/kosada/node/13896
+			// On some NVIDIA GPUs, the texture targets for the color and depth buffers need to match
+			// (otherwise it sporadically crashes, or if a window is added via livecoding, it renders the scene with the wrong colors).
 			// On AMD 7970 and AMD M370X, the depth texture target needs to always be GL_TEXTURE_2D
 			// (otherwise it throws GL_INVALID_OPERATION).
-			force2DDepth = (strcmp((const char *)glGetString(GL_RENDERER), "NVIDIA GeForce GT 650M OpenGL Engine") != 0);
+			const char *renderer = (const char *)glGetString(GL_RENDERER);
+			if (strcmp(renderer, "NVIDIA GeForce GT 650M OpenGL Engine") == 0
+			 || strcmp(renderer, "NVIDIA GeForce 9400M OpenGL Engine") == 0)
+				force2DDepth = false;
+			else
+				force2DDepth = true;
+		}
 
 		VDebugLog("force2DDepth = %d", force2DDepth);
 	});

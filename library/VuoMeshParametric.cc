@@ -2,7 +2,7 @@
  * @file
  * VuoMeshParametric implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -33,7 +33,7 @@ VuoModuleMetadata({
 /**
  * Generates a mesh given a set of mathematical expressions specifying a warped surface.
  */
-VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax)
+VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax, VuoDictionary_VuoText_VuoReal *constants)
 {
 	if (uSubdivisions < 2 || vSubdivisions < 2 || !xExp || !yExp || !zExp)
 		return VuoMesh_make(0);
@@ -71,6 +71,19 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	VuoMathExpressionParser_defineStandardLibrary(&xParser);
 	VuoMathExpressionParser_defineStandardLibrary(&yParser);
 	VuoMathExpressionParser_defineStandardLibrary(&zParser);
+
+	if (constants)
+	{
+		unsigned long constantCount = VuoListGetCount_VuoText(constants->keys);
+		VuoText *constantKeys = VuoListGetData_VuoText(constants->keys);
+		VuoReal *constantValues = VuoListGetData_VuoReal(constants->values);
+		for (unsigned long i = 0; i < constantCount; ++i)
+		{
+			xParser.DefineConst(constantKeys[i], constantValues[i]);
+			yParser.DefineConst(constantKeys[i], constantValues[i]);
+			zParser.DefineConst(constantKeys[i], constantValues[i]);
+		}
+	}
 
 	int width = uSubdivisions;
 	int height = vSubdivisions;

@@ -2,7 +2,7 @@
  * @file
  * VuoStringUtilities implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -203,7 +203,7 @@ bool VuoStringUtilities::isValidCharInIdentifier(char ch)
 }
 
 /**
- * Escapes backslashes, quotes, angle brackets, and pipes in the string, making it a valid identifier in the Graphviz DOT language.
+ * Escapes backslashes, quotes, curly braces, angle brackets, and pipes in the string, making it a valid identifier in the Graphviz DOT language.
  */
 string VuoStringUtilities::transcodeToGraphvizIdentifier(const string &originalString)
 {
@@ -212,6 +212,10 @@ string VuoStringUtilities::transcodeToGraphvizIdentifier(const string &originalS
 		escapedString.replace(i, 1, "\\\\");
 	for (string::size_type i = 0; (i = escapedString.find("\"", i)) != std::string::npos; i += 2)
 		escapedString.replace(i, 1, "\\\"");
+	for (string::size_type i = 0; (i = escapedString.find("{", i)) != std::string::npos; i += 2)
+		escapedString.replace(i, 1, "\\{");
+	for (string::size_type i = 0; (i = escapedString.find("}", i)) != std::string::npos; i += 2)
+		escapedString.replace(i, 1, "\\}");
 	for (string::size_type i = 0; (i = escapedString.find("<", i)) != std::string::npos; i += 2)
 		escapedString.replace(i, 1, "\\<");
 	for (string::size_type i = 0; (i = escapedString.find(">", i)) != std::string::npos; i += 2)
@@ -222,7 +226,7 @@ string VuoStringUtilities::transcodeToGraphvizIdentifier(const string &originalS
 }
 
 /**
- * Removes escapes for backslashes, quotes, angle brackets, and pipes in the Graphviz identifier, making it a normal string.
+ * Removes escapes for backslashes, quotes, curly braces, angle brackets, and pipes in the Graphviz identifier, making it a normal string.
  */
 string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvizIdentifier)
 {

@@ -11,6 +11,7 @@ SUBDIRS += \
 	vuo_artnet \
 	vuo.audio \
 	vuo.bcf2000 \
+	vuo_blackmagic \
 	vuo.color \
 	vuo.console \
 	vuo.data \
@@ -58,6 +59,13 @@ exists(vuo.artnet/premium) {
 	SUBDIRS += vuo_artnet_premium
 	vuo_artnet_premium.subdir = vuo.artnet/premium
 	vuo_artnet.depends = vuo_artnet_premium
+}
+
+vuo_blackmagic.subdir = vuo.blackmagic
+exists(vuo.blackmagic/premium) {
+	SUBDIRS += vuo_blackmagic_premium
+	vuo_blackmagic_premium.subdir = vuo.blackmagic/premium
+	vuo_blackmagic.depends = vuo_blackmagic_premium
 }
 
 vuo_image.subdir = vuo.image

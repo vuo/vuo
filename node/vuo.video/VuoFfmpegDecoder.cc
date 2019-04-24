@@ -2,7 +2,7 @@
  * @file
  * VuoFfmpegDecoder implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -62,12 +62,11 @@ VuoFfmpegDecoder::VuoFfmpegDecoder(VuoUrl url)
 		av_register_all();
 		avformat_network_init();
 
-		// av_log_set_level(AV_LOG_VERBOSE);
-		av_log_set_level(AV_LOG_FATAL);
+		av_log_set_level(VuoIsDebugEnabled() ? AV_LOG_VERBOSE : AV_LOG_FATAL);
 	});
 
 	mPlaybackRate = 1.;
-	mVideoPath = VuoUrl_normalize(url, VuoUrlNormalize_default);
+	mVideoPath = url;
 	VuoRetain(mVideoPath);
 }
 
@@ -99,21 +98,37 @@ bool VuoFfmpegDecoder::Initialize()
 	lastVideoTimestamp = 0;
 	lastSentVideoPts = 0;
 	lastAudioTimestamp = 0;
+	showedTimestampGapWarning = false;
 
-	VuoText path = VuoUrl_getPosixPath(mVideoPath);
-	VuoRetain(path);
+	DEBUG_LOG("Initialize: %s", mVideoPath);
 
-	bool success = avformat_open_input(&(container.formatCtx), path, NULL, NULL) == 0;
+	int ret = avformat_open_input(&(container.formatCtx), mVideoPath, NULL, NULL);
 
-	DEBUG_LOG("Initialize: %s", path);
-
-	VuoRelease(path);
-
-	if(!success)
+	// If opening the full normalized URL failed, try again with just the POSIX path.
+	// (FFmpeg doesn't seem to like percent-encoded `file:///` URLs.)
+	if (ret == AVERROR(ENOENT))
 	{
-		VUserLog("Error: FFmpeg could not find path \"%s\"", path);
+		VuoText path = VuoUrl_getPosixPath(mVideoPath);
+		if (path)
+		{
+			VuoLocal(path);
+			ret = avformat_open_input(&(container.formatCtx), path, NULL, NULL);
+		}
+	}
+
+	if (ret != 0 || !container.formatCtx)
+	{
+		VUserLog("Error: FFmpeg could not open \"%s\" — %s", mVideoPath, av_err2str(ret));
 		return false;
 	}
+
+	VDebugLog("FFmpeg context flags: 0x%x", container.formatCtx->ctx_flags);
+	if (container.formatCtx->iformat)
+		VDebugLog("FFmpeg input format : '%s' (%s)  flags=0x%x  codec=0x%x",
+			container.formatCtx->iformat->long_name,
+			container.formatCtx->iformat->name,
+			container.formatCtx->iformat->flags,
+			container.formatCtx->iformat->raw_codec_id);
 
 	// Load video context
 	if(avformat_find_stream_info(container.formatCtx, NULL) < 0)
@@ -145,7 +160,7 @@ bool VuoFfmpegDecoder::Initialize()
 	// VLog("Duration: %f", GetDuration());
 	// VLog("Framerate: %f", av_q2d(container.videoStream->avg_frame_rate));
 
-	return success;
+	return true;
 }
 
 bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
@@ -162,13 +177,15 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 
 	AVCodec* videoCodec = avcodec_find_decoder(container.videoCodecCtx->codec_id);
 
-	DEBUG_LOG("Video Codec: %s", VuoFfmpegUtility::AVCodecIDToString(videoCodec->id) );
-
 	if(videoCodec == NULL)
 	{
 		VUserLog("Error: FFmpeg could not find a suitable decoder for file \"%s\".", mVideoPath);
 		return false;
 	}
+
+	VDebugLog("FFmpeg video codec  : '%s' (%s)",
+		videoCodec->long_name,
+		videoCodec->name);
 
 	// Open video packet queue
 	videoPackets.destructor = av_free_packet;
@@ -189,8 +206,6 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 		VUserLog("Error: FFmpeg could not find the codec for \"%s\".", mVideoPath);
 		return false;
 	}
-
-	DEBUG_LOG("Video Codec: %s", VuoFfmpegUtility::AVCodecIDToString(videoCodec->id) );
 
 	return true;
 }
@@ -225,7 +240,9 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 	}
 	else
 	{
-		DEBUG_LOG("Audio Codec: %s", VuoFfmpegUtility::AVCodecIDToString(audioCodec->id) );
+		VDebugLog("FFmpeg audio codec  : '%s' (%s)",
+			audioCodec->long_name,
+			audioCodec->name);
 
 		container.swr_ctx = swr_alloc();
 
@@ -270,6 +287,13 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 
 			// sets default properties and lets ffmpeg manage data
 			ret = av_new_packet(&audio_packet, 32);
+			if (ret)
+			{
+				VUserLog("Error: Couldn't create a packet: %s", av_err2str(ret));
+				audio_channels = 0;
+				container.audioStreamIndex = -1;
+				return false;
+			}
 			audio_pkt_data = NULL;
 			audio_pkt_size = 0;
 			audioIsEnabled = VuoReal_areEqual(mPlaybackRate, 1.);
@@ -539,7 +563,7 @@ bool VuoFfmpegDecoder::StepAudioFrame(int64_t pts)
 	lastAudioTimestamp = audioFrame.timestamp;
 
 	// flush whatever's left - shouldn't be much
-	while(audioFrames.Shift(&audioFrame)) {};
+	while (audioFrames.Shift(&audioFrame));
 
 	return true;
 }
@@ -655,6 +679,23 @@ SKIP_VIDEO_FRAME:
 	{
 		// Get PTS here because formats with predictive frames can return junk values before a full frame is found
 		int64_t pts = av_frame_get_best_effort_timestamp ( frame );
+
+		// For unknown reasons, FFmpeg sometimes returns large PTS gaps when playing an RTSP stream.
+		// https://b33p.net/kosada/node/13972
+		int64_t ptsDelta = pts - lastDecodedVideoPts;
+		if (packet.duration > 0
+		 && lastDecodedVideoPts > 0
+		 && ptsDelta > packet.duration * 100
+		 && ptsDelta < 0x7000000000000000) // Don't apply this workaround during preroll, which commonly has bogus timestamps.
+		{
+			if (!showedTimestampGapWarning)
+			{
+				VUserLog("Warning: The video stream has a large timestamp gap.  Using estimated timestamps instead.");
+				showedTimestampGapWarning = true;
+			}
+			pts = lastDecodedVideoPts + packet.duration;
+		}
+
 		int64_t duration = packet.duration == 0 ? pts - lastDecodedVideoPts : packet.duration;
 		lastDecodedVideoPts = pts;
 
@@ -822,7 +863,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 	// don't bother allocating samples array if seeking since we're just decoding packets for timestamps
 	uint8_t** samples = seeking ? NULL : (uint8_t**)malloc(sizeof(uint8_t*) * audio_channels);
 
-	int len1, data_size = 0;
+	int len1;
 	int converted_sample_count = 0;
 
 	for(;;)
@@ -865,8 +906,6 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 
 				lastDecodedAudioPts = pts;
 
-				data_size = frame->nb_samples * container.bytesPerAudioSample;
-
 				// convert frame data to double planar
 				uint8_t **dst_data;
 				int dst_linesize;
@@ -881,6 +920,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 				if(ret < 0)
 				{
 					VUserLog("av_samples_alloc_array_and_samples failed allocating double** array");
+					free(samples);
 					return false;
 				}
 
@@ -900,7 +940,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 				 */
 				for(int i = 0; i < audio_channels; i++)
 				{
-					samples[i]=  (uint8_t*)calloc(sizeof(double) * converted_sample_count, sizeof(double));
+					samples[i] = (uint8_t*)malloc(dst_linesize);
 					memcpy(samples[i], dst_data[i], dst_linesize);
 				}
 
@@ -1014,11 +1054,21 @@ double VuoFfmpegDecoder::GetDuration()
 	{
 		if(container.videoInfo.last_pts == AV_NOPTS_VALUE)
 		{
-			// need to manually run through video til end to get last pts value
-			seeking = true;
-			StepVideoFrame(INT64_MAX, NULL);
-			seeking = false;
-			container.videoInfo.duration = container.videoInfo.last_pts - container.videoInfo.first_pts;
+			if (container.formatCtx->iformat->flags & AVFMT_NOFILE)
+			{
+				// For streaming video sources (e.g., RTSP), just use the reported duration,
+				// rather than seeking to the end (which could take a long time).
+				container.videoInfo.duration = container.formatCtx->duration;
+				return VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.formatCtx->duration);
+			}
+			else
+			{
+				// need to manually run through video til end to get last pts value
+				seeking = true;
+				StepVideoFrame(INT64_MAX, NULL);
+				seeking = false;
+				container.videoInfo.duration = container.videoInfo.last_pts - container.videoInfo.first_pts;
+			}
 		}
 
 		return VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.last_pts) - VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.first_pts);

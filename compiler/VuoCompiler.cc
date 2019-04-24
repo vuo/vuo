@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -3364,24 +3364,21 @@ vector<string> VuoCompiler::getCoreVuoDependencies(void)
 {
 	vector<string> dependencies;
 	dependencies.push_back("VuoCompositionDiff.bc");
-	dependencies.push_back("VuoCompositionState.bc");
-	dependencies.push_back("VuoEventLoop.bc");
 	dependencies.push_back("VuoHeap");
-	dependencies.push_back("VuoLog.bc");
 	dependencies.push_back("VuoNodeRegistry.bc");
 	dependencies.push_back("VuoRuntimeCommunicator.bc");
 	dependencies.push_back("VuoRuntimeContext.bc");
 	dependencies.push_back("VuoRuntimePersistentState.bc");
 	dependencies.push_back("VuoRuntimeState.bc");
-	dependencies.push_back("VuoRuntimeUtilities.bc");
 	dependencies.push_back("VuoTelemetry.bc");
 	dependencies.push_back("VuoThreadManager.bc");
-	dependencies.push_back("module.bc");
+	dependencies.push_back("VuoApp");
 	dependencies.push_back("zmq");
 	dependencies.push_back("json-c");
 	dependencies.push_back("objc");
 	dependencies.push_back("c");
 	dependencies.push_back("AppKit.framework");
+
 #ifdef COVERAGE
 	dependencies.push_back(LLVM_ROOT "/lib/libprofile_rt.dylib");
 #endif

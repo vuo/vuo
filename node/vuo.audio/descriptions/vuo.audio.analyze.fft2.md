@@ -15,16 +15,16 @@ If you want a specific number of outputs, use the table below to pick the right 
 Frequency Bins | Quadratic<br>Outputs | Logarithmic<br>Outputs
 -------------: | -------------------: | ---------------------:
              3 |                    3 |                      3
-             7 |                    5 |                      4
+             7 |                    4 |                      4
             15 |                    6 |                      5
-            31 |                    9 |                      6
-            63 |                   12 |                      7
-           127 |                   17 |                      8
-           255 |                   24 |                      9
-           511 |                   33 |                     10
-          1023 |                   46 |                     11
-          2047 |                   65 |                     12
+            31 |                    8 |                      6
+            63 |                   11 |                      7
+           127 |                   16 |                      8
+           255 |                   23 |                      9
+           511 |                   32 |                     10
+          1023 |                   45 |                     11
+          2047 |                   64 |                     12
           4095 |                   91 |                     13
-          8191 |                  129 |                     14
+          8191 |                  128 |                     14
 
 Technical details about the calculation: It's a fast Fourier transform (FFT). The total number of bins used in the FFT is `2 * (Frequency Bins + 1)` (a power of 2). `Frequency Bins` is the number of real-valued (frequency domain) coefficients minus the DC coefficient. The windowing function is Blackman-Harris.

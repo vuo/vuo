@@ -25,6 +25,10 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoAudioOutputDevice:2 \
 		VuoAudioSamples:2 \
 		VuoBaudRate:2 \
+		VuoBlackmagicInputDevice:2 \
+		VuoBlackmagicOutputDevice:2 \
+		VuoBlackmagicConnection:2 \
+		VuoBlackmagicVideoMode:2 \
 		VuoBlendMode:0 \
 		VuoBlurShape:0 \
 		VuoBoolean:0 \
@@ -36,6 +40,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
 		VuoData:2 \
+		VuoDeinterlacing:2 \
 		VuoDiode:0 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
@@ -145,6 +150,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.artnet \
 	$$ROOT/node/vuo.audio \
 	$$ROOT/node/vuo.bcf2000 \
+	$$ROOT/node/vuo.blackmagic \
 	$$ROOT/node/vuo.color \
 	$$ROOT/node/vuo.data \
 	$$ROOT/node/vuo.file \

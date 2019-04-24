@@ -2,12 +2,13 @@
  * @file
  * VuoInputEditorMovieFormat implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoInputEditorMovieFormat.hh"
+#include "VuoComboBox.hh"
 
 const QColor VuoInputEditorMovieFormat::darkModeEnabledLabelTextColor = QColor(207, 207, 207);
 const QColor VuoInputEditorMovieFormat::darkModeDisabledLabelTextColor = QColor(127, 127, 127);
@@ -90,13 +91,13 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 	// Display menus for "Image Encoding" and "Audio Encoding".
 	{
 		string originalMovieImageEncodingAsString = json_object_to_json_string_ext(VuoMovieImageEncoding_getJson(VuoMovieFormat_makeFromJson(originalValue).imageEncoding), JSON_C_TO_STRING_PLAIN);
-		comboBoxImageEncoding = new QComboBox(&dialog);
+		comboBoxImageEncoding = new VuoComboBox(&dialog);
 		comboBoxImageEncoding->setFont(font);
 		setUpComboBoxForType(comboBoxImageEncoding, "VuoMovieImageEncoding", originalMovieImageEncodingAsString);
 		connect(comboBoxImageEncoding, SIGNAL(currentIndexChanged(int)), this, SLOT(updateQualitySliderEnabledStatusAndEmitValueChanged()));
 
 		string originalAudioEncodingAsString = json_object_to_json_string_ext(VuoAudioEncoding_getJson(VuoMovieFormat_makeFromJson(originalValue).audioEncoding), JSON_C_TO_STRING_PLAIN);
-		comboBoxAudioEncoding = new QComboBox(&dialog);
+		comboBoxAudioEncoding = new VuoComboBox(&dialog);
 		comboBoxAudioEncoding->setFont(font);
 		setUpComboBoxForType(comboBoxAudioEncoding, "VuoAudioEncoding", originalAudioEncodingAsString);
 		connect(comboBoxAudioEncoding, SIGNAL(currentIndexChanged(int)), this, SLOT(updateQualitySliderEnabledStatusAndEmitValueChanged()));

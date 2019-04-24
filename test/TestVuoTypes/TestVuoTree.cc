@@ -2,7 +2,7 @@
  * @file
  * TestVuoTree implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -143,6 +143,10 @@ private slots:
 		{
 			QTest::newRow("leaf node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"a":"b"}))
 												<< "a" << noAttributes << "b" << "b" << 0;
+		}
+		{
+			QTest::newRow("leaf node, JSON, non-XML-compliant key") << VuoTree_makeFromJsonText(QUOTE({"50":"#ffebee"}))
+												<< "50" << noAttributes << "#ffebee" << "#ffebee" << 0;
 		}
 		{
 			QTest::newRow("leaf node, constructed")	<< VuoTree_make("a", noAttributesDict, "b", NULL)
@@ -495,9 +499,9 @@ private slots:
 			QTest::newRow("apostrophe character entity, XML")	<< VuoTree_makeFromXmlText(xml, false) << xml2 << json << false;
 		}
 		{
-			const char *json = QUOTE({"files":{"/etc/crontab":"configuration file","~/.bashrc":"shell script","My Pictures":"cat photos","passwords2.txt":"sequel to passwords1"}});
-			const char *json2 = QUOTE({"files":{"\/etc\/crontab":"configuration file","~\/.bashrc":"shell script","My Pictures":"cat photos","passwords2.txt":"sequel to passwords1"}});
-			const char *xml = "<files><item name=\"/etc/crontab\">configuration file</item><item name=\"~/.bashrc\">shell script</item><item name=\"My Pictures\">cat photos</item><passwords2.txt>sequel to passwords1</passwords2.txt></files>";
+			const char *json = QUOTE({"files":{"/etc/crontab":"configuration file","~/.bashrc":"shell script","My Pictures":"cat photos","passwords2.txt":"sequel to passwords1","50":"#ffebee"}});
+			const char *json2 = QUOTE({"files":{"\/etc\/crontab":"configuration file","~\/.bashrc":"shell script","My Pictures":"cat photos","passwords2.txt":"sequel to passwords1","50":"#ffebee"}});
+			const char *xml = "<files><item name=\"/etc/crontab\">configuration file</item><item name=\"~/.bashrc\">shell script</item><item name=\"My Pictures\">cat photos</item><passwords2.txt>sequel to passwords1</passwords2.txt><item name=\"50\">#ffebee</item></files>";
 			QTest::newRow("names valid in JSON but invalid in XML") << VuoTree_makeFromJsonText(json) << xml << json2 << false;
 		}
 		{

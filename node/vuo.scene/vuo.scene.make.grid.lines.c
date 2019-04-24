@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.make.grid.lines node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -61,7 +61,7 @@ void nodeEvent
 			normals[i] = VuoPoint4d_make( 0, 0, 1, 1);
 			tangents[i] = VuoPoint4d_make( 1, 0, 0, 1);
 			bitangents[i] = VuoPoint4d_make( 0, 1, 0, 1);
-			textures[i++] = VuoPoint4d_make( x/(float)(columns2-1), y/(float)(columns2-1), 0, 1);
+			textures[i++] = VuoPoint4d_make( x/(float)(columns2-1), y/(float)(rows2-1), 0, 1);
 		}
 	}
 

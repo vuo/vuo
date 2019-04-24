@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -1572,7 +1572,11 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			{
 				json_object *value = NULL;
 				if (json_object_object_get_ex(menuItemsValue, getConstantAsString().c_str(), &value))
-					return VuoText_makeFromJson(value);
+				{
+					VuoText t = VuoText_makeFromJson(value);
+					VuoLocal(t);
+					return VuoText_trim(t);
+				}
 			}
 
 			// Case: Port type is a regular VuoInteger
@@ -2020,6 +2024,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
 			const char *tempoRange = json_object_get_string(js);
+			if (!tempoRange)
+				return strdup("(unknown)");
 			if (strcmp(tempoRange, "andante") == 0)
 				return strdup("70–110 BPM");
 			else if (strcmp(tempoRange, "moderato") == 0)
@@ -2078,11 +2084,11 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			char* rangeSummary = (char*) malloc(sizeof(char) * 32);
 
 			if (minimum != VuoRange_NoMinimum && maximum != VuoRange_NoMaximum)
-				sprintf(rangeSummary, "%.2g to %.2g", minimum, maximum);
+				sprintf(rangeSummary, "%.4g to %.4g", minimum, maximum);
 			else if (minimum != VuoRange_NoMinimum)
-				sprintf(rangeSummary, "%.2g to ∞", minimum);
+				sprintf(rangeSummary, "%.4g to ∞", minimum);
 			else if (maximum != VuoRange_NoMaximum)
-				sprintf(rangeSummary, "-∞ to %.2g", maximum);
+				sprintf(rangeSummary, "-∞ to %.4g", maximum);
 			else
 				sprintf(rangeSummary, "-∞ to ∞");
 
@@ -2157,6 +2163,16 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		{
 			VuoTextComparison value = VuoTextComparison_makeFromString(getConstantAsString().c_str());
 			return VuoTextComparison_getSummary(value);
+		}
+		if (getDataType()->getModuleKey() == "VuoBlackmagicInputDevice"
+		 || getDataType()->getModuleKey() == "VuoBlackmagicOutputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o;
+			if (json_object_object_get_ex(js, "name", &o))
+				return json_object_get_string(o);
+			else
+				return strdup("(first)");
 		}
 	}
 

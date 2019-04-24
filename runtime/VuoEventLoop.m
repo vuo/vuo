@@ -2,7 +2,7 @@
  * @file
  * VuoEventLoop implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -142,6 +142,40 @@ unsigned long VuoEventLoop_getDispatchStrictMask(void)
 			mask = 0x1; // DISPATCH_TIMER_STRICT
 	});
 	return mask;
+}
+
+/**
+ * Returns the Dispatch attribute for `QOS_CLASS_USER_INTERACTIVE`
+ * if it's supported on the current OS version;
+ * otherwise returns 0.
+ *
+ * Apple's documentation says:
+ * "The use of this QOS class should be limited to […] view drawing, animation, etc."
+ */
+dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void)
+{
+	static dispatch_queue_attr_t attr = 0;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
+		if (macMinorVersion >= 10)
+		{
+			typedef dispatch_queue_attr_t (QueueAttrType)(dispatch_queue_attr_t attr, unsigned int qos, int relativePriority);
+			QueueAttrType *queueAttr = (QueueAttrType *)dlsym(RTLD_DEFAULT, "dispatch_queue_attr_make_with_qos_class");
+			if (!queueAttr)
+			{
+				VUserLog("Warning: Couldn't find dispatch_queue_attr_make_with_qos_class().");
+				return;
+			}
+
+			attr = queueAttr(DISPATCH_QUEUE_SERIAL, 0x21 /*QOS_CLASS_USER_INTERACTIVE*/, 0);
+		}
+	});
+	return attr;
 }
 
 /**

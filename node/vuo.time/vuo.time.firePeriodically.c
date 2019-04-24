@@ -5,7 +5,7 @@
  * See http://www.mikeash.com/pyblog/friday-qa-2010-07-02-background-timers.html and
  * http://www.fieryrobot.com/blog/2010/07/10/a-watchdog-timer-in-gcd/
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -54,7 +54,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const VuoReal second
 	if (seconds <= 0)
 		return;
 
-	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
 
 	uint64_t nanoseconds = (seconds > 0.001 ? (seconds * NSEC_PER_SEC) : (NSEC_PER_SEC / 1000));

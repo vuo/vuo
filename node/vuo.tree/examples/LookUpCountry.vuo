@@ -2,7 +2,7 @@
  * @file
  * Queries a web service to get the country name for a 3-letter ISO country code. Information about the web service is at [http://www.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm](http://www.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm).
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * @license This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.

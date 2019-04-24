@@ -2,7 +2,7 @@
  * @file
  * VuoFfmpegUtility interface.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -19,10 +19,10 @@ extern "C"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#include <avcodec.h>
-#include <avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-#include <swscale.h>
+#include <libswscale/swscale.h>
 #include <string.h>
 #include <libswresample/swresample.h>
 #include <libavutil/opt.h>

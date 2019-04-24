@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsView implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,6 +11,7 @@
 #import "VuoApp.h"
 #import "VuoCompositionState.h"
 #import "VuoCglPixelFormat.h"
+#import "VuoEventLoop.h"
 
 #import <OpenGL/gl3.h>
 #import <OpenGL/gl3ext.h>
@@ -82,7 +83,7 @@ CGLContextObj createContext(void)
 
 @property bool ioSurfaceChanged;              ///< @ref VuoGraphicsView_drawOnIOSurface sets this to true when it's changed the size of the IOSurface.
 
-@property dispatch_queue_t drawQueue;         ///< Serializes access to the root context.  @todo remove after switching to single-context, since VuoGl_perform() will ensure that
+@property dispatch_queue_t drawQueue;         ///< Serializes access to the root context.
 
 @property bool redrawIOSurfaceDuringDrawRect; ///< When true, drawRect should force the IOSurface to redraw, then display its contents in the view before returning (ensures the view has an appropriately-sized texture while live-resizing).
 
@@ -258,7 +259,10 @@ static void VuoGraphicsView_drawOnIOSurface(VuoGraphicsView *view)
 		_resizeCallback = resizeCallback;
 		_drawCallback = drawCallback;
 		_userData = userData;
-		_drawQueue = dispatch_queue_create("org.vuo.VuoGraphicsView", NULL);
+
+		/// @todo Remove drawQueue after switching to single-context, since VuoGl_perform() will take care of that.
+		_drawQueue = dispatch_queue_create("org.vuo.VuoGraphicsView", VuoEventLoop_getDispatchInteractiveAttribute());
+
 		_firstFrame = YES;
 
 		self.wantsBestResolutionOpenGLSurface = YES;

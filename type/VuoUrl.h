@@ -2,7 +2,7 @@
  * @file
  * VuoUrl C type definition.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -56,6 +56,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags);
 
 VuoText VuoUrl_getPosixPath(const VuoUrl url);
 VuoText VuoUrl_escapePosixPath(const VuoText posixPath);
+VuoText VuoUrl_escapeUTF8(const VuoText url);
 bool VuoUrl_isBundle(const VuoUrl url);
 VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength);
 VuoText VuoUrl_decodeRFC3986(const VuoUrl url);

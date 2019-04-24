@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -18,6 +18,7 @@
 #include <QuartzCore/CVImageBuffer.h>
 #include "VuoVideoFrame.h"
 #include "VuoApp.h"
+#include "VuoOsStatus.h"
 
 #ifndef DOXYGEN
 // Exists on 10.7 but is inexplicably missing from the CoreVideo header.
@@ -30,7 +31,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"VuoImage",
 						"VuoImageRenderer",
-						"VuoApp",
+						"VuoOsStatus",
 						"QTKit.framework",
 						"QuartzCore.framework",
 						"Quartz.framework",
@@ -71,15 +72,15 @@ VuoModuleMetadata({
 	}
 
 	/// initialize texture cache for creating gl textures from CVPixelBuffer
-	CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
 	__block CVReturn ret;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-		ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
+		ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, CGLGetPixelFormat(cgl_ctx), NULL, &textureCache);
 	});
-	CGLReleasePixelFormat(pf);
 	if (ret != kCVReturnSuccess)
 	{
-		VUserLog("Error: Couldn't create texture cache: %d", ret);
+		char *errorText = VuoOsStatus_getText(ret);
+		VUserLog("Error: Couldn't create texture cache: %s", errorText);
+		free(errorText);
 		return false;
 	}
 
@@ -96,7 +97,7 @@ VuoModuleMetadata({
 	// https://developer.apple.com/library/mac/documentation/quicktime/reference/QTCaptureDecompressedVideoOutput_Ref/DeprecationAppendix/AppendixADeprecatedAPI.html#//apple_ref/occ/instm/QTCaptureDecompressedVideoOutput/pixelBufferAttributes
 	// https://developer.apple.com/library/mac/qa/qa1501/_index.html
 
-	NSDictionary *pixelBufferAttributes = nil;
+	NSMutableDictionary *pixelBufferAttributes = nil;
 
 	// @todo  https://b33p.net/kosada/node/10194
 	SInt32 macMinorVersion;
@@ -122,7 +123,7 @@ VuoModuleMetadata({
 				VUserLog("%-64s (FourCC): %c%c%c%c key: %d", [VuoQtListener formatTypeString:value], (char)(value >> 24), (char)(value >> 16), (char)(value >> 8), (char)value, value);
 			}
 		}
-
+		CFRelease(formats);
 	}
 	Boolean overridden = false;
 
@@ -132,16 +133,20 @@ VuoModuleMetadata({
 	if(overridden)
 	{
 		VUserLog("User set pixel format type %s (fourcc): %c%c%c%c   key: %i", [VuoQtListener formatTypeString:pixelFormat], (char)(pixelFormat >> 24), (char)(pixelFormat >> 16), (char)(pixelFormat >> 8), (char)pixelFormat, pixelFormat);
-		pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, pixelFormat);
+		pixelBufferAttributes = [[(NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, pixelFormat) autorelease] mutableCopy];
 	}
 	else
 	{
 		if (macMinorVersion != 8)
-			pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_422YpCbCr8);
+			pixelBufferAttributes = [[(NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_422YpCbCr8) autorelease] mutableCopy];
 		else
-			pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_32ARGB);
+			pixelBufferAttributes = [[(NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_32ARGB) autorelease] mutableCopy];
 	}
 
+	// https://developer.apple.com/library/content/qa/qa1781/_index.html
+	pixelBufferAttributes[(id)kCVPixelBufferIOSurfacePropertiesKey] = @{};
+
+	pixelBufferAttributes[(id)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey] = @true;
 
 	if (VuoIsDebugEnabled())
 	{
@@ -159,6 +164,8 @@ VuoModuleMetadata({
 	}
 
 	[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pixelBufferAttributes];
+
+	[pixelBufferAttributes release];
 
 	[mCaptureDecompressedVideoOutput setDelegate:self];
 
@@ -211,6 +218,8 @@ VuoModuleMetadata({
 
 	dispatch_release(_captureQueue);
 
+	[ciContext release];
+
 	[super dealloc];
 }
 
@@ -236,6 +245,7 @@ VuoModuleMetadata({
 					  [pba removeObjectForKey:(NSString *)kCVPixelBufferWidthKey];
 					  [pba removeObjectForKey:(NSString *)kCVPixelBufferHeightKey];
 					  [mCaptureDecompressedVideoOutput setPixelBufferAttributes:pba];
+					  [pba release];
 				  });
 }
 
@@ -438,6 +448,28 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 }
 
 /**
+ * Specifies the desired image size.
+ */
+- (void)setWidth:(VuoInteger)width height:(VuoInteger)height
+{
+	NSMutableDictionary *pba = [[mCaptureDecompressedVideoOutput pixelBufferAttributes] mutableCopy];
+
+	if (width)
+		[pba setObject:[NSNumber numberWithInt:width ] forKey:(NSString *)kCVPixelBufferWidthKey];
+	else
+		[pba removeObjectForKey:(NSString *)kCVPixelBufferWidthKey];
+
+	if (height)
+		[pba setObject:[NSNumber numberWithInt:height] forKey:(NSString *)kCVPixelBufferHeightKey];
+	else
+		[pba removeObjectForKey:(NSString *)kCVPixelBufferHeightKey];
+
+	[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pba];
+
+	[pba release];
+}
+
+/**
  *	Delegate called when a new frame is available.
  */
 - (void) captureOutput:(QTCaptureOutput *)captureOutput didOutputVideoFrame:(CVImageBufferRef)imageBuffer withSampleBuffer:(QTSampleBuffer *)sampleBuffer fromConnection:(QTCaptureConnection *)connection
@@ -461,6 +493,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			[pba setObject:[NSNumber numberWithInt:texWidth*pixelAspectX/pixelAspectY] forKey:(NSString *)kCVPixelBufferWidthKey];
 			[pba setObject:[NSNumber numberWithInt:texHeight]                          forKey:(NSString *)kCVPixelBufferHeightKey];
 			[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pba];
+			[pba release];
 			return;
 		}
 	}
@@ -571,7 +604,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 
 			NSSize size;
 			size.width = rect.size.width;
-			size.width = rect.size.height;
+			size.height = rect.size.height;
 			[newRep setSize:size];
 
 			NSData *pngData = [newRep representationUsingType:NSPNGFileType properties:nil];
@@ -589,7 +622,33 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 		});
 		if (ret != kCVReturnSuccess)
 		{
-			VUserLog("Error: %d", ret);
+			if (ret == kCVReturnPixelBufferNotOpenGLCompatible)
+			{
+				if (!ciContext)
+				{
+					VUserLog("Warning: We requested that QTKit provide an OpenGL-compatible buffer, but the buffer we received is not OpenGL-compatible.  Falling back to non-OpenGL image conversion.  This may be slow.");
+					ciContext = [CIContext new];
+				}
+
+				// Converting to CIImage and back seems to be the simplest way
+				// to get something intelligible out of this YUV texture stored strangely using multiple texture planes.
+				CIImage *ci = [CIImage imageWithCVImageBuffer:imageBuffer];
+
+				// Flip vertically (CIImages are right-side-up; OpenGL textures are flipped).
+				ci = [ci imageByApplyingTransform:CGAffineTransformMake(1,0,0,-1,0,texHeight)];
+
+				int bytesPerRow = texWidth * 4;
+				char *pixels = (char *)malloc(bytesPerRow * texHeight);
+				extern CIFormat kCIFormatBGRA8;
+				[ciContext render:ci toBitmap:pixels rowBytes:bytesPerRow bounds:CGRectMake(0,0,texWidth,texHeight) format:kCIFormatBGRA8 colorSpace:NULL];
+				image = VuoImage_makeFromBuffer(pixels, GL_BGRA, texWidth, texHeight, VuoImageColorDepth_8, ^(void *p){free(p);});
+			}
+			else
+			{
+				char *errorText = VuoOsStatus_getText(ret);
+				VUserLog("Error: Couldn't get video image: %s", errorText);
+				free(errorText);
+			}
 		}
 		else
 		{

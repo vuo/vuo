@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject C type definition.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -129,6 +129,7 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object);
 VuoSceneObject VuoSceneObject_makeFromJson(struct json_object * js);
 struct json_object * VuoSceneObject_getJson(const VuoSceneObject value);
 char * VuoSceneObject_getSummary(const VuoSceneObject value);
+void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount);
 
 VuoBox VuoSceneObject_bounds(const VuoSceneObject so);										///< Get the axis aligned bounding box of this sceneobject and it's children.
 bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float matrix[16]); 	///< Bounding box of the vertices for this SceneObject (taking into account transform).

@@ -2,7 +2,7 @@
  * @file
  * VuoRendererNode implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -59,6 +59,11 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 		this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
 
 	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->isStateful();
+
+	// QPainter::drawText expects strings to be canonically composed,
+	// else it renders diacritics next to (instead of superimposed upon) their base glyphs.
+	this->nodeClass = this->nodeClass.normalized(QString::NormalizationForm_C);
+
 	this->nodeIsSubcomposition = nodeClass->hasCompiler() && nodeClass->getCompiler()->isSubcomposition();
 	this->nodeIsMissing = !nodeClass->hasCompiler();
 	this->alwaysDisplayPortNames = false;
@@ -542,6 +547,10 @@ void VuoRendererNode::updateNodeFrameRect(void)
 	QRectF updatedFrameRect;
 	QString nodeTitle = QString::fromUtf8(getBase()->getTitle().c_str());
 
+	// QPainter::drawText expects strings to be canonically composed,
+	// else it renders diacritics next to (instead of superimposed upon) their base glyphs.
+	nodeTitle = nodeTitle.normalized(QString::NormalizationForm_C);
+
 	// Width is the longest string or combined input+output port row.
 	qreal maxPortRowWidth=0;
 
@@ -742,8 +751,13 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	drawNodeFrame(painter, frameRect, colors);
 
 	// Node Title
-	QString nodeTitle = QString::fromUtf8(getBase()->getTitle().c_str());
 	{
+		QString nodeTitle = QString::fromUtf8(getBase()->getTitle().c_str());
+
+		// QPainter::drawText expects strings to be canonically composed,
+		// else it renders diacritics next to (instead of superimposed upon) their base glyphs.
+		nodeTitle = nodeTitle.normalized(QString::NormalizationForm_C);
+
 		QFont font = VuoRendererFonts::getSharedFonts()->nodeTitleFont();
 
 		nodeTitleBoundingRect = QRectF(

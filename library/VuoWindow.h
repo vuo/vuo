@@ -2,7 +2,7 @@
  * @file
  * VuoWindow interface.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -15,10 +15,6 @@ extern "C"
 #include "node.h"
 
 #include <stdint.h>
-
-void VuoApp_init(void);
-void *VuoApp_setMenuItems(void *items);
-void VuoApp_setMenu(void *menu);
 
 /**
  * A window containing a text edit widget.

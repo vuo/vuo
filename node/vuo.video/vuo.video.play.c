@@ -2,7 +2,7 @@
  * @file
  * vuo.video.play node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -89,6 +89,16 @@ bool setVideoPath(struct nodeInstanceData* instance, VuoUrl url)
 	return false;
 }
 
+void vuo_video_play_resume(struct nodeInstanceData *instance, void (*decodedVideo)(VuoVideoFrame), void (*decodedAudio)(VuoList_VuoAudioSamples), void (*finishedPlayback)(void))
+{
+	VuoVideo_setVideoDelegate(instance->player, decodedVideo);
+	VuoVideo_setAudioDelegate(instance->player, decodedAudio);
+	VuoVideo_setPlaybackFinishedDelegate(instance->player, finishedPlayback);
+
+	if (instance->isPlaying)
+		VuoVideo_play(instance->player);
+}
+
 /**
  * Validates the specified time, seeks to the specified time, and sets the playback rate (in case mirror loop mode is or was used).
  */
@@ -127,17 +137,11 @@ struct nodeInstanceData* nodeInstanceInit(
 void nodeInstanceTriggerStart(
 	VuoInstanceData(struct nodeInstanceData*) instance,
 	VuoOutputTrigger(decodedVideo, VuoVideoFrame),
-	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples),
+	VuoOutputTrigger(finishedPlayback, void)
 	)
 {
-	// Can't pass output triggers on nodeInstanceInit()
-	VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-	VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
-
-	if((*instance)->isPlaying)
-	{
-		VuoVideo_play((*instance)->player);
-	}
+	vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 }
 
 void nodeInstanceTriggerStop(
@@ -150,6 +154,7 @@ void nodeInstanceTriggerStop(
 
 		VuoVideo_setVideoDelegate((*instance)->player, NULL);
 		VuoVideo_setAudioDelegate((*instance)->player, NULL);
+		VuoVideo_setPlaybackFinishedDelegate((*instance)->player, NULL);
 	}
 }
 
@@ -166,18 +171,18 @@ void nodeInstanceEvent(
 	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
 	VuoInputEvent({"eventBlocking":"none", "data":"optimization"}) optimizationChanged,
 	VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
-	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples),
+	VuoOutputTrigger(finishedPlayback, void)
 	)
 {
 	if(urlEvent)
 	{
 		if(setVideoPath(*instance, url))
 		{
-			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+			// When changing the URL, seek before resuming playback, so we don't miss frames.
+			vuo_video_play_setTime(*instance, setTime);
 
-			if((*instance)->isPlaying)
-				VuoVideo_play((*instance)->player);
+			vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 		}
 	}
 
@@ -192,18 +197,12 @@ void nodeInstanceEvent(
 
 		VuoVideo_seekToSecond((*instance)->player, timestamp);
 
-		if( (*instance)->isPlaying )
-		{
-			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
-
-			VuoVideo_play((*instance)->player);
-		}
+		vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 	}
 
 	(*instance)->loop = loop;
 
-	if( setTimeEvent )
+	if (setTimeEvent && !urlEvent)
 	{
 		if((*instance)->player != NULL)
 		{
@@ -245,7 +244,8 @@ void nodeInstanceTriggerUpdate(
 	VuoInputData(VuoReal) setTime,
 	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
 	VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
-	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples),
+	VuoOutputTrigger(finishedPlayback, void)
 	)
 {
 	if(optimization != (*instance)->optimizeFor)
@@ -259,24 +259,19 @@ void nodeInstanceTriggerUpdate(
 
 		VuoVideo_seekToSecond((*instance)->player, timestamp);
 
-		if((*instance)->isPlaying)
-		{
-			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
-
-			VuoVideo_play((*instance)->player);
-		}
+		vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 	}
 
+	bool urlChanged = false;
 	if(VuoText_length(url) > 2 && !VuoText_areEqual(url, (*instance)->url))
 	{
+		urlChanged = true;
 		if( setVideoPath(*instance, url) )
 		{
-			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+			// When changing the URL, seek before resuming playback, so we don't miss frames.
+			vuo_video_play_setTime(*instance, setTime);
 
-			if((*instance)->isPlaying)
-				VuoVideo_play((*instance)->player);
+			vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 		}
 	}
 
@@ -289,7 +284,7 @@ void nodeInstanceTriggerUpdate(
 		VuoVideo_setPlaybackRate((*instance)->player, playbackRate);
 	}
 
-	if( !VuoReal_areEqual((*instance)->lastSoughtTime, setTime) )
+	if (!VuoReal_areEqual((*instance)->lastSoughtTime, setTime) && !urlChanged)
 		vuo_video_play_setTime(*instance, setTime);
 }
 

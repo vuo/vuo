@@ -22,10 +22,9 @@ LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
-	$$ROOT/library/VuoApp.o \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoOsStatus.o \
-	$$ROOT/library/libmodule.o \
 	$$ROOT/node/vuo.video/VuoQTCapture.o \
 	$$ROOT/node/vuo.video/VuoQtListener.o \
 	$$ROOT/node/vuo.video/VuoVideoInputDevice.o \

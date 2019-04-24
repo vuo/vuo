@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.make.tube node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -87,6 +87,7 @@ static VuoSubmesh makePipeShell(	const unsigned int columns,
 
 	float textureWidth = 1;//radius/uvRadius;
 	float textureHeight = 1.;//(1 / (2 * PI * uvRadius));
+	bool flip = winding == WINDING_CCW;
 
 	for(int y = 0; y < rows+1; y++)
 	{
@@ -98,6 +99,8 @@ static VuoSubmesh makePipeShell(	const unsigned int columns,
 			p = circle[x];
 			p.y = (y/(float)rows) * height - height / (float)2;
 			t.x = textureWidth - ((x / (float)columns) * textureWidth);
+			if (flip)
+				t.x = 1. - t.x;
 
 			textures[n] = t;
 			vertices[n++] = p;
@@ -107,7 +110,7 @@ static VuoSubmesh makePipeShell(	const unsigned int columns,
 		p = circle[0];
 		p.y = (y/(float)rows) * height - height / (float)2;
 
-		t.x = 0;//textureWidth;
+		t.x = flip ? 1 : 0;//textureWidth;
 		textures[n] = t;
 		vertices[n++] = p;
 	}
@@ -201,11 +204,14 @@ static VuoSubmesh makePipeCap(	const unsigned int columns,
 
 	float uvMax = 1;//(1 / (float)(2 * PI * radius));
 	float diameter = radius * 2;
+	bool flip = winding == WINDING_CW;
 
 	for(int i = 0; i < vertexCount; i++)
 	{
 		vertices[i].y = height;
-		textures[i] = VuoPoint4d_make( ((vertices[i].x + radius)/diameter) * uvMax, ((vertices[i].z + radius)/diameter) * uvMax, 0, 1);
+		textures[i] = VuoPoint4d_make( ((vertices[i].x + radius)/diameter) * uvMax,
+									   flip ? (1. - ((vertices[i].z + radius)/diameter) * uvMax) : (((vertices[i].z + radius)/diameter) * uvMax),
+									   0, 1);
 	}
 
 	free(outer);
@@ -278,11 +284,14 @@ static VuoSubmesh makeCylinderCap(const unsigned int columns, const float radius
 
 	float uvMax = 1;//(1 / (float)(2 * PI * radius));
 	float diameter = radius * 2;
+	bool flip = winding == WINDING_CW;
 
 	for(int i = 0; i < vertexCount; i++)
 	{
 		vertices[i].y = height;
-		textures[i] = VuoPoint4d_make( ((vertices[i].x + radius)/diameter) * uvMax, ((vertices[i].z + radius)/diameter) * uvMax, 0, 1);
+		textures[i] = VuoPoint4d_make( ((vertices[i].x + radius)/diameter) * uvMax,
+									   flip ? (1. - ((vertices[i].z + radius)/diameter) * uvMax) : (((vertices[i].z + radius)/diameter) * uvMax),
+									   0, 1);
 	}
 
 	free(outer);

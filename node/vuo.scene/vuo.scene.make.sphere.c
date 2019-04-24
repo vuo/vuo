@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.make.sphere node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -50,7 +50,8 @@ void nodeEvent
 												true,		// close u
 												0, 1,
 												false,		// close v
-												0, 1);
+												0, 1,
+												NULL);
 
 	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
 	object->name = VuoText_make("Sphere");

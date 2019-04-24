@@ -2,7 +2,7 @@
  * @file
  * VuoApp implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -23,15 +23,12 @@
 #include <pthread.h>
 #include <libproc.h>
 #include <mach-o/dyld.h>
+#import <libgen.h>
+#import <dirent.h>
 
-#ifdef VUO_COMPILER
-VuoModuleMetadata({
-					"title" : "VuoApp",
-					"dependencies" : [
-						"AppKit.framework",
-					]
-				 });
-#endif
+#include "VuoCompositionState.h"
+#include "VuoEventLoop.h"
+#import "VuoAppDelegate.h"
 
 /**
  * Is the current thread the main thread?
@@ -170,4 +167,115 @@ const char *VuoApp_getVuoFrameworkPath(void)
 		}
 	});
 	return frameworkPath;
+}
+
+/**
+ * Helper for @ref VuoApp_init.
+ *
+ * @threadMain
+ */
+static void VuoApp_initNSApplication(void)
+{
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
+
+	// http://stackoverflow.com/a/11010614/238387
+	NSApplication *app = [NSApplication sharedApplication];
+
+	if (![app delegate])
+		[app setDelegate:[VuoAppDelegate new]];
+
+	// When there's no host app present,
+	// create the default menu with the About and Quit menu items,
+	// to be overridden if/when any windows get focus.
+	VuoApp_setMenuItems(NULL);
+
+	// Show the app in the dock (since non-NIB apps are hidden by default).
+	[app setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+	// Stop bouncing in the dock.
+	[app finishLaunching];
+
+	VuoEventLoop_switchToAppMode();
+
+	[pool drain];
+}
+
+#ifndef DOXYGEN
+void VuoApp_fini(void);
+#endif
+
+/**
+ * Creates an NSApplication instance (if one doesn't already exist).
+ *
+ * This causes the process's icon to appear in the dock.
+ *
+ * VuoWindow methods call this automatically as needed,
+ * so you only need to call this if you need an NSApplication without using VuoWindow
+ * (like, for example, @ref VuoAudioFile does).
+ *
+ * @threadAny
+ */
+void VuoApp_init(void)
+{
+	if (NSApp)
+		return;
+
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		VuoApp_executeOnMainThread(^{
+			VuoApp_initNSApplication();
+		});
+		VuoAddCompositionFiniCallback(VuoApp_fini);
+	});
+}
+
+/**
+ * Helper for @ref VuoApp_fini.
+ *
+ * @threadMain
+ */
+static void VuoApp_finiWindows(uint64_t compositionUid)
+{
+	// Stop any window recordings currently in progress.
+	// This prompts the user for the save destination,
+	// so make sure these complete before shutting the composition down.
+	SEL stopRecording = @selector(stopRecording);
+	SEL compositionUidSel = @selector(compositionUid);
+	for (NSWindow *window in [NSApp windows])
+		if ([window respondsToSelector:stopRecording]
+		 && [window respondsToSelector:compositionUidSel]
+		 && (uint64_t)[window performSelector:compositionUidSel] == compositionUid)
+			[window performSelector:stopRecording];
+
+	// Avoid leaving menubar remnants behind.
+	// https://b33p.net/kosada/node/13384
+	[NSApp hide:nil];
+}
+
+/**
+ * Cleanly shuts the application down.
+ *
+ * Should only be called from within @ref vuoStopComposition().
+ *
+ * @threadAny
+ */
+void VuoApp_fini(void)
+{
+	if (!NSApp)
+		return;
+
+	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
+	uint64_t compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+	free(compositionState);
+
+	if (VuoApp_isMainThread())
+		VuoApp_finiWindows(compositionUid);
+	else
+	{
+		VUOLOG_PROFILE_BEGIN(mainQueue);
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			VUOLOG_PROFILE_END(mainQueue);
+			VuoApp_finiWindows(compositionUid);
+		});
+	}
 }

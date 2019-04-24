@@ -3,6 +3,7 @@ TEMPLATE = aux
 EXAMPLE_SOURCES += \
 	AddNoiseToClay.vuo \
 	AimFlashlight.vuo \
+	AnimateSupershape.vuo \
 	BendSphere.vuo \
 	BlendSphereIntoScene.vuo \
 #	BounceStereoSphere.vuo \

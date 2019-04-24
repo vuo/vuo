@@ -2,7 +2,7 @@
  * @file
  * VuoVideoPlayer implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -73,7 +73,7 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 			else
 				VDebugLog("Using FFmpeg video decoder despite optimization preference.");
 		}
-		else
+		else if (!player->decoder && !alt)
 		{
 			VUserLog("AVFoundation and FFmpeg video decoders failed to open the movie.");
 			player->failedLoading = true;
@@ -526,7 +526,7 @@ bool VuoVideoPlayer::NextAudioFrame(VuoAudioFrame* frame)
 
 void VuoVideoPlayer::startTimer(dispatch_source_t* timer, dispatch_time_t start, dispatch_semaphore_t* semaphore, void (VuoVideoPlayer::*func)(void))
 {
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
 	*timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
 
@@ -585,6 +585,16 @@ void VuoVideoPlayer::sendVideoFrame()
 
 		// didn't get a frame, so check what the loop type is and do something
 		pthread_mutex_lock(&decoderMutex);
+
+		if(videoPlaybackFinishedDelegate != NULL)
+		{
+			if (playbackRate < 0 && timestampStart == 0)
+			{
+				// Don't fire finishedPlayback after firing the first frame when playing backwards from the beginning.
+			}
+			else
+				videoPlaybackFinishedDelegate();
+		}
 
 		switch(loop)
 		{

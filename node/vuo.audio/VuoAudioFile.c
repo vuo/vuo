@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -22,7 +22,7 @@
 
 #include "module.h"
 
-#include "VuoWindow.h"
+#include "VuoApp.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -35,7 +35,6 @@ VuoModuleMetadata({
 						 "VuoReal",
 						 "VuoText",
 						 "VuoUrlFetch",
-						 "VuoWindow",
 						 "VuoList_VuoAudioSamples",
 						 "AudioToolbox.framework",
 						 "CoreFoundation.framework"
@@ -322,8 +321,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		}
 	}
 
-	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);
-	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", VuoEventLoop_getDispatchInteractiveAttribute());
+	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
 	afi->playbackTimerCanceled = dispatch_semaphore_create(0);
 
