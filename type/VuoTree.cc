@@ -2,7 +2,7 @@
  * @file
  * VuoTree implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -238,6 +238,17 @@ static xmlChar * VuoTree_serializeXmlNodeAsXml(VuoTree tree, bool indent, int le
 			const char *name = (currentNode == treeRoot && level == 0 ? "document" : "item");
 			xmlNodeSetName(currentNode, (const xmlChar *)name);
 		}
+		else
+		{
+			int flags = XML_PARSE_NOERROR | XML_PARSE_NOWARNING;
+			string testElement = "<" + string((const char *)currentNode->name) + "/>";
+			xmlDoc *testDoc = xmlReadMemory(testElement.c_str(), testElement.length(), "VuoTree.xml", encoding, flags);
+			if (!testDoc)
+			{
+				xmlNewProp(currentNode, (const xmlChar *)"name", (const xmlChar *)currentNode->name);
+				xmlNodeSetName(currentNode, (const xmlChar *)"item");
+			}
+		}
 
 		for (xmlNode *n = currentNode->children; n; n = n->next)
 			if (n->type == XML_ELEMENT_NODE)
@@ -307,21 +318,7 @@ static xmlNode * createXmlNode(const char *name)
 	if (! name || strlen(name) == 0)
 		return xmlNewNode(NULL, (const xmlChar *)"");
 
-	string testElement = "<" + string(name) + "/>";
-	xmlDoc *testDoc = xmlReadMemory(testElement.c_str(), testElement.length(), "VuoTree.xml", encoding, 0);
-	if (testDoc)
-	{
-		// <name>...</name>
-		xmlFreeDoc(testDoc);
-		return xmlNewNode(NULL, (const xmlChar *)name);
-	}
-	else
-	{
-		// <item name="name">...</item>
-		xmlNode *node = xmlNewNode(NULL, (const xmlChar *)"item");
-		xmlNewProp(node, (const xmlChar *)"name", (const xmlChar *)name);
-		return node;
-	}
+	return xmlNewNode(NULL, (const xmlChar *)name);
 }
 
 /**

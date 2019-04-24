@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsWindow implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -20,7 +20,6 @@
 VuoModuleMetadata({
 	"title" : "VuoGraphicsWindow",
 	"dependencies" : [
-		"VuoApp",
 		"VuoGraphicsView",
 		"VuoGraphicsWindowDelegate",
 		"VuoScreenCommon",
@@ -53,6 +52,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  */
 @interface VuoGraphicsWindow ()
 @property(retain) NSMenuItem *recordMenuItem;  ///< The record/stop menu item.
+@property(retain) id<NSWindowDelegate> privateDelegate;  ///< Maintain our own reference-counted delegate (since NSWindow's delegate property is a weak reference).
 @end
 
 @implementation VuoGraphicsWindow
@@ -74,7 +74,8 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 								  backing:NSBackingStoreBuffered
 									defer:NO])
 	{
-		self.delegate = [[VuoGraphicsWindowDelegate alloc] initWithWindow:self];
+		self.privateDelegate = [[[VuoGraphicsWindowDelegate alloc] initWithWindow:self] autorelease];
+		self.delegate = self.privateDelegate;
 		self.releasedWhenClosed = NO;
 
 		_cursor = VuoCursor_Pointer;
@@ -86,7 +87,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		self.collectionBehavior = NSWindowCollectionBehaviorFullScreenPrimary;
 
 		[self initDrag];
-		[self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
 
 		_userResizedWindow = NO;
 		_programmaticallyResizingWindow = NO;

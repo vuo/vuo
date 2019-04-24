@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.render.window node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #include "node.h"
 #include "VuoSceneRenderer.h"
 #include "VuoWindow.h"
+#include "VuoEventLoop.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -94,7 +95,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	VuoRegister(context, free);
 
 	context->sceneRenderer = NULL;
-	context->sceneRendererQueue = dispatch_queue_create("org.vuo.scene.render.window.sceneRenderer", NULL);
+	context->sceneRendererQueue = dispatch_queue_create("org.vuo.scene.render.window.sceneRenderer", VuoEventLoop_getDispatchInteractiveAttribute());
 
 	context->window = VuoWindowOpenGl_make(
 				vuo_scene_render_window_init,

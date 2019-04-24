@@ -19,9 +19,8 @@ INCLUDEPATH += \
 	$$ROOT/type
 
 LIBS += \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/library/VuoApp.o \
-	$$ROOT/library/libmodule.o \
 	$$ROOT/node/vuo.audio/VuoAudio.o \
 	$$ROOT/node/vuo.audio/VuoAudioInputDevice.o \
 	$$ROOT/node/vuo.audio/VuoAudioOutputDevice.o \

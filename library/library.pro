@@ -4,7 +4,6 @@ CONFIG += VuoPCH
 include(../vuo.pri)
 
 NODE_LIBRARY_SOURCES += \
-	VuoApp.m \
 	VuoBase64.cc \
 	VuoCglPixelFormat.c \
 	VuoDisplayRefresh.c \
@@ -54,6 +53,7 @@ SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoSceneObjectGet.c \
 	VuoSceneText.c \
 	VuoImageText.cc \
 	VuoMathExpressionParser.cc \
@@ -71,6 +71,9 @@ SOURCES += \
 
 OBJECTIVE_SOURCES += \
 	VuoApp.m \
+	VuoAppAboutBox.m \
+	VuoAppDelegate.m \
+	VuoAppMenu.m \
 	VuoGraphicsView.m \
 	VuoGraphicsWindow.m \
 	VuoGraphicsWindowDelegate.m \
@@ -82,6 +85,8 @@ OBJECTIVE_SOURCES += \
 
 HEADERS += \
 	VuoApp.h \
+	VuoAppAboutBox.h \
+	VuoAppDelegate.h \
 	VuoBase64.h \
 	VuoCglPixelFormat.h \
 	VuoDisplayRefresh.h \
@@ -230,7 +235,7 @@ NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT += \
 OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS = \
-	../runtime/VuoEventLoop.o
+	libVuoApp.dylib
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS \
 	$$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS \
@@ -255,3 +260,36 @@ csgjs.output = lib${QMAKE_FILE_IN_BASE}.a
 csgjs.commands = $$QMAKE_CXX -Oz -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_IN_BASE}.o \
 	&& ar -r lib${QMAKE_FILE_IN_BASE}.a ${QMAKE_FILE_IN_BASE}.o
 QMAKE_EXTRA_COMPILERS += csgjs
+silent:csgjs.commands = @echo compiling ${QMAKE_FILE_IN} && $$csgjs.commands
+
+
+
+# This is a library so that we don't need to modify everything that depends on VuoApp
+# (running compositions, input editors, tests) every time we add a dependency.
+# This is a dylib so that each process (with one or more running compositions)
+# only has once instance of VuoCompositionState::compositionStateKey.
+VUOAPP_LIBRARY = libVuoApp.dylib
+VUOAPP_LIBRARY_CONTENTS = \
+	VuoApp.o \
+	VuoAppAboutBox.o \
+	VuoAppDelegate.o \
+	VuoAppMenu.o \
+	libmodule.o \
+	../runtime/VuoEventLoop.o \
+	../runtime/VuoLog.o \
+	../runtime/libVuoCompositionState.bc \
+	../runtime/VuoRuntimeUtilities.o
+vuoApp.commands = $$QMAKE_CXX \
+	$$QMAKE_LFLAGS \
+	-Wl,-install_name,@rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/$$VUOAPP_LIBRARY \
+	-mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET \
+	-dynamiclib \
+	$$VUOAPP_LIBRARY_CONTENTS \
+	-o $$VUOAPP_LIBRARY \
+	-framework AppKit
+vuoApp.depends = $$VUOAPP_LIBRARY_CONTENTS
+vuoApp.target = $$VUOAPP_LIBRARY
+POST_TARGETDEPS += $$VUOAPP_LIBRARY
+QMAKE_EXTRA_TARGETS += vuoApp
+QMAKE_CLEAN += $$VUOAPP_LIBRARY
+silent:vuoApp.commands = @echo linking libVuoApp && $$vuoApp.commands

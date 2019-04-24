@@ -2,7 +2,7 @@
  * @file
  * vuo.audio.analyze.fft node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					 "title" : "Calculate Amplitude for Frequencies",
 					 "keywords" : [ "sound", "fourier", "music", "waveform", "spectrum", "pass", "filter", "signal",
 						"equalizer", "equaliser" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "dependencies" : [
 						"VuoDsp"
 					 ],

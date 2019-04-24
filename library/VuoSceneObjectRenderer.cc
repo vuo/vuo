@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObjectRenderer implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -338,18 +338,55 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 			actualVertexCount = outputVertexCount;
 
 
+#if 0 // NOCOMMIT
 		// Print out the result of the filter, for debugging.
-//		glFlush();
-//		GLfloat feedback[actualVertexCount*4*5];
-//		glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0, sizeof(feedback), feedback);
-//		for (int vertex = 0; vertex < actualVertexCount; vertex++)
-//		{
-//			for (int coordinate = 0; coordinate < 3; ++coordinate)
-//				VLog("\t%f", feedback[vertex*4*bufferCount + coordinate]);
-//			VL();
-//		}
+		glFlush();
+		GLfloat feedback[actualVertexCount*4*5];
+		glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBuffer);
+		glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0, sizeof(feedback), feedback);
+		for (int buffer = 0; buffer < 5; ++buffer)
+		{
+			if (buffer == 0)
+				fprintf(stderr, "positions:\n");
+			else if (buffer == 1)
+			{
+				if (!submesh.glUpload.normalOffset)
+					continue;
+				fprintf(stderr, "normals:\n");
+			}
+			else if (buffer == 2)
+			{
+				if (!submesh.glUpload.tangentOffset)
+					continue;
+				fprintf(stderr, "tangents:\n");
+			}
+			else if (buffer == 3)
+			{
+				if (!submesh.glUpload.bitangentOffset)
+					continue;
+				fprintf(stderr, "bitangents:\n");
+			}
+			else if (buffer == 4)
+			{
+				if (!submesh.glUpload.textureCoordinateOffset)
+					continue;
+				fprintf(stderr, "texture coordinates:\n");
+			}
 
-		// https://vuo.org/node/1571 @@@ b33p
+			for (int vertex = 0; vertex < actualVertexCount; vertex++)
+			{
+				for (int coordinate = 0; coordinate < 4; ++coordinate)
+					fprintf(stderr, "\t%f", feedback[vertex*4*5 + buffer*4 + coordinate]);
+				if (buffer >= 1 && buffer <= 3)
+					fprintf(stderr, " (length %f)", VuoPoint3d_magnitude((VuoPoint3d){feedback[vertex*4*5 + buffer*4], feedback[vertex*4*5 + buffer*4 + 1], feedback[vertex*4*5 + buffer*4 + 2]}));
+				fprintf(stderr, "\n");
+			}
+		}
+		glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0);
+#endif
+
+		// https://vuo.org/node/1571
+		// https://b33p.net/kosada/node/12431
 		// The output buffer will always contain all 5 vertex attributes,
 		// though (depending on input) some might not contain contain useful data.
 		unsigned long combinedOutputBufferStride = sizeof(VuoPoint4d) * 5;

@@ -2,7 +2,7 @@
  * @file
  * VuoDialogForInputEditor implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -18,7 +18,7 @@ const int VuoDialogForInputEditor::popoverArrowHalfWidth = 8; ///< Half the widt
  */
 VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 {
-	setWindowFlags(Qt::FramelessWindowHint /*| Qt::Tool ?*/);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
 
 	/// @todo copied from VuoErrorPopover
 	// Transparent background behind rounded corners
@@ -107,7 +107,7 @@ QString VuoDialogForInputEditor::getStyleSheet(bool isDark)
 							  color: black;
 						  }
 						  QComboBox:selected {
-							  background: #143B7D;//palette(highlight);
+							  background: #1370dc;//palette(highlight);
 							  selection-color: white;
 						  }
 						  QComboBox:focus {
@@ -120,6 +120,14 @@ QString VuoDialogForInputEditor::getStyleSheet(bool isDark)
 						  }
 						  QComboBox::down-arrow {
 							  image: url(:/Icons/spinbox-dec.png);
+						  }
+						  QComboBox::separator {
+							  height: 2px;
+							  background: #e3e3e3;
+							  margin: 5px 0;
+						  }
+						  QComboBox:disabled { // Disabled item text in the popup menu
+							  color: #808080;
 						  }
 						  );
 

@@ -63,6 +63,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.scene.make.cube.1.c \
 	vuo.scene.make.triangle.c \
 	vuo.scene.make.icosphere.c \
+	vuo.scene.make.supershape.c \
 	vuo.scene.make.torus.c \
 	vuo.scene.make.tube.c
 

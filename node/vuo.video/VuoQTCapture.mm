@@ -2,7 +2,7 @@
  * @file
  * VuoQTCapture implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -22,7 +22,6 @@
 VuoModuleMetadata({
 					  "title" : "VuoQtCapture",
 					  "dependencies" : [
-						"VuoApp",
 						"VuoImage",
 						"VuoOsStatus",
 						"VuoVideoInputDevice",
@@ -273,6 +272,15 @@ void VuoQtCapture_setInputDevice(VuoQTCapture movie, VuoVideoInputDevice inputDe
 {
 	VuoQtListener *listener = (VuoQtListener*)movie;
 	[listener setInputDevice:inputDevice];
+}
+
+/**
+ * Specifies the desired image size.
+ */
+void VuoQTCapture_setSize(VuoQTCapture movie, VuoInteger width, VuoInteger height)
+{
+	VuoQtListener *listener = (VuoQtListener*)movie;
+	[listener setWidth:width height:height];
 }
 
 /**

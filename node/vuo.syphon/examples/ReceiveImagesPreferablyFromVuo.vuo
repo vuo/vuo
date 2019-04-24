@@ -2,7 +2,7 @@
  * @file
  * Acts as a Syphon client, receiving images from a server with "Vuo" in its name if available, or else falling back on one of the available Syphon servers. Try running this composition at the same time as [SendImages.vuo](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/). 
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */

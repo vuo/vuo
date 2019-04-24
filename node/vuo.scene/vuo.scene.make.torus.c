@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.make.torus node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -60,7 +60,8 @@ void nodeEvent
 												true,		// close u
 												0, 1,
 												true,		// close v
-												0, 1);
+												0, 1,
+												NULL);
 
 	free(xExp);
 	free(yExp);

@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.make.cube node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -70,7 +70,9 @@ void nodeEvent
 			float z =  (sin((i/(float)(c-1))*TWOPI) * .5) * per;
 
 			positions[v] 	= VuoPoint4d_make(x, y, z, 1);
-			textures[v] 	= VuoPoint4d_make((x+.5), (z+.5), 0, 1);
+			textures[v]     = VuoPoint4d_make((x+.5),
+											  n == 0 ? z+.5 : 1. - (z+.5),
+											  0, 1);
 			v++;
 		}
 	}

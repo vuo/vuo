@@ -2,7 +2,7 @@
  * @file
  * TestVuoVideo interface and implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -46,6 +46,17 @@ class TestVuoVideo : public QObject
 
 	Q_OBJECT
 	// Q_DECLARE_METATYPE(VuoVideoOptimization)
+
+	bool isNetworkStream(QString url)
+	{
+		return url.startsWith("rtsp://");
+	}
+
+	bool exists(QString url)
+	{
+		return QFile(url).exists()
+		 || isNetworkStream(url);
+	}
 
 private slots:
 
@@ -93,7 +104,10 @@ private slots:
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap1 12 chunks opt=%d",optimize))	<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap1-12chunks.mov"												<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap5 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap5.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - QT7 - HapY opt=%d",optimize))					<< "/MovieGauntlet/Hap/crawling-qt7-HapY.mov"															<<  10.5	<<  315	<<  320 <<  240	<<  0 	<< optimize;
+
+		QTest::newRow(VuoText_format("RTSP - H.264 opt=%d",optimize))                           << "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov"                                               << 6627.56  <<  0 <<  0 <<  0 <<  0   << optimize;
 		}
+
 	}
 
 	void testInfoPerformance_data()
@@ -110,7 +124,7 @@ private slots:
 		QFETCH(double, expectedDuration);
 		QFETCH(int, optimize);
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
 
 		// QBENCHMARK
@@ -146,8 +160,10 @@ private slots:
 		QFETCH(int, expectedAudioChannels);
 		QFETCH(int, optimize);
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+		if (isNetworkStream(url))
+			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		QVERIFY(m != NULL);
@@ -278,8 +294,10 @@ private slots:
 		// QFETCH(int, expectedAudioChannels);
 		VUserLog("[%s] optimize=%s",url.toUtf8().data(), (optimize == AVFOUNDATION_OPTIMIZED ? "AVFoundation" : "FFMPEG"));
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+		if (isNetworkStream(url))
+			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -321,8 +339,10 @@ private slots:
 	{
 		QFETCH(QString, url);
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+		if (isNetworkStream(url))
+			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
 
 		if( url == QString("/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov") )
 		{
@@ -388,8 +408,9 @@ private slots:
 	{
 		QFETCH(QString, url);
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+
 		if (url == "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts")
 			QSKIP("This movie starts at PTS 600");
 		if (url == "/MovieGauntlet/interlaced/interlace_test2.mpeg")
@@ -410,8 +431,10 @@ private slots:
 		VuoVideoFrame videoFrame;
 		QVERIFY(VuoVideo_getFrameAtSecond(video, 0, &videoFrame));
 		QVERIFY(videoFrame.image);
-		QVERIFY2(VuoReal_areEqual(videoFrame.timestamp, 0),
-			QString("Requested timestamp 0 but actually got %1").arg(videoFrame.timestamp).toUtf8().data());
+
+		if (!isNetworkStream(url))
+			QVERIFY2(VuoReal_areEqual(videoFrame.timestamp, 0),
+				QString("Requested timestamp 0 but actually got %1").arg(videoFrame.timestamp).toUtf8().data());
 
 		VuoRelease(video);
 	}
@@ -430,8 +453,10 @@ private slots:
 	{
 		QFETCH(QString, url);
 
-		if (!QFile(url).exists())
+		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+		if (isNetworkStream(url))
+			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);

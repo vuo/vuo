@@ -2,12 +2,13 @@
  * @file
  * VuoRuntimeContext implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoRuntimeContext.h"
+#include "VuoEventLoop.h"
 
 /**
  * Creates a port context, initializing its fields to default values.
@@ -22,7 +23,7 @@ struct PortContext * vuoCreatePortContext(void *data, bool isTrigger, const char
 
 	if (isTrigger)
 	{
-		portContext->triggerQueue = dispatch_queue_create(triggerQueueName, NULL);
+		portContext->triggerQueue = dispatch_queue_create(triggerQueueName, VuoEventLoop_getDispatchInteractiveAttribute());
 		portContext->triggerSemaphore = dispatch_semaphore_create(1);
 	}
 	else

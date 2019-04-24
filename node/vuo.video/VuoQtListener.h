@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -34,6 +34,7 @@
 	VuoVideoInputDevice 				desiredDevice;						///< The device the user has requested.
 	BOOL 								userWantsRunning;					///< Was startRunning called (without calling stopRunning)?
 	CVOpenGLTextureCacheRef 			textureCache;						///< GL_TEXTURE_RECTANGLEs from the video feed
+	CIContext *ciContext; ///< Fallback for when CVOpenGLTextureCacheRef fails.
 }
 
 /**
@@ -55,6 +56,7 @@
 - (void) setCaptureDevice:(QTCaptureDevice*)device;
 
 - (void) setCallback:(void(*)(VuoVideoFrame))receivedFrame;
+- (void) setWidth:(VuoInteger)width height:(VuoInteger)height;
 + (char*) formatTypeString:(int)key;
 
 @end

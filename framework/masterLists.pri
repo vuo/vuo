@@ -3,7 +3,7 @@
 # FRAMEWORK_VUO_HEADERS		— headers to be copied to the framework's Headers folder
 # FRAMEWORK_VUO_STUB_HEADER	— filename of the Vuo.h template into which actual header names are substituted
 # MASTER_VUO_HEADER_LIST	— headers to be automatically included by the framework's Vuo.h
-# MODULE_OBJECTS
+# MODULE_OBJECTS            — binaries to be copied to the framework's Modules folder
 # QMAKE_LFLAGS
 # TYPE_OBJECTS
 # TYPE_HEADERS
@@ -39,7 +39,7 @@ for(header_list, API_HEADER_LISTS) {
 	}
 	HEADERS = ""
 	POST_TARGETDEPS -= $$NODE_SET_ZIP
-	QMAKE_EXTRA_TARGETS -= createNodeSetZip
+	QMAKE_EXTRA_TARGETS -= createNodeSetZip vuoApp
 }
 
 # Add the list headers (which were specified with a wildcard, excluded above).
@@ -56,7 +56,7 @@ include(../type/type.pro)
 TYPE_HEADERS = $$HEADERS
 HEADERS = ""
 POST_TARGETDEPS -= $$NODE_SET_ZIP
-QMAKE_EXTRA_TARGETS -= createNodeSetZip
+QMAKE_EXTRA_TARGETS -= createNodeSetZip vuoApp
 
 
 # Build the MODULE_OBJECTS list, containing compiled Vuo Modules to be copied to the Framework.
@@ -101,6 +101,8 @@ for(module_list, MODULE_LISTS) {
 	}
 }
 
+MODULE_OBJECTS += $$ROOT/library/$$VUOAPP_LIBRARY
+
 # Add node set zips to the list of files to be copied to Modules
 NODE_SETS = $$system(ls -1 ../node/*/*.pro)
 NODE_SETS = $$dirname(NODE_SETS)
@@ -114,7 +116,7 @@ for(node_set, NODE_SETS) {
 	TYPE_SOURCES = ""
 	include(../node/$${node_set}/$${node_set}.pro)
 	POST_TARGETDEPS -= $$NODE_SET_ZIP
-	QMAKE_EXTRA_TARGETS -= createNodeSetZip
+	QMAKE_EXTRA_TARGETS -= createNodeSetZip vuoApp
 
 	TYPE_OBJECTS = $$TYPE_SOURCES
 	TYPE_OBJECTS ~= s/\\.cc?$/.o/g
@@ -145,6 +147,7 @@ NODE_SOURCES = ""
 OBJECTIVE_SOURCES = ""
 OTHER_FILES = ""
 PCH_INCLUDE_PATHS = ""
+POST_TARGETDEPS = ""
 PRE_TARGETDEPS = ""
 QMAKE_AR_CMD = ""
 QMAKE_CFLAGS = ""
@@ -160,6 +163,7 @@ QMAKE_CXXFLAGS_I386 = ""
 QMAKE_CXXFLAGS_RELEASE = ""
 QMAKE_CXXFLAGS_WARN_ON = ""
 QMAKE_CXXFLAGS_X86_64 = ""
+QMAKE_EXTRA_COMPILERS = ""
 QMAKE_LFLAGS = ""
 QMAKE_LFLAGS_I386 = ""
 QMAKE_LFLAGS_X86_64 = ""

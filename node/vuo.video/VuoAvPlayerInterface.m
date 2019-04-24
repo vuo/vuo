@@ -15,13 +15,7 @@ VuoAvPlayerObjPtr VuoAvPlayer_make(const char* url)
 {
 	VuoAvPlayerObject* player = [[VuoAvPlayerObject alloc] init];
 
-	// [NSURL URLWithString:] returns nil if the string contains UTF-8 characters,
-	// and [NSString stringByAddingPercentEscapesUsingEncoding:] is deprecated (and results in double-escaped ASCII-7 characters),
-	// so just feed it a path; [NSURL fileURLWithPath:] can deal with UTF-8 characters.
-	VuoText path = VuoUrl_getPosixPath(url);
-	VuoRetain(path);
-	NSURL *file_url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:path] isDirectory:NO];
-	VuoRelease(path);
+	NSURL *file_url = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
 
 	if( ![player setURL:file_url] )
 	{

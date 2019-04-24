@@ -7,6 +7,8 @@ SUBDIRS += \
 	VuoInputEditorArtNetOutputDevice \
 	VuoInputEditorAudioInputDevice \
 	VuoInputEditorAudioOutputDevice \
+	VuoInputEditorBlackmagicInputDevice \
+	VuoInputEditorBlackmagicOutputDevice \
 	VuoInputEditorBlendMode \
 	VuoInputEditorColor \
 	VuoInputEditorCurve \
@@ -49,6 +51,8 @@ VuoInputEditorArtNetInputDevice.depends = widget
 VuoInputEditorArtNetOutputDevice.depends = widget
 VuoInputEditorAudioInputDevice.depends = widget
 VuoInputEditorAudioOutputDevice.depends = widget
+VuoInputEditorBlackmagicInputDevice.depends = widget
+VuoInputEditorBlackmagicOutputDevice.depends = widget
 VuoInputEditorBlendMode.depends = widget
 VuoInputEditorColor.depends = widget
 VuoInputEditorCurve.depends = widget

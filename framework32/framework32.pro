@@ -7,7 +7,7 @@ include(../vuo-macosx-sdk.pri)
 
 FLAGS32 = -m32
 QMAKE_CFLAGS += $$FLAGS32
-QMAKE_CXXFLAGS += $$FLAGS32
+QMAKE_CXXFLAGS += $$FLAGS32 -Wno-c++11-narrowing
 QMAKE_LFLAGS += $$FLAGS32
 
 ZMQ32_ROOT = /usr/local/Cellar/zeromq/2.2.0-32

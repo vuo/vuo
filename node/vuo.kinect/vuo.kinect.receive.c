@@ -2,7 +2,7 @@
  * @file
  * vuo.kinect.receive node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -183,7 +183,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	context->canceled = dispatch_semaphore_create(0);
 	context->triggerQueue = dispatch_queue_create("vuo.kinect.receive", NULL);
 
-	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), context, vuo_kinect_receive_worker);
+	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), context, vuo_kinect_receive_worker);
 
 	return context;
 }

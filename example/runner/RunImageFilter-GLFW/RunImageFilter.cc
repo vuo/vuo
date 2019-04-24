@@ -2,7 +2,7 @@
  * @file
  * RunImageFilter implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -80,6 +80,7 @@ int main(void)
 	//glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	glfwOpenWindow(640,480,8,8,8,8,8,0,GLFW_WINDOW);
+	glfwSetWindowTitle("RunImageFilter");
 	glfwSetWindowCloseCallback(windowWillClose);
 
 	cgl_ctx = CGLGetCurrentContext();

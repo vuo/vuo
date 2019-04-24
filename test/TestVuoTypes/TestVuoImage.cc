@@ -2,7 +2,7 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -665,6 +665,30 @@ private slots:
 		VuoLocal(i);
 
 		QCOMPARE(i->scaleFactor, expectedScaleFactor);
+	}
+
+	/**
+	 * Ensure Vuo reads huge images without crashing.
+	 * https://b33p.net/kosada/node/14063
+	 */
+	void testFetchHugeImage_data()
+	{
+		QTest::addColumn<unsigned long>("expectedWidth");
+		QTest::addColumn<unsigned long>("expectedHeight");
+
+		QTest::newRow("17000x17000.png") << 17000UL << 17000UL;
+	}
+	void testFetchHugeImage()
+	{
+		QFETCH(unsigned long, expectedWidth);
+		QFETCH(unsigned long, expectedHeight);
+
+		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		QEXPECT_FAIL("17000x17000.png", "Vuo doesn't currently support working with images larger than OpenGL's limit (but it still shouldn't crash).  https://b33p.net/kosada/node/7116", Abort);
+		QVERIFY(i);
+		QCOMPARE(i->pixelsWide, expectedWidth);
+		QCOMPARE(i->pixelsHigh, expectedHeight);
+		VuoLocal(i);
 	}
 };
 

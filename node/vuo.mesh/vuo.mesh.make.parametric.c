@@ -2,7 +2,7 @@
  * @file
  * vuo.vertices.make.parametric node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -41,5 +41,5 @@ void nodeEvent
 		VuoOutputData(VuoMesh) mesh
 )
 {
-	*mesh = VuoMeshParametric_generate(time, xExpression, yExpression, zExpression, columns, rows, (bool)uClosed, uMin, uMax, (bool)vClosed, vMin, vMax);
+	*mesh = VuoMeshParametric_generate(time, xExpression, yExpression, zExpression, columns, rows, (bool)uClosed, uMin, uMax, (bool)vClosed, vMin, vMax, NULL);
 }

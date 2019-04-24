@@ -2,7 +2,7 @@
  * @file
  * TestWindow implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -897,6 +897,16 @@ private slots:
 			});
 			EXPECT_NO_EVENT(^{
 				sendLeftMouseClick(windowX, windowY, 1);
+			});
+
+			EXPECT_ANY_EVENT(^{
+				// After updating Laittaa to Mac OS 10.10, the EXPECT_EVENT below started failing:
+				// `Expected port SingleClicked to have value -0.980469, 0.730469 but got value -1, 0.75.`.
+				// It seems that `VuoFileUtilities::focusProcess` (`-[NSRunningApplication activateWithOptions:…]`)
+				// brings the window to the foreground but doesn't actually focus the window.
+				// Simulating a click inside the window does cause it to gain focus, though.
+				// (On 10.9 and 10.12 and 10.13, it works fine with or without this workaround.)
+				sendLeftMouseClick(windowX + 10, windowY + 10, 1);
 			});
 
 			// Single-click inside the top left of the window,

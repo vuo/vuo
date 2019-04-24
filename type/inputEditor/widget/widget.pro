@@ -6,6 +6,7 @@ include(../../../vuo.pri)
 
 SOURCES += \
 	dummy.mm \
+	VuoComboBox.cc \
 	VuoDialogForInputEditor.cc \
 	VuoInputEditor.cc \
 	VuoInputEditorNamedEnum.cc \
@@ -16,6 +17,7 @@ SOURCES += \
 	VuoInputEditorWithLineEditList.cc
 
 HEADERS += \
+	VuoComboBox.hh \
 	VuoDialogForInputEditor.hh \
 	VuoInputEditor.hh \
 	VuoInputEditorNamedEnum.hh \

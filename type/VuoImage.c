@@ -2,7 +2,7 @@
  * @file
  * VuoImage implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -347,7 +347,7 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
  * Downloads the specified image's pixel data from the GPU to the CPU (or returns it from a cache),
  * and returns the CPU memory buffer.
  *
- * The return value is a pointer to a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.
+ * The return value is a pointer to a buffer of pixel data.  Row-major, starting at the bottom (flipped).  No row padding.  Premultiplied alpha.
  *
  * The returned buffer is owned by the VuoImage instance; the caller should not modify or `free()` it.
  *
@@ -454,10 +454,20 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 
 			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
+				// If each row is quad-aligned, OpenGL doesn't add any padding (good).
+				bool openGLAddsPadding = ((image->pixelsWide * channels * bytesPerChannel) % 4 != 0);
+				if (openGLAddsPadding)
+					// Remove the padding, since VuoImage_getBuffer promises tightly-packed buffers.
+					glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
 			glBindTexture(image->glTextureTarget, image->glTextureName);
 //			VLog("glGetTexImage(%s, 0, %s, %s, …); on texture internalformat %s", VuoGl_stringForConstant(image->glTextureTarget), VuoGl_stringForConstant(actualFormat), VuoGl_stringForConstant(type), VuoGl_stringForConstant(image->glInternalFormat));
 			glGetTexImage(image->glTextureTarget, 0, actualFormat, type, (GLvoid *)pixels);
 			glBindTexture(image->glTextureTarget, 0);
+
+				if (openGLAddsPadding)
+					// Restore the default.
+					glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
 			if (pixelBufferSize > tamperEvidentSealLength && strncmp((char *)pixels, tamperEvidentSeal, strlen(tamperEvidentSeal)) == 0)
 			{

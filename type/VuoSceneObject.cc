@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -1323,8 +1323,10 @@ unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
 
 /**
  * Traverses the specified scenegraph and returns statistics about it.
+ *
+ * The caller should initialize the output parameters to 0 before calling this function.
  */
-static void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
+void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
 {
 	unsigned long childObjectCount = 0;
 	if (value.childObjects)

@@ -2,7 +2,7 @@
  * @file
  * VuoFfmpegDecoder interface.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -12,6 +12,7 @@
 #ifdef __cplusplus
 extern "C"
 {
+#endif
 #include "module.h"
 #include "VuoVideoDecoder.h"
 #include "VuoVideo.h"
@@ -22,22 +23,24 @@ extern "C"
 #include "VuoVideoFrame.h"
 #include "VuoText.h"
 #include "VuoUrl.h"
-#endif
 
 // FFMPEG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#include <avcodec.h>
-#include <avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-#include <swscale.h>
+#include <libswscale/swscale.h>
 #include <string.h>
 #include <libswresample/swresample.h>
 #include <libavutil/opt.h>
 #pragma clang diagnostic pop
 
 #include <sys/types.h> // for uint
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * An object for controlling and extracting information from video using FFMPEG.
@@ -384,6 +387,7 @@ private:
 	int64_t lastDecodedVideoPts;
 	int64_t lastSentVideoPts;
 	int64_t lastDecodedAudioPts;
+	bool showedTimestampGapWarning;
 
 	double lastVideoTimestamp;	// Last sent video timestamp in seconds, relative to 0 being start of movie (actual timestamp could be negative, or non-zero)
 	double lastAudioTimestamp;	// Last sent audio timestamp in seconds.
@@ -480,7 +484,3 @@ private:
 	/// Return the amount of audio drift in seconds (last sent audioTimestamp - videoTimestamp)
 	double AudioOffset();
 };
-
-#ifdef __cplusplus
-}
-#endif

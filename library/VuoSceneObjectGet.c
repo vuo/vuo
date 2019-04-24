@@ -2,7 +2,7 @@
  * @file
  * VuoSceneGet implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -204,11 +204,20 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 					);
 	}
 
-	// Convert each mesh to a VuoSubmesh instance.
+	// Convert each aiMesh to either a single VuoSceneObject,
+	// or a VuoSceneObject group with multiple child VuoSceneObjects.
 	if (node->mNumMeshes)
 	{
-		sceneObject->type = VuoSceneObjectSubType_Mesh;
-		sceneObject->mesh = VuoMesh_make(node->mNumMeshes);
+		if (node->mNumMeshes == 1)
+		{
+			sceneObject->type = VuoSceneObjectSubType_Mesh;
+			sceneObject->mesh = VuoMesh_make(1);
+		}
+		else
+		{
+			sceneObject->type = VuoSceneObjectSubType_Group;
+			sceneObject->childObjects = VuoListCreate_VuoSceneObject();
+		}
 
 			/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
 		int materialIndex = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
@@ -277,7 +286,6 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 		}
 
 		unsigned int numValidElements = 0;
-		unsigned int minIndex=90000,maxIndex=0;
 		for (unsigned int face = 0; face < meshObj->mNumFaces; ++face)
 		{
 			const struct aiFace *faceObj = &meshObj->mFaces[face];
@@ -290,13 +298,6 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 			sm.elements[numValidElements++] = faceObj->mIndices[0];
 			sm.elements[numValidElements++] = faceObj->mIndices[1];
 			sm.elements[numValidElements++] = faceObj->mIndices[2];
-			for (int i=0;i<3;++i)
-			{
-				if (faceObj->mIndices[i]<minIndex)
-					minIndex=faceObj->mIndices[i];
-				if (faceObj->mIndices[i]>maxIndex)
-					maxIndex=faceObj->mIndices[i];
-			}
 		}
 
 		// if no texture coordinates found, attempt to generate passable ones.
@@ -311,14 +312,29 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 			VuoMeshUtility_calculateTangents(&sm);
 		}
 
-		sceneObject->mesh->submeshes[meshIndex] = sm;
+		if (node->mNumMeshes == 1)
+		{
+			sceneObject->mesh->submeshes[0] = sm;
+			VuoMesh_upload(sceneObject->mesh);
+		}
+		else
+		{
+			// Add this aiMesh as a child of this VuoSceneObject.
+			VuoMesh m = VuoMesh_make(1);
+			m->submeshes[0] = sm;
+			VuoMesh_upload(m);
+			VuoSceneObject child = VuoSceneObject_make(m, sceneObject->shader, VuoTransform_makeIdentity(), NULL);
+			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, child);
+		}
 	}
 
-	VuoMesh_upload(sceneObject->mesh);
+	if (node->mNumMeshes > 1)
+		sceneObject->shader = NULL;
 
 	if (node->mNumChildren)
 	{
-		sceneObject->childObjects = VuoListCreate_VuoSceneObject();
+		if (!sceneObject->childObjects)
+			sceneObject->childObjects = VuoListCreate_VuoSceneObject();
 		if (sceneObject->type == VuoSceneObjectSubType_Empty)
 			sceneObject->type = VuoSceneObjectSubType_Group;
 	}

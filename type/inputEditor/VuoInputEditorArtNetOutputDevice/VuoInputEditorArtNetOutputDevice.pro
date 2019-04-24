@@ -20,11 +20,11 @@ INCLUDEPATH += \
 	$$ROOT/type
 
 LIBS += \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/node/vuo.artnet/premium/VuoArtNet.o \
 	$$ROOT/node/vuo.artnet/VuoArtNetInputDevice.o \
 	$$ROOT/node/vuo.artnet/VuoArtNetOutputDevice.o \
-	$$ROOT/runtime/VuoEventLoop.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \

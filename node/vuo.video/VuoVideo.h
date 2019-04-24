@@ -2,7 +2,7 @@
  * @file
  * VuoVideo interface.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -30,16 +30,22 @@ typedef void* VuoVideo;	///< An opaque object for decoding video.
 VuoVideo VuoVideo_make(VuoUrl path, VuoVideoOptimization optimization);
 
 /**
- * Set the delgate to be called when a new video frame is available.  Video frames will
+ * Set the delegate to be called when a new video frame is available.  Video frames will
  * be send to delegates at the appropriate timestamp automatically when playing.
  */
 void VuoVideo_setVideoDelegate(VuoVideo player, void(*delegate)(VuoVideoFrame));
 
 /**
- * Set the delgate to be called when a new video frame is available.  Video frames will be
+ * Set the delegate to be called when a new video frame is available.  Video frames will be
  * sent to delegates at the appropriate timestamp automatically when playing.
  */
 void VuoVideo_setAudioDelegate(VuoVideo player, void(*delegate)(VuoList_VuoAudioSamples));
+
+/**
+ * Set the delegate to be called when a video playback reaches the end (or beginning, if playback
+ * rate is negative).
+ */
+void VuoVideo_setPlaybackFinishedDelegate(VuoVideo player, void(*delegate)(void));
 
 /**
  * Begin playback of video. Frames will be sent to delegates as set by VuoVideo_SetVideoDelegate

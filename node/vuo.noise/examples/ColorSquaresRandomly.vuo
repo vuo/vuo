@@ -2,7 +2,7 @@
  * @file
  * Displays a pattern of up to 100 colored squares. Each square has a one-in-five chance of being yellow. Once 100 squares are visible, continues to add new squares at the bottom and delete old squares at the top.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.

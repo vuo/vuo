@@ -2,7 +2,7 @@
  * @file
  * VuoDsp implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -41,6 +41,7 @@ VuoModuleMetadata({
 	unsigned int _frameSize;	///< The number of frames per-bucket to analyze.  Must be a power of 2.
 	VuoWindowing _windowMode;	///< What type of windowing to apply to sample data.
 	float* _window;			///< Holds windowed real values from samples.
+	VuoAudioBinAverageType priorFrequencyMode; ///< To detect when the frequencyMode changes.
 }
 
 - (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count newSumming:(bool)newSumming;
@@ -67,6 +68,7 @@ VuoModuleMetadata({
 	_split.realp = _frequency + frameSize;
 	_split.imagp = _split.realp + frameSize / 2;
 	_frameSize = frameSize;
+	priorFrequencyMode = (VuoAudioBinAverageType)-1;
 
 	// https://developer.apple.com/library/prerelease/ios/documentation/Accelerate/Reference/vDSPRef/index.html#//apple_ref/c/func/vDSP_blkman_window
 	// http://stackoverflow.com/questions/12642916/fft-output-with-float-buffer-audiounit
@@ -96,11 +98,31 @@ VuoModuleMetadata({
 	return self;
 }
 
+static void VuoDsp_showFrequencies(int frameCount, VuoAudioBinAverageType mode, int lowBin, int highBin, int displayBin)
+{
+	double nyquist = VuoAudioSamples_sampleRate / 2.;
+	double width = nyquist / (frameCount/2);
+
+	double lowFrequency    = ( lowBin - .5) * width;
+	double highFrequency   = (highBin + .5) * width;
+	double centerFrequency = (((double)lowBin + highBin) / 2.) * width;
+
+	VUserLog("Bin %4d   %8.2f Hz ± %7.2f Hz   (%8.2f Hz to %8.2f Hz)", displayBin, centerFrequency, (highFrequency - lowFrequency) / 2., lowFrequency, highFrequency);
+}
+
 /**
  * ...
  */
 - (VuoReal *)frequenciesForSampleData:(float *)sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count newSumming:(bool)newSumming
 {
+	bool showTable = false;
+	if (frames != _frameSize || frequencyMode != priorFrequencyMode)
+	{
+		_frameSize = frames;
+		priorFrequencyMode = frequencyMode;
+		showTable = VuoIsDebugEnabled();
+	}
+
 	VuoReal *freqChannel = (VuoReal *)malloc(sizeof(VuoReal) * frames/2);
 	// see vDSP_Library.pdf, page 20
 
@@ -152,6 +174,11 @@ VuoModuleMetadata({
 				for( i=1; i<frames/2; ++i )
 					freqChannel[i-1] = lFrequency[i] * ((float)sqrtf(i)*2.f + 1.f);
 			*count = frames/2 - 1;
+
+			if (showTable)
+				for (i = 1; i < frames/2; ++i)
+					VuoDsp_showFrequencies(frames, frequencyMode, i, i, i);
+
 			break;
 		}
 		case VuoAudioBinAverageType_Quadratic:	// Quadratic Average
@@ -175,7 +202,11 @@ VuoModuleMetadata({
 				sum /= (float)(upperFrequency-lowerFrequency+1);
 				sum *= (float)i*2.f + 1.f;
 				freqChannel[i] = sum;
-				lowerFrequency = upperFrequency;
+
+				if (showTable)
+					VuoDsp_showFrequencies(frames, frequencyMode, lowerFrequency, upperFrequency, i + 1);
+
+				lowerFrequency = upperFrequency + 1;
 				++i;
 			}
 			*count = i;
@@ -191,7 +222,7 @@ VuoModuleMetadata({
 			for( i=0; i<numBuckets; ++i)
 			{
 				lowerFrequency = (frames/2) / powf(2.f,log2FrameSize-i  )+1;
-				upperFrequency = (frames/2) / powf(2.f,log2FrameSize-i-1)+1;
+				upperFrequency = (frames/2) / powf(2.f,log2FrameSize-i-1);
 				sum=0.f;
 				if(upperFrequency>=frames/2)
 					upperFrequency=frames/2-1;
@@ -200,6 +231,9 @@ VuoModuleMetadata({
 				sum /= (float)(upperFrequency-lowerFrequency+1);
 				sum *= (float)powf(i,1.5f) + 1.f;
 				freqChannel[i] = sum;
+
+				if (showTable)
+					VuoDsp_showFrequencies(frames, frequencyMode, lowerFrequency, upperFrequency, i + 1);
 			}
 			*count = numBuckets;
 		}

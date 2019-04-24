@@ -19,9 +19,8 @@ INCLUDEPATH += \
 	$$ROOT/type
 
 LIBS += \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/library/libmodule.o \
-	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoIoReturn.o \
 	$$ROOT/node/vuo.hid/VuoHidControl.o \
 	$$ROOT/node/vuo.hid/VuoHidDevice.o \
@@ -29,7 +28,6 @@ LIBS += \
 	$$ROOT/node/vuo.hid/VuoHidIo.o \
 	$$ROOT/node/vuo.hid/VuoHidUsage.o \
 	$$ROOT/node/vuo.hid/VuoUsbVendor.o \
-	$$ROOT/runtime/VuoEventLoop.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \

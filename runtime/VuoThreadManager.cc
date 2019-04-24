@@ -2,7 +2,7 @@
  * @file
  * VuoThreadManager implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -13,6 +13,7 @@
 #include "VuoRuntimePersistentState.hh"
 #include "VuoRuntimeState.hh"
 #include "VuoRuntimeUtilities.hh"
+#include "VuoEventLoop.h"
 
 /**
  * Constructs a trigger worker.
@@ -227,8 +228,8 @@ void VuoThreadManager::ThreadPool::returnThreads(unsigned long workerId)
 VuoThreadManager::VuoThreadManager(void)
 {
 	mainThreadPool.setTotalThreads(60);  // maximum number of worker threads in use simultaneously
-	workersWaitingSync = dispatch_queue_create("org.vuo.runtime.workersWaiting", NULL);
-	threadPoolSync = dispatch_queue_create("org.vuo.runtime.threadPool", NULL);
+	workersWaitingSync = dispatch_queue_create("org.vuo.runtime.workersWaiting", VuoEventLoop_getDispatchInteractiveAttribute());
+	threadPoolSync = dispatch_queue_create("org.vuo.runtime.threadPool", VuoEventLoop_getDispatchInteractiveAttribute());
 	workersUpdated = dispatch_semaphore_create(0);
 	completed = dispatch_semaphore_create(0);
 }
@@ -251,7 +252,7 @@ void VuoThreadManager::enableSchedulingWorkers(void)
 	mayMoreWorkersBeEnqueued = true;
 	mayMoreWorkersBeDequeued = true;
 
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 	dispatch_async(queue, ^{
 					   while (mayMoreWorkersBeDequeued)
 					   {

@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.6
+VUO_VERSION = 1.2.7
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -42,7 +42,7 @@ RTAUDIO_ROOT = /usr/local/Cellar/rtaudio/4.1.2
 GAMMA_ROOT = /usr/local/Cellar/gamma/0.9.5
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.2.0
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
-FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
+FFMPEG_ROOT = $$(HOME)/.conan/data/ffmpeg/2.1-1/vuo/stable/package/45e70376d84210c452df82106a831812ea25d4c5
 LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.20
 LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.5.3
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0

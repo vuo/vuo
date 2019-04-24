@@ -2,7 +2,7 @@
  * @file
  * vuo.motion.spring node implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -97,9 +97,9 @@ void nodeInstanceEvent
 		double positivePeriod = MAX(period,0.000001);
 		double clampedDamping = MAX(MIN(damping,0.999999),0.000001);
 		VuoReal timeSinceStart = time - (*ctx)->timeMotionStarted;
-		(*ctx)->currentPosition = VuoGenericType1_spring(timeSinceStart, (*ctx)->startPosition, setTarget, period, clampedDamping);
+		(*ctx)->currentPosition = VuoGenericType1_spring(timeSinceStart, (*ctx)->startPosition, setTarget, positivePeriod, clampedDamping);
 
-		if (timeSinceStart > 2.*period/clampedDamping)
+		if (timeSinceStart > 2.*positivePeriod/clampedDamping)
 		{
 			(*ctx)->moving = false;
 			*reachedTarget = true;

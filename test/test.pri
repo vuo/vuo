@@ -27,6 +27,7 @@ QMAKE_LFLAGS += \
 	$${GRAPHVIZ_ROOT}/lib/libgraph.dylib \
 	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_dot_layout.dylib \
 	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_core.dylib \
+	$$ASSIMP_ROOT/lib/libassimp.dylib \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$FFMPEG_ROOT/lib/libavcodec.dylib \
 	$$FFMPEG_ROOT/lib/libavformat.dylib \
@@ -48,23 +49,20 @@ QMAKE_LFLAGS += \
 	-framework QuartzCore \
 	-framework AppKit \
 	$$ROOT/runtime/libVuoCompositionDiff.bc \
-	$$ROOT/runtime/libVuoCompositionState.bc \
 	$$ROOT/runtime/libVuoNodeRegistry.bc \
 	$$ROOT/runtime/libVuoRuntime.bc \
 	$$ROOT/runtime/libVuoRuntimeCommunicator.bc \
 	$$ROOT/runtime/libVuoRuntimeContext.bc \
 	$$ROOT/runtime/libVuoRuntimePersistentState.bc \
 	$$ROOT/runtime/libVuoRuntimeState.bc \
-	$$ROOT/runtime/libVuoRuntimeUtilities.bc \
 	$$ROOT/runtime/libVuoThreadManager.bc \
-	$$ROOT/runtime/libVuoEventLoop.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
 	$$ROOT/library/csgjs.o \
+	$$ROOT/library/libVuoApp.dylib \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoCglPixelFormat.o \
 	$$ROOT/library/VuoDisplayRefresh.o \
@@ -82,6 +80,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoOsStatus.o \
 	$$ROOT/library/VuoPnpId.o \
+	$$ROOT/library/VuoSceneObjectGet.o \
 	$$ROOT/library/VuoSceneText.o \
 	$$ROOT/library/VuoSceneRenderer.o \
 	$$ROOT/library/VuoScreenCommon.o \
@@ -91,7 +90,6 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoWindow.o \
 	$$ROOT/library/VuoWindowRecorder.o \
 	$$ROOT/library/VuoWindowTextInternal.o \
-	$$ROOT/library/libmodule.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoAnchor.o \
@@ -170,6 +168,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/list/VuoList_VuoWindowProperty.o \
 	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \
 	-Wl,-rpath,$$ROOT/framework \
+	-Wl,-rpath,$$FFMPEG_ROOT/lib \
 	"-framework QtTest" \
 	"-framework QtCore" \
 	"-framework IOSurface" \

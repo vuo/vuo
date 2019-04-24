@@ -32,7 +32,7 @@ compiler_vuo_compile.depends = compiler
 framework.subdir = framework
 framework.depends = base compiler renderer runtime node type type_input_editor type_list library
 
-library.depends = base library_shader type type_list
+library.depends = base library_shader type type_list runtime
 
 node.depends = compiler_vuo_compile type type_list
 

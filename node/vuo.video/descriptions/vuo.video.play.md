@@ -18,6 +18,9 @@ When the composition starts or this node is added to a running composition, the 
       - "Forward" optimizes for playing video frames in order.
       - "Random" optimizes for playing video frames in reverse order (such as if `Playback Rate` is -1 or `Loop` is "Mirror").
    - `Decoded Video` — Fires an event whenever it's time to display the next frame in the movie, which is outputted along with the event.
-   - `Decoded Audio` — Fires an event whenever it's time to play the next audio samples in the movie, which are outputted along with the event. 
+   - `Decoded Audio` — Fires an event whenever it's time to play the next audio samples in the movie, which are outputted along with the event. The `Decoded Audio` port only fires events when the movie is playing forward at normal speed. When the `Playback Rate` is not 1, or when the `Loop` is "Mirror" and the movie is playing in reverse, the `Decoded Audio` port does not fire events.
+   - `Finished Playback` — Fires when playback has reached the end (or beginning) of the movie file, including when playback is set to loop or mirror. (It does not fire when pausing the movie, or when there is an error decoding the movie.)
 
-The `Decoded Audio` port only fires events when the movie is playing forward at normal speed. When the `Playback Rate` is not 1, or when the `Loop` is "Mirror" and the movie is playing in reverse, the `Decoded Audio` port does not fire events.
+If this node is unable to play as fast as the requested `Playback Rate`, it plays back the movie at the fastest rate that it can. The maximum rate at which this node is able to play back a movie is influenced by the movie's resolution and encoding; your computer's disk speed, CPU speed, and GPU speed; and other applications that are running on your computer.
+
+An alternative to this node that's more suitable for protocol compositions, since it doesn't fire events, is `Decode Movie Image`.

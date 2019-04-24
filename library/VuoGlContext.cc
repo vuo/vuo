@@ -2,7 +2,7 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -311,7 +311,7 @@ private:
 	}
 	/// @todo provide a way to shut down entire system and release the contexts.
 
-	CGLContextObj createContext(CGLContextObj rootContext)
+	static CGLContextObj createContext(CGLContextObj rootContext)
 	{
 		static dispatch_once_t info = 0;
 		dispatch_once(&info, ^{
@@ -397,13 +397,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 		return;
 	}
 
-	CGLPixelFormatObj pf = CGLGetPixelFormat((CGLContextObj)rootContext);
-	CGLError error = CGLCreateContext(pf, (CGLContextObj)rootContext, &VuoGlContextPool::rootContext);
-	if (error != kCGLNoError)
-	{
-		VUserLog("Error: %s\n", CGLErrorString(error));
-		return;
-	}
+	VuoGlContextPool::rootContext = VuoGlContextPool::createContext((CGLContextObj)rootContext);
 }
 
 /**

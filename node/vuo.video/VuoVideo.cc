@@ -2,7 +2,7 @@
  * @file
  * VuoVideo implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -63,7 +63,6 @@ void VuoVideo_setVideoDelegate(VuoVideo player, void(*delegate)(VuoVideoFrame))
 {
 	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
 	if(obj == NULL) return;
-
 	obj->SetVideoDelegate(delegate);
 }
 
@@ -74,8 +73,14 @@ void VuoVideo_setAudioDelegate(VuoVideo player, void(*delegate)(VuoList_VuoAudio
 {
 	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
 	if(obj == NULL) return;
-
 	obj->SetAudioDelegate(delegate);
+}
+
+void VuoVideo_setPlaybackFinishedDelegate(VuoVideo player, void(*delegate)(void))
+{
+	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
+	if(obj == NULL) return;
+	obj->SetFinishedDelegate(delegate);
 }
 
 /**

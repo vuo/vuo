@@ -49,15 +49,12 @@ test_runner.commands = \
 		-o ${QMAKE_FILE_IN_BASE}.bc && \
 	$$LLVM_LINK \
 		$$ROOT/runtime/libVuoCompositionDiff.bc \
-		$$ROOT/runtime/libVuoCompositionState.bc \
-		$$ROOT/runtime/libVuoEventLoop.bc \
 		$$ROOT/runtime/libVuoNodeRegistry.bc \
 		$$ROOT/runtime/libVuoRuntime.bc \
 		$$ROOT/runtime/libVuoRuntimeCommunicator.bc \
 		$$ROOT/runtime/libVuoRuntimeContext.bc \
 		$$ROOT/runtime/libVuoRuntimePersistentState.bc \
 		$$ROOT/runtime/libVuoRuntimeState.bc \
-		$$ROOT/runtime/libVuoRuntimeUtilities.bc \
 		$$ROOT/runtime/libVuoTelemetry.bc \
 		$$ROOT/runtime/libVuoThreadManager.bc \
 		${QMAKE_FILE_IN_BASE}.bc \
@@ -66,6 +63,7 @@ test_runner.commands = \
 		$$QMAKE_LFLAGS \
 		$${TEST_RUNNER_NATIVE_LIBS} \
 		${QMAKE_FILE_IN_BASE}-linked.bc \
+		$$ROOT/library/libVuoApp.dylib \
 		libVuoHeap.dylib \
 		$${JSONC_ROOT}/lib/libjson-c.a \
 		-lobjc \

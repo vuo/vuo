@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,6 +11,7 @@
 #include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 #include "VuoApp.h"
+#include "VuoEventLoop.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -32,7 +33,6 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoAudio",
 					 "dependencies" : [
-						 "VuoApp",
 						 "VuoAudioSamples",
 						 "VuoAudioInputDevice",
 						 "VuoAudioOutputDevice",
@@ -274,7 +274,7 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 		ai->inputDevice.id = deviceId;
 		ai->outputDevice.id = deviceId;
 
-		ai->pendingOutputQueue = dispatch_queue_create("VuoAudio pending output", NULL);
+		ai->pendingOutputQueue = dispatch_queue_create("VuoAudio pending output", VuoEventLoop_getDispatchInteractiveAttribute());
 
 		// Though neither RtAudio's documentation nor Apple's documentation
 		// specify that audio must be initialized on the main thread,

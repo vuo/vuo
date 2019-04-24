@@ -232,4 +232,33 @@
 			]
 		}
 	},
+
+	/* `http://wwd.com/custom-feed/recent-stories/` (`<meta name="generator" content="WordPress.com" />`) — places `<image>` tag, with the URL as text content, directly in the `<item>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-wordpress-com.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "WWDWWD",
+			"description": "Women's Wear Daily brings you breaking news about the fashion industry, designers, celebrity trend setters, and extensive coverage of fashion week.",
+			"items": [
+				{
+					"title": "Timberland Introduces New Boot Style With Nationwide Brand Activation",
+					"author": "Aria Hughes",
+					"description": "To celebrate its limited-edition Ghost White style, Timberland is deploying ice cream trucks across the country.",
+					"url": "http://wwd.com/menswear-news/mens-accessories/timberland-new-boot-style-nationwide-brand-activation-10969530/",
+					"dateTime": 525911706,
+					"imageUrl": "http://pmcwwd.files.wordpress.com/2017/08/timberland-two-split-diptych.jpg",
+					"image": null,
+					"categories": [
+						"Mens Accessories",
+						"Boots",
+						"VF Corp."
+					]
+				}
+			]
+		}
+	},
 ]}

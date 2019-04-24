@@ -91,7 +91,7 @@ COMPOSITION_IMAGES += \
    ../node/vuo.time/examples/FlashOnMousePress.vuo \
 	../node/vuo.video/examples/PlayMovie.vuo
 
-contributors.commands = curl http://vuo.org/contributors/markdown -o contributors.md
+contributors.commands = curl https://vuo.org/contributors/markdown -o contributors.md
 contributors.target = contributors.md
 QMAKE_EXTRA_TARGETS += contributors
 POST_TARGETDEPS += contributors.md
