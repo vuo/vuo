@@ -123,7 +123,12 @@ VuoVideoPlayer::~VuoVideoPlayer()
 	if(isPlaying)
 		_Pause();
 
+	if (video_timer)
+		stopTimer(&video_timer, &video_semaphore);
 	dispatch_release(video_semaphore);
+
+	if (audio_timer)
+		stopTimer(&audio_timer, &audio_semaphore);
 	dispatch_release(audio_semaphore);
 
 	if(decoder != NULL)

@@ -97,18 +97,36 @@ QMAKE_EXTRA_TARGETS += contributors
 POST_TARGETDEPS += contributors.md
 QMAKE_CLEAN += contributors.md
 
-pandoc.commands = cat VuoManual.txt contributors.md \
-	| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \
-	| /usr/local/bin/pandoc \
-	--latex-engine=xelatex \
-	--table-of-contents \
-	--number-sections \
-	--smart \
-	--template=VuoManualTemplate.tex \
-	--include-in-header=VuoManualHeader.tex \
-	--from=markdown-yaml_metadata_block \
-	-o VuoManual.pdf \
-	-
+XELATEX = "echo 'running xelatex' ; max_print_line=1024 PATH=/Library/TeX/texbin xelatex -file-line-error -interaction=nonstopmode"
+XELATEX_FILTER = \
+	| egrep "'Warning|Error'" \
+	| egrep -v "'LaTeX Font Warning: Font shape.*undefined|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right'"
+pandoc.commands = \
+	   echo "running pandoc" \
+	&& cat VuoManual.txt contributors.md \
+		| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \
+		| /usr/local/bin/pandoc \
+		--table-of-contents \
+		--number-sections \
+		--smart \
+		--template=VuoManualTemplate.tex \
+		--include-in-header=VuoManualHeader.tex \
+		--from=markdown \
+		--to=latex \
+		-o VuoManual.tex \
+		- \
+	# The first xelatex run gathers the names of terms and references,
+	# so there will be a lot of harmless undefined reference warnings.
+	# xelatex exits with nonzero status even when it succeeds.
+	&& (($$XELATEX VuoManual.tex $$XELATEX_FILTER) || true) \
+		| egrep -v "'Package hyperref Warning: Rerun to get /PageLabels entry|LaTeX Warning: (Reference|Hyper reference).*on page.*undefined on input line|Package lastpage Warning: Rerun to get the references right on input line|LaTeX Warning: There were undefined references'" \
+	# The second xelatex run populates terms and references (including the table of contents).
+	# There shouldn't be any undefined references after the second run.
+	&& (($$XELATEX VuoManual.tex $$XELATEX_FILTER) || true) \
+	# The third xelatex run fixes up page numbers now that the table of contents is populated.
+	&& (($$XELATEX VuoManual.tex $$XELATEX_FILTER) || true) \
+	&& rm -f VuoManual.aux VuoManual.glg VuoManual.glo VuoManual.gls VuoManual.glsdefs VuoManual.idx VuoManual.ilg VuoManual.ind VuoManual.ist VuoManual.log VuoManual.out VuoManual.tex VuoManual.toc VuoManual.xdy texput.log
+
 pandoc.depends = VuoManual.txt contributors.md
 NODE_CLASS_IMAGE_BASENAMES = $$basename(NODE_CLASS_IMAGES)
 for(i,NODE_CLASS_IMAGE_BASENAMES): pandoc.depends += image-generated/$$replace(i,".c$",".pdf")

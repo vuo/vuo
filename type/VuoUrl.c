@@ -183,7 +183,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 }
 
 /**
- * Attempts to parse `url` as a `file:///` URL, and outputs its parts.
+ * Attempts to parse `url` as a `file:` URL, and outputs its parts.
  *
  * Returns true if parsing succeeded (which implies all output parameters have been populated, though possibly with NULL or zero-length strings).
  *
@@ -642,9 +642,9 @@ VuoText VuoUrl_decodeRFC3986(const VuoUrl url)
 }
 
 /**
- * If `url` uses the `file://` scheme, returns the corresponding (URL-decoded) POSIX path.
+ * If `url` uses the `file:` scheme, returns the corresponding (URL-decoded) POSIX path.
  *
- * If `url` does not use the `file://` scheme, returns NULL.
+ * If `url` does not use the `file:` scheme, returns NULL.
  */
 VuoText VuoUrl_getPosixPath(const VuoUrl url)
 {

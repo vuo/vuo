@@ -27,6 +27,7 @@ SUBDIRS += \
 	test_TestCompilingAndLinking_node \
 	test_TestControlAndTelemetry \
 	test_TestControlAndTelemetry_node \
+	test_TestExport \
 	test_TestSubcompositions \
 	test_TestEventDropping \
 	test_TestEventDropping_node \
@@ -74,6 +75,9 @@ test_TestEventDropping.depends = test_TestCompositionExecution test_TestEventDro
 
 test_TestEventDropping_node.subdir = TestEventDropping/node-TestEventDropping
 test_TestEventDropping_node.depends =
+
+test_TestExport.subdir = TestExport
+test_TestExport.depends =
 
 test_TestModules.subdir = TestModules
 test_TestModules.depends =

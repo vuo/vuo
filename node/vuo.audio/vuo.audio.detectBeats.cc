@@ -17,7 +17,7 @@ extern "C" {
 VuoModuleMetadata({
 					  "title" : "Detect Audio Beats",
 					  "keywords" : [ "tempo", "BPM", "synchronize", "metronome", "track" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "VuoBeatDetektor",
 						  "VuoDsp"

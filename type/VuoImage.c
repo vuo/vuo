@@ -151,7 +151,7 @@ static VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int 
  */
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
-	if (!pixelsWide || !pixelsHigh)
+	if (!glTextureName || !pixelsWide || !pixelsHigh)
 		return NULL;
 
 	VuoImage t = VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh, NULL, NULL);
@@ -188,7 +188,7 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInt
 		return NULL;
 	}
 
-	if (!pixelsWide || !pixelsHigh)
+	if (!glTextureName || !pixelsWide || !pixelsHigh)
 		return NULL;
 
 	return VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh, freeCallback, freeCallbackContext);
@@ -221,7 +221,11 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInt
 VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
 	VuoImage t = VuoImage_makeClientOwned(glTextureName, glInternalFormat, pixelsWide, pixelsHigh, freeCallback, freeCallbackContext);
+	if (!t)
+		return NULL;
+
 	t->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
+
 	return t;
 }
 
@@ -1029,9 +1033,8 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 	if (!value)
 		return NULL;
 
-	json_object * js = json_object_new_object();
-
 	__block VuoShader shader = NULL;
+	__block IOSurfaceID surfID = 0;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 //		VLog("Creating an IOSurface from glTextureName %d on target %lu",value->glTextureName,value->glTextureTarget);
 
@@ -1041,16 +1044,22 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 			shader = VuoShader_makeGlTextureRectangleAlphaPassthruShader(value, false);
 		VuoRetain(shader);
 
-		IOSurfaceID surfID = VuoImageRenderer_draw_internal(shader, value->pixelsWide, value->pixelsHigh, VuoImage_getColorDepth(value), true, true, 0);
+		surfID = VuoImageRenderer_draw_internal(shader, value->pixelsWide, value->pixelsHigh, VuoImage_getColorDepth(value), true, true, 0);
 //		VLog("Created IOSurfaceID %d",surfID);
-
-		json_object * o = json_object_new_int(surfID);
-		json_object_object_add(js, "ioSurface", o);
 
 		// Ensure the command queue gets executed before we return,
 		// since the IOSurface might immediately be used on another context.
 		glFlushRenderAPPLE();
 	});
+	if (!surfID)
+		return NULL;
+
+	json_object * js = json_object_new_object();
+	{
+		json_object * o = json_object_new_int(surfID);
+		json_object_object_add(js, "ioSurface", o);
+	}
+
 	{
 		json_object * o = json_object_new_int64(value->pixelsWide);
 		json_object_object_add(js, "pixelsWide", o);

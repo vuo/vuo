@@ -41,7 +41,7 @@ static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGl
  * If an existing, unused buffer of the specified @c type and @c size is available, it is returned.
  * Otherwise, a new buffer is created.
  *
- * The returned buffer's storage is will be preallocated (so the caller can efficiently upload data using [glBufferSubData](http://www.opengl.org/sdk/docs/man/xhtml/glBufferSubData.xml)).
+ * The returned buffer's storage is will be preallocated (so the caller can efficiently upload data using [glBufferSubData](https://www.khronos.org/opengl/wiki/GLAPI/glBufferSubData)).
  *
  * @threadAnyGL
  */
@@ -346,13 +346,13 @@ GLint VuoGlTexture_getMaximumTextureDimension(VuoGlContext glContext)
  * If an existing, unused texture matching the specified @c internalformat, @c width, and @c height is available, it is returned.
  * Otherwise, a new texture is created.
  *
- * The returned texture's storage is preallocated (so the caller can efficiently upload data using [glTexSubImage2D](http://www.opengl.org/sdk/docs/man/xhtml/glTexSubImage2D.xml)),
+ * The returned texture's storage is preallocated (so the caller can efficiently upload data using [glTexSubImage2D](https://www.khronos.org/opengl/wiki/GLAPI/glTexSubImage2D)),
  * and its texturing properties are set to the defaults:
  *
  *    - wrapping: clamp to border
  *    - filtering: linear
  *
- * See [glTexImage2D](http://www.opengl.org/sdk/docs/man/xhtml/glTexImage2D.xml) for information about @c internalformat and @c format.
+ * See [glTexImage2D](https://www.khronos.org/opengl/wiki/GLAPI/glTexImage2D) for information about @c internalformat and @c format.
  *
  * Returns 0 if the texture would be too large to fit in Video RAM.
  *
@@ -787,7 +787,7 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
 
 		/// @todo kIOSurfaceIsGlobal is deprecated on 10.11; replace int32 lookup with IOSurfaceCreateXPCObject or something.
-		/// http://lists.apple.com/archives/mac-opengl/2009/Sep/msg00110.html
+		/// http://web.archive.org/web/20151220161520/https://lists.apple.com/archives/mac-opengl/2009/Sep/msg00110.html
 		CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
 
 		long long pixelsWideLL = pixelsWide;
@@ -829,6 +829,11 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		{
 			VUserLog("Error in CGLTexImageIOSurface2D(GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, %d, %d, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, %d): %s",
 					 pixelsWide, pixelsHigh, IOSurfaceGetID(e->ioSurface), CGLErrorString(err));
+
+			glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+			glDeleteTextures(1, outputTexture);
+			*outputTexture = 0;
+
 			return NULL;
 		}
 

@@ -27,7 +27,7 @@
 
 
 /**
- * @ingroup DevelopingNodeClasses DevelopingTypes DevelopingLibraryModules
+ * @ingroup DevelopingNodeClasses
  * @defgroup VuoModuleMetadata Module Metadata
  * Name, version, and behavior information to be defined by node classes, port types, and library modules.
  *

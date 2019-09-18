@@ -705,6 +705,10 @@ div.directory {
 	border-left: 1px solid rgba(0,0,0,0.05);
 }
 
+.directory tr {
+  margin: 2px;
+}
+
 .directory tr.even {
 	padding-left: 6px;
 	background-color: #F7F8FB;
@@ -1145,6 +1149,72 @@ div.toc li.level4 {
 tr.heading h2 {
         margin-top: 12px;
         margin-bottom: 4px;
+}
+
+.memtitle {
+  display: none;
+}
+
+.arrow {
+  font-size: 80%;
+  opacity: .5;
+  display: inline-block;
+  text-align: center;
+  width: 16px;
+}
+
+icon {
+    font-family: Arial, Helvetica;
+    font-weight: bold;
+    font-size: 12px;
+    height: 14px;
+    width: 16px;
+    display: inline-block;
+    background-color: #9A9A9A;
+    color: white;
+    text-align: center;
+    border-radius: 4px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.icona {
+    width: 24px;
+    height: 22px;
+    display: inline-block;
+}
+
+.iconfopen {
+    width: 24px;
+    height: 18px;
+    margin-bottom: 4px;
+    background-image:url('folderopen.png');
+    background-position: 0px -4px;
+    background-repeat: repeat-y;
+    vertical-align:top;
+    display: inline-block;
+}
+
+.iconfclosed {
+    width: 24px;
+    height: 18px;
+    margin-bottom: 4px;
+    background-image:url('folderclosed.png');
+    background-position: 0px -4px;
+    background-repeat: repeat-y;
+    vertical-align:top;
+    display: inline-block;
+}
+
+.icondoc {
+    width: 24px;
+    height: 18px;
+    margin-bottom: 4px;
+    background-image:url('doc.png');
+    background-position: 0px -4px;
+    background-repeat: repeat-y;
+    vertical-align:top;
+    display: inline-block;
 }
 
 @media print

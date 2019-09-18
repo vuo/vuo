@@ -1,0 +1,40 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 1.3.0
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="1125,195"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="750,390"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="825,195" _increment="1.0" _decrement="1.0" _setCount="0.0"];
+CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="345,75" _wrapMode="\"wrap\""];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="960,195" _b="2"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="283,86" _1="\"..\\/..\\/..\\/node\\/vuo.video\\/examples\\/chess.mov\"" _2="\"..\\/..\\/..\\/node\\/vuo.video\\/examples\\/crawling.mov\""];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="837,101"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="570,75" fillcolor="magenta" _setTime="\"\"" _loop="\"none\"" _playbackRate="1" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="870,75" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="1275,225" _value="true"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Played3Videos>Played3Videos\l" _Played3Videos_type="VuoBoolean"];
+
+BecameTrue:becameTrue -> ShareValue:value;
+ConvertFrameToImage:image -> RenderImageToWindow:image;
+Count:count -> IsGreaterThan:a;
+CycleThroughList2:item -> PlayMovie:play;
+CycleThroughList2:item -> PlayMovie:url;
+IsGreaterThan:greaterThan -> BecameTrue:value;
+MakeList5:list -> RenderImageToWindow:setWindowProperties;
+MakeList:list -> CycleThroughList2:list;
+PlayMovie:decodedVideo -> ConvertFrameToImage:frame;
+PlayMovie:finishedPlayback -> Count:increment;
+PlayMovie:finishedPlayback -> CycleThroughList2:goForward;
+PublishedInputs:Event -> CycleThroughList2:goForward;
+ShareValue:sameValue -> PublishedOutputs:Played3Videos;
+}

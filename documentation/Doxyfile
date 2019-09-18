@@ -15,6 +15,7 @@ HTML_OUTPUT            = .
 HTML_HEADER            = DoxygenHeader.html
 HTML_FOOTER            = DoxygenFooter.html
 HTML_STYLESHEET        = Doxygen.css
+HTML_TIMESTAMP         = YES
 GENERATE_LATEX         = NO
 GENERATE_TODOLIST      = YES
 ALIASES                = "eg{1}=@par Example:^^@code \1 @endcode"

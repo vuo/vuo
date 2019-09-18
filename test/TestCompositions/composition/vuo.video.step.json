@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Ensures that `Step Movie Frame` can decode movie frames with appropriate timestamps and without crashing.
+ *
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.03690}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.07027}},
+]}

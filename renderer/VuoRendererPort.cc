@@ -2032,6 +2032,10 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 				return strdup("100–140 BPM");
 			else if (strcmp(tempoRange, "allegro") == 0)
 				return strdup("120–180 BPM");
+			else if (strcmp(tempoRange, "presto") == 0)
+				return strdup("170–250 BPM");
+			else if (strcmp(tempoRange, "prestissimo") == 0)
+				return strdup("220–320 BPM");
 		}
 		if (getDataType()->getModuleKey()=="VuoEdgeBlend")
 		{

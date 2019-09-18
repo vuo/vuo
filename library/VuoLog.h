@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 /**
- * @ingroup DevelopingNodeClasses DevelopingTypes DevelopingLibraryModules
+ * @ingroup DevelopingNodeClasses
  * @defgroup VuoModuleDebug Module Debugging
  * Macros to help with debugging.
  *
@@ -131,7 +131,7 @@ void VuoLog_recordTime(const char *name, double time);
  */
 
 /**
- * @ingroup DevelopingNodeClasses DevelopingTypes DevelopingLibraryModules
+ * @ingroup DevelopingNodeClasses
  * @defgroup VuoModuleDefer Defer
  * Macro to emulate Go's (and Swift's) `defer` keyword.
  *

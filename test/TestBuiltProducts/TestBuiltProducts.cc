@@ -154,7 +154,7 @@ private slots:
 		QTest::addColumn< string >("binaryPath");
 
 		set<string> binaryFilePaths;
-		getBinaryFilePaths(true, true, true, binaryFilePaths);
+		getBinaryFilePaths(true, false, true, binaryFilePaths);
 
 		foreach (string path, binaryFilePaths)
 			QTest::newRow(path.c_str()) << path;
@@ -163,6 +163,8 @@ private slots:
 	{
 		QFETCH(string, binaryPath);
 
+		// Ensure our binaries don't dynamically reference absolute paths to non-Apple-provided libraries.
+		{
 		vector<string> blacklistedLibraryPaths;
 		blacklistedLibraryPaths.push_back("/usr/local");
 		blacklistedLibraryPaths.push_back("/usr/X11");
@@ -191,6 +193,41 @@ private slots:
 				QVERIFY2(outputLine.find(path) == string::npos, (binaryPath + " : " + outputLine).c_str());
 		}
 		QVERIFY(! isFirst);
+		}
+
+
+		// Ensure our binaries don't search any absolute rpaths.
+		{
+			// `otool -l` shows all load commands.  We're only interested in LC_RPATH.
+			// Each LC_RPATH command looks like this:
+			//
+			//     Load command 42
+			//               cmd LC_RPATH
+			//           cmdsize 56
+			//              path /Users/me/prj/vuo/trunk/framework/bin (offset 12)
+			string command = string("otool -l \"") + binaryPath + "\"";
+
+			vector<string> linesFromCommand;
+			getLinesFromCommand(command, linesFromCommand);
+
+			for (vector<string>::iterator it = linesFromCommand.begin(); it != linesFromCommand.end(); ++it)
+			{
+				string line = VuoStringUtilities::substrAfter(*it, "          cmd ");
+				if (!VuoStringUtilities::beginsWith(line, "LC_RPATH"))
+					continue;
+
+				for (++it; it != linesFromCommand.end(); ++it)
+				{
+					string path = VuoStringUtilities::substrAfter(*it, "         path ");
+					if (path.empty())
+						continue;
+
+					QVERIFY2(!VuoStringUtilities::beginsWith(path, "/"),
+							 (string("The binary searches this absolute rpath: ") + path).c_str());
+					break;
+				}
+			}
+		}
 	}
 
 /* Disabled for now, since there are no longer any known-bad load commands.

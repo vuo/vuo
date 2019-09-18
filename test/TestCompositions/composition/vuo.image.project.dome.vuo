@@ -2,22 +2,26 @@
  * @file
  * Test composition.
  *
+ * @lastSavedInVuoVersion 1.3.0
  * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
 {
+AllowChanges [type="vuo.event.allowChanges2.VuoText" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="150,255"];
 AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-15,45"];
 BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="720,75" _blendMode="\"normal\"" _foregroundOpacity="1" _replaceOpacity="true"];
 MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="150,165" _width="512" _height="512"];
-MakeColorImage2 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="150,75" _color="{\"r\":0.50196081399917603,\"g\":0.50196081399917603,\"b\":0.50196081399917603,\"a\":1}" _width="512" _height="512"];
+MakeColorImage2 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="150,75" _color="\{\"r\":0.50196081399917603,\"g\":0.50196081399917603,\"b\":0.50196081399917603,\"a\":1\}" _width="512" _height="512"];
 SampleColorFromImage [type="vuo.image.sample.color" version="1.1.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="900,75" _width="0" _sampleType="\"average\""];
-WarpImageWithProjectionMesh [type="vuo.image.project.dome" version="2.0.0" label="Warp Image with Projection Mesh|<refresh>refresh\l|<url>url\l|<image>image\l|<imagePosition>imagePosition\l|<imageRotation>imageRotation\l|<width>width\l|<height>height\l|<warpedImage>warpedImage\r" pos="435,150" _url="\"vuo.image.project.dome-quad.data\"" _imagePosition="{\"x\":0,\"y\":0}" _imageRotation="0" _width="512" _height="512"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<color>color\r|<center>center\r" _color_type="VuoColor" _color="{\"r\":0.25098040699958801,\"g\":0.50196081399917603,\"b\":0.75294119119644165,\"a\":0.50000762939453125}" _center_type="VuoPoint2d" _center_suggestedMin="{\"x\":-1,\"y\":-1}" _center_suggestedMax="{\"x\":1,\"y\":1}" _center="{\"x\":-1,\"y\":-1}"];
+WarpImageWithProjectionMesh [type="vuo.image.project.dome" version="2.1.0" label="Warp Image with Projection Mesh|<refresh>refresh\l|<url>url\l|<image>image\l|<imagePosition>imagePosition\l|<imageRotation>imageRotation\l|<width>width\l|<height>height\l|<warpedImage>warpedImage\r" pos="435,150" _imagePosition="\{\"x\":0,\"y\":0\}" _imageRotation="0" _width="512" _height="512"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<color>color\r|<center>center\r|<url>url\r" _color_type="VuoColor" _color="\{\"r\":0.25098040699958801,\"g\":0.50196081399917603,\"b\":0.75294119119644165,\"a\":0.50000762939453125\}" _center_type="VuoPoint2d" _center_suggestedMin="\{\"x\":-1,\"y\":-1\}" _center_suggestedMax="\{\"x\":1,\"y\":1\}" _center="\{\"x\":-1,\"y\":-1\}" _url_type="VuoText"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputColor>outputColor\l" _outputColor_type="VuoColor"];
 
+AllowChanges:changedValue -> WarpImageWithProjectionMesh:url;
 AllowFirstEvent:firstEvent -> MakeColorImage2:refresh;
 AllowFirstEvent:firstEvent -> MakeColorImage:refresh;
 BlendImages:blended -> SampleColorFromImage:image;
@@ -26,6 +30,7 @@ MakeColorImage:image -> WarpImageWithProjectionMesh:image;
 PublishedInputs:center -> SampleColorFromImage:center;
 PublishedInputs:color -> AllowFirstEvent:event;
 PublishedInputs:color -> MakeColorImage:color;
+PublishedInputs:url -> AllowChanges:value;
 SampleColorFromImage:color -> PublishedOutputs:outputColor;
 WarpImageWithProjectionMesh:warpedImage -> BlendImages:foreground;
 }

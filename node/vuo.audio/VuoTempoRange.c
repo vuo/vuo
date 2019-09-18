@@ -47,6 +47,10 @@ VuoTempoRange VuoTempoRange_makeFromJson(json_object *js)
 		value = VuoTempoRange_Moderato;
 	else if (strcmp(valueAsString, "allegro") == 0)
 		value = VuoTempoRange_Allegro;
+	else if (strcmp(valueAsString, "presto") == 0)
+		value = VuoTempoRange_Presto;
+	else if (strcmp(valueAsString, "prestissimo") == 0)
+		value = VuoTempoRange_Prestissimo;
 
 	return value;
 }
@@ -62,6 +66,10 @@ json_object *VuoTempoRange_getJson(const VuoTempoRange value)
 		valueAsString = "moderato";
 	else if (value == VuoTempoRange_Allegro)
 		valueAsString = "allegro";
+	else if (value == VuoTempoRange_Presto)
+		valueAsString = "presto";
+	else if (value == VuoTempoRange_Prestissimo)
+		valueAsString = "prestissimo";
 
 	return json_object_new_string(valueAsString);
 }
@@ -75,6 +83,8 @@ VuoList_VuoTempoRange VuoTempoRange_getAllowedValues(void)
 	VuoListAppendValue_VuoTempoRange(l, VuoTempoRange_Andante);
 	VuoListAppendValue_VuoTempoRange(l, VuoTempoRange_Moderato);
 	VuoListAppendValue_VuoTempoRange(l, VuoTempoRange_Allegro);
+	VuoListAppendValue_VuoTempoRange(l, VuoTempoRange_Presto);
+	VuoListAppendValue_VuoTempoRange(l, VuoTempoRange_Prestissimo);
 	return l;
 }
 
@@ -83,12 +93,19 @@ VuoList_VuoTempoRange VuoTempoRange_getAllowedValues(void)
  */
 char *VuoTempoRange_getSummary(const VuoTempoRange value)
 {
-	char *valueAsString = " 70–110 BPM"; // FIGURE SPACE U+2007, to match the width of the numeral
+	// Each BPM range actually covers N to 2N BPM, but only works well for the middle ~60% of the range.
+
+	char *valueAsString = " 70–110 BPM";      // actually 60–120 BPM
+	// FIGURE SPACE U+2007, to match the width of the numeral
 
 	if (value == VuoTempoRange_Moderato)
-		valueAsString = "100–140 BPM";
+		valueAsString = "100–140 BPM";        // actually 80-160 BPM
 	else if (value == VuoTempoRange_Allegro)
-		valueAsString = "120–180 BPM";
+		valueAsString = "120–180 BPM";        // actually 100–200 BPM
+	else if (value == VuoTempoRange_Presto)
+		valueAsString = "170–250 BPM";        // actually 140-280 BPM
+	else if (value == VuoTempoRange_Prestissimo)
+		valueAsString = "220–320 BPM";        // actually 180-360 BPM
 
 	return strdup(valueAsString);
 }
@@ -103,6 +120,10 @@ int VuoTempoRange_getBaseBPM(const VuoTempoRange value)
 		return 60;
 	else if (value == VuoTempoRange_Allegro)
 		return 100;
+	else if (value == VuoTempoRange_Presto)
+		return 140;
+	else if (value == VuoTempoRange_Prestissimo)
+		return 180;
 	else
 		return 80;
 }

@@ -48,6 +48,9 @@ private:
 		videoFrameReceivedDelegate = NULL;
 		audioFrameReceivedDelegate = NULL;
 		videoPlaybackFinishedDelegate = NULL;
+
+		video_timer = NULL;
+		audio_timer = NULL;
 	}
 
 	/// Private destructor.  Use VuoVideoPlayer::Destroy() instead.

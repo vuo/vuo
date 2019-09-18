@@ -142,7 +142,7 @@ static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, Vuo
 
 /**
  * Create a unit quaternion from a rotation matrix (3x3).
- * http://www.insomniacgames.com/converting-a-rotation-matrix-to-a-quaternion/
+ * http://web.archive.org/web/20170705120459/http://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
  */
 static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation) __attribute__((const));
 static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation)

@@ -1,6 +1,6 @@
 /**
  * @file
- * Queries a web service that provides a list of countries, and displays their names one by one. Information about the web service is at [http://www.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm](http://www.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm).
+ * Queries a web service that provides a list of countries, and displays their names one by one. Information about the web service is at [http://services.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm](http://services.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm).
  *
  * @copyright Copyright © 2012–2018 Kosada Incorporated.
  * @license This code may be modified and distributed under the terms of the MIT License.

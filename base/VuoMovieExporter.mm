@@ -144,7 +144,12 @@ unsigned long VuoMovieExporterParameters::getEstimatedSize(void)
 VuoMovieExporter::VuoMovieExporter(std::string compositionFile, std::string outputMovieFile, VuoMovieExporterParameters parameters)
 {
 	NSURL *compositionUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:compositionFile.c_str()]];
+	if (!compositionUrl)
+		throw std::runtime_error("can't parse composition path");
+
 	NSString *compositionString = [NSString stringWithContentsOfURL:compositionUrl encoding:NSUTF8StringEncoding error:NULL];
+	if (!compositionString)
+		throw std::runtime_error("can't open composition");
 
 	std::string dir, file, ext;
 	VuoFileUtilities::splitPath(compositionFile, dir, file, ext);
@@ -157,7 +162,11 @@ VuoMovieExporter::VuoMovieExporter(std::string compositionFile, std::string outp
  */
 VuoMovieExporter::VuoMovieExporter(std::string compositionString, std::string name, std::string sourcePath, std::string outputMovieFile, VuoMovieExporterParameters parameters)
 {
-	init([NSString stringWithUTF8String:compositionString.c_str()], name, sourcePath, outputMovieFile, parameters);
+	NSString *compositionNSString = [NSString stringWithUTF8String:compositionString.c_str()];
+	if (!compositionNSString)
+		throw std::runtime_error("composition isn't valid UTF-8");
+
+	init(compositionNSString, name, sourcePath, outputMovieFile, parameters);
 }
 
 /**

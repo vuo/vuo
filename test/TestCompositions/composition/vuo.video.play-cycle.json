@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Ensures that `Play Movie` can switch between movies with audio using the `Finished Playback` port without crashing.
+ * https://b33p.net/kosada/node/14618
+ *
+ * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"Event", "inputPortValues":{}, "outputPortValues":{"Played3Videos":true}},
+]}

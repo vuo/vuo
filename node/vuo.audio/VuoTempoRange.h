@@ -29,7 +29,9 @@ typedef enum
 {
 	VuoTempoRange_Andante,
 	VuoTempoRange_Moderato,
-	VuoTempoRange_Allegro
+	VuoTempoRange_Allegro,
+	VuoTempoRange_Presto,
+	VuoTempoRange_Prestissimo
 } VuoTempoRange;
 
 VuoTempoRange VuoTempoRange_makeFromJson(struct json_object *js);

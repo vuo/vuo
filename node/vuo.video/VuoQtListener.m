@@ -108,7 +108,7 @@ VuoModuleMetadata({
 
 	if(VuoIsDebugEnabled())
 	{
-		VUserLog("Available Pixel Formats Usage: `defaults write org.vuo.Editor liveVideoPixelFormat 846624121`.  This examples sets the pixel format to kCVPixelFormatType_422YpCbCr8. See https://developer.apple.com/library/mac/documentation/QuartzCore/Reference/CVPixelFormatDescriptionRef/#//apple_ref/doc/constant_group/Pixel_Format_Types");
+		VUserLog("Available Pixel Formats Usage: `defaults write org.vuo.Editor liveVideoPixelFormat 846624121`.  This examples sets the pixel format to kCVPixelFormatType_422YpCbCr8. See https://developer.apple.com/documentation/corevideo/1563591-pixel_format_identifiers?language=objc");
 
 		CFArrayRef formats = CVPixelFormatDescriptionArrayCreateWithAllPixelFormatTypes(kCFAllocatorDefault);
 		for(CFIndex i = 0; i < CFArrayGetCount(formats); i++)
@@ -127,7 +127,7 @@ VuoModuleMetadata({
 	}
 	Boolean overridden = false;
 
-	/// https://developer.apple.com/library/mac/documentation/QuartzCore/Reference/CVPixelFormatDescriptionRef/#//apple_ref/doc/constant_group/Pixel_Format_Types
+	/// https://developer.apple.com/documentation/corevideo/1563591-pixel_format_identifiers?language=objc
 	int pixelFormat = CFPreferencesGetAppIntegerValue(CFSTR("liveVideoPixelFormat"), CFSTR("org.vuo.Editor"), &overridden);
 
 	if(overridden)
@@ -341,15 +341,29 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 
 		if (!success)
 		{
-			VUserLog("Couldn't initialize \"%s\": %s", [[device localizedDisplayName] UTF8String], [[error localizedDescription] UTF8String]);
+			VUserLog("Error: Couldn't open \"%s\": %s", [[device localizedDisplayName] UTF8String], [[error localizedDescription] UTF8String]);
 			mCaptureDeviceInput = nil;
 			return;
 		}
 
-		mCaptureDeviceInput = [[QTCaptureDeviceInput alloc] initWithDevice:device];
+		@try
+		{
+			mCaptureDeviceInput = [[QTCaptureDeviceInput alloc] initWithDevice:device];
+		}
+		@catch (NSException *e)
+		{
+			// Even though `device` is an input device, QTKit may throw `NSInvalidArgumentException: Device is not an input device`
+			// right after the device is plugged in.  It'll fail this time, then automatically retry and hopefully succeed next time.
+			// https://b33p.net/kosada/node/14625
+			VUserLog("Error: Couldn't initialize \"%s\": %s", [[device localizedDisplayName] UTF8String], [[e reason] UTF8String]);
+			success = false;
+		}
 
-		success = [mCaptureSession addInput:mCaptureDeviceInput error:&error];
-		_firstFrameTime = -INFINITY;
+		if (success)
+		{
+			success = [mCaptureSession addInput:mCaptureDeviceInput error:&error];
+			_firstFrameTime = -INFINITY;
+		}
 
 		if (!success)
 		{
