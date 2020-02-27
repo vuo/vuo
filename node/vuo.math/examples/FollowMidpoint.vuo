@@ -2,41 +2,44 @@
  * @file
  * Draws two points that randomly move around (blue) and the midpoint between them (orange).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="95,285"];
-Average [type="vuo.math.average" version="1.0.0" label="Average|<refresh>refresh\l|<values>values\l|<averageValue>averageValue\r" pos="298,490" fillcolor="violet"];
-Average3 [type="vuo.math.average" version="1.0.0" label="Average|<refresh>refresh\l|<values>values\l|<averageValue>averageValue\r" pos="298,557" fillcolor="violet"];
-ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.0" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="1110,261" _width="1.000000" _height="1.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="960,337" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="76,491"];
-Get2DPointValues2 [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="79,564"];
-Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="431,509"];
-MakeGradientNoise7 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<value>value\r" pos="249,120" _gradientNoise="\"simplex\""];
-MakeGradientNoise8 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<value>value\r" pos="248,284" _gradientNoise="\"simplex\""];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="252,501" fillcolor="violet"];
-MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="252,568" fillcolor="violet"];
-MakeList2 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1062,89" fillcolor="green"];
-MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="627,83" _1="{\"r\":0.015808,\"g\":0.115480,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
-MakeList5 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1025,74" fillcolor="green"];
-MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="628,246" _1="{\"r\":0.015808,\"g\":0.115480,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
-MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="49,296" _2="10.000000"];
-MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="627,475" _1="{\"r\":1,\"g\":0.63871216773986816,\"b\":0.094850078225135803,\"a\":1}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
-MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="697,57" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];
-MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="698,220" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];
-MakeRadialGradientLayer3 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="697,449" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1108,63" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Add [type="vuo.math.add.VuoReal" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="90,285"];
+Average [type="vuo.math.average" version="1.0.0" label="Average|<refresh>refresh\l|<values>values\l|<averageValue>averageValue\r" pos="300,495" fillcolor="orange"];
+Average3 [type="vuo.math.average" version="1.0.0" label="Average|<refresh>refresh\l|<values>values\l|<averageValue>averageValue\r" pos="300,555" fillcolor="orange"];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="1125,345" _width="1.000000" _height="1.000000"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-30,120" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="960,345" fillcolor="lime" _started_eventThrottling="enqueue"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="75,495"];
+Get2DPointValues2 [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="75,570"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="435,510"];
+MakeGradientNoise7 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="255,120" _gradientNoise="\"simplex\"" _scaledStart="\{\"x\":-1.,\"y\":-1.\}" _scaledEnd="\{\"x\":1.,\"y\":1.\}"];
+MakeGradientNoise8 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="255,285" _gradientNoise="\"simplex\"" _scaledStart="\{\"x\":-1.,\"y\":-1.\}" _scaledEnd="\{\"x\":1.,\"y\":1.\}"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,506" fillcolor="orange"];
+MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,566" fillcolor="orange"];
+MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="622,71" _1="\{\"r\":0.015808,\"g\":0.115480,\"b\":1.000000,\"a\":1.000000\}" _2="\{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000\}"];
+MakeList5 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1058,71" fillcolor="blue"];
+MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="622,266" _1="\{\"r\":0.015808,\"g\":0.115480,\"b\":1.000000,\"a\":1.000000\}" _2="\{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000\}"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="57,296" _2="10.000000"];
+MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="622,461" _1="\{\"r\":1,\"g\":0.63871216773986816,\"b\":0.094850078225135803,\"a\":1\}" _2="\{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000\}"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<gradientNoiseAmount>gradientNoiseAmount\l|<layerAnchor>layerAnchor\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layerOpacity>layerOpacity\l|<layer>layer\r" pos="690,60" _gradientCenter="\{\"x\":0,\"y\":0\}" _gradientRadius="1" _gradientNoiseAmount="0.2" _layerAnchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000" _layerOpacity="1.0"];
+MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<gradientNoiseAmount>gradientNoiseAmount\l|<layerAnchor>layerAnchor\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layerOpacity>layerOpacity\l|<layer>layer\r" pos="690,255" _gradientCenter="\{\"x\":0,\"y\":0\}" _gradientRadius="1" _gradientNoiseAmount="0.2" _layerAnchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000" _layerOpacity="1.0"];
+MakeRadialGradientLayer3 [type="vuo.layer.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<gradientNoiseAmount>gradientNoiseAmount\l|<layerAnchor>layerAnchor\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layerOpacity>layerOpacity\l|<layer>layer\r" pos="690,450" _gradientCenter="\{\"x\":0,\"y\":0\}" _gradientRadius="1" _gradientNoiseAmount="0.2" _layerAnchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000" _layerOpacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1110,60" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 Add:sum -> MakeGradientNoise8:position;
 Average3:averageValue -> Make2DPoint2:y;
 Average:averageValue -> Make2DPoint2:x;
-ChangeWindowAspectRatio:property -> MakeList2:1;
-FireOnStart:started -> ChangeWindowAspectRatio:refresh;
+ChangeWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+FireOnDisplayRefresh:requestedFrame -> MakeGradientNoise7:position;
+FireOnDisplayRefresh:requestedFrame -> MakeList7:1;
+FireOnStart:started -> ChangeWindowAspectRatio:windowDescription;
 Get2DPointValues2:x -> MakeList:2;
 Get2DPointValues2:y -> MakeList10:2;
 Get2DPointValues:x -> MakeList:1;
@@ -47,7 +50,6 @@ MakeGradientNoise7:value -> MakeRadialGradientLayer:layerCenter;
 MakeGradientNoise8:value -> Get2DPointValues2:point;
 MakeGradientNoise8:value -> MakeRadialGradientLayer2:layerCenter;
 MakeList10:list -> Average3:values;
-MakeList2:list -> RenderLayersToWindow:setWindowProperties;
 MakeList4:list -> MakeRadialGradientLayer:colors;
 MakeList5:list -> RenderLayersToWindow:layers;
 MakeList6:list -> MakeRadialGradientLayer2:colors;
@@ -57,6 +59,4 @@ MakeList:list -> Average:values;
 MakeRadialGradientLayer2:layer -> MakeList5:2;
 MakeRadialGradientLayer3:layer -> MakeList5:3;
 MakeRadialGradientLayer:layer -> MakeList5:1;
-RenderLayersToWindow:requestedFrame -> MakeGradientNoise7:position;
-RenderLayersToWindow:requestedFrame -> MakeList7:1;
 }

@@ -2,9 +2,9 @@
  * @file
  * TestCompilingAndLinking interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -26,27 +26,30 @@ class TestCompilingAndLinking : public TestCompositionExecution
 private:
 
 	VuoCompiler *compiler;
-	string cachedDylib_builtIn;
-	string cachedDylib_user;
-	string cachedIndex_builtIn;
-	string cachedIndex_user;
+	string cacheDylib_user;
+	string cacheIndex_user;
+	string cacheDylib_composition;
+	string cacheIndex_composition;
 
 private slots:
 
 	void initTestCase()
 	{
-		compiler = initCompiler();
-
-		string cacheDir = VuoFileUtilities::getCachePath();
-		cachedDylib_builtIn = cacheDir + "/libVuoResources.dylib";
-		cachedDylib_user = cacheDir + "/libVuoResources-user.dylib";
-		cachedIndex_builtIn = cacheDir + "/index.txt";
-		cachedIndex_user = cacheDir + "/index-user.txt";
+		cacheDylib_user = VuoFileUtilities::getCachePath() + "/User/libVuoModuleCache-installed.dylib";
+		cacheIndex_user = VuoFileUtilities::getCachePath() + "/User/moduleCache-installed.txt";
+		cacheDylib_composition = VuoCompiler::getCachePathForComposition(VuoFileUtilities::getTmpDir() + "/TestCompilingAndLinking") + "/libVuoModuleCache-installed.dylib";
+		cacheIndex_composition = VuoCompiler::getCachePathForComposition(VuoFileUtilities::getTmpDir() + "/TestCompilingAndLinking") + "/moduleCache-installed.txt";
 	}
 
-	void cleanupTestCase()
+	void init()
+	{
+		compiler = initCompiler();
+	}
+
+	void cleanup()
 	{
 		delete compiler;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingWithoutCrashing_data()
@@ -79,7 +82,9 @@ private slots:
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string bcPath = VuoFileUtilities::makeTmpFile(compositionName.toUtf8().constData(), "bc");
-		compiler->compileComposition(compositionPath, bcPath);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(compositionPath, bcPath, true, issues);
+		delete issues;
 		remove(bcPath.c_str());
 	}
 
@@ -106,7 +111,9 @@ private slots:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, (linkType == "EXECUTABLE" ? "" : "dylib"));
 		string linkedResourcePath = VuoFileUtilities::makeTmpFile(file + "-resource", "dylib");
 
-		compiler->compileComposition(compositionPath, compiledCompositionPath);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+		delete issues;
 
 		if (linkType == "EXECUTABLE")
 		{
@@ -118,10 +125,9 @@ private slots:
 		}
 		else if (linkType == "COMPOSITION_DYLIB_AND_RESOURCE_DYLIB")
 		{
-			vector<string> alreadyLinkedResourcePaths;
-			set<string> alreadyLinkedResources;
-			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, linkedResourcePath,
-															  alreadyLinkedResourcePaths, alreadyLinkedResources);
+			VuoRunningCompositionLibraries runningCompositionLibraries;
+			runningCompositionLibraries.setDeleteResourceLibraries(true);
+			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, &runningCompositionLibraries);
 		}
 		remove(compiledCompositionPath.c_str());
 
@@ -148,8 +154,10 @@ private slots:
 
 		for (int i = 0; i < 2; ++i)
 		{
-			compiler->compileComposition(compositionPath, bcPath);
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compiler->compileComposition(compositionPath, bcPath, true, issues);
 			compiler->linkCompositionToCreateExecutable(bcPath, exePath, VuoCompiler::Optimization_SmallBinary);
+			delete issues;
 			ifstream file(exePath.c_str());
 			QVERIFY2(file, qPrintable(QString("Failed to link on iteration %1").arg(i)));
 			file.close();
@@ -187,7 +195,9 @@ private slots:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "");
 
-		compiler->compileComposition(compositionPath, compiledCompositionPath);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+		delete issues;
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
 
@@ -223,12 +233,21 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 
-		QBENCHMARK {
-			compiler->compileComposition(compositionPath, compiledCompositionPath);
+		// Time 2 iterations with the same modules loaded (no VuoCompiler::reset() call in between).
+		// 1st iteration should load the modules, 2nd should reuse them.
+		struct timeval t1 = VuoTimeUtilities::getCurrentTime();
+		for (int iteration = 0; iteration < 2; ++iteration)
+		{
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+			delete issues;
 
 			QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
 			remove(compiledCompositionPath.c_str());
 		}
+		struct timeval t2 = VuoTimeUtilities::getCurrentTime();
+		struct timeval elapsed = VuoTimeUtilities::getElapsedTime(t1, t2);
+		QTest::setBenchmarkResult(elapsed.tv_sec*1000 + elapsed.tv_usec/1000, QTest::WalltimeMilliseconds);
 	}
 
 	void testCompilingAndLinkingPerformance_data()
@@ -259,27 +278,29 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		string linkedResourcePath = VuoFileUtilities::makeTmpFile(file + "-resource", "dylib");
 
 		// Simulate the most common case: the cache already exists when the process starts.
-		compiler->getCachedResources();
-		compiler->hasTriedCachedResources[0] = false;
-		compiler->hasTriedCachedResources[1] = false;
-		compiler->getCachedResources();
+		compiler->useModuleCache(true, false);
 
-		QBENCHMARK {
-			compiler->compileComposition(compositionPath, compiledCompositionPath);
+		// Time 2 iterations with the same modules loaded (no VuoCompiler::reset() call in between).
+		// 1st iteration should load the modules, 2nd should reuse them.
+		struct timeval t1 = VuoTimeUtilities::getCurrentTime();
+		for (int iteration = 0; iteration < 2; ++iteration)
+		{
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+			delete issues;
 
-			vector<string> alreadyLinkedResourcePaths;
-			set<string> alreadyLinkedResources;
-			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, linkedResourcePath,
-															  alreadyLinkedResourcePaths, alreadyLinkedResources);
+			VuoRunningCompositionLibraries runningCompositionLibraries;
+			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, &runningCompositionLibraries);
 
 			QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
 			remove(compiledCompositionPath.c_str());
 			remove(linkedCompositionPath.c_str());
-			remove(linkedResourcePath.c_str());
 		}
+		struct timeval t2 = VuoTimeUtilities::getCurrentTime();
+		struct timeval elapsed = VuoTimeUtilities::getElapsedTime(t1, t2);
+		QTest::setBenchmarkResult(elapsed.tv_sec*1000 + elapsed.tv_usec/1000, QTest::WalltimeMilliseconds);
 	}
 
 	void testLiveCodingPerformance_data()
@@ -312,19 +333,16 @@ private slots:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
 		// Simulate the most common case: the cache already exists when the process starts.
-		compiler->getCachedResources();
-		compiler->hasTriedCachedResources[0] = false;
-		compiler->hasTriedCachedResources[1] = false;
-		compiler->getCachedResources();
+		compiler->useModuleCache(true, false);
 
 		string compositionString = VuoFileUtilities::readFileToString(compositionPath);
 		VuoCompilerComposition *composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, compiler);
-		compiler->compileComposition(composition, compiledCompositionPath);
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
-		string linkedResourcePath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, linkedResourcePath,
-														  alreadyLinkedResourcePaths, alreadyLinkedResources);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(composition, compiledCompositionPath, true, issues);
+		delete issues;
+		VuoRunningCompositionLibraries runningCompositionLibraries;
+		runningCompositionLibraries.setDeleteResourceLibraries(true);
+		compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, &runningCompositionLibraries);
 		QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
@@ -340,20 +358,19 @@ private slots:
 
 			composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, compiler);
 
-			compiler->compileComposition(composition, compiledCompositionPath);
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compiler->compileComposition(composition, compiledCompositionPath, true, issues);
+			delete issues;
 
-			linkedResourcePath = VuoFileUtilities::makeTmpFile(file, "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, linkedResourcePath,
-															  alreadyLinkedResourcePaths, alreadyLinkedResources);
+			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, &runningCompositionLibraries);
 			QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
 			remove(compiledCompositionPath.c_str());
 			remove(linkedCompositionPath.c_str());
 
-			composition->diffAgainstOlderComposition(oldCompositionString, compiler, set<VuoCompilerComposition::NodeReplacement>());
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			diffInfo->diff(oldCompositionString, composition, compiler);
+			delete diffInfo;
 		}
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 	}
 
 	void testCompilingAndLinkingInSeparateProcessPerformance_data()
@@ -381,162 +398,289 @@ private slots:
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 
-		compiler->getCachedResources();
+		compiler->useModuleCache(true, false);
 
 		QBENCHMARK {
-			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromCompositionFile(compositionPath, false, true);
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath, issues);
 			QVERIFY(runner);
+			delete issues;
 			delete runner;
+		}
+	}
+
+	void testCheckForEventFlowErrorsPerformance_data()
+	{
+		QTest::addColumn<QString>("compositionName");
+
+		QTest::newRow("50 nodes in a line from 1 trigger") << "LineOfSameNodeClass";
+		QTest::newRow("50 nodes in a diamond series from 1 trigger") << "DiamondOfSameNodeClass";
+		QTest::newRow("50 nodes in a line from 50 triggers") << "LineOfSameNodeClassMultiTriggers";
+		QTest::newRow("50 nodes each from one of 50 triggers") << "EachPairOfSameNodeClassMultiTriggers";
+		QTest::newRow("100 nodes in a line from 1 trigger") << "LineOfSameNodeClass100";
+		QTest::newRow("200 nodes in a line from 1 trigger") << "LineOfSameNodeClass200";
+		QTest::newRow("400 nodes in a line from 1 trigger") << "LineOfSameNodeClass400";
+		QTest::newRow("50 nodes passing through from published input to output") << "PublishedPassthrough50";
+	}
+	void testCheckForEventFlowErrorsPerformance()
+	{
+		QFETCH(QString, compositionName);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		delete parser;
+
+		QBENCHMARK {
+			// Force the VuoCompilerGraph to be regenerated. Because of the way that QBENCHMARK repeats the test,
+			// it would sometimes use the cache and sometimes regenerate, making the results difficult to interpret.
+			composition.graphHash = 0;
+
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			composition.checkForEventFlowIssues(issues);
+			delete issues;
 		}
 	}
 
 private:
 
-	void doesCacheGetRecreated(bool &builtIn, bool &user)
+	void doesCacheGetRecreated(bool shouldResetCompiler, bool &user, bool &composition)
 	{
-		unsigned long cachedDylibLastModified_builtIn = (VuoFileUtilities::fileExists(cachedDylib_builtIn) ?
-															 VuoFileUtilities::getFileLastModifiedInSeconds(cachedDylib_builtIn) : 0);
-		unsigned long cachedIndexLastModified_builtIn = (VuoFileUtilities::fileExists(cachedIndex_builtIn) ?
-															 VuoFileUtilities::getFileLastModifiedInSeconds(cachedIndex_builtIn) : 0);
-		unsigned long cachedDylibLastModified_user = (VuoFileUtilities::fileExists(cachedDylib_user) ?
-														  VuoFileUtilities::getFileLastModifiedInSeconds(cachedDylib_user) : 0);
-		unsigned long cachedIndexLastModified_user = (VuoFileUtilities::fileExists(cachedIndex_user) ?
-														  VuoFileUtilities::getFileLastModifiedInSeconds(cachedIndex_user) : 0);
+		unsigned long cachedDylibLastModified_user = (VuoFileUtilities::fileExists(cacheDylib_user) ?
+														  VuoFileUtilities::getFileLastModifiedInSeconds(cacheDylib_user) : 0);
+		unsigned long cachedIndexLastModified_user = (VuoFileUtilities::fileExists(cacheIndex_user) ?
+														  VuoFileUtilities::getFileLastModifiedInSeconds(cacheIndex_user) : 0);
+		unsigned long cachedDylibLastModified_composition = (VuoFileUtilities::fileExists(cacheDylib_composition) ?
+																 VuoFileUtilities::getFileLastModifiedInSeconds(cacheDylib_composition) : 0);
+		unsigned long cachedIndexLastModified_composition = (VuoFileUtilities::fileExists(cacheIndex_composition) ?
+																 VuoFileUtilities::getFileLastModifiedInSeconds(cacheIndex_composition) : 0);
 
-		VuoCompiler::hasTriedCachedResources[0] = false;
-		VuoCompiler::hasTriedCachedResources[1] = false;
-		delete VuoCompiler::sharedEnvironment;
-		VuoCompiler::sharedEnvironment = NULL;
-		VuoCompiler c;  // Not created with TestCompositionExecution::initCompiler() — don't want extra module folders.
-		c.getCachedResources();
+		sleep(1);  // Make sure that, if the cache gets rebuilt, the file times returned below will be greater than those returned above.
 
-		builtIn = (VuoFileUtilities::fileExists(cachedDylib_builtIn) &&
-				   VuoFileUtilities::fileExists(cachedIndex_builtIn) &&
-				   VuoFileUtilities::getFileLastModifiedInSeconds(cachedDylib_builtIn) > cachedDylibLastModified_builtIn &&
-				   VuoFileUtilities::getFileLastModifiedInSeconds(cachedIndex_builtIn) > cachedIndexLastModified_builtIn);
-		user = (VuoFileUtilities::fileExists(cachedDylib_user) &&
-				   VuoFileUtilities::fileExists(cachedIndex_user) &&
-				   VuoFileUtilities::getFileLastModifiedInSeconds(cachedDylib_user) > cachedDylibLastModified_user &&
-				   VuoFileUtilities::getFileLastModifiedInSeconds(cachedIndex_user) > cachedIndexLastModified_user);
+		if (shouldResetCompiler)
+			compiler = new VuoCompiler(VuoFileUtilities::getTmpDir() + "/TestCompilingAndLinking/unused");  // Not initCompiler() — don't want module search path added, since we'll be installing those modules in the test.
+
+		compiler->useModuleCache(true, false);
+
+		if (shouldResetCompiler)
+		{
+			delete compiler;
+			compiler = NULL;
+			VuoCompiler::reset();
+		}
+
+		user = (VuoFileUtilities::fileExists(cacheDylib_user) &&
+				VuoFileUtilities::fileExists(cacheIndex_user) &&
+				VuoFileUtilities::getFileLastModifiedInSeconds(cacheDylib_user) > cachedDylibLastModified_user &&
+				VuoFileUtilities::getFileLastModifiedInSeconds(cacheIndex_user) > cachedIndexLastModified_user);
+		composition = (VuoFileUtilities::fileExists(cacheDylib_composition) &&
+					   VuoFileUtilities::fileExists(cacheIndex_composition) &&
+					   VuoFileUtilities::getFileLastModifiedInSeconds(cacheDylib_composition) > cachedDylibLastModified_composition &&
+					   VuoFileUtilities::getFileLastModifiedInSeconds(cacheIndex_composition) > cachedIndexLastModified_composition);
 	}
 
 private slots:
 
-	void testCreationOfCachedResources()
+	void testCreationOfCachedResourcesInitially()
 	{
+		string nodeDir               = string(BINARY_DIR) + "/test/TestCompilingAndLinking";
+		string compositionDir = VuoFileUtilities::getTmpDir() + "/TestCompilingAndLinking";
+		string compositionModulesDir = compositionDir + "/Modules";
+		VuoFileUtilities::makeDir(compositionModulesDir);
+
+		string controlNodeClass = "vuo.test.triggerCarryingReal.vuonode";  // A module needs to be installed for caches to be created.
+		VuoFileUtilities::copyFile(nodeDir + "/" + controlNodeClass, VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
+		VuoFileUtilities::copyFile(nodeDir + "/" + controlNodeClass, compositionModulesDir + "/" + controlNodeClass);
+
 		string nodeClass = "vuo.test.doNothing.vuonode";
-		string nodeDir = QDir::current().absolutePath().toStdString() + "/node-TestCompilingAndLinking";
-		string moduleDir = VuoFileUtilities::getUserModulesPath();
-		string nodeClassInModuleDir = moduleDir + "/" + nodeClass;
+		string nodeClassInNodeDir = nodeDir + "/" + nodeClass;
+		string nodeClassInCompositionModulesDir = compositionModulesDir + "/" + nodeClass;
 
-		remove(cachedDylib_builtIn.c_str());
-		remove(cachedDylib_user.c_str());
-		remove(cachedIndex_builtIn.c_str());
-		remove(cachedIndex_user.c_str());
-		remove(nodeClassInModuleDir.c_str());
+		VuoFileUtilities::deleteFile(cacheDylib_user);
+		VuoFileUtilities::deleteFile(cacheIndex_user);
+		VuoFileUtilities::deleteFile(cacheDylib_composition);
+		VuoFileUtilities::deleteFile(cacheIndex_composition);
 
-		bool recreated_builtIn = false;
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
+
 		bool recreated_user = false;
+		bool recreated_composition = false;
 
-		// Cached files do not exist.
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(recreated_builtIn);
+		// Cache files do not exist.
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
 		QVERIFY(recreated_user);
+		QVERIFY(recreated_composition);
 
-		// Cached files are up to date.
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(! recreated_builtIn);
+		// Cache files are up to date.
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
 		QVERIFY(! recreated_user);
+		QVERIFY(! recreated_composition);
 
-		// Cached dylib for built-in modules does not exist.
-		remove(cachedDylib_builtIn.c_str());
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(recreated_builtIn);
+		// Cache dylib for user modules does not exist.
+		VuoFileUtilities::deleteFile(cacheDylib_user);
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
+		QVERIFY(recreated_user);
+		QVERIFY(! recreated_composition);
+
+		// Cache dylib for composition modules does not exist.
+		VuoFileUtilities::deleteFile(cacheDylib_composition);
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
 		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
 
-		// Cached dylib for user modules does not exist.
-		remove(cachedDylib_user.c_str());
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(! recreated_builtIn);
-		QVERIFY(recreated_user);
+		// Node class added to composition modules folder.
+		VuoFileUtilities::copyFile(nodeClassInNodeDir, nodeClassInCompositionModulesDir);
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
 
-		// Node class added to Modules folder.
-		string escapedNodeClassInNodeDir = "\"" + nodeDir + "/" + nodeClass + "\"";
-		string escapedModuleDir = "\"" + moduleDir + "\"";
-		system(("/bin/cp " + escapedNodeClassInNodeDir + " " + escapedModuleDir).c_str());
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(! recreated_builtIn);
-		QVERIFY(recreated_user);
-
-		// Node class updated in Modules folder.
-		sleep(2);  // Make sure getFileLastModifiedInSeconds() is larger for the node class than the cache files.
-		string escapedNodeClassInModuleDir = "\"" + nodeClassInModuleDir + "\"";
+		// Node class updated in composition modules folder.
+		string escapedNodeClassInModuleDir = "\"" + nodeClassInCompositionModulesDir + "\"";
 		system(("/usr/bin/touch " + escapedNodeClassInModuleDir).c_str());
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(! recreated_builtIn);
-		QVERIFY(recreated_user);
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
 
-		// Node class deleted from Modules folder.
-		remove(nodeClassInModuleDir.c_str());
-		doesCacheGetRecreated(recreated_builtIn, recreated_user);
-		QVERIFY(! recreated_builtIn);
-		QVERIFY(recreated_user);
+		// Node class deleted from composition modules folder.
+		VuoFileUtilities::deleteFile(nodeClassInCompositionModulesDir);
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
+
+		VuoFileUtilities::deleteDir(compositionDir);
+		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
+	}
+
+	void testRecreationOfCachedResources()
+	{
+		string nodeDir               = string(BINARY_DIR) + "/test/TestCompilingAndLinking";
+		string compositionDir        = VuoFileUtilities::getTmpDir() + "/TestCompilingAndLinking";
+		string compositionModulesDir = compositionDir + "/Modules";
+		VuoFileUtilities::makeDir(compositionModulesDir);
+
+		string controlNodeClass = "vuo.test.triggerCarryingReal.vuonode";  // A module needs to be installed for caches to be created.
+		VuoFileUtilities::copyFile(nodeDir + "/" + controlNodeClass, VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
+		VuoFileUtilities::copyFile(nodeDir + "/" + controlNodeClass, compositionModulesDir + "/" + controlNodeClass);
+
+		string nodeClass = "vuo.test.doNothing.vuonode";
+		string nodeClassInNodeDir = nodeDir + "/" + nodeClass;
+		string nodeClassInCompositionModulesDir = compositionModulesDir + "/" + nodeClass;
+
+		delete compiler;
+		VuoCompiler::reset();
+		compiler = new VuoCompiler(compositionDir + "/unused");
+		TestCompilerDelegate delegate;
+		compiler->setDelegate(&delegate);
+
+		bool recreated_user = false;
+		bool recreated_composition = false;
+
+		// Create caches initially, if needed.
+		doesCacheGetRecreated(false, recreated_user, recreated_composition);
+		sleep(2);
+
+		// Node class added to composition modules folder.
+		delegate.installModule(nodeClassInNodeDir, nodeClassInCompositionModulesDir);
+		doesCacheGetRecreated(false, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
+
+		// Node class updated in composition modules folder.
+		delegate.installModule(nodeClassInNodeDir, nodeClassInCompositionModulesDir);
+		doesCacheGetRecreated(false, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
+
+		// Node class deleted from composition modules folder.
+		delegate.uninstallModule(nodeClassInCompositionModulesDir);
+		doesCacheGetRecreated(false, recreated_user, recreated_composition);
+		QVERIFY(! recreated_user);
+		QVERIFY(recreated_composition);
+
+		VuoFileUtilities::deleteDir(compositionDir);
+		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
 	}
 
 	void testFallbackWithoutCache()
 	{
-		VuoCompiler compiler2;
+		TestCompilerDelegate delegate;
+		compiler->setDelegate(&delegate);
+
+		string nodeClass = "vuo.test.triggerCarryingReal.vuonode";
+		string nodeDir   = string(BINARY_DIR) + "/test/TestCompilingAndLinking";
+		delegate.installModule(nodeDir + "/" + nodeClass, VuoFileUtilities::getUserModulesPath() + "/" + nodeClass);
 
 		// Simulate the compiler's having tried and failed to create the cache.
-		compiler2.hasTriedCachedResources[0] = true;
-		compiler2.hasTriedCachedResources[1] = true;
+		compiler->getNodeClasses();
+		for (vector< vector<VuoCompiler::Environment *> >::iterator i = compiler->environments.begin(); i != compiler->environments.end(); ++i)
+		{
+			for (vector<VuoCompiler::Environment *>::iterator j = i->begin(); j != i->end(); ++j)
+			{
+				(*j)->isModuleCacheInitialized = true;
+				(*j)->isModuleCacheableDataDirty = false;
+			}
+		}
 
-		string compositionPath = getCompositionPath("Recur.vuo");
+		VuoFileUtilities::deleteFile(cacheDylib_user);
+
+		string compositionPath = getCompositionPath("TriggerCarryingReal.vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "");
 
-		compiler2.compileComposition(compositionPath, compiledCompositionPath);
-		compiler2.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
-		remove(compiledCompositionPath.c_str());
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+		delete issues;
+		VuoFileUtilities::deleteFile(compiledCompositionPath);
 
-		QVERIFY2(access(linkedCompositionPath.c_str(), 0) == 0, ("Expected to find file " + linkedCompositionPath).c_str());
-		remove(linkedCompositionPath.c_str());
+		QVERIFY(! VuoFileUtilities::fileExists(cacheDylib_user));
+
+		QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
+		VuoFileUtilities::deleteFile(linkedCompositionPath);
+
+		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + nodeClass);
 	}
 
 	void testCacheCreationPerformance()
 	{
-		VuoCompiler compiler2;
-
 		// Delete the cache to force it to be recreated.
-		remove(cachedDylib_builtIn.c_str());
-		remove(cachedDylib_user.c_str());
-		remove(cachedIndex_builtIn.c_str());
-		remove(cachedIndex_user.c_str());
+		QDir cacheDir(VuoFileUtilities::getCachePath().c_str());
+		cacheDir.removeRecursively();
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 
 		QBENCHMARK {
-			bool recreated_builtIn = false;
 			bool recreated_user = false;
-			doesCacheGetRecreated(recreated_builtIn, recreated_user);
-			QVERIFY(recreated_builtIn);
+			bool recreated_composition = false;
+			doesCacheGetRecreated(true, recreated_user, recreated_composition);
 			QVERIFY(recreated_user);
+			QVERIFY(recreated_composition);
 		}
 	}
 
 	void testCacheCheckingPerformance()
 	{
-		VuoCompiler compiler2;
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 
 		// Make sure the cache exists, but force it to be rechecked.
-		compiler2.getCachedResources();
+		bool recreated_user = false;
+		bool recreated_composition = false;
+		doesCacheGetRecreated(true, recreated_user, recreated_composition);
 
 		QBENCHMARK {
-			bool recreated_builtIn = false;
-			bool recreated_user = false;
-			doesCacheGetRecreated(recreated_builtIn, recreated_user);
-			QVERIFY(! recreated_builtIn);
+			recreated_user = false;
+			recreated_composition = false;
+			doesCacheGetRecreated(true, recreated_user, recreated_composition);
 			QVERIFY(! recreated_user);
+			QVERIFY(! recreated_composition);
 		}
 	}
 };

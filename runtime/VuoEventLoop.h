@@ -2,10 +2,12 @@
  * @file
  * VuoEventLoop interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
@@ -30,7 +32,6 @@ void VuoEventLoop_switchToAppMode(void);
 
 bool VuoEventLoop_mayBeTerminated(void);
 
-unsigned long VuoEventLoop_getDispatchStrictMask(void);
 dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void);
 void VuoEventLoop_installSignalHandlers(void);
 

@@ -2,9 +2,9 @@
  * @file
  * TestImageFilters implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -13,6 +13,14 @@
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoCompilerNodeClass *);
 Q_DECLARE_METATYPE(string);
+
+class TestImageFiltersDelegate : public VuoRunnerDelegateAdapter
+{
+	void lostContactWithComposition(void)
+	{
+		QFAIL("Composition crashed.");
+	}
+};
 
 /**
  * Tests each image filter node for common mistakes.
@@ -85,10 +93,17 @@ private slots:
 //		printf("%s\n", QTest::currentDataTag()); fflush(stdout);
 //		printf("%s\n",TestCompositionExecution::wrapNodeInComposition(nodeClass, compiler).c_str());
 
+		VuoCompilerIssues issues;
 		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(
 			TestCompositionExecution::wrapNodeInComposition(nodeClass, compiler),
-			".");
+			QTest::currentDataTag(),
+			".", &issues);
 		QVERIFY(runner);
+
+		TestImageFiltersDelegate delegate;
+		runner->setDelegate(&delegate);
+
+		runner->setRuntimeChecking(true);
 		runner->start();
 
 		VuoRunner::Port *inputImagePort = runner->getPublishedInputPortWithName(inputPort);
@@ -101,11 +116,16 @@ private slots:
 			VuoImage greenImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(0,1,0,1), 640, 480);
 			QVERIFY(greenImage);
 			VuoLocal(greenImage);
-			runner->setPublishedInputPortValue(inputImagePort, VuoImage_getInterprocessJson(greenImage));
+
+			greenImage->scaleFactor = 2;
+
+			map<VuoRunner::Port *, json_object *> m;
+			m[inputImagePort] = VuoImage_getInterprocessJson(greenImage);
+			runner->setPublishedInputPortValues(m);
 
 			// Execute the image filter.
 			runner->firePublishedInputPortEvent(inputImagePort);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 
 			// Ensure the output image is non-null.
 			json_object *out = runner->getPublishedOutputPortValue(outputImagePort);
@@ -113,23 +133,27 @@ private slots:
 			VuoImage outputImage = VuoImage_makeFromJson(out);
 			QVERIFY(outputImage);
 			VuoLocal(outputImage);
+
+			// Ensure the output image has the same scale factor as the input image.
+			QEXPECT_FAIL("vuo.image.feedback", "Feedback always has scaleFactor 1.", Continue);
+			QCOMPARE(outputImage->scaleFactor, greenImage->scaleFactor);
 		}
 
 		{
-			if (QString(QTest::currentDataTag()) == "vuo.image.feedback")
-				QSKIP("It's OK that feedback continues to output an image when fed NULL (allows the feedback trails to continue to swoosh around).");
-			else if (QString(QTest::currentDataTag()) == "vuo.image.make.shadertoy")
-				QSKIP("It's OK that Shadertoy outputs an image when fed NULL, since the custom shader doesn't necessarily require the image.");
-
 			// Set a null image.
-			runner->setPublishedInputPortValue(inputImagePort, NULL);
+			map<VuoRunner::Port *, json_object *> m;
+			m[inputImagePort] = NULL;
+			runner->setPublishedInputPortValues(m);
 
 			// Execute the image filter.
 			runner->firePublishedInputPortEvent(inputImagePort);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 
 			// Ensure the output image is null.
 			json_object *out = runner->getPublishedOutputPortValue(outputImagePort);
+			QEXPECT_FAIL("vuo.image.feedback", "It's OK that feedback continues to output an image when fed NULL (allows the feedback trails to continue to swoosh around).", Continue);
+			QEXPECT_FAIL("vuo.image.make.shadertoy",  "It's OK that Shadertoy outputs an image when fed NULL, since the custom shader doesn't necessarily require the image.", Continue);
+			QEXPECT_FAIL("vuo.image.make.shadertoy2", "It's OK that Shadertoy outputs an image when fed NULL, since the custom shader doesn't necessarily require the image.", Continue);
 			QVERIFY(out == NULL);
 		}
 

@@ -2,17 +2,13 @@
  * @file
  * VuoOscOutputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoOscOutputDevice.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -42,19 +38,11 @@ VuoModuleMetadata({
  */
 VuoOscOutputDevice VuoOscOutputDevice_makeFromJson(json_object * js)
 {
-	VuoOscOutputDevice value = {NULL, NULL, 0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "ipAddress", &o))
-		value.ipAddress = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "port", &o))
-		value.port = VuoInteger_makeFromJson(o);
-
-	return value;
+	return (VuoOscOutputDevice){
+		VuoJson_getObjectValue(VuoText,    js, "name",      NULL),
+		VuoJson_getObjectValue(VuoText,    js, "ipAddress", NULL),
+		VuoJson_getObjectValue(VuoInteger, js, "port",      0)
+	};
 }
 
 /**
@@ -131,14 +119,8 @@ bool VuoOscOutputDevice_areEqual(const VuoOscOutputDevice a, const VuoOscOutputD
  */
 bool VuoOscOutputDevice_isLessThan(const VuoOscOutputDevice a, const VuoOscOutputDevice b)
 {
-	if (VuoText_isLessThan(a.name, b.name)) return true;
-	if (VuoText_isLessThan(b.name, a.name)) return false;
-
-	if (VuoText_isLessThan(a.ipAddress, b.ipAddress)) return true;
-	if (VuoText_isLessThan(b.ipAddress, a.ipAddress)) return false;
-
-	if (a.port < b.port) return true;
-//	if (b.port < a.port) return false;
-
+	VuoType_returnInequality(VuoText,    a.name,      b.name);
+	VuoType_returnInequality(VuoText,    a.ipAddress, b.ipAddress);
+	VuoType_returnInequality(VuoInteger, a.port,      b.port);
 	return false;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.pixellate node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -25,9 +25,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform float aspectRatio;
@@ -69,10 +69,10 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 		vec2 s = .25/viewportSize;
 		vec2 sx = vec2(s.x, 0.);
 		vec2 sy = vec2(0., s.y);
-		vec4 a = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate.xy - sx));
-		vec4 b = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate.xy + sx));
-		vec4 c = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate.xy - sy));
-		vec4 d = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate.xy + sy));
+		vec4 a = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate - sx));
+		vec4 b = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate + sx));
+		vec4 c = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate - sy));
+		vec4 d = VuoGlsl_sample(texture, transform(fragmentTextureCoordinate + sy));
 		gl_FragColor = (a+b+c+d)/4.;
 	}
 );

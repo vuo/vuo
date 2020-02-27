@@ -2,14 +2,11 @@
  * @file
  * VuoTimeUnit implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoTimeUnit.h"
 #include "VuoList_VuoTimeUnit.h"
@@ -222,6 +219,9 @@ bool VuoTimeUnit_areEqual(const VuoTimeUnit valueA, const VuoTimeUnit valueB)
  */
 bool VuoTimeUnit_isLessThan(const VuoTimeUnit valueA, const VuoTimeUnit valueB)
 {
-	return valueA < valueB;
+	// Since time units are listed in reverse order of brevity in the enum,
+	// reverse the comparison operator here so that briefer time units are
+	// considered less than lengthier time units.
+	return valueA > valueB;
 }
 

@@ -2,9 +2,9 @@
  * @file
  * vuo.syphon.send node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,11 +13,10 @@
 #include "string.h"
 
 VuoModuleMetadata({
-					  "title" : "Send Image via Syphon",
-					  "keywords" : [ "application", "frame", "interprocess", "IOSurface", "server", "share", "video" ],
+					  "title" : "Send Syphon Video",
+					  "keywords" : [ "application", "frame", "interprocess", "IOSurface", "server", "share" ],
 					  "version" : "1.0.1",
 					  "node": {
-						  "isInterface" : true,
 						  "exampleCompositions" : [ "SendImages.vuo" ]
 					  },
 					  "dependencies" : [

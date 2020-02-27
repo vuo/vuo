@@ -2,9 +2,9 @@
  * @file
  * VuoRendererItem implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererItem.hh"
@@ -19,6 +19,14 @@ bool VuoRendererItem::snapToGrid = false;
 void VuoRendererItem::setDrawBoundingRects(bool drawBoundingRects)
 {
 	VuoRendererItem::drawBoundingRects = drawBoundingRects;
+}
+
+/**
+ * Returns whether bounding rects are currently being shown.
+ */
+bool VuoRendererItem::shouldDrawBoundingRects()
+{
+	return VuoRendererItem::drawBoundingRects;
 }
 
 /**
@@ -76,6 +84,17 @@ VuoRendererItem::VuoRendererItem()
 }
 
 /**
+ * Enables or disables selection for the item.
+ */
+void VuoRendererItem::setSelectable(bool selectable)
+{
+	if (selectable)
+		setFlags(flags() | QGraphicsItem::ItemIsSelectable);
+	else
+		setFlags(flags() &~ QGraphicsItem::ItemIsSelectable);
+}
+
+/**
  * Draws a rect, for debugging.
  */
 void VuoRendererItem::drawRect(QPainter *painter, QRectF rect)
@@ -93,6 +112,9 @@ void VuoRendererItem::drawRect(QPainter *painter, QRectF rect)
  */
 void VuoRendererItem::drawBoundingRect(QPainter *painter)
 {
+	if (!drawBoundingRects)
+		return;
+
 	drawRect(painter, boundingRect());
 }
 

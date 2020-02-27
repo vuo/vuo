@@ -2,14 +2,15 @@
  * @file
  * TestVuoList implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoText.h"
+#include "VuoList_VuoPoint4d.h"
 #include "VuoList_VuoText.h"
 }
 
@@ -362,6 +363,34 @@ private slots:
 //			VLog("expected: %s",expectedSummary.toUtf8().constData());
 //		}
 		QCOMPARE(QString(VuoList_VuoText_getSummary(list)), expectedSummary);
+	}
+
+	void testCreateWithCount()
+	{
+		VuoPoint4d p = (VuoPoint4d){1,2,3,4};
+		VuoList_VuoPoint4d l = VuoListCreateWithCount_VuoPoint4d(2, p);
+		for (int i = 1; i <= 4; ++i)
+			QVERIFY(VuoPoint4d_areEqual(VuoListGetValue_VuoPoint4d(l, i), p));
+	}
+
+	/**
+	 * Verifies that VuoListForeach visits each item once.
+	 */
+	void testForeach()
+	{
+		VuoList_VuoInteger l = VuoListCreateWithCount_VuoInteger(4, 0);
+		VuoInteger *lValues = VuoListGetData_VuoInteger(l);
+		lValues[0] = 1;
+		lValues[1] = 20;
+		lValues[2] = 300;
+		lValues[3] = 4000;
+
+		__block VuoInteger total = 0;
+		VuoListForeach_VuoInteger(l, ^(const VuoInteger item){
+			total += item;
+			return true;
+		});
+		QCOMPARE(total, 4321);
 	}
 };
 

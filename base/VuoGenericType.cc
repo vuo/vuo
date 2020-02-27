@@ -2,13 +2,12 @@
  * @file
  * VuoGenericType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoGenericType.hh"
-#include "VuoStringUtilities.hh"
 #include <sstream>
 
 /// The common beginning of all generic port type names.
@@ -79,6 +78,9 @@ bool VuoGenericType::isGenericTypeCompatible(VuoGenericType *otherType)
 			(thisCompatibility == anyListType && VuoType::isListTypeName(otherType->getModuleKey())) ||
 			(otherCompatibility == anyListType && VuoType::isListTypeName(getModuleKey())))
 		return true;
+
+	std::sort(thisCompatibles.begin(), thisCompatibles.end());
+	std::sort(otherCompatibles.begin(), otherCompatibles.end());
 
 	set<string> bothCompatibles;
 	set_intersection(thisCompatibles.begin(), thisCompatibles.end(),

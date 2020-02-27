@@ -2,19 +2,16 @@
  * @file
  * VuoCompilerPublishedPort interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoCompilerPort.hh"
 
-class VuoCompilerPublishedPortClass;
 class VuoPort;
-class VuoPublishedPort;
-class VuoType;
 
 /**
  * The compiler detail class for @c VuoPublishedPort.
@@ -22,6 +19,7 @@ class VuoType;
 class VuoCompilerPublishedPort : public VuoCompilerPort
 {
 public:
+	static VuoCompilerPublishedPort * newPort(string name, VuoType *type);
 	VuoCompilerPublishedPort(VuoPort *basePort);
 	string getIdentifier(void);
 	void setInitialValue(string initialValueAsString);

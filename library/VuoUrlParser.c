@@ -23,11 +23,8 @@
  */
 #include "VuoUrlParser.h"
 #include <assert.h>
-#include <stddef.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
 #include "module.h"
 

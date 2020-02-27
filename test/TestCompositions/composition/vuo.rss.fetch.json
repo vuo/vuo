@@ -2,9 +2,9 @@
  * @file
  * Expected outputs for the vuo.rss.fetch node.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration": [
@@ -83,7 +83,7 @@
 		}
 	},
 
-	/* `http://vuo.org/blog/rss` — places `<img>` tags in the `<description>` tag */
+	/* `https://vuo.org/blog/rss` — places `<img>` tags in the `<description>` tag */
 	{
 		"firingPort": "refresh",
 		"inputPortValues": {
@@ -257,6 +257,156 @@
 						"Boots",
 						"VF Corp."
 					]
+				}
+			]
+		}
+	},
+
+	/* `https://en.wikipedia.org/wiki/Atom_(standard)#Example_of_an_Atom_1.0_feed` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-wikipedia.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Example Feed",
+			"description": "A subtitle.",
+			"items": [
+				{
+					"title": "Atom-Powered Robots Run Amok",
+					"author": "John Doe <johndoe@example.com>",
+					"description": "\n\t\t\t\n\t\t\t\tThis is the entry content.\n\t\t\t\n\t\t",
+					"url": "http://example.org/2003/12/13/atom03",
+					"dateTime": 93051002,
+					"imageUrl": "",
+					"image": null,
+					"categories": []
+				}
+			]
+		}
+	},
+
+	/* `https://www.youtube.com/feeds/videos.xml?channel_id=UCV1-6fXv7Cdj83qbhMcvjjg` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-youtube-channel.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "photonal",
+			"description": null,
+			"items": [
+				{
+					"title": "Physicality 128",
+					"author": "photonal (https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg)",
+					"description": null,
+					"url": "https://www.youtube.com/watch?v=sS-F9mnkxRE",
+					"dateTime": 525378895,
+					"imageUrl": "https://i4.ytimg.com/vi/sS-F9mnkxRE/hqdefault.jpg",
+					"image": null,
+					"categories": []
+				}
+			]
+		}
+	},
+
+	/* `https://www.youtube.com/feeds/videos.xml?playlist_id=PLCD1B521208BFBE05` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-youtube-playlist.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Photonics",
+			"description": null,
+			"items": [
+				{
+					"title": "Nightclubbing",
+					"author": "photonal (https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg)",
+					"description": null,
+					"url": "https://www.youtube.com/watch?v=vMagG0AR84w",
+					"dateTime": 525378889,
+					"imageUrl": "https://i3.ytimg.com/vi/vMagG0AR84w/hqdefault.jpg",
+					"image": null,
+					"categories": []
+				}
+			]
+		}
+	},
+
+	/* `https://www.youtube.com/feeds/videos.xml?user=photonal` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-youtube-user.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "photonal",
+			"description": null,
+			"items": [
+				{
+					"title": "Physicality 128",
+					"author": "photonal (https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg)",
+					"description": null,
+					"url": "https://www.youtube.com/watch?v=sS-F9mnkxRE",
+					"dateTime": 525378895,
+					"imageUrl": "https://i4.ytimg.com/vi/sS-F9mnkxRE/hqdefault.jpg",
+					"image": null,
+					"categories": []
+				}
+			]
+		}
+	},
+
+	/* `https://tools.ietf.org/html/rfc4287#section-1.1` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-rfc4287-brief.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Example Feed",
+			"description": null,
+			"items": [
+				{
+					"title": "Atom-Powered Robots Run Amok",
+					"author": null,
+					"description": null,
+					"url": "http://example.org/2003/12/13/atom03",
+					"dateTime": 93051002,
+					"imageUrl": "",
+					"image": null,
+					"categories": []
+				}
+			]
+		}
+	},
+
+	/* `https://tools.ietf.org/html/rfc4287#section-1.1` */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-rfc4287-extensive.atom",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "dive into mark",
+			"description": "\n    A <em>lot<\/em> of effort\n    went into making this effortless\n  ",
+			"items": [
+				{
+					"title": "Atom draft-07 snapshot",
+					"author": "Mark Pilgrim <f8dy@example.com> (http://example.org/)",
+					"description": "\n      \n        [Update: The Atom draft is finished.]\n      \n    ",
+					"url": "http://example.org/2005/04/02/atom",
+					"dateTime": 144523769,
+					"imageUrl": "",
+					"image": null,
+					"categories": []
 				}
 			]
 		}

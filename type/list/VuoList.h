@@ -2,9 +2,9 @@
  * @file
  * LIST_TYPE C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -55,6 +55,8 @@ LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list);
  * Index values start at 1.
  * If the list has no items, returns a default value.
  * Attempting to access an out-of-bounds index returns the first item in the list (if the index is 0), or last item in the list (if the index is greater than the list size).
+ *
+ * If iterating over an entire list, consider using @ref VuoListGetData_ELEMENT_TYPE or @ref VuoListForeach_ELEMENT_TYPE.
  */
 ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned long index);
 
@@ -75,6 +77,16 @@ ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned l
  * The pointer remains owned by the list; don't free it.
  */
 ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list);
+
+/**
+ * Applies `function` to each of `list`'s items, serially in order of index.
+ *
+ * If `function` returns false, visiting will stop immediately
+ * (possibly before all items have been visited).
+ *
+ * @version200New
+ */
+void VuoListForeach_ELEMENT_TYPE(const LIST_TYPE list, bool (^function)(const ELEMENT_TYPE value));
 
 /**
  * Changes the @ref ELEMENT_TYPE at @c index.
@@ -149,6 +161,17 @@ void VuoListReverse_ELEMENT_TYPE(LIST_TYPE list);
  */
 LIST_TYPE VuoListSubset_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount);
 
+#ifdef ELEMENT_TYPE_SUPPORTS_COMPARISON
+/**
+ * Returns a new list containing unique items from the original list, preserving order.
+ *
+ * Items in the new list are retained (not copied) from the original list.
+ *
+ * @version200New
+ */
+LIST_TYPE VuoListRemoveDuplicates_ELEMENT_TYPE(LIST_TYPE list);
+#endif
+
 /**
  * Removes the first value from @c list.
  */
@@ -189,6 +212,15 @@ LIST_TYPE LIST_TYPE_makeFromJson(struct json_object * js);
  * Encodes @c value as a JSON object.
  */
 struct json_object * LIST_TYPE_getJson(const LIST_TYPE value);
+
+#ifdef ELEMENT_TYPE_REQUIRES_INTERPROCESS_JSON
+/**
+ * Encodes `value` as an interprocess-compatible JSON object.
+ *
+ * @version200New
+ */
+struct json_object * LIST_TYPE_getInterprocessJson(const LIST_TYPE value);
+#endif
 
 /**
  * Produces a brief human-readable summary of @c value.

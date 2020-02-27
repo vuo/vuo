@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorIntegerRange interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -42,7 +42,7 @@ protected:
 	virtual void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
 	virtual json_object* getAcceptedValue();
 	virtual bool supportsTabbingBetweenPorts(void) { return true; }			///< This editor does support tabbing between ports.
-	bool eventFilter(QObject *object, QEvent *event);						///< Enable arrow keys to move around offset & gamma.
+	bool eventFilter(QObject *object, QEvent *event) VuoWarnUnusedResult;     ///< Enable arrow keys to move around offset & gamma.
 
 private:
 	VuoIntegerRange currentValue;	/// Value currently shown in editor.

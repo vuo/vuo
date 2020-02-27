@@ -35,7 +35,7 @@ VuoModuleMetadata({
 				 });
 @endcode
 
-The @ref VuoModuleMetadata macro takes a [JSON-formatted](http://www.json.org/) argument. The argument may include a title and other information about the library module. 
+The @ref VuoModuleMetadata macro takes a [JSON-formatted](https://www.json.org/) argument. The argument may include a title and other information about the library module.
 
 For more information, see the documentation for @ref VuoModuleMetadata. 
 
@@ -45,11 +45,11 @@ For more information, see the documentation for @ref VuoModuleMetadata.
 
 Before you can install your library module, you need to compile it to a `.bc` (LLVM bitcode) file. 
 
-If your library module is written in C, you can compile it with the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](http://vuo.org/manual.pdf) or run `vuo-compile --help`. 
+If your library module is written in C, you can compile it with the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://vuo.org/manual.pdf) or run `vuo-compile --help`.
 
-If your library module is written in another language, you can compile it with [Clang](http://clang.llvm.org/). For example: 
+If your library module is written in another language, you can compile it with [Clang](https://clang.llvm.org/). For example:
 @code
-clang -cc1 -triple x86_64-apple-macosx10.8.0 -emit-llvm-bc MyModule.c -o MyModule.bc
+clang -cc1 -triple x86_64-apple-macosx10.10.0 -emit-llvm-bc MyModule.c -o MyModule.bc
 @endcode
 
 If your library module is written in C++, the @ref VuoModuleMetadata call and any exported functions need to be enclosed by `extern "C" { ... }` so that symbols are exported with C names (instead of C++ mangled names). 
@@ -58,7 +58,7 @@ If your library module is written in C++, the @ref VuoModuleMetadata call and an
 
 ## Installing a library module
 
-The final step is to place your compiled library module in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](http://vuo.org/manual.pdf). 
+The final step is to place your compiled library module in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
 
 After that, you should be able to use your library module as a dependency of a node class or port type. See @ref ManagingDependencies. 
 

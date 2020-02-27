@@ -2,28 +2,24 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <list>
 
-extern "C"
-{
+#include <OpenGL/CGLMacro.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoSceneObject.h"
-#include "VuoList_VuoImage.h"
-#include "VuoList_VuoSceneObject.h"
-#include "VuoBoolean.h"
-#include "VuoFont.h"
 #include "VuoMeshUtility.h"
 
 /// @{
 #ifdef VUO_COMPILER
+extern "C"
+{
 VuoModuleMetadata({
 					 "title" : "Scene Object",
 					 "description" : "A 3D Object: visible (mesh), or virtual (group, light, camera).",
@@ -33,6 +29,7 @@ VuoModuleMetadata({
 						"csgjs",
 						"VuoBlendMode",
 						"VuoBoolean",
+						"VuoCubemap",
 						"VuoFont",
 						"VuoMesh",
 						"VuoMeshUtility",
@@ -44,35 +41,122 @@ VuoModuleMetadata({
 						"VuoList_VuoSceneObject"
 					 ]
 				 });
+}
 #endif
 /// @}
+
+/**
+ * @private VuoSceneObject fields.
+ *
+ * When a constructor (e.g., `VuoSceneObject_make`) returns,
+ * VuoSceneObject's component objects (e.g., `mesh`) should have retain count +1,
+ * and the VuoSceneObject itself should have retain count 0.
+ */
+typedef struct
+{
+	VuoSceneObjectSubType type;
+
+	// Data for all scene objects
+	uint64_t id;  ///< A unique ID for this object.  Persists through livecoding reloads (but not through save/load).  Used by @ref VuoRenderedLayers.
+	VuoText name;
+	VuoTransform transform;
+
+	// Mesh
+	VuoMesh mesh;
+	VuoShader shader;
+	bool isRealSize;  ///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
+	bool preservePhysicalSize;  ///< Only used if isRealSize=true.  If preservePhysicalSize=true, uses the texture's scaleFactor and the backingScaleFactor to determine the rendered size.  If preservePhysicalSize=false, the texture is always rendered 1:1.
+	VuoBlendMode blendMode;
+
+	union
+	{
+		VuoList_VuoSceneObject childObjects;
+
+		struct
+		{
+			float fieldOfView;          ///< Perspective and fisheye FOV, in degrees.
+			float width;                ///< Orthographic width, in scene coordinates.
+			float distanceMin;          ///< Distance from camera to near clip plane.
+			float distanceMax;          ///< Distance from camera to far clip plane.
+			float confocalDistance;     ///< Distance from camera to stereoscopic confocal plane.
+			float intraocularDistance;  ///< Distance between the stereoscopic camera pair.
+			float vignetteWidth;        ///< Fisheye only.  Distance from the center of the viewport to the center of the vignette.
+			float vignetteSharpness;    ///< Fisheye only.  Distance that the vignette gradient covers.
+		} camera;
+
+		struct
+		{
+			VuoColor color;
+			float brightness;
+			float range;      ///< Distance (in local coordinates) the light reaches.  Affects point lights and spotlights.
+			float cone;       ///< Size (in radians) of the light's cone.  Affects spotlights.
+			float sharpness;  ///< Sharpness of the light's distance/cone falloff.  0 means the light starts fading at distance/angle 0 and ends at 2*lightRange or 2*lightCone.  1 means the falloff is instant.
+		} light;
+
+		struct
+		{
+			VuoText text;
+			VuoFont font;
+			bool scaleWithScene;
+			float wrapWidth;
+		} text;
+	};
+} VuoSceneObject_internal;
+
+/**
+ * Returns a number, unique within this process,
+ * for identifying a particlar scene object instance.
+ */
+uint64_t VuoSceneObject_getNextId(void)
+{
+	static uint64_t id = 0;
+	return __sync_add_and_fetch(&id, 1);
 }
 
+/**
+ * Frees the memory associated with the object.
+ *
+ * @threadAny
+ */
+void VuoSceneObject_free(void *sceneObject)
+{
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
+	VuoRelease(so->name);
+	VuoRelease(so->mesh);
+	VuoRelease(so->shader);
+	if (so->type == VuoSceneObjectSubType_Group)
+		VuoRelease(so->childObjects);
+	else if (so->type == VuoSceneObjectSubType_Text)
+	{
+		VuoRelease(so->text.text);
+		VuoFont_release(so->text.font);
+	}
+
+	free(so);
+}
 
 /**
  * Creates a new, empty scene object.
  */
 VuoSceneObject VuoSceneObject_makeEmpty(void)
 {
-	VuoSceneObject o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)calloc(1, sizeof(VuoSceneObject_internal));
+	VuoRegister(so, VuoSceneObject_free);
 
-	o.type = VuoSceneObjectSubType_Empty;
+	so->id = 0;
+	so->type = VuoSceneObjectSubType_Empty;
 
-	o.mesh = NULL;
-	o.shader = NULL;
-	o.isRealSize = false;
-	o.preservePhysicalSize = false;
-	o.blendMode = VuoBlendMode_Normal;
+	so->mesh = NULL;
+	so->shader = NULL;
+	so->isRealSize = false;
+	so->preservePhysicalSize = false;
+	so->blendMode = VuoBlendMode_Normal;
 
-	o.childObjects = NULL;
+	so->name = NULL;
+	so->transform = VuoTransform_makeIdentity();
 
-	o.name = NULL;
-	o.transform = VuoTransform_makeIdentity();
-
-	o.text = NULL;
-	o.font = (VuoFont){NULL, 0, false, (VuoColor){0,0,0,0}, VuoHorizontalAlignment_Left, 0, 0};
-
-	return o;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -80,57 +164,36 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
  */
 VuoSceneObject VuoSceneObject_makeGroup(VuoList_VuoSceneObject childObjects, VuoTransform transform)
 {
-	VuoSceneObject o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
 
-	o.type = VuoSceneObjectSubType_Group;
+	so->type = VuoSceneObjectSubType_Group;
 
-	o.mesh = NULL;
-	o.shader = NULL;
-	o.isRealSize = false;
-	o.preservePhysicalSize = false;
-	o.blendMode = VuoBlendMode_Normal;
+	VuoSceneObject_setChildObjects((VuoSceneObject)so, childObjects);
 
-	o.childObjects = childObjects;
+	so->transform = transform;
 
-	o.name = NULL;
-	o.transform = transform;
-
-	o.text = NULL;
-	o.font = (VuoFont){NULL, 0, false, (VuoColor){0,0,0,0}, VuoHorizontalAlignment_Left, 0, 0};
-
-	return o;
+	return (VuoSceneObject)so;
 }
 
 /**
  * Creates a visible (mesh) scene object.
  */
-VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
+VuoSceneObject VuoSceneObject_makeMesh(VuoMesh mesh, VuoShader shader, VuoTransform transform)
 {
-	VuoSceneObject o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
 
-	o.type = VuoSceneObjectSubType_Mesh;
+	so->type = VuoSceneObjectSubType_Mesh;
 
-	o.mesh = mesh;
+	VuoSceneObject_setMesh((VuoSceneObject)so, mesh);
 
 	if (mesh && !shader)
-		o.shader = VuoShader_makeDefaultShader();
+		VuoSceneObject_setShader((VuoSceneObject)so, VuoShader_makeDefaultShader());
 	else
-		o.shader = shader;
+		VuoSceneObject_setShader((VuoSceneObject)so, shader);
 
-	o.isRealSize = false;
-	o.preservePhysicalSize = false;
-	o.blendMode = VuoBlendMode_Normal;
+	so->transform = transform;
 
-	o.childObjects = childObjects;
-
-	o.name = NULL;
-
-	o.transform = transform;
-
-	o.text = NULL;
-	o.font = (VuoFont){NULL, 0, false, (VuoColor){0,0,0,0}, VuoHorizontalAlignment_Left, 0, 0};
-
-	return o;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -149,16 +212,14 @@ VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform 
  */
 VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height)
 {
-	return VuoSceneObject_make(
+	return VuoSceneObject_makeMesh(
 				VuoMesh_makeQuadWithoutNormals(),
 				shader,
 				VuoTransform_makeEuler(
 					center,
 					VuoPoint3d_multiply(rotation, M_PI/180.),
 					VuoPoint3d_make(width,height,1)
-				),
-				NULL
-			);
+				));
 }
 
 /**
@@ -177,16 +238,14 @@ VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoP
  */
 VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height)
 {
-	return VuoSceneObject_make(
+	return VuoSceneObject_makeMesh(
 				VuoMesh_makeQuad(),
 				shader,
 				VuoTransform_makeEuler(
 					center,
 					VuoPoint3d_multiply(rotation, M_PI/180.),
 					VuoPoint3d_make(width,height,1)
-				),
-				NULL
-			);
+				));
 }
 
 /**
@@ -197,7 +256,7 @@ VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d c
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha)
 {
 	if (!image)
-		return VuoSceneObject_makeEmpty();
+		return nullptr;
 
 	VuoSceneObject object = VuoSceneObject_makeQuad(
 				VuoShader_makeUnlitImageShader(image, alpha),
@@ -218,7 +277,7 @@ VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPo
 VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess)
 {
 	if (!image)
-		return VuoSceneObject_makeEmpty();
+		return nullptr;
 
 	return VuoSceneObject_makeQuadWithNormals(
 				VuoShader_makeLitImageShader(image, alpha, highlightColor, shininess),
@@ -240,95 +299,210 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 
 	// Front Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					frontShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			frontShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
 	// Left Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					leftShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			leftShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
 	// Right Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					rightShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			rightShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
 	// Back Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					backShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			backShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
 	// Top Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					topShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			topShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
 	// Bottom Face
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					quadMesh,
-					bottomShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			quadMesh,
+			bottomShader,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)));
 		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
 	}
 
-	return VuoSceneObject_make(NULL, NULL, transform, cubeChildObjects);
+	return VuoSceneObject_makeGroup(cubeChildObjects, transform);
 }
 
 
 /**
  * Returns a cube scene object with a single shader applied to all 6 sides.
+ *
+ * @deprecated{Use `VuoSceneObject_makeCube_Vuo*()` instead.}
  */
 VuoSceneObject VuoSceneObject_makeCube1(VuoTransform transform, VuoShader shader)
 {
-	return VuoSceneObject_make(VuoMesh_makeCube(), shader, transform, NULL);
+    return VuoSceneObject_makeMesh(VuoMesh_makeCube(), shader, transform);
 }
+
+/**
+ * Creates a cube painted on all sides by `shader`.
+ *
+ * @version200New
+ */
+VuoSceneObject VuoSceneObject_makeCube_VuoShader(VuoTransform transform, VuoShader shader)
+{
+    return VuoSceneObject_makeMesh(VuoMesh_makeCube(), shader, transform);
+}
+
+/**
+ * Creates a cube painted on all sides by `image`.
+ *
+ * @version200New
+ */
+VuoSceneObject VuoSceneObject_makeCube_VuoImage(VuoTransform transform, VuoImage image)
+{
+    return VuoSceneObject_makeMesh(VuoMesh_makeCube(), VuoShader_make_VuoImage(image), transform);
+}
+
+/**
+ * Creates a cube painted on all sides by `color`.
+ *
+ * @version200New
+ */
+VuoSceneObject VuoSceneObject_makeCube_VuoColor(VuoTransform transform, VuoColor color)
+{
+    return VuoSceneObject_makeMesh(VuoMesh_makeCube(), VuoShader_make_VuoColor(color), transform);
+}
+
+/**
+ * Creates a cube painted with a cubemap.
+ *
+ * @version200New
+ */
+VuoSceneObject VuoSceneObject_makeCube_VuoCubemap(VuoTransform transform, VuoCubemap cubemap)
+{
+    return VuoSceneObject_makeCubeMulti(transform, 2, 2, 2,
+        VuoShader_make_VuoImage(VuoCubemap_getFront(cubemap)),
+        VuoShader_make_VuoImage(VuoCubemap_getLeft(cubemap)),
+        VuoShader_make_VuoImage(VuoCubemap_getRight(cubemap)),
+        VuoShader_make_VuoImage(VuoCubemap_getBack(cubemap)),
+        VuoShader_make_VuoImage(VuoCubemap_getTop(cubemap)),
+        VuoShader_make_VuoImage(VuoCubemap_getBottom(cubemap)));
+}
+
+/**
+ * Creates a cube with subdivided faces and multiple shaders.
+ *
+ * @version200New
+ */
+VuoSceneObject VuoSceneObject_makeCubeMulti(VuoTransform transform, VuoInteger columns, VuoInteger rows, VuoInteger slices,
+    VuoShader front, VuoShader left, VuoShader right, VuoShader back, VuoShader top, VuoShader bottom)
+{
+    VuoList_VuoSceneObject cubeChildObjects = VuoListCreate_VuoSceneObject();
+
+	unsigned int _rows = MAX(2, MIN(512, rows));
+	unsigned int _columns = MAX(2, MIN(512, columns));
+	unsigned int _slices = MAX(2, MIN(512, slices));
+
+	VuoMesh frontBackMesh = VuoMesh_makePlane(_columns, _rows);
+	VuoMesh leftRightMesh = VuoMesh_makePlane(_slices, _rows);
+	VuoMesh topBottomMesh = VuoMesh_makePlane(_columns, _slices);
+
+	// Front Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			frontBackMesh,
+			front,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Left Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			leftRightMesh,
+			left,
+			VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Right Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			leftRightMesh,
+			right,
+			VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Back Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			frontBackMesh,
+			back,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Top Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			topBottomMesh,
+			top,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Bottom Face
+	{
+		VuoSceneObject so = VuoSceneObject_makeMesh(
+			topBottomMesh,
+			bottom,
+			VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)));
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	return VuoSceneObject_makeGroup(cubeChildObjects, transform);
+}
+
 /**
  * Returns a scene object representing deferred-rendered text.
  *
  * The caller is responsible for providing the sceneobject's mesh (e.g., @ref VuoMesh_makeQuadWithoutNormals).
  *
  * @threadAny
+ * @version200Changed{Added `scaleWithScene`, `wrapWidth` arguments.}
  */
-VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font)
+VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font, VuoBoolean scaleWithScene, float wrapWidth)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.type = VuoSceneObjectSubType_Text;
-	o.text = text;
-	o.font = font;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_Text;
+	VuoSceneObject_setText((VuoSceneObject)so, text);
+	VuoSceneObject_setTextFont((VuoSceneObject)so, font);
+	so->text.scaleWithScene = scaleWithScene;
+	so->text.wrapWidth = wrapWidth;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -336,14 +510,14 @@ VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font)
  */
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.type = VuoSceneObjectSubType_PerspectiveCamera;
-	o.name = name;
-	o.transform = transform;
-	o.cameraFieldOfView = fieldOfView;
-	o.cameraDistanceMin = distanceMin;
-	o.cameraDistanceMax = distanceMax;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_PerspectiveCamera;
+	VuoSceneObject_setName((VuoSceneObject)so, name);
+	so->transform = transform;
+	so->camera.fieldOfView = fieldOfView;
+	so->camera.distanceMin = distanceMin;
+	so->camera.distanceMax = distanceMax;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -351,16 +525,16 @@ VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform t
  */
 VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.type = VuoSceneObjectSubType_StereoCamera;
-	o.name = name;
-	o.transform = transform;
-	o.cameraFieldOfView = fieldOfView;
-	o.cameraDistanceMin = distanceMin;
-	o.cameraDistanceMax = distanceMax;
-	o.cameraConfocalDistance = confocalDistance;
-	o.cameraIntraocularDistance = intraocularDistance;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_StereoCamera;
+	VuoSceneObject_setName((VuoSceneObject)so, name);
+	so->transform = transform;
+	so->camera.fieldOfView = fieldOfView;
+	so->camera.distanceMin = distanceMin;
+	so->camera.distanceMax = distanceMax;
+	so->camera.confocalDistance = confocalDistance;
+	so->camera.intraocularDistance = intraocularDistance;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -368,14 +542,14 @@ VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transf
  */
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.type = VuoSceneObjectSubType_OrthographicCamera;
-	o.name = name;
-	o.transform = transform;
-	o.cameraWidth = width;
-	o.cameraDistanceMin = distanceMin;
-	o.cameraDistanceMax = distanceMax;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_OrthographicCamera;
+	VuoSceneObject_setName((VuoSceneObject)so, name);
+	so->transform = transform;
+	so->camera.width = width;
+	so->camera.distanceMin = distanceMin;
+	so->camera.distanceMax = distanceMax;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -383,20 +557,20 @@ VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform 
  */
 VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal vignetteWidth, VuoReal vignetteSharpness)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.type = VuoSceneObjectSubType_FisheyeCamera;
-	o.name = name;
-	o.transform = transform;
-	o.cameraFieldOfView = fieldOfView;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_FisheyeCamera;
+	VuoSceneObject_setName((VuoSceneObject)so, name);
+	so->transform = transform;
+	so->camera.fieldOfView = fieldOfView;
 
 	// 0 and 1000 come from "Realtime Dome Imaging and Interaction" by Bailey/Clothier/Gebbie 2006.
-	o.cameraDistanceMin = 0;
-	o.cameraDistanceMax = 1000;
+	so->camera.distanceMin = 0;
+	so->camera.distanceMax = 1000;
 
-	o.cameraVignetteWidth = vignetteWidth;
-	o.cameraVignetteSharpness = vignetteSharpness;
+	so->camera.vignetteWidth = vignetteWidth;
+	so->camera.vignetteSharpness = vignetteSharpness;
 
-	return o;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -421,31 +595,80 @@ VuoSceneObject VuoSceneObject_makeDefaultCamera(void)
 /**
  * Searches the scenegraph (depth-first) for a scene object with the given name.
  *
- * @param so The root object of the scenegraph to search.
+ * @param sceneObject The root object of the scenegraph to search.
  * @param nameToMatch The name to search for.
  * @param[out] ancestorObjects The ancestors of @a foundObject, starting with the root of the scenegraph.
  * @param[out] foundObject The first matching scene object found.
  * @return True if a matching scene object was found.
  */
-bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
+bool VuoSceneObject_find(VuoSceneObject sceneObject, VuoText nameToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
 {
-	if (VuoText_areEqual(so.name, nameToMatch))
+	if (!sceneObject)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
+	if (VuoText_areEqual(so->name, nameToMatch))
 	{
-		*foundObject = so;
+		*foundObject = (VuoSceneObject)so;
 		return true;
 	}
 
-	VuoListAppendValue_VuoSceneObject(ancestorObjects, so);
-
-	unsigned long childObjectCount = (so.childObjects ? VuoListGetCount_VuoSceneObject(so.childObjects) : 0);
-	for (unsigned long i = 1; i <= childObjectCount; ++i)
+	if (so->type == VuoSceneObjectSubType_Group)
 	{
-		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-		if (VuoSceneObject_find(childObject, nameToMatch, ancestorObjects, foundObject))
-			return true;
+		VuoListAppendValue_VuoSceneObject(ancestorObjects, sceneObject);
+
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so->childObjects, i);
+			if (VuoSceneObject_find(childObject, nameToMatch, ancestorObjects, foundObject))
+				return true;
+		}
+
+		VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
 	}
 
-	VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
+	return false;
+}
+
+/**
+ * Searches the scenegraph (depth-first) for a scene object with the given id.
+ *
+ * @param sceneObject The root object of the scenegraph to search.
+ * @param idToMatch The id to search for.
+ * @param[out] ancestorObjects The ancestors of @a foundObject, starting with the root of the scenegraph.
+ * @param[out] foundObject The first matching scene object found.
+ * @return True if a matching scene object was found.
+ * @version200New
+ */
+bool VuoSceneObject_findById(VuoSceneObject sceneObject, uint64_t idToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
+{
+	if (!sceneObject)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
+	if (so->id == idToMatch)
+	{
+		*foundObject = (VuoSceneObject)so;
+		return true;
+	}
+
+	if (so->type == VuoSceneObjectSubType_Group)
+	{
+		VuoListAppendValue_VuoSceneObject(ancestorObjects, sceneObject);
+
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so->childObjects, i);
+			if (VuoSceneObject_findById(childObject, idToMatch, ancestorObjects, foundObject))
+				return true;
+		}
+
+		VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
+	}
 
 	return false;
 }
@@ -453,33 +676,42 @@ bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoScen
 /**
  * Searches the scenegraph (depth-first) for the first scene object with the specified type.
  *
- * @param so The root object of the scenegraph to search.
+ * @param sceneObject The root object of the scenegraph to search.
  * @param typeToMatch The sub-type to search for.
  * @param[out] ancestorObjects The ancestors of @a foundObject, starting with the root of the scenegraph.
  * @param[out] foundObject The first matching scene object found.
  * @return True if a matching scene object was found.
+ * @version200New
  */
-bool VuoSceneObject_findWithType(VuoSceneObject so, VuoSceneObjectSubType typeToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
+bool VuoSceneObject_findWithType(VuoSceneObject sceneObject, VuoSceneObjectSubType typeToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
 {
-	if (so.type == typeToMatch)
+	if (!sceneObject)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
+	if (so->type == typeToMatch)
 	{
-		*foundObject = so;
+		*foundObject = (VuoSceneObject)so;
 		return true;
 	}
 
-	VuoListAppendValue_VuoSceneObject(ancestorObjects, so);
-
-	unsigned long childObjectCount = (so.childObjects ? VuoListGetCount_VuoSceneObject(so.childObjects) : 0);
-
-	for (unsigned long i = 1; i <= childObjectCount; ++i)
+	if (so->type == VuoSceneObjectSubType_Group)
 	{
-		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
+		VuoListAppendValue_VuoSceneObject(ancestorObjects, sceneObject);
 
-		if (VuoSceneObject_findWithType(childObject, typeToMatch, ancestorObjects, foundObject))
-			return true;
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
+
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so->childObjects, i);
+
+			if (VuoSceneObject_findWithType(childObject, typeToMatch, ancestorObjects, foundObject))
+				return true;
+		}
+
+		VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
 	}
-
-	VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
 
 	return false;
 }
@@ -492,18 +724,22 @@ bool VuoSceneObject_findWithType(VuoSceneObject so, VuoSceneObjectSubType typeTo
  * The returned boolean indicates whether a camera was found.
  * If no camera was found, `foundCamera` is unaltered.
  */
-bool VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, VuoSceneObject *foundCamera)
+bool VuoSceneObject_findCamera(VuoSceneObject sceneObject, VuoText nameToMatch, VuoSceneObject *foundCamera)
 {
+	if (!sceneObject)
+		return false;
+
 	__block bool didFindCamera = false;
-	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		if ((currentObject->type == VuoSceneObjectSubType_PerspectiveCamera
-		  || currentObject->type == VuoSceneObjectSubType_StereoCamera
-		  || currentObject->type == VuoSceneObjectSubType_OrthographicCamera
-		  || currentObject->type == VuoSceneObjectSubType_FisheyeCamera)
-		  && (!nameToMatch || (currentObject->name && nameToMatch && strstr(currentObject->name, nameToMatch))))
+	VuoSceneObject_visit(sceneObject, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		if ((co->type == VuoSceneObjectSubType_PerspectiveCamera
+		  || co->type == VuoSceneObjectSubType_StereoCamera
+		  || co->type == VuoSceneObjectSubType_OrthographicCamera
+		  || co->type == VuoSceneObjectSubType_FisheyeCamera)
+		  && (!nameToMatch || (co->name && nameToMatch && strstr(co->name, nameToMatch))))
 		{
-			*foundCamera = *currentObject;
-			foundCamera->transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			*foundCamera = currentObject;
+			VuoSceneObject_setTransform(*foundCamera, VuoTransform_makeFromMatrix4x4(modelviewMatrix));
 			didFindCamera = true;
 			return false;
 		}
@@ -514,27 +750,15 @@ bool VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, VuoSceneO
 }
 
 /**
- * Performs a depth-first search of the scenegraph.
- *
- * Returns true if the scene object or any of its children have a non-empty type.
+ * Returns true if the scene object has a non-empty type.
  */
-bool VuoSceneObject_isPopulated(VuoSceneObject so)
+bool VuoSceneObject_isPopulated(VuoSceneObject sceneObject)
 {
-	if (so.type != VuoSceneObjectSubType_Empty)
-		return true;
+	if (!sceneObject)
+		return false;
 
-	if (so.childObjects)
-	{
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
-		for (unsigned long i = 1; i <= childObjectCount; ++i)
-		{
-			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-			if (VuoSceneObject_isPopulated(childObject))
-				return true;
-		}
-	}
-
-	return false;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	return so->type != VuoSceneObjectSubType_Empty;
 }
 
 /**
@@ -575,8 +799,6 @@ static const char * VuoSceneObject_cStringForType(VuoSceneObjectSubType type)
 {
 	switch (type)
 	{
-		case VuoSceneObjectSubType_Empty:
-			return "empty";
 		case VuoSceneObjectSubType_Group:
 			return "group";
 		case VuoSceneObjectSubType_Mesh:
@@ -597,6 +819,7 @@ static const char * VuoSceneObject_cStringForType(VuoSceneObjectSubType type)
 			return "light-spot";
 		case VuoSceneObjectSubType_Text:
 			return "text";
+		// VuoSceneObjectSubType_Empty
 		default:
 			return "empty";
 	}
@@ -608,12 +831,12 @@ static const char * VuoSceneObject_cStringForType(VuoSceneObjectSubType type)
  */
 VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.name = VuoText_make("Ambient Light");
-	o.type = VuoSceneObjectSubType_AmbientLight;
-	o.lightColor = color;
-	o.lightBrightness = brightness;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_AmbientLight;
+	VuoSceneObject_setName((VuoSceneObject)so, VuoText_make("Ambient Light"));
+	so->light.color = color;
+	so->light.brightness = brightness;
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -628,15 +851,16 @@ VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness)
  */
 VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, VuoPoint3d position, float range, float sharpness)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.name = VuoText_make("Point Light");
-	o.type = VuoSceneObjectSubType_PointLight;
-	o.lightColor = color;
-	o.lightBrightness = brightness;
-	o.lightRange = range;
-	o.lightSharpness = MAX(MIN(sharpness,1),0);
-	o.transform = VuoTransform_makeEuler(position, VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1));
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_PointLight;
+	VuoText t = VuoText_make("Point Light");
+	VuoSceneObject_setName((VuoSceneObject)so, t);
+	so->light.color = color;
+	so->light.brightness = brightness;
+	so->light.range = range;
+	so->light.sharpness = MAX(MIN(sharpness,1),0);
+	so->transform = VuoTransform_makeEuler(position, VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1));
+	return (VuoSceneObject)so;
 }
 
 /**
@@ -652,26 +876,27 @@ VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, V
  */
 VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, VuoTransform transform, float cone, float range, float sharpness)
 {
-	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.name = VuoText_make("Spot Light");
-	o.type = VuoSceneObjectSubType_Spotlight;
-	o.lightColor = color;
-	o.lightBrightness = brightness;
-	o.lightCone = cone;
-	o.lightRange = range;
-	o.lightSharpness = MAX(MIN(sharpness,1),0);
-	o.transform = transform;
-	return o;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+	so->type = VuoSceneObjectSubType_Spotlight;
+	VuoSceneObject_setName((VuoSceneObject)so, VuoText_make("Spot Light"));
+	so->light.color = color;
+	so->light.brightness = brightness;
+	so->light.cone = cone;
+	so->light.range = range;
+	so->light.sharpness = MAX(MIN(sharpness,1),0);
+	so->transform = transform;
+	return (VuoSceneObject)so;
 }
 
 /**
- * Finds and returns all the lights in the scene.
+ * Finds and returns all the lights in the scene,
+ * with their transforms applied.
  *
  * If there are multiple ambient lights, returns the weighted (by alpha) average color and summed brightness.
  *
  * If there are no lights in the scene, returns some default lights.
  */
-void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights)
+void VuoSceneObject_findLights(VuoSceneObject sceneObject, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights)
 {
 	__block VuoList_VuoColor ambientColors = VuoListCreate_VuoColor();
 	VuoRetain(ambientColors);
@@ -680,22 +905,23 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 	*pointLights = VuoListCreate_VuoSceneObject();
 	*spotLights = VuoListCreate_VuoSceneObject();
 
-	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		if (currentObject->type == VuoSceneObjectSubType_AmbientLight)
+	VuoSceneObject_visit(sceneObject, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		if (co->type == VuoSceneObjectSubType_AmbientLight)
 		{
-			VuoListAppendValue_VuoColor(ambientColors, currentObject->lightColor);
-			*ambientBrightness += currentObject->lightBrightness;
+			VuoListAppendValue_VuoColor(ambientColors, co->light.color);
+			*ambientBrightness += co->light.brightness;
 		}
-		else if (currentObject->type == VuoSceneObjectSubType_PointLight)
+		else if (co->type == VuoSceneObjectSubType_PointLight)
 		{
-			VuoSceneObject l = *currentObject;
-			l.transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			VuoSceneObject l = VuoSceneObject_copy((VuoSceneObject)co);
+			VuoSceneObject_setTransform(l, VuoTransform_makeFromMatrix4x4(modelviewMatrix));
 			VuoListAppendValue_VuoSceneObject(*pointLights, l);
 		}
-		else if (currentObject->type == VuoSceneObjectSubType_Spotlight)
+		else if (co->type == VuoSceneObjectSubType_Spotlight)
 		{
-			VuoSceneObject l = *currentObject;
-			l.transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			VuoSceneObject l = VuoSceneObject_copy((VuoSceneObject)co);
+			VuoSceneObject_setTransform(l, VuoTransform_makeFromMatrix4x4(modelviewMatrix));
 			VuoListAppendValue_VuoSceneObject(*spotLights, l);
 		}
 		return true;
@@ -710,10 +936,10 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 
 		// https://en.wikipedia.org/wiki/Three-point_lighting
 
-		VuoSceneObject keyLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .70, VuoPoint3d_make(-1,1,1), 5, .5);
+		VuoSceneObject keyLight  = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .70, VuoPoint3d_make(-1,1,1), 5, .5);
 		VuoListAppendValue_VuoSceneObject(*pointLights, keyLight);
 
-		VuoSceneObject fillLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .2, VuoPoint3d_make(.5,0,1), 5, 0);
+		VuoSceneObject fillLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .20, VuoPoint3d_make(.5,0,1), 5, 0);
 		VuoListAppendValue_VuoSceneObject(*pointLights, fillLight);
 
 		VuoSceneObject backLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .15, VuoPoint3d_make(1,.75,-.5), 5, 0);
@@ -744,9 +970,14 @@ typedef struct
  *
  * The value `modelviewMatrix` (which `VuoSceneObject_visit` passes to `function`)
  * is the cumulative transformation matrix (from `object` down to the `currentObject`).
+ *
+ * NULL objects in the tree are ignored (`function` is not called).
  */
-void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const VuoSceneObject *currentObject, float modelviewMatrix[16]))
+void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const VuoSceneObject currentObject, float modelviewMatrix[16]))
 {
+	if (!object)
+		return;
+
 	VuoSceneObject_treeState rootState;
 	rootState.objectCount = 1;
 	rootState.objects = &object;
@@ -760,23 +991,30 @@ void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const Vu
 
 		for (long i = 0; i < currentState.objectCount; ++i)
 		{
+			VuoSceneObject_internal *currentObject = (VuoSceneObject_internal *)currentState.objects[i];
+			if (!currentObject)
+				continue;
+
 			float localModelviewMatrix[16];
-			VuoTransform_getMatrix(currentState.objects[i].transform, localModelviewMatrix);
+			VuoTransform_getMatrix(currentObject->transform, localModelviewMatrix);
 			float compositeModelviewMatrix[16];
 			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, currentState.modelviewMatrix, compositeModelviewMatrix);
 
-			if (!function(&currentState.objects[i], compositeModelviewMatrix))
+			if (!function((VuoSceneObject)currentObject, compositeModelviewMatrix))
 				return;
 
-			// Prepend this object's childObjects to the objectsToVisit queue.
-			long childObjectCount = VuoListGetCount_VuoSceneObject(currentState.objects[i].childObjects);
-			if (childObjectCount)
+			if (currentObject->type == VuoSceneObjectSubType_Group)
 			{
-				VuoSceneObject_treeState childState;
-				childState.objectCount = childObjectCount;
-				childState.objects = VuoListGetData_VuoSceneObject(currentState.objects[i].childObjects);
-				memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
-				objectsToVisit.push_front(childState);
+				// Prepend this object's childObjects to the objectsToVisit queue.
+				long childObjectCount = VuoListGetCount_VuoSceneObject(currentObject->childObjects);
+				if (childObjectCount)
+				{
+					VuoSceneObject_treeState childState;
+					childState.objectCount = childObjectCount;
+					childState.objects = VuoListGetData_VuoSceneObject(currentObject->childObjects);
+					memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
+					objectsToVisit.push_front(childState);
+				}
 			}
 		}
 	}
@@ -785,23 +1023,28 @@ void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const Vu
 /**
  * Helper for @ref VuoSceneObject_apply.
  */
-static void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]), float modelviewMatrix[16])
+static void VuoSceneObject_applyInternal(VuoSceneObject sceneObject, void (^function)(VuoSceneObject currentObject, float modelviewMatrix[16]), float modelviewMatrix[16])
 {
+	if (!sceneObject)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
 	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(object->transform, localModelviewMatrix);
+	VuoTransform_getMatrix(so->transform, localModelviewMatrix);
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
 
-	function(object, compositeModelviewMatrix);
+	function(sceneObject, compositeModelviewMatrix);
 
-	if (object->childObjects)
+	if (so->type == VuoSceneObjectSubType_Group && so->childObjects)
 	{
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object->childObjects);
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject o = VuoListGetValue_VuoSceneObject(object->childObjects, i);
-			VuoSceneObject_applyInternal(&o, function, compositeModelviewMatrix);
-			VuoListSetValue_VuoSceneObject(object->childObjects, o, i, false);
+			VuoSceneObject o = VuoListGetValue_VuoSceneObject(so->childObjects, i);
+			VuoSceneObject_applyInternal(o, function, compositeModelviewMatrix);
+			VuoListSetValue_VuoSceneObject(so->childObjects, o, i, false);
 		}
 	}
 }
@@ -812,9 +1055,14 @@ static void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function
  *
  * The value `modelviewMatrix` (which `VuoSceneObject_apply` passes to `function`)
  * is the cumulative transformation matrix (from `object` down to the `currentObject`).
+ *
+ * NULL objects in the tree are ignored (`function` is not called).
  */
-void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]))
+void VuoSceneObject_apply(VuoSceneObject object, void (^function)(VuoSceneObject currentObject, float modelviewMatrix[16]))
 {
+	if (!object)
+		return;
+
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
 
@@ -822,19 +1070,608 @@ void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObjec
 }
 
 /**
- * Sets the @c faceCullingMode on @c object and its child objects.
+ * Applies a transformation to the sceneobject (combining it with its previous transform).
  *
- * @c faceCullingMode can be @c GL_NONE (show both front and back faces),
- * @c GL_BACK (show only front faces),
- * or @c GL_FRONT (show only back faces).
+ * @version200New
  */
-void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int faceCullingMode)
+void VuoSceneObject_transform(VuoSceneObject object, VuoTransform transform)
 {
-	VuoSceneObject_apply(object, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-							 if (currentObject->mesh)
-								 for (unsigned long i = 0; i < currentObject->mesh->submeshCount; ++i)
-									 currentObject->mesh->submeshes[i].faceCullingMode = faceCullingMode;
-						 });
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform = VuoTransform_composite(so->transform, transform);
+}
+
+/**
+ * Moves the sceneobject in 3D space.
+ *
+ * @version200New
+ */
+void VuoSceneObject_translate(VuoSceneObject object, VuoPoint3d translation)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform.translation += translation;
+}
+
+/**
+ * Scales the sceneobject in 3D space.
+ *
+ * @version200New
+ */
+void VuoSceneObject_scale(VuoSceneObject object, VuoPoint3d scale)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform.scale *= scale;
+}
+
+/**
+ * Returns the sceneobject's display name.
+ *
+ * @version200New
+ */
+VuoText VuoSceneObject_getName(VuoSceneObject object)
+{
+	if (!object)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->name;
+}
+
+/**
+ * Returns the list of this sceneobject's child sceneobjects.
+ *
+ * The caller is permitted to modify the returned value (e.g., append items to the list),
+ * which will affect this sceneobject.
+ *
+ * @version200New
+ */
+VuoList_VuoSceneObject VuoSceneObject_getChildObjects(VuoSceneObject object)
+{
+	if (!object)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	if (so->type != VuoSceneObjectSubType_Group)
+		return nullptr;
+
+	return so->childObjects;
+}
+
+/**
+ * Returns the sceneobject's blend mode.
+ *
+ * @version200New
+ */
+VuoBlendMode VuoSceneObject_getBlendMode(const VuoSceneObject object)
+{
+	if (!object)
+		return VuoBlendMode_Normal;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->blendMode;
+}
+
+/**
+ * Returns the sceneobject's type.
+ *
+ * @version200New
+ */
+VuoSceneObjectSubType VuoSceneObject_getType(const VuoSceneObject object)
+{
+	if (!object)
+		return VuoSceneObjectSubType_Empty;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->type;
+}
+
+/**
+ * Returns the sceneobject's identification number
+ * (unique among objects in the currently-running composition).
+ *
+ * @version200New
+ */
+uint64_t VuoSceneObject_getId(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->id;
+}
+
+/**
+ * Returns the sceneobject's shader.
+ *
+ * The caller is permitted to modify the returned value (e.g., change the shader's uniforms),
+ * which will affect this sceneobject.
+ *
+ * @version200New
+ */
+VuoShader VuoSceneObject_getShader(const VuoSceneObject object)
+{
+	if (!object)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->shader;
+}
+
+/**
+ * Returns true if the sceneobject should ignore rotations and scales,
+ * and be sized to match the shader's first image.
+ *
+ * @version200New
+ */
+bool VuoSceneObject_isRealSize(const VuoSceneObject object)
+{
+	if (!object)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->isRealSize;
+}
+
+/**
+ * Returns true if the sceneobject should use the texture's scaleFactor
+ * and the backingScaleFactor to determine the rendered size.
+ * Returns false if the texture should always be rendered 1:1.
+ *
+ * @version200New
+ */
+bool VuoSceneObject_shouldPreservePhysicalSize(const VuoSceneObject object)
+{
+	if (!object)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->preservePhysicalSize;
+}
+
+/**
+ * Returns the sceneobject's mesh.
+ *
+ * The caller is permitted to modify the returned value (e.g., change the mesh's buffers),
+ * which will affect this sceneobject.
+ *
+ * @version200New
+ */
+VuoMesh VuoSceneObject_getMesh(const VuoSceneObject object)
+{
+	if (!object)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->mesh;
+}
+
+/**
+ * Returns the sceneobject's rendered text.
+ *
+ * @version200New
+ */
+VuoText VuoSceneObject_getText(const VuoSceneObject object)
+{
+	if (!object)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->text.text;
+}
+
+/**
+ * Returns the sceneobject's font.
+ *
+ * @version200New
+ */
+VuoFont VuoSceneObject_getTextFont(const VuoSceneObject object)
+{
+	if (!object)
+		return VuoFont_makeDefault();
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->text.font;
+}
+
+/**
+ * Returns true if the sceneobject's text
+ * should change depending on the scene's rendering destination,
+ * or false if it should maintain its nominal size.
+ *
+ * @version200New
+ */
+bool VuoSceneObject_shouldTextScaleWithScene(const VuoSceneObject object)
+{
+	if (!object)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->text.scaleWithScene;
+}
+
+/**
+ * Returns the width at which the sceneobject's rendered text should wrap.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getTextWrapWidth(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->text.wrapWidth;
+}
+
+/**
+ * Returns the sceneobject's field of view (for perspective cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraFieldOfView(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.fieldOfView;
+}
+
+/**
+ * Returns the sceneobject's camera width (for isometric cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraWidth(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.width;
+}
+
+/**
+ * Returns the sceneobject's depth buffer minimum distance.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraDistanceMin(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.distanceMin;
+}
+
+/**
+ * Returns the sceneobject's depth buffer maximum distance.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraDistanceMax(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.distanceMax;
+}
+
+/**
+ * Returns the sceneobject's vignette width (for fisheye cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraVignetteWidth(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.vignetteWidth;
+}
+
+/**
+ * Returns the sceneobject's vignette sharpness (for fisheye cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraVignetteSharpness(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.vignetteSharpness;
+}
+
+/**
+ * Returns the sceneobject's camera intraocular distance (for stereoscopic cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraIntraocularDistance(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.intraocularDistance;
+}
+
+/**
+ * Returns the sceneobject's camera confocal distance (for stereoscopic cameras).
+ *
+ * @version200New
+ */
+float VuoSceneObject_getCameraConfocalDistance(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->camera.confocalDistance;
+}
+
+/**
+ * Returns the sceneobject's light color.
+ *
+ * @version200New
+ */
+VuoColor VuoSceneObject_getLightColor(const VuoSceneObject object)
+{
+	if (!object)
+		return (VuoColor){0,0,0,0};
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->light.color;
+}
+
+/**
+ * Returns the sceneobject's light brightness.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getLightBrightness(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->light.brightness;
+}
+
+/**
+ * Returns the sceneobject's light cone range.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getLightRange(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->light.range;
+}
+
+/**
+ * Returns the sceneobject's light cone sharpness.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getLightSharpness(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->light.sharpness;
+}
+
+/**
+ * Returns the sceneobject's light cone angle.
+ *
+ * @version200New
+ */
+float VuoSceneObject_getLightCone(const VuoSceneObject object)
+{
+	if (!object)
+		return 0;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->light.cone;
+}
+
+/**
+ * Returns the sceneobject's transform.
+ *
+ * @version200New
+ */
+VuoTransform VuoSceneObject_getTransform(const VuoSceneObject object)
+{
+	if (!object)
+		return VuoTransform_makeIdentity();
+
+   VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+   return so->transform;
+}
+
+/**
+ * Returns the sceneobject's transform's translation.
+ *
+ * @version200New
+ */
+VuoPoint3d VuoSceneObject_getTranslation(const VuoSceneObject object)
+{
+	if (!object)
+		return (VuoPoint3d){0,0,0};
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	return so->transform.translation;
+}
+
+/**
+ * Changes the sceneobject's type.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setType(VuoSceneObject object, VuoSceneObjectSubType type)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->type = type;
+}
+
+/**
+ * Changes the sceneobject's identification number
+ * (should be unique among objects in the currently-running composition).
+ *
+ * @version200New
+ */
+void VuoSceneObject_setId(VuoSceneObject object, uint64_t id)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->id = id;
+}
+
+/**
+ * Changes the sceneobject's display name.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setName(VuoSceneObject object, VuoText name)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	VuoRetain(name);
+	VuoRelease(so->name);
+	so->name = name;
+}
+
+/**
+ * Changes the sceneobject's list of child objects.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setChildObjects(VuoSceneObject object, VuoList_VuoSceneObject childObjects)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	if (so->type != VuoSceneObjectSubType_Group)
+		return;
+
+	VuoRetain(childObjects);
+	VuoRelease(so->childObjects);
+	so->childObjects = childObjects;
+}
+
+/**
+ * Changes the sceneobject's mesh.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setMesh(VuoSceneObject object, VuoMesh mesh)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	VuoRetain(mesh);
+	VuoRelease(so->mesh);
+	so->mesh = mesh;
+}
+
+/**
+ * Changes the sceneobject's transform.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setTransform(VuoSceneObject object, VuoTransform transform)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform = transform;
+}
+
+/**
+ * Changes the sceneobject's transform's translation.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setTranslation(VuoSceneObject object, VuoPoint3d translation)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform.translation = translation;
+}
+
+/**
+ * Changes the sceneobject's transform's scale.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setScale(VuoSceneObject object, VuoPoint3d scale)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->transform.scale = scale;
+}
+
+/**
+ * Changes the sceneobject's shader.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setShader(VuoSceneObject object, VuoShader shader)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	VuoRetain(shader);
+	VuoRelease(so->shader);
+	so->shader = shader;
+}
+
+/**
+ * Sets the `faceCulling` on `object` and its child objects.
+ */
+void VuoSceneObject_setFaceCulling(VuoSceneObject object, VuoMesh_FaceCulling faceCulling)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_apply(object, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoMesh m = VuoMesh_copyShallow(VuoSceneObject_getMesh(currentObject));
+		VuoMesh_setFaceCulling(m, faceCulling);
+		VuoSceneObject_setMesh(currentObject, m);
+	});
 }
 
 /**
@@ -849,39 +1686,193 @@ void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int face
  *    - @ref VuoBlendMode_LinearDodge
  *    - @ref VuoBlendMode_Subtract
  */
-void VuoSceneObject_setBlendMode(VuoSceneObject *object, VuoBlendMode blendMode)
+void VuoSceneObject_setBlendMode(VuoSceneObject object, VuoBlendMode blendMode)
 {
-	VuoSceneObject_apply(object, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		currentObject->blendMode = blendMode;
+	if (!object)
+		return;
+
+	VuoSceneObject_apply(object, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		co->blendMode = blendMode;
 	});
 }
 
 /**
- * Makes a deep copy of @c object.
- * Each mesh is copied (see @ref VuoMesh_copy),
- * and each child object is copied.
+ * Changes whether the sceneobject should ignore rotations and scales
+ * and be sized to match the shader's first image.
  *
- * You can change attributes on the copy without affecting the original.
+ * @version200New
+ */
+void VuoSceneObject_setRealSize(VuoSceneObject object, bool isRealSize)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->isRealSize = isRealSize;
+}
+
+/**
+ * Changes whether the sceneobject should use the texture's scaleFactor
+ * and the backingScaleFactor to determine the rendered size.
  *
- * @todo The shaders are not copied, so changes to the copy's shaders will affect both the original and the copy.
+ * @version200New
+ */
+void VuoSceneObject_setPreservePhysicalSize(VuoSceneObject object, bool shouldPreservePhysicalSize)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->preservePhysicalSize = shouldPreservePhysicalSize;
+}
+
+/**
+ * Changes the sceneobject's rendered text.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setText(VuoSceneObject object, VuoText text)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	VuoRetain(text);
+	VuoRelease(so->text.text);
+	so->text.text = text;
+}
+
+/**
+ * Changes the sceneobject's font for rendered text.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setTextFont(VuoSceneObject object, VuoFont font)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	VuoFont_retain(font);
+	VuoFont_release(so->text.font);
+	so->text.font = font;
+}
+
+/**
+ * Changes the sceneobject's camera field of view (for perspective cameras).
+ *
+ * @version200New
+ */
+void VuoSceneObject_setCameraFieldOfView(VuoSceneObject object, float fieldOfView)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->camera.fieldOfView = fieldOfView;
+}
+
+/**
+ * Changes the sceneobject's depth buffer minimum distance.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setCameraDistanceMin(VuoSceneObject object, float distanceMin)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->camera.distanceMin = distanceMin;
+}
+
+/**
+ * Changes the sceneobject's depth buffer maximum distance.
+ *
+ * @version200New
+ */
+void VuoSceneObject_setCameraDistanceMax(VuoSceneObject object, float distanceMax)
+{
+	if (!object)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)object;
+	so->camera.distanceMax = distanceMax;
+}
+
+/**
+ * Creates a new scene object hierarchy that references the input object's meshes and shaders.
+ *
+ * You can change the transforms and _replace_ the meshes and shaders without affecting the original,
+ * but you cannot _mutate_ the existing meshes and shaders.
+ *
+ * The sceneobject's id is preserved.
+ *
+ * @version200Changed{Meshes are now retained, not copied.}
  */
 VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
 {
-	VuoSceneObject copiedObject = object;
+	if (!object)
+		return nullptr;
 
-	copiedObject.mesh = VuoMesh_copy(object.mesh);
+	VuoSceneObject_internal *o = (VuoSceneObject_internal *)object;
 
-	if (object.childObjects)
+	VuoSceneObject_internal *co = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
+
+	co->type = o->type;
+	co->id = o->id;
+	VuoSceneObject_setName((VuoSceneObject)co, o->name);
+	co->transform = o->transform;
+	VuoSceneObject_setMesh((VuoSceneObject)co, o->mesh);
+	VuoSceneObject_setShader((VuoSceneObject)co, o->shader); // @todo
+	co->isRealSize = o->isRealSize;
+	co->preservePhysicalSize = o->preservePhysicalSize;
+	co->blendMode = o->blendMode;
+
+	if (o->type == VuoSceneObjectSubType_Group && o->childObjects)
 	{
-		copiedObject.childObjects = VuoListCreate_VuoSceneObject();
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
-		for (unsigned long i = 1; i <= childObjectCount; ++i)
-			VuoListAppendValue_VuoSceneObject(copiedObject.childObjects, VuoSceneObject_copy(VuoListGetValue_VuoSceneObject(object.childObjects, i)));
+		co->childObjects = VuoListCreate_VuoSceneObject();
+		VuoRetain(co->childObjects);
+		VuoListForeach_VuoSceneObject(o->childObjects, ^(const VuoSceneObject object){
+			VuoListAppendValue_VuoSceneObject(co->childObjects, VuoSceneObject_copy(object));
+			return true;
+		});
 	}
 
-	copiedObject.name = VuoText_make(object.name);
+	if (o->type == VuoSceneObjectSubType_PerspectiveCamera
+	 || o->type == VuoSceneObjectSubType_StereoCamera
+	 || o->type == VuoSceneObjectSubType_OrthographicCamera
+	 || o->type == VuoSceneObjectSubType_FisheyeCamera)
+	{
+		co->camera.fieldOfView = o->camera.fieldOfView;
+		co->camera.width = o->camera.width;
+		co->camera.distanceMin = o->camera.distanceMin;
+		co->camera.distanceMax = o->camera.distanceMax;
+		co->camera.confocalDistance = o->camera.confocalDistance;
+		co->camera.intraocularDistance = o->camera.intraocularDistance;
+		co->camera.vignetteWidth = o->camera.vignetteWidth;
+		co->camera.vignetteSharpness = o->camera.vignetteSharpness;
+	}
+	else if (o->type == VuoSceneObjectSubType_AmbientLight
+		  || o->type == VuoSceneObjectSubType_PointLight
+		  || o->type == VuoSceneObjectSubType_Spotlight)
+	{
+		co->light.color = o->light.color;
+		co->light.brightness = o->light.brightness;
+		co->light.range = o->light.range;
+		co->light.cone = o->light.cone;
+		co->light.sharpness = o->light.sharpness;
+	}
+	else if (o->type == VuoSceneObjectSubType_Text)
+	{
+		VuoSceneObject_setText((VuoSceneObject)co, o->text.text);
+		VuoSceneObject_setTextFont((VuoSceneObject)co, o->text.font);
+		co->text.scaleWithScene = o->text.scaleWithScene;
+		co->text.wrapWidth = o->text.wrapWidth;
+	}
 
-	return copiedObject;
+	return (VuoSceneObject)co;
 }
 
 /**
@@ -889,12 +1880,15 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
   */
 VuoBox VuoSceneObject_bounds(const VuoSceneObject so)
 {
+	if (!so)
+		return VuoBox_make((VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0});
+
 	__block bool haveGlobalBounds = false;
 	__block VuoBox globalBounds;
 
-	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+	VuoSceneObject_visit(so, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
 		VuoBox bounds;
-		bool foundBounds = VuoSceneObject_meshBounds(*currentObject, &bounds, modelviewMatrix);
+		bool foundBounds = VuoSceneObject_meshBounds(currentObject, &bounds, modelviewMatrix);
 		if (foundBounds)
 		{
 			globalBounds = haveGlobalBounds ? VuoBox_encapsulate(globalBounds, bounds) : bounds;
@@ -912,24 +1906,31 @@ VuoBox VuoSceneObject_bounds(const VuoSceneObject so)
 /**
  *	Bounding box of the vertices for this SceneObject (taking into account transform).
  */
-bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
+bool VuoSceneObject_meshBounds(const VuoSceneObject sceneObject, VuoBox *bounds, float matrix[16])
 {
-	if (VuoSceneObject_getVertexCount(so) < 1)
+	if (!sceneObject)
 		return false;
 
-	if (so.isRealSize)
+	if (VuoSceneObject_getVertexCount(sceneObject) < 1)
+		return false;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	if (so->isRealSize
+	 || so->type == VuoSceneObjectSubType_Text)
+	{
 		// We don't know what the actual rendered size of the realSize layer will be,
 		// but we can at least include its center point.
 		*bounds = VuoBox_make(VuoPoint3d_make(matrix[12], matrix[13], matrix[14]), VuoPoint3d_make(0,0,0));
+	}
 	else
 	{
-		*bounds = VuoMesh_bounds(so.mesh, matrix);
+		*bounds = VuoMesh_bounds(so->mesh, matrix);
 
-		if (so.shader)
+		if (so->shader)
 		{
-			bounds->size.x *= so.shader->objectScale;
-			bounds->size.y *= so.shader->objectScale;
-			bounds->size.z *= so.shader->objectScale;
+			bounds->size.x *= so->shader->objectScale;
+			bounds->size.y *= so->shader->objectScale;
+			bounds->size.z *= so->shader->objectScale;
 		}
 	}
 
@@ -939,9 +1940,13 @@ bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float ma
 /**
  *	Make the bounds center of all vertices == {0,0,0}
  */
-void VuoSceneObject_center(VuoSceneObject *so)
+void VuoSceneObject_center(VuoSceneObject sceneObject)
 {
-	VuoBox bounds = VuoSceneObject_bounds(*so);
+	if (!sceneObject)
+		return;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	VuoBox bounds = VuoSceneObject_bounds(sceneObject);
 	so->transform.translation = VuoPoint3d_subtract(so->transform.translation, bounds.center);
 }
 
@@ -950,9 +1955,12 @@ void VuoSceneObject_center(VuoSceneObject *so)
  * If the scenegraph has zero size (e.g., if it is empty, or if it consists entirely of Real Size Layers),
  * the transform is left unchanged.
  */
-void VuoSceneObject_normalize(VuoSceneObject *so)
+void VuoSceneObject_normalize(VuoSceneObject sceneObject)
 {
-	VuoBox bounds = VuoSceneObject_bounds(*so);
+	if (!sceneObject)
+		return;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	VuoBox bounds = VuoSceneObject_bounds(sceneObject);
 
 	float scale = fmax(fmax(bounds.size.x, bounds.size.y), bounds.size.z);
 	if (fabs(scale) < 0.00001)
@@ -990,6 +1998,10 @@ void VuoSceneObject_normalize(VuoSceneObject *so)
 VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 {
 	json_object *o = NULL;
+
+	int id = 0;
+	if (json_object_object_get_ex(js, "id", &o))
+		id = json_object_get_int64(o);
 
 	VuoSceneObjectSubType type = VuoSceneObjectSubType_Empty;
 	if (json_object_object_get_ex(js, "type", &o))
@@ -1083,35 +2095,47 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 		text = VuoText_makeFromJson(o);
 
 	VuoFont font;
-	if (json_object_object_get_ex(js, "font", &o))
+	if (json_object_object_get_ex(js, "textFont", &o))
 		font = VuoFont_makeFromJson(o);
 
+	bool scaleWithScene = false;
+	if (json_object_object_get_ex(js, "textScaleWithScene", &o))
+		scaleWithScene = VuoBoolean_makeFromJson(o);
 
+	float wrapWidth = INFINITY;
+	if (json_object_object_get_ex(js, "textWrapWidth", &o))
+		wrapWidth = json_object_get_double(o);
+
+	VuoSceneObject obj;
 	switch (type)
 	{
 		case VuoSceneObjectSubType_Empty:
-			return VuoSceneObject_makeEmpty();
+			obj = nullptr;
+			break;
 		case VuoSceneObjectSubType_Group:
-			return VuoSceneObject_makeGroup(childObjects, transform);
+			obj = VuoSceneObject_makeGroup(childObjects, transform);
+			break;
 		case VuoSceneObjectSubType_Mesh:
 		{
-			VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
-			o.isRealSize = isRealSize;
-			o.preservePhysicalSize = preservePhysicalSize;
-			o.blendMode = blendMode;
-			o.name = name;
-			return o;
+			obj = VuoSceneObject_makeMesh(mesh, shader, transform);
+			VuoSceneObject_internal *so = (VuoSceneObject_internal *)obj;
+			so->isRealSize = isRealSize;
+			so->preservePhysicalSize = preservePhysicalSize;
+			so->blendMode = blendMode;
+			VuoSceneObject_setName(obj, name);
+			break;
 		}
 		case VuoSceneObjectSubType_PerspectiveCamera:
-			return VuoSceneObject_makePerspectiveCamera(
+			obj = VuoSceneObject_makePerspectiveCamera(
 						name,
 						transform,
 						cameraFieldOfView,
 						cameraDistanceMin,
 						cameraDistanceMax
 						);
+			break;
 		case VuoSceneObjectSubType_StereoCamera:
-			return VuoSceneObject_makeStereoCamera(
+			obj = VuoSceneObject_makeStereoCamera(
 						name,
 						transform,
 						cameraFieldOfView,
@@ -1120,117 +2144,115 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 						cameraConfocalDistance,
 						cameraIntraocularDistance
 						);
+			break;
 		case VuoSceneObjectSubType_OrthographicCamera:
-			return VuoSceneObject_makeOrthographicCamera(
+			obj = VuoSceneObject_makeOrthographicCamera(
 						name,
 						transform,
 						cameraWidth,
 						cameraDistanceMin,
 						cameraDistanceMax
 						);
+			break;
 		case VuoSceneObjectSubType_FisheyeCamera:
-			return VuoSceneObject_makeFisheyeCamera(
+			obj = VuoSceneObject_makeFisheyeCamera(
 						name,
 						transform,
 						cameraFieldOfView,
 						cameraVignetteWidth,
 						cameraVignetteSharpness
 						);
+			break;
 		case VuoSceneObjectSubType_AmbientLight:
-			return VuoSceneObject_makeAmbientLight(lightColor, lightBrightness);
+			obj = VuoSceneObject_makeAmbientLight(lightColor, lightBrightness);
+			break;
 		case VuoSceneObjectSubType_PointLight:
-			return VuoSceneObject_makePointLight(lightColor, lightBrightness, transform.translation, lightRange, lightSharpness);
+			obj = VuoSceneObject_makePointLight(lightColor, lightBrightness, transform.translation, lightRange, lightSharpness);
+			break;
 		case VuoSceneObjectSubType_Spotlight:
-			return VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
+			obj = VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
+			break;
 		case VuoSceneObjectSubType_Text:
-		{
-			VuoSceneObject o = VuoSceneObject_makeText(text, font);
-			o.transform = transform;
-			o.mesh = mesh;
-			return o;
-		}
+			obj = VuoSceneObject_makeText(text, font, scaleWithScene, wrapWidth);
+			VuoSceneObject_setTransform(obj, transform);
+			VuoSceneObject_setMesh(obj, mesh);
+			break;
 	}
+
+	VuoSceneObject_setId(obj, id);
+
+	return obj;
 }
 
 /**
  * Encodes @c value as a JSON object.
  */
-json_object *VuoSceneObject_getJson(const VuoSceneObject value)
+json_object *VuoSceneObject_getJson(const VuoSceneObject sceneObject)
 {
+	if (!sceneObject)
+		return nullptr;
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
 	json_object *js = json_object_new_object();
 
-	json_object_object_add(js, "type", json_object_new_string(VuoSceneObject_cStringForType(value.type)));
+	json_object_object_add(js, "id", json_object_new_int64(so->id));
+	json_object_object_add(js, "type", json_object_new_string(VuoSceneObject_cStringForType(so->type)));
 
-	switch (value.type)
+	switch (so->type)
 	{
 		case VuoSceneObjectSubType_Empty:
 			break;
 
-		case VuoSceneObjectSubType_Group:
 		case VuoSceneObjectSubType_Mesh:
-		{
-			if (value.mesh)
-			{
-				json_object *meshObject = VuoMesh_getJson(value.mesh);
-				json_object_object_add(js, "mesh", meshObject);
-			}
+			if (so->mesh)
+				json_object_object_add(js, "mesh", VuoMesh_getJson(so->mesh));
 
-			if (value.shader)
-			{
-				json_object *shaderObject = VuoShader_getJson(value.shader);
-				json_object_object_add(js, "shader", shaderObject);
-			}
+			if (so->shader)
+				json_object_object_add(js, "shader", VuoShader_getJson(so->shader));
 
-			json_object *isRealSizeObject = VuoBoolean_getJson(value.isRealSize);
-			json_object_object_add(js, "isRealSize", isRealSizeObject);
+			json_object_object_add(js, "isRealSize", VuoBoolean_getJson(so->isRealSize));
 
-			json_object *preservePhysicalSizeObject = VuoBoolean_getJson(value.preservePhysicalSize);
-			json_object_object_add(js, "preservePhysicalSize", preservePhysicalSizeObject);
+			json_object_object_add(js, "preservePhysicalSize", VuoBoolean_getJson(so->preservePhysicalSize));
 
-			if (value.blendMode != VuoBlendMode_Normal)
-			{
-				json_object *blendModeObject = VuoBlendMode_getJson(value.blendMode);
-				json_object_object_add(js, "blendMode", blendModeObject);
-			}
-
-			if (value.childObjects)
-			{
-				json_object *childObjectsObject = VuoList_VuoSceneObject_getJson(value.childObjects);
-				json_object_object_add(js, "childObjects", childObjectsObject);
-			}
-
+			if (so->blendMode != VuoBlendMode_Normal)
+				json_object_object_add(js, "blendMode", VuoBlendMode_getJson(so->blendMode));
 			break;
-		}
+
+		case VuoSceneObjectSubType_Group:
+			if (so->childObjects)
+				json_object_object_add(js, "childObjects", VuoList_VuoSceneObject_getJson(so->childObjects));
+			break;
 
 		case VuoSceneObjectSubType_PerspectiveCamera:
 		case VuoSceneObjectSubType_StereoCamera:
 		case VuoSceneObjectSubType_OrthographicCamera:
 		case VuoSceneObjectSubType_FisheyeCamera:
 		{
-			if (value.type != VuoSceneObjectSubType_FisheyeCamera)
+			if (so->type != VuoSceneObjectSubType_FisheyeCamera)
 			{
-				json_object_object_add(js, "cameraDistanceMin", json_object_new_double(value.cameraDistanceMin));
-				json_object_object_add(js, "cameraDistanceMax", json_object_new_double(value.cameraDistanceMax));
+				json_object_object_add(js, "cameraDistanceMin", json_object_new_double(so->camera.distanceMin));
+				json_object_object_add(js, "cameraDistanceMax", json_object_new_double(so->camera.distanceMax));
 			}
 
-			if (value.type == VuoSceneObjectSubType_PerspectiveCamera
-			 || value.type == VuoSceneObjectSubType_StereoCamera
-			 || value.type == VuoSceneObjectSubType_FisheyeCamera)
-				json_object_object_add(js, "cameraFieldOfView", json_object_new_double(value.cameraFieldOfView));
+			if (so->type == VuoSceneObjectSubType_PerspectiveCamera
+			 || so->type == VuoSceneObjectSubType_StereoCamera
+			 || so->type == VuoSceneObjectSubType_FisheyeCamera)
+				json_object_object_add(js, "cameraFieldOfView", json_object_new_double(so->camera.fieldOfView));
 
-			if (value.type == VuoSceneObjectSubType_StereoCamera)
+			if (so->type == VuoSceneObjectSubType_StereoCamera)
 			{
-				json_object_object_add(js, "cameraConfocalDistance", json_object_new_double(value.cameraConfocalDistance));
-				json_object_object_add(js, "cameraIntraocularDistance", json_object_new_double(value.cameraIntraocularDistance));
+				json_object_object_add(js, "cameraConfocalDistance", json_object_new_double(so->camera.confocalDistance));
+				json_object_object_add(js, "cameraIntraocularDistance", json_object_new_double(so->camera.intraocularDistance));
 			}
 
-			if (value.type == VuoSceneObjectSubType_OrthographicCamera)
-				json_object_object_add(js, "cameraWidth", json_object_new_double(value.cameraWidth));
+			if (so->type == VuoSceneObjectSubType_OrthographicCamera)
+				json_object_object_add(js, "cameraWidth", json_object_new_double(so->camera.width));
 
-			if (value.type == VuoSceneObjectSubType_FisheyeCamera)
+			if (so->type == VuoSceneObjectSubType_FisheyeCamera)
 			{
-				json_object_object_add(js, "cameraVignetteWidth", json_object_new_double(value.cameraVignetteWidth));
-				json_object_object_add(js, "cameraVignetteSharpness", json_object_new_double(value.cameraVignetteSharpness));
+				json_object_object_add(js, "cameraVignetteWidth", json_object_new_double(so->camera.vignetteWidth));
+				json_object_object_add(js, "cameraVignetteSharpness", json_object_new_double(so->camera.vignetteSharpness));
 			}
 
 			break;
@@ -1240,53 +2262,43 @@ json_object *VuoSceneObject_getJson(const VuoSceneObject value)
 		case VuoSceneObjectSubType_PointLight:
 		case VuoSceneObjectSubType_Spotlight:
 		{
-			json_object_object_add(js, "lightColor", VuoColor_getJson(value.lightColor));
-			json_object_object_add(js, "lightBrightness", json_object_new_double(value.lightBrightness));
+			json_object_object_add(js, "lightColor", VuoColor_getJson(so->light.color));
+			json_object_object_add(js, "lightBrightness", json_object_new_double(so->light.brightness));
 
-			if (value.type == VuoSceneObjectSubType_PointLight
-			 || value.type == VuoSceneObjectSubType_Spotlight)
+			if (so->type == VuoSceneObjectSubType_PointLight
+			 || so->type == VuoSceneObjectSubType_Spotlight)
 			{
-				json_object_object_add(js, "lightRange", json_object_new_double(value.lightRange));
-				json_object_object_add(js, "lightSharpness", json_object_new_double(value.lightSharpness));
+				json_object_object_add(js, "lightRange", json_object_new_double(so->light.range));
+				json_object_object_add(js, "lightSharpness", json_object_new_double(so->light.sharpness));
 			}
-			if (value.type == VuoSceneObjectSubType_Spotlight)
-				json_object_object_add(js, "lightCone", json_object_new_double(value.lightCone));
+			if (so->type == VuoSceneObjectSubType_Spotlight)
+				json_object_object_add(js, "lightCone", json_object_new_double(so->light.cone));
 
 			break;
 		}
 
 		case VuoSceneObjectSubType_Text:
 		{
-			if (value.text)
-			{
-				json_object *textObject = VuoText_getJson(value.text);
-				json_object_object_add(js, "text", textObject);
-			}
+			if (so->text.text)
+				json_object_object_add(js, "text", VuoText_getJson(so->text.text));
 
-			json_object *fontObject = VuoFont_getJson(value.font);
-			json_object_object_add(js, "font", fontObject);
+			json_object_object_add(js, "textFont", VuoFont_getJson(so->text.font));
 
-			if (value.mesh)
-			{
-				json_object *meshObject = VuoMesh_getJson(value.mesh);
-				json_object_object_add(js, "mesh", meshObject);
-			}
+			if (so->mesh)
+				json_object_object_add(js, "mesh", VuoMesh_getJson(so->mesh));
+
+			json_object_object_add(js, "textScaleWithScene", VuoBoolean_getJson(so->text.scaleWithScene));
+			json_object_object_add(js, "textWrapWidth", VuoReal_getJson(so->text.wrapWidth));
 
 			break;
 		}
 	}
 
-	if (value.name)
-	{
-		json_object *nameObject = VuoText_getJson(value.name);
-		json_object_object_add(js, "name", nameObject);
-	}
+	if (so->name)
+		json_object_object_add(js, "name", VuoText_getJson(so->name));
 
-	if (value.type != VuoSceneObjectSubType_AmbientLight)
-	{
-		json_object *transformObject = VuoTransform_getJson(value.transform);
-		json_object_object_add(js, "transform", transformObject);
-	}
+	if (so->type != VuoSceneObjectSubType_AmbientLight)
+		json_object_object_add(js, "transform", VuoTransform_getJson(so->transform));
 
 	return js;
 }
@@ -1294,30 +2306,34 @@ json_object *VuoSceneObject_getJson(const VuoSceneObject value)
 /**
  * Returns the total number of vertices in the scene object (but not its descendants).
  */
-unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value)
+unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject sceneObject)
 {
-	if (!value.mesh)
+	if (!sceneObject)
 		return 0;
 
-	unsigned long vertexCount = 0;
-	for (unsigned int i = 0; i < value.mesh->submeshCount; ++i)
-		vertexCount += value.mesh->submeshes[i].vertexCount;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	if (!so->mesh)
+		return 0;
 
+	unsigned int vertexCount;
+	VuoMesh_getCPUBuffers(so->mesh, &vertexCount, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 	return vertexCount;
 }
 
 /**
  * Returns the total number of element in the scene object (but not its descendants).
  */
-unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
+unsigned long VuoSceneObject_getElementCount(const VuoSceneObject sceneObject)
 {
-	if (!value.mesh)
+	if (!sceneObject)
 		return 0;
 
-	unsigned long elementCount = 0;
-	for (unsigned int i = 0; i < value.mesh->submeshCount; ++i)
-		elementCount += value.mesh->submeshes[i].elementCount;
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	if (!so->mesh)
+		return 0;
 
+	unsigned int elementCount;
+	VuoMesh_getCPUBuffers(so->mesh, nullptr, nullptr, nullptr, nullptr, nullptr, &elementCount, nullptr);
 	return elementCount;
 }
 
@@ -1326,31 +2342,40 @@ unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
  *
  * The caller should initialize the output parameters to 0 before calling this function.
  */
-void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
+void VuoSceneObject_getStatistics(const VuoSceneObject sceneObject, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
 {
-	unsigned long childObjectCount = 0;
-	if (value.childObjects)
-		childObjectCount = VuoListGetCount_VuoSceneObject(value.childObjects);
-	*descendantCount += childObjectCount;
-	*totalVertexCount += VuoSceneObject_getVertexCount(value);
-	*totalElementCount += VuoSceneObject_getElementCount(value);
+	if (!sceneObject)
+		return;
 
-	for (unsigned long i = 1; i <= childObjectCount; ++i)
-		VuoSceneObject_getStatistics(VuoListGetValue_VuoSceneObject(value.childObjects, i), descendantCount, totalVertexCount, totalElementCount);
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+	unsigned long childObjectCount = 0;
+	if (so->type == VuoSceneObjectSubType_Group && so->childObjects)
+		childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
+	*descendantCount += childObjectCount;
+	*totalVertexCount += VuoSceneObject_getVertexCount(sceneObject);
+	*totalElementCount += VuoSceneObject_getElementCount(sceneObject);
+
+	if (so->type == VuoSceneObjectSubType_Group)
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+			VuoSceneObject_getStatistics(VuoListGetValue_VuoSceneObject(so->childObjects, i), descendantCount, totalVertexCount, totalElementCount);
 }
 
 /**
  * Returns a list of all unique shader names in the sceneobject and its descendants.
  */
-static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject object)
+static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject sceneObject)
 {
+	if (!sceneObject)
+		return nullptr;
+
 	// Exploit json_object's set-containing-only-unique-items data structure.
 	__block json_object *names = json_object_new_object();
-	VuoSceneObject_visit(object, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-							 if (currentObject->shader)
-								json_object_object_add(names, currentObject->shader->name, NULL);
-							 return true;
-						 });
+	VuoSceneObject_visit(sceneObject, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		if (co->shader)
+			json_object_object_add(names, co->shader->name, NULL);
+		return true;
+	});
 
 	VuoList_VuoText nameList = VuoListCreate_VuoText();
 	json_object_object_foreach(names, key, val)
@@ -1362,87 +2387,92 @@ static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject object)
 /**
  * Produces a brief human-readable summary of `value`.
  */
-char *VuoSceneObject_getSummary(const VuoSceneObject value)
+char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 {
-	if (value.type == VuoSceneObjectSubType_Text)
+	if (!sceneObject)
+		return strdup("no object");
+
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
+	if (so->type == VuoSceneObjectSubType_Text)
 	{
-		char *fontSummary = VuoFont_getSummary(value.font);
-		char *textSummary = VuoText_format("\"%s\"<br>%sat (%g,%g)", value.text, fontSummary, value.transform.translation.x, value.transform.translation.y);
+		char *fontSummary = VuoFont_getSummary(so->text.font);
+		char *textSummary = VuoText_format("<div>\"%s\"</div><div>%sat (%g,%g)</div><div>id %llu</div>", so->text.text, fontSummary, so->transform.translation.x, so->transform.translation.y, so->id);
 		free(fontSummary);
 		return textSummary;
 	}
 
-	if (value.type == VuoSceneObjectSubType_PerspectiveCamera
-	 || value.type == VuoSceneObjectSubType_StereoCamera
-	 || value.type == VuoSceneObjectSubType_OrthographicCamera
-	 || value.type == VuoSceneObjectSubType_FisheyeCamera)
+	if (so->type == VuoSceneObjectSubType_PerspectiveCamera
+	 || so->type == VuoSceneObjectSubType_StereoCamera
+	 || so->type == VuoSceneObjectSubType_OrthographicCamera
+	 || so->type == VuoSceneObjectSubType_FisheyeCamera)
 	{
-		const char *type = VuoSceneObject_cStringForType(value.type);
+		const char *type = VuoSceneObject_cStringForType(so->type);
 
 		float cameraViewValue = 0;
 		const char *cameraViewString = "";
-		if (value.type == VuoSceneObjectSubType_PerspectiveCamera)
+		if (so->type == VuoSceneObjectSubType_PerspectiveCamera)
 		{
-			cameraViewValue = value.cameraFieldOfView;
+			cameraViewValue = so->camera.fieldOfView;
 			cameraViewString = "° field of view";
 		}
-		else if (value.type == VuoSceneObjectSubType_StereoCamera)
+		else if (so->type == VuoSceneObjectSubType_StereoCamera)
 		{
-			cameraViewValue = value.cameraFieldOfView;
+			cameraViewValue = so->camera.fieldOfView;
 			cameraViewString = "° field of view (stereoscopic)";
 		}
-		else if (value.type == VuoSceneObjectSubType_OrthographicCamera)
+		else if (so->type == VuoSceneObjectSubType_OrthographicCamera)
 		{
-			cameraViewValue = value.cameraWidth;
+			cameraViewValue = so->camera.width;
 			cameraViewString = " unit width";
 		}
-		else if (value.type == VuoSceneObjectSubType_FisheyeCamera)
+		else if (so->type == VuoSceneObjectSubType_FisheyeCamera)
 		{
-			cameraViewValue = value.cameraFieldOfView;
+			cameraViewValue = so->camera.fieldOfView;
 			cameraViewString = "° field of view (fisheye)";
 		}
 
-		char *translationString = VuoPoint3d_getSummary(value.transform.translation);
+		char *translationString = VuoPoint3d_getSummary(so->transform.translation);
 
 		const char *rotationLabel;
 		char *rotationString;
-		if (value.transform.type == VuoTransformTypeEuler)
+		if (so->transform.type == VuoTransformTypeEuler)
 		{
 			rotationLabel = "rotated";
-			rotationString = VuoPoint3d_getSummary(VuoPoint3d_multiply(value.transform.rotationSource.euler, -180.f/M_PI));
+			rotationString = VuoPoint3d_getSummary(VuoPoint3d_multiply(so->transform.rotationSource.euler, -180.f/M_PI));
 		}
 		else
 		{
 			rotationLabel = "target";
-			rotationString = VuoPoint3d_getSummary(value.transform.rotationSource.target);
+			rotationString = VuoPoint3d_getSummary(so->transform.rotationSource.target);
 		}
 
-		char *valueAsString = VuoText_format("%s named \"%s\"<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
-											 type, value.name ? value.name : "",
+		char *valueAsString = VuoText_format("<div>%s named \"%s\"</div><div>at (%s)</div><div>%s (%s)</div><div>%g%s</div><div>shows objects between depth %g and %g</div>",
+											 type, so->name ? so->name : "",
 											 translationString,
 											 rotationLabel, rotationString,
 											 cameraViewValue, cameraViewString,
-											 value.cameraDistanceMin, value.cameraDistanceMax);
+											 so->camera.distanceMin, so->camera.distanceMax);
 		free(rotationString);
 		free(translationString);
 		return valueAsString;
 	}
 
-	if (value.type == VuoSceneObjectSubType_AmbientLight
-	 || value.type == VuoSceneObjectSubType_PointLight
-	 || value.type == VuoSceneObjectSubType_Spotlight)
+	if (so->type == VuoSceneObjectSubType_AmbientLight
+	 || so->type == VuoSceneObjectSubType_PointLight
+	 || so->type == VuoSceneObjectSubType_Spotlight)
 	{
-		const char *type = VuoSceneObject_cStringForType(value.type);
-		char *colorString = VuoColor_getShortSummary(value.lightColor);
+		const char *type = VuoSceneObject_cStringForType(so->type);
+		char *colorString = VuoColor_getShortSummary(so->light.color);
 
 		char *positionRangeString;
-		if (value.type == VuoSceneObjectSubType_PointLight
-		 || value.type == VuoSceneObjectSubType_Spotlight)
+		if (so->type == VuoSceneObjectSubType_PointLight
+		 || so->type == VuoSceneObjectSubType_Spotlight)
 		{
-			char *positionString = VuoPoint3d_getSummary(value.transform.translation);
+			char *positionString = VuoPoint3d_getSummary(so->transform.translation);
 
-			positionRangeString = VuoText_format("<br>position (%s)<br>range %g units (%g sharpness)",
-												 positionString, value.lightRange, value.lightSharpness);
+			positionRangeString = VuoText_format("<div>position (%s)</div><div>range %g units (%g sharpness)</div>",
+												 positionString, so->light.range, so->light.sharpness);
 
 			free(positionString);
 		}
@@ -1450,21 +2480,21 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 			positionRangeString = strdup("");
 
 		char *directionConeString;
-		if (value.type == VuoSceneObjectSubType_Spotlight)
+		if (so->type == VuoSceneObjectSubType_Spotlight)
 		{
-			VuoPoint3d direction = VuoTransform_getDirection(value.transform);
+			VuoPoint3d direction = VuoTransform_getDirection(so->transform);
 			char *directionString = VuoPoint3d_getSummary(direction);
 
-			directionConeString = VuoText_format("<br>direction (%s)<br>cone %g°",
-												 directionString, value.lightCone * 180./M_PI);
+			directionConeString = VuoText_format("<div>direction (%s)</div><div>cone %g°</div>",
+												 directionString, so->light.cone * 180./M_PI);
 
 			free(directionString);
 		}
 		else
 			directionConeString = strdup("");
 
-		char *valueAsString = VuoText_format("%s<br>color %s<br>brightness %g%s%s",
-											 type, colorString, value.lightBrightness, positionRangeString, directionConeString);
+		char *valueAsString = VuoText_format("<div>%s</div><div>color %s</div><div>brightness %g</div>%s%s",
+											 type, colorString, so->light.brightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
 		free(positionRangeString);
@@ -1473,14 +2503,14 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 		return valueAsString;
 	}
 
-	unsigned long vertexCount = VuoSceneObject_getVertexCount(value);
-	unsigned long elementCount = VuoSceneObject_getElementCount(value);
+	unsigned long vertexCount = VuoSceneObject_getVertexCount(sceneObject);
+	unsigned long elementCount = VuoSceneObject_getElementCount(sceneObject);
 
-	char *transform = VuoTransform_getSummary(value.transform);
+	char *transform = VuoTransform_getSummary(so->transform);
 
 	unsigned long childObjectCount = 0;
-	if (value.childObjects)
-		childObjectCount = VuoListGetCount_VuoSceneObject(value.childObjects);
+	if (so->type == VuoSceneObjectSubType_Group && so->childObjects)
+		childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
 	const char *childObjectPlural = childObjectCount == 1 ? "" : "s";
 
 	char *descendants;
@@ -1489,26 +2519,26 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 		unsigned long descendantCount = 0;
 		unsigned long totalVertexCount = 0;
 		unsigned long totalElementCount = 0;
-		VuoSceneObject_getStatistics(value, &descendantCount, &totalVertexCount, &totalElementCount);
+		VuoSceneObject_getStatistics(sceneObject, &descendantCount, &totalVertexCount, &totalElementCount);
 		const char *descendantPlural = descendantCount == 1 ? "" : "s";
 
-		descendants = VuoText_format("<br>%ld descendant%s<br><br>total, including descendants:<br>%ld vertices, %ld elements",
+		descendants = VuoText_format("<div>%ld descendant%s</div><div>total, including descendants:</div><div>%ld vertices, %ld elements</div>",
 									 descendantCount, descendantPlural, totalVertexCount, totalElementCount);
 	}
 	else
 		descendants = strdup("");
 
-	VuoList_VuoText shaderNames = VuoSceneObject_findShaderNames(value);
+	VuoList_VuoText shaderNames = VuoSceneObject_findShaderNames(sceneObject);
 	VuoRetain(shaderNames);
 	char *shaderNamesSummary;
 	if (VuoListGetCount_VuoText(shaderNames))
 	{
 		VuoInteger shaderNameCount = VuoListGetCount_VuoText(shaderNames);
-		const char *header = "<br><br>shaders:<ul>";
+		const char *header = "<div>shaders:<ul>";
 		VuoInteger shaderNameLength = strlen(header);
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
 			shaderNameLength += strlen("<li>") + strlen(VuoListGetValue_VuoText(shaderNames, i)) + strlen("</li>");
-		shaderNameLength += strlen("</ul>");
+		shaderNameLength += strlen("</ul></div>");
 
 		shaderNamesSummary = (char *)malloc(shaderNameLength + 1);
 		char *t = shaderNamesSummary;
@@ -1519,16 +2549,17 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 			t = strcpy(t, VuoListGetValue_VuoText(shaderNames, i)) + strlen(VuoListGetValue_VuoText(shaderNames, i));
 			t = strcpy(t, "</li>") + strlen("</li>");
 		}
-		t = strcpy(t, "</ul>");
+		t = strcpy(t, "</ul></div>");
 	}
 	else
 		shaderNamesSummary = strdup("");
 	VuoRelease(shaderNames);
 
-	char *valueAsString = VuoText_format("object named \"%s\"<br>%ld vertices, %ld elements<br><br>%s<br><br>%ld child object%s%s%s",
-										 value.name ? value.name : "",
+	char *valueAsString = VuoText_format("<div>object named \"%s\"</div><div>%ld vertices, %ld elements</div><div>%s</div><div>id %lld</div><div>%ld child object%s</div>%s%s",
+										 so->name ? so->name : "",
 										 vertexCount, elementCount,
 										 transform,
+										 so->id,
 										 childObjectCount, childObjectPlural,
 										 descendants, shaderNamesSummary);
 
@@ -1542,21 +2573,29 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 /**
  * Outputs information about the sceneobject (and its descendants).
  */
-static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int level)
+static void VuoSceneObject_dump_internal(const VuoSceneObject sceneObject, unsigned int level)
 {
+	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
+
 	for (unsigned int i=0; i<level; ++i)
 		fprintf(stderr, "\t");
 
-	fprintf(stderr, "%s: ", VuoSceneObject_cStringForType(so.type));
-	if (so.type == VuoSceneObjectSubType_Mesh)
-		fprintf(stderr, "%lu vertices, %lu elements, shader '%s' (%p)", VuoSceneObject_getVertexCount(so), VuoSceneObject_getElementCount(so), so.shader ? so.shader->name : "", so.shader);
+	if (!sceneObject)
+	{
+		fprintf(stderr, "no object\n");
+		return;
+	}
+
+	fprintf(stderr, "%s (%s) ", VuoSceneObject_cStringForType(so->type), VuoTransform_getSummary(so->transform));
+	if (so->type == VuoSceneObjectSubType_Mesh)
+		fprintf(stderr, "%lu vertices, %lu elements, shader '%s' (%p)", VuoSceneObject_getVertexCount(sceneObject), VuoSceneObject_getElementCount(sceneObject), so->shader ? so->shader->name : "", so->shader);
 	fprintf(stderr, "\n");
 
-	if (so.childObjects)
+	if (so->type == VuoSceneObjectSubType_Group && so->childObjects)
 	{
-		unsigned int childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
+		unsigned int childObjectCount = VuoListGetCount_VuoSceneObject(so->childObjects);
 		for (unsigned int i=1; i<=childObjectCount; ++i)
-			VuoSceneObject_dump_internal(VuoListGetValue_VuoSceneObject(so.childObjects, i), level+1);
+			VuoSceneObject_dump_internal(VuoListGetValue_VuoSceneObject(so->childObjects, i), level+1);
 	}
 }
 
@@ -1565,7 +2604,7 @@ static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int l
  */
 void VuoSceneObject_dump(const VuoSceneObject so)
 {
-	VuoSceneObject_dump_internal(so,0);
+    VuoSceneObject_dump_internal(so,0);
 }
 
 /**
@@ -1575,223 +2614,326 @@ void VuoSceneObject_dump(const VuoSceneObject so)
  *
  * If `so` contains multiple primitive types, a single mesh is created
  * with a submesh for each expanded primitive type.
+ *
+ * The last-visited submesh's `faceCullingMode` and `primitiveSize` are used in the output mesh.
  */
-VuoSceneObject VuoSceneObject_flatten(const VuoSceneObject so, bool calculateTangents)
+VuoSceneObject VuoSceneObject_flatten(const VuoSceneObject so)
 {
+	if (!so)
+		return nullptr;
+
 	// Count the vertices.
+
 	__block unsigned long triangleVertexCount = 0;
 	__block unsigned long trianglePrimitiveCount = 0;
+	__block VuoMesh_FaceCulling triangleFaceCulling = VuoMesh_CullBackfaces;
+
 	__block unsigned long lineVertexCount = 0;
 	__block unsigned long linePrimitiveCount = 0;
+	__block double        linePrimitiveSize = 0;
+
 	__block unsigned long pointVertexCount = 0;
 	__block unsigned long pointPrimitiveCount = 0;
-	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		if (!currentObject->mesh)
+	__block double        pointPrimitiveSize = 0;
+
+	VuoSceneObject_visit(so, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		if (!co->mesh)
 			return true;
 
-		for (unsigned int i = 0; i < currentObject->mesh->submeshCount; ++i)
-		{
-			VuoSubmesh submesh = currentObject->mesh->submeshes[i];
-			if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles
-			 || submesh.elementAssemblyMethod == VuoMesh_TriangleStrip
-			 || submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+		VuoMesh_ElementAssemblyMethod elementAssemblyMethod = VuoMesh_getElementAssemblyMethod(co->mesh);
+
+		unsigned int vertexCount;
+		VuoMesh_getCPUBuffers(co->mesh, &vertexCount, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+			if (elementAssemblyMethod == VuoMesh_IndividualTriangles
+			 || elementAssemblyMethod == VuoMesh_TriangleStrip
+			 || elementAssemblyMethod == VuoMesh_TriangleFan)
 			{
-				triangleVertexCount += submesh.vertexCount;
-				trianglePrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+				triangleVertexCount += vertexCount;
+				trianglePrimitiveCount += VuoMesh_getSplitPrimitiveCount(co->mesh);
+				triangleFaceCulling = VuoMesh_getFaceCulling(co->mesh);
 			}
-			else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines
-				  || submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+			else if (elementAssemblyMethod == VuoMesh_IndividualLines
+				  || elementAssemblyMethod == VuoMesh_LineStrip)
 			{
-				lineVertexCount += submesh.vertexCount;
-				linePrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+				lineVertexCount += vertexCount;
+				linePrimitiveCount += VuoMesh_getSplitPrimitiveCount(co->mesh);
+				linePrimitiveSize = VuoMesh_getPrimitiveSize(co->mesh);
 			}
-			else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+			else if (elementAssemblyMethod == VuoMesh_Points)
 			{
-				pointVertexCount += submesh.vertexCount;
-				pointPrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+				pointVertexCount += vertexCount;
+				pointPrimitiveCount += VuoMesh_getSplitPrimitiveCount(co->mesh);
+				pointPrimitiveSize = VuoMesh_getPrimitiveSize(co->mesh);
 			}
-		}
+
 		return true;
 	});
 //	VLog("triangles: %ldv %ldp    lines: %ldv %ldp    points: %ldv %ldp", triangleVertexCount, trianglePrimitiveCount, lineVertexCount, linePrimitiveCount, pointVertexCount, pointPrimitiveCount);
 
-	VuoSubmesh triangleSubmesh;
-	VuoSubmesh lineSubmesh;
-	VuoSubmesh pointSubmesh;
-	int submeshCount = 0;
-	if (trianglePrimitiveCount)
-	{
-		triangleSubmesh = VuoSubmesh_make(triangleVertexCount, trianglePrimitiveCount * 3);
-		triangleSubmesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-		++submeshCount;
-	}
-	else if (linePrimitiveCount)
-	{
-		lineSubmesh = VuoSubmesh_make(lineVertexCount, linePrimitiveCount * 2);
-		lineSubmesh.elementAssemblyMethod = VuoMesh_IndividualLines;
-		++submeshCount;
-	}
-	else if (pointPrimitiveCount)
-	{
-		pointSubmesh = VuoSubmesh_make(pointVertexCount, pointPrimitiveCount);
-		pointSubmesh.elementAssemblyMethod = VuoMesh_Points;
-		++submeshCount;
-	}
-	else
-		return VuoSceneObject_makeEmpty();
-
+	if (!trianglePrimitiveCount && !linePrimitiveCount && !pointPrimitiveCount)
+		return nullptr;
 
 	// Allocate the buffers.
+	unsigned int *triangleElements = nullptr;
+	float *trianglePositions = nullptr, *triangleNormals = nullptr, *triangleTextureCoordinates = nullptr;
+	unsigned int *lineElements = nullptr;
+	float *linePositions = nullptr, *lineNormals = nullptr, *lineTextureCoordinates = nullptr;
+	unsigned int *pointElements = nullptr;
+	float *pointPositions = nullptr, *pointNormals = nullptr, *pointTextureCoordinates = nullptr;
+	if (trianglePrimitiveCount)
+		VuoMesh_allocateCPUBuffers(triangleVertexCount, &trianglePositions, &triangleNormals, &triangleTextureCoordinates, nullptr, trianglePrimitiveCount * 3, &triangleElements);
+	if (linePrimitiveCount)
+		VuoMesh_allocateCPUBuffers(lineVertexCount, &linePositions, &lineNormals, &lineTextureCoordinates, nullptr, linePrimitiveCount * 2, &lineElements);
+	if (pointPrimitiveCount)
+		VuoMesh_allocateCPUBuffers(pointVertexCount, &pointPositions, &pointNormals, &pointTextureCoordinates, nullptr, pointPrimitiveCount, &pointElements);
+
+	// Copy the vertex attributes.
 	__block unsigned long triangleVertexIndex = 0;
 	__block unsigned long triangleElementIndex  = 0;
 	__block unsigned long lineVertexIndex = 0;
 	__block unsigned long lineElementIndex  = 0;
 	__block unsigned long pointVertexIndex = 0;
 	__block unsigned long pointElementIndex  = 0;
-	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		if (!currentObject->mesh)
+	__block bool anyTextureCoordinates = false;
+	VuoSceneObject_visit(so, ^(const VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoSceneObject_internal *co = (VuoSceneObject_internal *)currentObject;
+		if (!co->mesh)
 			return true;
 
-		for (unsigned int i = 0; i < currentObject->mesh->submeshCount; ++i)
-		{
-			VuoSubmesh submesh = currentObject->mesh->submeshes[i];
-			if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles
-			 || submesh.elementAssemblyMethod == VuoMesh_TriangleStrip
-			 || submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+		VuoMesh_ElementAssemblyMethod elementAssemblyMethod = VuoMesh_getElementAssemblyMethod(co->mesh);
+
+		unsigned int vertexCount, elementCount, *elements;
+		float *positions, *normals, *textureCoordinates;
+		VuoMesh_getCPUBuffers(co->mesh, &vertexCount, &positions, &normals, &textureCoordinates, nullptr, &elementCount, &elements);
+
+			if (textureCoordinates)
+				anyTextureCoordinates = true;
+
+			if (elementAssemblyMethod == VuoMesh_IndividualTriangles
+			 || elementAssemblyMethod == VuoMesh_TriangleStrip
+			 || elementAssemblyMethod == VuoMesh_TriangleFan)
 			{
 				unsigned long indexOffset = triangleVertexIndex;
-				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				for (unsigned int n = 0; n < vertexCount; ++n)
 				{
-					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d p = VuoPoint3d_makeFromArray(&positions[n * 3]);
 					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
-					triangleSubmesh.positions[triangleVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+					VuoPoint3d_setArray(&trianglePositions[triangleVertexIndex * 3], pt);
 
-					if (submesh.normals)
+					if (normals)
 					{
-						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d r = VuoPoint3d_makeFromArray(&normals[n * 3]);
 						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
-						triangleSubmesh.normals[triangleVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+						VuoPoint3d_setArray(&triangleNormals[triangleVertexIndex * 3], rt);
 					}
 
-					if (submesh.textureCoordinates)
-						triangleSubmesh.textureCoordinates[triangleVertexIndex] = submesh.textureCoordinates[n];
+					if (textureCoordinates)
+						VuoPoint2d_setArray(&triangleTextureCoordinates[triangleVertexIndex * 2], VuoPoint2d_makeFromArray(&textureCoordinates[n * 2]));
 
 					++triangleVertexIndex;
 				}
 
-				if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
-					for (unsigned int n = 0; n < submesh.elementCount; ++n)
-						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n];
-				else if (submesh.elementAssemblyMethod != VuoMesh_TriangleStrip)
+				if (elementAssemblyMethod == VuoMesh_IndividualTriangles)
+				{
+					if (elementCount)
+						for (unsigned int n = 0; n < elementCount; ++n)
+							triangleElements[triangleElementIndex++] = indexOffset + elements[n];
+					else
+						for (unsigned int n = 0; n < vertexCount; ++n)
+							triangleElements[triangleElementIndex++] = indexOffset + n;
+				}
+				else if (elementAssemblyMethod == VuoMesh_TriangleStrip)
 				{
 					// Expand the triangle strip to individual triangles.
-					for (unsigned int n = 2; n < submesh.elementCount; ++n)
-					{
-						if (n%2 == 0)
-						{
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-2];
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
-						}
-						else
-						{
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-2];
-							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
-						}
-					}
+					if (elementCount)
+						for (unsigned int n = 2; n < elementCount; ++n)
+							if (n%2 == 0)
+							{
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n-2];
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n-1];
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n  ];
+							}
+							else
+							{
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n-1];
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n-2];
+								triangleElements[triangleElementIndex++] = indexOffset + elements[n  ];
+							}
+					else
+						for (unsigned int n = 0; n < vertexCount; ++n)
+							if (n%2 == 0)
+							{
+								triangleElements[triangleElementIndex++] = indexOffset + n-2;
+								triangleElements[triangleElementIndex++] = indexOffset + n-1;
+								triangleElements[triangleElementIndex++] = indexOffset + n  ;
+							}
+							else
+							{
+								triangleElements[triangleElementIndex++] = indexOffset + n-1;
+								triangleElements[triangleElementIndex++] = indexOffset + n-2;
+								triangleElements[triangleElementIndex++] = indexOffset + n  ;
+							}
 				}
-				else if (submesh.elementAssemblyMethod != VuoMesh_TriangleFan)
+				else if (elementAssemblyMethod == VuoMesh_TriangleFan)
 				{
 					// Expand the triangle fan to individual triangles.
-					for (unsigned int n = 2; n < submesh.elementCount; ++n)
-					{
-						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[0];
-						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
-						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
-					}
+					if (elementCount)
+						for (unsigned int n = 2; n < elementCount; ++n)
+						{
+							triangleElements[triangleElementIndex++] = indexOffset + elements[0  ];
+							triangleElements[triangleElementIndex++] = indexOffset + elements[n-1];
+							triangleElements[triangleElementIndex++] = indexOffset + elements[n  ];
+						}
+					else
+						for (unsigned int n = 2; n < vertexCount; ++n)
+						{
+							triangleElements[triangleElementIndex++] = indexOffset + 0;
+							triangleElements[triangleElementIndex++] = indexOffset + n-1;
+							triangleElements[triangleElementIndex++] = indexOffset + n;
+						}
 				}
 			}
-			else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines
-				  || submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+			else if (elementAssemblyMethod == VuoMesh_IndividualLines
+				  || elementAssemblyMethod == VuoMesh_LineStrip)
 			{
 				unsigned long indexOffset = lineVertexIndex;
-				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				for (unsigned int n = 0; n < vertexCount; ++n)
 				{
-					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d p = VuoPoint3d_makeFromArray(&positions[n * 3]);
 					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
-					lineSubmesh.positions[lineVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+					VuoPoint3d_setArray(&linePositions[lineVertexIndex * 3], pt);
 
-					if (submesh.normals)
+					if (normals)
 					{
-						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d r = VuoPoint3d_makeFromArray(&normals[n * 3]);
 						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
-						lineSubmesh.normals[lineVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+						VuoPoint3d_setArray(&lineNormals[lineVertexIndex * 3], rt);
 					}
 
-					if (submesh.textureCoordinates)
-						lineSubmesh.textureCoordinates[lineVertexIndex] = submesh.textureCoordinates[n];
+					if (textureCoordinates)
+						VuoPoint2d_setArray(&lineTextureCoordinates[lineVertexIndex], VuoPoint2d_makeFromArray(&textureCoordinates[n * 2]));
 
 					++lineVertexIndex;
 				}
 
-				if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
-					for (unsigned int n = 0; n < submesh.elementCount; ++n)
-						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n];
-				else if (submesh.elementAssemblyMethod != VuoMesh_LineStrip)
+				if (elementAssemblyMethod == VuoMesh_IndividualLines)
+				{
+					if (elementCount)
+						for (unsigned int n = 0; n < elementCount; ++n)
+							lineElements[lineElementIndex++] = indexOffset + elements[n];
+					else
+						for (unsigned int n = 0; n < vertexCount; ++n)
+							lineElements[lineElementIndex++] = indexOffset + n;
+				}
+				else if (elementAssemblyMethod == VuoMesh_LineStrip)
 				{
 					// Expand the line strip to individual lines.
-					for (unsigned int n = 1; n < submesh.elementCount; ++n)
-					{
-						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n-1];
-						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n ];
-					}
+					if (elementCount)
+						for (unsigned int n = 1; n < elementCount; ++n)
+						{
+							lineElements[lineElementIndex++] = indexOffset + elements[n-1];
+							lineElements[lineElementIndex++] = indexOffset + elements[n  ];
+						}
+					else
+						for (unsigned int n = 1; n < vertexCount; ++n)
+						{
+							lineElements[lineElementIndex++] = indexOffset + n-1;
+							lineElements[lineElementIndex++] = indexOffset + n;
+						}
 				}
 			}
-			else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+			else if (elementAssemblyMethod == VuoMesh_Points)
 			{
 				unsigned long indexOffset = pointVertexIndex;
-				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				for (unsigned int n = 0; n < vertexCount; ++n)
 				{
-					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d p = VuoPoint3d_makeFromArray(&positions[n * 3]);
 					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
-					pointSubmesh.positions[pointVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+					VuoPoint3d_setArray(&pointPositions[pointVertexIndex * 3], pt);
 
-					if (submesh.normals)
+					if (normals)
 					{
-						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d r = VuoPoint3d_makeFromArray(&normals[n * 3]);
 						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
-						pointSubmesh.normals[pointVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+						VuoPoint3d_setArray(&pointNormals[pointVertexIndex * 3], rt);
 					}
 
-					if (submesh.textureCoordinates)
-						pointSubmesh.textureCoordinates[pointVertexIndex] = submesh.textureCoordinates[n];
+					if (textureCoordinates)
+						VuoPoint2d_setArray(&pointTextureCoordinates[pointVertexIndex * 2], VuoPoint2d_makeFromArray(&textureCoordinates[n * 2]));
 
 					++pointVertexIndex;
 				}
 
-				for (unsigned int n = 0; n < submesh.elementCount; ++n)
-					pointSubmesh.elements[pointElementIndex++] = indexOffset + submesh.elements[n];
+				if (elementCount)
+					/// @todo It doesn't really make sense for a point mesh to have an element buffer, does it?
+					for (unsigned int n = 0; n < elementCount; ++n)
+						pointElements[pointElementIndex++] = indexOffset + elements[n];
+				else
+				{
+					for (unsigned int n = 0; n < vertexCount; ++n)
+						pointElements[pointElementIndex++] = indexOffset + n;
+				}
 			}
-		}
+
 		return true;
 	});
 
 
-	VuoMesh mesh = VuoMesh_make(submeshCount);
-	int submeshIndex = 0;
+	VuoMesh triangleMesh = nullptr;
+	VuoMesh lineMesh = nullptr;
+	VuoMesh pointMesh = nullptr;
 	if (trianglePrimitiveCount)
 	{
-		if (calculateTangents)
-			VuoMeshUtility_calculateTangents(&triangleSubmesh);
-		mesh->submeshes[submeshIndex++] = triangleSubmesh;
+		if (!anyTextureCoordinates)
+		{
+			free(triangleTextureCoordinates);
+			triangleTextureCoordinates = nullptr;
+		}
+		triangleMesh = VuoMesh_makeFromCPUBuffers(triangleVertexCount, trianglePositions, triangleNormals, triangleTextureCoordinates, nullptr, trianglePrimitiveCount * 3, triangleElements, VuoMesh_IndividualTriangles);
+		VuoMesh_setFaceCulling(triangleMesh, triangleFaceCulling);
 	}
-	else if (linePrimitiveCount)
-		mesh->submeshes[submeshIndex++] = lineSubmesh;
-	else if (pointPrimitiveCount)
-		mesh->submeshes[submeshIndex++] = pointSubmesh;
+	if (linePrimitiveCount)
+	{
+		if (!anyTextureCoordinates)
+		{
+			free(lineTextureCoordinates);
+			lineTextureCoordinates = nullptr;
+		}
+		lineMesh = VuoMesh_makeFromCPUBuffers(lineVertexCount, linePositions, lineNormals, lineTextureCoordinates, nullptr, linePrimitiveCount * 2, lineElements, VuoMesh_IndividualLines);
+		VuoMesh_setPrimitiveSize(lineMesh, linePrimitiveSize);
+	}
+	if (pointPrimitiveCount)
+	{
+		if (!anyTextureCoordinates)
+		{
+			free(pointTextureCoordinates);
+			pointTextureCoordinates = nullptr;
+		}
+		pointMesh = VuoMesh_makeFromCPUBuffers(pointVertexCount, pointPositions, pointNormals, pointTextureCoordinates, nullptr, pointPrimitiveCount, pointElements, VuoMesh_Points);
+		VuoMesh_setPrimitiveSize(pointMesh, pointPrimitiveSize);
+	}
 
-	return VuoSceneObject_make(mesh, NULL, VuoTransform_makeIdentity(), NULL);
+	if (triangleMesh && !lineMesh && !pointMesh)
+		return VuoSceneObject_makeMesh(triangleMesh, NULL, VuoTransform_makeIdentity());
+	else if (!triangleMesh && lineMesh && !pointMesh)
+		return VuoSceneObject_makeMesh(lineMesh, NULL, VuoTransform_makeIdentity());
+	else if (!triangleMesh && !lineMesh && pointMesh)
+		return VuoSceneObject_makeMesh(pointMesh, NULL, VuoTransform_makeIdentity());
+	else
+	{
+		VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
+		if (triangleMesh)
+			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_makeMesh(triangleMesh, NULL, VuoTransform_makeIdentity()));
+		if (lineMesh)
+			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_makeMesh(lineMesh, NULL, VuoTransform_makeIdentity()));
+		if (pointMesh)
+			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_makeMesh(pointMesh, NULL, VuoTransform_makeIdentity()));
+		return VuoSceneObject_makeGroup(childObjects, VuoTransform_makeIdentity());
+	}
+
+	return NULL;
 }
 
 #define CSGJS_HEADER_ONLY
@@ -1802,30 +2944,36 @@ VuoSceneObject VuoSceneObject_flatten(const VuoSceneObject so, bool calculateTan
  */
 static csgjs_model VuoSceneObject_getCsgjsModel(const VuoSceneObject so)
 {
-	VuoSceneObject flat = VuoSceneObject_flatten(so, false);
-	if (!flat.mesh)
+	if (!so)
 		return csgjs_model();
 
-	VuoSceneObject_retain(flat);
-	VuoDefer(^{ VuoSceneObject_release(flat); });
-
-	if (flat.mesh->submeshes[0].elementAssemblyMethod != VuoMesh_IndividualTriangles)
+	VuoSceneObject flat = VuoSceneObject_flatten(so);
+	VuoSceneObject_internal *f = (VuoSceneObject_internal *)flat;
+	if (!f->mesh)
 		return csgjs_model();
 
-	VuoSubmesh submesh = flat.mesh->submeshes[0];
+	VuoLocal(flat);
+
+	if (VuoMesh_getElementAssemblyMethod(f->mesh) != VuoMesh_IndividualTriangles)
+		return csgjs_model();
+
+	unsigned int vertexCount, elementCount, *elements;
+	float *positions, *normals, *textureCoordinates;
+	VuoMesh_getCPUBuffers(f->mesh, &vertexCount, &positions, &normals, &textureCoordinates, nullptr, &elementCount, &elements);
+
 	csgjs_model cm;
-	for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+	for (unsigned int n = 0; n < vertexCount; ++n)
 	{
 		csgjs_vertex v;
-		v.pos = csgjs_vector(submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z);
-		if (submesh.normals)
-			v.normal = csgjs_vector(submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z);
-		if (submesh.textureCoordinates)
-			v.uv = csgjs_vector(submesh.textureCoordinates[n].x, submesh.textureCoordinates[n].y, 0);
+		v.pos = csgjs_vector(positions[n * 3], positions[n * 3 + 1], positions[n * 3 + 2]);
+		if (normals)
+			v.normal = csgjs_vector(normals[n * 3], normals[n * 3 + 1], normals[n * 3 + 2]);
+		if (textureCoordinates)
+			v.uv = csgjs_vector(textureCoordinates[n * 3], textureCoordinates[n * 3 + 1], 0);
 		cm.vertices.push_back(v);
 	}
-	for (unsigned int n = 0; n < submesh.elementCount; ++n)
-		cm.indices.push_back(submesh.elements[n]);
+	for (unsigned int n = 0; n < elementCount; ++n)
+		cm.indices.push_back(elements[n]);
 
 	return cm;
 }
@@ -1835,24 +2983,32 @@ static csgjs_model VuoSceneObject_getCsgjsModel(const VuoSceneObject so)
  */
 static VuoSceneObject VuoSceneObject_makeFromCsgjsModel(const csgjs_model &cm)
 {
-	VuoSubmesh submesh = VuoSubmesh_make(cm.vertices.size(), cm.indices.size());
+	unsigned int vertexCount = cm.vertices.size();
+	unsigned int elementCount = cm.indices.size();
+	unsigned int *elements;
+	float *positions, *normals, *textureCoordinates;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, &normals, &textureCoordinates, nullptr, elementCount, &elements);
 
 	const csgjs_vertex *vertex = &cm.vertices[0];
-	for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+	for (unsigned int n = 0; n < vertexCount; ++n)
 	{
-		submesh.positions[n] = (VuoPoint4d){vertex[n].pos.x,vertex[n].pos.y,vertex[n].pos.z,1};
-		submesh.normals[n] = (VuoPoint4d){vertex[n].normal.x,vertex[n].normal.y,vertex[n].normal.z,1};
-		submesh.textureCoordinates[n] = (VuoPoint4d){vertex[n].uv.x,vertex[n].uv.y,vertex[n].uv.z,1};
+		positions[n * 3    ] = vertex[n].pos.x;
+		positions[n * 3 + 1] = vertex[n].pos.y;
+		positions[n * 3 + 2] = vertex[n].pos.z;
+		normals[n * 3    ] = vertex[n].normal.x;
+		normals[n * 3 + 1] = vertex[n].normal.y;
+		normals[n * 3 + 2] = vertex[n].normal.z;
+		textureCoordinates[n * 2    ] = vertex[n].uv.x;
+		textureCoordinates[n * 2 + 1] = vertex[n].uv.y;
 	}
 
 	const int *index = &cm.indices[0];
-	for (unsigned int n = 0; n < submesh.elementCount; ++n)
-		submesh.elements[n] = index[n];
+	for (unsigned int n = 0; n < elementCount; ++n)
+		elements[n] = index[n];
 
-	VuoMeshUtility_calculateTangents(&submesh);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(vertexCount, positions, normals, textureCoordinates, nullptr, elementCount, elements, VuoMesh_IndividualTriangles);
 
-	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
-	return VuoSceneObject_make(mesh, NULL, VuoTransform_makeIdentity(), NULL);
+	return VuoSceneObject_makeMesh(mesh, NULL, VuoTransform_makeIdentity());
 }
 
 /**
@@ -1873,7 +3029,7 @@ VuoSceneObject VuoSceneObject_union(VuoList_VuoSceneObject objects, float qualit
 
 	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
 	if (objectCount == 0)
-		return VuoSceneObject_makeEmpty();
+		return nullptr;
 	if (objectCount == 1)
 		return VuoListGetValue_VuoSceneObject(objects, 1);
 
@@ -1928,7 +3084,7 @@ VuoSceneObject VuoSceneObject_intersect(VuoList_VuoSceneObject objects, float qu
 
 	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
 	if (objectCount == 0)
-		return VuoSceneObject_makeEmpty();
+		return nullptr;
 	if (objectCount == 1)
 		return VuoListGetValue_VuoSceneObject(objects, 1);
 

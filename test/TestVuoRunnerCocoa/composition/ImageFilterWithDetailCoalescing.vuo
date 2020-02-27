@@ -1,24 +1,28 @@
 /**
  * @file
  * @brief ImageFilter with Detail Coalescing
- *
  * An ImageFilter with published input ports connected to multiple internal ports each with differing details.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
-
 
 digraph G
 {
-MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="143,57" _name="\"camera\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<image>image\r|<time>time\r|<position>position\r|<fieldOfView>fieldOfView\r" _image_type="VuoImage" _time_type="VuoReal" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _position_type="VuoPoint3d" _fieldOfView="0.010000" _fieldOfView_type="VuoReal"];
+MakeCGAImage [type="vuo.image.color.cga" version="1.0.0" label="Make CGA Image|<refresh>refresh\l|<image>image\l|<backgroundColor>backgroundColor\l|<palette>palette\l|<cgaImage>cgaImage\r" pos="165,300" _backgroundColor="0"];
+MakeCGAImage2 [type="vuo.image.color.cga" version="1.0.0" label="Make CGA Image|<refresh>refresh\l|<image>image\l|<backgroundColor>backgroundColor\l|<palette>palette\l|<cgaImage>cgaImage\r" pos="165,390" _backgroundColor="0"];
+MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="150,60" _name="\"camera\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<image>image\r|<position>position\r|<fieldOfView>fieldOfView\r|<Palette>Palette\r" _time_type="VuoReal" _image_type="VuoImage" _position_type="VuoPoint3d" _position_suggestedMin="\{\"x\":-2,\"y\":-2,\"z\":-2\}" _position_suggestedMax="\{\"x\":2,\"y\":2,\"z\":2\}" _position_suggestedStep="\{\"x\":0.1,\"y\":0.1,\"z\":0.1\}" _position="\{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000\}" _fieldOfView_type="VuoReal" _fieldOfView_suggestedMin="0.01" _fieldOfView_suggestedMax="20." _fieldOfView_suggestedStep="0.1" _fieldOfView="0.010000" _Palette_type="VuoInteger" _Palette_menuItems="\{\"0\":\"Cyan, Magenta, Gray (Dark)\",\"1\":\"Cyan, Magenta, White (Light)\",\"2\":\"Green, Red, Brown (Dark)\",\"3\":\"Green, Red, Yellow (Light)\",\"4\":\"Cyan, Red, Gray (Dark)\",\"5\":\"Cyan, Red, White (Light)\"\}" _Palette="1"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-PublishedInputs:position -> MakePerspectiveCamera:rotation;
-PublishedInputs:position -> MakePerspectiveCamera:position;
-PublishedInputs:fieldOfView -> MakePerspectiveCamera:fieldOfView;
-PublishedInputs:fieldOfView -> MakePerspectiveCamera:distanceMin;
+PublishedInputs:Palette -> MakeCGAImage2:palette;
+PublishedInputs:Palette -> MakeCGAImage:palette;
 PublishedInputs:fieldOfView -> MakePerspectiveCamera:distanceMax;
+PublishedInputs:fieldOfView -> MakePerspectiveCamera:distanceMin;
+PublishedInputs:fieldOfView -> MakePerspectiveCamera:fieldOfView;
+PublishedInputs:position -> MakePerspectiveCamera:position;
+PublishedInputs:position -> MakePerspectiveCamera:rotation;
 }

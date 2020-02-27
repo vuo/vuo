@@ -2,9 +2,9 @@
  * @file
  * VuoWindowTextInternal implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "VuoWindowTextInternal.h"
@@ -80,6 +80,12 @@ VuoModuleMetadata({
 		[textView setEditable:YES];
 		[textView setAllowsUndo:NO];
 		[textView setAutoresizingMask:NSViewWidthSizable];
+		[textView setAutomaticDashSubstitutionEnabled:NO];
+		[textView setAutomaticDataDetectionEnabled:NO];
+		[textView setAutomaticLinkDetectionEnabled:NO];
+		[textView setAutomaticQuoteSubstitutionEnabled:NO];
+		[textView setAutomaticSpellingCorrectionEnabled:NO];
+		[textView setAutomaticTextReplacementEnabled:NO];
 		[scrollView setDocumentView:textView];
 
 		// Remove the "Cut" option from the context menu.
@@ -251,7 +257,10 @@ VuoModuleMetadata({
 	BOOL autoscroll = abs(NSMaxY(textView.visibleRect) - NSMaxY(textView.bounds)) < 1;
 
 	NSString *line = [[NSString stringWithUTF8String:text] stringByAppendingString:@"\n"];
-	NSDictionary *attributes = [NSDictionary dictionaryWithObject:textFont forKey:NSFontAttributeName];
+	NSDictionary *attributes = @{
+		NSFontAttributeName: textFont,
+		NSForegroundColorAttributeName: NSColor.textColor,
+	};
 	NSAttributedString *attributedLine = [[NSAttributedString alloc] initWithString:line attributes:attributes];
 	[[textView textStorage] appendAttributedString:attributedLine];
 	[attributedLine release];

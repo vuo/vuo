@@ -1,32 +1,34 @@
 /**
  * @file
+ * @brief Move through Tube with Fisheye
  * Animates moving through a tube, using a fisheye camera.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoPoint3d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="255,720" _startPosition="{\"x\":0,\"y\":0,\"z\":1.5}" _endPosition="{\"x\":0,\"y\":0,\"z\":-1.5}" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="105,495" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="255,525" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":1,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _center="{\"x\":0,\"y\":0}" _width="1024" _height="1024"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="694,641" fillcolor="green"];
-MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="664,611" fillcolor="green"];
-MakeTargetedFisheyeCamera [type="vuo.scene.make.camera.fisheye.target" version="1.0.0" label="Make Targeted Fisheye Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<vignetteWidth>vignetteWidth\l|<vignetteSharpness>vignetteSharpness\l|<object>object\r" pos="420,705" fillcolor="violet" _name="\"\"" _target="{\"x\":-1,\"y\":0,\"z\":0}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="180.000000" _vignetteWidth="0.84999999999999998" _vignetteSharpness="0.80000000000000004"];
-MakeTube6 [type="vuo.scene.make.tube.VuoImage.VuoImage.VuoImage.VuoImage" version="1.0.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="510,465" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[1.5707963705062866,0,0],\"scale\":[1,2,1]}" _rows="16" _columns="32" _thickness="0.10000000000000001"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="735,600" fillcolor="green" _cameraName="\"\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="75,525"];
+Curve2 [type="vuo.motion.curve.VuoPoint3d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="255,720" _startPosition="\{\"x\":0,\"y\":0,\"z\":1.5\}" _endPosition="\{\"x\":0,\"y\":0,\"z\":-1.5\}" _duration="10.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="15,720" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="255,525" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":1,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0,\"y\":0\}" _width="1024" _height="1024"];
+MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="779,611" fillcolor="blue"];
+MakeTargetedFisheyeCamera [type="vuo.scene.make.camera.fisheye.target" version="1.0.0" label="Make Targeted Fisheye Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<vignetteWidth>vignetteWidth\l|<vignetteSharpness>vignetteSharpness\l|<object>object\r" pos="495,705" fillcolor="orange" _name="\"\"" _target="\{\"x\":-1,\"y\":0,\"z\":0\}" _upDirection="\{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000\}" _fieldOfView="180.000000" _vignetteWidth="0.84999999999999998" _vignetteSharpness="0.80000000000000004"];
+MakeTube6 [type="vuo.scene.make.tube.VuoImage.VuoImage.VuoImage.VuoImage" version="1.1.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="570,495" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[1.5707963705062866,0,0],\"scale\":[1,2,1]\}" _rows="16" _columns="32" _thickness="0.10000000000000001"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="825,600" fillcolor="blue" _cameraName="\"\"" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage:upperLeftColor;
 Curve2:value -> MakeTargetedFisheyeCamera:position;
-FireOnStart:started -> MakeCheckerboardImage:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeCheckerboardImage:image -> MakeTube6:bottomMaterial;
 MakeCheckerboardImage:image -> MakeTube6:insideMaterial;
 MakeCheckerboardImage:image -> MakeTube6:outsideMaterial;
 MakeCheckerboardImage:image -> MakeTube6:topMaterial;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList7:list -> RenderSceneToWindow:objects;
 MakeTargetedFisheyeCamera:object -> MakeList7:2;
 MakeTube6:object -> MakeList7:1;
-RenderSceneToWindow:requestedFrame -> Curve2:time [style=invis];
 }

@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.sort node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"list", "inputPortValues":{"list":[false, false], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[false, false]}},
+	{"firingPort":"list", "inputPortValues":{"list":[false, true], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[false, true]}},
+	{"firingPort":"list", "inputPortValues":{"list":[true, false], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[false, true]}},
+	{"firingPort":"list", "inputPortValues":{"list":[true, true], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[true, true]}},
+]}

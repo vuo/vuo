@@ -1,99 +1,105 @@
 /**
  * @file
- * Makes a scene consisting of two palm trees, each shaded with a different color.  Displays 4 different views of the same scene, like [CAD](https://en.wikipedia.org/wiki/Computer-aided_design) software.
+ * Makes a scene consisting of two palm trees, each shaded with different coloring.  Displays 4 different views of the same scene, like [CAD](https://en.wikipedia.org/wiki/Computer-aided_design) software.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeAllShaders2 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="1065,-615" fillcolor="violet"];
-ChangeAllShaders3 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="1035,-405" fillcolor="violet"];
-ChangeResizableStatus [type="vuo.window.resizable" version="1.0.0" label="Change Resizable Status|<refresh>refresh\l|<resizable>resizable\l|<property>property\r" pos="810,885" _resizable="false"];
-Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1620,-450"];
-Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1275,-705"];
-Combine3DObjects3 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1275,-480"];
+ChangeAllShaders2 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="1050,-630" fillcolor="orange"];
+ChangeAllShaders3 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="1035,-405" fillcolor="orange"];
+ChangeResizableStatus [type="vuo.window.resizable2" version="2.0.0" label="Change Resizable Status|<refresh>refresh\l|<windowDescription>windowDescription\l|<resizable>resizable\l|<changedWindowDescription>changedWindowDescription\r" pos="1335,1170" _resizable="false"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="285,-705" _speed="8"];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1635,-495"];
+Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1320,-720"];
+Combine3DObjects3 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1320,-480"];
 ConvertRealTo3DPoint3 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="210,-585"];
 ConvertRealTo3DPoint4 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="450,-225"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-255,-90" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetScene [type="vuo.scene.fetch" version="2.0.2" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="240,-600" fillcolor="violet" _url="\"palmtree.dae\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
-Left [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Front|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="165,450" fillcolor="violet" _name="\"camera\"" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="525,-720" _translation="{\"x\":-0.400000,\"y\":-0.500000,\"z\":-0.300000}" _scale="{\"x\":2.000000,\"y\":2.000000,\"z\":2.000000}"];
-Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="510,-465" _translation="{\"x\":0.400000,\"y\":-0.500000,\"z\":0.000000}" _scale="{\"x\":2.200000,\"y\":2.200000,\"z\":2.200000}"];
-MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="315,-300" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[2,2,2]}"];
-MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="506,461"];
-MakeList17 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1245,-454"];
-MakeList18 [type="vuo.list.make.8.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="1180,311" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="506,686"];
-MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="491,11"];
-MakeList4 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="506,236"];
-MakeList5 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1587,-424"];
-MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,-694" fillcolor="green" _1="8.000000"];
-MakeList8 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1215,326" fillcolor="green"];
-MakeList9 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1245,-679"];
-MakeOrthographicCamera [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Top|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="165,0" fillcolor="violet" _name="\"camera\"" _position="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _rotation="{\"x\":-90.000000,\"y\":0.000000,\"z\":0.000000}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
-MakeOrthographicCamera2 [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Left|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="165,225" fillcolor="violet" _name="\"camera\"" _position="{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":-90.000000,\"z\":0.000000}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
-MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Perspective|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="180,675" fillcolor="violet" _name="\"camera\"" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="855,-15" _center="{\"x\":-0.500000,\"y\":0.375000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="855,210" _center="{\"x\":-0.500000,\"y\":-0.375000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="855,435" _center="{\"x\":0.500000,\"y\":0.375000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer4 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="855,660" _center="{\"x\":0.500000,\"y\":-0.375000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="870,120" _text="\"Top\"" _font="{\"fontName\":\"HelveticaNeue-Medium\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.900000,\"y\":0.675000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="870,345" _text="\"Left\"" _font="{\"fontName\":\"HelveticaNeue-Medium\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.900000,\"y\":-0.075000}"];
-MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="870,570" _text="\"Front\"" _font="{\"fontName\":\"HelveticaNeue-Medium\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.100000,\"y\":0.675000}"];
-MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="870,795" _text="\"Perspective\"" _font="{\"fontName\":\"HelveticaNeue-Medium\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.200000,\"y\":-0.075000}"];
-Multiply3 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="300,-705" fillcolor="green"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1245,300" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="555,0" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="570,225" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage3 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="570,450" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage4 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="570,675" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="165,-240" _color="{\"r\":1.000000,\"g\":0.971237,\"b\":0.527474,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":0.999969,\"b\":0.999985,\"a\":0.250004}" _shininess="0.000000"];
-ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="840,-555" _color="{\"r\":1.000000,\"g\":0.278325,\"b\":0.804685,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="855,-375" _color="{\"r\":0.201068,\"g\":0.652003,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-ShareValue4 [type="vuo.data.share.VuoSceneObject" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="345,-60"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="60,-705" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-255,-90" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetScene [type="vuo.scene.fetch" version="2.0.2" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="240,-600" fillcolor="orange" _url="\"palmtree.dae\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+Left [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Front|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="555,615" fillcolor="orange" _name="\"camera\"" _position="\{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="525,-720" _translation="\{\"x\":-0.400000,\"y\":-0.500000,\"z\":-0.300000\}" _scale="\{\"x\":2.000000,\"y\":2.000000,\"z\":2.000000\}"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="525,-465" _translation="\{\"x\":0.400000,\"y\":-0.500000,\"z\":0.000000\}" _scale="\{\"x\":2.200000,\"y\":2.200000,\"z\":2.200000\}"];
+MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="540,-255" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[2,2,2]\}"];
+MakeFont [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<horizontalAlignment>horizontalAlignment\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="600,1095" _fontName="\"Avenir-Black\"" _pointSize="28." _underlined="false" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _horizontalAlignment="\"left\"" _characterSpacing="1." _lineSpacing="1."];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="899,626"];
+MakeList17 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1287,-454"];
+MakeList18 [type="vuo.list.make.8.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="1703,371" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="899,851"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="884,176"];
+MakeList4 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="899,401"];
+MakeList5 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1602,-469"];
+MakeList9 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1287,-694"];
+MakeOrthographicCamera [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Top|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="555,165" fillcolor="orange" _name="\"camera\"" _position="\{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000\}" _rotation="\{\"x\":-90.000000,\"y\":0.000000,\"z\":0.000000\}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
+MakeOrthographicCamera2 [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Left|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="555,390" fillcolor="orange" _name="\"camera\"" _position="\{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":-90.000000,\"z\":0.000000\}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
+MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Perspective|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="570,840" fillcolor="orange" _name="\"camera\"" _position="\{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+MakePointLight [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="240,-105" _color="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _brightness="0.90000000000000002" _position="\{\"x\":0,\"y\":0.10000000149011612,\"z\":0\}" _range="2" _sharpness="1"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1365,165" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.500000,\"y\":0.375000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1365,390" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.500000,\"y\":-0.375000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeScaledLayer3 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1365,615" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.500000,\"y\":0.375000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeScaledLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1365,840" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.500000,\"y\":-0.375000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1380,300" _text="\"Top\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.900000,\"y\":0.675000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1380,525" _text="\"Left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.900000,\"y\":-0.075000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1380,750" _text="\"Front\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.100000,\"y\":0.675000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1380,975" _text="\"Perspective\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.200000,\"y\":-0.075000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeVertexAttributeShader [type="vuo.shader.make.normal" version="1.3.0" label="Make Vertex Attribute Shader|<refresh>refresh\l|<attribute>attribute\l|<coordinateSpace>coordinateSpace\l|<xColor>xColor\l|<yColor>yColor\l|<zColor>zColor\l|<shader>shader\r" pos="780,-555" _attribute="\"normal\"" _coordinateSpace="0" _xColor="\{\"r\":1.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _yColor="\{\"r\":1,\"g\":1,\"b\":0.40000000596046448,\"a\":1\}" _zColor="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}"];
+MakeVertexAttributeShader2 [type="vuo.shader.make.normal" version="1.3.0" label="Make Vertex Attribute Shader|<refresh>refresh\l|<attribute>attribute\l|<coordinateSpace>coordinateSpace\l|<xColor>xColor\l|<yColor>yColor\l|<zColor>zColor\l|<shader>shader\r" pos="780,-390" _attribute="\"normal\"" _coordinateSpace="0" _xColor="\{\"r\":1,\"g\":0.50196081399917603,\"b\":0,\"a\":1\}" _yColor="\{\"r\":0,\"g\":1,\"b\":0,\"a\":1\}" _zColor="\{\"r\":0.25098040699958801,\"g\":0,\"b\":0.50196081399917603,\"a\":1\}"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1755,360" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="945,165" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage2 [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="960,390" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage3 [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="960,615" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage4 [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="960,840" _width="512" _height="384" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="225,-240" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _highlightColor="\{\"r\":1,\"g\":0.999969482421875,\"b\":0.9999847412109375,\"a\":0.25000381469726562\}" _shininess="0.000000"];
+ShareValue4 [type="vuo.data.share.VuoSceneObject" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="540,15"];
 ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="495,-600" _keepFront="true"];
-ShowBackOfObject2 [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="495,-300" _keepFront="false"];
+ShowBackOfObject2 [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="810,-255" _keepFront="false"];
 
 ChangeAllShaders2:shadedObject -> MakeList9:1;
 ChangeAllShaders3:shadedObject -> MakeList17:1;
-ChangeResizableStatus:property -> MakeList8:1;
+ChangeResizableStatus:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint3:y;
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint4:y;
 Combine3DObjects2:object -> MakeList5:1;
 Combine3DObjects3:object -> MakeList5:2;
 Combine3DObjects:object -> ShareValue4:value;
 ConvertRealTo3DPoint3:point3d -> Make3DTransform:rotation;
 ConvertRealTo3DPoint4:point3d -> Make3DTransform2:rotation;
-FireOnStart:started -> GetScene:refresh;
-FireOnStart:started -> Left:refresh;
-FireOnStart:started -> MakeOrthographicCamera2:refresh;
-FireOnStart:started -> MakeOrthographicCamera:refresh;
-FireOnStart:started -> MakePerspectiveCamera:refresh;
-FireOnStart:started -> ShadeWithColor:refresh;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+FireOnStart:started -> GetScene:url;
+FireOnStart:started -> Left:name;
+FireOnStart:started -> MakeFont:fontName;
+FireOnStart:started -> MakeOrthographicCamera2:name;
+FireOnStart:started -> MakeOrthographicCamera:name;
+FireOnStart:started -> MakePerspectiveCamera:name;
+FireOnStart:started -> MakePointLight:color;
+FireOnStart:started -> ShadeWithColor:color;
 GetScene:scene -> ShowBackOf3DObject:object;
 Left:object -> MakeList:1;
-Left:object -> MakeTextLayer3:refresh;
 Make3DTransform2:transform -> Combine3DObjects3:transform;
 Make3DTransform:transform -> Combine3DObjects2:transform;
 MakeCube3:cube -> ShowBackOfObject2:object;
+MakeFont:font -> ChangeResizableStatus:resizable [event=true];
+MakeFont:font -> MakeTextLayer2:font;
+MakeFont:font -> MakeTextLayer3:font;
+MakeFont:font -> MakeTextLayer4:font;
+MakeFont:font -> MakeTextLayer:font;
 MakeList17:list -> Combine3DObjects3:childObjects;
 MakeList18:list -> RenderLayersToWindow:layers;
 MakeList2:list -> RenderSceneToImage4:objects;
 MakeList3:list -> RenderSceneToImage:objects;
 MakeList4:list -> RenderSceneToImage2:objects;
 MakeList5:list -> Combine3DObjects:childObjects;
-MakeList6:list -> Multiply3:values;
-MakeList8:list -> RenderLayersToWindow:setWindowProperties;
 MakeList9:list -> Combine3DObjects2:childObjects;
 MakeList:list -> RenderSceneToImage3:objects;
 MakeOrthographicCamera2:object -> MakeList4:1;
-MakeOrthographicCamera2:object -> MakeTextLayer2:refresh;
 MakeOrthographicCamera:object -> MakeList3:1;
-MakeOrthographicCamera:object -> MakeTextLayer:refresh;
-MakePerspectiveCamera:object -> ChangeResizableStatus:refresh;
 MakePerspectiveCamera:object -> MakeList2:1;
-MakePerspectiveCamera:object -> MakeTextLayer4:refresh;
+MakePointLight:object -> MakeList5:4;
 MakeScaledLayer2:layer -> MakeList18:3;
 MakeScaledLayer3:layer -> MakeList18:5;
 MakeScaledLayer4:layer -> MakeList18:7;
@@ -102,15 +108,12 @@ MakeTextLayer2:layer -> MakeList18:4;
 MakeTextLayer3:layer -> MakeList18:6;
 MakeTextLayer4:layer -> MakeList18:8;
 MakeTextLayer:layer -> MakeList18:2;
-Multiply3:product -> ConvertRealTo3DPoint3:y;
-Multiply3:product -> ConvertRealTo3DPoint4:y;
-RenderLayersToWindow:requestedFrame -> MakeList6:2 [style=invis];
+MakeVertexAttributeShader2:shader -> ChangeAllShaders3:shader;
+MakeVertexAttributeShader:shader -> ChangeAllShaders2:shader;
 RenderSceneToImage2:image -> MakeScaledLayer2:image;
 RenderSceneToImage3:image -> MakeScaledLayer3:image;
 RenderSceneToImage4:image -> MakeScaledLayer4:image;
 RenderSceneToImage:image -> MakeScaledLayer:image;
-ShadeWithColor2:shader -> ChangeAllShaders2:shader;
-ShadeWithColor3:shader -> ChangeAllShaders3:shader;
 ShadeWithColor:shader -> MakeCube3:material;
 ShareValue4:sameValue -> MakeList2:2;
 ShareValue4:sameValue -> MakeList3:2;
@@ -118,7 +121,7 @@ ShareValue4:sameValue -> MakeList4:2;
 ShareValue4:sameValue -> MakeList:2;
 ShowBackOf3DObject:backObject -> ChangeAllShaders2:object;
 ShowBackOf3DObject:backObject -> ChangeAllShaders3:object;
-ShowBackOf3DObject:backObject -> ShadeWithColor2:refresh;
-ShowBackOf3DObject:backObject -> ShadeWithColor3:refresh;
+ShowBackOf3DObject:backObject -> MakeVertexAttributeShader2:attribute [event=true];
+ShowBackOf3DObject:backObject -> MakeVertexAttributeShader:attribute [event=true];
 ShowBackOfObject2:backObject -> MakeList5:3;
 }

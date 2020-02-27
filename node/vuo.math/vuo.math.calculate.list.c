@@ -2,9 +2,9 @@
  * @file
  * vuo.math.calculate.list node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					  "title" : "Calculate List",
 					  "keywords" : [
 						"maths", "mathematics",
-						"add", "sum", "+", "subtract", "minus", "difference", "-", "multiply", "product", "*",
+						"add", "sum", "+", "subtract", "minus", "difference", "-", "multiply", "product", "*", "•", "×", "x",
 						"divide", "quotient", "/", "power", "^", "modulus", "%", "if", "condition",
 						"and", "&&", "or", "==", "less", "<", "<=", "greater", ">", ">=", "equal", "==", "compare",
 						"sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",

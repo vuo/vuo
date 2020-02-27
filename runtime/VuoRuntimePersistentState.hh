@@ -2,9 +2,9 @@
  * @file
  * VuoRuntimePersistentState interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -40,7 +40,7 @@ private:
 	dispatch_group_t triggerWorkersScheduled;  ///< Keeps track of trigger workers that have been scheduled but have not yet launched an event into the composition.
 
 public:
-	//@{
+	/// @{
 	/**
 	 * Objects preserved across live-coding reloads.
 	 */
@@ -48,7 +48,7 @@ public:
 	VuoNodeRegistry *nodeRegistry;
 	VuoRuntimeCommunicator *communicator;
 	VuoThreadManager *threadManager;
-	//@}
+	/// @}
 
 	VuoRuntimeState *runtimeState;  ///< Reference to the parent VuoRuntimeState.
 

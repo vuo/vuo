@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleName</key>
+	<string>Vuo Composition Loader</string>
 	<key>CFBundleIconFile</key>
 	<string>vuo-composition.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -9,8 +11,12 @@
 	<key>CFBundleShortVersionString</key>
 	<string>@SHORT_VERSION@</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012–2018 Kosada Incorporated.  This executable may be used and distributed according to the terms described on http://vuo.org/license.</string>
+	<string>Copyright © 2012–2020 Kosada Incorporated.  This executable may be used and distributed according to the terms described on https://vuo.org/license.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSRequiresAquaSystemAppearance</key>
+	<false/>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
 </dict>
 </plist>

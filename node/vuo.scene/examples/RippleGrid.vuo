@@ -2,55 +2,51 @@
  * @file
  * Ripples a plane with various kinds of waves. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CycleThroughList2 [type="vuo.list.cycle.VuoDispersion" version="1.0.3" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="390,390" _wrapMode="\"wrap\""];
-CycleThroughList4 [type="vuo.list.cycle.VuoDisplacement" version="1.0.3" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="390,510" _wrapMode="\"wrap\""];
-CycleThroughList6 [type="vuo.list.cycle.VuoText" version="1.0.3" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="390,630" _wrapMode="\"wrap\""];
-Divide2 [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="540,-15" _b="4.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-75,90" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="555,135"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="105,-45" _upperLeftColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _upperRightColor="{\"r\":0.556634,\"g\":0.826612,\"b\":0.556634,\"a\":1.000000}" _squareSize="0.250000" _sharpness="1.0" _angle="0." _center="{\"x\":0,\"y\":0}" _width="1024" _height="1024"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1024,206" fillcolor="green"];
-MakeList19 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="320,641" _1="\"Linear and transverse\"" _2="\"Linear and longitudinal\"" _3="\"Radial and transverse\"" _4="\"Radial and longitudinal\""];
-MakeList20 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="994,176" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1024,206" fillcolor="green"];
-MakeList5 [type="vuo.list.make.4.VuoDispersion" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="320,401" _1="\"linear\"" _2="\"linear\"" _3="\"radial\"" _4="\"radial\""];
-MakeList9 [type="vuo.list.make.2.VuoDisplacement" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="320,521" _1="\"transverse\"" _2="\"longitudinal\""];
-MakeParametricMesh [type="vuo.mesh.make.parametric" version="3.0.0" label="Make Parametric Grid Mesh|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<mesh>mesh\r" pos="90,135" _time="0.000000" _xExpression="\"U\"" _yExpression="\"V\"" _zExpression="\"0\"" _rows="16" _columns="16" _uClosed="false" _uMin="-0.500000" _uMax="0.500000" _vClosed="false" _vMin="-0.500000" _vMax="0.500000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="645,630" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="645,750" _text="\"Click to change the type of ripple.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="855,630" _center="{\"x\":0.000000,\"y\":-0.600000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.500000" _opacity="1.000000"];
-MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="855,750" _center="{\"x\":0.000000,\"y\":0.600000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.750000" _opacity="1.000000"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-45,465" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1065,165" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RippleObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="735,135" fillcolor="violet" _angle="90.000000" _amplitude="0.050000" _wavelength="0.050000"];
-ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="375,180" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.990000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-135,120" fillcolor="lime"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="645,45" _speed="0.29999999999999999"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoDispersion" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="405,270" _wrapMode="\"wrap\""];
+CycleThroughList4 [type="vuo.list.cycle2.VuoDisplacement" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="405,405" _wrapMode="\"wrap\""];
+CycleThroughList6 [type="vuo.list.cycle2.VuoText" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="405,555" _wrapMode="\"wrap\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-165,45" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DSquare [type="vuo.scene.make.square.VuoImage" version="1.1.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="435,135" _rows="16" _columns="16"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="150,150" _upperLeftColor="\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\}" _upperRightColor="\{\"r\":0.556634,\"g\":0.826612,\"b\":0.556634,\"a\":1.000000\}" _squareSize="0.250000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0,\"y\":0\}" _width="1024" _height="1024"];
+MakeList19 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="343,611" _1="\"Linear and transverse\"" _2="\"Linear and longitudinal\"" _3="\"Radial and transverse\"" _4="\"Radial and longitudinal\""];
+MakeList20 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1019,146" fillcolor="blue"];
+MakeList5 [type="vuo.list.make.4.VuoDispersion" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="343,326" _1="\"linear\"" _2="\"linear\"" _3="\"radial\"" _4="\"radial\""];
+MakeList9 [type="vuo.list.make.2.VuoDisplacement" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="343,461" _1="\"transverse\"" _2="\"longitudinal\""];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="705,555" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="705,690" _text="\"Click to change the type of ripple.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="915,555" _center="\{\"x\":0.000000,\"y\":-0.600000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.500000" _opacity="1.000000"];
+MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="915,690" _center="\{\"x\":0.000000,\"y\":0.600000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.750000" _opacity="1.000000"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-180,375" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1065,135" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RippleObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="840,135" fillcolor="orange" _angle="90.000000" _amplitude="0.050000" _wavelength="0.050000"];
 
+AllowFirstEvent:firstEvent -> CycleThroughList2:goForward;
+AllowFirstEvent:firstEvent -> CycleThroughList4:goForward;
+AllowFirstEvent:firstEvent -> CycleThroughList6:goForward;
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage:upperLeftColor;
+AllowFirstEvent:firstEvent -> MakeTextImage2:text;
+ChangeSpeed:changedTime -> RippleObject:phase;
 CycleThroughList2:item -> RippleObject:dispersion;
 CycleThroughList4:item -> RippleObject:displacement;
 CycleThroughList6:item -> MakeTextImage:text;
-Divide2:quotient -> RippleObject:phase;
-FireOnStart:started -> CycleThroughList2:goForward;
-FireOnStart:started -> CycleThroughList4:goForward;
-FireOnStart:started -> CycleThroughList6:goForward;
-FireOnStart:started -> MakeCheckerboardImage:refresh;
-FireOnStart:started -> MakeParametricMesh:refresh;
-FireOnStart:started -> MakeTextImage2:refresh;
-Make3DObject:object -> RippleObject:object;
-MakeCheckerboardImage:image -> ShadeWithImage:image;
-MakeList0:list -> RenderSceneToWindow:setWindowProperties;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+Make3DSquare:object -> RippleObject:object;
+MakeCheckerboardImage:image -> Make3DSquare:material;
 MakeList19:list -> CycleThroughList6:list;
 MakeList20:list -> RenderSceneToWindow:objects;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> CycleThroughList2:list;
 MakeList9:list -> CycleThroughList4:list;
-MakeParametricMesh:mesh -> Make3DObject:mesh;
 MakeTextImage2:image -> MakeUnlit3DObjectFromImage2:image;
 MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
 MakeUnlit3DObjectFromImage2:object -> MakeList20:3;
@@ -58,8 +54,6 @@ MakeUnlit3DObjectFromImage:object -> MakeList20:2;
 ReceiveMouseButtons:released -> CycleThroughList2:goForward;
 ReceiveMouseButtons:released -> CycleThroughList4:goForward;
 ReceiveMouseButtons:released -> CycleThroughList6:goForward;
-RenderSceneToWindow:requestedFrame -> Divide2:a;
-RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderSceneToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 RippleObject:rippledObject -> MakeList20:1;
-ShadeWithImage:shader -> Make3DObject:shader;
 }

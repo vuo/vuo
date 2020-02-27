@@ -2,14 +2,14 @@
  * @file
  * VuoImageFormat C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoImageFormat_struct { void *l; } * VuoList_VuoImageFormat;
 #define VuoList_VuoImageFormat_TYPE_DEFINED
 /// @}
@@ -41,7 +41,7 @@ VuoImageFormat VuoImageFormat_makeFromJson(struct json_object * js);
 struct json_object * VuoImageFormat_getJson(const VuoImageFormat value);
 VuoList_VuoImageFormat VuoImageFormat_getAllowedValues(void);
 char * VuoImageFormat_getSummary(const VuoImageFormat value);
-char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* length);
+struct json_object *VuoImageFormat_getValidFileExtensions(const VuoImageFormat format);
 char * VuoImageFormat_getExtension(const VuoImageFormat value);
 
 #define VuoImageFormat_SUPPORTS_COMPARISON

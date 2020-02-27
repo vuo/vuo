@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorDisplacement SOURCE VuoInputEditorDisplacement.cc)

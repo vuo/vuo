@@ -12,4 +12,4 @@ Distorts the image by displaying it using a grid of rectangles, triangles, or he
 
 ![](pixellate-hex.png)
 
-Thanks to [Ruslan Shestopalyuk](http://web.archive.org/web/20160519195648/http://www.gdreflections.com/2011/02/hexagonal-grid-math.html), [Agnius Vasiliauskas](http://web.archive.org/web/20160430035627/http://coding-experiments.blogspot.com/2010/06/pixelation.html), and [Strawbry_jam](http://web.archive.org/web/20170207200837/https://forum.yoyogames.com/index.php?threads/triangular-grid-snap.2882/#post-22111) for implementing parts of the GLSL code used in this node.
+Thanks to [Ruslan Shestopalyuk](https://web.archive.org/web/20160519195648/http://www.gdreflections.com/2011/02/hexagonal-grid-math.html), [Agnius Vasiliauskas](https://web.archive.org/web/20160430035627/http://coding-experiments.blogspot.com/2010/06/pixelation.html), and [Strawbry_jam](https://web.archive.org/web/20170207200837/https://forum.yoyogames.com/index.php?threads/triangular-grid-snap.2882/#post-22111) for implementing parts of the GLSL code used in this node.

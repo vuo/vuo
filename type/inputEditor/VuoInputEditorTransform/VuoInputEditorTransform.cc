@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorTransform implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorTransform.hh"
@@ -54,7 +54,7 @@ void VuoInputEditorTransform::setCoordMap(map<coord, double>* coordMap, VuoTrans
  */
 VuoDoubleSpinBox* VuoInputEditorTransform::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 7);
 	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 	spin->setDecimals(decimalPrecision);
 	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
@@ -96,8 +96,8 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 
 	bool tabCycleForward = true;
 
-	VuoTransform default_min = VuoTransform_makeEuler( VuoPoint3d_make(-1, -1, -1), VuoPoint3d_make(0, 0, 0), VuoPoint3d_make(0, 0, 0));
-	VuoTransform default_max = VuoTransform_makeEuler( VuoPoint3d_make(1, 1, 1), VuoPoint3d_make(360. * DEG2RAD, 360. * DEG2RAD, 360. * DEG2RAD), VuoPoint3d_make(2, 2, 2));
+	VuoTransform default_min = VuoTransform_makeEuler( VuoPoint3d_make(-1, -1, -1), VuoPoint3d_make(-180. * DEG2RAD, -180. * DEG2RAD, -180. * DEG2RAD), VuoPoint3d_make(0, 0, 0));
+	VuoTransform default_max = VuoTransform_makeEuler( VuoPoint3d_make(1, 1, 1), VuoPoint3d_make(180. * DEG2RAD, 180. * DEG2RAD, 180. * DEG2RAD), VuoPoint3d_make(2, 2, 2));
 	VuoTransform default_step = VuoTransform_makeEuler( VuoPoint3d_make(.01, .01, .01), VuoPoint3d_make(5. * DEG2RAD, 5. * DEG2RAD, 5. * DEG2RAD), VuoPoint3d_make(.01, .01, .01));
 
 	setCoordMap(&suggestedMinForCoord, default_min);
@@ -140,57 +140,57 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 	// x-translation
 	spinboxForCoord[xTranslation] = initSpinBox(xTranslation, dialog, currentTransform.translation.x);
 	sliderForCoord[xTranslation] = initSlider(xTranslation, dialog, currentTransform.translation.x);
-	connect(sliderForCoord[xTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[xTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[xTranslation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[xTranslation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// y-translation
 	spinboxForCoord[yTranslation] = initSpinBox(yTranslation, dialog, currentTransform.translation.y);
 	sliderForCoord[yTranslation] = initSlider(yTranslation, dialog, currentTransform.translation.y);
-	connect(sliderForCoord[yTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[yTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[yTranslation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[yTranslation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// z-translation
 	spinboxForCoord[zTranslation] = initSpinBox(zTranslation, dialog, currentTransform.translation.z);
 	sliderForCoord[zTranslation] = initSlider(zTranslation, dialog, currentTransform.translation.z);
-	connect(sliderForCoord[zTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[zTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[zTranslation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[zTranslation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// x-rotation
 	VuoPoint3d rotation = VuoTransform_getEuler(currentTransform);
 	spinboxForCoord[xRotation] = initSpinBox(xRotation, dialog, rotation.x * RAD2DEG);
 	sliderForCoord[xRotation] = initSlider(xRotation, dialog, rotation.x * RAD2DEG);
-	connect(sliderForCoord[xRotation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[xRotation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[xRotation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[xRotation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// y-rotation
 	spinboxForCoord[yRotation] = initSpinBox(yRotation, dialog, rotation.y * RAD2DEG);
 	sliderForCoord[yRotation] = initSlider(yRotation, dialog, rotation.y * RAD2DEG);
-	connect(sliderForCoord[yRotation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[yRotation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[yRotation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[yRotation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// z-rotation
 	spinboxForCoord[zRotation] = initSpinBox(zRotation, dialog, rotation.z * RAD2DEG);
 	sliderForCoord[zRotation] = initSlider(zRotation, dialog, rotation.z * RAD2DEG);
-	connect(sliderForCoord[zRotation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[zRotation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[zRotation], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[zRotation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// x-scale
 	spinboxForCoord[xScale] = initSpinBox(xScale, dialog, currentTransform.scale.x);
 	sliderForCoord[xScale] = initSlider(xScale, dialog, currentTransform.scale.x);
-	connect(sliderForCoord[xScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[xScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[xScale], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[xScale], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// y-scale
 	spinboxForCoord[yScale] = initSpinBox(yScale, dialog, currentTransform.scale.y);
 	sliderForCoord[yScale] = initSlider(yScale, dialog, currentTransform.scale.y);
-	connect(sliderForCoord[yScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[yScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[yScale], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[yScale], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// z-scale
 	spinboxForCoord[zScale] = initSpinBox(zScale, dialog, currentTransform.scale.z);
 	sliderForCoord[zScale] = initSlider(zScale, dialog, currentTransform.scale.z);
-	connect(sliderForCoord[zScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[zScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[zScale], &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
+	connect(spinboxForCoord[zScale], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	// layout dialog
 	QGridLayout* layout = new QGridLayout;
@@ -339,9 +339,9 @@ void VuoInputEditorTransform::onSliderUpdate(int sliderValue)
 	setTransformProperty(whichCoord, value);
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	disconnect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 	spinboxForCoord[whichCoord]->setValue( value );
-	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform::onSpinboxUpdate);
 
 	spinboxForCoord[whichCoord]->setFocus();
 	spinboxForCoord[whichCoord]->selectAll();
@@ -362,9 +362,9 @@ void VuoInputEditorTransform::onSpinboxUpdate(QString spinboxValue)
 	QSlider *targetSlider =	sliderForCoord[whichCoord];
 	int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
 
-	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	disconnect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
 	targetSlider->setValue( sliderValue );
-	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorTransform::onSliderUpdate);
 
 	emit valueChanged( getAcceptedValue() );
 }

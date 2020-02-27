@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Executes a shell command that creates an old-fashioned pin-feed printer banner, and shows it in a window.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ExecuteShellCommand [type="vuo.app.shell" version="1.0.0" label="Execute Shell Command|<refresh>refresh\l|<command>command\l|<output>output\r|<status>status\r" pos="285,150" fillcolor="orange" _command="\"banner -w 55 'Hello'\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="135,120" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="681,161" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="540,150" _font="\{\"fontName\":\"Monaco\",\"pointSize\":9,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="735,150" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+ExecuteShellCommand:output -> MakeTextLayer:text;
+FireOnStart:started -> ExecuteShellCommand:command;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList:1;
+}

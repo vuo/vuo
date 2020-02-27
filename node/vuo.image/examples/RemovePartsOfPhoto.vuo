@@ -1,51 +1,53 @@
 /**
  * @file
+ * @brief Remove Parts of Photo
  * Shows how to seamlessly remove parts of a photograph.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 Add3 [type="vuo.math.add.VuoPoint2d" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="-570,510"];
-ApplyLiquidResizing [type="vuo.image.resize.liquid" version="1.0.0" label="Apply Liquid Resizing|<refresh>refresh\l|<image>image\l|<width>width\l|<height>height\l|<rigidity>rigidity\l|<preserveMask>preserveMask\l|<discardMask>discardMask\l|<resizedImage>resizedImage\r" pos="390,390" fillcolor="violet" _width="256" _height="384" _rigidity="0"];
+ApplyLiquidResizing [type="vuo.image.resize.liquid" version="1.0.0" label="Apply Liquid Resizing|<refresh>refresh\l|<image>image\l|<width>width\l|<height>height\l|<rigidity>rigidity\l|<preserveMask>preserveMask\l|<discardMask>discardMask\l|<resizedImage>resizedImage\r" pos="390,375" fillcolor="orange" _width="256" _height="384" _rigidity="0"];
 BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="-135,540" _feedbackTransform="\"identity\"" _feedbackBlendMode="\"normal\"" _pixelAligned="false" _imageInForeground="true" _colorDepth="\"8bpc\""];
 Convert2DPointToTranslation2 [type="vuo.type.translate.point2d.transform2d" version="1.0.0" label="Convert 2D Point to Translation|<refresh>refresh\l|<translation>translation\l|<transform>transform\r" pos="840,855"];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-690,210" _url="\"Buttes.jpg\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-855,165" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-75,420" fillcolor="yellow" _seconds="1.0" _fired_eventThrottling="drop"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-690,225" _url="\"Buttes.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-915,120" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-120,450" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
 GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="-405,645"];
-HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="90,465"];
-MakeImageLayer2 [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,375" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.60000002384185791,\"y\":0}" _rotation="0" _width="0.5" _opacity="1"];
-MakeImageLayer4 [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,225" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.30000001192092896,\"y\":0}" _rotation="0" _width="1" _opacity="0.5"];
-MakeImageLayer5 [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,525" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.30000001192092896,\"y\":0}" _rotation="0.0" _width="1" _opacity="0.5"];
-MakeList [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="802,356" fillcolor="green"];
-MakeList4 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-603,521" _2="{\"x\":0.30000001192092896,\"y\":0}"];
-MakeList7 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-422,371" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":0}"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="827,386" fillcolor="green"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="-360,360" _center="{\"x\":0,\"y\":0}" _radius="1" _noiseAmount="0.2" _width="32" _height="32"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="600,120" _text="\"Paint over parts of this image\\nto discard when rescaling.\\n\\nPress space to reset.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.80000001192092896,\"y\":-0.5}"];
-ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-900,585" fillcolor="yellow" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-885,360" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-885,510" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="855,345" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="90,450"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,375" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.60000002384185791,\"y\":0\}" _rotation="0" _width="0.5" _opacity="1"];
+MakeImageLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,225" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.30000001192092896,\"y\":0\}" _rotation="0" _width="1" _opacity="0.5"];
+MakeImageLayer5 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,525" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.30000001192092896,\"y\":0\}" _rotation="0.0" _width="1" _opacity="0.5"];
+MakeList [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="803,356" fillcolor="blue"];
+MakeList4 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-603,521" _2="\{\"x\":0.30000001192092896,\"y\":0\}"];
+MakeList7 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-421,371" _2="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="-360,360" _center="\{\"x\":0,\"y\":0\}" _radius="1" _noiseAmount="0.2" _width="32" _height="32"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="615,75" _text="\"Paint over parts of this image\\nto discard when rescaling.\\n\\nPress space to reset.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.80000001192092896,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-900,585" fillcolor="lime" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-870,360" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-870,510" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="855,345" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="-570,225" _sizingMode="\"fit\"" _width="512" _height="384"];
 ScalePoint2 [type="vuo.point.multiply.scalar.VuoPoint2d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="-435,510" _scaleFactor="2"];
-SelectLatest2 [type="vuo.select.latest.2.VuoColor" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="-570,360" _option1="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25000381469726562}"];
+SelectLatest2 [type="vuo.select.latest.2.VuoColor" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="-570,360" _option1="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25000381469726562\}" _option2="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}"];
 SelectLatest4 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="-570,585" _option2="1"];
-SpinOffValue2 [type="vuo.event.spinOffValue.VuoImage" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="225,465" _spunOff_eventThrottling="enqueue"];
+SpinOffValue2 [type="vuo.event.spinOffValue.VuoImage" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="225,450" _spunOff_eventThrottling="enqueue"];
 
 Add3:sum -> ScalePoint2:point;
 ApplyLiquidResizing:resizedImage -> MakeImageLayer2:image;
-BlendImageWithFeedback:feedbackImage -> HoldValue2:newValue;
+BlendImageWithFeedback:feedbackImage -> HoldValue2:value;
 BlendImageWithFeedback:feedbackImage -> MakeImageLayer5:image;
 Convert2DPointToTranslation2:transform -> BlendImageWithFeedback:imageTransform;
 FetchImage:image -> ResizeImage:image;
-FireOnStart:started -> FetchImage:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> MakeTextLayer:center;
 FireOnStart:started -> SelectLatest4:option2;
-FirePeriodically:fired -> HoldValue2:refresh;
+FirePeriodically:fired -> HoldValue2:update;
 GetImageSize:height -> BlendImageWithFeedback:height;
 GetImageSize:width -> BlendImageWithFeedback:width;
 HoldValue2:heldValue -> SpinOffValue2:value;
@@ -54,7 +56,6 @@ MakeImageLayer4:layer -> MakeList:2;
 MakeImageLayer5:layer -> MakeList:4;
 MakeList4:list -> Add3:values;
 MakeList7:list -> MakeRadialGradientImage:colors;
-MakeList9:list -> RenderLayersToWindow:setWindowProperties;
 MakeList:list -> RenderLayersToWindow:layers;
 MakeRadialGradientImage:image -> BlendImageWithFeedback:image;
 MakeTextLayer:layer -> MakeList:1;
@@ -63,9 +64,9 @@ ReceiveKeyboardButtons:released -> SelectLatest4:option2;
 ReceiveMouseButtons:pressed -> SelectLatest2:option1 [event=true];
 ReceiveMouseButtons:released -> SelectLatest2:option2 [event=true];
 ReceiveMouseMoves:movedTo -> MakeList4:1;
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
 ResizeImage:resizedImage -> ApplyLiquidResizing:image;
 ResizeImage:resizedImage -> GetImageSize:image;
 ResizeImage:resizedImage -> MakeImageLayer4:image;

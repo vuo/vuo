@@ -1,21 +1,20 @@
 /**
  * @file
- * Acts as a Syphon server, sending images to all connected Syphon clients. Try running this composition at the same time as [ReceiveImages.vuo](vuo-example://vuo.syphon/ReceiveImages.vuo) or [Simple Client](http://syphon.v002.info/). 
+ * Acts as a Syphon server, sending images to all connected Syphon clients. Try running this composition at the same time as [Receive Images](vuo-example://vuo.syphon/ReceiveImages.vuo) or [Simple Client](http://syphon.v002.info/).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  */
 
 digraph G
 {
-FireOnDisplayRefresh2 [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-171,301" fillcolor="yellow" _requestedFrame_eventThrottling="drop"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,173" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnDisplayRefresh2 [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-171,301" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,173" fillcolor="lime" _started_eventThrottling="enqueue"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="126,203" _url="\"VuoLogo.png\""];
 MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="81,312" _2="100.000000"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="127,301"];
 RippleImage [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="289,286" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000"];
-SendImageToSyphon [type="vuo.syphon.send" version="1.0.1" label="Send Image to Syphon|<refresh>refresh\l|<serverName>serverName\l|<sendImage>sendImage\l" pos="533,271" fillcolor="violet" _serverName="\"Vuo Syphon Server\""];
+SendImageToSyphon [type="vuo.syphon.send" version="1.0.1" label="Send Image to Syphon|<refresh>refresh\l|<serverName>serverName\l|<sendImage>sendImage\l" pos="533,271" fillcolor="orange" _serverName="\"Vuo Syphon Server\""];
 
 FireOnDisplayRefresh2:requestedFrame -> MakeList:1;
 FireOnStart:started -> GetImage:url;

@@ -2,13 +2,14 @@
  * @file
  * TestBuiltProducts interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
 #include "TestCompositionExecution.hh"
+#include "VuoMacAppExporter.hh"
 #include "VuoRendererComposition.hh"
 
 
@@ -17,7 +18,7 @@ Q_DECLARE_METATYPE(string);
 
 
 /**
- * Tests for build problems in Vuo.framework, Vuo Editor.app, and compositions exported as apps
+ * Tests for build problems in Vuo.framework, Vuo.app, and compositions exported as apps
  * that might prevent them from running on some systems.
  */
 class TestBuiltProducts : public TestCompositionExecution
@@ -52,22 +53,26 @@ private:
 	{
 		set<string> allFilePaths;
 
-		string frameworkDir = "../../framework/Vuo.framework";
-		set<VuoFileUtilities::File *> frameworkFiles = VuoFileUtilities::findAllFilesInDirectory(frameworkDir, set<string>(), true);
-		foreach (VuoFileUtilities::File *file, frameworkFiles)
-			allFilePaths.insert(frameworkDir + "/" + file->getRelativePath());
+		// No need to separately check the framework, since it's included in Vuo.app below.
+		// string frameworkDir                          = string(BINARY_DIR) + "/lib/Vuo.framework";
+		// set<VuoFileUtilities::File *> frameworkFiles = VuoFileUtilities::findAllFilesInDirectory(frameworkDir, set<string>(), true);
+		// foreach (VuoFileUtilities::File *file, frameworkFiles)
+		//     allFilePaths.insert(frameworkDir + "/" + file->getRelativePath());
 
-		allFilePaths.insert("../../framework/vuo-debug");
-		allFilePaths.insert("../../framework/vuo-compile");
-		allFilePaths.insert("../../framework/vuo-link");
-		allFilePaths.insert("../../framework/vuo-render");
+		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-compile-for-framework");
+		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-debug");
+		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-export");
+		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-link");
+		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-render");
+		// No need to check vuo-compile since we don't distribute it.
+		// allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-compile");
 
-		string editorDir = "../../editor/VuoEditorApp/Vuo Editor.app";
+		string editorDir                          = string(BINARY_DIR) + "/bin/Vuo.app";
 		set<VuoFileUtilities::File *> editorFiles = VuoFileUtilities::findAllFilesInDirectory(editorDir, set<string>(), true);
 		foreach (VuoFileUtilities::File *file, editorFiles)
 			allFilePaths.insert(editorDir + "/" + file->getRelativePath());
 
-		string nodeDir = "../../node";
+		string nodeDir                            = string(BINARY_DIR) + "/node";
 		set<VuoFileUtilities::File *> nodeSetDirs = VuoFileUtilities::findAllFilesInDirectory(nodeDir, set<string>(), true);
 		foreach (VuoFileUtilities::File *nodeSetDir, nodeSetDirs)
 		{
@@ -112,6 +117,16 @@ private:
 		fileEndingsToIgnore.insert(".lproj");
 		fileEndingsToIgnore.insert(".nib");
 		fileEndingsToIgnore.insert(".strings");
+		fileEndingsToIgnore.insert(".vs");
+		fileEndingsToIgnore.insert(".gs");
+		fileEndingsToIgnore.insert(".fs");
+		fileEndingsToIgnore.insert(".glsl");
+		fileEndingsToIgnore.insert(".jpg");
+		fileEndingsToIgnore.insert(".ttf");
+		fileEndingsToIgnore.insert(".metainfo");
+		fileEndingsToIgnore.insert(".conf");
+		fileEndingsToIgnore.insert(".qml");
+		fileEndingsToIgnore.insert("/qmldir");
 		fileEndingsToIgnore.insert("/PkgInfo");
 		fileEndingsToIgnore.insert("/Current");
 		fileEndingsToIgnore.insert("/Headers");
@@ -129,6 +144,12 @@ private:
 					break;
 				}
 			if (skip)
+				continue;
+
+			if (path.find("/Headers/") != string::npos)
+				continue;
+
+			if (VuoFileUtilities::isSymlink(path))
 				continue;
 
 			string command = string("file \"") + path + string("\"");
@@ -157,7 +178,7 @@ private slots:
 		getBinaryFilePaths(true, false, true, binaryFilePaths);
 
 		foreach (string path, binaryFilePaths)
-			QTest::newRow(path.c_str()) << path;
+			QTest::newRow(VuoStringUtilities::substrAfter(path, string(BINARY_DIR) + "/").c_str()) << path;
 	}
 	void testReferencesToLibraries()
 	{
@@ -168,9 +189,9 @@ private slots:
 		vector<string> blacklistedLibraryPaths;
 		blacklistedLibraryPaths.push_back("/usr/local");
 		blacklistedLibraryPaths.push_back("/usr/X11");
-		char *userName = getenv("USER");
-		QVERIFY(userName != NULL);
-		blacklistedLibraryPaths.push_back(userName);
+		char *userdir = getenv("HOME");
+		QVERIFY(userdir != NULL);
+		blacklistedLibraryPaths.push_back(userdir);
 
 		string command = string("otool -L \"") + binaryPath + string("\"");
 		vector<string> linesFromCommand;
@@ -212,16 +233,17 @@ private slots:
 
 			for (vector<string>::iterator it = linesFromCommand.begin(); it != linesFromCommand.end(); ++it)
 			{
-				string line = VuoStringUtilities::substrAfter(*it, "          cmd ");
-				if (!VuoStringUtilities::beginsWith(line, "LC_RPATH"))
+				string line = VuoStringUtilities::trim(*it);
+				if (line != "cmd LC_RPATH")
 					continue;
 
 				for (++it; it != linesFromCommand.end(); ++it)
 				{
-					string path = VuoStringUtilities::substrAfter(*it, "         path ");
-					if (path.empty())
+					string line = VuoStringUtilities::trim(*it);
+					if (!VuoStringUtilities::beginsWith(line, "path "))
 						continue;
 
+					string path = VuoStringUtilities::substrAfter(line, "path ");
 					QVERIFY2(!VuoStringUtilities::beginsWith(path, "/"),
 							 (string("The binary searches this absolute rpath: ") + path).c_str());
 					break;
@@ -230,7 +252,7 @@ private slots:
 		}
 	}
 
-/* Disabled for now, since there are no longer any known-bad load commands.
+	/* Disabled for now, since there are no longer any known-bad load commands.
 	void testLoadCommands_data()
 	{
 		QTest::addColumn< string >("binaryPath");
@@ -239,7 +261,7 @@ private slots:
 		getBinaryFilePaths(true, true, true, binaryFilePaths);
 
 		foreach (string path, binaryFilePaths)
-			QTest::newRow(path.c_str()) << path;
+			QTest::newRow(VuoStringUtilities::substrAfter(path, string(BINARY_DIR) + "/").c_str()) << path;
 	}
 	void testLoadCommands()
 	{
@@ -398,7 +420,9 @@ private slots:
 		getBinaryFilePaths(true, true, true, binaryFilePaths);
 
 		foreach (string path, binaryFilePaths)
-			QTest::newRow(path.c_str()) << path;
+			// Ignore libraries targeting specific processor features.
+			if (path.find("_avx2.dylib") == string::npos)
+				QTest::newRow(VuoStringUtilities::substrAfter(path, string(BINARY_DIR) + "/").c_str()) << path;
 	}
 	/**
 	 * Ensures binaries do not contain CPU instructions that aren't implemented on some systems Vuo supports.
@@ -436,7 +460,44 @@ private slots:
 			// AVX
 				"broadcastss", "broadcastsd", "broadcastf128", "insertf128", "extractf128",
 				"maskmovps", "maskmovpd", "permilps", "permilpd", "perm2f128", "zeroall", "zeroupper",
-				"vxorps", "vmovups"
+				"vxorps", "vmovups",
+
+			// AVX2
+				"vbroadcasti128",
+				"vextracti128",
+				"vgatherdpd", "vgatherdps", "vgatherqpd", "vgatherqps",
+				"vinserti128",
+				"vmovntdqa",
+				"vmpsadbw",
+				"vpabsb", "vpabsd", "vpabsw",
+				"vpackssdw", "vpacksswb", "vpackusdw", "vpackuswb",
+				"vpaddb", "vpaddd", "vpaddq", "vpaddsb", "vpaddsw", "vpaddusb", "vpaddusw", "vpaddw",
+				"vpalignr",
+				"vpand", "vpandn",
+				"vpavgb", "vpavgw",
+				"vpblendd", "vpblendvb", "vpblendw",
+				"vpbroadcastb", "vpbroadcastd", "vpbroadcastq", "vpbroadcastw",
+				"vpcmpeqb", "vpcmpeqd", "vpcmpeqq", "vpcmpeqw", "vpcmpgtb", "vpcmpgtd", "vpcmpgtq", "vpcmpgtw",
+				"vperm2i128", "vpermd", "vpermpd", "vpermps", "vpermq",
+				"vpgatherdd", "vpgatherdq", "vpgatherqd", "vpgatherqq",
+				"vphaddd", "vphaddsw", "vphaddw",
+				"vphsubd", "vphsubsw", "vphsubw",
+				"vpmaddubsw",
+				"vpmaddwd",
+				"vpmaskmovd", "vpmaskmovq",
+				"vpmaxsb", "vpmaxsd", "vpmaxsw", "vpmaxub", "vpmaxud", "vpmaxuw",
+				"vpminsb", "vpminsd", "vpminsw", "vpminub", "vpminud", "vpminuw",
+				"vpmovmskb", "vpmovsxbd", "vpmovsxbq", "vpmovsxbw", "vpmovsxdq", "vpmovsxwd", "vpmovsxwq", "vpmovzxbd", "vpmovzxbq", "vpmovzxbw", "vpmovzxdq", "vpmovzxwd", "vpmovzxwq",
+				"vpmuldq", "vpmulhrsw", "vpmulhuw", "vpmulhw", "vpmulld", "vpmullw", "vpmuludq",
+				"vpor",
+				"vpsadbw",
+				"vpshufb", "vpshufd", "vpshufhw", "vpshuflw",
+				"vpsignb", "vpsignd", "vpsignw",
+				"vpslld", "vpslldq", "vpsllq", "vpsllvd", "vpsllvq", "vpsllw",
+				"vpsrad", "vpsravd", "vpsraw", "vpsrld", "vpsrldq", "vpsrlq", "vpsrlvd", "vpsrlvq", "vpsrlw",
+				"vpsubb", "vpsubd", "vpsubq", "vpsubsb", "vpsubsw", "vpsubusb", "vpsubusw", "vpsubw",
+				"vpunpckhbw", "vpunpckhdq", "vpunpckhqdq", "vpunpckhwd", "vpunpcklbw", "vpunpckldq", "vpunpcklqdq", "vpunpcklwd",
+				"vpxor",
 		};
 
 		set<string> whitelistedInstructions;
@@ -492,19 +553,12 @@ private slots:
 		string exportedExecutablePath = exportedAppPath + "/Contents/MacOS/" + compositionName.toStdString();
 		{
 			string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
-
 			VuoCompiler *compiler = initCompiler();
-			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
-			VuoComposition baseComposition;
-			VuoCompilerComposition compilerComposition(&baseComposition, parser);
-			VuoRendererComposition rendererComposition(&baseComposition);
-
-			string exportErrString;
-			rendererComposition.exportApp(exportedAppPath.c_str(), compiler, exportErrString);
-
-			delete parser;
+			VuoMacAppExporter exporter;
+			exporter.setComposition(VuoFileUtilities::readFileToString(compositionPath));
+			exporter.setCompiler(compiler);
+			exporter.performExport(exportedAppPath);
 			delete compiler;
-
 			QVERIFY2(VuoFileUtilities::fileExists(exportedExecutablePath), exportedExecutablePath.c_str());
 		}
 
@@ -515,8 +569,7 @@ private slots:
 			getLinesFromCommand(command, linesFromCommand);
 
 			set<string> encryptionSymbols;
-			encryptionSymbols.insert("crypto");
-			encryptionSymbols.insert("ssl");
+			encryptionSymbols.insert("curl"); // libcurl.dylib includes OpenSSL symbols (but doesn't export them).
 			bool foundEncryption = false;
 
 			foreach (string line, linesFromCommand)
@@ -542,6 +595,9 @@ private slots:
 int main(int argc, char *argv[])
 {
 	VuoRendererComposition::createAutoreleasePool();
+
+	// Tell Qt where to find its plugins.
+	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../QtPlugins").c_str()));
 
 	// https://bugreports.qt-project.org/browse/QTBUG-29197
 	qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1");

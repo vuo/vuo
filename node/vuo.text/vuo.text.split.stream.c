@@ -2,9 +2,9 @@
  * @file
  * vuo.text.split.stream node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -55,7 +55,7 @@ void nodeInstanceEvent
 		size_t lastSeparatorIndex = VuoText_findLastOccurrence(combinedText, separator);
 		if (lastSeparatorIndex == 0)
 			lastSeparatorIndex = 1 - separatorLength;
-		splittableText = VuoText_substring(combinedText, 1, lastSeparatorIndex - 1);
+		splittableText = VuoText_substring(combinedText, 1, includeEmptyParts ? lastSeparatorIndex : lastSeparatorIndex - 1);
 		**accumulatedText = VuoText_substring(combinedText, lastSeparatorIndex + separatorLength, combinedTextLength);
 	}
 	else
@@ -67,6 +67,13 @@ void nodeInstanceEvent
 
 	size_t partsCount = 0;
 	VuoText *splitTextsArr = VuoText_split(splittableText, separator, includeEmptyParts, &partsCount);
+
+	if (includeEmptyParts && partsCount > 0)
+	{
+		--partsCount;
+		VuoRetain(splitTextsArr[partsCount]);
+		VuoRelease(splitTextsArr[partsCount]);
+	}
 
 	for (size_t i = 0; i < partsCount; ++i)
 		splitText( splitTextsArr[i] );

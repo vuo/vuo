@@ -2,9 +2,9 @@
  * @file
  * vuo.osc.message.make.1 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@
 #pragma clang diagnostic pop
 
 VuoModuleMetadata({
-					 "title" : "Make Message",
+					 "title" : "Make Message (11)",
 					 "keywords" : [ ],
 					 "version" : "1.1.0",
 					 "genericTypes": {
@@ -73,27 +73,27 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"/example"}) address,
-		VuoInputData(VuoGenericType10) data1,
+		VuoInputData(VuoGenericType10, {"name":"Value 1"}) data1,
 		VuoInputData(VuoOscType, {"default":"auto"}) type1,
-		VuoInputData(VuoGenericType11) data2,
+		VuoInputData(VuoGenericType11, {"name":"Value 2"}) data2,
 		VuoInputData(VuoOscType, {"default":"auto"}) type2,
-		VuoInputData(VuoGenericType12) data3,
+		VuoInputData(VuoGenericType12, {"name":"Value 3"}) data3,
 		VuoInputData(VuoOscType, {"default":"auto"}) type3,
-		VuoInputData(VuoGenericType13) data4,
+		VuoInputData(VuoGenericType13, {"name":"Value 4"}) data4,
 		VuoInputData(VuoOscType, {"default":"auto"}) type4,
-		VuoInputData(VuoGenericType14) data5,
+		VuoInputData(VuoGenericType14, {"name":"Value 5"}) data5,
 		VuoInputData(VuoOscType, {"default":"auto"}) type5,
-		VuoInputData(VuoGenericType15) data6,
+		VuoInputData(VuoGenericType15, {"name":"Value 6"}) data6,
 		VuoInputData(VuoOscType, {"default":"auto"}) type6,
-		VuoInputData(VuoGenericType16) data7,
+		VuoInputData(VuoGenericType16, {"name":"Value 7"}) data7,
 		VuoInputData(VuoOscType, {"default":"auto"}) type7,
-		VuoInputData(VuoGenericType17) data8,
+		VuoInputData(VuoGenericType17, {"name":"Value 8"}) data8,
 		VuoInputData(VuoOscType, {"default":"auto"}) type8,
-		VuoInputData(VuoGenericType18) data9,
+		VuoInputData(VuoGenericType18, {"name":"Value 9"}) data9,
 		VuoInputData(VuoOscType, {"default":"auto"}) type9,
-		VuoInputData(VuoGenericType19) data10,
+		VuoInputData(VuoGenericType19, {"name":"Value 10"}) data10,
 		VuoInputData(VuoOscType, {"default":"auto"}) type10,
-		VuoInputData(VuoGenericType20) data11,
+		VuoInputData(VuoGenericType20, {"name":"Value 11"}) data11,
 		VuoInputData(VuoOscType, {"default":"auto"}) type11,
 		VuoOutputData(VuoOscMessage) message
 )

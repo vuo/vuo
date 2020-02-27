@@ -2,9 +2,9 @@
  * @file
  * VuoPort implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoPort.hh"
@@ -103,6 +103,25 @@ VuoPortClass::EventThrottling VuoPort::getEventThrottling(void)
 void VuoPort::setEventThrottling(VuoPortClass::EventThrottling eventThrottling)
 {
 	this->eventThrottling = eventThrottling;
+}
+
+/**
+ * Stores the port's original initial value found when parsing it from a Graphviz-formatted composition string.
+ */
+void VuoPort::setRawInitialValue(const string &rawInitialValue)
+{
+	this->rawInitialValue = rawInitialValue;
+}
+
+/**
+ * Returns the port's original initial value found when parsing it from a Graphviz-formatted composition string.
+ * This is useful for preserving the constant value when the port is on a node that lacks a VuoCompilerNode.
+ * It is not useful for checking the current constant value of a port when the VuoCompilerNode is present;
+ * see VuoCompilerInputEventPort.
+ */
+string VuoPort::getRawInitialValue(void)
+{
+	return rawInitialValue;
 }
 
 /**

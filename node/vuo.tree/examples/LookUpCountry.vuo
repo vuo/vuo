@@ -1,28 +1,27 @@
 /**
  * @file
- * Queries a web service to get the country name for a 3-letter ISO country code. Information about the web service is at [http://services.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm](http://services.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm).
+ * Queries a web service to get the country name for a 3-letter ISO country code.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="345,255"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="360,255"];
 AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="915,180" _separator="\"\""];
-FetchJSONTree [type="vuo.tree.fetch.json" version="1.0.0" label="Fetch JSON Tree|<refresh>refresh\l|<url>url\l|<tree>tree\r" pos="510,255" fillcolor="violet"];
-FindSubtreeValue2 [type="vuo.tree.find.VuoText" version="1.0.0" label="Find Subtree Value|<refresh>refresh\l|<tree>tree\l|<name>name\l|<value>value\r" pos="690,255" fillcolor="violet" _name="\"name\""];
+FetchJSONTree [type="vuo.tree.fetch.json" version="1.0.0" label="Fetch JSON Tree|<refresh>refresh\l|<url>url\l|<tree>tree\r" pos="510,255" fillcolor="orange"];
+FindSubtreeValue2 [type="vuo.tree.find.VuoText" version="1.0.0" label="Find Subtree Value|<refresh>refresh\l|<tree>tree\l|<name>name\l|<value>value\r" pos="690,255" fillcolor="orange" _name="\"name\""];
 GetRandomItemFromList2 [type="vuo.list.get.random.VuoText" version="1.0.0" label="Get Random Item from List|<refresh>refresh\l|<list>list\l|<randomItem>randomItem\r" pos="-75,180"];
-MakeButton [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="-360,90" fillcolor="yellow" _label="\"Look up a random country\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.5090714693069458,\"g\":0.26486611366271973,\"b\":0.66500341892242432,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0,\"y\":0.20000000298023224}" _width="0.80000000000000004" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeList27 [type="vuo.list.make.25.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<15>15\l|<16>16\l|<17>17\l|<18>18\l|<19>19\l|<20>20\l|<21>21\l|<22>22\l|<23>23\l|<24>24\l|<25>25\l|<list>list\r" pos="-114,191" _1="\"AFG\"" _2="\"BHS\"" _3="\"KHM\"" _4="\"DNK\"" _5="\"ECU\"" _6="\"FLK\"" _7="\"GAB\"" _8="\"HTI\"" _9="\"ISL\"" _10="\"JAM\"" _11="\"KAZ\"" _12="\"LAO\"" _13="\"MKD\"" _14="\"NAM\"" _15="\"OMN\"" _16="\"PAK\"" _17="\"QAT\"" _18="\"REU\"" _19="\"BLM\"" _20="\"TWN\"" _21="\"UGA\"" _22="\"VUT\"" _23="\"WLF\"" _24="\"YEM\"" _25="\"ZMB\""];
-MakeList28 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="304,266" _1="\"http:\\/\\/services.groupkt.com\\/country\\/get\\/iso3code\\/\""];
+MakeActionButton [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="-330,90" fillcolor="lime" _label="\"Look up a random country\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0.20000000298023224\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList27 [type="vuo.list.make.24.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<15>15\l|<16>16\l|<17>17\l|<18>18\l|<19>19\l|<20>20\l|<21>21\l|<22>22\l|<23>23\l|<24>24\l|<list>list\r" pos="-113,191" _1="\"AFG\"" _2="\"BHS\"" _3="\"KHM\"" _4="\"DNK\"" _5="\"ECU\"" _6="\"FLK\"" _7="\"GAB\"" _8="\"HTI\"" _9="\"ISL\"" _10="\"JAM\"" _11="\"KAZ\"" _12="\"LAO\"" _13="\"MKD\"" _14="\"NAM\"" _15="\"OMN\"" _16="\"PAK\"" _17="\"QAT\"" _18="\"KGZ\"" _19="\"ZMB\"" _20="\"TWN\"" _21="\"UGA\"" _22="\"VUT\"" _23="\"WLF\"" _24="\"YEM\""];
+MakeList28 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="319,266" _1="\"https:\\/\\/vuo.org\\/sites\\/default\\/files\\/iso3code\\/\""];
 MakeList30 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="874,191" _2="\": \""];
-MakeList37 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1352,131" fillcolor="green"];
-MakeList38 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1332,101" fillcolor="green"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1170,180" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1380,90" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+MakeList38 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1326,101" fillcolor="blue"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1170,180" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1380,90" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
 AppendTexts2:compositeText -> MakeTextLayer2:text;
 AppendTexts:compositeText -> FetchJSONTree:url;
@@ -30,13 +29,12 @@ FetchJSONTree:tree -> FindSubtreeValue2:tree;
 FindSubtreeValue2:value -> MakeList30:3;
 GetRandomItemFromList2:randomItem -> MakeList28:2;
 GetRandomItemFromList2:randomItem -> MakeList30:1;
-MakeButton:pressed -> GetRandomItemFromList2:refresh;
-MakeButton:updatedLayer -> MakeList38:1;
+MakeActionButton:pressed -> MakeList27:1;
+MakeActionButton:updatedLayer -> MakeList38:1;
 MakeList27:list -> GetRandomItemFromList2:list;
 MakeList28:list -> AppendTexts:texts;
 MakeList30:list -> AppendTexts2:texts;
-MakeList37:list -> RenderLayersToWindow:setWindowProperties;
 MakeList38:list -> RenderLayersToWindow:layers;
 MakeTextLayer2:layer -> MakeList38:2;
-RenderLayersToWindow:renderedLayers -> MakeButton:renderedLayers [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton:window [style=invis];
 }

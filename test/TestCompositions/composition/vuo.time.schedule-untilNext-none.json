@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Expected outputs for the vuo.time.schedule node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{"firingPort":"time", "inputPortValues":{"time":0,   "schedule":[1,2], "durationType":"until next", "loop":"none"}},
+	{"firingPort":"time", "inputPortValues":{"time":0.5, "schedule":[1,2], "durationType":"until next", "loop":"none"}},
+	{"firingPort":"time", "inputPortValues":{"time":1,   "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{"elapsedTime1":0  }},                      // hit schedule 1 for the first time.
+	{"firingPort":"time", "inputPortValues":{"time":1.5, "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{"elapsedTime1":0.5}},                      // durationType=untilNext should output intervening events.
+	{"firingPort":"time", "inputPortValues":{"time":2.1, "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{"elapsedTime1":1.1, "elapsedTime2":0.1}},  // didn't hit the exact schedule point; should output deltas.
+	{"firingPort":"time", "inputPortValues":{"time":2.5, "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{                    "elapsedTime2":0.5}},  // durationType=untilNext shouldn't output 1 after 2 has started.
+	{"firingPort":"time", "inputPortValues":{"time":3,   "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{                    "elapsedTime2":1  }},
+	{"firingPort":"time", "inputPortValues":{"time":3.5, "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{                    "elapsedTime2":1.5}},
+	{"firingPort":"time", "inputPortValues":{"time":4,   "schedule":[1,2], "durationType":"until next", "loop":"none"}, "outputPortValues":{                    "elapsedTime2":2  }},
+]}

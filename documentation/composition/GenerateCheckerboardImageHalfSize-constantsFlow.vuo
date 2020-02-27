@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="60,150"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="60,330"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="285,195"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="165,-45" fillcolor="orange" _upperLeftColor="\{\"r\":0.749996,\"g\":0.749996,\"b\":0.749996,\"a\":1.000000\}" _upperRightColor="\{\"r\":0.500008,\"g\":0.500008,\"b\":0.500008,\"a\":1.000000\}" _squareSize="0.750000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-138,-64" fillcolor="orange" _2="0.5"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-138,-4" fillcolor="orange" _2="0.5"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-105,-75" fillcolor="orange"];
+Multiply2 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-105,-15" fillcolor="orange"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="270,255"];
+Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="270,270"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedStep="32" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedStep="32"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+ConvertIntegerToRealNumber2:real -> MakeList2:1;
+ConvertIntegerToRealNumber:real -> MakeList:1;
+ConvertRealTo2DPoint:point2d -> MakeCheckerboardImage:center;
+MakeCheckerboardImage:image -> PublishedOutputs:outputImage;
+MakeList2:list -> Multiply2:values;
+MakeList:list -> Multiply:values;
+Multiply2:product -> Round2:real;
+Multiply:product -> Round:real;
+PublishedInputs:height -> ConvertIntegerToRealNumber2:integer;
+PublishedInputs:time -> ConvertIntegerToRealNumber2:integer [event=true];
+PublishedInputs:time -> ConvertIntegerToRealNumber:integer [event=true];
+PublishedInputs:time -> ConvertRealTo2DPoint:x;
+PublishedInputs:width -> ConvertIntegerToRealNumber:integer;
+Round2:rounded -> MakeCheckerboardImage:height;
+Round:rounded -> MakeCheckerboardImage:width;
+}

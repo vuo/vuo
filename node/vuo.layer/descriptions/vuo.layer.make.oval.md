@@ -8,3 +8,4 @@ Creates a solid-color oval layer that can be combined with other layers to creat
    - `Width` — The width of the oval, in Vuo Coordinates.
    - `Height` — The height of the oval, in Vuo Coordinates.
    - `Sharpness` — How sharp the edge of the oval is.  A value of 0 means the edge is blurry; a value of 1 means the edge is sharp.
+   - `Opacity` — The oval's opacity, from 0 (fully transparent) to 1 (same opacity as the input `Color`).

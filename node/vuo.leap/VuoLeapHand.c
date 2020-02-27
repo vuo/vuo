@@ -2,17 +2,13 @@
  * @file
  * VuoLeapHand implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
-
-#include <stdio.h>
-#include <string.h>
 
 #include "type.h"
 #include "VuoLeapHand.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -44,68 +40,22 @@ VuoModuleMetadata({
  */
 VuoLeapHand VuoLeapHand_makeFromJson(json_object * js)
 {
-	VuoLeapHand hand = VuoLeapHand_make(
-					0,									// id
-					(VuoPoint4d){0,0,0,0},				// rotation
-					(VuoPoint3d){0,0,0},				// palmPosition
-					(VuoPoint3d){0,0,0},				// palmVelocity
-					0.,									// sphereRadius
-					(VuoPoint3d){0,0,0},				// sphereCenter
-					0., 								// palmWidth
-					(VuoPoint3d){0,0,0},				// wristPosition
-					0.,		 							// pinchAmount
-					0.,		 							// grabAmount
-					0.,		 							// timeVisible
-					false, 		 						// isLeftHand
-					0.,		 							// confidence
-					VuoListCreate_VuoLeapPointable()	// fingers
-				);
-
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "id", &o))
-		hand.id = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "rotation", &o))
-		hand.rotation = VuoPoint4d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "palmPosition", &o))
-		hand.palmPosition = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "palmVelocity", &o))
-		hand.palmVelocity = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "sphereRadius", &o))
-		hand.sphereRadius = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "sphereCenter", &o))
-		hand.sphereCenter = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "palmWidth", &o))
-		hand.palmWidth = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "wristPosition", &o))
-		hand.wristPosition = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "pinchAmount", &o))
-		hand.pinchAmount = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "grabAmount", &o))
-		hand.grabAmount = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "timeVisible", &o))
-		hand.timeVisible = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "isLeftHand", &o))
-		hand.isLeftHand = VuoBoolean_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "confidence", &o))
-		hand.confidence = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "fingers", &o))
-		hand.fingers = VuoList_VuoLeapPointable_makeFromJson(o);
-
-	return hand;
+	return (VuoLeapHand){
+		VuoJson_getObjectValue(VuoInteger,               js, "id",            0),
+		VuoJson_getObjectValue(VuoPoint4d,               js, "rotation",      (VuoPoint4d){0,0,0,0}),
+		VuoJson_getObjectValue(VuoPoint3d,               js, "palmPosition",  (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoPoint3d,               js, "palmVelocity",  (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoReal,                  js, "sphereRadius",  0.),
+		VuoJson_getObjectValue(VuoPoint3d,               js, "sphereCenter",  (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoReal,                  js, "palmWidth",     0.),
+		VuoJson_getObjectValue(VuoPoint3d,               js, "wristPosition", (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoReal,                  js, "pinchAmount",   0.),
+		VuoJson_getObjectValue(VuoReal,                  js, "grabAmount",    0.),
+		VuoJson_getObjectValue(VuoReal,                  js, "timeVisible",   0.),
+		VuoJson_getObjectValue(VuoBoolean,               js, "isLeftHand",    false),
+		VuoJson_getObjectValue(VuoReal,                  js, "confidence",    0.),
+		VuoJson_getObjectValue(VuoList_VuoLeapPointable, js, "fingers",       NULL)
+	};
 }
 
 /**

@@ -2,22 +2,19 @@
  * @file
  * VuoMeshParametric implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
 #include "VuoMeshParametric.h"
-#include "muParser.h"
-#include <OpenGL/CGLMacro.h>
+#include <muParser/muParser.h>
 #include "VuoMeshUtility.h"
-#include "VuoMathExpressionParser.h"
+
+#include "module.h"
 
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoMeshParametric",
@@ -31,12 +28,22 @@ VuoModuleMetadata({
 }
 
 /**
+ * Adds a normal to a running sum.
+ */
+static inline void add(float *normals, int index, VuoPoint3d normal)
+{
+	normals[index * 3    ] += normal.x;
+	normals[index * 3 + 1] += normal.y;
+	normals[index * 3 + 2] += normal.z;
+}
+
+/**
  * Generates a mesh given a set of mathematical expressions specifying a warped surface.
  */
 VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax, VuoDictionary_VuoText_VuoReal *constants)
 {
 	if (uSubdivisions < 2 || vSubdivisions < 2 || !xExp || !yExp || !zExp)
-		return VuoMesh_make(0);
+		return nullptr;
 
 	mu::Parser xParser, yParser, zParser;
 
@@ -88,17 +95,20 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	int width = uSubdivisions;
 	int height = vSubdivisions;
 
-	float u = 0., v = 0., ustep = 1./(width-1.), vstep = 1./(height-1.);
+	float ustep = 1./(width-1.), vstep = 1./(height-1.);
 
 	int vertexCount = width * height;
 
-	VuoPoint4d *positions 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *normals 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *textures 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	unsigned int elementCount = ((uSubdivisions-1)*(vSubdivisions-1))*3*2;
+	float *positions, *normals, *textureCoordinates;
+	unsigned int *elements;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, &normals, &textureCoordinates, nullptr, elementCount, &elements);
+	bzero(normals, sizeof(float) * 3 * vertexCount);
 
 	try
 	{
 		int i = 0;
+		float u = 0., v = 0.;
 		for(int y = 0; y < height; y++)
 		{
 			vVar = VuoReal_lerp(vMin, vMax, (closeV && y==height-1) ? 0 : v);
@@ -109,20 +119,12 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 				iVar = x + 1;
 				jVar = y + 1;
 
-				positions[i].x = xParser.Eval();
-				positions[i].y = yParser.Eval();
-				positions[i].z = zParser.Eval();
-				positions[i].w = 1.;
+				positions[i * 3    ] = xParser.Eval();
+				positions[i * 3 + 1] = yParser.Eval();
+				positions[i * 3 + 2] = zParser.Eval();
 
-				normals[i].x = 0.;
-				normals[i].y = 0.;
-				normals[i].z = 0.;
-				normals[i].w = 0.;
-
-				textures[i].x = u;
-				textures[i].y = v;
-				textures[i].z = 0.;
-				textures[i].w = 0.;
+				textureCoordinates[i * 2    ] = u;
+				textureCoordinates[i * 2 + 1] = v;
 
 				u += ustep;
 				i++;
@@ -137,8 +139,8 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 		VUserLog("Error: %s", e.GetMsg().c_str());
 		free(positions);
 		free(normals);
-		free(textures);
-		return VuoMesh_make(0);
+		free(textureCoordinates);
+		return nullptr;
 	}
 
 	// wind triangles
@@ -146,13 +148,8 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	width = uSubdivisions-1;
 	height = vSubdivisions-1;
 
-	unsigned int triangleCount = (width*height)*3*2;
-	unsigned int *triangles = (unsigned int *)malloc(sizeof(unsigned int)*triangleCount);
-
 	// Prepare an array to count how many neighboring face normals have been added to the vertex normal, so we can divide later to get the average.
 	unsigned int* normalCount = (unsigned int*)calloc(sizeof(unsigned int) * vertexCount, sizeof(unsigned int));
-	for (int i=0;i<vertexCount;++i)
-		normalCount[i] = 0;
 
 	int index = 0;
 	int one, two, three, four;
@@ -171,12 +168,15 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 			four = x+row+stride+1;
 
 			// calculate face normal, add to normals, augment normalCount for subsequent averaging
-			VuoPoint4d faceNormal = VuoMeshUtility_faceNormal(positions[one], positions[two], positions[three]);
+			VuoPoint3d faceNormal = VuoMeshUtility_faceNormal(
+				VuoPoint3d_makeFromArray(&positions[one   * 3]),
+				VuoPoint3d_makeFromArray(&positions[two   * 3]),
+				VuoPoint3d_makeFromArray(&positions[three * 3]));
 
-			normals[one] 	= VuoPoint4d_add(normals[one], faceNormal);
-			normals[two] 	= VuoPoint4d_add(normals[two], faceNormal);
-			normals[three] 	= VuoPoint4d_add(normals[three], faceNormal);
-			normals[four] 	= VuoPoint4d_add(normals[four], faceNormal);
+			add(normals, one, faceNormal);
+			add(normals, two, faceNormal);
+			add(normals, three, faceNormal);
+			add(normals, four, faceNormal);
 
 			normalCount[one]++;
 			normalCount[two]++;
@@ -186,13 +186,16 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 			if(closeU && x == width-1)
 			{
 				// Add the first face in row normal to right-most vertices
-				VuoPoint4d uNrm = VuoMeshUtility_faceNormal( positions[row], positions[row+1], positions[row+stride] );
+				VuoPoint3d uNrm = VuoMeshUtility_faceNormal(
+					VuoPoint3d_makeFromArray(&positions[row            * 3]),
+					VuoPoint3d_makeFromArray(&positions[(row + 1)      * 3]),
+					VuoPoint3d_makeFromArray(&positions[(row + stride) * 3]));
 
-				normals[two] 		= VuoPoint4d_add(normals[two], uNrm);
-				normals[four] 		= VuoPoint4d_add(normals[four], uNrm);
+				add(normals, two,          uNrm);
+				add(normals, four,         uNrm);
 				// And add the current face normal to the origin row vertex normals
-				normals[row] 		= VuoPoint4d_add(normals[row], faceNormal);
-				normals[row+stride] = VuoPoint4d_add(normals[row+stride], faceNormal);
+				add(normals, row,          faceNormal);
+				add(normals, row + stride, faceNormal);
 
 				normalCount[two]++;
 				normalCount[four]++;
@@ -202,12 +205,15 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 
 			if(closeV && y==height-1)
 			{
-				VuoPoint4d vNrm = VuoMeshUtility_faceNormal( positions[x], positions[x+1], positions[x+stride] );
+				VuoPoint3d vNrm = VuoMeshUtility_faceNormal(
+					VuoPoint3d_makeFromArray(&positions[x            * 3]),
+					VuoPoint3d_makeFromArray(&positions[(x + 1)      * 3]),
+					VuoPoint3d_makeFromArray(&positions[(x + stride) * 3]));
 
-				normals[three] 	= VuoPoint4d_add(normals[three], vNrm);
-				normals[four] 	= VuoPoint4d_add(normals[four], vNrm);
-				normals[x] 		= VuoPoint4d_add(normals[x], faceNormal);
-				normals[x+1] 	= VuoPoint4d_add(normals[x+1], faceNormal);
+				add(normals, three, vNrm);
+				add(normals, four,  vNrm);
+				add(normals, x,     faceNormal);
+				add(normals, x + 1, faceNormal);
 
 				normalCount[three]++;
 				normalCount[four]++;
@@ -218,12 +224,12 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 			// Elements are wound to be front-facing for Vuo's right-handed coordinate system.
 			// Order the elements so that the diagonal edge of each triangle
 			// is last, so that vuo.shader.make.wireframe can optionally omit them.
-			triangles[index+0] = three;
-			triangles[index+1] = one;
-			triangles[index+2] = two;
-			triangles[index+3] = two;
-			triangles[index+4] = four;
-			triangles[index+5] = three;
+			elements[index    ] = three;
+			elements[index + 1] = one;
+			elements[index + 2] = two;
+			elements[index + 3] = two;
+			elements[index + 4] = four;
+			elements[index + 5] = three;
 
 			index += 6;
 		}
@@ -233,15 +239,13 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	// average normals
 	for(int i = 0; i < vertexCount; i++)
 	{
-		normals[i] = VuoPoint4d_multiply(normals[i], 1./(double)normalCount[i]);
+		normals[i * 3    ] /= normalCount[i];
+		normals[i * 3 + 1] /= normalCount[i];
+		normals[i * 3 + 2] /= normalCount[i];
 	}
 	free(normalCount);
 
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													positions, normals, NULL, NULL, textures,
-													triangleCount, triangles, VuoMesh_IndividualTriangles);
-
-	VuoMeshUtility_calculateTangents(&submesh);
-
-	return VuoMesh_makeFromSingleSubmesh(submesh);
+	return VuoMesh_makeFromCPUBuffers(vertexCount,
+		positions, normals, textureCoordinates, nullptr,
+		elementCount, elements, VuoMesh_IndividualTriangles);
 }

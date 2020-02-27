@@ -2,14 +2,16 @@
  * @file
  * composition interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#pragma once
 
 #include "VuoRuntime.h"
 
-//@{
+/// @{
 /**
  * Normally defined in the composition's generated code. Defined here to prevent link errors.
  */
@@ -35,14 +37,7 @@ void vuoInstanceTriggerStart(void)
 void vuoInstanceTriggerStop(void)
 {
 }
-char * vuoGetPortValue(const char *portIdentifier, int serializationType)
-{
-	return NULL;
-}
 void vuoSetInputPortValue(const char *portIdentifier, char *valueAsString)
-{
-}
-void fireTriggerPortEvent(const char *portIdentifier)
 {
 }
 unsigned int getPublishedInputPortCount(void)
@@ -108,4 +103,4 @@ char * getPublishedOutputPortValue(const char *portIdentifier, int shouldUseInte
 	return NULL;
 }
 
-//@}
+/// @}

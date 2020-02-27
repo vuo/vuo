@@ -2,9 +2,9 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoAudio.h"
@@ -12,22 +12,20 @@
 #include "VuoTriggerSet.hh"
 #include "VuoApp.h"
 #include "VuoEventLoop.h"
+#include "VuoOsStatus.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include "rtaudio/RtAudio.h"
+#include <RtAudio/RtAudio.h>
 #pragma clang diagnostic pop
 
-#include <dispatch/dispatch.h>
-#include <map>
 #include <queue>
-#include <set>
 #include <CoreAudio/CoreAudio.h>
+#include <objc/objc-runtime.h>
 
 
 extern "C"
 {
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -39,6 +37,7 @@ VuoModuleMetadata({
 						 "VuoList_VuoAudioSamples",
 						 "VuoList_VuoAudioInputDevice",
 						 "VuoList_VuoAudioOutputDevice",
+						 "VuoOsStatus",
 						 "rtaudio",
 						 "CoreAudio.framework"
 					 ]
@@ -47,6 +46,10 @@ VuoModuleMetadata({
 }
 
 const VuoInteger VuoAudio_queueSize = 8;	///< The number of buffers that must be enqueued before starting playback.
+
+static VuoTriggerSet<VuoList_VuoAudioInputDevice>  VuoAudio_inputDeviceCallbacks;   ///< Trigger functions to call when the list of audio input devices changes.
+static VuoTriggerSet<VuoList_VuoAudioOutputDevice> VuoAudio_outputDeviceCallbacks;  ///< Trigger functions to call when the list of audio output devices changes.
+unsigned int VuoAudio_useCount = 0;  ///< Process-wide count of callers (typically node instances) interested in notifications about audio devices.
 
 /**
  * Ensure we're listening for the system's device notifications.
@@ -97,6 +100,98 @@ VuoList_VuoAudioOutputDevice VuoAudio_getOutputDevices(void)
 			VuoListAppendValue_VuoAudioOutputDevice(outputDevices, VuoAudioOutputDevice_make(i, VuoText_make(info.modelUid.c_str()), VuoText_make(info.name.c_str()), info.outputChannels));
 	}
 	return outputDevices;
+}
+
+/**
+ * Invoked by Core Audio.
+ */
+static OSStatus VuoAudio_reconfigurationCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses, void *inClientData)
+{
+	VuoAudio_inputDeviceCallbacks.fire(VuoAudio_getInputDevices());
+	VuoAudio_outputDeviceCallbacks.fire(VuoAudio_getOutputDevices());
+	return noErr;
+}
+
+/**
+ * Indicates that the caller needs to get notifications about audio devices.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoAudio_use(void)
+{
+	if (__sync_add_and_fetch(&VuoAudio_useCount, 1) == 1)
+	{
+		AudioObjectPropertyAddress address;
+		address.mSelector = kAudioHardwarePropertyDevices;
+		address.mScope = kAudioObjectPropertyScopeGlobal;
+		address.mElement = kAudioObjectPropertyElementMaster;
+		OSStatus ret = AudioObjectAddPropertyListener(kAudioObjectSystemObject, &address, &VuoAudio_reconfigurationCallback, NULL);
+		if (ret)
+		{
+			char *description = VuoOsStatus_getText(ret);
+			VUserLog("Error: Couldn't register device change listener: %s", description);
+			free(description);
+		}
+	}
+}
+
+/**
+ * Indicates that the caller no longer needs notifications about audio devices.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoAudio_disuse(void)
+{
+	if (VuoAudio_useCount <= 0)
+	{
+		VUserLog("Error: Unbalanced VuoAudio_use() / _disuse() calls.");
+		return;
+	}
+
+	if (__sync_sub_and_fetch(&VuoAudio_useCount, 1) == 0)
+	{
+		AudioObjectPropertyAddress address;
+		address.mSelector = kAudioHardwarePropertyDevices;
+		address.mScope = kAudioObjectPropertyScopeGlobal;
+		address.mElement = kAudioObjectPropertyElementMaster;
+		OSStatus ret = AudioObjectRemovePropertyListener(kAudioObjectSystemObject, &address, &VuoAudio_reconfigurationCallback, NULL);
+		if (ret)
+		{
+			char *description = VuoOsStatus_getText(ret);
+			VUserLog("Error: Couldn't unregister device change listener: %s", description);
+			free(description);
+		}
+	}
+}
+
+/**
+ * Adds a trigger callback, to be invoked whenever the list of known audio devices changes.
+ *
+ * Call `VuoAudio_use()` before calling this.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoAudio_addDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoAudioInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoAudioOutputDevice))
+{
+	VuoAudio_inputDeviceCallbacks.addTrigger(inputDevices);
+	VuoAudio_outputDeviceCallbacks.addTrigger(outputDevices);
+	inputDevices(VuoAudio_getInputDevices());
+	outputDevices(VuoAudio_getOutputDevices());
+}
+
+/**
+ * Removes a trigger callback previously added by @ref VuoAudio_addDevicesChangedTriggers.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoAudio_removeDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoAudioInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoAudioOutputDevice))
+{
+	VuoAudio_inputDeviceCallbacks.removeTrigger(inputDevices);
+	VuoAudio_outputDeviceCallbacks.removeTrigger(outputDevices);
 }
 
 /**
@@ -270,6 +365,20 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 	VuoAudio_internal ai = NULL;
 	try
 	{
+		Class avCaptureDeviceClass = objc_getClass("AVCaptureDevice");
+		if (class_getClassMethod(avCaptureDeviceClass, sel_getUid("authorizationStatusForMediaType:")))
+		{
+			CFStringRef mediaType = CFStringCreateWithCString(NULL, "soun", kCFStringEncodingUTF8);
+			long status = (long)objc_msgSend((id)avCaptureDeviceClass, sel_getUid("authorizationStatusForMediaType:"), mediaType);
+			CFRelease(mediaType);
+
+			if (status == 0 /* AVAuthorizationStatusNotDetermined */)
+				VUserLog("Warning: Audio input may be unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Microphone.");
+			else if (status == 1 /* AVAuthorizationStatusRestricted */
+				  || status == 2 /* AVAuthorizationStatusDenied */)
+				VUserLog("Error: Audio input is unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Microphone.");
+		}
+
 		ai = new _VuoAudio_internal;
 		ai->inputDevice.id = deviceId;
 		ai->outputDevice.id = deviceId;
@@ -318,12 +427,11 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 	catch (RtAudioError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VUserLog("Failed to open the audio device (%d) :: %s.\n", deviceId, error.what());
+		VUserLog("Failed to open the audio device (%d): %s", deviceId, error.what());
 
 		if (ai)
 		{
-			if (ai->rta)
-				delete ai->rta;
+			delete ai->rta;
 			delete ai;
 			ai = NULL;
 		}
@@ -348,7 +456,7 @@ static void VuoAudio_destroy(VuoAudio_internal ai)
 	}
 	catch (RtAudioError &error)
 	{
-		VUserLog("Failed to close the audio device (%s) :: %s.\n", ai->inputDevice.name, error.what());
+		VUserLog("Failed to close the audio device (%s): %s", ai->inputDevice.name, error.what());
 	}
 
 	// Now that the audio stream is stopped (and the last callback has returned), it's safe to delete the queue.
@@ -375,98 +483,15 @@ VUOKEYEDPOOL_DEFINE(unsigned int, VuoAudio_internal, VuoAudio_make);
  */
 VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
 {
-	int deviceId = -1;
+	VuoAudioInputDevice realizedDevice;
+	if (!VuoAudioInputDevice_realize(aid, &realizedDevice))
+		return nullptr;
 
-	__block RtAudio *temporaryRTA;	// Just for getting device info prior to opening a shared device.
+	VuoAudioInputDevice_retain(realizedDevice);
+	VuoAudioIn ai = (VuoAudioIn)VuoAudio_internalPool->getSharedInstance(realizedDevice.id);
+	VuoAudioInputDevice_release(realizedDevice);
 
-	try
-	{
-		// https://b33p.net/kosada/node/12068
-		VuoApp_executeOnMainThread(^{
-									   temporaryRTA = new RtAudio();
-								   });
-
-		if (aid.id == -1)
-		{
-			if (VuoText_isEmpty(aid.modelUid) && VuoText_isEmpty(aid.name))
-			{
-				// Choose the default device
-				deviceId = temporaryRTA->getDefaultInputDevice();
-
-				if (VuoIsDebugEnabled())
-				{
-					RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
-					if (di.inputChannels)
-						VUserLog("Using default device #%d, name \"%s\".", deviceId, di.name.c_str());
-				}
-			}
-			else
-			{
-				if (!VuoText_isEmpty(aid.modelUid))
-				{
-					// Choose the first input device whose name contains aid.modelUid
-					VDebugLog("Trying to match model UID \"%s\"…", aid.modelUid);
-					unsigned int deviceCount = temporaryRTA->getDeviceCount();
-					for (unsigned int i = 0; i < deviceCount; ++i)
-					{
-						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-						if (di.inputChannels && di.modelUid.find(aid.modelUid) != std::string::npos)
-						{
-							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
-							deviceId = i;
-							break;
-						}
-					}
-				}
-
-				if (deviceId == -1 && !VuoText_isEmpty(aid.name))
-				{
-					// Choose the first input device whose name contains aid.name
-					VDebugLog("Trying to match name \"%s\"…", aid.name);
-					unsigned int deviceCount = temporaryRTA->getDeviceCount();
-					for (unsigned int i = 0; i < deviceCount; ++i)
-					{
-						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-						if (di.inputChannels && di.name.find(aid.name) != std::string::npos)
-						{
-							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
-							deviceId = i;
-							break;
-						}
-					}
-				}
-
-				if (deviceId == -1)
-				{
-					VUserLog("Couldn't find a matching audio device.");
-					return NULL;
-				}
-			}
-		}
-		else
-		{
-			// Choose the device specified by aid.id
-			deviceId = aid.id;
-
-			if (VuoIsDebugEnabled())
-			{
-				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
-				if (di.inputChannels)
-					VUserLog("Using device #%d, name \"%s\".", deviceId, di.name.c_str());
-			}
-		}
-
-		delete temporaryRTA;
-	}
-	catch (RtAudioError &error)
-	{
-		/// @todo https://b33p.net/kosada/node/4724
-		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
-		delete temporaryRTA;
-		return NULL;
-	}
-
-	return (VuoAudioIn)VuoAudio_internalPool->getSharedInstance(deviceId);
+	return ai;
 }
 
 /**
@@ -474,98 +499,15 @@ VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
  */
 VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
 {
-	int deviceId = -1;
+	VuoAudioOutputDevice realizedDevice;
+	if (!VuoAudioOutputDevice_realize(aod, &realizedDevice))
+		return nullptr;
 
-	__block RtAudio *temporaryRTA;	// Just for getting device info prior to opening a shared device.
+	VuoAudioOutputDevice_retain(realizedDevice);
+	VuoAudioOut ao = (VuoAudioOut)VuoAudio_internalPool->getSharedInstance(realizedDevice.id);
+	VuoAudioOutputDevice_release(realizedDevice);
 
-	try
-	{
-		// https://b33p.net/kosada/node/12068
-		VuoApp_executeOnMainThread(^{
-									   temporaryRTA = new RtAudio();
-								   });
-
-		if (aod.id == -1)
-		{
-			if (VuoText_isEmpty(aod.modelUid) && VuoText_isEmpty(aod.name))
-			{
-				// Choose the default device
-				deviceId = temporaryRTA->getDefaultOutputDevice();
-
-				if (VuoIsDebugEnabled())
-				{
-					RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
-					if (di.outputChannels)
-						VUserLog("Using default device #%d, name \"%s\".", deviceId, di.name.c_str());
-				}
-			}
-			else
-			{
-				if (!VuoText_isEmpty(aod.modelUid))
-				{
-					// Choose the first output device whose name contains aid.modelUid
-					VDebugLog("Trying to match model UID \"%s\"…", aod.modelUid);
-					unsigned int deviceCount = temporaryRTA->getDeviceCount();
-					for (unsigned int i = 0; i < deviceCount; ++i)
-					{
-						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-						if (di.outputChannels && di.modelUid.find(aod.modelUid) != std::string::npos)
-						{
-							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
-							deviceId = i;
-							break;
-						}
-					}
-				}
-
-				if (deviceId == -1 && !VuoText_isEmpty(aod.name))
-				{
-					// Choose the first output device whose name contains aid.name
-					VDebugLog("Trying to match name \"%s\"…", aod.name);
-					unsigned int deviceCount = temporaryRTA->getDeviceCount();
-					for (unsigned int i = 0; i < deviceCount; ++i)
-					{
-						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-						if (di.outputChannels && di.name.find(aod.name) != std::string::npos)
-						{
-							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
-							deviceId = i;
-							break;
-						}
-					}
-				}
-
-				if (deviceId == -1)
-				{
-					VUserLog("Couldn't find a matching audio device.");
-					return NULL;
-				}
-			}
-		}
-		else
-		{
-			// Choose the device specified by aid.id
-			deviceId = aod.id;
-
-			if (VuoIsDebugEnabled())
-			{
-				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
-				if (di.outputChannels)
-					VUserLog("Using device #%d, name \"%s\".", deviceId, di.name.c_str());
-			}
-		}
-
-		delete temporaryRTA;
-	}
-	catch (RtAudioError &error)
-	{
-		/// @todo https://b33p.net/kosada/node/4724
-		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
-		delete temporaryRTA;
-		return NULL;
-	}
-
-	return (VuoAudioOut)VuoAudio_internalPool->getSharedInstance(deviceId);
+	return ao;
 }
 
 /**
@@ -660,4 +602,229 @@ void VuoAudioOut_sendChannels(VuoAudioOut ao, VuoList_VuoAudioSamples channels, 
 	dispatch_async(aii->pendingOutputQueue, ^{
 					  aii->pendingOutput[id].push(channels);
 				  });
+}
+
+/// Helper for VuoAudioInputDevice_realize.
+#define setRealizedDevice(newDevice) \
+	realizedDevice->id = newDevice.id; \
+	realizedDevice->modelUid = VuoText_make(newDevice.modelUid); \
+	realizedDevice->name = VuoText_make(newDevice.name); \
+	realizedDevice->channelCount = newDevice.channelCount;
+
+/**
+ * If `device`'s channel count is unknown (zero):
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If `device`'s channel count is already known (presumably from the `List Audio Devices` node),
+ * sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * @threadAny
+ */
+bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice *realizedDevice)
+{
+	// Already have channel count; nothing to do.
+	if (device.channelCount > 0)
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device:          %s", json_object_to_json_string(VuoAudioInputDevice_getJson(device)));
+	VuoList_VuoAudioInputDevice devices = VuoAudio_getInputDevices();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// First pass: try to find an exact match by ID.
+	VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
+		if (device.id != -1 && device.id == item.id)
+		{
+			VDebugLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+			return false;
+		}
+		return true;
+	});
+
+	// Second pass: try to find a match by model AND name.
+	// (Try AND first since, for example, Soundflower creates multiple devices with different names but the same model.)
+	if (!found)
+		VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
+			if (device.id == -1 && !VuoText_isEmpty(device.modelUid) && !VuoText_isEmpty(device.name)
+			 && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid)
+			 && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Third pass: try to find a loose match by model OR name.
+	if (!found)
+		VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
+			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid))
+			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name)))
+			{
+				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Fourth pass: if the user hasn't specified a device, use the default device.
+	if (!found && device.id == -1 && VuoText_isEmpty(device.modelUid) && VuoText_isEmpty(device.name))
+	{
+		__block RtAudio *temporaryRTA;  // Just for getting device info prior to opening a shared device.
+
+		try
+		{
+			// https://b33p.net/kosada/node/12068
+			VuoApp_executeOnMainThread(^{
+				temporaryRTA = new RtAudio();
+			});
+
+			int defaultID = temporaryRTA->getDefaultInputDevice();
+			VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
+				if (item.id == defaultID)
+				{
+					VDebugLog("Using default device:      %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+					setRealizedDevice(item);
+					found = true;
+					return false;
+				}
+				return true;
+			});
+
+			delete temporaryRTA;
+		}
+		catch (RtAudioError &error)
+		{
+			VUserLog("Error: Couldn't enumerate audio devices: %s", error.what());
+			delete temporaryRTA;
+		}
+	}
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
+}
+
+/**
+ * If `device`'s channel count is unknown (zero):
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If `device`'s channel count is already known (presumably from the `List Audio Devices` node),
+ * sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * @threadAny
+ */
+bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDevice *realizedDevice)
+{
+	// Already have channel count; nothing to do.
+	if (device.channelCount > 0)
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device:          %s", json_object_to_json_string(VuoAudioOutputDevice_getJson(device)));
+	VuoList_VuoAudioOutputDevice devices = VuoAudio_getOutputDevices();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// First pass: try to find an exact match by ID.
+	VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
+		if (device.id != -1 && device.id == item.id)
+		{
+			VDebugLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+			return false;
+		}
+		return true;
+	});
+
+	// Second pass: try to find a match by model AND name.
+	// (Try AND first since, for example, Soundflower creates multiple devices with different names but the same model.)
+	if (!found)
+		VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
+			if (device.id == -1 && !VuoText_isEmpty(device.modelUid) && !VuoText_isEmpty(device.name)
+				&& VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid)
+				&& VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Third pass: try to find a loose match by model OR name.
+	if (!found)
+		VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
+			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid))
+			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name)))
+			{
+				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Fourth pass: if the user hasn't specified a device, use the default device.
+	if (!found && device.id == -1 && VuoText_isEmpty(device.modelUid) && VuoText_isEmpty(device.name))
+	{
+		__block RtAudio *temporaryRTA;  // Just for getting device info prior to opening a shared device.
+
+		try
+		{
+			// https://b33p.net/kosada/node/12068
+			VuoApp_executeOnMainThread(^{
+				temporaryRTA = new RtAudio();
+			});
+
+			int defaultID = temporaryRTA->getDefaultOutputDevice();
+			VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
+				if (item.id == defaultID)
+				{
+					VDebugLog("Using default device:      %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+					setRealizedDevice(item);
+					found = true;
+					return false;
+				}
+				return true;
+			});
+
+			delete temporaryRTA;
+		}
+		catch (RtAudioError &error)
+		{
+			VUserLog("Error: Couldn't enumerate audio devices: %s", error.what());
+			delete temporaryRTA;
+		}
+	}
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
 }

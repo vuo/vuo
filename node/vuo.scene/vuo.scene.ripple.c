@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.ripple node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,6 +12,7 @@
 #include "VuoSceneObjectRenderer.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 
 #include "VuoDispersion.h"
@@ -36,7 +37,7 @@ VuoModuleMetadata({
 				 });
 
 static const char *linearShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
+	\n#include "deform.glsl"
 
 	// Inputs
 	uniform float angle;
@@ -45,7 +46,7 @@ static const char *linearShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float wavelength;
 	uniform float phase;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		float coordinatePhase = position.x*cos(angle) + position.y*sin(angle);
 		float offset = sin(coordinatePhase/wavelength + phase) * amplitude;
@@ -54,7 +55,7 @@ static const char *linearShaderSource = VUOSHADER_GLSL_SOURCE(120,
 );
 
 static const char *radialLongitudinalShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
+	\n#include "deform.glsl"
 
 	// Inputs
 	uniform float angle;
@@ -62,7 +63,7 @@ static const char *radialLongitudinalShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float wavelength;
 	uniform float phase;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		float coordinatePhase = sqrt(position.x*position.x + position.y*position.y + position.z*position.z);
 		float offset = sin(coordinatePhase/wavelength - phase) * amplitude;
@@ -72,7 +73,7 @@ static const char *radialLongitudinalShaderSource = VUOSHADER_GLSL_SOURCE(120,
 );
 
 static const char *radialTransverseShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
+	\n#include "deform.glsl"
 
 	// Inputs
 	uniform float angle;
@@ -80,7 +81,7 @@ static const char *radialTransverseShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float wavelength;
 	uniform float phase;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		float coordinatePhase = sqrt(position.x*position.x + position.y*position.y + position.z*position.z);
 		float offset = sin(coordinatePhase/wavelength - phase) * amplitude;
@@ -169,17 +170,52 @@ void nodeInstanceEvent
 	}
 
 	double nonzeroWavelength = VuoReal_makeNonzero(wavelength);
+	double nonzeroWavelengthRadians = nonzeroWavelength * M_PI * 2.;
+	float angleRadians = angle * M_PI / 180.;
+	float angleDelta = displacement == VuoDisplacement_Transverse ? M_PI/2. : 0;
+	float phaseRadians = phase * M_PI * 2.;
 
 	// Feed parameters to the shader.
-	VuoShader_setUniform_VuoReal    ((*instance)->shader, "angle",      angle*M_PI/180.);
+	VuoShader_setUniform_VuoReal    ((*instance)->shader, "angle",      angleRadians);
 	if (dispersion == VuoDispersion_Linear)
-		VuoShader_setUniform_VuoReal((*instance)->shader, "angleDelta", displacement == VuoDisplacement_Transverse ? M_PI/2. : 0);
+		VuoShader_setUniform_VuoReal((*instance)->shader, "angleDelta", angleDelta);
 	VuoShader_setUniform_VuoReal    ((*instance)->shader, "amplitude",  amplitude);
-	VuoShader_setUniform_VuoReal    ((*instance)->shader, "wavelength", nonzeroWavelength*M_PI*2.);
-	VuoShader_setUniform_VuoReal    ((*instance)->shader, "phase",      phase*M_PI*2.);
+	VuoShader_setUniform_VuoReal    ((*instance)->shader, "wavelength", nonzeroWavelengthRadians);
+	VuoShader_setUniform_VuoReal    ((*instance)->shader, "phase",      phaseRadians);
+
+	VuoSceneObjectRenderer_CPUGeometryOperator cpuGeometryOperator = VuoSceneObjectRenderer_makeDeformer(^(VuoPoint3d position, VuoPoint3d normal, VuoPoint2d textureCoordinate) {
+		if (dispersion == VuoDispersion_Linear)
+		{
+			float coordinatePhase = position.x * cosf(angleRadians) + position.y * sinf(angleRadians);
+			float offset          = sinf(coordinatePhase / nonzeroWavelengthRadians + phaseRadians) * amplitude;
+			return position + (VuoPoint3d){ offset * cosf(angleRadians + angleDelta),
+											offset * sinf(angleRadians + angleDelta),
+											0 };
+		}
+		else // radial
+		{
+			float coordinatePhase = sqrtf(position.x * position.x + position.y * position.y + position.z * position.z);
+			float offset          = sinf(coordinatePhase / nonzeroWavelengthRadians - phaseRadians) * amplitude;
+			if (displacement == VuoDisplacement_Longitudinal)
+			{
+				float theta = atan2(position.y, position.x);
+				return position + (VuoPoint3d){ offset * cosf(theta),
+												offset * sinf(theta) * cosf(angleRadians),
+												offset * sinf(angleRadians) };
+			}
+			else // transverse
+			{
+				return position + (VuoPoint3d){ 0,
+												offset * cosf(angleRadians + 3.14159 / 2),
+												offset * sinf(angleRadians + 3.14159 / 2) };
+			}
+		}
+	});
 
 	// Render.
-	*rippledObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*rippledObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object, cpuGeometryOperator);
+
+	Block_release(cpuGeometryOperator);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

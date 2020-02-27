@@ -1,0 +1,7 @@
+
+	gl_Position = position;
+
+	//vv_FragNormCoord = vec2((gl_Position.x+1.0)/2.0, (gl_Position.y+1.0)/2.0);
+	isf_FragNormCoord = vec2((gl_Position.x+1.0)/2.0, (gl_Position.y+1.0)/2.0);
+	//vec2	vv_fragCoord = floor(vv_FragNormCoord * RENDERSIZE);
+	vec2	isf_fragCoord = floor(isf_FragNormCoord * RENDERSIZE);

@@ -1,45 +1,45 @@
 /**
  * @file
+ * @brief Compare Color and Edge Shaders
  * Renders 2 copies of a 3D object side-by-side with different shaders.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="570,330" _scaleToFit="true" _center="{\"x\":0.000000,\"y\":0.100000,\"z\":0.000000}" _width="1.3999999999999999" _columns="2" _height="1" _rows="1" _depth="2.000000" _slices="1"];
-ChangeAllShaders [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="315,390"];
-ChangeAllShaders2 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="315,300"];
-FetchScene [type="vuo.scene.fetch" version="2.0.2" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="-105,360" _url="\"einstein.3ds\"" _center="false" _fit="false" _hasLeftHandedCoordinates="false"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-120,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList19 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="482,341"];
-MakeList22 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="844,131" fillcolor="green"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="874,161" fillcolor="green"];
-MakeOrthographicCamera [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Make Orthographic Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="570,-75" _name="\"camera\"" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,60" _text="\"   Make Lit Color Shader   \"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,195" _text="\"Shade Edges with Color\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="540,60" _center="{\"x\":-0.320000,\"y\":0.550000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.500000" _opacity="1.000000"];
-MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="540,195" _center="{\"x\":0.350000,\"y\":0.550000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.500000" _opacity="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="915,120" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeEdgesWithColor3 [type="vuo.shader.make.edge.color" version="1.0.0" label="Shade Edges with Color|<refresh>refresh\l|<color>color\l|<width>width\l|<sharpness>sharpness\l|<interiorOpacity>interiorOpacity\l|<shader>shader\r" pos="105,435" fillcolor="violet" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="0.450000" _sharpness="0.000000" _interiorOpacity="0.000000"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="120,270" fillcolor="violet" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="570,330" _scaleToFit="true" _center="\{\"x\":0.000000,\"y\":0.100000,\"z\":0.000000\}" _width="1.3999999999999999" _columns="2" _height="1" _rows="1" _depth="2.000000" _slices="1"];
+ChangeAllShaders [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="300,405"];
+ChangeAllShaders2 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="300,315"];
+FetchScene [type="vuo.scene.fetch" version="2.0.2" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="-135,180" _url="\"einstein.3ds\"" _center="false" _fit="false" _hasLeftHandedCoordinates="false"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-360,-75" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList19 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="492,341"];
+MakeList22 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="893,176" fillcolor="blue"];
+MakeOrthographicCamera [type="vuo.scene.make.camera.orthographic" version="1.0.0" label="Make Orthographic Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="570,-75" _name="\"camera\"" _position="\{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="2.000000" _distanceMin="-10.000000" _distanceMax="10.000000"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="315,60" _text="\" \  Make Lit Color Shader \  \"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="315,195" _text="\"Shade Edges with Color\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="540,75" _center="\{\"x\":-0.320000,\"y\":0.550000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.500000" _opacity="1.000000"];
+MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="540,195" _center="\{\"x\":0.350000,\"y\":0.550000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.500000" _opacity="1.000000"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="945,165" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeEdgesWithColor3 [type="vuo.shader.make.edge.color" version="1.0.0" label="Shade Edges with Color|<refresh>refresh\l|<color>color\l|<width>width\l|<sharpness>sharpness\l|<interiorOpacity>interiorOpacity\l|<shader>shader\r" pos="30,420" fillcolor="orange" _color="\{\"r\":0,\"g\":0.50196081399917603,\"b\":1,\"a\":1\}" _width="0.5" _sharpness="0" _interiorOpacity="0"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="45,330" fillcolor="orange" _color="\{\"r\":0,\"g\":0.50196081399917603,\"b\":1,\"a\":1\}" _highlightColor="\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\}" _shininess="0.900000"];
 
 Arrange3DObjectsInGrid:griddedObject -> MakeList22:4;
 ChangeAllShaders2:shadedObject -> MakeList19:1;
 ChangeAllShaders:shadedObject -> MakeList19:2;
 FetchScene:scene -> ChangeAllShaders2:object;
 FetchScene:scene -> ChangeAllShaders:object;
-FireOnStart:started -> FetchScene:refresh;
-FireOnStart:started -> MakeOrthographicCamera:refresh;
-FireOnStart:started -> MakeTextImage2:refresh;
-FireOnStart:started -> MakeTextImage:refresh;
-FireOnStart:started -> ShadeEdgesWithColor3:refresh;
-FireOnStart:started -> ShadeWithColor:refresh;
+FireOnStart:started -> FetchScene:url;
+FireOnStart:started -> MakeOrthographicCamera:name;
+FireOnStart:started -> MakeTextImage2:text;
+FireOnStart:started -> MakeTextImage:text;
+FireOnStart:started -> ShadeEdgesWithColor3:color;
+FireOnStart:started -> ShadeWithColor:color;
 MakeList19:list -> Arrange3DObjectsInGrid:objects;
 MakeList22:list -> RenderSceneToWindow:objects;
-MakeList5:list -> RenderSceneToWindow:setWindowProperties;
 MakeOrthographicCamera:object -> MakeList22:1;
 MakeTextImage2:image -> MakeUnlit3DObjectFromImage2:image;
 MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;

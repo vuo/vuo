@@ -2,9 +2,9 @@
  * @file
  * TestCompositionExecution implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -20,7 +20,7 @@
 VuoCompiler * TestCompositionExecution::initCompiler(void)
 {
 	VuoCompiler *c = new VuoCompiler();
-	c->addModuleSearchPath("node-" + QDir::current().dirName().toStdString());
+	c->environments.back().at(0)->addModuleSearchPath(BINARY_DIR "/test/" + QDir::current().dirName().toStdString(), false);
 	return c;
 }
 
@@ -45,19 +45,17 @@ string TestCompositionExecution::getCompositionPath(string compositionFileName)
 /**
  * Copies the composition at @a compositionPath to the User Modules folder, renaming it to @a nodeClassName.
  */
-void TestCompositionExecution::installSubcomposition(string compositionPath, string nodeClassName, VuoCompiler *compiler)
+void TestCompositionExecution::installSubcomposition(string compositionPath, string nodeClassName)
 {
 	string installedSubcompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
 	VuoFileUtilities::copyFile(compositionPath, installedSubcompositionPath);
-	compiler->installSubcomposition(installedSubcompositionPath);
 }
 
 /**
- * Removes the subcomposition called @a nodeClassName from the User Modules folder and uninstalls it.
+ * Removes the subcomposition called @a nodeClassName from the User Modules folder.
  */
-void TestCompositionExecution::uninstallSubcomposition(string nodeClassName, VuoCompiler *compiler)
+void TestCompositionExecution::uninstallSubcomposition(string nodeClassName)
 {
-	compiler->uninstallSubcomposition(nodeClassName);
 	string copiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
 	remove(copiedCompositionPath.c_str());
 }
@@ -150,6 +148,12 @@ const char *TestCompositionExecution::getJsonTypeDescription(enum json_type type
 	}
 }
 
+double TestCompositionExecution_tolerance = 0.00001;
+void TestCompositionExecution::setTolerance(double tolerance)
+{
+	TestCompositionExecution_tolerance = tolerance;
+}
+
 /**
  * Checks that the port values are equal (or approximately equal, for doubles).
  */
@@ -164,20 +168,20 @@ void TestCompositionExecution::checkEqual(string itemName, string type, json_obj
 	string failMessage = "\"" + itemName + "\" --- " + expectedString + " != " + actualString;
 
 //	VLog("type=%s expectedJson=%s actualJson=%s", type.c_str(), getJsonTypeDescription(expectedType), getJsonTypeDescription(actualType));
-	if (expectedType == json_type_object && actualType == json_type_object)
+	if (type == "VuoColor")
+	{
+		VuoColor expected = VuoColor_makeFromJson(expectedValue);
+		VuoColor   actual = VuoColor_makeFromJson(actualValue);
+		QVERIFY2(VuoColor_areEqualWithinTolerance(actual, expected, 0.01), failMessage.c_str());
+		return;
+	}
+	else if (expectedType == json_type_object && actualType == json_type_object)
 	{
 		if (type == "VuoImage")
 		{
 			VuoImage expectedImage = VuoImage_makeFromJson(expectedValue);
 			VuoImage   actualImage = VuoImage_makeFromJson(actualValue);
 			QVERIFY2(VuoImage_areEqualWithinTolerance(actualImage, expectedImage, 1), failMessage.c_str());
-			return;
-		}
-		else if (type == "VuoColor")
-		{
-			VuoColor expected = VuoColor_makeFromJson(expectedValue);
-			VuoColor   actual = VuoColor_makeFromJson(actualValue);
-			QVERIFY2(VuoColor_areEqualWithinTolerance(actual, expected, 0.01), failMessage.c_str());
 			return;
 		}
 		else if (type == "VuoWindowReference")
@@ -201,6 +205,10 @@ void TestCompositionExecution::checkEqual(string itemName, string type, json_obj
 	}
 	else if (expectedType == json_type_array && actualType == json_type_array)
 	{
+		string elementType;
+		if (VuoType::isListTypeName(type))
+			elementType = VuoType::extractInnermostTypeName(type);
+
 		int actualElementCount = json_object_array_length(actualValue);
 		int expectedElementCount = json_object_array_length(expectedValue);
 		QVERIFY2(actualElementCount == expectedElementCount, failMessage.c_str());
@@ -209,7 +217,7 @@ void TestCompositionExecution::checkEqual(string itemName, string type, json_obj
 		{
 			json_object *actualElement = json_object_array_get_idx(actualValue, i);
 			json_object *expectedElement = json_object_array_get_idx(expectedValue, i);
-			checkEqual(itemName, "", actualElement, expectedElement);
+			checkEqual(itemName, elementType, actualElement, expectedElement);
 		}
 	}
 	else if ((expectedType == json_type_double && (actualType == json_type_double || actualType == json_type_int)) ||
@@ -217,14 +225,145 @@ void TestCompositionExecution::checkEqual(string itemName, string type, json_obj
 	{
 		double actualDouble = json_object_get_double(actualValue);
 		double expectedDouble = json_object_get_double(expectedValue);
-		const double DELTA = 0.00001;
 		if (isnan(actualDouble) && isnan(expectedDouble))
 		{
 			// OK, since NaN was both expected and actually received.
 		}
 		else
-			QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
+			QVERIFY2(fabs(actualDouble - expectedDouble) <= TestCompositionExecution_tolerance, failMessage.c_str());
 	}
 	else
 		QVERIFY2(actualString == expectedString, failMessage.c_str());
+}
+
+/**
+ * Constructs a compiler delegate that is ready to receive notifications of modules loaded/unloaded.
+ */
+TestCompilerDelegate::TestCompilerDelegate(void)
+{
+	sem = dispatch_semaphore_create(0);
+	waiting = false;
+	diffInfo = new VuoCompilerCompositionDiff();
+}
+
+/**
+ * Destructor.
+ */
+TestCompilerDelegate::~TestCompilerDelegate(void)
+{
+	dispatch_release(sem);
+	delete diffInfo;
+}
+
+/**
+ * Copies the module file at @a originalPath to @a installedPath and waits for the notification that it has been installed.
+ */
+void TestCompilerDelegate::installModule(const string &originalPath, const string &installedPath, const string &moduleToWaitOn)
+{
+	waiting = true;
+	moduleWaitingOn = (! moduleToWaitOn.empty() ? moduleToWaitOn : VuoCompiler::getModuleKeyForPath(installedPath));
+	VuoFileUtilities::copyFile(originalPath, installedPath);
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+/**
+ * Like @ref installModule, but if @a originalPath is a subcomposition source file, copies a slightly modified version
+ * of it to @a installedPath.
+ */
+void TestCompilerDelegate::installModuleWithSuperficialChange(const string &originalPath, const string &installedPath)
+{
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(originalPath, dir, file, ext);
+	if (ext == "vuo")
+	{
+		string originalSource = VuoFileUtilities::readFileToString(originalPath);
+		string modifiedSource = originalSource + "/* modified */";
+		string modifiedPath = VuoFileUtilities::makeTmpFile("vuo.test.TestModuleLoading.modified", "vuo");
+		VuoFileUtilities::writeStringToFile(modifiedSource, modifiedPath);
+
+		installModule(modifiedPath, installedPath);
+
+		VuoFileUtilities::deleteFile(modifiedPath);
+	}
+	else
+	{
+		installModule(originalPath, installedPath);
+	}
+}
+
+/**
+ * Deletes the module file at @a installedPath and waits for the notification that it has been uninstalled.
+ */
+void TestCompilerDelegate::uninstallModule(const string &installedPath)
+{
+	waiting = true;
+	moduleWaitingOn = VuoCompiler::getModuleKeyForPath(installedPath);
+	VuoFileUtilities::deleteFile(installedPath);
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+/**
+ * Handles a notification that modules have been installed/uninstalled.
+ */
+void TestCompilerDelegate::loadedModules(const map<string, VuoCompilerModule *> &modulesAdded,
+										 const map<string, pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified,
+										 const map<string, VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues)
+{
+	bool found = false;
+	if (waiting)
+	{
+		for (auto m : modulesAdded)
+		{
+			if (m.first == moduleWaitingOn)
+			{
+				found = true;
+				break;
+			}
+		}
+		for (auto m : modulesModified)
+		{
+			if (m.first == moduleWaitingOn)
+			{
+				found = true;
+				break;
+			}
+		}
+		for (auto m : modulesRemoved)
+		{
+			if (m.first == moduleWaitingOn)
+			{
+				found = true;
+				break;
+			}
+		}
+	}
+
+	for (auto m : modulesModified)
+	{
+		VuoCompilerNodeClass *oldNodeClass = dynamic_cast<VuoCompilerNodeClass *>(m.second.first);
+		VuoCompilerNodeClass *newNodeClass = dynamic_cast<VuoCompilerNodeClass *>(m.second.second);
+		if (oldNodeClass && newNodeClass)
+			diffInfo->addNodeClassReplacement(oldNodeClass, newNodeClass);
+		else
+			diffInfo->addModuleReplacement(m.first);
+	}
+
+	if (found)
+	{
+		dispatch_semaphore_signal(sem);
+		waiting = false;
+		moduleWaitingOn = "";
+	}
+
+	if (! issues->isEmpty())
+		QFAIL(issues->getLongDescription(false).c_str());
+
+	loadedModulesCompleted();
+}
+
+VuoCompilerCompositionDiff * TestCompilerDelegate::takeDiffInfo(void)
+{
+	VuoCompilerCompositionDiff *ret = diffInfo;
+	diffInfo = new VuoCompilerCompositionDiff();
+	return ret;
 }

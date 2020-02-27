@@ -2,31 +2,19 @@
  * @file
  * TestVuoCompilerComposition interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include "TestVuoCompiler.hh"
-#include "VuoCompilerComposition.hh"
-#include "VuoCompilerCable.hh"
-#include "VuoCompilerBitcodeGenerator.hh"
-#include "VuoCompilerGraph.hh"
-#include "VuoCompilerGraphvizParser.hh"
-#include "VuoCompilerPort.hh"
-#include "VuoCompilerPublishedPortClass.hh"
-#include "VuoGenericType.hh"
-#include "VuoPort.hh"
-#include "VuoPublishedPort.hh"
 #include <sstream>
 
-typedef map<string, string> PublishedPortReplacements;  ///< Typedef needed for Q_DECLARE_METATYPE and QFETCH to compile.
+#include "TestVuoCompiler.hh"
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoComposition *);
 Q_DECLARE_METATYPE(set<string>);
-Q_DECLARE_METATYPE(set<VuoCompilerComposition::NodeReplacement>);
-Q_DECLARE_METATYPE(PublishedPortReplacements);
+Q_DECLARE_METATYPE(VuoCompilerCompositionDiff *);
 
 /**
  * Tests for using compositions.
@@ -35,30 +23,32 @@ class TestVuoCompilerComposition : public TestVuoCompiler
 {
 	Q_OBJECT
 
-private slots:
-
-	void initTestCase()
+public:
+	TestVuoCompilerComposition()
 	{
 		initCompiler();
 	}
 
-	void cleanupTestCase()
+	~TestVuoCompilerComposition()
 	{
 		cleanupCompiler();
 	}
 
+private slots:
 	void testDiff_data()
 	{
 		QTest::addColumn<VuoComposition *>("oldComposition");
 		QTest::addColumn<VuoComposition *>("newComposition");
-		QTest::addColumn< set<VuoCompilerComposition::NodeReplacement> >("nodeReplacements");
-		QTest::addColumn<PublishedPortReplacements>("publishedPortReplacements");
+		QTest::addColumn<VuoCompilerCompositionDiff *>("diffInfo");
 		QTest::addColumn<QString>("expectedDiff");
 
 		VuoNode *startNode = compiler->getNodeClass("vuo.event.fireOnStart")->newNode("FireOnStart1");
 		VuoNode *roundNode = compiler->getNodeClass("vuo.math.round")->newNode("Round1");
 		VuoNode *makeList1Node = compiler->getNodeClass("vuo.list.make.1.VuoInteger")->newNode("MakeList1");
 		VuoNode *makeList2Node = compiler->getNodeClass("vuo.list.make.2.VuoInteger")->newNode("MakeList2");
+		VuoNode *countWithinRangeGenericNode = compiler->createNode(compiler->getNodeClass("vuo.math.countWithinRange"), "CountWithinRangeGeneric");
+		VuoNode *countWithinRangeRealNode = compiler->createNode(compiler->getNodeClass("vuo.math.countWithinRange.VuoReal"), "CountWithinRangeReal");
+		VuoNode *fakeSubcompositionNode = compiler->getNodeClass("vuo.math.subtract")->newNode("Subcomposition1");
 
 		VuoCompilerPublishedPortClass *portClass1 = new VuoCompilerPublishedPortClass("publishedInput1", VuoPortClass::eventOnlyPort, NULL);
 		VuoPublishedPort *publishedInput1 = static_cast<VuoPublishedPort *>(portClass1->newPort()->getBase());
@@ -70,23 +60,23 @@ private slots:
 			VuoComposition *oldComposition = new VuoComposition();
 			VuoComposition *newComposition = new VuoComposition();
 			QString expectedDiff = "[]";
-			QTest::newRow("empty composition -> empty composition") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QTest::newRow("empty composition -> empty composition") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
 			VuoComposition *oldComposition = new VuoComposition();
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addNode(startNode);
-			QString expectedDiff = "[{\"add\":\"FireOnStart1\",\"value\":{\"nodeClass\":\"vuo.event.fireOnStart\"}}]";
-			QTest::newRow("empty composition -> one node") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QString expectedDiff = "[{\"add\":\"Top/FireOnStart1\"}]";
+			QTest::newRow("empty composition -> one node") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
 			VuoComposition *oldComposition = new VuoComposition();
 			oldComposition->addNode(startNode);
 			VuoComposition *newComposition = new VuoComposition();
-			QString expectedDiff = "[{\"remove\":\"FireOnStart1\"}]";
-			QTest::newRow("one node -> empty composition") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QString expectedDiff = "[{\"remove\":\"Top/FireOnStart1\"}]";
+			QTest::newRow("one node -> empty composition") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
@@ -94,8 +84,8 @@ private slots:
 			oldComposition->addNode(startNode);
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addNode(roundNode);
-			QString expectedDiff = "[{\"remove\":\"FireOnStart1\"},{\"add\":\"Round1\",\"value\":{\"nodeClass\":\"vuo.math.round\"}}]";
-			QTest::newRow("remove a node and add a node") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QString expectedDiff = "[{\"remove\":\"Top/FireOnStart1\"},{\"add\":\"Top/Round1\"}]";
+			QTest::newRow("remove a node and add a node") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
@@ -106,7 +96,7 @@ private slots:
 			newComposition->addNode(startNode);
 			newComposition->addNode(roundNode);
 			QString expectedDiff = "[]";
-			QTest::newRow("keep the same nodes") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QTest::newRow("keep the same nodes") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
@@ -114,23 +104,40 @@ private slots:
 			oldComposition->addNode(makeList1Node);
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addNode(makeList2Node);
-			VuoCompilerComposition::NodeReplacement nodeReplacement;
-			nodeReplacement.oldNodeIdentifier = "MakeList1";
-			nodeReplacement.newNodeIdentifier = "MakeList2";
-			nodeReplacement.oldAndNewPortIdentifiers["1"] = "1";
-			nodeReplacement.oldAndNewPortIdentifiers["list"] = "list";
-			set<VuoCompilerComposition::NodeReplacement> nodeReplacements;
-			nodeReplacements.insert(nodeReplacement);
-			QString expectedDiff = "[{\"remove\":\"MakeList1\"},{\"add\":\"MakeList2\",\"value\":{\"nodeClass\":\"vuo.list.make.2.VuoInteger\"}},{\"map\":\"MakeList1\",\"to\":\"MakeList2\",\"ports\":[{\"map\":\"1\",\"to\":\"1\"},{\"map\":\"list\",\"to\":\"list\"}]}]";
-			QTest::newRow("replace a node") << oldComposition << newComposition << nodeReplacements << map<string, string>() << expectedDiff;
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			diffInfo->addNodeReplacementInTopLevelComposition("MakeList1", "MakeList2");
+			QString expectedDiff = "[{\"replace\":\"Top/MakeList1\",\"with\":\"Top/MakeList2\",\"ports\":[{\"map\":\"refresh\",\"to\":\"refresh\"},{\"map\":\"1\",\"to\":\"1\"},{\"map\":\"list\",\"to\":\"list\"}]}]";
+			QTest::newRow("replace a node") << oldComposition << newComposition << diffInfo << expectedDiff;
+		}
+
+		{
+			VuoComposition *oldComposition = new VuoComposition();
+			oldComposition->addNode(countWithinRangeGenericNode);
+			VuoComposition *newComposition = new VuoComposition();
+			newComposition->addNode(countWithinRangeRealNode);
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			diffInfo->addNodeReplacementInTopLevelComposition("CountWithinRangeGeneric", "CountWithinRangeReal");
+			QString expectedDiff = "[{\"replace\":\"Top/CountWithinRangeGeneric\",\"with\":\"Top/CountWithinRangeReal\",\"ports\":[{\"map\":\"refresh\",\"to\":\"refresh\"},{\"map\":\"wrapMode\",\"to\":\"wrapMode\"}]}]";
+			QTest::newRow("specialize a node") << oldComposition << newComposition << diffInfo << expectedDiff;
+		}
+
+		{
+			VuoComposition *oldComposition = new VuoComposition();
+			oldComposition->addNode(countWithinRangeRealNode);
+			VuoComposition *newComposition = new VuoComposition();
+			newComposition->addNode(countWithinRangeGenericNode);
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			diffInfo->addNodeReplacementInTopLevelComposition("CountWithinRangeReal", "CountWithinRangeGeneric");
+			QString expectedDiff = "[{\"replace\":\"Top/CountWithinRangeReal\",\"with\":\"Top/CountWithinRangeGeneric\",\"ports\":[{\"map\":\"refresh\",\"to\":\"refresh\"},{\"map\":\"wrapMode\",\"to\":\"wrapMode\"}]}]";
+			QTest::newRow("unspecialize a node") << oldComposition << newComposition << diffInfo << expectedDiff;
 		}
 
 		{
 			VuoComposition *oldComposition = new VuoComposition();
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addPublishedInputPort(publishedInput1, 0);
-			QString expectedDiff = "[{\"add\":\"PublishedInputs\"},{\"add\":\"PublishedOutputs\"}]";
-			QTest::newRow("add first published port") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			QString expectedDiff = "[{\"add\":\"Top/PublishedInputs\"},{\"add\":\"Top/PublishedInputsTrigger\"},{\"add\":\"Top/PublishedOutputs\"}]";
+			QTest::newRow("add first published port") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
@@ -138,9 +145,9 @@ private slots:
 			oldComposition->addPublishedInputPort(publishedInput1, 0);
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addPublishedInputPort(publishedInput1, 0);
-			newComposition->addPublishedInputPort(publishedInput2, 0);
-			QString expectedDiff = "[{\"remove\":\"PublishedInputs\"},{\"add\":\"PublishedInputs\"},{\"map\":\"PublishedInputs\",\"to\":\"PublishedInputs\",\"ports\":[{\"map\":\"publishedInput1\",\"to\":\"publishedInput1\"}]}]";
-			QTest::newRow("add second published port") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << map<string, string>() << expectedDiff;
+			newComposition->addPublishedInputPort(publishedInput2, 1);
+			QString expectedDiff = "[{\"replace\":\"Top/PublishedInputs\",\"with\":\"Top/PublishedInputs\",\"ports\":[{\"map\":\"publishedInput1\",\"to\":\"publishedInput1\"}]}]";
+			QTest::newRow("add second published port") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
 		}
 
 		{
@@ -148,25 +155,38 @@ private slots:
 			oldComposition->addPublishedInputPort(publishedInput1, 0);
 			VuoComposition *newComposition = new VuoComposition();
 			newComposition->addPublishedInputPort(publishedInput2, 0);
-			map<string, string> publishedPortReplacements;
-			publishedPortReplacements["publishedInput1"] = "publishedInput2";
-			QString expectedDiff = "[{\"remove\":\"PublishedInputs\"},{\"add\":\"PublishedInputs\"},{\"map\":\"PublishedInputs\",\"to\":\"PublishedInputs\",\"ports\":[]}]";
-			QTest::newRow("rename a published port") << oldComposition << newComposition << set<VuoCompilerComposition::NodeReplacement>() << publishedPortReplacements << expectedDiff;
+			QString expectedDiff = "[{\"replace\":\"Top/PublishedInputs\",\"with\":\"Top/PublishedInputs\",\"ports\":[]}]";
+			QTest::newRow("rename a published port") << oldComposition << newComposition << new VuoCompilerCompositionDiff() << expectedDiff;
+		}
+
+		{
+			VuoComposition *oldComposition = new VuoComposition();
+			oldComposition->addNode(startNode);
+			oldComposition->addNode(roundNode);
+			VuoComposition *newComposition = new VuoComposition();
+			newComposition->addNode(startNode);
+			newComposition->addNode(fakeSubcompositionNode);
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			set<VuoCompilerNode *> nodesMoved;
+			nodesMoved.insert(roundNode->getCompiler());
+			diffInfo->addRefactoring("Top", nodesMoved, fakeSubcompositionNode->getCompiler());
+			QString expectedDiff = "[{\"add\":\"Top/Subcomposition1\"},{\"move\":\"Top/Round1\",\"to\":\"Top/Subcomposition1/Round1\"}]";
+			QTest::newRow("refactor a node into a subcomposition") << oldComposition << newComposition << diffInfo << expectedDiff;
 		}
 	}
 	void testDiff()
 	{
 		QFETCH(VuoComposition *, oldComposition);
 		QFETCH(VuoComposition *, newComposition);
-		QFETCH(set<VuoCompilerComposition::NodeReplacement>, nodeReplacements);
-		QFETCH(PublishedPortReplacements, publishedPortReplacements);
+		QFETCH(VuoCompilerCompositionDiff *, diffInfo);
 		QFETCH(QString, expectedDiff);
 
 		VuoCompilerComposition oldCompilerComposition(oldComposition, NULL);
 		string oldCompositionSerialized = oldCompilerComposition.getGraphvizDeclaration();
 		VuoCompilerComposition newCompilerComposition(newComposition, NULL);
 
-		string actualDiff = newCompilerComposition.diffAgainstOlderComposition(oldCompositionSerialized, compiler, nodeReplacements);
+		string actualDiff = diffInfo->diff(oldCompositionSerialized, &newCompilerComposition, compiler);
+		delete diffInfo;
 
 		json_object *expectedDiffObj = json_tokener_parse(expectedDiff.toStdString().c_str());
 		json_object *actualDiffObj = json_tokener_parse(actualDiff.c_str());
@@ -190,36 +210,35 @@ private slots:
 						node = json_object_get_string(val);
 
 					changesForNode[i][node].insert(key);
+				}
 
-					if (! strcmp(key, "map"))
+				json_object *portMappingArray;
+				if (json_object_object_get_ex(change, "ports", &portMappingArray))
+				{
+					json_object *o;
+
+					string oldNode;
+					if (json_object_object_get_ex(change, "replace", &o))
+						oldNode = json_object_get_string(o);
+
+					string newNode;
+					if (json_object_object_get_ex(change, "with", &o))
+						newNode = json_object_get_string(o);
+
+					int numPortMappings = json_object_array_length(portMappingArray);
+					for (int k = 0; k < numPortMappings; ++k)
 					{
-						json_object *o;
+						json_object *portMapping = json_object_array_get_idx(portMappingArray, k);
 
-						string oldNode = node;
+						string oldPort;
+						if (json_object_object_get_ex(portMapping, "map", &o))
+							oldPort = json_object_get_string(o);
 
-						string newNode;
-						if (json_object_object_get_ex(change, "to", &o))
-							newNode = json_object_get_string(o);
+						string newPort;
+						if (json_object_object_get_ex(portMapping, "to", &o))
+							newPort = json_object_get_string(o);
 
-						json_object *portMappingArray = NULL;
-						if (json_object_object_get_ex(change, "ports", &o))
-							portMappingArray = o;
-
-						int numPortMappings = json_object_array_length(portMappingArray);
-						for (int k = 0; k < numPortMappings; ++k)
-						{
-							json_object *portMapping = json_object_array_get_idx(portMappingArray, k);
-
-							string oldPort;
-							if (json_object_object_get_ex(portMapping, "map", &o))
-								oldPort = json_object_get_string(o);
-
-							string newPort;
-							if (json_object_object_get_ex(portMapping, "to", &o))
-								newPort = json_object_get_string(o);
-
-							portMappingsForNodes[i][oldNode][newNode][oldPort] = newPort;
-						}
+						portMappingsForNodes[i][oldNode][newNode][oldPort] = newPort;
 					}
 				}
 			}
@@ -443,16 +462,16 @@ private slots:
 			QTest::newRow("one upstream trigger — direct cable") << "OneUpstream-DirectCable" << "Make Text Layer" << "Fire on Start" << "started";
 		}
 		{
-			QTest::newRow("one upstream trigger — no event blocking") << "OneUpstream-NoBlocking" << "Combine Layers" << "Render Layers to Window" << "requestedFrame";
+			QTest::newRow("one upstream trigger — no event blocking") << "OneUpstream-NoBlocking" << "Combine Layers" << "Fire on Display Refresh" << "requestedFrame";
 		}
 		{
-			QTest::newRow("one upstream trigger — same node") << "OneUpstream-NoBlocking" << "Render Layers to Window" << "Render Layers to Window" << "requestedFrame";
+			QTest::newRow("one upstream trigger — same node") << "OneUpstream-NoBlocking" << "Render Layers to Window" << "Fire on Display Refresh" << "requestedFrame";
 		}
 		{
 			QTest::newRow("one upstream trigger — door") << "OneUpstream-Door" << "Render Image to Window" << "Receive Live Video" << "receivedFrame";
 		}
 		{
-			QTest::newRow("two upstream triggers — no event blocking, one closer") << "TwoUpstream-OneCloser" << "Make Sphere" << "Render Scene to Window" << "requestedFrame";
+			QTest::newRow("two upstream triggers — no event blocking, one closer") << "TwoUpstream-OneCloser" << "Make Sphere" << "Fire on Display Refresh" << "requestedFrame";
 		}
 		{
 			QTest::newRow("two upstream triggers — no event blocking, equidistant") << "TwoUpstream-Equidistant" << "Display Console Window" << "Fire on Start" << "started";
@@ -591,6 +610,128 @@ private slots:
 		QCOMPARE((hash1 == hash2), hashesEqual);
 	}
 
+	void testMissingNodeClasses_data()
+	{
+		QTest::addColumn<QString>("compositionFile");
+		QTest::addColumn<QStringList>("missingNodeClasses");
+		QTest::addColumn<QString>("hintSubstring");
+
+		{
+			QStringList nodeClasses;
+			nodeClasses << "vuo.time.fireProntolistically";
+			QTest::newRow("Wrong node class name") << "WrongNodeClassName.vuo" << nodeClasses << "";
+		}
+		{
+			QStringList nodeClasses;
+			nodeClasses << "vuo.scene.union" << "vuo.scene.render.image.stereo2";
+			QTest::newRow("Pro nodes in CE") << "ProNodes.vuo" << nodeClasses << "Pro nodes";
+		}
+	}
+	void testMissingNodeClasses()
+	{
+		QFETCH(QString, compositionFile);
+		QFETCH(QStringList, missingNodeClasses);
+		QFETCH(QString, hintSubstring);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		try {
+			composition.checkForMissingNodeClasses(issues);
+		} catch (const VuoCompilerException &e) { }
+
+		QVERIFY2(issues->isEmpty() == missingNodeClasses.empty(), issues->getShortDescription(false).c_str());
+
+		if (! issues->isEmpty())
+		{
+			QStringList issueNodeClasses;
+
+			for (VuoCompilerIssue issue : issues->getList())
+			{
+				QCOMPARE(QString::fromStdString(issue.getSummary()), QString("Nodes not installed"));
+
+				for (VuoNode *node : issue.getNodes())
+					issueNodeClasses += QString::fromStdString(node->getNodeClass()->getClassName());
+
+				QVERIFY2(QString::fromStdString(issue.getHint(false)).contains(hintSubstring), issue.getHint(false).c_str());
+			}
+
+			issueNodeClasses.sort();
+			missingNodeClasses.sort();
+			QCOMPARE(issueNodeClasses, missingNodeClasses);
+		}
+
+		delete issues;
+		delete parser;
+	}
+
+	void testInfiniteFeedbackLoops_data()
+	{
+		QTest::addColumn<QString>("compositionFile");
+		QTest::addColumn<bool>("hasInfiniteFeedbackLoop");
+
+		QTest::newRow("Infinite feedback loop containing 2 nodes.") << "TriggerPortWithOutputPort_Count_infiniteLoop.vuo" << true;
+		QTest::newRow("Infinite feedback loop containing 1 node.") << "Recur_Count_infiniteLoop.vuo" << true;
+		QTest::newRow("No feedback loops.") << "TwoUpstream-OneCloser.vuo" << false;
+	}
+	void testInfiniteFeedbackLoops()
+	{
+		QFETCH(QString, compositionFile);
+		QFETCH(bool, hasInfiniteFeedbackLoop);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		VuoCompilerGraph graph(&composition);
+
+		bool gotException = false;
+		VuoCompilerIssues issues;
+		try {
+			graph.checkForInfiniteFeedback(&issues);
+		} catch (const VuoCompilerException &e) {
+			gotException = true;
+		}
+		QCOMPARE(gotException, hasInfiniteFeedbackLoop);
+
+		delete parser;
+	}
+
+	void testDeadlockedFeedbackLoops_data()
+	{
+		QTest::addColumn<QString>("compositionFile");
+		QTest::addColumn<bool>("hasDeadlockedFeedbackLoop");
+
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 2-node feedback loop.") << "DeadlockedFeedbackLoop2Nodes.vuo" << true;
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 3-node feedback loop.") << "DeadlockedFeedbackLoop3Nodes.vuo" << true;
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 4-node feedback loop.") << "DeadlockedFeedbackLoop4Nodes.vuo" << true;
+		QTest::newRow("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.") << "AsymmetricFeedbackLoop.vuo" << false;
+		QTest::newRow("Trigger unambiguously pushing 2 nested feedback loops.") << "NestedLoopsBothTriggered.vuo" << false;
+		QTest::newRow("Trigger unambiguously pushing nodes not in a feedback loop.") << "NonDeadlockedWithSemiconductor.vuo" << false;
+		QTest::newRow("2 triggers that start at different points in a feedback loop.") << "NonDeadlocked2Triggers.vuo" << false;
+	}
+	void testDeadlockedFeedbackLoops()
+	{
+		QFETCH(QString, compositionFile);
+		QFETCH(bool, hasDeadlockedFeedbackLoop);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		VuoCompilerGraph graph(&composition);
+
+		bool gotException = false;
+		VuoCompilerIssues issues;
+		try {
+			graph.checkForDeadlockedFeedback(&issues);
+		} catch (const VuoCompilerException &e) {
+			gotException = true;
+		}
+		QCOMPARE(gotException, hasDeadlockedFeedbackLoop);
+
+		delete parser;
+	}
 };
 
 QTEST_APPLESS_MAIN(TestVuoCompilerComposition)

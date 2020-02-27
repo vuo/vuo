@@ -2,9 +2,9 @@
  * @file
  * VuoSyphon implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "module.h"
@@ -44,7 +44,7 @@ VuoList_VuoSyphonServerDescription VuoSyphon_getAvailableServerDescriptions(void
 		VuoText serverName = VuoText_make([[server objectForKey:SyphonServerDescriptionNameKey] UTF8String]);
 		VuoText applicationName = VuoText_make([[server objectForKey:SyphonServerDescriptionAppNameKey] UTF8String]);
 
-		VuoSyphonServerDescription description = VuoSyphonServerDescription_make(serverUUID, serverName, applicationName);
+		VuoSyphonServerDescription description = VuoSyphonServerDescription_make(serverUUID, serverName, applicationName, true);
 		VuoListAppendValue_VuoSyphonServerDescription(descriptions, description);
 	}
 
@@ -67,12 +67,20 @@ VuoList_VuoSyphonServerDescription VuoSyphon_filterServerDescriptions(VuoList_Vu
 	{
 		VuoSyphonServerDescription description = VuoListGetValue_VuoSyphonServerDescription(allDescriptions, i);
 
-		/// @todo Handle UTF8 names (add VuoText function).
-		if ((!partialDescription.serverUUID      || strstr(description.serverUUID,      partialDescription.serverUUID     ) != NULL) &&
-			(!partialDescription.serverName      || strstr(description.serverName,      partialDescription.serverName     ) != NULL) &&
-			(!partialDescription.applicationName || strstr(description.applicationName, partialDescription.applicationName) != NULL))
+		if (partialDescription.useWildcard)
 		{
-			VuoListAppendValue_VuoSyphonServerDescription(filteredDescriptions, description);
+			if (VuoText_compare(description.serverUUID,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.serverUUID)
+			 && VuoText_compare(description.serverName,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.serverName)
+			 && VuoText_compare(description.applicationName, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.applicationName))
+				VuoListAppendValue_VuoSyphonServerDescription(filteredDescriptions, description);
+		}
+		else
+		{
+			/// @todo Handle UTF8 names (add VuoText function).
+			if ((!partialDescription.serverUUID      || strstr(description.serverUUID,      partialDescription.serverUUID     ) != NULL)
+			 && (!partialDescription.serverName      || strstr(description.serverName,      partialDescription.serverName     ) != NULL)
+			 && (!partialDescription.applicationName || strstr(description.applicationName, partialDescription.applicationName) != NULL))
+				VuoListAppendValue_VuoSyphonServerDescription(filteredDescriptions, description);
 		}
 	}
 
@@ -101,7 +109,7 @@ void VuoSyphonClient_connectToServer(VuoSyphonClient syphonClient,
 									 VuoSyphonServerDescription serverDescription,
 									 VuoOutputTrigger(receivedFrame, VuoImage))
 {
-	VuoApp_init();
+	VuoApp_init(false);
 	VuoSyphonListener *listener = (VuoSyphonListener *)syphonClient;
 	[listener startListeningWithServerDescription:serverDescription callback:receivedFrame];
 }
@@ -139,9 +147,9 @@ void VuoSyphonServer_free(void *server);
 VuoSyphonServer VuoSyphonServer_make(const char *serverName)
 {
 	if (!serverName)
-		return NULL;
+		serverName = "Vuo Syphon Server";
 
-	VuoApp_init();
+	VuoApp_init(false);
 	VuoSyphonSender *server = [[VuoSyphonSender alloc] init];
 	[server initServerWithName:[NSString stringWithUTF8String:serverName]];
 	VuoRegister(server, VuoSyphonServer_free);

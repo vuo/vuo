@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorAudioInputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorAudioInputDevice.hh"
@@ -32,7 +32,7 @@ VuoInputEditorMenuItem * VuoInputEditorAudioInputDevice::setUpMenuTree()
 	optionsTree->addItem(new VuoInputEditorMenuItem("Default device", NULL));
 
 	optionsTree->addSeparator();
-	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device (by model)", NULL, NULL, false));
+	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device (by model and name)", NULL, NULL, false));
 
 	VuoList_VuoAudioInputDevice devices = VuoAudio_getInputDevices();
 

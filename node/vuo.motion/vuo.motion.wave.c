@@ -2,9 +2,9 @@
  * @file
  * vuo.motion.wave node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,6 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Wave",
 					 "keywords" : [ "sine", "cosine", "sawtooth", "triangle", "phase accumulator", "oscillator", "frequency", "period", "VCO", "DCO", "NCO",
+						 /* Samia Halaby */ "yoyo", "yo-yo",
 						 /* QC */ "LFO", "Wave Generator"
 					 ],
 					 "version" : "2.0.0",
@@ -27,6 +28,7 @@ struct phaseAccumulator {
 	VuoReal phase;
 	VuoReal priorTime;
 	VuoWave priorWave;
+	bool first;
 };
 
 struct phaseAccumulator *nodeInstanceInit()
@@ -35,7 +37,7 @@ struct phaseAccumulator *nodeInstanceInit()
 	VuoRegister(data, free);
 	data->phase = 0;
 	data->priorTime = 0;
-	data->priorWave = -1;
+	data->first = true;
 	return data;
 }
 
@@ -67,7 +69,7 @@ void nodeInstanceEvent
 
 	// When changing waveforms, adjust the accumulated phase to make the output value continuous.
 	double adjustedPhase = nonNegativePhase;
-	if ((*data)->priorWave != -1 && (*data)->priorWave != wave)
+	if (!(*data)->first && (*data)->priorWave != wave)
 	{
 		if ((*data)->priorWave == VuoWave_Sine && wave == VuoWave_Triangle)
 		{
@@ -105,6 +107,7 @@ void nodeInstanceEvent
 	}
 	(*data)->phase += adjustedPhase - nonNegativePhase;
 	(*data)->priorWave = wave;
+	(*data)->first = false;
 
 	// Calculate the output value.
 	VuoReal thisPhase = fmod(adjustedPhase + phase, 1);

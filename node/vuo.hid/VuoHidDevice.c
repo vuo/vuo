@@ -2,14 +2,11 @@
  * @file
  * VuoHidDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoHidDevice.h"
 #include "VuoHid.h"
@@ -34,9 +31,9 @@ VuoModuleMetadata({
 /**
  * Returns a device matching type constant for the specified identifier string.
  */
-static VuoHidDevice_MatchType VuoHidDevice_getMatchTypeForString(const char *string)
+static VuoHidDevice_MatchType VuoHidDevice_MatchType_makeFromJson(json_object *js)
 {
-	if (strcmp(string, "location") == 0)
+	if (strcmp(json_object_get_string(js), "location") == 0)
 		return VuoHidDevice_MatchLocation;
 
 	return VuoHidDevice_MatchName;
@@ -66,27 +63,16 @@ static const char *VuoHidDevice_getStringForMatchType(VuoHidDevice_MatchType typ
  */
 VuoHidDevice VuoHidDevice_makeFromJson(json_object *js)
 {
-	VuoHidDevice value = {VuoHidDevice_MatchName, NULL, 0, NULL, 0, 0, 0, 0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "matchType", &o))
-		value.matchType = VuoHidDevice_getMatchTypeForString(json_object_get_string(o));
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-	if (json_object_object_get_ex(js, "location", &o))
-		value.location = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "controls", &o))
-		value.controls = VuoList_VuoHidControl_makeFromJson(o);
-	if (json_object_object_get_ex(js, "vendorID", &o))
-		value.vendorID = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "productID", &o))
-		value.productID = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "usagePage", &o))
-		value.usagePage = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "usage", &o))
-		value.usage = VuoInteger_makeFromJson(o);
-
-	return value;
+	return (VuoHidDevice){
+		VuoJson_getObjectValue(VuoHidDevice_MatchType, js, "matchType", VuoHidDevice_MatchName),
+		VuoJson_getObjectValue(VuoText, js, "name", NULL),
+		VuoJson_getObjectValue(VuoInteger, js, "location", 0),
+		VuoJson_getObjectValue(VuoList_VuoHidControl, js, "controls", NULL),
+		VuoJson_getObjectValue(VuoInteger, js, "vendorID", 0),
+		VuoJson_getObjectValue(VuoInteger, js, "productID", 0),
+		VuoJson_getObjectValue(VuoInteger, js, "usagePage", 0),
+		VuoJson_getObjectValue(VuoInteger, js, "usage", 0)
+	};
 }
 
 /**
@@ -274,5 +260,5 @@ char *VuoHidDevice_getSummary(const VuoHidDevice value)
 	if (value.name)
 		return strdup(value.name);
 
-	return strdup("(unknown device)");
+	return strdup("Unknown device");
 }

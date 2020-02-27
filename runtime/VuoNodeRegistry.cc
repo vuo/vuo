@@ -2,17 +2,17 @@
  * @file
  * VuoNodeRegistry implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoNodeRegistry.hh"
 
 #include <dlfcn.h>
 #include <sstream>
-#include <stdexcept>
 #include "VuoCompositionDiff.hh"
+#include "VuoException.hh"
 #include "VuoRuntimePersistentState.hh"
 #include "VuoRuntimeState.hh"
 #include "VuoRuntimeUtilities.hh"
@@ -32,7 +32,7 @@ VuoNodeRegistry::VuoNodeRegistry(VuoRuntimePersistentState *persistentState)
 /**
  * Updates references to symbols defined in the composition's generated code.
  *
- * @throw std::runtime_error One of the symbols was not found in the composition binary.
+ * @throw VuoException One of the symbols was not found in the composition binary.
  */
 void VuoNodeRegistry::updateCompositionSymbols(void *compositionBinaryHandle)
 {
@@ -42,9 +42,18 @@ void VuoNodeRegistry::updateCompositionSymbols(void *compositionBinaryHandle)
 	if (! vuoTopLevelCompositionIdentifierPtr)
 	{
 		errorMessage << "The composition couldn't be started because its vuoTopLevelCompositionIdentifier variable couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 	vuoTopLevelCompositionIdentifier = *vuoTopLevelCompositionIdentifierPtr;
+}
+
+/**
+ * Returns the top-level composition identifier if @a compositionIdentifier is empty, otherwise @a compositionIdentifier.
+ * @version200New
+ */
+const char * VuoNodeRegistry::defaultToTopLevelCompositionIdentifier(const char *compositionIdentifier)
+{
+	return (strlen(compositionIdentifier) > 0 ? compositionIdentifier : vuoTopLevelCompositionIdentifier);
 }
 
 /**
@@ -52,15 +61,15 @@ void VuoNodeRegistry::updateCompositionSymbols(void *compositionBinaryHandle)
  * and the subcomposition node within the parent composition. Otherwise, outputs @a compositionIdentifier as
  * the parent composition identifier.
  *
- * This needs to be kept in sync with `VuoCompilerNode::generateSubcompositionIdentifierValue()`.
+ * This needs to be kept in sync with @ref VuoStringUtilities::buildCompositionIdentifier().
  */
 void VuoNodeRegistry::splitCompositionIdentifier(const string &compositionIdentifier, string &parentCompositionIdentifier, string &nodeIdentifier)
 {
-	size_t pos = compositionIdentifier.rfind("__");
+	size_t pos = compositionIdentifier.rfind("/");
 	if (pos != string::npos)
 	{
 		parentCompositionIdentifier = compositionIdentifier.substr(0, pos);
-		nodeIdentifier = compositionIdentifier.substr(pos + strlen("__"));
+		nodeIdentifier = compositionIdentifier.substr(pos + strlen("/"));
 	}
 	else
 	{
@@ -72,18 +81,46 @@ void VuoNodeRegistry::splitCompositionIdentifier(const string &compositionIdenti
 /**
  * Constructs the composition identifier for a subcomposition.
  */
-string VuoNodeRegistry::joinCompositionIdentifier(const string &parentCompositionIdentifier, const string &nodeIdentifier)
+string VuoNodeRegistry::buildCompositionIdentifier(const string &parentCompositionIdentifier, const string &nodeIdentifier)
 {
-	return parentCompositionIdentifier + "__" + nodeIdentifier;
+	return parentCompositionIdentifier + "/" + nodeIdentifier;
+}
+
+/**
+ * Outputs the node identifier and port name parts of a port identifier.
+ *
+ * This needs to be kept in sync with @ref VuoStringUtilities::buildPortIdentifier().
+ */
+void VuoNodeRegistry::splitPortIdentifier(const string &portIdentifier, string &nodeIdentifier, string &portName)
+{
+	size_t pos = portIdentifier.rfind(":");
+	if (pos != string::npos)
+	{
+		nodeIdentifier = portIdentifier.substr(0, pos);
+		portName = portIdentifier.substr(pos + strlen(":"));
+	}
 }
 
 /**
  * Registers metadata for a node. When a (sub)composition is added or recompiled, this function should be
  * called for each node in the composition, in the same order as `VuoCompilerBitcodeGenerator::orderedNodes`.
+ *
+ * @version200Changed{Added callback arguments.}
  */
-void VuoNodeRegistry::addNodeMetadata(const char *compositionIdentifier, const char *nodeIdentifier)
+void VuoNodeRegistry::addNodeMetadata(const char *compositionIdentifier, const char *nodeIdentifier,
+									  NodeContext *(*compositionCreateContextForNode)(unsigned long),
+									  void (*compositionSetPortValue)(VuoCompositionState *, const char *, const char *, bool, bool, bool, bool, bool),
+									  char * (*compositionGetPortValue)(VuoCompositionState *, const char *, int, bool),
+									  void (*compositionFireTriggerPortEvent)(VuoCompositionState *, const char *),
+									  void (*compositionReleasePortData)(void *, unsigned long))
 {
-	NodeMetadata nodeMetadata = { nodeIdentifier };
+	NodeMetadata nodeMetadata;
+	nodeMetadata.identifier = nodeIdentifier;
+	nodeMetadata.compositionCreateContextForNode = compositionCreateContextForNode;
+	nodeMetadata.compositionSetPortValue = compositionSetPortValue;
+	nodeMetadata.compositionGetPortValue = compositionGetPortValue;
+	nodeMetadata.compositionFireTriggerPortEvent = compositionFireTriggerPortEvent;
+	nodeMetadata.compositionReleasePortData = compositionReleasePortData;
 	nodeMetadatas[compositionIdentifier].push_back(nodeMetadata);
 }
 
@@ -111,7 +148,7 @@ string VuoNodeRegistry::getNodeIdentifierForIndex(const char *compositionIdentif
 		if (nodeIndex < iter1->second.size())
 			return iter1->second[nodeIndex].identifier;
 
-	VUserLog("Couldn't find identifier for node %s:%lu", compositionIdentifier, nodeIndex);
+	VUserLog("Couldn't find identifier for node %s/%lu", compositionIdentifier, nodeIndex);
 	return "";
 }
 
@@ -129,8 +166,26 @@ unsigned long VuoNodeRegistry::getNodeIndexForIdentifier(const string &compositi
 			if (iter1->second[i].identifier == nodeIdentifier)
 				return i;
 
-	VUserLog("Couldn't find index for node %s:%s", compositionIdentifier.c_str(), nodeIdentifier.c_str());
+	VUserLog("Couldn't find index for node %s", buildCompositionIdentifier(compositionIdentifier, nodeIdentifier).c_str());
 	return invalidCompositionIndex;
+}
+
+/**
+ * Looks up the node metadata for the node containing a port with the given identifier.
+ */
+const VuoNodeRegistry::NodeMetadata * VuoNodeRegistry::getNodeMetadataForPort(const string &compositionIdentifier, const string &portIdentifier)
+{
+	string nodeIdentifier, portName;
+	splitPortIdentifier(portIdentifier, nodeIdentifier, portName);
+
+	map<string, vector<NodeMetadata> >::iterator iter1 = nodeMetadatas.find(compositionIdentifier);
+	if (iter1 != nodeMetadatas.end())
+		for (unsigned long i = 0; i < iter1->second.size(); ++i)
+			if (iter1->second[i].identifier == nodeIdentifier)
+				return &(iter1->second[i]);
+
+	VUserLog("Couldn't find node metadata for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
+	return NULL;
 }
 
 /**
@@ -158,7 +213,7 @@ void VuoNodeRegistry::addNodeContext(const char *compositionIdentifier, unsigned
 	{
 		map<unsigned long, NodeContext *>::iterator iter2 = iter1->second.find(nodeIndex);
 		if (iter2 != iter1->second.end())
-			VUserLog("Context overwritten for node %s:%s", compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex).c_str());
+			VUserLog("Context overwritten for node %s", buildCompositionIdentifier(compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex)).c_str());
 	}
 
 	nodeContextForIndex[compositionIdentifierHash][nodeIndex] = nodeContext;
@@ -184,7 +239,7 @@ void VuoNodeRegistry::removeNodeContext(const char *compositionIdentifier, unsig
 				nodeContextForIndex.erase(iter1);
 
 			string nodeIdentifier = getNodeIdentifierForIndex(compositionIdentifier, nodeIndex);
-			string subcompositionIdentifier = joinCompositionIdentifier(compositionIdentifier, nodeIdentifier);
+			string subcompositionIdentifier = buildCompositionIdentifier(compositionIdentifier, nodeIdentifier);
 			unsigned long subcompositionIdentifierHash = VuoRuntimeUtilities::hash(subcompositionIdentifier.c_str());
 			map<unsigned long, string>::iterator ciIter = compositionIdentifierForHash.find(subcompositionIdentifierHash);
 			if (ciIter != compositionIdentifierForHash.end())
@@ -194,46 +249,49 @@ void VuoNodeRegistry::removeNodeContext(const char *compositionIdentifier, unsig
 		}
 	}
 
-	VUserLog("Couldn't find context for node %s:%s", compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex).c_str());
+	VUserLog("Couldn't find context for node %s", buildCompositionIdentifier(compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex)).c_str());
 }
 
 /**
- * Preserves all remaining node contexts to be accessed after a live-coding reload, and clears the
- * list of registered node contexts.
+ * Preserves a node context to be accessed after a live-coding reload.
  */
-void VuoNodeRegistry::relocateAllNodeContexts(void)
+void VuoNodeRegistry::relocateNodeContext(const char *compositionIdentifier, unsigned long nodeIndex)
 {
-	for (map<unsigned long, map<unsigned long, NodeContext *> >::iterator i = nodeContextForIndex.begin(); i != nodeContextForIndex.end(); ++i)
+	unsigned long compositionIdentifierHash = VuoRuntimeUtilities::hash(compositionIdentifier);
+
+	map<unsigned long, map<unsigned long, NodeContext *> >::iterator iter1 = nodeContextForIndex.find(compositionIdentifierHash);
+	if (iter1 != nodeContextForIndex.end())
 	{
-		unsigned long compositionIdentifierHash = i->first;
-		string compositionIdentifier = getCompositionIdentifierForHash(compositionIdentifierHash);
-
-		map<string, NodeContext *> nodeContextForIdentifier;
-		for (map<unsigned long, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+		map<unsigned long, NodeContext *>::iterator iter2 = iter1->second.find(nodeIndex);
+		if (iter2 != iter1->second.end())
 		{
-			string nodeIdentifier = getNodeIdentifierForIndex(compositionIdentifier.c_str(), j->first);
-			nodeContextForIdentifier[nodeIdentifier] = j->second;
-		}
+			string nodeIdentifier = getNodeIdentifierForIndex(compositionIdentifier, nodeIndex);
+			carriedOverNodeContextForIdentifier[compositionIdentifier][nodeIdentifier] = iter2->second;
+			iter1->second.erase(iter2);
 
-		carriedOverNodeContextForIdentifier[compositionIdentifier] = nodeContextForIdentifier;
+			if (iter1->second.empty())
+				nodeContextForIndex.erase(iter1);
+
+			return;
+		}
 	}
 
-	nodeContextForIndex.clear();
+	VUserLog("Couldn't find context for node %s", buildCompositionIdentifier(compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex)).c_str());
 }
 
 /**
  * Carries over a node context from before a live-coding reload — registering it with the new node contexts
- * and removing it from the list of carried-over node contexts. If the node is a subcomposition, this function
- * also carries over the node contexts of all nodes within the subcomposition.
+ * and removing it from the list of carried-over node contexts.
  */
-NodeContext * VuoNodeRegistry::carryOverNodeContext(const char *compositionIdentifier, unsigned long nodeIndex)
+NodeContext * VuoNodeRegistry::carryOverNodeContext(const char *oldCompositionIdentifier, const char *newCompositionIdentifier,
+													unsigned long nodeIndex)
 {
 	NodeContext *nodeContext = NULL;
-	string nodeIdentifier = getNodeIdentifierForIndex(compositionIdentifier, nodeIndex);
+	string nodeIdentifier = getNodeIdentifierForIndex(newCompositionIdentifier, nodeIndex);
 
 	{
 		bool found = false;
-		map<string, map<string, NodeContext *> >::iterator coIter1 = carriedOverNodeContextForIdentifier.find(compositionIdentifier);
+		map<string, map<string, NodeContext *> >::iterator coIter1 = carriedOverNodeContextForIdentifier.find(oldCompositionIdentifier);
 		if (coIter1 != carriedOverNodeContextForIdentifier.end())
 		{
 			map<string, NodeContext *>::iterator coIter2 = coIter1->second.find(nodeIdentifier);
@@ -241,68 +299,19 @@ NodeContext * VuoNodeRegistry::carryOverNodeContext(const char *compositionIdent
 			{
 				nodeContext = coIter2->second;
 				coIter1->second.erase(coIter2);
-				addNodeContext(compositionIdentifier, nodeIndex, nodeContext);
+				addNodeContext(newCompositionIdentifier, nodeIndex, nodeContext);
 				found = true;
+
+				if (coIter1->second.empty())
+					carriedOverNodeContextForIdentifier.erase(coIter1);
 			}
 		}
 
 		if (! found)
-			VUserLog("Couldn't find context for node %s:%s", compositionIdentifier, nodeIdentifier.c_str());
-	}
-
-	if (! nodeIdentifier.empty())
-	{
-		string subcompositionIdentifier = joinCompositionIdentifier(compositionIdentifier, nodeIdentifier);
-		vector<string> compositionIdentifiersToErase;
-		for (map<string, map<string, NodeContext *> >::iterator i = carriedOverNodeContextForIdentifier.begin(); i != carriedOverNodeContextForIdentifier.end(); ++i)
-		{
-			string currCompositionIdentifier = i->first;
-			unsigned long currCompositionIdentifierHash = VuoRuntimeUtilities::hash(currCompositionIdentifier.c_str());
-
-			if (currCompositionIdentifier.substr(0, subcompositionIdentifier.length()) == subcompositionIdentifier)
-			{
-				map<unsigned long, NodeContext *> currNodeContextForIndex;
-				for (map<string, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-				{
-					unsigned long currNodeIndex = getNodeIndexForIdentifier(currCompositionIdentifier, j->first);
-					currNodeContextForIndex[currNodeIndex] = j->second;
-				}
-				nodeContextForIndex[currCompositionIdentifierHash] = currNodeContextForIndex;
-
-				compositionIdentifiersToErase.push_back(currCompositionIdentifier);
-			}
-		}
-
-		for (vector<string>::iterator i = compositionIdentifiersToErase.begin(); i != compositionIdentifiersToErase.end(); ++i)
-			carriedOverNodeContextForIdentifier.erase(*i);
+			VUserLog("Couldn't find context for node %s", buildCompositionIdentifier(oldCompositionIdentifier, nodeIdentifier).c_str());
 	}
 
 	return nodeContext;
-}
-
-/**
- * Removes the node from the list of carried-over node contexts.
- */
-void VuoNodeRegistry::removeCarriedOverNodeContext(const char *compositionIdentifier, const string &nodeIdentifier)
-{
-	carriedOverNodeContextForIdentifier[compositionIdentifier].erase(nodeIdentifier);
-}
-
-/**
- * Removes all remaining items from the list of carried-over node contexts.
- */
-void VuoNodeRegistry::removeAllCarriedOverNodeContexts(void (*compositionDestroyNodeContext)(VuoCompositionState *, const char *, NodeContext *))
-{
-	for (map<string, map<string, NodeContext *> >::iterator i = carriedOverNodeContextForIdentifier.begin(); i != carriedOverNodeContextForIdentifier.end(); ++i)
-	{
-		for (map<string, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-		{
-			VuoCompositionState compositionState = { persistentState->runtimeState, i->first.c_str() };
-			compositionDestroyNodeContext(&compositionState, j->first.c_str(), j->second);
-		}
-	}
-
-	carriedOverNodeContextForIdentifier.clear();
 }
 
 /**
@@ -320,7 +329,7 @@ NodeContext * VuoNodeRegistry::getNodeContext(const char *compositionIdentifier,
 			return iter2->second;
 	}
 
-	VUserLog("Couldn't find context for node %s:%s", compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex).c_str());
+	VUserLog("Couldn't find context for node %s", buildCompositionIdentifier(compositionIdentifier, getNodeIdentifierForIndex(compositionIdentifier, nodeIndex)).c_str());
 	return NULL;
 }
 
@@ -335,21 +344,35 @@ NodeContext * VuoNodeRegistry::getCompositionContext(const char *compositionIden
 	return getNodeContext(parentCompositionIdentifier.c_str(), subcompositionNodeIndex);
 }
 
+/**
+ * Helper function. Checks if cached info exists in one of the cached port info maps, and if so, provides an iterator pointing to it.
+ */
+template<typename T>
+bool VuoNodeRegistry::findCachedInfoForPort(const map<string, map<string, T> > &cachedInfoForPort, const string &compositionIdentifier,
+											const string &portIdentifier, typename map<string, T>::const_iterator &foundIter)
+{
+	typename map<string, map<string, T> >::const_iterator compIter = cachedInfoForPort.find(compositionIdentifier);
+	if (compIter != cachedInfoForPort.end())
+	{
+		foundIter = compIter->second.find(portIdentifier);
+		if (foundIter != compIter->second.end())
+			return true;
+	}
+
+	return false;
+}
 
 /**
  * Returns the `data` field in a port's context, given the port's identifier.
  */
 void * VuoNodeRegistry::getDataForPort(const char *compositionIdentifier, const char *portIdentifier)
 {
-	map<string, map<string, void *> >::iterator compIter = dataForPort.find(compositionIdentifier);
-	if (compIter != dataForPort.end())
-	{
-		map<string, void *>::iterator portIter = compIter->second.find(portIdentifier);
-		if (portIter != compIter->second.end())
-			return portIter->second;
-	}
+	map<string, void *>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<void *>(dataForPort, compositionIdentifier, portIdentifier, foundIter);
+	if (found)
+		return foundIter->second;
 
-	VUserLog("Couldn't find data for port %s:%s", compositionIdentifier, portIdentifier);
+	VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	return NULL;
 }
 
@@ -358,15 +381,12 @@ void * VuoNodeRegistry::getDataForPort(const char *compositionIdentifier, const 
  */
 dispatch_semaphore_t VuoNodeRegistry::getNodeSemaphoreForPort(const char *compositionIdentifier, const char *portIdentifier)
 {
-	map<string, map<string, dispatch_semaphore_t> >::iterator compIter = nodeSemaphoreForPort.find(compositionIdentifier);
-	if (compIter != nodeSemaphoreForPort.end())
-	{
-		map<string, dispatch_semaphore_t>::iterator portIter = compIter->second.find(portIdentifier);
-		if (portIter != compIter->second.end())
-			return portIter->second;
-	}
+	map<string, dispatch_semaphore_t>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
+	if (found)
+		return foundIter->second;
 
-	VUserLog("Couldn't find node semaphore for port %s:%s", compositionIdentifier, portIdentifier);
+	VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	return NULL;
 }
 
@@ -375,15 +395,12 @@ dispatch_semaphore_t VuoNodeRegistry::getNodeSemaphoreForPort(const char *compos
  */
 unsigned long VuoNodeRegistry::getNodeIndexForPort(const char *compositionIdentifier, const char *portIdentifier)
 {
-	map<string, map<string, unsigned long> >::iterator compIter = nodeIndexForPort.find(compositionIdentifier);
-	if (compIter != nodeIndexForPort.end())
-	{
-		map<string, unsigned long>::iterator portIter = compIter->second.find(portIdentifier);
-		if (portIter != compIter->second.end())
-			return portIter->second;
-	}
+	map<string, unsigned long>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<unsigned long>(nodeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+	if (found)
+		return foundIter->second;
 
-	VUserLog("Couldn't find node index for port %s:%s", compositionIdentifier, portIdentifier);
+	VUserLog("Couldn't find node index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	return 0;
 }
 
@@ -392,15 +409,12 @@ unsigned long VuoNodeRegistry::getNodeIndexForPort(const char *compositionIdenti
  */
 unsigned long VuoNodeRegistry::getTypeIndexForPort(const char *compositionIdentifier, const char *portIdentifier)
 {
-	map<string, map<string, unsigned long> >::iterator compIter = typeIndexForPort.find(compositionIdentifier);
-	if (compIter != typeIndexForPort.end())
-	{
-		map<string, unsigned long>::iterator portIter = compIter->second.find(portIdentifier);
-		if (portIter != compIter->second.end())
-			return portIter->second;
-	}
+	map<string, unsigned long>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<unsigned long>(typeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+	if (found)
+		return foundIter->second;
 
-	VUserLog("Couldn't find type index for port %s:%s", compositionIdentifier, portIdentifier);
+	VUserLog("Couldn't find type index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	return 0;
 }
 
@@ -410,13 +424,10 @@ unsigned long VuoNodeRegistry::getTypeIndexForPort(const char *compositionIdenti
 void VuoNodeRegistry::addPortIdentifier(const char *compositionIdentifier, const string &portIdentifier,
 										void *data, dispatch_semaphore_t nodeSemaphore, unsigned long nodeIndex, unsigned long typeIndex)
 {
-	map<string, map<string, void *> >::iterator iter1 = dataForPort.find(compositionIdentifier);
-	if (iter1 != dataForPort.end())
-	{
-		map<string, void *>::iterator iter2 = iter1->second.find(portIdentifier);
-		if (iter2 != iter1->second.end())
-			VUserLog("Cache overwritten for port %s:%s", compositionIdentifier, portIdentifier.c_str());
-	}
+	map<string, void *>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<void *>(dataForPort, compositionIdentifier, portIdentifier, foundIter);
+	if (found)
+		VUserLog("Cache overwritten for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 
 	dataForPort[compositionIdentifier][portIdentifier] = data;
 	nodeSemaphoreForPort[compositionIdentifier][portIdentifier] = nodeSemaphore;
@@ -430,155 +441,133 @@ void VuoNodeRegistry::addPortIdentifier(const char *compositionIdentifier, const
 void VuoNodeRegistry::removePortIdentifier(const char *compositionIdentifier, const string &portIdentifier)
 {
 	{
-		bool found = false;
-		map<string, map<string, void *> >::iterator iter1 = dataForPort.find(compositionIdentifier);
-		if (iter1 != dataForPort.end())
+		map<string, void *>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<void *>(dataForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
 		{
-			map<string, void *>::iterator iter2 = iter1->second.find(portIdentifier);
-			if (iter2 != iter1->second.end())
-			{
-				iter1->second.erase(iter2);
-				found = true;
-			}
-		}
+			dataForPort[compositionIdentifier].erase(portIdentifier);
 
-		if (! found)
-			VUserLog("Couldn't find data for port %s:%s", compositionIdentifier, portIdentifier.c_str());
+			if (dataForPort[compositionIdentifier].empty())
+				dataForPort.erase(compositionIdentifier);
+		}
+		else
+			VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 	{
-		bool found = false;
-		map<string, map<string, dispatch_semaphore_t> >::iterator iter1 = nodeSemaphoreForPort.find(compositionIdentifier);
-		if (iter1 != nodeSemaphoreForPort.end())
+		map<string, dispatch_semaphore_t>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
 		{
-			map<string, dispatch_semaphore_t>::iterator iter2 = iter1->second.find(portIdentifier);
-			if (iter2 != iter1->second.end())
-			{
-				iter1->second.erase(iter2);
-				found = true;
-			}
-		}
+			nodeSemaphoreForPort[compositionIdentifier].erase(portIdentifier);
 
-		if (! found)
-			VUserLog("Couldn't find node semaphore for port %s:%s", compositionIdentifier, portIdentifier.c_str());
+			if (nodeSemaphoreForPort[compositionIdentifier].empty())
+				nodeSemaphoreForPort.erase(compositionIdentifier);
+		}
+		else
+			VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 	{
-		bool found = false;
-		map<string, map<string, unsigned long> >::iterator iter1 = nodeIndexForPort.find(compositionIdentifier);
-		if (iter1 != nodeIndexForPort.end())
+		map<string, unsigned long>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<unsigned long>(nodeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
 		{
-			map<string, unsigned long>::iterator iter2 = iter1->second.find(portIdentifier);
-			if (iter2 != iter1->second.end())
-			{
-				iter1->second.erase(iter2);
-				found = true;
-			}
-		}
+			nodeIndexForPort[compositionIdentifier].erase(portIdentifier);
 
-		if (! found)
-			VUserLog("Couldn't find node index for port %s:%s", compositionIdentifier, portIdentifier.c_str());
+			if (nodeIndexForPort[compositionIdentifier].empty())
+				nodeIndexForPort.erase(compositionIdentifier);
+		}
+		else
+			VUserLog("Couldn't find node index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 	{
-		bool found = false;
-		map<string, map<string, unsigned long> >::iterator iter1 = typeIndexForPort.find(compositionIdentifier);
-		if (iter1 != typeIndexForPort.end())
+		map<string, unsigned long>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<unsigned long>(typeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
 		{
-			map<string, unsigned long>::iterator iter2 = iter1->second.find(portIdentifier);
-			if (iter2 != iter1->second.end())
-			{
-				iter1->second.erase(iter2);
-				found = true;
-			}
-		}
+			typeIndexForPort[compositionIdentifier].erase(portIdentifier);
 
-		if (! found)
-			VUserLog("Couldn't find type index for port %s:%s", compositionIdentifier, portIdentifier.c_str());
+			if (typeIndexForPort[compositionIdentifier].empty())
+				typeIndexForPort.erase(compositionIdentifier);
+		}
+		else
+			VUserLog("Couldn't find type index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 }
 
 /**
- * Preserves all remaining port cache entries to be accessed after a live-coding reload, and clears the port cache.
+ * Preserves a port's cache entries to be accessed after a live-coding reload.
  */
-void VuoNodeRegistry::relocateAllPortIdentifiers(void)
+void VuoNodeRegistry::relocatePortIdentifier(const char *compositionIdentifier, const string &portIdentifier)
 {
-	carriedOverDataForPort = dataForPort;
-	carriedOverNodeSemaphoreForPort = nodeSemaphoreForPort;
-	carriedOverNodeIndexForPort = nodeIndexForPort;
-	carriedOverTypeIndexForPort = typeIndexForPort;
+	{
+		map<string, void *>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<void *>(dataForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
+			carriedOverDataForPort[compositionIdentifier][portIdentifier] = foundIter->second;
+		else
+			VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
+	}
+	{
+		map<string, dispatch_semaphore_t>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
+			carriedOverNodeSemaphoreForPort[compositionIdentifier][portIdentifier] = foundIter->second;
+		else
+			VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
+	}
+	{
+		map<string, unsigned long>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<unsigned long>(nodeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
+			carriedOverNodeIndexForPort[compositionIdentifier][portIdentifier] = foundIter->second;
+		else
+			VUserLog("Couldn't find node index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
+	}
+	{
+		map<string, unsigned long>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<unsigned long>(typeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
+		if (found)
+			carriedOverTypeIndexForPort[compositionIdentifier][portIdentifier] = foundIter->second;
+		else
+			VUserLog("Couldn't find type index for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
+	}
 
-	dataForPort.clear();
-	nodeSemaphoreForPort.clear();
-	nodeIndexForPort.clear();
-	typeIndexForPort.clear();
+	removePortIdentifier(compositionIdentifier, portIdentifier);
 }
 
 /**
  * Carries over a port's cache entry from before a live-coding reload — transferring the entry to the new
  * port cache and removing it from the list of carried-over port cache entries.
  */
-void VuoNodeRegistry::carryOverPortIdentifier(const char *compositionIdentifier, const string &portIdentifier,
-											  unsigned long nodeIndex, unsigned long typeIndex)
+void VuoNodeRegistry::carryOverPortIdentifier(const char *oldCompositionIdentifier, const char *newCompositionIdentifier,
+											  const string &portIdentifier, unsigned long nodeIndex, unsigned long typeIndex)
 {
-	bool found = false;
-	map<string, map<string, void *> >::iterator iter1 = carriedOverDataForPort.find(compositionIdentifier);
-	if (iter1 != carriedOverDataForPort.end())
-	{
-		map<string, void *>::iterator iter2 = iter1->second.find(portIdentifier);
-		if (iter2 != iter1->second.end())
-			found = true;
-	}
-
+	map<string, void *>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<void *>(carriedOverDataForPort, oldCompositionIdentifier, portIdentifier, foundIter);
 	if (! found)
 	{
-		VUserLog("Couldn't find cache for port %s:%s", compositionIdentifier, portIdentifier.c_str());
+		VUserLog("Couldn't find cache for port %s", buildCompositionIdentifier(oldCompositionIdentifier, portIdentifier).c_str());
 		return;
 	}
 
-	dataForPort[compositionIdentifier][portIdentifier] = carriedOverDataForPort[compositionIdentifier][portIdentifier];
-	nodeSemaphoreForPort[compositionIdentifier][portIdentifier] = carriedOverNodeSemaphoreForPort[compositionIdentifier][portIdentifier];
-	nodeIndexForPort[compositionIdentifier][portIdentifier] = nodeIndex;
-	typeIndexForPort[compositionIdentifier][portIdentifier] = typeIndex;
+	dataForPort[newCompositionIdentifier][portIdentifier] = carriedOverDataForPort[oldCompositionIdentifier][portIdentifier];
+	nodeSemaphoreForPort[newCompositionIdentifier][portIdentifier] = carriedOverNodeSemaphoreForPort[oldCompositionIdentifier][portIdentifier];
+	nodeIndexForPort[newCompositionIdentifier][portIdentifier] = nodeIndex;
+	typeIndexForPort[newCompositionIdentifier][portIdentifier] = typeIndex;
 
-	carriedOverDataForPort[compositionIdentifier].erase(portIdentifier);
-	carriedOverNodeSemaphoreForPort[compositionIdentifier].erase(portIdentifier);
-	carriedOverNodeIndexForPort[compositionIdentifier].erase(portIdentifier);
-	carriedOverTypeIndexForPort[compositionIdentifier].erase(portIdentifier);
+	removeCarriedOverPortIdentifier(oldCompositionIdentifier, portIdentifier);
 }
 
 /**
  * Carries over all of the node's port cache entries from before a live-coding reload — transferring the entries
- * to the new port cache and removing them from the list of carried-over port cache entries. If the node is a
- * subcomposition, this function also carries over the port cache entries for all nodes within the subcomposition.
+ * to the new port cache and removing them from the list of carried-over port cache entries.
  */
-void VuoNodeRegistry::carryOverPortIdentifiersForNode(const char *compositionIdentifier, const string &nodeIdentifier, unsigned long nodeIndex,
+void VuoNodeRegistry::carryOverPortIdentifiersForNode(const char *oldCompositionIdentifier, const char *newCompositionIdentifier,
+													  const string &nodeIdentifier, unsigned long nodeIndex,
 													  const vector<string> &portIdentifiers, const vector<unsigned long> typeIndexes)
 {
 	for (size_t j = 0; j < portIdentifiers.size(); ++j)
-		carryOverPortIdentifier(compositionIdentifier, portIdentifiers[j], nodeIndex, typeIndexes[j]);
-
-	string subcompositionIdentifier = joinCompositionIdentifier(compositionIdentifier, nodeIdentifier);
-	vector<string> compositionIdentifiersToErase;
-	for (map<string, map<string, void *> >::iterator i = carriedOverDataForPort.begin(); i != carriedOverDataForPort.end(); ++i)
-	{
-		string currCompositionIdentifier = i->first;
-		if (currCompositionIdentifier.substr(0, subcompositionIdentifier.length()) == subcompositionIdentifier)
-		{
-			dataForPort[currCompositionIdentifier] = carriedOverDataForPort[currCompositionIdentifier];
-			nodeSemaphoreForPort[currCompositionIdentifier] = carriedOverNodeSemaphoreForPort[currCompositionIdentifier];
-			nodeIndexForPort[currCompositionIdentifier] = carriedOverNodeIndexForPort[currCompositionIdentifier];
-			typeIndexForPort[currCompositionIdentifier] = carriedOverTypeIndexForPort[currCompositionIdentifier];
-
-			compositionIdentifiersToErase.push_back(currCompositionIdentifier);
-		}
-	}
-
-	for (vector<string>::iterator i = compositionIdentifiersToErase.begin(); i != compositionIdentifiersToErase.end(); ++i)
-	{
-		string currCompositionIdentifier = *i;
-		carriedOverDataForPort.erase(currCompositionIdentifier);
-		carriedOverNodeSemaphoreForPort.erase(currCompositionIdentifier);
-		carriedOverNodeIndexForPort.erase(currCompositionIdentifier);
-		carriedOverTypeIndexForPort.erase(currCompositionIdentifier);
-	}
+		carryOverPortIdentifier(oldCompositionIdentifier, newCompositionIdentifier, portIdentifiers[j], nodeIndex, typeIndexes[j]);
 }
 
 /**
@@ -586,89 +575,97 @@ void VuoNodeRegistry::carryOverPortIdentifiersForNode(const char *compositionIde
  */
 void VuoNodeRegistry::removeCarriedOverPortIdentifier(const char *compositionIdentifier, const string &oldPortIdentifier)
 {
+	map<string, void *>::const_iterator foundIter;
+	bool found = findCachedInfoForPort<void *>(carriedOverDataForPort, compositionIdentifier, oldPortIdentifier, foundIter);
+	if (! found)
+	{
+		VUserLog("Couldn't find cache for port %s", buildCompositionIdentifier(compositionIdentifier, oldPortIdentifier).c_str());
+		return;
+	}
+
 	carriedOverDataForPort[compositionIdentifier].erase(oldPortIdentifier);
 	carriedOverNodeSemaphoreForPort[compositionIdentifier].erase(oldPortIdentifier);
 	carriedOverNodeIndexForPort[compositionIdentifier].erase(oldPortIdentifier);
 	carriedOverTypeIndexForPort[compositionIdentifier].erase(oldPortIdentifier);
-}
 
-/**
- * Removes all remaining items from the list of carried-over port cache entries.
- */
-void VuoNodeRegistry::removeAllCarriedOverPortIdentifiers(void)
-{
-	carriedOverDataForPort.clear();
-	carriedOverNodeSemaphoreForPort.clear();
-	carriedOverNodeIndexForPort.clear();
-	carriedOverTypeIndexForPort.clear();
+	if (carriedOverDataForPort[compositionIdentifier].empty())
+		carriedOverDataForPort.erase(compositionIdentifier);
+	if (carriedOverNodeSemaphoreForPort[compositionIdentifier].empty())
+		carriedOverNodeSemaphoreForPort.erase(compositionIdentifier);
+	if (carriedOverNodeIndexForPort[compositionIdentifier].empty())
+		carriedOverNodeIndexForPort.erase(compositionIdentifier);
+	if (carriedOverTypeIndexForPort[compositionIdentifier].empty())
+		carriedOverTypeIndexForPort.erase(compositionIdentifier);
 }
 
 /**
  * For a node being replaced across a live-coding reload, transfers port data from a port on the old node
  * to the corresponding port on the new node (by copying the port data's heap address from the old PortContext
- * to the new PortContext).
+ * to the new PortContext). Updates the port data cache.
  */
-void VuoNodeRegistry::carryOverPortData(const char *compositionIdentifier, const string &oldPortIdentifier,
-										const string &newPortIdentifier, PortContext *newPortContext)
+void VuoNodeRegistry::carryOverPortData(const char *oldCompositionIdentifier, const char *newCompositionIdentifier,
+										const string &oldPortIdentifier, const string &newPortIdentifier, PortContext *newPortContext)
 {
-	void *carriedOverData = NULL;
-	bool foundPort = false;
-	map<string, map<string, void *> >::iterator compIter = carriedOverDataForPort.find(compositionIdentifier);
-	if (compIter != carriedOverDataForPort.end())
+	void *carriedOverData;
 	{
-		map<string, void *>::iterator portIter = compIter->second.find(oldPortIdentifier);
-		if (portIter != compIter->second.end())
+		map<string, void *>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<void *>(carriedOverDataForPort, oldCompositionIdentifier, oldPortIdentifier, foundIter);
+		if (! found)
 		{
-			carriedOverData = portIter->second;
-			foundPort = true;
+			VUserLog("Couldn't find data for carried-over port %s", buildCompositionIdentifier(oldCompositionIdentifier, oldPortIdentifier).c_str());
+			return;
 		}
-	}
 
-	if (! foundPort)
-	{
-		VUserLog("Couldn't find data for carried-over port %s:%s", compositionIdentifier, newPortIdentifier.c_str());
-		return;
+		carriedOverData = foundIter->second;
 	}
 
 	vuoSetPortContextData(newPortContext, carriedOverData);
-	dataForPort[compositionIdentifier][newPortIdentifier] = carriedOverData;
+
+	{
+		map<string, void *>::const_iterator foundIter;
+		bool found = findCachedInfoForPort<void *>(dataForPort, newCompositionIdentifier, newPortIdentifier, foundIter);
+		if (! found)
+		{
+			VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(newCompositionIdentifier, newPortIdentifier).c_str());
+			return;
+		}
+
+		dataForPort[newCompositionIdentifier][newPortIdentifier] = carriedOverData;
+	}
 }
 
 /**
- * Helper function for `compositionContextInit()`. If the composition contains subcomposition nodes,
- * this function calls each subcomposition's `compositionContextInit()`.
+ * Initializes a node context for the top-level composition, for each node and port in the top-level composition,
+ * and recursively for each subcomposition.
+ *
+ * @version200New
  */
-NodeContext * VuoNodeRegistry::compositionContextInitHelper(VuoCompositionState *compositionState, bool hasInstanceData, unsigned long publishedOutputPortCount,
-															NodeContext *(*compositionCreateNodeContext)(VuoCompositionState *, unsigned long),
-															void (*compositionDestroyNodeContext)(VuoCompositionState *, const char *, NodeContext *),
-															void (*compositionSetPortValue)(VuoCompositionState *, const char *, const char *, bool, bool, bool, bool, bool))
+void VuoNodeRegistry::initContextForTopLevelComposition(VuoCompositionState *compositionState, bool hasInstanceData,
+														unsigned long publishedOutputPortCount)
 {
-	NodeContext *compositionContext = NULL;
-
 	const char *compositionIdentifier = compositionState->compositionIdentifier;
 
-	bool isTopLevelComposition = ! strcmp(compositionIdentifier, vuoTopLevelCompositionIdentifier);
-	if (isTopLevelComposition)
+	if (persistentState->compositionDiff->isCompositionStartingOrStopping())
 	{
-		if (persistentState->compositionDiff->isCompositionStartingOrStopping())
-		{
-			// The top-level composition is starting for the first time. Create and register its context.
-			compositionContext = vuoCreateNodeContext(hasInstanceData, true, publishedOutputPortCount);
-			addNodeContext(compositionIdentifier, topLevelCompositionIndex, compositionContext);
-		}
-		else
-		{
-			// Restore the top-level composition's context from before the live-coding reload.
-			compositionContext = carryOverNodeContext(compositionIdentifier, topLevelCompositionIndex);
-
-			nodeMetadatas.insert(carriedOverNodeMetadatas.begin(), carriedOverNodeMetadatas.end());
-			carriedOverNodeMetadatas.clear();
-		}
+		// Create and register a node context for the top-level composition.
+		NodeContext *compositionContext = vuoCreateNodeContext(hasInstanceData, true, publishedOutputPortCount);
+		addNodeContext(compositionIdentifier, topLevelCompositionIndex, compositionContext);
 	}
 	else
 	{
-		compositionContext = vuoCreateNodeContext(hasInstanceData, true, publishedOutputPortCount);
+		carryOverNodeContext(compositionIdentifier, compositionIdentifier, topLevelCompositionIndex);
 	}
+
+	initContextsForCompositionContents(compositionState);
+}
+
+/**
+ * Initializes the node and port contexts for each node in the composition, and recursively for each subcomposition.
+ * The contexts are either created anew or carried over from before a live-coding reload.
+ */
+void VuoNodeRegistry::initContextsForCompositionContents(VuoCompositionState *compositionState)
+{
+	const char *compositionIdentifier = compositionState->compositionIdentifier;
 
 	for (size_t nodeIndex = 0; nodeIndex < nodeMetadatas[compositionIdentifier].size(); ++nodeIndex)
 	{
@@ -676,23 +673,18 @@ NodeContext * VuoNodeRegistry::compositionContextInitHelper(VuoCompositionState 
 		NodeContext *nodeContext = NULL;
 
 		json_object *replacementObj = NULL;
-		VuoCompositionDiff::ChangeType changeType = (isTopLevelComposition ?
-														 persistentState->compositionDiff->findNode(nodeMetadata.identifier.c_str(), &replacementObj) :
-														 VuoCompositionDiff::ChangeAdd);
-
+		VuoCompositionDiff::ChangeType changeType = persistentState->compositionDiff->findNode(compositionIdentifier,
+																							   nodeMetadata.identifier.c_str(),
+																							   &replacementObj);
 		if (changeType == VuoCompositionDiff::ChangeStartStop ||
 				changeType == VuoCompositionDiff::ChangeAdd || changeType == VuoCompositionDiff::ChangeReplace)
 		{
-			// Create the added node's context.
-			// If the node is a subcomposition, this calls compositionContextInit().
-			nodeContext = compositionCreateNodeContext(compositionState, nodeIndex);
-
-			// Register the added node's context.
+			// Create and register a node context for the added node and a port context for each of its ports.
+			NodeContext *nodeContext = nodeMetadata.compositionCreateContextForNode(nodeIndex);
 			addNodeContext(compositionIdentifier, nodeIndex, nodeContext);
 
-			dispatch_semaphore_t nodeSemaphore = vuoGetNodeContextSemaphore(nodeContext);
-
 			// Add the added node's ports to the port cache.
+			dispatch_semaphore_t nodeSemaphore = vuoGetNodeContextSemaphore(nodeContext);
 			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
 			{
 				PortMetadata portMetadata = nodeMetadata.portMetadatas[portIndex];
@@ -702,48 +694,45 @@ NodeContext * VuoNodeRegistry::compositionContextInitHelper(VuoCompositionState 
 				addPortIdentifier(compositionIdentifier, portMetadata.identifier, portData, nodeSemaphore, nodeIndex, portMetadata.typeIndex);
 			}
 
-			string oldNodeIdentifier;
 			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
 			{
 				PortMetadata portMetadata = nodeMetadata.portMetadatas[portIndex];
 				PortContext *portContext = vuoGetNodeContextPortContext(nodeContext, portIndex);
 				void *portData = vuoGetPortContextData(portContext);
 
-				if (! portData)
-					continue;
-
-				string oldPortIdentifier;
-				if (changeType == VuoCompositionDiff::ChangeReplace &&
-						persistentState->compositionDiff->isPortReplacingAnother(portMetadata.name.c_str(), replacementObj, oldNodeIdentifier, oldPortIdentifier))
+				if (portData)
 				{
-					// Set the replacement port's data from the port it replaces.
-					carryOverPortData(compositionIdentifier, oldPortIdentifier, portMetadata.identifier, portContext);
+					string oldNodeIdentifier;
+					string oldPortIdentifier;
+					if (changeType == VuoCompositionDiff::ChangeReplace &&
+							persistentState->compositionDiff->isPortReplacingAnother(portMetadata.name.c_str(), replacementObj, oldNodeIdentifier, oldPortIdentifier))
+					{
+						// Set the replacement port's data from the port it replaces.
+						carryOverPortData(compositionIdentifier, compositionIdentifier, oldPortIdentifier, portMetadata.identifier, portContext);
 
-					// Remove the port being replaced from the port cache.
-					removeCarriedOverPortIdentifier(compositionIdentifier, oldPortIdentifier);
+						// Remove the port from the carried-over port info.
+						removeCarriedOverPortIdentifier(compositionIdentifier, oldPortIdentifier);
+					}
+					else
+					{
+						// Set the added port's data to its initial value.
+						nodeMetadata.compositionSetPortValue(compositionState, portMetadata.identifier.c_str(), portMetadata.initialValue.c_str(),
+															 false, false, false, false, true);
+					}
 				}
-				else
-				{
-					// Set the added port's data to its initial value.
-					compositionSetPortValue(compositionState, portMetadata.identifier.c_str(), portMetadata.initialValue.c_str(),
-											false, false, false, false, true);
-				}
-			}
-
-			if (changeType == VuoCompositionDiff::ChangeReplace && ! oldNodeIdentifier.empty())
-			{
-				// Remove the node context for the node being replaced.
-				removeCarriedOverNodeContext(compositionIdentifier, oldNodeIdentifier);
 			}
 		}
 		else
 		{
+			string oldCompositionIdentifier = compositionIdentifier;
+			if (changeType == VuoCompositionDiff::ChangeMove &&
+					(! persistentState->compositionDiff->isNodeBeingMovedToHere(compositionIdentifier, nodeMetadata.identifier.c_str(), replacementObj, oldCompositionIdentifier)))
+				continue;
+
 			// Restore the kept node's context.
-			// If the node is a subcomposition, this also restores the contexts of all nodes within it.
-			nodeContext = carryOverNodeContext(compositionIdentifier, nodeIndex);
+			nodeContext = carryOverNodeContext(oldCompositionIdentifier.c_str(), compositionIdentifier, nodeIndex);
 
 			// Restore the kept node's ports to the port cache.
-			// If the node is a subcomposition, this also restores the ports of all nodes within it.
 			vector<string> portIdentifiers;
 			vector<unsigned long> typeIndexes;
 			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
@@ -752,43 +741,87 @@ NodeContext * VuoNodeRegistry::compositionContextInitHelper(VuoCompositionState 
 				portIdentifiers.push_back(portMetadata.identifier);
 				typeIndexes.push_back(portMetadata.typeIndex);
 			}
-			carryOverPortIdentifiersForNode(compositionIdentifier, nodeMetadata.identifier, nodeIndex, portIdentifiers, typeIndexes);
+			carryOverPortIdentifiersForNode(oldCompositionIdentifier.c_str(), compositionIdentifier, nodeMetadata.identifier, nodeIndex, portIdentifiers, typeIndexes);
+
+			// If the node has been packaged into a subcomposition, copy the port values with connected published input cables
+			// from here (the node inside the subcomposition) to the new subcomposition node in the parent composition.
+			if (changeType == VuoCompositionDiff::ChangeMove)
+			{
+				for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
+				{
+					PortMetadata portMetadata = nodeMetadata.portMetadatas[portIndex];
+
+					string destinationCompositionIdentifier;
+					string destinationPortIdentifier;
+					if (persistentState->compositionDiff->isPortBeingCopied(portMetadata.name.c_str(), replacementObj,
+																			destinationCompositionIdentifier, destinationPortIdentifier))
+					{
+						char *portValue = getPortValue(compositionState, portMetadata.identifier.c_str(), false);
+
+						const NodeMetadata *destinationPortMetadata = getNodeMetadataForPort(destinationCompositionIdentifier.c_str(), destinationPortIdentifier.c_str());
+						VuoCompositionState *destinationCompositionState = vuoCreateCompositionState(compositionState->runtimeState, destinationCompositionIdentifier.c_str());
+						destinationPortMetadata->compositionSetPortValue(destinationCompositionState, destinationPortIdentifier.c_str(), portValue, false, false, false, true, true);
+					}
+				}
+			}
 		}
 
 		json_object_put(replacementObj);
-	}
 
-	if (isTopLevelComposition)
-	{
-		// Clean up the stuff carried over for nodes being replaced across the live-coding reload.
-		removeAllCarriedOverPortIdentifiers();
-		removeAllCarriedOverNodeContexts(compositionDestroyNodeContext);
+		// If the node is a subcomposition, initialize the node and port contexts within it.
+		string subcompositionIdentifier = buildCompositionIdentifier(compositionIdentifier, nodeMetadata.identifier);
+		if (nodeMetadatas.find(subcompositionIdentifier) != nodeMetadatas.end())
+		{
+			VuoCompositionState *subcompositionState = vuoCreateCompositionState(compositionState->runtimeState, subcompositionIdentifier.c_str());
+			initContextsForCompositionContents(subcompositionState);
+			vuoFreeCompositionState(subcompositionState);
+		}
 	}
-
-	return compositionContext;
 }
 
 /**
- * Helper function for `compositionContextFini()`. If the composition contains subcomposition nodes,
- * this function calls each subcomposition's `compositionContextFini()`.
+ * Finalizes the node context for the top-level composition, for each node and port in the top-level composition,
+ * and recursively for each subcomposition. Also erases all stored node metadatas.
+ *
+ * @version200New
  */
-void VuoNodeRegistry::compositionContextFiniHelper(VuoCompositionState *compositionState,
-												   void (*compositionDestroyNodeContext)(VuoCompositionState *, const char *, NodeContext *),
-												   void (*compositionReleasePortData)(void *, unsigned long))
+void VuoNodeRegistry::finiContextForTopLevelComposition(VuoCompositionState *compositionState)
 {
 	const char *compositionIdentifier = compositionState->compositionIdentifier;
 
-	bool isTopLevelComposition = ! strcmp(compositionIdentifier, vuoTopLevelCompositionIdentifier);
+	if (persistentState->compositionDiff->isCompositionStartingOrStopping())
+	{
+		// Unregister and destroy the node context for the top-level composition.
+		NodeContext *compositionContext = getNodeContext(compositionIdentifier, topLevelCompositionIndex);
+		removeNodeContext(compositionIdentifier, topLevelCompositionIndex);
+		vuoFreeNodeContext(compositionContext);
+	}
+	else
+	{
+		relocateNodeContext(compositionIdentifier, topLevelCompositionIndex);
+	}
+
+	finiContextsForCompositionContents(compositionState);
+
+	nodeMetadatas.clear();
+}
+
+/**
+ * Finalizes the node and port contexts for each node in the composition, and recursively for each subcomposition.
+ * The contexts are either destroyed or relocated to be carried across a live-coding reload.
+ */
+void VuoNodeRegistry::finiContextsForCompositionContents(VuoCompositionState *compositionState)
+{
+	const char *compositionIdentifier = compositionState->compositionIdentifier;
 
 	for (size_t nodeIndex = 0; nodeIndex < nodeMetadatas[compositionIdentifier].size(); ++nodeIndex)
 	{
 		NodeMetadata nodeMetadata = nodeMetadatas[compositionIdentifier][nodeIndex];
 
 		json_object *replacementObj = NULL;
-		VuoCompositionDiff::ChangeType changeType = (isTopLevelComposition ?
-														 persistentState->compositionDiff->findNode(nodeMetadata.identifier.c_str(), &replacementObj) :
-														 VuoCompositionDiff::ChangeRemove);
-
+		VuoCompositionDiff::ChangeType changeType = persistentState->compositionDiff->findNode(compositionIdentifier,
+																							   nodeMetadata.identifier.c_str(),
+																							   &replacementObj);
 		if (changeType == VuoCompositionDiff::ChangeStartStop ||
 				changeType == VuoCompositionDiff::ChangeRemove || changeType == VuoCompositionDiff::ChangeReplace)
 		{
@@ -800,72 +833,175 @@ void VuoNodeRegistry::compositionContextFiniHelper(VuoCompositionState *composit
 				PortContext *portContext = vuoGetNodeContextPortContext(nodeContext, portIndex);
 				void *portData = vuoGetPortContextData(portContext);
 
-				if (changeType == VuoCompositionDiff::ChangeReplace &&
-						persistentState->compositionDiff->isPortBeingReplaced(portMetadata.name.c_str(), replacementObj))
+				bool relocated = false;
+				if (portData)
 				{
-					if (portData)
+					if (changeType == VuoCompositionDiff::ChangeReplace &&
+							persistentState->compositionDiff->isPortBeingReplaced(portMetadata.name.c_str(), replacementObj))
 					{
 						// Retain the being-replaced port's data for after the live-coding reload.
 						vuoRetainPortContextData(portContext);
+
+						// Carry over the port's data
+						relocatePortIdentifier(compositionIdentifier, portMetadata.identifier);
+						relocated = true;
+					}
+					else
+					{
+						// Release the port's data.
+						nodeMetadata.compositionReleasePortData(portData, portMetadata.typeIndex);
 					}
 				}
-				else
-				{
-					if (portData)
-					{
-						// Release the removed port's data.
-						compositionReleasePortData(portData, portMetadata.typeIndex);
-					}
 
-					// Remove the removed port from the port cache.
+				if (! relocated)
+				{
+					// Remove the port from the (non-carried-over) port cache.
 					removePortIdentifier(compositionIdentifier, portMetadata.identifier);
 				}
 			}
 
-			if (changeType == VuoCompositionDiff::ChangeStartStop || changeType == VuoCompositionDiff::ChangeRemove)
-			{
-				// Destroy the removed node's context.
-				// If the node is a subcomposition, this calls compositionContextFini().
-				compositionDestroyNodeContext(compositionState, nodeMetadata.identifier.c_str(), nodeContext);
-
-				// Un-register the removed node's context.
-				removeNodeContext(compositionIdentifier, nodeIndex);
-			}
-		}
-
-		json_object_put(replacementObj);
-	}
-
-	if (isTopLevelComposition)
-	{
-		if (persistentState->compositionDiff->isCompositionStartingOrStopping())
-		{
-			// The top-level composition is stopping for the last time. Un-register and destroy its context.
-			NodeContext *compositionContext = getCompositionContext(compositionIdentifier);
-			removeNodeContext(compositionIdentifier, topLevelCompositionIndex);
-			vuoFreeNodeContext(compositionContext);
+			// Unregister and destroy the node's context.
+			removeNodeContext(compositionIdentifier, nodeIndex);
+			vuoFreeNodeContext(nodeContext);
 		}
 		else
 		{
-			// Carry over stuff for kept and being-replaced nodes for after the live-coding reload.
-			// If any nodes are subcompositions, this also carries over stuff for all nodes within them.
-			relocateAllPortIdentifiers();
-			relocateAllNodeContexts();
+			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
+			{
+				// Carry over the port's data
+				PortMetadata portMetadata = nodeMetadata.portMetadatas[portIndex];
+				relocatePortIdentifier(compositionIdentifier, portMetadata.identifier);
+			}
 
-			// Clear the node metadata for all nodes in this composition (but not for nodes within subcomposition nodes).
-			nodeMetadatas.erase(compositionIdentifier);
-
-			// Carry over the node metadata for nodes within kept subcomposition nodes.
-			carriedOverNodeMetadatas = nodeMetadatas;
+			// Carry over the node's context
+			relocateNodeContext(compositionIdentifier, nodeIndex);
 		}
 
-		nodeMetadatas.clear();
+		json_object_put(replacementObj);
+
+		string subcompositionIdentifier = buildCompositionIdentifier(compositionIdentifier, nodeMetadata.identifier);
+		if (nodeMetadatas.find(subcompositionIdentifier) != nodeMetadatas.end())
+		{
+			// Recursive call for subcomposition.
+			VuoCompositionState *subcompositionState = vuoCreateCompositionState(compositionState->runtimeState, subcompositionIdentifier.c_str());
+			finiContextsForCompositionContents(subcompositionState);
+			vuoFreeCompositionState(subcompositionState);
+		}
 	}
-	else
+}
+
+/**
+ * Sets the data value of the port to @a valueAsString. The port is found by looking in the (sub)composition specified by
+ * @a compositionState for a port with the given identifier.
+ *
+ * @version200New
+ */
+void VuoNodeRegistry::setPortValue(VuoCompositionState *compositionState, const char *portIdentifier, const char *valueAsString)
+{
+	const NodeMetadata *nm = getNodeMetadataForPort(compositionState->compositionIdentifier, portIdentifier);
+	if (!nm)
+		return;
+
+	nm->compositionSetPortValue(compositionState, portIdentifier, valueAsString, true, true, true, true, true);
+}
+
+/**
+ * Returns the data value of the port. The port is found by looking in the (sub)composition specified by
+ * @a compositionState for a port with the given identifier.
+ *
+ * @version200New
+ */
+char * VuoNodeRegistry::getPortValue(VuoCompositionState *compositionState, const char *portIdentifier, bool shouldUseInterprocessSerialization)
+{
+	const NodeMetadata *nm = getNodeMetadataForPort(compositionState->compositionIdentifier, portIdentifier);
+	if (!nm)
+		return nullptr;
+
+	return nm->compositionGetPortValue(compositionState, portIdentifier, shouldUseInterprocessSerialization ? 2 : 1, true);
+}
+
+/**
+ * Returns a text summary of the data value of the port. The port is found by looking in the (sub)composition specified by
+ * @a compositionState for a port with the given identifier.
+ *
+ * @version200New
+ */
+char * VuoNodeRegistry::getPortSummary(VuoCompositionState *compositionState, const char *portIdentifier)
+{
+	const NodeMetadata *nm = getNodeMetadataForPort(compositionState->compositionIdentifier, portIdentifier);
+	if (!nm)
+		return nullptr;
+
+	return nm->compositionGetPortValue(compositionState, portIdentifier, 0, true);
+}
+
+/**
+ * Fires an event from the trigger port. The port is found by looking in the (sub)composition specified by
+ * @a compositionState for a port with the given identifier.
+ *
+ * @version200New
+ */
+void VuoNodeRegistry::fireTriggerPortEvent(VuoCompositionState *compositionState, const char *portIdentifier)
+{
+	const NodeMetadata *nm = getNodeMetadataForPort(compositionState->compositionIdentifier, portIdentifier);
+	if (!nm)
+		return;
+
+	nm->compositionFireTriggerPortEvent(compositionState, portIdentifier);
+}
+
+/**
+ * Prints the state of the node registry to stdout for debugging.
+ */
+void VuoNodeRegistry::print(void)
+{
+	const char *indent = "  ";
+
+	printf("=== node metadatas ===\n\n");
+	for (map<string, vector<NodeMetadata> >::iterator i = nodeMetadatas.begin(); i != nodeMetadatas.end(); ++i)
 	{
-		// Clear the node metadata for all nodes in this composition (but not for nodes within subcomposition nodes).
-		nodeMetadatas.erase(compositionIdentifier);
+		printf("%s%s\n", indent, i->first.c_str());
+		for (size_t j = 0; j < i->second.size(); ++j)
+			printf("%s%s%lu %s, %lu ports\n", indent, indent, j, i->second[j].identifier.c_str(), i->second[j].portMetadatas.size());
 	}
+	printf("\n");
+
+	printf("=== node contexts ===\n\n");
+	for (map<unsigned long, map<unsigned long, NodeContext *> >::iterator i = nodeContextForIndex.begin(); i != nodeContextForIndex.end(); ++i)
+	{
+		string compositionIdentifier = getCompositionIdentifierForHash(i->first);
+		printf("%s%s\n", indent, compositionIdentifier.c_str());
+		for (map<unsigned long, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			printf("%s%s%s %p\n", indent, indent, getNodeIdentifierForIndex(compositionIdentifier.c_str(), j->first).c_str(), j->second);
+	}
+	printf("\n");
+
+	printf("=== carried-over node contexts ===\n\n");
+	for (map<string, map<string, NodeContext *> >::iterator i = carriedOverNodeContextForIdentifier.begin(); i != carriedOverNodeContextForIdentifier.end(); ++i)
+	{
+		printf("%s%s\n", indent, i->first.c_str());
+		for (map<string, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+	}
+	printf("\n");
+
+	printf("=== cached ports ===\n\n");
+	for (map<string, map<string, void *> >::iterator i = dataForPort.begin(); i != dataForPort.end(); ++i)
+	{
+		printf("%s%s\n", indent, i->first.c_str());
+		for (map<string, void *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+	}
+	printf("\n");
+
+	printf("=== carried-over cached ports ===\n\n");
+	for (map<string, map<string, void *> >::iterator i = carriedOverDataForPort.begin(); i != carriedOverDataForPort.end(); ++i)
+	{
+		printf("%s%s\n", indent, i->first.c_str());
+		for (map<string, void *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+	}
+	printf("\n");
 }
 
 extern "C"
@@ -873,12 +1009,22 @@ extern "C"
 
 /**
  * C wrapper for VuoNodeRegistry::addNodeMetadata().
+ *
+ * @version200Changed{Added callback arguments.}
  */
-void vuoAddNodeMetadata(VuoCompositionState *compositionState, const char *nodeIdentifier)
+void vuoAddNodeMetadata(VuoCompositionState *compositionState, const char *nodeIdentifier,
+						NodeContext *(*compositionCreateContextForNode)(unsigned long),
+						void (*compositionSetPortValue)(VuoCompositionState *, const char *, const char *, bool, bool, bool, bool, bool),
+						char * (*compositionGetPortValue)(VuoCompositionState *, const char *, int, bool),
+						void (*compositionFireTriggerPortEvent)(VuoCompositionState *, const char *),
+						void (*compositionReleasePortData)(void *, unsigned long))
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
 	const char *compositionIdentifier = compositionState->compositionIdentifier;
-	runtimeState->persistentState->nodeRegistry->addNodeMetadata(compositionIdentifier, nodeIdentifier);
+	runtimeState->persistentState->nodeRegistry->addNodeMetadata(compositionIdentifier, nodeIdentifier,
+																 compositionCreateContextForNode, compositionSetPortValue,
+																 compositionGetPortValue, compositionFireTriggerPortEvent,
+																 compositionReleasePortData);
 }
 
 /**
@@ -953,28 +1099,25 @@ unsigned long vuoGetTypeIndexForPort(VuoCompositionState *compositionState, cons
 }
 
 /**
- * C wrapper for VuoNodeRegistry::compositionContextInitHelper().
+ * C wrapper for VuoNodeRegistry::initContextForTopLevelComposition().
+ *
+ * @version200New
  */
-NodeContext * vuoCompositionContextInitHelper(VuoCompositionState *compositionState, bool hasInstanceData, unsigned long publishedOutputPortCount,
-											  NodeContext *(*compositionCreateNodeContext)(VuoCompositionState *, unsigned long),
-											  void (*compositionDestroyNodeContext)(VuoCompositionState *, const char *, NodeContext *),
-											  void (*compositionSetPortValue)(VuoCompositionState *, const char *, const char *, bool, bool, bool, bool, bool))
+void vuoInitContextForTopLevelComposition(VuoCompositionState *compositionState, bool hasInstanceData, unsigned long publishedOutputPortCount)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->nodeRegistry->compositionContextInitHelper(compositionState, hasInstanceData, publishedOutputPortCount,
-																					 compositionCreateNodeContext, compositionDestroyNodeContext, compositionSetPortValue);
+	return runtimeState->persistentState->nodeRegistry->initContextForTopLevelComposition(compositionState, hasInstanceData, publishedOutputPortCount);
 }
 
 /**
- * C wrapper for VuoNodeRegistry::compositionContextFiniHelper().
+ * C wrapper for VuoNodeRegistry::finiContextForTopLevelComposition().
+ *
+ * @version200New
  */
-void vuoCompositionContextFiniHelper(VuoCompositionState *compositionState,
-									 void (*compositionDestroyNodeContext)(VuoCompositionState *, const char *, NodeContext *),
-									 void (*compositionReleasePortData)(void *, unsigned long))
+void vuoFiniContextForTopLevelComposition(VuoCompositionState *compositionState)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	runtimeState->persistentState->nodeRegistry->compositionContextFiniHelper(compositionState,
-																			  compositionDestroyNodeContext, compositionReleasePortData);
+	return runtimeState->persistentState->nodeRegistry->finiContextForTopLevelComposition(compositionState);
 }
 
 }

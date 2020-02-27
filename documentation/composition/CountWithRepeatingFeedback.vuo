@@ -1,0 +1,32 @@
+/**
+ * @file
+ * This composition intends to output a count every second, but it has an infinite feedback loop.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add1 [type="vuo.math.add.VuoInteger" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="195,120" fillcolor="orange"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="510,225"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="420,120" fillcolor="blue" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,0" fillcolor="lime" _started_eventThrottling="enqueue"];
+Hold1 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="180,0" fillcolor="orange"];
+IsLessThan [type="vuo.data.isLessThan.VuoInteger" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="15,240" _b="10"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="162,131" fillcolor="orange" _2="1"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="165,240"];
+
+Add1:sum -> SummarizeValue:value;
+Add1:sum -> Hold1:value;
+Add1:sum -> IsLessThan:a;
+SummarizeValue:summary -> DisplayConsoleWindow:writeLine;
+FireOnStart:started -> Hold1:update;
+Hold1:heldValue -> MakeList:1;
+IsLessThan:lessThan -> SelectEventOutput:which;
+MakeList:list -> Add1:values;
+SelectEventOutput:trueOption -> Hold1:update;
+}

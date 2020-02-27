@@ -2,15 +2,12 @@
  * @file
  * TestVuoCompilerType interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerDataClass.hh"
-#include "VuoCompilerInputEventPortClass.hh"
-#include "VuoCompilerType.hh"
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(Type::TypeID);
@@ -50,8 +47,9 @@ private slots:
 
 		QTest::newRow("VuoInteger") << "VuoInteger" << Type::IntegerTyID;
 		QTest::newRow("VuoText") << "VuoText" << Type::PointerTyID;
-		QTest::newRow("VuoPoint2d") << "VuoPoint2d" << Type::StructTyID;
-		QTest::newRow("VuoSceneObject") << "VuoSceneObject" << Type::StructTyID;
+		QTest::newRow("VuoPoint2d") << "VuoPoint2d" << Type::VectorTyID;
+		QTest::newRow("VuoColor") << "VuoColor" << Type::StructTyID;
+		QTest::newRow("VuoSceneObject") << "VuoSceneObject" << Type::PointerTyID;
 	}
 	void testLLVMTypes()
 	{

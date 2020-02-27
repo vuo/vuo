@@ -1,6 +1,6 @@
 Creates a scene object in the shape of a tube.
 
-- `Transform` — A transform that changes the tube's translation, rotation, or scale. It should use Vuo Coordinates.
+- `Transform` — Changes the tube's translation, rotation, or scale, in Vuo Coordinates.
 - `Outside Material` — A shader, image, or color to apply to the outside surface of the tube.  To render without stretching, images should have an aspect ratio of 3.14:1 (about 3 times wider than tall).
 - `Inside Material` — A shader, image, or color to apply to the inside surface of the tube.  To render without stretching, images should have an aspect ratio of 3.14:1 (about 3 times wider than tall) when `Thickness` is 0.  As `Thickness` increases, the image is squeezed, so you may want to provide an image with a taller aspect ratio.
 - `Top Material` — A shader, image, or color to apply to the top surface of this tube.  To render without stretching, images should be square.

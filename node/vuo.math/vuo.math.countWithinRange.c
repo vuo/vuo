@@ -2,9 +2,9 @@
  * @file
  * vuo.math.countWithinRange node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,8 +12,8 @@
 VuoModuleMetadata({
 					  "title" : "Count within Range",
 					  "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease",
-					  "wrap", "saturate", "limit", "loop", "modulus", "clock", "clamp" ],
-					  "version" : "1.0.0",
+					  "wrap", "%", "saturate", "limit", "loop", "modulus", "clock", "clamp" ],
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  },
@@ -83,8 +83,4 @@ void nodeInstanceEvent
 	}
 
 	*count = **countState;
-}
-
-void nodeInstanceFini(VuoInstanceData(VuoGenericType1 *) countState)
-{
 }

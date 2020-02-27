@@ -1,46 +1,46 @@
 /**
  * @file
- * Takes some squares from the left side and the right side of the top row, and puts them together in the bottom row.
+ * Takes some squares from the right side of the row, and then adds squares one at a time from the left side and puts them together in the bottom row.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AppendLists2 [type="vuo.list.append.VuoLayer" version="1.0.0" label="Append Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<combinedList>combinedList\r" pos="1156,292" fillcolor="violet"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1337,293" _scaleToFit="true" _center="{\"x\":0.000000,\"y\":-0.300000}" _width="1.800000" _columns="6" _height="0.500000" _rows="1"];
-ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1336,142" _scaleToFit="true" _center="{\"x\":0.000000,\"y\":0.300000}" _width="1.800000" _columns="6" _height="0.500000" _rows="1"];
-CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="717,344" _increment="1" _decrement="1" _setCount="2" _minimum="2" _maximum="4" _wrapMode="\"wrap\""];
-CutList2 [type="vuo.list.cut.VuoLayer" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1031,261" fillcolor="violet" _startPosition="1"];
-CutList3 [type="vuo.list.cut.VuoLayer" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1030,356" fillcolor="violet" _startPosition="5" _itemCount="2"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="552,312" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="254,343" _color="{\"r\":0.338903,\"g\":0.544762,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer4 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="255,211" _color="{\"r\":0.104982,\"g\":0.294789,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer5 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="254,77" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer6 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="254,477" _color="{\"r\":0.540108,\"g\":0.660838,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer8 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="254,612" _color="{\"r\":0.789975,\"g\":0.847913,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer9 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="254,746" _color="{\"r\":0.999893,\"g\":1.000000,\"b\":0.999832,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeList14 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="486,159"];
-MakeList23 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1568,167" fillcolor="green"];
-MakeList24 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1538,152" fillcolor="green"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1609,141" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShareList2 [type="vuo.data.share.list.VuoLayer" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="533,148"];
+AppendLists2 [type="vuo.list.append.VuoLayer" version="1.0.0" label="Append Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<combinedList>combinedList\r" pos="1305,330" fillcolor="orange"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1485,330" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.300000\}" _width="1.800000" _columns="6" _height="0.25" _rows="1"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1485,135" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.300000\}" _width="1.800000" _columns="6" _height="0.25" _rows="1"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="855,375" _increment="1" _decrement="1" _setCount="2" _minimum="0" _maximum="4" _wrapMode="\"wrap\""];
+CutList2 [type="vuo.list.cut.VuoLayer" version="1.0.1" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1110,345" fillcolor="orange" _startPosition="1"];
+CutList3 [type="vuo.list.cut.VuoLayer" version="1.0.1" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1110,240" fillcolor="orange" _startPosition="5" _itemCount="2"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,75" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="630,375" fillcolor="lime" _seconds="1.000000" _fired_eventThrottling="drop"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,465" _color="\{\"r\":0.338903,\"g\":0.544762,\"b\":1.000000,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer4 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,270" _color="\{\"r\":0.10498207062482834,\"g\":0.29478904604911804,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer5 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,75" _color="\{\"r\":0.042404823005199432,\"g\":0.36047914624214172,\"b\":0.74380099773406982,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer6 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,660" _color="\{\"r\":0.540108,\"g\":0.660838,\"b\":1.000000,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer8 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,855" _color="\{\"r\":0.789975,\"g\":0.847913,\"b\":1.000000,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer9 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="255,1050" _color="\{\"r\":0.999893,\"g\":1.000000,\"b\":0.999832,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList14 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="597,146"];
+MakeList24 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1748,146" fillcolor="blue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1800,135" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ShareList2 [type="vuo.data.share.list.VuoLayer" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="630,135"];
 
 AppendLists2:combinedList -> ArrangeLayersInGrid:layers;
 ArrangeLayersInGrid2:griddedLayer -> MakeList24:1;
 ArrangeLayersInGrid:griddedLayer -> MakeList24:2;
 CountWithinRange:count -> CutList2:itemCount;
-CutList2:partialList -> AppendLists2:list1;
-CutList3:partialList -> AppendLists2:list2;
-FireOnStart:started -> MakeColorLayer4:refresh;
-FireOnStart:started -> MakeColorLayer5:refresh;
-FireOnStart:started -> MakeColorLayer6:refresh;
-FireOnStart:started -> MakeColorLayer8:refresh;
-FireOnStart:started -> MakeColorLayer9:refresh;
-FireOnStart:started -> MakeColorLayer:refresh;
+CutList2:partialList -> AppendLists2:list2;
+CutList3:partialList -> AppendLists2:list1;
+FireOnStart:started -> MakeColorLayer4:color;
+FireOnStart:started -> MakeColorLayer5:color;
+FireOnStart:started -> MakeColorLayer6:color;
+FireOnStart:started -> MakeColorLayer8:color;
+FireOnStart:started -> MakeColorLayer9:color;
+FireOnStart:started -> MakeColorLayer:color;
 FirePeriodically:fired -> CountWithinRange:increment [event=true];
 MakeColorLayer4:layer -> MakeList14:2;
 MakeColorLayer5:layer -> MakeList14:1;
@@ -49,7 +49,6 @@ MakeColorLayer8:layer -> MakeList14:5;
 MakeColorLayer9:layer -> MakeList14:6;
 MakeColorLayer:layer -> MakeList14:3;
 MakeList14:list -> ShareList2:value;
-MakeList23:list -> RenderLayersToWindow:setWindowProperties;
 MakeList24:list -> RenderLayersToWindow:layers;
 ShareList2:sameValue -> ArrangeLayersInGrid2:layers;
 ShareList2:sameValue -> CutList2:list;

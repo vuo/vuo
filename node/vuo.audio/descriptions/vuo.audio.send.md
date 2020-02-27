@@ -4,9 +4,9 @@ This node can be used to hear audio that was read from a movie or sound file, or
 
    - `Device` — The device to send to. If no device is given, then the system default audio output device is used.
    - `Send Channels` — When this port receives an event, the audio sample buffers are sent to the device. Each item in the list corresponds to one audio channel (item 1 with channel 1, item 2 with channel 2, etc.). 
-   - `Requested Channels` — Fires an event when the output device is ready for another audio buffer.  The event's data is the audio output device's timestamp — the number of seconds since output began.
+   - `Refreshed at Time` — Fires an event when the output device is ready for another audio buffer.  The event's data is the audio output device's timestamp — the number of seconds since output began.
 
-For the best sound quality, this node needs to receive events into its `Send Channels` port at the same rate that `Requested Channels` is firing events. If it receives sample buffers too quickly, then some buffers may be combined. If it receives sample buffers too slowly, then there may be short gaps of silence.
+For the best sound quality, this node needs to receive events into its `Send Channels` port at the same rate that `Refreshed at Time` is firing events. If it receives sample buffers too quickly, then some buffers may be combined. If it receives sample buffers too slowly, then there may be short gaps of silence.
 
 If the `Send Channels` port receives fewer list items than the number of channels in the audio device, the last item in the list is duplicated to fill the remaining channels. For example, if mono audio (a single list item) is provided for a stereo audio device, this node sends the audio to both stereo channels.
 

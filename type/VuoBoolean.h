@@ -2,15 +2,21 @@
  * @file
  * vuo.boolean C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 struct json_object;
 
-/// @{
+/// @{ List type.
 typedef void * VuoList_VuoBoolean;
 #define VuoList_VuoBoolean_TYPE_DEFINED
 /// @}
@@ -43,14 +49,14 @@ void VuoBoolean_retain(VuoBoolean value);
 void VuoBoolean_release(VuoBoolean value);
 /// @}
 
-/**
- * Returns true if the two values are equal.
- */
-static inline bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean value2)
-{
-	return value1 == value2;
-}
+#define VuoBoolean_SUPPORTS_COMPARISON
+bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean value2);
+bool VuoBoolean_isLessThan(const VuoBoolean a, const VuoBoolean b);
 
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

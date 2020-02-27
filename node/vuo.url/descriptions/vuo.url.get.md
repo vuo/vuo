@@ -10,4 +10,4 @@ URLs are structured as follows: `scheme://user@host:port/path?query#fragment`
    - `Query` — Non-hierarchical information clarifying the URL's request for data.
    - `Fragment` — The sub-resource to locate within the retrieved data.
 
-(See also the `Get File URL Values` node.)
+(See also the [Get File URL Values](vuo-node://vuo.url.get.file) node.)

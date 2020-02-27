@@ -2,14 +2,11 @@
  * @file
  * VuoHidControl implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoHidControl.h"
 
@@ -42,19 +39,12 @@ VuoModuleMetadata({
  */
 VuoHidControl VuoHidControl_makeFromJson(json_object *js)
 {
-	VuoHidControl value = {NULL, 0, 0, 0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-	if (json_object_object_get_ex(js, "value", &o))
-		value.value = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "min", &o))
-		value.min = VuoInteger_makeFromJson(o);
-	if (json_object_object_get_ex(js, "max", &o))
-		value.max = VuoInteger_makeFromJson(o);
-
-	return value;
+	return (VuoHidControl){
+		VuoJson_getObjectValue(VuoText, js, "name", NULL),
+		VuoJson_getObjectValue(VuoInteger, js, "value", 0),
+		VuoJson_getObjectValue(VuoInteger, js, "min", 0),
+		VuoJson_getObjectValue(VuoInteger, js, "max", 0)
+	};
 }
 
 /**
@@ -116,18 +106,10 @@ bool VuoHidControl_areEqual(const VuoHidControl valueA, const VuoHidControl valu
  */
 bool VuoHidControl_isLessThan(const VuoHidControl a, const VuoHidControl b)
 {
-	if (VuoText_isLessThan(a.name, b.name)) return true;
-	if (VuoText_isLessThan(b.name, a.name)) return false;
-
-	if (a.value < b.value) return true;
-	if (a.value > b.value) return false;
-
-	if (a.min < b.min) return true;
-	if (a.min > b.min) return false;
-
-	if (a.max < b.max) return true;
-//	if (a.max > b.max) return false;
-
+	VuoType_returnInequality(VuoText,    a.name,  b.name);
+	VuoType_returnInequality(VuoInteger, a.value, b.value);
+	VuoType_returnInequality(VuoInteger, a.min,   b.min);
+	VuoType_returnInequality(VuoInteger, a.max,   b.max);
 	return false;
 }
 
@@ -139,5 +121,5 @@ char *VuoHidControl_getSummary(const VuoHidControl value)
 	if (value.name)
 		return VuoText_format("%s = %lld", value.name, value.value);
 	else
-		return strdup("(no control)");
+		return strdup("No control");
 }

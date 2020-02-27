@@ -2,18 +2,22 @@
  * @file
  * vuo.audio.get.input node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 #include "VuoAudioInputDevice.h"
+#include "VuoAudio.h"
 
 VuoModuleMetadata({
 					  "title" : "Get Audio Input Values",
 					  "keywords" : [ "sound", "input", "microphone", "music", "listen", "device" ],
-					  "version" : "1.1.0",
+					  "version" : "1.2.0",
+					  "dependencies" : [
+						  "VuoAudio",
+					  ],
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -28,8 +32,19 @@ void nodeEvent
 		VuoOutputData(VuoInteger) channelCount
 )
 {
-	*id = device.id;
-	*name = device.name;
-	*modelCode = device.modelUid;
-	*channelCount = device.channelCount;
+	VuoAudioInputDevice realizedDevice;
+	if (VuoAudioInputDevice_realize(device, &realizedDevice))
+	{
+		*id = realizedDevice.id;
+		*name = realizedDevice.name;
+		*modelCode = realizedDevice.modelUid;
+		*channelCount = realizedDevice.channelCount;
+	}
+	else
+	{
+		*id = device.id;
+		*name = device.name;
+		*modelCode = device.modelUid;
+		*channelCount = device.channelCount;
+	}
 }

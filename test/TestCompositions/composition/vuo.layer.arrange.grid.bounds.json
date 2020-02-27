@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Expected outputs for the bounds of the vuo.layer.arrange.grid node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":[
+	// Make sure `Arrange Layers in Grid` properly calculates the width of a scalable text layer,
+	// and make sure that `Get Layer Bounds` outputs the correct width for the grid.
+	{"firingPort":"Width", "inputPortValues":{ "Width": 0.1 }, "outputPortValues":{ "outputWidth": 0.1 }},
+	{"firingPort":"Width", "inputPortValues":{ "Width": 1   }, "outputPortValues":{ "outputWidth": 1   }},
+	{"firingPort":"Width", "inputPortValues":{ "Width": 2   }, "outputPortValues":{ "outputWidth": 2   }},
+]}

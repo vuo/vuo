@@ -2,41 +2,47 @@
  * @file
  * Arranges text layers in columns, demonstrating horizontal alignment of layers within a column and of text within a layer.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AllowFirstValue2 [type="vuo.event.allowFirstValue.VuoRenderedLayers" version="1.0.0" label="Allow First Value|<refresh>refresh\l|<value>value\l|<reset>reset\l|<firstValue>firstValue\r" pos="240,585"];
-ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.0.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="570,210" fillcolor="violet" _horizontalAlignment="\"left\"" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _position="{\"x\":-0.5,\"y\":0}" _spacing="0"];
-ArrangeLayersInColumn2 [type="vuo.layer.arrange.column" version="1.0.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="570,360" fillcolor="violet" _horizontalAlignment="\"right\"" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _position="{\"x\":0.5,\"y\":0}" _spacing="0"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-165,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList10 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="492,371" fillcolor="violet"];
-MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="799,296" fillcolor="green"];
-MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="829,326" fillcolor="green"];
-MakeList9 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="488,221" fillcolor="violet"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,180" _text="\"In this row, the font is\\nleft-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,300" _text="\"In this row, the font is\\ncenter-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,420" _text="\"In this row, the font is\\nright-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"right\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="330,135" _text="\"This column is left-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-MakeTextLayer5 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="330,465" _text="\"This column is right-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="870,285" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SpinOffValue2 [type="vuo.event.spinOffValue.VuoRenderedLayers" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="405,585" _spunOff_eventThrottling="enqueue"];
+AlignLayerToWindow [type="vuo.layer.align.window2" version="2.0.0" label="Align Layer to Window|<refresh>refresh\l|<layer>layer\l|<window>window\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="615,-270" _horizontalAlignment="\"left\"" _horizontalMargin="0.052499999999999998" _verticalAlignment="\"center\"" _verticalMargin="0.0"];
+AlignLayerToWindow2 [type="vuo.layer.align.window2" version="2.0.0" label="Align Layer to Window|<refresh>refresh\l|<layer>layer\l|<window>window\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="615,-75" _horizontalAlignment="\"right\"" _horizontalMargin="0.037999999999999999" _verticalAlignment="\"center\"" _verticalMargin="0.0"];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="615,135" fillcolor="orange" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":-0.5,\"y\":0\}" _spacing="0"];
+ArrangeLayersInColumn2 [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="615,495" fillcolor="orange" _horizontalAlignment="\"right\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.5,\"y\":0\}" _spacing="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-285,270" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList10 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="546,506" fillcolor="orange"];
+MakeList5 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1011,296" fillcolor="blue"];
+MakeList9 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="543,146" fillcolor="orange"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="330,-255" _color="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":0.40000000596046448,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="0.88" _height="1" _sharpness="1" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="330,-60" _color="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":0.40000000596046448,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="0.92500000000000004" _height="1" _sharpness="1" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="30,330" _text="\"In this row, the font is\\nleft-aligned.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="30,495" _text="\"In this row, the font is\\ncenter-aligned.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="30,660" _text="\"In this row, the font is\\nright-aligned.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"right\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="360,135" _text="\"This column is left-aligned.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer5 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="345,300" _text="\"This column is right-aligned.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1065,285" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
-AllowFirstValue2:firstValue -> SpinOffValue2:value;
-ArrangeLayersInColumn2:arrangedLayer -> MakeList5:2;
-ArrangeLayersInColumn:arrangedLayer -> MakeList5:1;
-FireOnStart:started -> MakeTextLayer2:refresh;
-FireOnStart:started -> MakeTextLayer3:refresh;
-FireOnStart:started -> MakeTextLayer4:refresh;
-FireOnStart:started -> MakeTextLayer5:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+AlignLayerToWindow2:alignedLayer -> MakeList5:2;
+AlignLayerToWindow:alignedLayer -> MakeList5:1;
+ArrangeLayersInColumn2:arrangedLayer -> MakeList5:4;
+ArrangeLayersInColumn:arrangedLayer -> MakeList5:3;
+FireOnStart:started -> MakeRectangleLayer2:color;
+FireOnStart:started -> MakeRectangleLayer:color;
+FireOnStart:started -> MakeTextLayer2:text;
+FireOnStart:started -> MakeTextLayer3:text;
+FireOnStart:started -> MakeTextLayer4:text;
+FireOnStart:started -> MakeTextLayer5:text;
+FireOnStart:started -> MakeTextLayer:text;
 MakeList10:list -> ArrangeLayersInColumn2:layers;
 MakeList5:list -> RenderLayersToWindow:layers;
-MakeList8:list -> RenderLayersToWindow:setWindowProperties;
 MakeList9:list -> ArrangeLayersInColumn:layers;
+MakeRectangleLayer2:layer -> AlignLayerToWindow2:layer;
+MakeRectangleLayer:layer -> AlignLayerToWindow:layer;
 MakeTextLayer2:layer -> MakeList10:3;
 MakeTextLayer2:layer -> MakeList9:3;
 MakeTextLayer3:layer -> MakeList10:4;
@@ -45,7 +51,8 @@ MakeTextLayer4:layer -> MakeList9:1;
 MakeTextLayer5:layer -> MakeList10:1;
 MakeTextLayer:layer -> MakeList10:2;
 MakeTextLayer:layer -> MakeList9:2;
-RenderLayersToWindow:renderedLayers -> AllowFirstValue2:value;
-SpinOffValue2:spunOff -> ArrangeLayersInColumn2:renderedLayers;
-SpinOffValue2:spunOff -> ArrangeLayersInColumn:renderedLayers;
+RenderLayersToWindow:updatedWindow -> AlignLayerToWindow2:window [style=invis];
+RenderLayersToWindow:updatedWindow -> AlignLayerToWindow:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ArrangeLayersInColumn2:renderedLayers;
+RenderLayersToWindow:updatedWindow -> ArrangeLayersInColumn:renderedLayers;
 }

@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Icons/dockwidget-close-light.png</file>
+        <file>Icons/dockwidget-close-light@2x.png</file>
+        <file>Icons/dockwidget-close-dark.png</file>
+        <file>Icons/dockwidget-close-dark@2x.png</file>
+        <file>Icons/checkmark.svg</file>
+        <file>Icons/vuo.png</file>
+        <file>Icons/vuo@2x.png</file>
+        <file>Icons/spinbox-dec-disabled.png</file>
+        <file>Icons/spinbox-dec-disabled@2x.png</file>
+        <file>Icons/spinbox-dec.png</file>
+        <file>Icons/spinbox-dec@2x.png</file>
+        <file>Icons/spinbox-inc-disabled.png</file>
+        <file>Icons/spinbox-inc-disabled@2x.png</file>
+        <file>Icons/spinbox-inc.png</file>
+        <file>Icons/spinbox-inc@2x.png</file>
+        <file>Icons/vuo-composition.png</file>
+        <file>Icons/vuo-composition@2x.png</file>
+        <file>Icons/vuo-composition-64.png</file>
+        <file>Icons/question-circle.svg</file>
+        <file>Icons/new.svg</file>
+    </qresource>
+</RCC>

@@ -2,9 +2,9 @@
  * @file
  * TestVuoPoint4d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -37,6 +37,7 @@ private slots:
 			p.z = 1;
 			p.w = 127;
 			QTest::newRow("different values") << "{\"x\":-0.5,\"y\":0.5,\"z\":1,\"w\":127}" << p << true;
+			QTest::newRow("different values array") << QUOTE([-.5,0.5,1,127]) << p << false;
 			QTest::newRow("different values text") << QUOTE("-.5,.5, 1,127") << p << false;
 		}
 	}

@@ -2,18 +2,15 @@
  * @file
  * VuoHid implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoHid.h"
 
-#include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -28,10 +25,11 @@ VuoModuleMetadata({
  * The caller is responsible for freeing the returned string.
  *
  * Based on "HID Usage Tables 10/28/2004 Version 1.12" (with a few spelling errors corrected),
- * plus changes from Review Requests 28 through 52.  Exceptions:
+ * plus changes from Review Requests 28 through 57.  Exceptions:
  *
  *    - Implementation of RR39 is incomplete.
- *    - The conflicting assignments between RR33 (status "Review") and RR47 (status "Approved") are noted below; I went with the latter.
+ *    - RR43 is not published and is thus not implemented.
+ *    - The conflicting assignments between RR33 and RR47 are resolved by RR57.
  *    - Includes usage 0x01:0xffffffff (Apple Mikey keycode).
  *    - Includes usage 0x07:0xffffffff (the 8-bit USB HID keycodes of up to 8 simultanouely-pressed keys).
  *    - Includes usage pages 0x84 and 0x85 from "Universal Serial Bus Usage Tables for HID Power Devices Release 1.0 November 1, 1997".
@@ -221,8 +219,11 @@ char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage)
 			"Remote", "Forward", "Reverse", "Stop", "Rewind", "Fast Forward", "Play", "Pause",
 			"Record", "Error", "Usage Selected Indicator", "Usage In Use Indicator", "Usage Multi Mode Indicator", "Indicator On", "Indicator Flash", "Indicator Slow Blink",
 			"Indicator Fast Blink", "Indicator Off", "Flash On Time", "Slow Blink On Time", "Slow Blink Off Time", "Fast Blink On Time", "Fast Blink Off Time", "￼Usage Indicator Color",
-			"Indicator Red", "Indicator Green", "Indicator Amber", "Generic Indicator", "System Suspend", "External Power Connected", /* "Indicator Blue", "Indicator Orange", */ "Player Indicator", "Player 1",	// Conflict between RR33 and RR47
-			/* "Good Status", "Warning Status", "RGB LED", "Red LED Channel", "Greed LED Channel", "Blue LED Channel", "LED Intensity", 0, */ "Player 2", "Player 3", "Player 4",  "Player 5",  "Player 6",  "Player 7",  "Player 8", 0,	// Conflict between RR33 and RR47
+			"Indicator Red", "Indicator Green", "Indicator Amber", "Generic Indicator", "System Suspend", "External Power Connected", "Indicator Blue", "Indicator Orange",
+			"Good Status", "Warning Status", "RGB LED", "Red LED Channel", "Greed LED Channel", "Blue LED Channel", "LED Intensity", 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			"Player Indicator", "Player 1", "Player 2", "Player 3", "Player 4",  "Player 5",  "Player 6",  "Player 7",
+			"Player 8", 0, 0, 0, 0, 0, 0, 0,
 		};
 		text = usage < sizeof(lookup)/sizeof(char *) ? (lookup[usage] ? strdup(lookup[usage]) : 0) : 0;
 	}
@@ -374,7 +375,7 @@ char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage)
 			"AC Set Borders", "AC Insert Row", "AC Insert Column", "AC Insert File", "AC Insert Picture", "AC Insert Object", "AC Insert Symbol", "AC Save and Close",
 			"AC Rename", "AC Merge", "AC Split", "AC Distribute Horizontally", "AC Distribute Vertically", 0, 0, 0,
 			"AC Soft Key Left", "AC Soft Key Right", 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, "AC Next Keyboard Layout Select", 0, 0,
 			"AC Idle Keep Alive", 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0,
 			"Extended Keyboard Attributes Collection", "Keyboard Form Factor", "Keyboard Key Type", "Keyboard Physical Layout", "Vendor-Specific Keyboard Physical Layout", "Keyboard IETF Language Tag Index", "Implemented Keyboard Input Assist Controls", "Keyboard Input Assist Previous",
@@ -470,7 +471,7 @@ char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage)
 			"Altitude", "Twist", "Tip Switch", "Secondary Tip Switch", "Barrel Switch", "Eraser", "Tablet Pick", "Touch Valid",
 			"Width", "Height", 0, 0, 0, 0, 0, 0,
 			0, "Contact identifier", "Device mode", "Device identifier", "Contact count", "Contact count maximum", 0, 0,
-			0, 0, "Secondary Barrel Switch", "Transducer Serial Number", 0, 0, 0, 0,
+			0, 0, "Secondary Barrel Switch", "Transducer Serial Number", "Preferred Color", 0, 0, 0,
 		};
 		text = usage < sizeof(lookup)/sizeof(char *) ? (lookup[usage] ? strdup(lookup[usage]) : 0) : 0;
 	}
@@ -518,7 +519,7 @@ char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage)
 			0, "Sensor", 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0,
 			"Biometric", "Biometric: Human Presence", "Biometric: Human Proximity", "Biometric: Human Touch", 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, "Property: Maximum FIFO Events", "Property: Report Latency", 0, 0, 0, 0,
 			"Electrical", "Electrical: Capacitance", "Electrical: Current", "Electrical: Power", "Electrical: Inductance", "Electrical: Resistance", "Electrical: Voltage", "Electrical: Potentiometer",
 			"Electrical: Frequency", "Electrical: Period", 0, 0, 0, 0, 0, 0,
 			"Environmental", "Environmental: Atmospheric Pressure", "Environmental: Humidity", "Environmental: Temperature", "Environmental: Wind Direction", "Environmental: Wind Speed", 0, 0,

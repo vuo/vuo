@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.copy.trs node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -35,7 +35,7 @@ void nodeEvent
 	// If any list is empty, don't make any copies.
 	if (t == 0 || r == 0 || s == 0)
 	{
-		*copies = VuoSceneObject_makeEmpty();
+		*copies = NULL;
 		return;
 	}
 
@@ -67,9 +67,8 @@ void nodeEvent
 				);
 
 		// VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale)
-		VuoSceneObject so = object;
-		so.transform = VuoTransform_composite(object.transform,
-											  VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale));
-		VuoListAppendValue_VuoSceneObject(copies->childObjects, so);
+		VuoSceneObject so = VuoSceneObject_copy(object);
+		VuoSceneObject_transform(so, VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale));
+		VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects(*copies), so);
 	}
 }

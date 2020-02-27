@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Generates a noise pattern with a stained glass effect.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-15,30" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeNoiseImage [type="vuo.image.make.noise" version="1.2.0" label="Make Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<time>time\l|<scale>scale\l|<type>type\l|<grid>grid\l|<tile>tile\l|<range>range\l|<rangeMode>rangeMode\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<height>height\l|<image>image\r" pos="210,120" fillcolor="violet" _colorA="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _colorB="\{\"r\":0.40000000596046448,\"g\":1,\"b\":0.80000001192092896,\"a\":1\}" _center="\{\"x\":0,\"y\":0\}" _scale="0.2" _type="\"gradient\"" _grid="\"triangular\"" _tile="false" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _rangeMode="\"clamp\"" _levels="1" _roughness="0.5" _spacing="2.0" _width="640" _height="480"];
+MakeStainedGlassImage [type="vuo.image.stainedGlass" version="1.0.0" label="Make Stained Glass Image|<refresh>refresh\l|<image>image\l|<tileSize>tileSize\l|<center>center\l|<chaos>chaos\l|<borderColor>borderColor\l|<borderWidth>borderWidth\l|<stainedGlassImage>stainedGlassImage\r" pos="420,120" fillcolor="violet" _tileSize="0.029999999999999999" _center="\{\"x\":0.0,\"y\":0.0\}" _chaos="0.7" _borderColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _borderWidth="0"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="675,120" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+
+Comment [type="vuo.comment" label="\"## ↖︎ Click the Run button!\"" pos="-31,-121" width="233" height="44"];
+Comment2 [type="vuo.comment" label="\"⤶ Click on this port to see the events that      control the timing of the animation.\"" pos="150,15" width="276" height="56" fillcolor="lime"];
+Comment3 [type="vuo.comment" label="\"Double-click on these ports to change the colors.          →\"" pos="-37,105" width="193" height="57" fillcolor="violet"];
+Comment4 [type="vuo.comment" label="\"## To learn more:\\n\\n \  - [Quick Start tutorial](https:\\/\\/vuo.org\\/quickstart)\\n \  - Help \> Vuo Manual \> Quick Start\"" pos="573,269" width="264" height="102"];
+
+FireOnDisplayRefresh:requestedFrame -> MakeNoiseImage:time;
+MakeNoiseImage:image -> MakeStainedGlassImage:image;
+MakeStainedGlassImage:stainedGlassImage -> RenderImageToWindow:image;
+}

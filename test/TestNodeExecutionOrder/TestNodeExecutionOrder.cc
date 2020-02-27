@@ -2,9 +2,9 @@
  * @file
  * TestNodeExecutionOrder interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -46,14 +46,16 @@ public:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
-		compiler->compileComposition(compositionPath, compiledCompositionPath);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, &issues);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
 
 		runner->setDelegate(this);
+		runner->setRuntimeChecking(true);
 		runner->start();
-		runner->subscribeToAllTelemetry();
+		runner->subscribeToAllTelemetry("");
 
 		VuoRunner::Port *startPort = runner->getPublishedInputPortWithName("start");
 		runner->firePublishedInputPortEvent(startPort);
@@ -71,7 +73,7 @@ public:
 		delete generator;
 	}
 
-	void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+	void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 	{
 		if (! VuoStringUtilities::beginsWith(portIdentifier, "Conductor") &&
 				! VuoStringUtilities::beginsWith(portIdentifier, "Semiconductor") &&

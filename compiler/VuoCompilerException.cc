@@ -2,82 +2,61 @@
  * @file
  * VuoCompilerException implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerException.hh"
-
-
-/**
- * Constructor.
- */
-VuoCompilerError::VuoCompilerError(const string &summary, const string &details,
-								   const set<VuoNode *> &problemNodes, const set<VuoCable *> &problemCables)
-{
-	this->summary = summary;
-	this->details = details;
-	this->problemNodes = problemNodes;
-	this->problemCables = problemCables;
-}
-
-/**
- * Returns a summary of the error.
- */
-string VuoCompilerError::getSummary(void) const
-{
-	return summary;
-}
-
-/**
- * Returns a detailed description of the error.
- */
-string VuoCompilerError::getDetails(void) const
-{
-	return details;
-}
-
-/**
- * Returns the nodes involved in the error.
- */
-set<VuoNode *> VuoCompilerError::getProblemNodes(void) const
-{
-	return problemNodes;
-}
-
-/**
- * Returns the cables involved in the error.
- */
-set<VuoCable *> VuoCompilerError::getProblemCables(void) const
-{
-	return problemCables;
-}
-
+#include "VuoCompilerIssue.hh"
 
 /**
  * Constructor.
  */
-VuoCompilerException::VuoCompilerException(const vector<VuoCompilerError> &errors)
+VuoCompilerException::VuoCompilerException(const VuoCompilerIssue &issue)
+	: VuoException(issue.getShortDescription(false), false)
 {
-	this->errors = errors;
-
-	for (vector<VuoCompilerError>::iterator i = this->errors.begin(); i != this->errors.end(); ++i)
-		description += (*i).getSummary() + " — " + (*i).getDetails() + "\n";
+	issues = new VuoCompilerIssues(issue);
+	ownsIssues = true;
+	shortDescription = strdup(issues->getShortDescription(false).c_str());
 }
 
 /**
- * Returns the list of errors.
+ * Constructor.
+ *
+ * If @a isOwner is true, the created VuoCompilerException is responsible for deallocating @a issues.
+ * Otherwise, the caller is responsible.
  */
-vector<VuoCompilerError> VuoCompilerException::getErrors(void) const
+VuoCompilerException::VuoCompilerException(VuoCompilerIssues *issues, bool ownsIssues)
+	: VuoException(issues->getShortDescription(false), false)
 {
-	return errors;
+	this->issues = issues;
+	this->ownsIssues = ownsIssues;
+	this->shortDescription = strdup(issues->getShortDescription(false).c_str());
 }
 
 /**
- * Returns a string containing the list of errors.
+ * Destructor.
+ */
+VuoCompilerException::~VuoCompilerException(void) throw()
+{
+	if (ownsIssues)
+		delete issues;
+	free(shortDescription);
+}
+
+/**
+ * Returns the list of issues.
+ */
+VuoCompilerIssues * VuoCompilerException::getIssues(void) const
+{
+	return issues;
+}
+
+/**
+ * Returns an HTML-formatted string containing short descriptions of all issues.
  */
 const char * VuoCompilerException::what() const throw()
 {
-	return description.c_str();
+	return shortDescription;
 }

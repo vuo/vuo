@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Expected outputs for the vuo.osc.message.make.list node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":[
+	{"firingPort":"values", "inputPortValues":{ "address":"/foo", "values":[] }, "outputPortValues":{ "message":{"address":"/foo"} }},
+	{"firingPort":"values", "inputPortValues":{ "address":"/foo", "values":["a","b","c","d"] }, "outputPortValues":{ "message":{"address":"/foo","data":[{"type":"auto","data":"a"},{"type":"auto","data":"b"},{"type":"auto","data":"c"},{"type":"auto","data":"d"}]} }},
+]}

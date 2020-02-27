@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorPoint2d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorPoint2d.hh"
@@ -32,9 +32,10 @@ QLabel* makeLabel(const char* text)
  */
 VuoDoubleSpinBox* VuoInputEditorPoint2d::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
-	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 7);
+	const int decimalPrecision = FLT_MAX_10_EXP + FLT_DIG;
 	spin->setDecimals(decimalPrecision);
+	spin->setFixedWidth(100);
 	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
 	spin->setButtonMaximum(suggestedMaxForCoord[whichCoord]);
 	spin->setSingleStep(suggestedStepForCoord[whichCoord]);
@@ -118,15 +119,15 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 	spinboxForCoord[coord_x] = initSpinBox(coord_x, dialog, current.x);
 	spinboxForCoord[coord_y] = initSpinBox(coord_y, dialog, current.y);
-	connect(spinboxForCoord[coord_x], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
-	connect(spinboxForCoord[coord_y], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[coord_x], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint2d::onSpinboxUpdate);
+	connect(spinboxForCoord[coord_y], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint2d::onSpinboxUpdate);
 
 	if(hasMinMax)
 	{
 		sliderForCoord[coord_x] = initSlider(coord_x, dialog, current.x);
 		sliderForCoord[coord_y] = initSlider(coord_y, dialog, current.y);
-		connect(sliderForCoord[coord_x], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-		connect(sliderForCoord[coord_y], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(sliderForCoord[coord_x], &QSlider::valueChanged, this, &VuoInputEditorPoint2d::onSliderUpdate);
+		connect(sliderForCoord[coord_y], &QSlider::valueChanged, this, &VuoInputEditorPoint2d::onSliderUpdate);
 	}
 
 	// layout dialog
@@ -205,9 +206,9 @@ void VuoInputEditorPoint2d::onSliderUpdate(int sliderValue)
 	setCoord(whichCoord, value);
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	disconnect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint2d::onSpinboxUpdate);
 	spinboxForCoord[whichCoord]->setValue( value );
-	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint2d::onSpinboxUpdate);
 
 	spinboxForCoord[whichCoord]->setFocus();
 	spinboxForCoord[whichCoord]->selectAll();
@@ -233,9 +234,9 @@ void VuoInputEditorPoint2d::onSpinboxUpdate(QString spinboxValue)
 	if(targetSlider != NULL)
 	{
 		int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
-		disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		disconnect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorPoint2d::onSliderUpdate);
 		targetSlider->setValue( sliderValue );
-		connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorPoint2d::onSliderUpdate);
 	}
 
 	emitValueChanged();

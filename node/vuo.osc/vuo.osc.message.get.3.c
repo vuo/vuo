@@ -2,16 +2,16 @@
  * @file
  * vuo.osc.message.get.3 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 #include "VuoOscMessage.h"
 
 VuoModuleMetadata({
-					 "title" : "Get Message Values",
+					 "title" : "Get Message Values (3)",
 					 "keywords" : [ "address", "data" ],
 					 "version" : "1.0.1",
 					 "genericTypes": {
@@ -37,9 +37,9 @@ void nodeEvent
 (
 		VuoInputData(VuoOscMessage) message,
 		VuoOutputData(VuoText) address,
-		VuoOutputData(VuoGenericType1) data1,
-		VuoOutputData(VuoGenericType2) data2,
-		VuoOutputData(VuoGenericType3) data3
+		VuoOutputData(VuoGenericType1, {"name":"Value 1"}) data1,
+		VuoOutputData(VuoGenericType2, {"name":"Value 2"}) data2,
+		VuoOutputData(VuoGenericType3, {"name":"Value 3"}) data3
 )
 {
 	if (!message || !message->dataCount)

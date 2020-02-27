@@ -1,0 +1,52 @@
+/**
+ * @file
+ * Displays an image pattern created using a scene object and image feedback.
+ *
+ * Based on a composition by [Bodysoulspirit](https://vuo.org/user/2475).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddNoiseTo3DObject [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="1695,300" _amount="\{\"x\":0.30000001192092896,\"y\":0.30000001192092896,\"z\":0.30000001192092896\}" _scale="0.10000000000000001"];
+BlendImageWithFeedback2 [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="2220,45" _imageTransform="\"identity\"" _feedbackTransform="\{\"translation\":[0,0],\"rotation\":1.0471975430846214,\"scale\":[1,1]\}" _feedbackOpacity="0.69999999999999996" _feedbackBlendMode="\"normal\"" _pixelAligned="false" _imageInForeground="false" _width="0" _height="0" _colorDepth="\"16bpc\""];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="270,360" _speed="0.5"];
+ChangeSpeed3 [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="480,285" _speed="0.050000000000000003"];
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="105,390" _endPosition="0.5" _duration="2" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"none\"" _phase="0.0"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="1035,270" _translation="\{\"x\":0,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeGradientNoise6 [type="vuo.noise.gradient.VuoReal.VuoPoint3d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="765,285" _gradientNoise="\"rectangular\"" _scaledStart="\{\"x\":0,\"y\":-360,\"z\":0\}" _scaledEnd="\{\"x\":0,\"y\":360,\"z\":0\}"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="480,480" _saturation="1" _opacity="1"];
+MakeList13 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1904,56"];
+MakeRandomPointsObject2 [type="vuo.scene.make.random.points.VuoShader" version="1.1.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="915,465" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,0.20000000298023224,1]\}" _distribution="\"sphere-volume\"" _count="5" _pointSize="0.20000000000000001" _seed="0"];
+RemoveTextureCoordinates [type="vuo.scene.tc.remove" version="1.0.0" label="Remove Texture Coordinates|<refresh>refresh\l|<object>object\l|<modifiedObject>modifiedObject\r" pos="1155,465"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1965,45" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+ShadeWithOval [type="vuo.shader.make.oval" version="1.0.0" label="Shade with Oval|<refresh>refresh\l|<ovalColor>ovalColor\l|<ovalWidth>ovalWidth\l|<ovalSharpness>ovalSharpness\l|<haloColor>haloColor\l|<shader>shader\r" pos="645,480" _ovalWidth="0.5" _ovalSharpness="1" _haloColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0\}"];
+Transform3DObject [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="1410,270"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedMax="4096" _width_suggestedStep="256" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedMax="4096" _height_suggestedStep="256"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+AddNoiseTo3DObject:noisedObject -> MakeList13:1;
+BlendImageWithFeedback2:feedbackImage -> PublishedOutputs:outputImage;
+ChangeSpeed3:changedTime -> MakeGradientNoise6:position;
+ChangeSpeed:changedTime -> AddNoiseTo3DObject:time;
+ChangeSpeed:changedTime -> ChangeSpeed3:time;
+ChangeSpeed:changedTime -> Curve:time;
+ChangeSpeed:changedTime -> MakeHSLColor:hue;
+Curve:value -> MakeHSLColor:lightness;
+Make3DTransform:transform -> Transform3DObject:transform;
+MakeGradientNoise6:value -> Make3DTransform:rotation;
+MakeHSLColor:color -> ShadeWithOval:ovalColor;
+MakeList13:list -> RenderSceneToImage:objects;
+MakeRandomPointsObject2:object -> RemoveTextureCoordinates:object;
+PublishedInputs:height -> RenderSceneToImage:height;
+PublishedInputs:time -> ChangeSpeed:time;
+PublishedInputs:width -> RenderSceneToImage:width;
+RemoveTextureCoordinates:modifiedObject -> Transform3DObject:object;
+RenderSceneToImage:image -> BlendImageWithFeedback2:image;
+ShadeWithOval:shader -> MakeRandomPointsObject2:material;
+Transform3DObject:transformedObject -> AddNoiseTo3DObject:object;
+}

@@ -12,4 +12,4 @@ If some rows have more columns than others, the output table has as many columns
 
 If the text is formatted incorrectly, this node outputs an empty table. Check Console.app for details about the error.
 
-This node is a shortcut for `Fetch Data -> Convert Data to Text -> Make Table from Text`.
+This node is a shortcut for [Fetch Data](vuo-node://vuo.data.fetch) -> [Convert Data to Text](vuo-node://vuo.type.data.text) -> [Make Table from Text](vuo-node://vuo.table.make.text).

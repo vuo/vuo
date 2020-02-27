@@ -1,0 +1,48 @@
+/**
+ * @file
+ * Customizes the settings of two windows so that a larger graphics window appears on the left and a smaller control window appears on the right.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeResizableStatus [type="vuo.window.resizable2" version="2.0.0" label="Change Resizable Status|<refresh>refresh\l|<windowDescription>windowDescription\l|<resizable>resizable\l|<changedWindowDescription>changedWindowDescription\r" pos="225,555" fillcolor="orange" _resizable="false"];
+ChangeWindowPosition [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-210,555" fillcolor="orange" _topLeft="\{\"x\":820,\"y\":0\}" _unit="\"points\""];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="15,555" fillcolor="orange" _width="600" _height="200" _unit="\"points\""];
+ChangeWindowSize2 [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="270,135" fillcolor="orange" _width="800" _height="600" _unit="\"points\""];
+ChangeWindowTitle [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="465,555" fillcolor="orange" _title="\"Secondary\""];
+ChangeWindowTitle2 [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="480,135" fillcolor="orange" _title="\"Primary\""];
+ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="750,345"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.xy" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="165,255"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-330,135" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-420,555" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-75,75" _upperLeftColor="\{\"r\":0.50196081399917603,\"g\":0.50196081399917603,\"b\":0.50196081399917603,\"a\":1\}" _upperRightColor="\{\"r\":0.4118715226650238,\"g\":0.13017471134662628,\"b\":0.27104601263999939,\"a\":1\}" _squareSize="0.20000000000000001" _sharpness="1.0" _center="\{\"x\":0,\"y\":0\}" _width="1600" _height="1200"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="621,506" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="636,86" fillcolor="blue"];
+MakeSlider [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="-345,285" _label="\"Coverage\"" _setValue="0.10000000000000001" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0.0,\"y\":0.0\}" _trackLength="1.8999999999999999" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="675,495" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="690,75" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+ChangeResizableStatus:changedWindowDescription -> ChangeWindowTitle:windowDescription;
+ChangeWindowPosition:changedWindowDescription -> ChangeWindowSize:windowDescription;
+ChangeWindowSize2:changedWindowDescription -> ChangeWindowTitle2:windowDescription;
+ChangeWindowSize:changedWindowDescription -> ChangeResizableStatus:windowDescription;
+ChangeWindowTitle2:changedWindowDescription -> RenderLayersToWindow2:setWindowDescription;
+ChangeWindowTitle:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+ConvertImageToLayer:layer -> MakeList2:1;
+ConvertRealTo2DPoint2:point2d -> MakeCheckerboardImage:coverage;
+FireOnDisplayRefresh:requestedFrame -> MakeCheckerboardImage:angle;
+FireOnStart2:started -> ChangeWindowPosition:windowDescription;
+FireOnStart2:started -> ChangeWindowSize2:windowDescription;
+MakeCheckerboardImage:image -> ConvertImageToLayer:image;
+MakeList2:list -> RenderLayersToWindow2:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeSlider:changed -> ConvertRealTo2DPoint2:x;
+MakeSlider:updatedLayer -> MakeList:1;
+RenderLayersToWindow:updatedWindow -> MakeSlider:window;
+}

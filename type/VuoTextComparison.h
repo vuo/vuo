@@ -2,12 +2,17 @@
  * @file
  * VuoTextComparison C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+/// @{ List type.
+typedef const struct VuoList_VuoTextComparison_struct { void *l; } * VuoList_VuoTextComparison;
+#define VuoList_VuoTextComparison_TYPE_DEFINED
+/// @}
 
 /**
  * @ingroup VuoTypes
@@ -19,13 +24,17 @@
 
 /**
  * Various ways of comparing one text to another to see if they match.
+ *
+ * @version200Changed{Added `VuoTextComparison_MatchesWildcard`, `VuoTextComparison_MatchesRegEx`.}
  */
 typedef enum
 {
 	VuoTextComparison_Equals,
 	VuoTextComparison_Contains,
 	VuoTextComparison_BeginsWith,
-	VuoTextComparison_EndsWith
+	VuoTextComparison_EndsWith,
+	VuoTextComparison_MatchesWildcard,
+	VuoTextComparison_MatchesRegEx,
 } VuoTextComparisonType;
 
 /**
@@ -41,6 +50,7 @@ typedef struct
 
 VuoTextComparison VuoTextComparison_makeFromJson(struct json_object * js);
 struct json_object * VuoTextComparison_getJson(const VuoTextComparison value);
+//VuoList_VuoTextComparison VuoTextComparison_getAllowedValues(void);
 char * VuoTextComparison_getSummary(const VuoTextComparison value);
 
 /// @{

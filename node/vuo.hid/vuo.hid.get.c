@@ -2,9 +2,9 @@
  * @file
  * vuo.hid.get node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get HID Values",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -34,7 +34,7 @@ void nodeEvent
 	}
 	else
 	{
-		*name = NULL;
-		*controls = NULL;
+		*name = device.name;
+		*controls = device.controls;
 	}
 }

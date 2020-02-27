@@ -2,18 +2,19 @@
  * @file
  * VuoFfmpegDecoder interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#include "module.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-#include "module.h"
 #include "VuoVideoDecoder.h"
 #include "VuoVideo.h"
 #include "VuoImage.h"
@@ -388,6 +389,7 @@ private:
 	int64_t lastSentVideoPts;
 	int64_t lastDecodedAudioPts;
 	bool showedTimestampGapWarning;
+	bool showedSeekIgnoredWarning;
 
 	double lastVideoTimestamp;	// Last sent video timestamp in seconds, relative to 0 being start of movie (actual timestamp could be negative, or non-zero)
 	double lastAudioTimestamp;	// Last sent audio timestamp in seconds.
@@ -426,42 +428,42 @@ private:
 	VuoFfmpegDecoder(VuoUrl url);
 
 	// Prepare internal stuff for decoding.
-	bool Initialize();
+	bool Initialize() VuoWarnUnusedResult;
 
 	// Initialize the video context
-	bool InitializeVideo(VuoFfmpegDecoder::AVContainer& container);
+	bool InitializeVideo(VuoFfmpegDecoder::AVContainer& container) VuoWarnUnusedResult;
 
 	// Initialize the audio context
-	bool InitializeAudio(VuoFfmpegDecoder::AVContainer& container);
+	bool InitializeAudio(VuoFfmpegDecoder::AVContainer& container) VuoWarnUnusedResult;
 
 	// Read information about starting and ending timestamp + duration for both container.videoInfo & container.audioInfo
-	bool InitializeVideoInfo();
+	bool InitializeVideoInfo() VuoWarnUnusedResult;
 
 	// Advance the next packet and place in either video or audio queue.
-	bool NextPacket();
+	bool NextPacket() VuoWarnUnusedResult;
 
 	// Decode a frame of audio, and store the frames in audioFrames list
-	bool DecodeAudioFrame();
+	bool DecodeAudioFrame() VuoWarnUnusedResult;
 
 	// Decode a frame of video, and store the frames in videoFrames list
-	bool DecodeVideoFrame();
+	bool DecodeVideoFrame() VuoWarnUnusedResult;
 
 	// Decode a chunk of video frames prior to the current video timestamp.
-	bool DecodePreceedingVideoFrames();
+	bool DecodePreceedingVideoFrames() VuoWarnUnusedResult;
 
 	// Grab the next frame from audioFrames, calling NextPacket & DecodeAudio as necessary.
-	bool FillAudioBuffer();
+	bool FillAudioBuffer() VuoWarnUnusedResult;
 
 	// Seek to presentation timestamp.
-	bool SeekToPts(int64_t pts, VuoVideoFrame *frame);
+	void SeekToPts(int64_t pts, VuoVideoFrame *frame);
 
 	/// If currently seeking, this lets the decode audio/video functions know so they can skip
 	/// unnecessary stuff
 	bool seeking;
 
 	// After av_seek, use this to step the decoded frames to a more exact position
-	bool StepVideoFrame(int64_t pts, VuoVideoFrame *frame);
-	bool StepAudioFrame(int64_t pts);
+	bool StepVideoFrame(int64_t pts, VuoVideoFrame *frame) VuoWarnUnusedResult;
+	bool StepAudioFrame(int64_t pts) VuoWarnUnusedResult;
 
 	void ClearAudioBuffer();
 

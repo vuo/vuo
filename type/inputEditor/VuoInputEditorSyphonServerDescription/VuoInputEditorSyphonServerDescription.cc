@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorSyphonServerDescription implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorSyphonServerDescription.hh"
@@ -13,10 +13,6 @@ extern "C"
 {
 	#include "VuoSyphon.h"
 }
-
-#include <set>
-#include <string>
-using namespace std;
 
 /**
  * Constructs a VuoInputEditorSyphonServerDescription object.
@@ -51,7 +47,7 @@ VuoInputEditorMenuItem * VuoInputEditorSyphonServerDescription::setUpMenuTree()
 
 	if (!uniqueServerNames.empty())
 		for (set<string>::iterator it = uniqueServerNames.begin(); it != uniqueServerNames.end(); ++it)
-			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", it->c_str()), VuoSyphonServerDescription_getJson(VuoSyphonServerDescription_make(NULL, it->c_str(), NULL))));
+			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", it->c_str()), VuoSyphonServerDescription_getJson(VuoSyphonServerDescription_make(VuoText_make("*"), it->c_str(), VuoText_make("*"), true))));
 	else
 		optionsTree->addItem(new VuoInputEditorMenuItem("      (no servers found)", NULL, NULL, false));
 
@@ -60,7 +56,7 @@ VuoInputEditorMenuItem * VuoInputEditorSyphonServerDescription::setUpMenuTree()
 
 	if (!uniqueApplicationNames.empty())
 		for (set<string>::iterator it = uniqueApplicationNames.begin(); it != uniqueApplicationNames.end(); ++it)
-			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", it->c_str()), VuoSyphonServerDescription_getJson(VuoSyphonServerDescription_make(NULL, NULL, it->c_str()))));
+			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", it->c_str()), VuoSyphonServerDescription_getJson(VuoSyphonServerDescription_make(VuoText_make("*"), VuoText_make("*"), it->c_str(), true))));
 	else
 		optionsTree->addItem(new VuoInputEditorMenuItem("      (no servers found)", NULL, NULL, false));
 
@@ -70,7 +66,7 @@ VuoInputEditorMenuItem * VuoInputEditorSyphonServerDescription::setUpMenuTree()
 extern "C"
 {
 
-//@{
+/// @{
 /**
  * Dummy definitions of functions not actually used by this input editor but needed for it to build.
  */
@@ -78,6 +74,6 @@ void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState
 void vuoRemoveCompositionStateFromThreadLocalStorage(void) {}
 const void * vuoCopyCompositionStateFromThreadLocalStorage(void) { return NULL; }
 uint64_t vuoGetCompositionUniqueIdentifier(const struct VuoCompositionState *compositionState) { return 0; }
-//@}
+/// @}
 
 }

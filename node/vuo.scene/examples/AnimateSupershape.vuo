@@ -4,37 +4,38 @@
  * to demonstrate a range of shapes the supershape formula can create.
  * Drag to rotate the supershape.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see http://opensource.org/licenses/MIT .
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-270,-405"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-270,-375" fillcolor="lime"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="0,-225" _startPosition="0.5" _endPosition="5" _duration="5" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
 Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="0,-45" _startPosition="0.10000000000000001" _endPosition="5" _duration="7" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0"];
 Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="0,135" _startPosition="0.10000000000000001" _endPosition="5" _duration="10" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0"];
-MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.1" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="555,-270" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="788,-379" fillcolor="green"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="812,-334" fillcolor="green"];
-MakeSupershape5 [type="vuo.scene.make.supershape.VuoShader" version="1.0.0" label="Make Supershape|<refresh>refresh\l|<transform>transform\l|<material>material\l|<m>m\l|<n1>n1\l|<n2>n2\l|<n3>n3\l|<a>a\l|<b>b\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="315,-390" fillcolor="violet" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[2.268928050994873,2.7925267219543457,0],\"scale\":[1,1,1]\}" _m="6" _a="1" _b="1" _rows="64" _columns="64"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-345,-285" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag2" version="2.0.0" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="555,-270" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="788,-379" fillcolor="blue"];
+MakeSupershape5 [type="vuo.scene.make.supershape.VuoShader" version="1.0.0" label="Make Supershape|<refresh>refresh\l|<transform>transform\l|<material>material\l|<m>m\l|<n1>n1\l|<n2>n2\l|<n3>n3\l|<a>a\l|<b>b\l|<angle>angle\l|<radius>radius\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="315,-390" fillcolor="orange" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[2.268928050994873,2.7925267219543457,0],\"scale\":[1,1,1]\}" _m="6" _a="1" _b="1" _angle="\{\"minimum\":-180.0,\"maximum\":180.0\}" _radius="\{\"minimum\":1.0,\"maximum\":1.0\}" _rows="64" _columns="64"];
 MakeWireframeShader [type="vuo.shader.make.wireframe" version="1.1.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<uniformWidth>uniformWidth\l|<shader>shader\r" pos="-75,-375" _frontColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _backColor="\{\"r\":0.49803921580314636,\"g\":0.49803921580314636,\"b\":0.49803921580314636,\"a\":1\}" _width="0.10000000000000001" _standoffWidth="0" _showThirdEdge="false" _uniformWidth="true"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.3.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="840,-390" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="840,-390" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="525,-390" _keepFront="true"];
 
 AllowFirstEvent:firstEvent -> MakeWireframeShader:frontColor;
 Curve2:value -> MakeSupershape5:n1;
 Curve3:value -> MakeSupershape5:n2;
 Curve4:value -> MakeSupershape5:n3;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
+FireOnDisplayRefresh:requestedFrame -> Curve3:time;
+FireOnDisplayRefresh:requestedFrame -> Curve4:time;
 MakeDraggableCamera:updatedCamera -> MakeList2:2;
 MakeList2:list -> RenderSceneToWindow:objects;
-MakeList6:list -> RenderSceneToWindow:setWindowProperties;
 MakeSupershape5:object -> ShowBackOf3DObject:object;
 MakeWireframeShader:shader -> MakeSupershape5:material;
-RenderSceneToWindow:requestedFrame -> AllowFirstEvent:event [style=invis];
-RenderSceneToWindow:requestedFrame -> Curve2:time [style=invis];
-RenderSceneToWindow:requestedFrame -> Curve3:time [style=invis];
-RenderSceneToWindow:requestedFrame -> Curve4:time [style=invis];
-RenderSceneToWindow:showedWindow -> MakeDraggableCamera:window [style=invis];
+RenderSceneToWindow:updatedWindow -> MakeDraggableCamera:window [style=invis];
 ShowBackOf3DObject:backObject -> MakeList2:1;
 }

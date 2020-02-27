@@ -2,9 +2,9 @@
  * @file
  * VuoDialogForInputEditor implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoDialogForInputEditor.hh"
@@ -93,22 +93,20 @@ QString VuoDialogForInputEditor::getStyleSheet(bool isDark)
 						  }
 
 
+						  // The combo box widget (not the combo box's popup menu).
 						  QComboBox {
 							  border: 2px solid #707070;
 							  border-radius: 4px;
-							  padding: 2px 22px 2px 4px;
+							  padding: 0 22px 0 4px;
 							  background: #1a1a1a;
 							  color: #cfcfcf;
+							  min-height: 22px;
 						  }
 						  QComboBox:on {
 							  color: black;
 						  }
 						  QComboBox:off {
 							  color: black;
-						  }
-						  QComboBox:selected {
-							  background: #1370dc;//palette(highlight);
-							  selection-color: white;
 						  }
 						  QComboBox:focus {
 							  background: #1a1a1a;
@@ -121,13 +119,43 @@ QString VuoDialogForInputEditor::getStyleSheet(bool isDark)
 						  QComboBox::down-arrow {
 							  image: url(:/Icons/spinbox-dec.png);
 						  }
+
+						  // The combo box's popup menu.
+						  // Should parallel VuoEditorWindow::updateColor()'s QMenu styles.
+						  QComboBox QAbstractItemView {
+							  border-top: 4px solid #404040;
+							  border-bottom: 4px solid #404040;
+							  background-color: #404040;
+						  }
+						  QComboBox::item {
+							  color: #cfcfcf;
+							  padding-left: 22px;
+							  padding-right: 36px;
+							  height: 21px;
+						  }
+						  QComboBox::item:disabled {
+							  color: #707070;
+						  }
+						  QComboBox::item:selected {
+							  background-color: #1060d0;
+							  color: #ffffff;
+						  }
 						  QComboBox::separator {
 							  height: 2px;
-							  background: #e3e3e3;
+							  background: #505050;
 							  margin: 5px 0;
 						  }
-						  QComboBox:disabled { // Disabled item text in the popup menu
-							  color: #808080;
+						  QComboBox::indicator:checked {
+							  image: url(:/Icons/checkmark.svg);
+							  width: 11px;
+						  }
+						  QComboBox::indicator:checked,
+						  QComboBox::icon {
+							  margin-left: 6px;
+						  }
+						  QComboBox::icon:checked,
+						  QComboBox::icon:unchecked {
+							  margin-left: 0;
 						  }
 						  );
 

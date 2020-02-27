@@ -2,41 +2,36 @@
  * @file
  * VuoCompilerComposition implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+#include "VuoCable.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerComment.hh"
 #include "VuoCompilerException.hh"
-#include "VuoCompilerGenericType.hh"
 #include "VuoCompilerGraph.hh"
 #include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerIssue.hh"
 #include "VuoCompilerNode.hh"
-#include "VuoCompilerPort.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoCompilerTriggerPort.hh"
-#include "VuoCompilerType.hh"
-#include "VuoFileUtilities.hh"
+#include "VuoComposition.hh"
 #include "VuoGenericType.hh"
 #include "VuoNode.hh"
-#include "VuoPort.hh"
+#include "VuoNodeClass.hh"
+#include "VuoComment.hh"
 #include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
 #include <sstream>
-#include <stdexcept>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#include <json-c/json.h>
-#pragma clang diagnostic pop
-
 
 const string VuoCompilerComposition::defaultGraphDeclaration = "digraph G\n";
+const string VuoCompilerComposition::topLevelCompositionIdentifier = "Top";
 
 /**
  * Creates a composition. If a non-null parser is provided, the composition is populated from the parser.
@@ -47,9 +42,11 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 {
 	getBase()->setCompiler(this);
 
-	graph = NULL;
+	graph = nullptr;
 	graphHash = 0;
-	module = NULL;
+	manuallyFirableInputNode = nullptr;
+	manuallyFirableInputPort = nullptr;
+	module = nullptr;
 
 	if (parser)
 	{
@@ -69,9 +66,14 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 		for (int index = 0; index < publishedOutputPorts.size(); ++index)
 			getBase()->addPublishedOutputPort(publishedOutputPorts.at(index), index);
 
-		getBase()->setName(parser->getName());
-		getBase()->setDescription(parser->getDescription());
-		getBase()->setCopyright(parser->getCopyright());
+		vector<VuoComment *> comments = parser->getComments();
+		for (vector<VuoComment *>::iterator comment = comments.begin(); comment != comments.end(); ++comment)
+			getBase()->addComment(*comment);
+
+		manuallyFirableInputNode = parser->getManuallyFirableInputNode();
+		manuallyFirableInputPort = parser->getManuallyFirableInputPort();
+
+		getBase()->setMetadata(parser->getMetadata(), true);
 
 		updateGenericPortTypes();
 
@@ -87,11 +89,13 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 VuoCompilerComposition::~VuoCompilerComposition(void)
 {
 	delete graph;
-	VuoCompiler::deleteModule(module);
+	VuoCompiler::destroyLlvmModule(module);
 }
 
 /**
  * Creates a composition from the Graphviz-formatted string representation of a composition.
+ *
+ * @throw VuoCompilerException Couldn't parse the composition.
  */
 VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler)
 {
@@ -102,15 +106,102 @@ VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDecla
 }
 
 /**
+ * Outputs the modifications to cables that would be made by @ref VuoCompilerComposition::replaceNode
+ * without actually modifying anything.
+ */
+void VuoCompilerComposition::getChangesToReplaceNode(VuoNode *oldNode, VuoNode *newNode,
+													 map<VuoCable *, VuoPort *> &cablesToTransferFromPort,
+													 map<VuoCable *, VuoPort *> &cablesToTransferToPort,
+													 set<VuoCable *> &cablesToRemove) const
+{
+	set<VuoCable *> cables = getBase()->getCables();
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	{
+		VuoCable *cable = *i;
+
+		bool foundMismatch = false;
+		if (cable->getFromNode() == oldNode)
+		{
+			VuoPort *oldPort = cable->getFromPort();
+			VuoPort *newPort = newNode->getOutputPortWithName( oldPort->getClass()->getName() );
+
+			if (portsMatch(oldPort, newPort))
+				cablesToTransferFromPort[cable] = newPort;
+			else
+				foundMismatch = true;
+		}
+		if (cable->getToNode() == oldNode)
+		{
+			VuoPort *oldPort = cable->getToPort();
+			VuoPort *newPort = newNode->getInputPortWithName( oldPort->getClass()->getName() );
+
+			if (portsMatch(oldPort, newPort))
+				cablesToTransferToPort[cable] = newPort;
+			else
+				foundMismatch = true;
+		}
+
+		if (foundMismatch)
+		{
+			cablesToRemove.insert(cable);
+
+			map<VuoCable *, VuoPort *>::iterator fromIter = cablesToTransferFromPort.find(cable);
+			if (fromIter != cablesToTransferFromPort.end())
+				cablesToTransferFromPort.erase(fromIter);
+
+			map<VuoCable *, VuoPort *>::iterator toIter = cablesToTransferToPort.find(cable);
+			if (toIter != cablesToTransferToPort.end())
+				cablesToTransferToPort.erase(toIter);
+		}
+	}
+}
+
+/**
+ * Replaces @a oldNode with @a newNode in the composition, transferring all cable and published port
+ * connections from @a oldNode to @a newNode where port names and data types correspond, and severing the rest.
+ *
+ * If @a oldNode or @a newNode lacks a compiler detail (its node class is not loaded), then cables are
+ * transferred where port names correspond.
+ */
+void VuoCompilerComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
+{
+	map<VuoCable *, VuoPort *> cablesToTransferFromPort;
+	map<VuoCable *, VuoPort *> cablesToTransferToPort;
+	set<VuoCable *> cablesToRemove;
+
+	getChangesToReplaceNode(oldNode, newNode, cablesToTransferFromPort, cablesToTransferToPort, cablesToRemove);
+
+	getBase()->removeNode(oldNode);
+	getBase()->addNode(newNode);
+
+	for (map<VuoCable *, VuoPort *>::iterator i = cablesToTransferFromPort.begin(); i != cablesToTransferFromPort.end(); ++i)
+		i->first->setFrom(newNode, i->second);
+	for (map<VuoCable *, VuoPort *>::iterator i = cablesToTransferToPort.begin(); i != cablesToTransferToPort.end(); ++i)
+		i->first->setTo(newNode, i->second);
+	for (set<VuoCable *>::iterator i = cablesToRemove.begin(); i != cablesToRemove.end(); ++i)
+		getBase()->removeCable(*i);
+}
+
+/**
  * Returns the graph for this composition, using the most recently generated graph if it still applies.
  */
-VuoCompilerGraph * VuoCompilerComposition::getCachedGraph(void)
+VuoCompilerGraph * VuoCompilerComposition::getCachedGraph(VuoCompiler *compiler)
 {
 	long currentHash = VuoCompilerGraph::getHash(this);
-	if (currentHash != graphHash)
+	bool compositionChanged = (currentHash != graphHash);
+
+	bool shouldAddPublishedNodeImplementations = false;
+	if (! compositionChanged && compiler)
+	{
+		VuoCompilerNode *publishedInputNode = graph->getPublishedInputNode();
+		if (publishedInputNode && ! publishedInputNode->getBase()->getNodeClass()->getCompiler()->getEventFunction())
+			shouldAddPublishedNodeImplementations = true;
+	}
+
+	if (compositionChanged || shouldAddPublishedNodeImplementations)
 	{
 		delete graph;
-		graph = new VuoCompilerGraph(this);
+		graph = new VuoCompilerGraph(this, compiler);
 		graphHash = currentHash;
 	}
 
@@ -118,69 +209,185 @@ VuoCompilerGraph * VuoCompilerComposition::getCachedGraph(void)
 }
 
 /**
+ * Indicates that the most recently generated graph for this composition no longer applies.
+ */
+void VuoCompilerComposition::invalidateCachedGraph(void)
+{
+	delete graph;
+	graph = nullptr;
+	graphHash = 0;
+}
+
+/**
  * Checks that the composition is valid (able to be compiled).
  *
+ * @param issues Any issues found are appended to this.
  * @throw VuoCompilerException The composition is invalid.
  */
-void VuoCompilerComposition::check(void)
+void VuoCompilerComposition::check(VuoCompilerIssues *issues)
 {
-	checkForMissingNodeClasses();
-	checkFeedback();
+	checkForMissingNodeClasses(issues);
+	checkForMissingTypes(issues);
+	checkForEventFlowIssues(issues);
 }
 
 /**
  * Checks that all of the nodes in the composition have a node class known to the compiler.
  *
+ * @param issues Any issues found are appended to this.
  * @throw VuoCompilerException One or more nodes have an unknown node class.
  */
-void VuoCompilerComposition::checkForMissingNodeClasses(void)
+void VuoCompilerComposition::checkForMissingNodeClasses(VuoCompilerIssues *issues)
 {
-	vector<VuoCompilerError> errors;
-	set<string> encounteredProModules = VuoCompiler::getEncounteredPremiumModules();
-
+	set<VuoNode *> missingNodes;
 	set<VuoNode *> nodes = getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
 		if (! node->getNodeClass()->hasCompiler())
-		{
-			string summary = "Node not installed";
-			string details = node->getTitle() + " (" + node->getNodeClass()->getClassName() + ")";
-
-			// If the error text changes, also need to change the text replacements where the exception is caught in
-			// VuoEditor::createEditorWindow().
-			if (encounteredProModules.find(node->getNodeClass()->getClassName()) != encounteredProModules.end())
-				details += " [pro node]";
-			else if (node->getNodeClass()->getDescription().find("This node was updated or removed in Vuo 0.9 or earlier.") != string::npos)
-				details += " [Vuo 0.9 or earlier]";
-
-			set<VuoNode *> nodeAsSet;
-			nodeAsSet.insert(node);
-			VuoCompilerError error(summary, details, nodeAsSet, set<VuoCable *>());
-			errors.push_back(error);
-		}
+			missingNodes.insert(node);
 	}
 
-	if (! errors.empty())
-		throw VuoCompilerException(errors);
+	if (! missingNodes.empty())
+	{
+		// Assumes the details are always displayed in plain text. Doesn't use VuoCompilerIssue's formatting.
+		vector<string> uniqueNodeDetails;
+		bool missingProNode = false;
+		bool missingOldNode = false;
+		for (set<VuoNode *>::iterator i = missingNodes.begin(); i != missingNodes.end(); ++i)
+		{
+			VuoNode *node = *i;
+
+			string nodeDetail = node->getTitle() + " (" + (*i)->getNodeClass()->getClassName() + ")";
+
+#if VUO_PRO
+			if (node->getNodeClass()->isPro())
+			{
+				nodeDetail += " [Vuo Pro]";
+				missingProNode = true;
+			}
+#endif
+
+			if (node->getNodeClass()->getDescription().find("This node was updated or removed in Vuo 0.9 or earlier.") != string::npos)
+			{
+				nodeDetail += " [Vuo 0.9 or earlier]";
+				missingOldNode = true;
+			}
+
+			if (find(uniqueNodeDetails.begin(), uniqueNodeDetails.end(), nodeDetail) == uniqueNodeDetails.end())
+				uniqueNodeDetails.push_back(nodeDetail);
+		}
+		sort(uniqueNodeDetails.begin(), uniqueNodeDetails.end());
+		string details = "\n\n" + VuoStringUtilities::join(uniqueNodeDetails, "\n");
+
+		string hint;
+		string linkUrl;
+		string linkText;
+
+		if (missingProNode)
+		{
+			hint += "<p>Some of the non-installed nodes are Pro nodes. "
+					"%link to enable Pro nodes.</p>";
+			linkUrl = "https://vuo.org/buy";
+			linkText = "Upgrade to Vuo Pro";
+		}
+
+		if (missingOldNode)
+		{
+			hint += "<p>Some of the non-installed nodes were updated or removed in Vuo 0.9 or earlier. "
+					"To work with this composition in Vuo 1.0 or later, first make a "
+					"backup copy of the composition, then open the composition in Vuo 0.9 and save it. "
+					"This will automatically upgrade the composition so you can use it in Vuo 1.0 or later.</p>";
+		}
+
+		// If changing this text, also change VuoEditorWindow::hideBuildActivityIndicator() and VuoEditorWindow::displayExportErrorBox().
+		string summary = "Nodes not installed";
+
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "opening composition", "", summary, details);
+		issue.setNodes(missingNodes);
+		issue.setHint(hint);
+		issue.setLink(linkUrl, linkText);
+		issues->append(issue);
+		throw VuoCompilerException(issues, false);
+	}
 }
 
 /**
- * Checks that the structure of feedback loops in the composition is valid.
+ * Checks that all of the nodes in the composition have port types known to the compiler.
+ *
+ * @param issues Any issues found are appended to this.
+ * @throw VuoCompilerException One or more nodes have an unknown port type.
+ */
+void VuoCompilerComposition::checkForMissingTypes(VuoCompilerIssues *issues)
+{
+	map<string, set<string> > missingTypes;
+	for (VuoNode *node : getBase()->getNodes())
+	{
+		if (! node->getNodeClass()->hasCompiler())
+			continue;
+
+		vector<VuoPort *> ports;
+		vector<VuoPort *> inputPorts = node->getInputPorts();
+		ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+		vector<VuoPort *> outputPorts = node->getOutputPorts();
+		ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
+
+		for (VuoPort *port : ports)
+		{
+			VuoType *type = static_cast<VuoCompilerPort *>(port->getCompiler())->getDataVuoType();
+			if (type && ! type->hasCompiler() && ! dynamic_cast<VuoGenericType *>(type))
+				missingTypes[type->getModuleKey()].insert(node->getNodeClass()->getClassName());
+		}
+	}
+
+	if (! missingTypes.empty())
+	{
+		for (auto i : missingTypes)
+		{
+			vector<string> nodeClassNames(i.second.begin(), i.second.end());
+			std::sort(nodeClassNames.begin(), nodeClassNames.end());
+
+			string summary = "Data type not installed";
+			string details = i.first + " — used by " + VuoStringUtilities::join(nodeClassNames, ", ");
+			string hint = "Check with the developer of the nodes that use this data type.";
+
+			VuoCompilerIssue issue(VuoCompilerIssue::Error, "opening composition", "", summary, details);
+			issue.setHint(hint);
+			issues->append(issue);
+		}
+
+		throw VuoCompilerException(issues, false);
+	}
+}
+
+/**
+ * Checks that the event flow in the composition is valid.
+ *
+ * @param issues Any issues found are appended to this.
+ * @throw VuoCompilerException There is an infinite or deadlocked feedback loop.
+ */
+void VuoCompilerComposition::checkForEventFlowIssues(VuoCompilerIssues *issues)
+{
+	checkForEventFlowIssues(set<VuoCompilerCable *>(), issues);
+}
+
+/**
+ * Checks that the event flow in the composition is valid.
  *
  * @param potentialCables Cables that are not yet in the composition but should be included in the check.
- * @throw VuoCompilerException There is at least one infinite feedback loop or deadlocked feedback loop.
+ * @param issues Any issues found are appended to this.
+ * @throw VuoCompilerException There is an infinite or deadlocked feedback loop.
  */
-void VuoCompilerComposition::checkFeedback(set<VuoCompilerCable *> potentialCables)
+void VuoCompilerComposition::checkForEventFlowIssues(set<VuoCompilerCable *> potentialCables, VuoCompilerIssues *issues)
 {
 	VuoCompilerGraph *graph;
 	if (! potentialCables.empty())
-		graph = new VuoCompilerGraph(this, potentialCables);
+		graph = new VuoCompilerGraph(this, nullptr, potentialCables);
 	else
 		graph = getCachedGraph();
 
-	graph->checkForInfiniteFeedback();
-	graph->checkForDeadlockedFeedback();
+	graph->checkForInfiniteFeedback(issues);
+	graph->checkForDeadlockedFeedback(issues);
 
 	if (! potentialCables.empty())
 		delete graph;
@@ -188,11 +395,8 @@ void VuoCompilerComposition::checkFeedback(set<VuoCompilerCable *> potentialCabl
 
 /**
  * Puts the generic ports in the composition into sets, where all ports in a set have the same generic type.
- *
- * @param useOriginalType If true, considers a port generic if it's currently generic or if it's specialized
- *		from a generic. If false, only looks at ports that are currently generic.
  */
-set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bool useOriginalType)
+set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(void)
 {
 	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts;
 
@@ -224,31 +428,12 @@ set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bo
 	for (set< pair< vector<VuoPort *>, VuoNode* > >::iterator i = portsGroupedByNode.begin(); i != portsGroupedByNode.end(); ++i)
 	{
 		vector<VuoPort *> ports = i->first;
-		VuoNode *node = i->second;
 
 		map<string, set<VuoCompilerPort *> > genericPortsForType;
 		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
 		{
 			VuoCompilerPort *port = static_cast<VuoCompilerPort *>((*j)->getCompiler());
-			VuoGenericType *genericType = NULL;
-			if (useOriginalType)
-			{
-				/// @todo https://b33p.net/kosada/node/7655 Handle published ports (node is NULL).
-				if (! node)
-					break;
-
-				VuoCompilerNodeClass *nodeClass = node->getNodeClass()->getCompiler();
-				VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
-				if (specializedNodeClass)
-				{
-					VuoPortClass *portClass = port->getBase()->getClass();
-					genericType = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass) );
-				}
-			}
-			else
-			{
-				genericType = dynamic_cast<VuoGenericType *>(port->getDataVuoType());
-			}
+			VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(port->getDataVuoType());
 
 			if (genericType)
 			{
@@ -270,7 +455,9 @@ set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bo
 	{
 		VuoCable *cable = *i;
 
-		if (!(cable->getFromPort() && cable->getToPort() && cable->getCompiler()->carriesData()))
+		if (! (cable->getFromPort() && cable->getFromPort()->hasCompiler() &&
+			   cable->getToPort() && cable->getToPort()->hasCompiler() &&
+			   cable->getCompiler()->carriesData()))
 			continue;
 
 		VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(cable->getFromPort()->getCompiler());
@@ -307,7 +494,7 @@ set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bo
  */
 void VuoCompilerComposition::updateGenericPortTypes(void)
 {
-	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts = groupGenericPortsByType(false);
+	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts = groupGenericPortsByType();
 
 	// Give each set of connected generic ports a unique generic type.
 	set<string> usedTypeNames;
@@ -420,30 +607,111 @@ string VuoCompilerComposition::createFreshGenericTypeName(void)
 }
 
 /**
- * Returns the set of ports that have the same innermost generic type as the given port.
+ * Returns the set of ports that have the same innermost generic type as @a entryPort.
  *
  * Assumes that updateGenericPortTypes() has been called since any changes affecting the groups/networks
  * of connected generic ports have been made to the composition.
+ *
+ * @param entryNode The node containing @a entryPort.
+ * @param entryPort The port whose type is to be matched in the returned ports.
+ * @param useOriginalType If true, considers a port generic if it's currently generic or if it's specialized
+ *     from a generic. If false, only looks at ports that are currently generic.
  */
-set<VuoPort *> VuoCompilerComposition::getConnectedGenericPorts(VuoPort *port)
+set<VuoPort *> VuoCompilerComposition::getCorrelatedGenericPorts(VuoNode *entryNode, VuoPort *entryPort, bool useOriginalType)
 {
-	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts = groupGenericPortsByType(false);
+	/// @todo https://b33p.net/kosada/node/7655 Correctly handle published ports.
 
-	set<VuoCompilerPort *> connectedPorts;
-	for (set< set<VuoCompilerPort *> >::iterator i = setsOfConnectedGenericPorts.begin(); i != setsOfConnectedGenericPorts.end(); ++i)
+	auto getGenericTypeName = [&useOriginalType] (VuoNode *node, VuoPort *port)
 	{
-		if ((*i).find(static_cast<VuoCompilerPort *>(port->getCompiler())) != (*i).end())
+		VuoGenericType *genericType = nullptr;
+
+		if (useOriginalType)
 		{
-			connectedPorts = *i;
-			break;
+			if (node && node->hasCompiler())
+			{
+				VuoCompilerNodeClass *nodeClass = node->getNodeClass()->getCompiler();
+				VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
+				if (specializedNodeClass)
+					genericType = dynamic_cast<VuoGenericType *>(specializedNodeClass->getOriginalPortType(port->getClass()));
+			}
+		}
+		else
+		{
+			VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(port->getCompiler());
+			genericType = dynamic_cast<VuoGenericType *>(compilerPort->getDataVuoType());
+		}
+
+		return genericType ? VuoType::extractInnermostTypeName(genericType->getModuleKey()) : "";
+	};
+
+	set<VuoPort *> correlatedPorts;
+	set<VuoNode *> nodesEnqueuedOrVisited;
+	list< pair<VuoNode *, string> > nodesToVisit;
+
+	string entryGenericType = getGenericTypeName(entryNode, entryPort);
+	if (! entryGenericType.empty())
+	{
+		nodesToVisit.push_back( make_pair(entryNode, entryGenericType) );
+		nodesEnqueuedOrVisited.insert(entryNode);
+	}
+
+	while (! nodesToVisit.empty())
+	{
+		VuoNode *currNode = nodesToVisit.front().first;
+		string currGenericType = nodesToVisit.front().second;
+		nodesToVisit.pop_front();
+
+		// Find all ports on the node that share (or would share if unspecialized) the same data type.
+
+		list<VuoPort *> correlatedPortsOnNode;
+		for (VuoPort *currPort : currNode->getInputPorts())
+			if (getGenericTypeName(currNode, currPort) == currGenericType)
+				correlatedPortsOnNode.push_back(currPort);
+		for (VuoPort *currPort : currNode->getOutputPorts())
+			if (getGenericTypeName(currNode, currPort) == currGenericType)
+				correlatedPortsOnNode.push_back(currPort);
+
+		correlatedPorts.insert(correlatedPortsOnNode.begin(), correlatedPortsOnNode.end());
+
+		// Follow all data-carrying cables from those ports to other nodes.
+
+		for (VuoPort *port : correlatedPortsOnNode)
+		{
+			for (VuoCable *cable : port->getConnectedCables())
+			{
+				if (! (cable->hasCompiler() && cable->getCompiler()->carriesData()))
+					continue;
+
+				VuoNode *otherNode = nullptr;
+				VuoPort *otherPort = nullptr;
+				if (currNode != cable->getFromNode())
+				{
+					otherNode = cable->getFromNode();
+					otherPort = cable->getFromPort();
+				}
+				else if (currNode != cable->getToNode())
+				{
+					otherNode = cable->getToNode();
+					otherPort = cable->getToPort();
+				}
+
+				if (! otherPort)
+					continue;
+
+				if (nodesEnqueuedOrVisited.find(otherNode) == nodesEnqueuedOrVisited.end())
+				{
+					string otherGenericType = getGenericTypeName(otherNode, otherPort);
+					if (! otherGenericType.empty())
+					{
+						nodesToVisit.push_back( make_pair(otherNode, otherGenericType) );
+						nodesEnqueuedOrVisited.insert(otherNode);
+					}
+				}
+			}
 		}
 	}
 
-	set<VuoPort *> connectedBasePorts;
-	for (set<VuoCompilerPort *>::iterator i = connectedPorts.begin(); i != connectedPorts.end(); ++i)
-		connectedBasePorts.insert((*i)->getBase());
-
-	return connectedBasePorts;
+	return correlatedPorts;
 }
 
 /**
@@ -451,9 +719,7 @@ set<VuoPort *> VuoCompilerComposition::getConnectedGenericPorts(VuoPort *port)
  */
 VuoPort * VuoCompilerComposition::findNearestUpstreamTriggerPort(VuoNode *node)
 {
-	delete graph;
-	graph = new VuoCompilerGraph(this);
-
+	VuoCompilerGraph *graph = getCachedGraph();
 	VuoCompilerTriggerPort *trigger = graph->findNearestUpstreamTrigger(node->getCompiler());
 	return trigger ? trigger->getBase() : NULL;
 }
@@ -467,30 +733,43 @@ void VuoCompilerComposition::setModule(Module *module)
 }
 
 /**
+ * Relinquishes ownership of the LLVM module previously passed to @ref setModule.
+ */
+Module * VuoCompilerComposition::takeModule(void)
+{
+	Module *takenModule = module;
+	module = NULL;
+	return takenModule;
+}
+
+/**
  * If the given node has the same Graphviz identifier as another node currently in the composition,
  * a node that was in the composition when it was originally parsed from Graphviz, or a node that was
  * previously passed through this function, changes the given node's Graphviz identifier to one that
  * has never been used by this composition.
  */
-void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node)
+void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node, const string &preferredIdentifier, const string &identifierPrefix)
 {
 	if (! node->hasCompiler())
 		return;
 
-	set<VuoNode *> nodes = getBase()->getNodes();
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-		if (*i != node && (*i)->hasCompiler())
-			nodeGraphvizIdentifierUsed[ (*i)->getCompiler()->getGraphvizIdentifier() ] = *i;
+	for (VuoNode *currNode : getBase()->getNodes())
+		if (currNode != node && currNode->hasCompiler())
+			nodeGraphvizIdentifierUsed[ currNode->getCompiler()->getGraphvizIdentifier() ] = currNode;
 
-	string uniqueIdentifier = node->getCompiler()->getGraphvizIdentifier();
-	string prefix = node->getCompiler()->getGraphvizIdentifierPrefix();
-	int suffix = 1;
-	while (nodeGraphvizIdentifierUsed[uniqueIdentifier] != NULL && nodeGraphvizIdentifierUsed[uniqueIdentifier] != node)
+	auto isIdentifierAvailable = [this, node] (const string &identifier)
 	{
-		ostringstream oss;
-		oss << ++suffix;
-		uniqueIdentifier = prefix + oss.str();
-	}
+		auto it = nodeGraphvizIdentifierUsed.find(identifier);
+		if (it == nodeGraphvizIdentifierUsed.end())
+			return true;
+
+		return it->second == node;
+	};
+
+	string nonEmptyPreferredIdentifier = (! preferredIdentifier.empty() ? preferredIdentifier : node->getCompiler()->getGraphvizIdentifier());
+	string nonEmptyIdentifierPrefix = (! identifierPrefix.empty() ? identifierPrefix : node->getCompiler()->getGraphvizIdentifierPrefix());
+
+	string uniqueIdentifier = VuoStringUtilities::formUniqueIdentifier(isIdentifierAvailable, nonEmptyPreferredIdentifier, nonEmptyIdentifierPrefix);
 
 	nodeGraphvizIdentifierUsed[uniqueIdentifier] = node;
 	node->getCompiler()->setGraphvizIdentifier(uniqueIdentifier);
@@ -505,14 +784,83 @@ void VuoCompilerComposition::clearGraphvizNodeIdentifierHistory()
 }
 
 /**
+ * If the given comment has the same Graphviz identifier as another comment currently in the composition,
+ * a comment that was in the composition when it was originally parsed from Graphviz, or a comment that was
+ * previously passed through this function, changes the given comment's Graphviz identifier to one that
+ * has never been used by this composition.
+ */
+void VuoCompilerComposition::setUniqueGraphvizIdentifierForComment(VuoComment *comment)
+{
+	if (! comment->hasCompiler())
+		return;
+
+	for (VuoComment *currComment : getBase()->getComments())
+		if (currComment != comment && currComment->hasCompiler())
+			commentGraphvizIdentifierUsed[ currComment->getCompiler()->getGraphvizIdentifier() ] = currComment;
+
+	auto isIdentifierAvailable = [this, comment] (const string &identifier)
+	{
+		auto it = commentGraphvizIdentifierUsed.find(identifier);
+		if (it == commentGraphvizIdentifierUsed.end())
+			return true;
+
+		return it->second == comment;
+	};
+
+	string uniqueIdentifier = VuoStringUtilities::formUniqueIdentifier(isIdentifierAvailable,
+																	   comment->getCompiler()->getGraphvizIdentifier(),
+																	   comment->getCompiler()->getGraphvizIdentifierPrefix());
+	commentGraphvizIdentifierUsed[uniqueIdentifier] = comment;
+	comment->getCompiler()->setGraphvizIdentifier(uniqueIdentifier);
+}
+
+/**
+ * Clears the map containing the records of previously used Graphviz comment identifiers.
+ */
+void VuoCompilerComposition::clearGraphvizCommentIdentifierHistory()
+{
+	commentGraphvizIdentifierUsed.clear();
+}
+
+/**
+ * Selects the input port into which a hidden trigger port can fire events on demand.
+ *
+ * The trigger port and the cable from it to @a portFiredInto are not included in the
+ * lists of nodes or cables stored in the VuoComposition. The trigger port can be accessed
+ * with @ref VuoCompilerGraph::getManuallyFirableTrigger().
+ */
+void VuoCompilerComposition::setManuallyFirableInputPort(VuoNode *nodeContainingPort, VuoPort *portFiredInto)
+{
+	this->manuallyFirableInputNode = nodeContainingPort;
+	this->manuallyFirableInputPort = portFiredInto;
+}
+
+/**
+ * Returns the node most recently set by @ref VuoCompilerComposition::setManuallyFirableInputPort().
+ */
+VuoNode * VuoCompilerComposition::getManuallyFirableInputNode(void)
+{
+	return manuallyFirableInputNode;
+}
+
+/**
+ * Returns the input port most recently set by @ref VuoCompilerComposition::setManuallyFirableInputPort().
+ */
+VuoPort * VuoCompilerComposition::getManuallyFirableInputPort(void)
+{
+	return manuallyFirableInputPort;
+}
+
+/**
  * Returns the .vuo (Graphviz dot format) representation of this composition.
  */
-string VuoCompilerComposition::getGraphvizDeclaration(string header, string footer)
+string VuoCompilerComposition::getGraphvizDeclaration(VuoProtocol *activeProtocol, string header, string footer)
 {
 	return getGraphvizDeclarationForComponents(getBase()->getNodes(),
 											   getBase()->getCables(),
-											   getBase()->getPublishedInputPorts(),
-											   getBase()->getPublishedOutputPorts(),
+											   getBase()->getComments(),
+											   getBase()->getProtocolAwarePublishedPortOrder(activeProtocol, true),
+											   getBase()->getProtocolAwarePublishedPortOrder(activeProtocol, false),
 											   header,
 											   footer);
 }
@@ -522,6 +870,7 @@ string VuoCompilerComposition::getGraphvizDeclaration(string header, string foot
  */
 string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet,
 																   set<VuoCable *> cableSet,
+																   set<VuoComment *> commentSet,
 																   vector<VuoPublishedPort *> publishedInputPorts,
 																   vector<VuoPublishedPort *> publishedOutputPorts,
 																   string header, string footer, double xPositionOffset, double yPositionOffset)
@@ -540,14 +889,25 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 
 	sort(cables.begin(), cables.end(), compareGraphvizIdentifiersOfCables);
 
+	// Sort comments.
+	vector<VuoComment *> comments;
+	for (set<VuoComment *>::iterator i = commentSet.begin(); i != commentSet.end(); ++i)
+		comments.push_back(*i);
+
+	sort(comments.begin(), comments.end(), compareGraphvizIdentifiersOfComments);
+
 	string compositionHeader = (! header.empty()? header : defaultGraphDeclaration);
 	string compositionFooter = (! footer.empty()? footer : "\n");
 
 	ostringstream output;
-	string nodeCableSectionDivider = (! (cables.empty()
-										 && publishedInputPorts.empty()
-										 && publishedOutputPorts.empty())?
-										 "\n":"");
+	string nodeCommentSectionDivider = "\n";
+	if ((nodes.empty() && publishedInputPorts.empty() && publishedOutputPorts.empty()) ||
+			(comments.empty() && cables.empty()))
+		nodeCommentSectionDivider = "";
+
+	string commentCableSectionDivider = "\n";
+	if (comments.empty() || cables.empty())
+		commentCableSectionDivider = "";
 
 	// Print header
 	output << compositionHeader;
@@ -557,7 +917,8 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 	for (vector<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		string nodeDeclaration = ((*i)->hasCompiler() ?
-									  (*i)->getCompiler()->getGraphvizDeclaration(true, xPositionOffset, yPositionOffset) :
+									  (*i)->getCompiler()->getGraphvizDeclaration(true, xPositionOffset, yPositionOffset,
+																				  manuallyFirableInputNode == *i ? manuallyFirableInputPort : nullptr) :
 									  (*i)->getRawGraphvizDeclaration());
 		output << nodeDeclaration << endl;
 	}
@@ -586,19 +947,22 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 		output << "];" << endl;
 	}
 
-	output << nodeCableSectionDivider;
+	output << nodeCommentSectionDivider;
+
+	// Print comments
+	for (vector<VuoComment *>::iterator i = comments.begin(); i != comments.end(); ++i)
+	{
+		string commentDeclaration = ((*i)->hasCompiler() ?
+									  (*i)->getCompiler()->getGraphvizDeclaration(xPositionOffset, yPositionOffset) : "");
+		output << commentDeclaration << endl;
+	}
+
+	output << commentCableSectionDivider;
 
 	// Print cables
 	for (vector<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
 	{
 		VuoCable *cable = *i;
-
-		if ((cable->isPublishedInputCable() &&
-			 find(publishedInputPorts.begin(), publishedInputPorts.end(), cable->getFromPort()) == publishedInputPorts.end()) ||
-				(cable->isPublishedOutputCable() &&
-				 find(publishedOutputPorts.begin(), publishedOutputPorts.end(), cable->getToPort()) == publishedOutputPorts.end()))
-			continue;
-
 		output << cable->getCompiler()->getGraphvizDeclaration() << endl;
 	}
 
@@ -609,250 +973,14 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 }
 
 /**
- * Returns a string representation of a comparison between the old and the current composition.
- *
- * The string representation is based on the [JSON Patch](http://tools.ietf.org/html/draft-ietf-appsawg-json-patch-02) format,
- * with some extensions. The key used for each node is its Graphviz identifier. Unlike the examples below (spaced for readability),
- * the returned string contains no whitespace.
- *
- * The comparison follows the compiler's rule that the PublishedInputs and PublishedOutputs pseudo-nodes are either
- * both present or both absent in a compiled composition.
- *
- * @eg{
- * // The new composition contains (added) node FireOnStart. The old composition contains (removed) node Round.
- * [
- *   {"add" : "FireOnStart", "value" : {"nodeClass" : "vuo.event.fireOnStart"}},
- *   {"remove" : "Round"}
- * ]
- * }
- *
- * @eg{
- * // From the old composition to the new composition, a drawer has been expanded from 2 to 3 inputs.
- * [
- *   {"add" : "MakeList2", "value" : {"nodeClass" : "vuo.list.make.3.VuoInteger"}},
- *   {"remove" : "MakeList1"},
- *   {"map" : "MakeList1", "to" : "MakeList2",
- *     "ports" : [
- *       {"map" : "1", "to" : "1"},
- *       {"map" : "2", "to" : "2"},
- *       {"map" : "list", "to" : "list}
- *     ]
- *   }
- * ]
- * }
- *
- * @eg{
- * // From the old to the new composition, a published input port has been added.
- * // Published input port "firstInput" and published output port "firstOutput" stay the same.
- * [
- *   {"add" : "PublishedInputs"},
- *   {"remove" : "PublishedInputs"},
- *   {"map" : "PublishedInputs", "to" : "PublishedInputs",
- *     "ports" : [
- *       {"map" : "firstInput", "to" : "firstInput"}
- *     ]
- *   },
- *   {"add" : "PublishedOutputs"},
- *   {"remove" : "PublishedOutputs"},
- *   {"map" : "PublishedOutputs", "to" : "PublishedOutputs",
- *     "ports" : [
- *       {"map" : "firstOutput", "to" : "firstOutput"}
- *     ]
- *   }
- * ]
- * }
- *
- * @eg{
- * // From the old to the new composition, a published input port has been added.
- * // The old composition doesn't have any published ports.
- * [
- *   {"add" : "PublishedInputs"},
- *   {"add" : "PublishedOutputs"}
- * ]
- * }
- *
- * This needs to be kept in sync with VuoRuntime function `findNodeInCompositionDiff()`.
+ * Returns the set of targets (operating system versions) with which this composition is compatible.
  */
-string VuoCompilerComposition::diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler,
-														   const set<NodeReplacement> &nodeReplacements)
+VuoCompilerTargetSet VuoCompilerComposition::getCompatibleTargets()
 {
-	json_object *diff = json_object_new_array();
-
-	// Diff nodes.
-
-	VuoCompilerComposition *oldComposition = newCompositionFromGraphvizDeclaration(oldCompositionGraphvizDeclaration, compiler);
-	set<VuoNode *> oldNodes = oldComposition->getBase()->getNodes();
-	set<VuoNode *> newNodes = getBase()->getNodes();
-
-	map<string, VuoNode *> oldNodeForIdentifier;
-	map<string, VuoNode *> newNodeForIdentifier;
-	for (set<VuoNode *>::iterator i = oldNodes.begin(); i != oldNodes.end(); ++i)
-		oldNodeForIdentifier[(*i)->getCompiler()->getGraphvizIdentifier()] = *i;
-	for (set<VuoNode *>::iterator i = newNodes.begin(); i != newNodes.end(); ++i)
-		newNodeForIdentifier[(*i)->getCompiler()->getGraphvizIdentifier()] = *i;
-
-	for (map<string, VuoNode *>::iterator oldNodeIter = oldNodeForIdentifier.begin(); oldNodeIter != oldNodeForIdentifier.end(); ++oldNodeIter)
-	{
-		map<string, VuoNode *>::iterator newNodeIter = newNodeForIdentifier.find(oldNodeIter->first);
-		if (newNodeIter == newNodeForIdentifier.end())
-		{
-			// { "remove" : "<node identifier>" }
-			json_object *remove = json_object_new_object();
-			json_object *nodeIdentifier = json_object_new_string(oldNodeIter->first.c_str());
-			json_object_object_add(remove, "remove", nodeIdentifier);
-			json_object_array_add(diff, remove);
-		}
-	}
-	for (map<string, VuoNode *>::iterator newNodeIter = newNodeForIdentifier.begin(); newNodeIter != newNodeForIdentifier.end(); ++newNodeIter)
-	{
-		map<string, VuoNode *>::iterator oldNodeIter = oldNodeForIdentifier.find(newNodeIter->first);
-		if (oldNodeIter == oldNodeForIdentifier.end())
-		{
-			// { "add" : "<node identifier>", "value" : { "nodeClass" : "<node class>" } }
-			json_object *add = json_object_new_object();
-			json_object *nodeIdentifier = json_object_new_string(newNodeIter->first.c_str());
-			json_object_object_add(add, "add", nodeIdentifier);
-			json_object *value = json_object_new_object();
-			json_object *nodeClass = json_object_new_string(newNodeIter->second->getNodeClass()->getClassName().c_str());
-			json_object_object_add(value, "nodeClass", nodeClass);
-			json_object_object_add(add, "value", value);
-			json_object_array_add(diff, add);
-		}
-	}
-	for (set<NodeReplacement>::iterator nodeReplacementIter = nodeReplacements.begin(); nodeReplacementIter != nodeReplacements.end(); ++nodeReplacementIter)
-	{
-		// {   "map" : "<node identifier>",
-		//      "to" : "<node identifier>",
-		//   "ports" : [
-		//			{ "map" : "<port identifier>", "to" : "<port identifier>" },
-		//			{ "map" : "<port identifier>", "to" : "<port identifier>" },
-		//			... ] }
-		json_object *mapObj = json_object_new_object();
-		json_object *oldNodeIdentifier = json_object_new_string(nodeReplacementIter->oldNodeIdentifier.c_str());
-		json_object_object_add(mapObj, "map", oldNodeIdentifier);
-		json_object *newNodeIdentifier = json_object_new_string(nodeReplacementIter->newNodeIdentifier.c_str());
-		json_object_object_add(mapObj, "to", newNodeIdentifier);
-		json_object *ports = json_object_new_array();
-		for (map<string, string>::const_iterator portMapIter = nodeReplacementIter->oldAndNewPortIdentifiers.begin(); portMapIter != nodeReplacementIter->oldAndNewPortIdentifiers.end(); ++portMapIter)
-		{
-			json_object *portObj = json_object_new_object();
-			json_object *oldPortIdentifier = json_object_new_string(portMapIter->first.c_str());
-			json_object_object_add(portObj, "map", oldPortIdentifier);
-			json_object *newPortIdentifier = json_object_new_string(portMapIter->second.c_str());
-			json_object_object_add(portObj, "to", newPortIdentifier);
-			json_object_array_add(ports, portObj);
-		}
-		json_object_object_add(mapObj, "ports", ports);
-		json_object_array_add(diff, mapObj);
-	}
-
-	// Diff published ports.
-
-	bool publishedPortsChanged[2] = { false, false };
-	vector<VuoPublishedPort *> oldPublishedPorts[2];
-	vector<VuoPublishedPort *> newPublishedPorts[2];
-	string nodeIdentifier[2];
-	map<string, string> oldAndNewPublishedPortNames[2];
-
-	for (int i = 0; i < 2; ++i)
-	{
-		if (i == 0)
-		{
-			oldPublishedPorts[i] = oldComposition->getBase()->getPublishedInputPorts();
-			newPublishedPorts[i] = getBase()->getPublishedInputPorts();
-			nodeIdentifier[i] = "PublishedInputs";
-		}
-		else
-		{
-			oldPublishedPorts[i] = oldComposition->getBase()->getPublishedOutputPorts();
-			newPublishedPorts[i] = getBase()->getPublishedOutputPorts();
-			nodeIdentifier[i] = "PublishedOutputs";
-		}
-
-		for (vector<VuoPublishedPort *>::iterator j = oldPublishedPorts[i].begin(); j != oldPublishedPorts[i].end(); ++j)
-		{
-			VuoPublishedPort *oldPort = *j;
-			string oldPortName = oldPort->getClass()->getName();
-			VuoPublishedPort *newPort = (i == 0 ?
-											 getBase()->getPublishedInputPortWithName(oldPortName) :
-											 getBase()->getPublishedOutputPortWithName(oldPortName));
-
-			bool foundMatchByName = false;
-			if (newPort)
-			{
-				VuoType *oldType = static_cast<VuoCompilerPort *>( oldPort->getCompiler() )->getDataVuoType();
-				VuoType *newType = static_cast<VuoCompilerPort *>( newPort->getCompiler() )->getDataVuoType();
-				if (oldType == newType)
-				{
-					foundMatchByName = true;
-					oldAndNewPublishedPortNames[i][oldPortName] = oldPortName;
-				}
-			}
-
-			if (! foundMatchByName)
-				publishedPortsChanged[i] = true;
-		}
-
-		if (newPublishedPorts[i].size() > oldPublishedPorts[i].size())
-			publishedPortsChanged[i] = true;
-	}
-
-	if (publishedPortsChanged[0] || publishedPortsChanged[1])
-	{
-		bool addBoth = oldPublishedPorts[0].empty() && oldPublishedPorts[1].empty();
-		bool removeBoth = newPublishedPorts[0].empty() && newPublishedPorts[1].empty();
-
-		for (int i = 0; i < 2; ++i)
-		{
-			if (removeBoth || (! addBoth && publishedPortsChanged[i]))
-			{
-				// { "remove" : "PublishedInputs" }
-				json_object *remove = json_object_new_object();
-				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
-				json_object_object_add(remove, "remove", nodeIdentifierObj);
-				json_object_array_add(diff, remove);
-			}
-			if (addBoth || (! removeBoth && publishedPortsChanged[i]))
-			{
-				// { "add" : "PublishedInputs" }
-				json_object *add = json_object_new_object();
-				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
-				json_object_object_add(add, "add", nodeIdentifierObj);
-				json_object_array_add(diff, add);
-			}
-			if (! (addBoth || removeBoth) && publishedPortsChanged[i])
-			{
-				// {   "map" : "PublishedInputs",
-				//      "to" : "PublishedInputs",
-				//   "ports" : [
-				//			{ "map" : "<published port name>", "to" : "<published port name>" },
-				//			{ "map" : "<published port name>", "to" : "<published port name>" },
-				//			... ] }
-				json_object *mapObj = json_object_new_object();
-				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
-				json_object_object_add(mapObj, "map", nodeIdentifierObj);
-				json_object_object_add(mapObj, "to", nodeIdentifierObj);
-				json_object *ports = json_object_new_array();
-				for (map<string, string>::iterator j = oldAndNewPublishedPortNames[i].begin(); j != oldAndNewPublishedPortNames[i].end(); ++j)
-				{
-					json_object *portObj = json_object_new_object();
-					json_object *oldPublishedPortName = json_object_new_string(j->first.c_str());
-					json_object_object_add(portObj, "map", oldPublishedPortName);
-					json_object *newPublishedPortName = json_object_new_string(j->second.c_str());
-					json_object_object_add(portObj, "to", newPublishedPortName);
-					json_object_array_add(ports, portObj);
-				}
-				json_object_object_add(mapObj, "ports", ports);
-				json_object_array_add(diff, mapObj);
-			}
-		}
-	}
-
-	delete oldComposition;
-
-	string diffString = json_object_to_json_string_ext(diff, JSON_C_TO_STRING_PLAIN);
-	json_object_put(diff);
-	return diffString;
+	VuoCompilerTargetSet compositeTarget;
+	for (auto node : getBase()->getNodes())
+		compositeTarget.restrictToBeCompatibleWithAllOf(node->getNodeClass()->getCompiler()->getCompatibleTargets());
+	return compositeTarget;
 }
 
 /**
@@ -876,11 +1004,65 @@ bool VuoCompilerComposition::compareGraphvizIdentifiersOfCables(VuoCable *lhs, V
 }
 
 /**
- * Needed so this type can be used in STL containers.
+ * Returns true if @c lhs precedes @c rhs in lexicographic order of their identifiers in a .vuo file.
  */
-bool operator<(const VuoCompilerComposition::NodeReplacement &lhs, const VuoCompilerComposition::NodeReplacement &rhs)
+bool VuoCompilerComposition::compareGraphvizIdentifiersOfComments(VuoComment *lhs, VuoComment *rhs)
 {
-	return (lhs.oldNodeIdentifier != rhs.oldNodeIdentifier ?
-										 lhs.oldNodeIdentifier < rhs.oldNodeIdentifier :
-										 lhs.newNodeIdentifier < rhs.newNodeIdentifier);
+	string lhsIdentifier = (lhs->hasCompiler() ? lhs->getCompiler()->getGraphvizIdentifier() : "");
+	string rhsIdentifier = (rhs->hasCompiler() ? rhs->getCompiler()->getGraphvizIdentifier() : "");
+	return lhsIdentifier.compare(rhsIdentifier) < 0;
+}
+
+/**
+ * Returns true if a port on an old node corresponds to a port on a new node replacing the old one
+ * (same name, same data type).
+ */
+bool VuoCompilerComposition::portsMatch(VuoPort *oldPort, VuoPort *newPort)
+{
+	if (! oldPort || ! newPort)
+		return false;
+
+	string oldPortName = oldPort->getClass()->getName();
+	string newPortName = newPort->getClass()->getName();
+	if (oldPortName == newPortName)
+	{
+		if (oldPort->hasCompiler() && newPort->hasCompiler())
+		{
+			VuoType *oldType = static_cast<VuoCompilerPort *>( oldPort->getCompiler() )->getDataVuoType();
+			VuoType *newType = static_cast<VuoCompilerPort *>( newPort->getCompiler() )->getDataVuoType();
+			if (oldType == newType)
+				return true;
+		}
+		else
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if a port on an old node class corresponds to a port on a new node class replacing the old one
+ * (same name, same data type).
+ */
+bool VuoCompilerComposition::portClassesMatch(VuoPortClass *oldPortClass, VuoPortClass *newPortClass)
+{
+	if (! oldPortClass || ! newPortClass)
+		return false;
+
+	string oldPortName = oldPortClass->getName();
+	string newPortName = newPortClass->getName();
+	if (oldPortName == newPortName)
+	{
+		if (oldPortClass->hasCompiler() && newPortClass->hasCompiler())
+		{
+			VuoType *oldType = static_cast<VuoCompilerPortClass *>( oldPortClass->getCompiler() )->getDataVuoType();
+			VuoType *newType = static_cast<VuoCompilerPortClass *>( newPortClass->getCompiler() )->getDataVuoType();
+			if (oldType == newType)
+				return true;
+		}
+		else
+			return true;
+	}
+
+	return false;
 }

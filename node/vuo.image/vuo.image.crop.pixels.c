@@ -2,9 +2,9 @@
  * @file
  * vuo.image.crop.pixels node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Crop Image Pixels",
-					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
+					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim", "cut", ],
 					  "version" : "1.1.2",
 					  "node" : {
 						  "exampleCompositions" : [ ]
@@ -20,9 +20,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float x;
 	uniform float y;
@@ -31,7 +31,7 @@ static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy * vec2(width, height) + vec2(x,y));
+		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate * vec2(width, height) + vec2(x,y));
 	}
 );
 

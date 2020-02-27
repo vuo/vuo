@@ -2,13 +2,11 @@
  * @file
  * VuoScreen implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "type.h"
 #include "VuoScreen.h"
@@ -90,7 +88,7 @@ json_object * VuoScreen_getJson(const VuoScreen value)
 char * VuoScreen_getSummary(const VuoScreen value)
 {
 	if (value.isRealized)
-		return VuoText_format("Screen \"%s\"<br>%lld x %lld points<br>%lld x %lld DPI", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
+		return VuoText_format("<div>Screen \"%s\"</div><div>%lld x %lld points</div><div>%lld x %lld DPI</div>", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
 
 	if (value.type == VuoScreenType_Active)
 		return strdup("The screen with the active window.");
@@ -103,7 +101,7 @@ char * VuoScreen_getSummary(const VuoScreen value)
 	else if (value.type == VuoScreenType_MatchId)
 		return VuoText_format("Screen #%lld", value.id);
 	else
-		return strdup("(unknown)");
+		return strdup("Unknown");
 }
 
 /**
@@ -119,6 +117,16 @@ bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2)
 		&& value1.height == value2.height
 		&& value1.dpiHorizontal == value2.dpiVertical
 		&& value1.dpiVertical == value2.dpiVertical;
+}
+
+/**
+ * Returns true if the id of `a` is less than the id of `b`.
+ *
+ * @version200New
+ */
+bool VuoScreen_isLessThan(const VuoScreen a, const VuoScreen b)
+{
+	return a.id < b.id;
 }
 
 /**

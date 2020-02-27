@@ -2,16 +2,20 @@
  * @file
  * Implementations of functions available to modules (nodes, types, libraries).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <dlfcn.h>
 #include <limits.h>
+#include <mach-o/dyld.h>
+
 #include "VuoCompositionState.h"
 
 #include "module.h"
+
+const int VuoGraphicsWindowDefaultWidth = 1024;
 
 /**
  * Wrapper for @ref vuoCopyCompositionStateFromThreadLocalStorage().
@@ -62,6 +66,57 @@ const char *VuoGetWorkingDirectory(void)
 		}
 	});
 	return workingDirectoryResult;
+}
+
+/**
+ * Returns the path of the folder containing `Vuo.framework`.
+ *
+ * See also @ref VuoFileUtilities::getVuoFrameworkPath.
+ */
+const char *VuoGetFrameworkPath(void)
+{
+	static char frameworkPath[PATH_MAX+1] = "";
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		uint32_t imageCount = _dyld_image_count();
+		for (uint32_t i = 0; i < imageCount; ++i)
+		{
+			const char *dylibPath = _dyld_get_image_name(i);
+			char *pos;
+			if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
+			{
+				strncpy(frameworkPath, dylibPath, pos-dylibPath);
+				break;
+			}
+		}
+	});
+	return frameworkPath;
+}
+
+/**
+ * Returns the path of the folder containing `VuoRunner.framework`.
+ *
+ * See also @ref VuoFileUtilities::getVuoRunnerFrameworkPath.
+ * @version200New
+ */
+const char *VuoGetRunnerFrameworkPath(void)
+{
+	static char frameworkPath[PATH_MAX+1] = "";
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		uint32_t imageCount = _dyld_image_count();
+		for (uint32_t i = 0; i < imageCount; ++i)
+		{
+			const char *dylibPath = _dyld_get_image_name(i);
+			char *pos;
+			if ( (pos = strstr(dylibPath, "/VuoRunner.framework/")) )
+			{
+				strncpy(frameworkPath, dylibPath, pos-dylibPath);
+				break;
+			}
+		}
+	});
+	return frameworkPath;
 }
 
 pid_t VuoGetRunnerPid(void)
@@ -138,44 +193,27 @@ void VuoEnableTermination(void)
 	free(compositionState);
 }
 
-bool VuoIsTrial(void)
+bool VuoShouldShowSplashWindow(void)
 {
-	static bool trialRestrictionsEnabledResult = true;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		bool **trialRestrictionsEnabled = (bool **) dlsym(RTLD_SELF, "VuoTrialRestrictionsEnabled");
-		if (!trialRestrictionsEnabled)
-			trialRestrictionsEnabled = (bool **) dlsym(RTLD_DEFAULT, "VuoTrialRestrictionsEnabled");
-		if (!trialRestrictionsEnabled)
-		{
-//			VLog("Warning: Couldn't find symbol VuoTrialRestrictionsEnabled.");
-			return;
-		}
-		if (!*trialRestrictionsEnabled)
-		{
-//			VLog("Warning: VuoTrialRestrictionsEnabled isn't allocated.");
-			return;
-		}
-//		VLog("trialRestrictionsEnabled = %d",**trialRestrictionsEnabled);
-		trialRestrictionsEnabledResult = **trialRestrictionsEnabled;
-	});
-	return trialRestrictionsEnabledResult;
+	typedef bool (*vuoShouldShowSplashWindowType)(void);
+	vuoShouldShowSplashWindowType vuoShouldShowSplashWindow = (vuoShouldShowSplashWindowType) dlsym(RTLD_DEFAULT, "vuoShouldShowSplashWindow");
+	if (!vuoShouldShowSplashWindow)
+	{
+//		VLog("Warning: Couldn't find symbol VuoShouldShowSplashWindow.");
+		return false;
+	}
+//	VLog("shouldShowSplashWindow = %d",vuoShouldShowSplashWindow());
+	return vuoShouldShowSplashWindow();
 }
 
-bool VuoIsPro(void)
+/**
+ * Returns true if the current (runtime) processor supports Intel AVX2.
+ */
+bool VuoProcessorSupportsAVX2(void)
 {
-	static bool proEnabledResult = false;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		bool *proEnabled = (bool *) dlsym(RTLD_SELF, "VuoProEnabled");
-		if (!proEnabled)
-			proEnabled = (bool *) dlsym(RTLD_DEFAULT, "VuoProEnabled");
-		if (!proEnabled)
-		{
-//			VLog("Warning: Couldn't find symbol VuoProEnabled.");
-			return;
-		}
-		proEnabledResult = *proEnabled;
-	});
-	return proEnabledResult;
+	// Based on https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
+	uint32_t eax = 7, ebx, ecx = 0, edx;
+	__asm__ ( "cpuid" : "+b" (ebx), "+a" (eax), "+c" (ecx), "=d" (edx) );
+	uint32_t avx2_mask = 1 << 5;
+	return (ebx & avx2_mask) == avx2_mask;
 }

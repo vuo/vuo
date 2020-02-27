@@ -2,14 +2,13 @@
  * @file
  * Expected outputs for the vuo.image.resize.larger node. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-{"portConfiguration": [
-	/* Semitransparent orange. */
-	{
+{"portConfiguration": {
+	"semitransparent orange": {
 		"firingPort": "image",
 		"inputPortValues": {
 			"image": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":3,"pixelsHigh":3},
@@ -21,4 +20,30 @@
 			"resizedImage": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":2,"pixelsHigh":2}
 		}
 	},
-]}
+
+	"proportional wide": {
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":10,"pixelsHigh":5},
+			"sizingMode": "proportional",
+			"width": 2,
+			"height": 2,
+		},
+		"outputPortValues": {
+			"resizedImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":2,"pixelsHigh":1}
+		}
+	},
+
+	"proportional tall": {
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":5,"pixelsHigh":10},
+			"sizingMode": "proportional",
+			"width": 2,
+			"height": 2,
+		},
+		"outputPortValues": {
+			"resizedImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":2}
+		}
+	},
+}}

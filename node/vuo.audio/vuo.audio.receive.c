@@ -2,9 +2,9 @@
  * @file
  * vuo.audio.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -20,7 +20,6 @@ VuoModuleMetadata({
 					  ],
 					  "node": {
 						  "exampleCompositions" : [ "ShowLiveAudioWaveform.vuo", "VisualizeLoudness.vuo" ],
-						  "isInterface" : true
 					  }
 				 });
 
@@ -29,6 +28,7 @@ struct nodeInstanceData
 {
 	VuoAudioInputDevice device;
 	VuoAudioIn audioManager;
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoAudioInputDevice newDevice)
@@ -60,6 +60,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoAudioIn_addTrigger((*context)->audioManager, receivedChannels);
 }
 
@@ -85,6 +86,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"})
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (! VuoAudioInputDevice_areEqual(device, (*context)->device))
 	{
 		VuoAudioIn_removeTrigger((*context)->audioManager, receivedChannels);
@@ -100,6 +104,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoAudioIn_removeTrigger((*context)->audioManager, receivedChannels);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

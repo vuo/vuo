@@ -2,9 +2,9 @@
  * @file
  * vuo.math.add.list.2 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -37,7 +37,7 @@ void nodeEvent
 	unsigned long maxCount = MAX(list1Count, list2Count);
 	for (unsigned long i = 1; i <= maxCount; ++i)
 	{
-		VuoGenericType1 sum;
+		VuoGenericType1 sum = VuoGenericType1_makeFromJson(NULL);
 		if (i <= list1Count && i <= list2Count)
 			sum = VuoGenericType1_add(
 						VuoListGetValue_VuoGenericType1(list1, i),

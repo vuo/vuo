@@ -2,25 +2,27 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="515,69"];
-ConvertIntegerToText8 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="564,330"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="473,225" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="36,56" _started_eventThrottling="enqueue"];
-MakeList2 [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="160,116" _1="10" _2="11" _3="5"];
-MakeList4 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="469,80" _1="\"The volume of the box is \"" _3="\" cubic inches\""];
-Multiply [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="206,105"];
+Append [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="510,75"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="480,225" fillcolor="blue" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="60,60" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="192,101" _1="10" _2="11" _3="5"];
+MakeList4 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="469,86" _1="\"The volume of the box is \"" _3="\" cubic inches\""];
+Multiply [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="225,90"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="570,195"];
 
 Append:compositeText -> DisplayConsoleWindow:writeLine;
-ConvertIntegerToText8:text -> MakeList4:2;
-FireOnStart2:started -> Multiply:refresh;
+FireOnStart2:started -> MakeList2:1;
 MakeList2:list -> Multiply:values;
 MakeList4:list -> Append:texts;
-Multiply:product -> ConvertIntegerToText8:integer;
+Multiply:product -> SummarizeValue:value;
+SummarizeValue:summary -> MakeList4:2;
 }

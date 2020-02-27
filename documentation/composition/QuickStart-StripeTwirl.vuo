@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-60,135" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeStripeImage [type="vuo.image.make.stripe" version="1.0.0" label="Make Stripe Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<stripeWidth>stripeWidth\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="165,135" _colorA="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":1,\"a\":1\}" _colorB="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _stripeWidth="0.1" _sharpness="1.0" _coverage="0.5" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="510,135" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+TwirlImage [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="360,135" _center="\{\"x\":0,\"y\":0\}" _angle="360" _radius="0.5"];
+
+FireOnDisplayRefresh:requestedFrame -> MakeStripeImage:angle;
+MakeStripeImage:image -> TwirlImage:image;
+TwirlImage:twirledImage -> RenderImageToWindow:image;
+}

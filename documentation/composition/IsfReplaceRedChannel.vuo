@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-510,-60" _url="\"..\\/..\\/node\\/vuo.image\\/examples\\/Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-720,-90" _started_eventThrottling="enqueue"];
+ReplaceRedChannel2 [type="me.isf.replaceRed" version="" label="Replace Red Channel|<refresh>refresh\l|<inputImage>inputImage\l|<red>red\l|<outputImage>outputImage\r" pos="255,-60" _red="0.10000000000000001"];
+
+FetchImage:image -> ReplaceRedChannel2:inputImage;
+FireOnStart:started -> FetchImage:url;
+}

@@ -1,6 +1,6 @@
-Outputs the frequency associated with a MIDI note number. 
+Outputs the frequency associated with a MIDI note number.
 
-This node is useful for playing MIDI notes aloud in Vuo. You can connect this node to a `Make Audio Wave` node, then connect that to a `Send Live Audio` node. 
+This node is useful for playing MIDI notes aloud in Vuo. You can connect this node to a [Make Audio Wave](vuo-node://vuo.audio.wave2) node, then connect that to a [Send Live Audio](vuo-node://vuo.audio.send2) node.
 
    - `Note Number` — Ranges from 0 to 127. 
    - `Pitch Bend` — Ranges from 0 to 16383, where 8192 is the default.  A value of 8192 means no change to the frequency.  A value of 0 decreases the frequency by `Pitch Bend Range` semitones; a value of 16383 increases the frequency by `Pitch Bend Range` semitones.

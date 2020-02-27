@@ -2,35 +2,51 @@
  * @file
  * Vuo Image Generator driver.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="316,187" _height="1.000000"];
-ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="66,413" _width="1024" _height="768"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-35,296" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetWindowDimensions [type="vuo.window.get.dimensions" version="1.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r" pos="76,-107"];
-HoldValue2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="345,-93" fillcolor="cyan" _initialValue="800"];
-HoldValue3 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="345,30" fillcolor="cyan" _initialValue="600"];
-MakeList3 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-38,157" fillcolor="magenta"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="8,131" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowChanges [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="495,-165" fillcolor="cyan"];
+AllowChanges3 [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="495,-15" fillcolor="cyan"];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-330,-90" _width="1024" _height="768" _unit="\"points\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="105,-345" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnLiveEditingReload [type="vuo.event.fireOnReload" version="1.0.0" label="Fire on Live-Editing Reload|<refresh>refresh\l|<reloaded>reloaded\r" pos="75,-285" fillcolor="lime" _reloaded_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-510,-120" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetWindowDimensions [type="vuo.window.get.dimensions2" version="2.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r|<isFullscreen>isFullscreen\r" pos="75,-105"];
+HoldValue [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-90" fillcolor="cyan"];
+HoldValue2 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-165" fillcolor="cyan"];
+HoldValue4 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,60" fillcolor="cyan"];
+HoldValue5 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-15" fillcolor="cyan"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="-135,-105" fillcolor="magenta" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="675,-15" fillcolor="cyan"];
+SelectLatest2 [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="675,-165" fillcolor="cyan"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<width>width\l|<height>height\l|<time>time\l" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal"];
 
-ChangeWindowSize:property -> MakeList3:1;
+AllowChanges3:changedValue -> SelectLatest:option1;
+AllowChanges:changedValue -> SelectLatest2:option1;
+ChangeWindowSize:changedWindowDescription -> RenderImageToWindow:setWindowDescription;
+FireOnDisplayRefresh:requestedFrame -> HoldValue2:update;
+FireOnDisplayRefresh:requestedFrame -> HoldValue5:update;
+FireOnDisplayRefresh:requestedFrame -> PublishedOutputs:time;
+FireOnLiveEditingReload:reloaded -> HoldValue4:update;
+FireOnLiveEditingReload:reloaded -> HoldValue:update;
 FireOnStart:started -> ChangeWindowSize:refresh;
-GetWindowDimensions:aspectRatio -> ChangeWindowAspectRatio:width;
-GetWindowDimensions:pixelsHigh -> HoldValue3:newValue;
-GetWindowDimensions:pixelsWide -> HoldValue2:newValue;
-MakeList3:list -> RenderImageToWindow:setWindowProperties;
-RenderImageToWindow:requestedFrame -> HoldValue2:refresh;
-RenderImageToWindow:requestedFrame -> HoldValue3:refresh;
-RenderImageToWindow:showedWindow -> GetWindowDimensions:window;
+GetWindowDimensions:pixelsHigh -> HoldValue4:value;
+GetWindowDimensions:pixelsHigh -> HoldValue5:value;
+GetWindowDimensions:pixelsWide -> HoldValue2:value;
+GetWindowDimensions:pixelsWide -> HoldValue:value;
+HoldValue2:heldValue -> AllowChanges:value;
+HoldValue4:heldValue -> SelectLatest:option2;
+HoldValue5:heldValue -> AllowChanges3:value;
+HoldValue:heldValue -> SelectLatest2:option2;
 PublishedInputs:outputImage -> RenderImageToWindow:image;
-HoldValue2:heldValue -> PublishedOutputs:width;
-HoldValue3:heldValue -> PublishedOutputs:height;
-RenderImageToWindow:requestedFrame -> PublishedOutputs:time;
+RenderImageToWindow:updatedWindow -> GetWindowDimensions:window;
+SelectLatest2:latest -> PublishedOutputs:width;
+SelectLatest:latest -> PublishedOutputs:height;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.supershape node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -22,6 +22,7 @@ VuoModuleMetadata({
 		"morph", "animate",
 		"circle", "circular", "oval", "polar",
 		"sphere", "spherical",
+		"blob",
 		"aquatic", "starfish",
 		"starfruit", "carambola",
 		"flower", "floral", "cactus",
@@ -115,8 +116,9 @@ void nodeInstanceEvent
 	 && rowsClamped == (*context)->rows
 	 && columnsClamped == (*context)->columns)
 	{
-		object->transform = transform;
-		object->shader = VuoShader_make_VuoGenericType1(material);
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, transform);
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
 		return;
 	}
 
@@ -148,9 +150,9 @@ void nodeInstanceEvent
 		-90, 90,
 		&constants);
 
-	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
+	*object = VuoSceneObject_makeMesh(mesh, VuoShader_make_VuoGenericType1(material), transform);
 	VuoDictionary_VuoText_VuoReal_release(constants);
-	object->name = VuoText_make("Supershape");
+	VuoSceneObject_setName(*object, VuoText_make("Supershape"));
 
 	(*context)->m = m;
 	(*context)->n1 = n1Clamped;

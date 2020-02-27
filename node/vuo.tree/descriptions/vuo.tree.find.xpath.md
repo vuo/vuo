@@ -1,4 +1,4 @@
-Finds all items in a tree that match an [XPath expression](http://www.w3schools.com/xml/xml_xpath.asp).
+Finds all items in a tree that match an [XPath expression](https://www.w3schools.com/xml/xml_xpath.asp).
 
 For example, if the tree was created from the following XML…
 

@@ -2,9 +2,9 @@
  * @file
  * VuoCglPixelFormat implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCglPixelFormat.h"
@@ -185,18 +185,20 @@ char *VuoCglRenderer_getText(int rendererID)
 	else if (rendererID == kCGLRendererATIRadeonX1000ID        ) return strdup("ATI Radeon X1xxx");
 	else if (rendererID == kCGLRendererATIRadeonX2000ID        ) return strdup("ATI Radeon HD 2xxx/4xxx");
 	else if (rendererID == kCGLRendererATIRadeonX3000ID        ) return strdup("ATI Radeon HD 5xxx/6xxx");
-	else if (rendererID == /*kCGLRendererATIRadeonX4000ID*/ 0x00021C00) return strdup("ATI Radeon HD 7xxx");
+	else if (rendererID == kCGLRendererATIRadeonX4000ID        ) return strdup("ATI Radeon HD 7xxx");
+	else if (rendererID == 0x21d00                             ) return strdup("AMD Radeon X5000"); // unconfirmed
+	else if (rendererID == 0x21e00                             ) return strdup("AMD Radeon X6000");
 	else if (rendererID == kCGLRendererGeForce2MXID            ) return strdup("NVIDIA GeForce 2MX/4MX");
 	else if (rendererID == kCGLRendererGeForce3ID              ) return strdup("NVIDIA GeForce 3/4Ti");
 	else if (rendererID == kCGLRendererGeForceFXID             ) return strdup("NVIDIA GeForce 5xxx/6xxx/7xxx or Quadro FX 4500");
 	else if (rendererID == kCGLRendererGeForce8xxxID           ) return strdup("NVIDIA GeForce 8xxx/9xxx/1xx/2xx/3xx or Quadro 4800");
-	else if (rendererID == /*kCGLRendererGeForceID*/ 0x00022700) return strdup("NVIDIA GeForce 6xx or Quadro 4000/K5000");
+	else if (rendererID == kCGLRendererGeForceID               ) return strdup("NVIDIA GeForce 6xx or Quadro 4000/K5000");
 	else if (rendererID == kCGLRendererVTBladeXP2ID            ) return strdup("VTBladeXP2");
 	else if (rendererID == kCGLRendererIntel900ID              ) return strdup("Intel GMA 950");
 	else if (rendererID == kCGLRendererIntelX3100ID            ) return strdup("Intel X3100");
 	else if (rendererID == kCGLRendererIntelHDID               ) return strdup("Intel HD 3000");
 	else if (rendererID == kCGLRendererIntelHD4000ID           ) return strdup("Intel HD 4000");
-	else if (rendererID == /*kCGLRendererIntelHD5000ID*/ 0x00024500) return strdup("Intel HD 5000 (Iris)");
+	else if (rendererID == kCGLRendererIntelHD5000ID           ) return strdup("Intel HD 5000 (Iris)");
 	else if (rendererID == kCGLRendererMesa3DFXID              ) return strdup("Mesa 3DFX");
 #pragma clang diagnostic pop
 

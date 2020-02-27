@@ -2,16 +2,16 @@
  * @file
  * <Graph description>
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="AppendTexts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="764,303"];
+AppendTexts [type="vuo.text.append" version="1.0.0" label="AppendTexts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="764,303"];
 CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="CountCharacters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="750,96"];
-Cut [type="vuo.text.cut" version="2.0.0" label="CutText|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="1155,305" _characterCount="10"];
+CutText [type="vuo.text.cut" version="2.0.0" label="CutText|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="1155,305" _characterCount="10"];
 DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="1192,504" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="74,53" _seconds="1" _fired_eventThrottling="enqueue"];
 Hold2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="132,210" _initialValue="\"recent\""];
@@ -19,15 +19,15 @@ Hold3 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold3|<refresh>refres
 MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="MakeList|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="718,314"];
 Subtract [type="vuo.math.subtract.VuoInteger" version="1.1.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1001,214" _b="9"];
 
-Append:compositeText -> CountCharacters:text;
-Append:compositeText -> Cut:text;
+AppendTexts:compositeText -> CountCharacters:text;
+AppendTexts:compositeText -> CutText:text;
 CountCharacters:characterCount -> Subtract:a;
-Cut:partialText -> DisplayConsoleWindow:writeLine;
-Cut:partialText -> Hold3:newValue;
+CutText:partialText -> DisplayConsoleWindow:writeLine;
+CutText:partialText -> Hold3:newValue;
 FirePeriodically:fired -> Hold2:refresh;
 Hold2:heldValue -> Hold3:refresh;
 Hold2:heldValue -> MakeList:2;
 Hold3:heldValue -> MakeList:1;
-MakeList:list -> Append:texts;
-Subtract:difference -> Cut:startPosition;
+MakeList:list -> AppendTexts:texts;
+Subtract:difference -> CutText:startPosition;
 }

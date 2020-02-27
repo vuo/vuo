@@ -2,9 +2,9 @@
  * @file
  * vuo.mouse.button node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.3",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true,
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "ShowMouseClicks.vuo" ]
 					  }
 				  });
@@ -51,7 +51,7 @@ void nodeInstanceTriggerStart
 )
 {
 	(*context)->isTriggerStopped = false;
-	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 
@@ -69,7 +69,7 @@ void nodeInstanceTriggerUpdate
 		return;
 	VuoMouse_stopListening((*context)->pressedListener);
 	VuoMouse_stopListening((*context)->releasedListener);
-	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 
@@ -87,7 +87,7 @@ void nodeInstanceEvent
 		return;
 	VuoMouse_stopListening((*context)->pressedListener);
 	VuoMouse_stopListening((*context)->releasedListener);
-	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 

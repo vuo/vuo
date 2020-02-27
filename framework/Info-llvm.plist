@@ -7,9 +7,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.llvm.framework</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.2</string>
+	<string>3.3</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright (c) 2007-2012 University of Illinois at Urbana-Champaign</string>
+	<string>Copyright (c) 2007-2013 University of Illinois at Urbana-Champaign</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>

@@ -2,17 +2,12 @@
  * @file
  * VuoReal implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoInteger.h"
-#include "VuoReal.h"
-#include "VuoText.h"
-#include "VuoList_VuoReal.h"
-#include <float.h>
 #include <limits.h>
 
 /// @{
@@ -32,7 +27,7 @@ VuoModuleMetadata({
 /// @}
 
 /**
- * @ingroup VuoSceneObject
+ * @ingroup VuoReal
  * Decodes the JSON object `js` to create a new value.
  */
 VuoReal VuoReal_makeFromJson(json_object * js)
@@ -85,7 +80,8 @@ json_object * VuoReal_getJson(const VuoReal value)
  */
 char * VuoReal_getSummary(const VuoReal value)
 {
-	return VuoText_format("%g", value);
+	// See VuoDoubleSpinBox::textFromValue.
+	return VuoText_format("%.11g", value);
 }
 
 /**
@@ -149,17 +145,24 @@ VuoReal VuoReal_average(VuoList_VuoReal values)
 }
 
 /**
- * Returns @a value if it is within the range of @a minimum to @a maximum (exclusive),
+ * Returns @a value if it is within the range of @a minimum (inclusive) to @a maximum (exclusive),
  * otherwise a value wrapped with modular arithmetic to be within the range.
+ *
+ * @version200Changed{Made `minimum` inclusive and `maximum` exclusive.}
  */
 VuoReal VuoReal_wrap(VuoReal value, VuoReal minimum, VuoReal maximum)
 {
-	if (value > maximum)
-		return minimum + fmod(value-maximum, maximum-minimum);
-	else if (value < minimum)
-		return maximum - fmod(minimum-value, maximum-minimum);
-	else
-		return value;
+	value -= minimum;
+	value = fmod(value, maximum - minimum);
+	if (value < 0)
+		value += maximum - minimum;
+	value += minimum;
+
+	// Pretend IEEE 754 "signed zero" doesn't exist since it's unnecessarily confusing.
+	if (value == -0)
+		value = 0;
+
+	return value;
 }
 
 /**
@@ -180,4 +183,27 @@ VuoReal VuoReal_random(const VuoReal minimum, const VuoReal maximum)
 VuoReal VuoReal_randomWithState(unsigned short state[3], const VuoReal minimum, const VuoReal maximum)
 {
 	return ((VuoReal)VuoInteger_randomWithState(state, 0, INT_MAX) / (VuoReal)(INT_MAX)) * (maximum - minimum) + minimum;
+}
+
+/**
+ * Returns true if the two values are equal (within a small tolerance).
+ */
+bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
+{
+	// https://stackoverflow.com/questions/1565164/what-is-the-rationale-for-all-comparisons-returning-false-for-ieee754-nan-values
+	if( isnan(value1) || isnan(value2) )
+		return false;
+	// when comparing inf or -inf don't use fuzzy values
+	else if( !isfinite(value1) || !isfinite(value2) )
+		return value1 == value2;
+	else
+		return fabs(value1 - value2) <= 0.00001;
+}
+
+/**
+ * Returns true if a < b.
+ */
+bool VuoReal_isLessThan(const VuoReal a, const VuoReal b)
+{
+	return a < b;
 }

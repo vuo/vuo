@@ -10,6 +10,7 @@ Stretches an image by specifying the positions of its four corners.  Useful for 
    - "Crop" is the proportion of the image that should be cropped out. When cropped, the image is stretched so that it still reaches the corner points.
    - "Cutoff" is the proportion of the image that should be blended from transparent to the image's full opacity.
    - "Gamma" controls the gradient of the blending. As gamma increases, the change from transparent to full opacity becomes more gradual.
+- `Opacity` — The image's opacity, from 0 (fully transparent) to 1 (fully opaque).
 
 **Perspective**
 

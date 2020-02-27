@@ -2,21 +2,22 @@
  * @file
  * Displays a sliding checkerboard. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="279,202"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="180,47" _upperLeftColor="{\"r\":0.749996,\"g\":0.749996,\"b\":0.749996,\"a\":1.000000}" _upperRightColor="{\"r\":0.500008,\"g\":0.500008,\"b\":0.500008,\"a\":1.000000}" _squareSize="0.750000"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="285,195"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="300,-90" _upperLeftColor="\{\"r\":0.80000001192092896,\"g\":0.80000001192092896,\"b\":0.80000001192092896,\"a\":1\}" _upperRightColor="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":0.40000000596046448,\"a\":1\}" _squareSize="0.750000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedStep="32" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedStep="32" _time_type="VuoReal"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
 ConvertRealTo2DPoint:point2d -> MakeCheckerboardImage:center;
-PublishedInputs:width -> MakeCheckerboardImage:width;
+MakeCheckerboardImage:image -> PublishedOutputs:outputImage;
 PublishedInputs:height -> MakeCheckerboardImage:height;
 PublishedInputs:time -> ConvertRealTo2DPoint:x;
-MakeCheckerboardImage:image -> PublishedOutputs:outputImage;
+PublishedInputs:width -> MakeCheckerboardImage:width;
 }

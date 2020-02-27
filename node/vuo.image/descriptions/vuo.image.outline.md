@@ -1,7 +1,7 @@
 Shows only an image's edges.
 
    - `Channels` — Which combination of image channels to find the edges of.
-   - `Radius` — The distance, in pixels, to blur the image before finding its edges.  Larger values are helpful for reducing noise.
+   - `Radius` — The distance, in points, to blur the image before finding its edges.  Larger values are helpful for reducing noise.
    - `Intensity` — How bright (or dark) the edges are.
    - `Range` — How to convert the edges into a visible image.  The edge colors depend on whether an object is lighter or darker than its background:
       - `Unipolar` — Against a darker background, interior edges are dark, exterior edges are bright, and non-edges are grey, producing a nimbus effect.  Negating `Intensity` reverses the edges, and produces an effect like embossing or relief printing.

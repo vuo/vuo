@@ -2,9 +2,9 @@
  * @file
  * vuo.serial.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,7 +21,6 @@ VuoModuleMetadata({
 						 "VuoSerialIO"
 					 ],
 					 "node": {
-						 "isInterface" : true,
 						 "exampleCompositions" : [ "LogTextFromSerialDevice.vuo" ],
 					 }
 				 });
@@ -30,6 +29,7 @@ struct nodeInstanceData
 {
 	VuoSerialDevice device;
 	VuoSerial s;
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoSerialDevice newDevice)
@@ -73,6 +73,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedData, VuoData)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoSerial_addReceiveTrigger((*context)->s, receivedData);
 }
 
@@ -98,6 +99,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedData, VuoData)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (!(*context)->s || !VuoSerialDevice_areEqual(device, (*context)->device))
 	{
 		VuoSerial_removeReceiveTrigger((*context)->s, receivedData);
@@ -113,6 +117,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoSerial_removeReceiveTrigger((*context)->s, receivedData);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

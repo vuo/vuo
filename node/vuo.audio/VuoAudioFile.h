@@ -2,9 +2,9 @@
  * @file
  * VuoAudioFile interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #ifdef __cplusplus
@@ -12,6 +12,7 @@ extern "C"
 {
 #endif
 
+#include "VuoHeap.h"
 #include "VuoInteger.h"
 #include "VuoLoopType.h"
 #include "VuoReal.h"
@@ -19,7 +20,7 @@ extern "C"
 #include "VuoAudioSamples.h"
 #include "VuoList_VuoAudioSamples.h"
 
-bool VuoAudioFile_getInfo(VuoText url, VuoReal *duration, VuoInteger *channelCount, VuoReal *sampleRate);
+bool VuoAudioFile_getInfo(VuoText url, VuoReal *duration, VuoInteger *channelCount, VuoReal *sampleRate) VuoWarnUnusedResult;
 
 /**
  * A state object for firing display refresh events.

@@ -1,4 +1,4 @@
-# http://editorconfig.org
+# https://editorconfig.org
 
 root = true
 
@@ -16,6 +16,10 @@ spaces_around_operators = true
 spaces_around_brackets = outside
 indent_brace_style = Allman
 
-[*.md]
+[*.{md,feature}]
 indent_style = space
 indent_size = 3
+
+[*.php]
+indent_style = space
+indent_size = 2

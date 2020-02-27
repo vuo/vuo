@@ -2,19 +2,20 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <libgen.h>
 #include <dirent.h>
-#include <fcntl.h>
+#include <spawn.h>
 #include <sys/stat.h>
+#include <copyfile.h>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
 #include <mach-o/dyld.h>
+#include <sys/time.h>
+#include "VuoException.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoFileUtilitiesCocoa.hh"
 #include "VuoStringUtilities.hh"
@@ -80,14 +81,50 @@ void VuoFileUtilities::canonicalizePath(string &path)
 }
 
 /**
- * Creates a new temporary file, avoiding any name conflicts with existing files.
- * Creates the file in the specified @c directory if one is provided, or in "/tmp" otherwise.
+ * Returns true if the paths refer to the same location.
+ *
+ * This handles different formats for the same path (by comparing the canonicalized paths).
+ * It does not follow symlinks.
+ */
+bool VuoFileUtilities::arePathsEqual(string path1, string path2)
+{
+	canonicalizePath(path1);
+	canonicalizePath(path2);
+	return path1 == path2;
+}
+
+/**
+ * Returns the absolute path of @a path (which may be relative or absolute).
+ */
+string VuoFileUtilities::getAbsolutePath(const string &path)
+{
+	if (VuoStringUtilities::beginsWith(path, "/"))
+		return path;
+
+	char *cwd = getcwd(NULL, 0);
+	if (! cwd)
+	{
+		VUserLog("Couldn't get current working directory: %s", strerror(errno));
+		return path;
+	}
+
+	string absolutePath = string(cwd) + "/" + path;
+	free(cwd);
+	return absolutePath;
+}
+
+/**
+ * Creates a new temporary file with mode 0600,
+ * avoiding any name conflicts with existing files.
+ * Creates the file in the specified @c directory if one is provided, or in the user's temporary directory otherwise.
  *
  * Returns the path of the file.
  */
 string VuoFileUtilities::makeTmpFile(string file, string extension, string directory)
 {
-	if ((directory.length() > 0) && (directory.at(directory.length()-1) != '/'))
+	if (directory.empty())
+		directory = getTmpDir();
+	if (directory.at(directory.length()-1) != '/')
 		directory += "/";
 	string suffix = (extension.empty() ? "" : ("." + extension));
 	string pathTemplate = directory + file + "-XXXXXX" + suffix;
@@ -101,13 +138,17 @@ string VuoFileUtilities::makeTmpFile(string file, string extension, string direc
 }
 
 /**
- * Creates a new temporary directory, avoiding any name conflicts with existing files.
+ * Creates a new temporary directory with mode 0700,
+ * whose final path element begins with `prefix`
+ * and has a unique extension (avoiding name conflicts with existing files).
+ *
+ * `prefix` shouldn't contain any slashes.
  *
  * Returns the path of the directory (without a trailing slash).
  */
-string VuoFileUtilities::makeTmpDir(string dir)
+string VuoFileUtilities::makeTmpDir(string prefix)
 {
-	string pathTemplate = "/tmp/" + dir + ".XXXXXX";
+	string pathTemplate = getTmpDir() + "/" + prefix + ".XXXXXX";
 	char *path = (char *)calloc(pathTemplate.length() + 1, sizeof(char));
 	strncpy(path, pathTemplate.c_str(), pathTemplate.length());
 	mkdtemp(path);
@@ -130,20 +171,53 @@ string VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(string path)
 }
 
 /**
- * Returns the path of the default temporary directory.
+ * For non-sandboxed processes,
+ * returns the user's private temporary directory if avaialble
+ * (e.g., `/var/folders/f3/v1j4zqhs5jz5757t0rmh7jj80000gn/T`),
+ * otherwise returns the system temporary directory (`/tmp`).
+ *
+ * For sandboxed processes, returns the sandbox container directory
+ * (e.g., `/Users/me/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data`).
+ *
+ * The returned path does not include a trailing slash.
  */
 string VuoFileUtilities::getTmpDir(void)
 {
+	char *cwd = getcwd(NULL, 0);
+	if (strstr(cwd, "/Library/Containers/"))  // We're in a sandbox.
+	{
+		// https://b33p.net/kosada/node/16374
+		// In the macOS 10.15 screen saver sandbox, at least,
+		// we're not allowed to use the system or user temporary directories for socket-files,
+		// but we are allowed to use the sandbox container directory.
+		string cwdS(cwd);
+		free(cwd);
+		return VuoStringUtilities::endsWith(cwdS, "/") ? VuoStringUtilities::substrBefore(cwdS, "/") : cwdS;
+	}
+	free(cwd);
+
+	char userTempDir[PATH_MAX];
+	if (confstr(_CS_DARWIN_USER_TEMP_DIR, userTempDir, PATH_MAX) > 0)
+	{
+		string userTempDirS(userTempDir);
+		return VuoStringUtilities::endsWith(userTempDirS, "/") ? VuoStringUtilities::substrBefore(userTempDirS, "/") : userTempDirS;
+	}
+
 	return "/tmp";
 }
 
 /**
  * Creates a new directory (and parent directories if needed), if it doesn't already exist.
  *
- * @throw std::runtime_error The directory couldn't be created.
+ * @throw VuoException The directory couldn't be created.
+ *
+ * @version200Changed{The new directory now respects the process's umask.}
  */
 void VuoFileUtilities::makeDir(string path)
 {
+	if (path.empty())
+		throw VuoException("Couldn't create directory with empty path");
+
 	if (dirExists(path))
 		return;
 
@@ -156,32 +230,42 @@ void VuoFileUtilities::makeDir(string path)
 	splitPath(path, parentDir, file, ext);
 	makeDir(parentDir);
 
-	int ret = mkdir(path.c_str(), 0700);
+	// `mkdir` ANDs the mode with the process's umask,
+	// so by default the created directory's mode will end up being 0755.
+	int ret = mkdir(path.c_str(), 0777);
 	if (ret != 0 && ! dirExists(path))
-		throw std::runtime_error((string("Couldn't create directory \"" + path + "\": ") + strerror(errno)).c_str());
+		throw VuoException((string("Couldn't create directory \"" + path + "\": ") + strerror(errno)).c_str());
 }
 
 /**
  * Returns the absolute path of Vuo.framework (without a trailing slash),
  * or an empty string if Vuo.framework cannot be located.
  *
- * For a C version accessible from nodes and libraries, see @ref VuoApp_getVuoFrameworkPath.
+ * For a C version accessible from nodes and libraries, see @ref VuoGetFrameworkPath.
  */
 string VuoFileUtilities::getVuoFrameworkPath(void)
 {
+	static string frameworkPath;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+
 	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
 	const char *frameworkPathFragment = "/Vuo.framework/Versions/";
-	for(unsigned int i=0; i<_dyld_image_count(); ++i)
+	uint32_t imageCount = _dyld_image_count();
+	for (uint32_t i = 0; i < imageCount; ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
-		char *found = strstr(dylibPath, frameworkPathFragment);
+		const char *found     = strstr(dylibPath, frameworkPathFragment);
 		if (found)
 		{
 			char *pathC = strndup(dylibPath, found - dylibPath);
 			string path = string(pathC) + "/Vuo.framework";
 			free(pathC);
 			if (fileExists(path))
-				return path;
+			{
+				frameworkPath = path;
+				return;
+			}
 		}
 	}
 
@@ -203,21 +287,108 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 		path += "/Frameworks/Vuo.framework";
 
 		if (fileExists(path))
-			return path;
+		{
+			frameworkPath = path;
+			return;
+		}
 	}
 
-	// Failing that, check for ~/Library/Frameworks/Vuo.framework.
-	string userFrameworkPath = string(getenv("HOME")) + "/Library/Frameworks/Vuo.framework";
-	if (fileExists(userFrameworkPath))
-		return userFrameworkPath;
-
-	// Failing that, check for /Library/Frameworks/Vuo.framework.
-	string systemFrameworkPath = "/Library/Frameworks/Vuo.framework";
-	if (fileExists(systemFrameworkPath))
-		return systemFrameworkPath;
-
 	// Give up.
-	return "";
+	});
+
+	return frameworkPath;
+}
+
+/**
+ * Returns the absolute path of VuoRunner.framework (without a trailing slash),
+ * or an empty string if VuoRunner.framework cannot be located.
+ */
+string VuoFileUtilities::getVuoRunnerFrameworkPath(void)
+{
+	static string runnerFrameworkPath;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		// Check for VuoRunner.framework alongside Vuo.framework.
+		string possibleFrameworkPath = getVuoFrameworkPath() + "/../VuoRunner.framework";
+		if (dirExists(possibleFrameworkPath))
+		{
+			runnerFrameworkPath = possibleFrameworkPath;
+			return;
+		}
+
+		// Failing that, check whether VuoRunner.framework is in the list of loaded dynamic libraries.
+		const char *frameworkPathFragment = "/VuoRunner.framework/Versions/";
+		uint32_t imageCount = _dyld_image_count();
+		for (uint32_t i = 0; i < imageCount; ++i)
+		{
+			const char *dylibPath = _dyld_get_image_name(i);
+			const char *found     = strstr(dylibPath, frameworkPathFragment);
+			if (found)
+			{
+				char *pathC = strndup(dylibPath, found - dylibPath);
+				string path = string(pathC) + "/VuoRunner.framework";
+				free(pathC);
+				if (fileExists(path))
+				{
+					runnerFrameworkPath = path;
+					return;
+				}
+			}
+		}
+
+		// Failing that, check for a VuoRunner.framework bundled with the executable app.
+		char executablePath[PATH_MAX + 1];
+		uint32_t size = sizeof(executablePath);
+
+		if (! _NSGetExecutablePath(executablePath, &size))
+		{
+			char cleanedExecutablePath[PATH_MAX + 1];
+
+			realpath(executablePath, cleanedExecutablePath);  // remove extra references (e.g., "/./")
+			string path = cleanedExecutablePath;
+			string dir, file, ext;
+			splitPath(path, dir, file, ext);        // remove executable name
+			path = dir.substr(0, dir.length() - 1); // remove "/"
+			splitPath(path, dir, file, ext);        // remove "MacOS"
+			path = dir.substr(0, dir.length() - 1); // remove "/"
+			path += "/Frameworks/VuoRunner.framework";
+
+			if (fileExists(path))
+			{
+				runnerFrameworkPath = path;
+				return;
+			}
+		}
+
+		// Give up.
+	});
+	return runnerFrameworkPath;
+}
+
+/**
+ * Returns the path of the composition-local Modules folder for a composition located at
+ * @a compositionPath. (The composition file need not actually exist.)
+ *
+ * If the composition is installed as a subcomposition (it's located in a folder called Modules),
+ * returns that folder. Otherwise, returns a Modules folder located in the same folder as
+ * the composition.
+ */
+string VuoFileUtilities::getCompositionLocalModulesPath(const string &compositionPath)
+{
+	string compositionDir, compositionFile, ext;
+	splitPath(getAbsolutePath(compositionPath), compositionDir, compositionFile, ext);
+	canonicalizePath(compositionDir);
+
+	string parentDir, compositionDirName;
+	splitPath(compositionDir, parentDir, compositionDirName, ext);
+	canonicalizePath(compositionDirName);
+
+	string compositionBaseDir = (compositionDirName == "Modules" ? parentDir : compositionDir);
+
+	string compositionModulesDir = compositionBaseDir + "/Modules";
+	canonicalizePath(compositionModulesDir);
+
+	return compositionModulesDir;
 }
 
 /**
@@ -245,6 +416,22 @@ string VuoFileUtilities::getCachePath(void)
 }
 
 /**
+ * Returns true if @a path (a source file or compiled module) is located in a Modules folder.
+ */
+bool VuoFileUtilities::isInstalledAsModule(const string &path)
+{
+	if (path.empty())
+		return false;
+
+	string compositionLocalModulesPath = getCompositionLocalModulesPath(path);
+
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(path, dir, file, ext);
+
+	return VuoFileUtilities::arePathsEqual(compositionLocalModulesPath, dir);
+}
+
+/**
  * Saves @a originalFileName into @a fileContents so that, when @a fileContents is written to some other
  * file path, @a originalFileName will still be the name that shows up in compile errors/warnings and
  * in the @c __FILE__ macro.
@@ -263,9 +450,9 @@ void VuoFileUtilities::preserveOriginalFileName(string &fileContents, string ori
  */
 size_t VuoFileUtilities::getFirstInsertionIndex(string s)
 {
-	char bomUtf8[] = { 0xEF, 0xBB, 0xBF };
-	char bomUtf16Be[] = { 0xFE, 0xFF };
-	char bomUtf16Le[] = { 0xFF, 0xFE };
+	string bomUtf8 = "\xEF\xBB\xBF";
+	string bomUtf16Be = "\xFE\xFF";
+	string bomUtf16Le = "\xFF\xFE";
 	string boms[] = { bomUtf8, bomUtf16Be, bomUtf16Le };
 	for (int i = 0; i < 3; ++i)
 	{
@@ -285,7 +472,7 @@ size_t VuoFileUtilities::getFirstInsertionIndex(string s)
  */
 string VuoFileUtilities::readStdinToString(void)
 {
-	// http://stackoverflow.com/questions/201992/how-to-read-until-eof-from-cin-in-c
+	// https://stackoverflow.com/questions/201992/how-to-read-until-eof-from-cin-in-c
 
 	string contents;
 	string line;
@@ -298,15 +485,15 @@ string VuoFileUtilities::readStdinToString(void)
 /**
  * Reads the whole contents of the file into a string.
  *
- * @throw std::runtime_error The file couldn't be read.
+ * @throw VuoException The file couldn't be read.
  */
 string VuoFileUtilities::readFileToString(string path)
 {
-	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+	// https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
 
 	ifstream in(path.c_str(), ios::in | ios::binary);
 	if (! in)
-		throw std::runtime_error(string("Couldn't read file: ") + strerror(errno) + " — " + path);
+		throw VuoException(string("Couldn't read file: ") + strerror(errno) + " — " + path);
 
 	string contents;
 	in.seekg(0, ios::end);
@@ -322,19 +509,19 @@ string VuoFileUtilities::readFileToString(string path)
  *
  * If the file already exists, it gets overwritten.
  *
- * @throw std::runtime_error The file couldn't be written.
+ * @throw VuoException The file couldn't be written.
  */
 void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, string file)
 {
 	FILE *f = fopen(file.c_str(), "wb");
 	if (! f)
-		throw std::runtime_error(string("Couldn't open file for writing: ") + strerror(errno) + " — " + file);
+		throw VuoException(string("Couldn't open file for writing: ") + strerror(errno) + " — " + file);
 
 	size_t numBytesWritten = fwrite(data, sizeof(char), numBytes, f);
 	if (numBytesWritten != numBytes)
 	{
 		fclose(f);
-		throw std::runtime_error(string("Couldn't write all data: ") + strerror(errno) + " — " + file);
+		throw VuoException(string("Couldn't write all data: ") + strerror(errno) + " — " + file);
 	}
 
 	fclose(f);
@@ -345,7 +532,7 @@ void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, str
  *
  * If the file already exists, it gets overwritten.
  *
- * @throw std::runtime_error The file couldn't be written.
+ * @throw VuoException The file couldn't be written.
  */
 void VuoFileUtilities::writeStringToFile(string s, string file)
 {
@@ -353,44 +540,107 @@ void VuoFileUtilities::writeStringToFile(string s, string file)
 }
 
 /**
+ * Saves to file using the standard Unix procedure (write to temporary file, then rename).
+ * This prevents the destination file from becoming corrupted if the write fails.
+ *
+ * If the file already exists, it gets overwritten.
+ *
+ * @throw VuoException The file couldn't be written.
+ */
+void VuoFileUtilities::writeStringToFileSafely(string s, string path)
+{
+	string dir, file, ext;
+	splitPath(path, dir, file, ext);
+	string tmpPath = makeTmpFile("." + file, ext, dir);
+
+	writeStringToFile(s, tmpPath);
+
+	moveFile(tmpPath, path);
+}
+
+/**
  * Returns true if the file exists.
+ *
+ * If `path` is a symlink or macOS Alias, it is dereferenced.
  */
 bool VuoFileUtilities::fileExists(string path)
 {
+	if (VuoFileUtilitiesCocoa_isMacAlias(path))
+		path = VuoFileUtilitiesCocoa_resolveMacAlias(path);
+
+	// `access()` automatically dereferences symlinks.
 	return access(path.c_str(), 0) == 0;
 }
 
 /**
- * Returns true if the file exists and is a directory.
+ * Returns true if `path` exists and is a directory.
+ *
+ * If `path` is a symlink or macOS Alias, it is dereferenced.
  */
 bool VuoFileUtilities::dirExists(string path)
 {
+	if (VuoFileUtilitiesCocoa_isMacAlias(path))
+		path = VuoFileUtilitiesCocoa_resolveMacAlias(path);
+
+	// `stat()` automatically dereferences symlinks.
 	struct stat st_buf;
-	int status = lstat(path.c_str(), &st_buf);  // Unlike stat, lstat doesn't follow symlinks.
+	int status = stat(path.c_str(), &st_buf);
 	return (! status && S_ISDIR(st_buf.st_mode));
 }
 
 /**
- * Returns true if the file is readable.
+ * Returns true if `path` exists and is a symlink.
+ */
+bool VuoFileUtilities::isSymlink(string path)
+{
+	struct stat st_buf;
+	int status = lstat(path.c_str(), &st_buf);
+	return (! status && S_ISLNK(st_buf.st_mode));
+}
+
+/**
+ * Returns true if the file or directory is readable.
+ *
+ * If `path` is a symlink or macOS Alias, it is dereferenced.
  */
 bool VuoFileUtilities::fileIsReadable(string path)
 {
+	if (VuoFileUtilitiesCocoa_isMacAlias(path))
+		path = VuoFileUtilitiesCocoa_resolveMacAlias(path);
+
+	// `access()` automatically dereferences symlinks.
 	return access(path.c_str(), R_OK) == 0;
 }
 
 /**
  * Returns true if the file exists, can be opened, and has a size of more than 0 bytes.
+ *
+ * If `path` is a symlink or macOS Alias, it is dereferenced.
  */
 bool VuoFileUtilities::fileContainsReadableData(string path)
 {
+	if (VuoFileUtilitiesCocoa_isMacAlias(path))
+		path = VuoFileUtilitiesCocoa_resolveMacAlias(path);
+
+	// `fopen()` automatically dereferences symlinks.
 	FILE *f = fopen(path.c_str(), "rb");
 	if (!f)
 		return false;
 
 	fseek(f, 0, SEEK_END);
 	long pos = ftell(f);
+	if (pos <= 0)
+	{
+		fclose(f);
+		return false;
+	}
+
+	// `fopen` and `fseek` both succeed on directories, so also attempt to actually read the data.
+	fseek(f, 0, SEEK_SET);
+	char z;
+	size_t ret = fread(&z, 1, 1, f);
 	fclose(f);
-	return pos > 0;
+	return ret > 0;
 }
 
 /**
@@ -403,29 +653,66 @@ void VuoFileUtilities::createFile(string path)
 }
 
 /**
- * Deletes the file if it exists; otherwise, has no effect.
+ * Deletes the file or directory if it exists and, if a directory, is empty; otherwise, has no effect.
  */
 void VuoFileUtilities::deleteFile(string path)
 {
-	remove(path.c_str());
+	int ret = remove(path.c_str());
+	if (ret != 0 && fileExists(path))
+		VUserLog("Couldn't delete file: %s — %s", strerror(errno), path.c_str());
+}
+
+/**
+ * Deletes the directory and its contents if the directory exists; otherwise, has no effect.
+ */
+void VuoFileUtilities::deleteDir(string path)
+{
+	if (! dirExists(path))
+		return;
+
+	DIR *d = opendir(path.c_str());
+	if (! d)
+	{
+		VUserLog("Couldn't read directory: %s — %s", strerror(errno), path.c_str());
+		return;
+	}
+
+	struct dirent *de;
+	while( (de=readdir(d)) )
+	{
+		string fileName = de->d_name;
+		string filePath = path + "/" + fileName;
+
+		if (fileName == "." || fileName == "..")
+			continue;
+
+		if (dirExists(filePath))
+			deleteDir(filePath);
+		else
+			deleteFile(filePath);
+	}
+
+	closedir(d);
+
+	deleteFile(path);
 }
 
 /**
  * Moves the file from @a fromPath to @a toPath.
  *
- * @throw std::runtime_error The file couldn't be moved.
+ * @throw VuoException The file couldn't be moved.
  */
 void VuoFileUtilities::moveFile(string fromPath, string toPath)
 {
 	int ret = rename(fromPath.c_str(), toPath.c_str());
 	if (ret != 0)
-		throw std::runtime_error(string("Couldn't move file: ") + strerror(errno) + " — " + toPath);
+		throw VuoException(string("Couldn't move file: ") + strerror(errno) + " — " + toPath);
 }
 
 /**
  * Moves the specified file to the user's trash folder.
  *
- * @throw std::runtime_error The file couldn't be moved.
+ * @throw VuoException The file couldn't be moved.
  */
 void VuoFileUtilities::moveFileToTrash(string filePath)
 {
@@ -433,14 +720,75 @@ void VuoFileUtilities::moveFileToTrash(string filePath)
 }
 
 /**
- * Copies the file from @a fromPath to @a toPath.
+ * Copies the file from @a fromPath to @a toPath,
+ * preserving the file's mode.
  *
- * @throw std::runtime_error The file couldn't be copied.
+ * If @a preserveMetadata is true and @a toPath already exists, the file's inode and stat info is preserved,
+ * thus so are any locks on the file.
+ *
+ * @throw VuoException The file couldn't be copied.
+ *
+ * @version200Changed{The copied file now preserves the original file's mode.}
  */
-void VuoFileUtilities::copyFile(string fromPath, string toPath)
+void VuoFileUtilities::copyFile(string fromPath, string toPath, bool preserveMetadata)
 {
-	string contents = readFileToString(fromPath);
-	writeStringToFile(contents, toPath);
+	int i = open(fromPath.c_str(), O_RDONLY);
+	if (i == -1)
+		throw VuoException(string("Couldn't open copy source: ") + strerror(errno) + " — " + fromPath);
+
+	struct stat s;
+	fstat(i, &s);
+	int o = open(toPath.c_str(), O_WRONLY | O_CREAT, s.st_mode & 0777);
+	if (o == -1)
+	{
+		close(i);
+		throw VuoException(string("Couldn't open copy destination: ") + strerror(errno) + " — " + toPath);
+	}
+
+	int ret = fcopyfile(i, o, NULL, COPYFILE_DATA | (preserveMetadata ? COPYFILE_STAT : 0));
+	char *e = strerror(errno);
+	close(o);
+	close(i);
+
+	if (ret)
+		throw VuoException(string("Couldn't copy ") + fromPath + " to " + toPath + ": " + e);
+}
+
+/**
+ * Recursively copies the provided file or directory from `fromPath` to `toPath`.
+ *
+ * Preserves symlinks (rather than copying their target files).
+ *
+ * @throw VuoException The file couldn't be copied.
+ *
+ * @version200Changed{Each copied file now preserves the original file's mode.}
+ */
+void VuoFileUtilities::copyDirectory(string fromPath, string toPath)
+{
+	if (isSymlink(fromPath))
+	{
+		// Preserve the relative symlinks found in framework bundles, instead of flattening them.
+		char linkDestination[PATH_MAX + 1];
+		ssize_t len = readlink(fromPath.c_str(), linkDestination, PATH_MAX);
+		linkDestination[len] = 0;  // "readlink does not append a NUL character to buf."
+		if (symlink(linkDestination, toPath.c_str()) == -1)
+			throw VuoException(string("Couldn't copy symlink \"") + fromPath + "\" to \"" + toPath + "\": " + strerror(errno));
+	}
+
+	else if (!dirExists(fromPath))
+		copyFile(fromPath, toPath);
+
+	else
+	{
+		auto files = findAllFilesInDirectory(fromPath);
+		makeDir(toPath);
+		for (auto file : files)
+		{
+			string sourceFile = fromPath + "/" + file->getRelativePath();
+			string targetFile = toPath + "/" + file->getRelativePath();
+			copyDirectory(sourceFile, targetFile);
+		}
+	}
 }
 
 /**
@@ -455,7 +803,23 @@ unsigned long VuoFileUtilities::getFileLastModifiedInSeconds(string path)
 }
 
 /**
+ * Returns the time since the file was last accessed, in seconds.
+ */
+unsigned long VuoFileUtilities::getSecondsSinceFileLastAccessed(string path)
+{
+	struct stat s;
+	lstat(path.c_str(), &s);
+
+	struct timeval t;
+	gettimeofday(&t, NULL);
+
+	return t.tv_sec - s.st_atimespec.tv_sec;
+}
+
+/**
  * Searches a directory for files.
+ *
+ * If `dirPath` is a symlink or macOS Alias, it is dereferenced.
  *
  * @param dirPath The directory to search in. Only the top level is searched.
  * @param archiveExtensions The file extensions for archives to search in. Any archive with one of these extensions
@@ -463,18 +827,22 @@ unsigned long VuoFileUtilities::getFileLastModifiedInSeconds(string path)
  * @param shouldSearchRecursively If true, the directory will be searched searched recursively.
  * @return All files found.
  *
- * @throw std::runtime_error The directory couldn't be read.
+ * @throw VuoException The directory couldn't be read.
  */
 set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string dirPath, set<string> archiveExtensions,
 																		bool shouldSearchRecursively)
 {
 	set<File *> files;
 
+	if (VuoFileUtilitiesCocoa_isMacAlias(dirPath))
+		dirPath = VuoFileUtilitiesCocoa_resolveMacAlias(dirPath);
+
+	// `opendir()` automatically dereferences symlinks.
 	DIR *d = opendir(dirPath.c_str());
 	if (! d)
 	{
 		if (access(dirPath.c_str(), F_OK) != -1)
-			throw std::runtime_error(string("Couldn't read directory: ") + strerror(errno) + " — " + dirPath);
+			throw VuoException(string("Couldn't read directory: ") + strerror(errno) + " — " + dirPath);
 		return files;
 	}
 
@@ -503,7 +871,9 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 
 		if (! isArchive)
 		{
-			bool shouldSearchDir = shouldSearchRecursively && dirExists(relativeFilePath);
+			bool shouldSearchDir = shouldSearchRecursively
+								&& dirExists(relativeFilePath)
+								&& !isSymlink(relativeFilePath);
 			if (shouldSearchDir)
 			{
 				set<File *> filesInDir = findAllFilesInDirectory(relativeFilePath, archiveExtensions, true);
@@ -549,7 +919,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findFilesInDirectory(string dirP
 			if (VuoStringUtilities::endsWith((*i)->getRelativePath(), "." + *extension))
 				endsWithExtension = true;
 
-		if (endsWithExtension)
+		if (endsWithExtension && ((*i)->isInArchive() || !VuoFileUtilities::dirExists((*i)->path())))
 			matchingFiles.insert(*i);
 		else
 			delete *i;
@@ -661,7 +1031,7 @@ string VuoFileUtilities::getArchiveFileContentsAsString(string archivePath, stri
  *
  * `path` should be an absolute POSIX path.  Its last few path components needn't exist.
  *
- * @throw std::runtime_error
+ * @throw VuoException
  */
 size_t VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(string path)
 {
@@ -695,7 +1065,19 @@ VuoFileUtilities::Archive::Archive(string path) :
 VuoFileUtilities::Archive::~Archive(void)
 {
 	if (zipArchive)
+	{
 		mz_zip_reader_end(zipArchive);
+		free(zipArchive);
+	}
+}
+
+/**
+ * Creates an unset file reference.
+ *
+ * (This is needed in order to use VuoFileUtilities::File in Q_DECLARE_METATYPE.)
+ */
+VuoFileUtilities::File::File()
+{
 }
 
 /**
@@ -721,6 +1103,20 @@ VuoFileUtilities::File::File(Archive *archive, string filePath) :
 	this->fileDescriptor = -1;
 	this->archive = archive;
 	++archive->referenceCount;
+}
+
+/**
+ * Creates a reference to a file in the same directory/archive as the current file,
+ * but with a different extension.
+ */
+VuoFileUtilities::File VuoFileUtilities::File::fileWithDifferentExtension(string extension)
+{
+	string newFilePath = basename() + "." + extension;
+
+	if (archive)
+		return File(archive, newFilePath);
+	else
+		return File(dirPath, newFilePath);
 }
 
 /**
@@ -760,12 +1156,65 @@ string VuoFileUtilities::File::getRelativePath(void)
 }
 
 /**
+ * Returns the absolute path to the file, including the filename.
+ *
+ * @throw VuoException The file is in an archive.
+ */
+string VuoFileUtilities::File::path()
+{
+	if (archive)
+		throw VuoException("Can't return a simple absolute path for a file in an archive.");
+
+	return dirPath + "/" + filePath;
+}
+
+/**
+ * Returns the absolute path to the folder containing the file file.
+ *
+ * @throw VuoException The file is in an archive.
+ */
+string VuoFileUtilities::File::dir()
+{
+	if (archive)
+		throw VuoException("Can't return a simple absolute path for a file in an archive.");
+
+	return dirPath;
+}
+
+/**
+ * Returns the part of the filename before the extension.
+ */
+string VuoFileUtilities::File::basename()
+{
+	return filePath.substr(0, filePath.find_last_of('.'));
+}
+
+/**
+ * Returns the extension part of the filename.
+ */
+string VuoFileUtilities::File::extension()
+{
+	return filePath.substr(filePath.find_last_of('.') + 1);
+}
+
+/**
+ * Returns true if the file exists.
+ */
+bool VuoFileUtilities::File::exists()
+{
+	if (archive)
+		return mz_zip_reader_locate_file(archive->zipArchive, filePath.c_str(), nullptr, MZ_ZIP_FLAG_CASE_SENSITIVE) != -1;
+	else
+		return VuoFileUtilities::fileExists((dirPath.empty() ? "" : (dirPath + "/")) + filePath);
+}
+
+/**
  * Returns the contents of the file as an array of bytes.
  *
  * @param[out] numBytes The size of the returned array.
  * @return The array of bytes. The caller is responsible for freeing it.
  *
- * @throw std::runtime_error The file couldn't be read.
+ * @throw VuoException The file couldn't be read.
  */
 char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 {
@@ -780,7 +1229,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 
 		FILE *pFile = fopen ( fullPath.c_str() , "rb" );
 		if (pFile==NULL)
-			throw std::runtime_error(string("Couldn't open file: ") + strerror(errno) + " — " + fullPath);
+			throw VuoException(string("Couldn't open file: ") + strerror(errno) + " — " + fullPath);
 
 		// obtain file size:
 		fseek (pFile , 0 , SEEK_END);
@@ -796,7 +1245,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 		if (numBytes != lSize)
 		{
 			free(buffer);
-			throw std::runtime_error(string("Couldn't read file: ") + strerror(errno) + " — " + fullPath);
+			throw VuoException(string("Couldn't read file: ") + strerror(errno) + " — " + fullPath);
 		}
 	}
 	else
@@ -810,7 +1259,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 /**
  * Returns the contents of the file as a string.
  *
- * @throw std::runtime_error The file couldn't be read.
+ * @throw VuoException The file couldn't be read.
  */
 string VuoFileUtilities::File::getContentsAsString(void)
 {
@@ -874,4 +1323,120 @@ void VuoFileUtilities::File::unlock(void)
 void VuoFileUtilities::focusProcess(pid_t pid, bool force)
 {
 	VuoFileUtilitiesCocoa_focusProcess(pid, force);
+}
+
+/**
+ * Runs a binary.
+ * If the exit status is nonzero, throws an exception containing stdout and stderr.
+ *
+ * @throw VuoException
+ */
+void VuoFileUtilities::executeProcess(vector<string> processAndArgs)
+{
+	string binaryDir, binaryFile, binaryExt;
+	splitPath(processAndArgs[0], binaryDir, binaryFile, binaryExt);
+
+	string errorPrefix = "Couldn't execute " + binaryFile + ": ";
+
+	// Capture stdout and stderr.
+	int outputPipe[2];
+	int ret = pipe(outputPipe);
+	if (ret)
+		throw VuoException(errorPrefix + "couldn't open pipe: " + strerror(ret));
+	int pipeRead  = outputPipe[0];
+	int pipeWrite = outputPipe[1];
+	VuoDefer(^{ close(pipeRead); });
+	posix_spawn_file_actions_t fileActions;
+	posix_spawn_file_actions_init(&fileActions);
+	posix_spawn_file_actions_adddup2(&fileActions, pipeWrite, STDOUT_FILENO);
+	posix_spawn_file_actions_adddup2(&fileActions, pipeWrite, STDERR_FILENO);
+	posix_spawn_file_actions_addclose(&fileActions, pipeRead);
+
+	// Convert args.
+	// posix_spawn requires a null-terminated array, which `&processAndArgs[0]` doesn't guarantee.
+	char **processAndArgsZ = (char **)malloc(sizeof(char *) * (processAndArgs.size() + 1));
+	int argCount = 0;
+	for (auto arg : processAndArgs)
+		if (argCount == 0)
+			processAndArgsZ[argCount++] = strdup(binaryFile.c_str());
+		else
+			processAndArgsZ[argCount++] = strdup(arg.c_str());
+	processAndArgsZ[argCount] = nullptr;
+
+	// Execute.
+	pid_t pid;
+	ret = posix_spawn(&pid, processAndArgs[0].c_str(), &fileActions, NULL, (char * const *)processAndArgsZ, NULL);
+	close(pipeWrite);
+	posix_spawn_file_actions_destroy(&fileActions);
+	for (int i = 0; i < argCount; ++i)
+		free(processAndArgsZ[i]);
+
+	if (ret)
+		throw VuoException(errorPrefix + strerror(ret));
+	else
+	{
+		int status;
+		if (waitpid(pid, &status, 0) == -1)
+			throw VuoException(errorPrefix + "waitpid failed: " + strerror(errno));
+		else if (status != 0)
+		{
+			string output;
+			char buf[256];
+			bzero(buf, 256);
+			while (read(pipeRead, &buf, 255) > 0)
+			{
+				output += buf;
+				bzero(buf, 256);
+			}
+
+			throw VuoException(binaryFile + " failed: " + output);
+		}
+	}
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is a Vuo composition file.
+ */
+bool VuoFileUtilities::isCompositionExtension(string extension)
+{
+	return extension == "vuo";
+}
+
+/**
+ * Returns C/C++/Objective-C/Objective-C++ source file extensions (without a leading dot).
+ */
+set<string> VuoFileUtilities::getCSourceExtensions()
+{
+	set<string> e;
+	e.insert("c");
+	e.insert("cc");
+	e.insert("C");
+	e.insert("cpp");
+	e.insert("cxx");
+	e.insert("c++");
+	e.insert("m");
+	e.insert("mm");
+	return e;
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is a C/C++/Objective-C/Objective-C++ source file.
+ */
+bool VuoFileUtilities::isCSourceExtension(string extension)
+{
+	auto extensions = getCSourceExtensions();
+	return extensions.find(extension) != extensions.end();
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is an ISF source file.
+ */
+bool VuoFileUtilities::isIsfSourceExtension(string extension)
+{
+	set<string> e;
+	e.insert("fs");
+	e.insert("vs");
+	e.insert("vuoshader");
+	e.insert("vuoobjectfilter");
+	return e.find(extension) != e.end();
 }

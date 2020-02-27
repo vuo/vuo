@@ -1,24 +1,49 @@
 /**
  * @file
- * Sends MIDI notes, with pitches randomly generated from simplex noise, to a MIDI device. Requires a MIDI device to play sound. 
+ * @brief Send MIDI Notes
+ * Sends random MIDI notes to a MIDI device.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * This composition by itself doesn't play sound. To play sound, you can use MIDI hardware or follow the instructions in the [vuo.midi documentation](vuo-nodeset://vuo.midi) to use another Vuo composition such as [Receive MIDI Notes](vuo-example://vuo.midi/ReceiveMidiNotes.vuo).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="405,120" _increment="0.050000" _decrement="1" _setCount="0.000000"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="210,90" fillcolor="yellow" _seconds="0.100000" _fired_eventThrottling="enqueue"];
-MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal.VuoReal" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="570,120" _gradientNoise="\"simplex\"" _scaledStart="36" _scaledEnd="84"];
-MakeMIDINote [type="vuo.midi.make.note" version="1.0.0" label="Make Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<note>note\r" pos="690,270" fillcolor="violet" _channel="1" _isNoteOn="\"true\"" _velocity="127"];
-Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="510,225"];
-SendMIDIEvent [type="vuo.midi.send" version="2.1.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<sendPitchBend>sendPitchBend\l" pos="855,255" fillcolor="violet"];
+Count2 [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="1155,255" _increment="0.050000" _decrement="1" _setCount="0.000000"];
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="1365,30" _startPosition="63" _endPosition="127" _duration="3" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+Enqueue [type="vuo.list.enqueue.VuoMidiNote" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="1200,450" _maxItemCount="2"];
+FirePeriodically2 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="915,30" fillcolor="yellow" _seconds="0.100000" _fired_eventThrottling="enqueue"];
+GetFirstItemInList [type="vuo.list.get.first.VuoMidiNote" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="1545,555"];
+GetNoteValues2 [type="vuo.midi.get.note" version="1.0.0" label="Get Note Values|<refresh>refresh\l|<note>note\l|<channel>channel\r|<isNoteOn>isNoteOn\r|<velocity>velocity\r|<noteNumber>noteNumber\r" pos="1440,450"];
+MakeGradientNoise2 [type="vuo.noise.gradient.VuoReal.VuoReal" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="1320,255" _gradientNoise="\"simplex\"" _scaledStart="36" _scaledEnd="84"];
+MakeNote2 [type="vuo.midi.make.note" version="1.0.0" label="Make Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<note>note\r" pos="1635,210" fillcolor="orange" _channel="1" _isNoteOn="\"true\""];
+MakeNote3 [type="vuo.midi.make.note" version="1.0.0" label="Make Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<note>note\r" pos="1635,450" fillcolor="orange" _isNoteOn="false" _velocity="127"];
+Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="1455,165"];
+Round3 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="1725,345"];
+SendMIDIEvent2 [type="vuo.midi.send" version="2.1.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<sendPitchBend>sendPitchBend\l" pos="1815,195" fillcolor="orange" _device="null"];
+SendMIDIEvent3 [type="vuo.midi.send" version="2.1.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<sendPitchBend>sendPitchBend\l" pos="1815,435" fillcolor="orange" _device="null"];
 
-Count:count -> MakeGradientNoise1D:position;
-FirePeriodically:fired -> Count:increment [event=true];
-MakeGradientNoise1D:value -> Round:real;
-MakeMIDINote:note -> SendMIDIEvent:sendNote;
-Round:rounded -> MakeMIDINote:noteNumber;
+Comment [type="vuo.comment" label="\"Turn the current note on.\"" pos="1605,135" width="360" height="154"];
+Comment2 [type="vuo.comment" label="\"Turn the previous note off.\"" pos="1605,375" width="360" height="154"];
+Comment3 [type="vuo.comment" label="\"Crescendo and decrescendo over time.\"" pos="1230,-45" width="242" height="206"];
+Comment4 [type="vuo.comment" label="\"Generate pitches randomly from simplex noise.\"" pos="1095,180" width="381" height="147"];
+
+Count2:count -> MakeGradientNoise2:position;
+Curve:value -> Round3:real;
+Enqueue:list -> GetFirstItemInList:list;
+FirePeriodically2:fired -> Count2:increment [event=true];
+FirePeriodically2:fired -> Curve:time;
+GetFirstItemInList:firstItem -> GetNoteValues2:note;
+GetNoteValues2:channel -> MakeNote3:channel;
+GetNoteValues2:noteNumber -> MakeNote3:noteNumber;
+MakeGradientNoise2:value -> Round2:real;
+MakeNote2:note -> Enqueue:addItem;
+MakeNote2:note -> SendMIDIEvent2:sendNote;
+MakeNote3:note -> SendMIDIEvent3:sendNote;
+Round2:rounded -> MakeNote2:noteNumber;
+Round3:rounded -> MakeNote2:velocity;
 }

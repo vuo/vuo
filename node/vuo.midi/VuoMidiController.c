@@ -2,19 +2,13 @@
  * @file
  * VuoMidiController implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoMidiController.h"
-#include "VuoBoolean.h"
-#include "VuoInteger.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -46,19 +40,11 @@ VuoModuleMetadata({
  */
 VuoMidiController VuoMidiController_makeFromJson(json_object * js)
 {
-	VuoMidiController mn = {1,1,127};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "channel", &o))
-		mn.channel = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "controllerNumber", &o))
-		mn.controllerNumber = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "value", &o))
-		mn.value = VuoInteger_makeFromJson(o);
-
-	return mn;
+	return (VuoMidiController){
+		VuoJson_getObjectValue(VuoInteger, js, "channel", 1),
+		VuoJson_getObjectValue(VuoInteger, js, "controllerNumber", 1),
+		VuoJson_getObjectValue(VuoInteger, js, "value", 127),
+		""};
 }
 
 /**
@@ -99,4 +85,16 @@ bool VuoMidiController_areEqual(const VuoMidiController value1, const VuoMidiCon
 	return (value1.channel          == value2.channel
 		 && value1.controllerNumber == value2.controllerNumber
 		 && value1.value            == value2.value);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoMidiController_isLessThan(const VuoMidiController a, const VuoMidiController b)
+{
+	VuoType_returnInequality(VuoInteger, a.channel, b.channel);
+	VuoType_returnInequality(VuoInteger, a.controllerNumber, b.controllerNumber);
+	VuoType_returnInequality(VuoInteger, a.value, b.value);
+	return false;
 }

@@ -2,16 +2,20 @@
  * @file
  * Logging functions.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+// Don't use `#pragma once` here, since this header is included both from the source tree and from Vuo.framework.
+#ifndef VUO_LOG
+#define VUO_LOG
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdbool.h>
 
 /**
  * @ingroup DevelopingNodeClasses
@@ -25,12 +29,41 @@ double VuoLogGetTime(void);
 double VuoLogGetElapsedTime(void);
 bool VuoIsDebugEnabled(void);
 char *VuoLog_copyCFDescription(const void *variable);
+
 void VuoLog_backtrace(void);
+#ifdef __cplusplus
+}
+#include <vector>
+std::vector<std::string> VuoLog_getBacktrace(void);
+extern "C" {
+#endif
+
+
+/**
+ * Stores status information so it can be included in crash reports.
+ * Only the most recent status is stored.
+ * Use `NULL` to clear the status.
+ *
+ * Similar to VUserLog()/VDebugLog(),
+ * but useful for highly verbose status messages where only the most recent is relevant.
+ *
+ * @hideinitializer
+ */
+#define VuoLog_status(format, ...) VuoLog_statusF(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
+
+/**
+ * Helper for VuoLog_status.
+ */
+#ifdef DOXYGEN
+void VuoLog_statusF(const char *file, const unsigned int linenumber, const char *function, const char *format, ...);
+#else
+void VuoLog_statusF(const char *file, const unsigned int linenumber, const char *function, const char *format, ...) __attribute__((format(printf, 4, 5)));
+#endif
 
 /**
  * Outputs a message to the system log and to `stderr`.
  *
- * Also stores the most recent 2 messages in the OS X CrashReporter data structure, to be included with crash reports.
+ * Also stores the most recent several messages in the OS X CrashReporter data structure, to be included with crash reports.
  */
 #ifdef DOXYGEN
 void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...);
@@ -60,7 +93,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
  * \eg{
  * void nodeEvent(VuoInputData(VuoInteger, "42") number)
  * {
- *     VLog("%d", number);
+ *     VLog("%lld", number);
  * }
  * }
  *
@@ -103,7 +136,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 
 void VuoLog_recordTime(const char *name, double time);
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 #define VUOLOG_PROFILE_BEGIN(object) double VuoLog_time_ ## object = VuoLogGetTime();
 #define VUOLOG_PROFILE_END(object) VuoLog_recordTime(#object, VuoLogGetTime() - VuoLog_time_ ## object);
 #else
@@ -173,3 +206,4 @@ static inline void VuoDeferCleanup(void (^*b)(void)) { if (*b) (*b)(); }
 }
 #endif
 
+#endif

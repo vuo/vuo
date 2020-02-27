@@ -2,17 +2,14 @@
  * @file
  * VuoPoint2d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "type.h"
-#include "VuoPoint2d.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -30,64 +27,6 @@ VuoModuleMetadata({
 /// @}
 
 /**
- * Returns the intersecting area of @c rectangleA and @c rectangleB.
- *
- * Edges that touch (but don't overlap) are not considered to be overlapping.
- *
- * If the rectangles do not intersect, returns rectangle @c {{0,0},{0,0}}.
- */
-VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectangle rectangleB)
-{
-	float rectangleALeft   = rectangleA.center.x - rectangleA.size.x/2.;
-	float rectangleARight  = rectangleA.center.x + rectangleA.size.x/2.;
-	float rectangleABottom = rectangleA.center.y - rectangleA.size.y/2.;
-	float rectangleATop    = rectangleA.center.y + rectangleA.size.y/2.;
-
-	float rectangleBLeft   = rectangleB.center.x - rectangleB.size.x/2.;
-	float rectangleBRight  = rectangleB.center.x + rectangleB.size.x/2.;
-	float rectangleBBottom = rectangleB.center.y - rectangleB.size.y/2.;
-	float rectangleBTop    = rectangleB.center.y + rectangleB.size.y/2.;
-
-	float tolerance = 0.00001;
-
-	if (       rectangleARight < rectangleBLeft   + tolerance
-			|| rectangleBRight < rectangleALeft   + tolerance
-			|| rectangleATop   < rectangleBBottom + tolerance
-			|| rectangleBTop   < rectangleABottom + tolerance)
-		return VuoRectangle_make(0,0,0,0);
-	else
-	{
-		float intersectionLeft   = MAX(rectangleALeft,   rectangleBLeft);
-		float intersectionRight  = MIN(rectangleARight,  rectangleBRight);
-		float intersectionBottom = MAX(rectangleABottom, rectangleBBottom);
-		float intersectionTop    = MIN(rectangleATop,    rectangleBTop);
-
-		return VuoRectangle_make(
-					(intersectionLeft   + intersectionRight)/2.,
-					(intersectionBottom + intersectionTop)/2.,
-					intersectionRight   - intersectionLeft,
-					intersectionTop     - intersectionBottom);
-	}
-}
-
-/**
- * Returns the union area of @c rectangleA and @c rectangleB.
- */
-VuoRectangle VuoPoint2d_rectangleUnion(VuoRectangle rectangleA, VuoRectangle rectangleB)
-{
-	VuoReal left	= MIN(rectangleA.center.x - rectangleA.size.x/2., rectangleB.center.x - rectangleB.size.x/2.);
-	VuoReal right	= MAX(rectangleA.center.x + rectangleA.size.x/2., rectangleB.center.x + rectangleB.size.x/2.);
-	VuoReal bottom	= MIN(rectangleA.center.y - rectangleA.size.y/2., rectangleB.center.y - rectangleB.size.y/2.);
-	VuoReal top		= MAX(rectangleA.center.y + rectangleA.size.y/2., rectangleB.center.y + rectangleB.size.y/2.);
-
-	return VuoRectangle_make(
-				(left + right)/2.,
-				(bottom + top)/2.,
-				right - left,
-				top - bottom);
-}
-
-/**
  * @ingroup VuoPoint2d
  * Decodes the JSON object @c js to create a new value.
  *
@@ -102,10 +41,21 @@ VuoPoint2d VuoPoint2d_makeFromJson(json_object * js)
 {
 	VuoPoint2d point = {0,0};
 
-	if (json_object_get_type(js) == json_type_string)
+	json_type t = json_object_get_type(js);
+	if (t == json_type_string)
 	{
 		const char *s = json_object_get_string(js);
-		sscanf(s, "%20g, %20g", &point.x, &point.y);
+		float x, y;
+		sscanf(s, "%20g, %20g", &x, &y);
+		return (VuoPoint2d){x, y};
+	}
+	else if (t == json_type_array)
+	{
+		int len = json_object_array_length(js);
+		if (len >= 1)
+			point.x = json_object_get_double(json_object_array_get_idx(js, 0));
+		if (len >= 2)
+			point.y = json_object_get_double(json_object_array_get_idx(js, 1));
 		return point;
 	}
 
@@ -113,8 +63,12 @@ VuoPoint2d VuoPoint2d_makeFromJson(json_object * js)
 
 	if (json_object_object_get_ex(js, "x", &o))
 		point.x = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "X", &o))
+		point.x = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "y", &o))
+		point.y = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "Y", &o))
 		point.y = VuoReal_makeFromJson(o);
 
 	return point;
@@ -153,6 +107,19 @@ bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2)
 {
 	return fabs(value1.x - value2.x) < 0.00001
 		&& fabs(value1.y - value2.y) < 0.00001;
+}
+
+/**
+ * Compares `a` to `b` primarily by `x`-value and secondarily by `y`-value,
+ * returning true if `a` is less than `b`.
+ *
+ * @version200New
+ */
+bool VuoPoint2d_isLessThan(const VuoPoint2d a, const VuoPoint2d b)
+{
+	VuoType_returnInequality(VuoReal, a.x, b.x);
+	VuoType_returnInequality(VuoReal, a.y, b.y);
+	return false;
 }
 
 /**

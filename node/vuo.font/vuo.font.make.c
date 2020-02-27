@@ -2,9 +2,9 @@
  * @file
  * vuo.font.make node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,8 +21,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoText, {"default":"HelveticaNeue-Light"}) fontName,
-		VuoInputData(VuoReal, {"default":28.,"suggestedMin":0.0001,"suggestedMax":512.}) pointSize,
+		VuoInputData(VuoText, {"default":"Avenir-Medium"}) fontName,
+		VuoInputData(VuoReal, {"default":24.,"suggestedMin":0.0001,"suggestedMax":512.}) pointSize,
 		VuoInputData(VuoBoolean, {"default":false}) underlined,
 		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) color,
 		VuoInputData(VuoHorizontalAlignment,{"default":"left"}) horizontalAlignment,

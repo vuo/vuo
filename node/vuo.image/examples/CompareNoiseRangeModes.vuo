@@ -2,33 +2,35 @@
  * @file
  * Shows the different range modes that can be used to generate a noise image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="375,105" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}" _width="2.0" _columns="2" _height="1.5" _rows="2"];
-ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="375,285" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}" _width="2.0" _columns="2" _height="1.5" _rows="2"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="435,105" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2.0" _columns="2" _height="1.5" _rows="2"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="435,285" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2.0" _columns="2" _height="1.5" _rows="2"];
 ConvertImageToLayer2 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="210,60"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-300,-90" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList13 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="604,236" fillcolor="green"];
-MakeList5 [type="vuo.list.make.4.VuoImageWrapMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="-196,-49" _1="\"none\"" _2="\"clamp\"" _3="\"repeat\"" _4="\"mirror\""];
-MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="574,206" fillcolor="green"];
-MakeNoiseImage [type="vuo.image.make.noise" version="1.2.0" label="Make Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<time>time\l|<scale>scale\l|<type>type\l|<grid>grid\l|<tile>tile\l|<range>range\l|<rangeMode>rangeMode\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<height>height\l|<image>image\r" pos="405,-180" fillcolor="violet" _colorA="{\"r\":0.2693827748298645,\"g\":0.35878539085388184,\"b\":0.69629967212677002,\"a\":1}" _colorB="{\"r\":0.42812237143516541,\"g\":0.57869839668273926,\"b\":0.9987335205078125,\"a\":1}" _center="{\"x\":0,\"y\":0}" _time="0" _scale="0.20000000000000001" _type="\"gradient\"" _grid="\"triangular\"" _tile="false" _range="{\"minimum\":0.5,\"maximum\":0.59999999999999998}" _levels="1" _roughness="0.5" _spacing="2.0" _width="512" _height="384"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="135,240" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.40000000596046448,\"y\":-0.25}"];
-ProcessList2 [type="vuo.list.process.VuoImageWrapMode.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="90,-60" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-ProcessList3 [type="vuo.list.process.VuoImageWrapMode.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="90,60" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="645,195" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-390,-60" fillcolor="lime" _started_eventThrottling="enqueue"];
+LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="690,360" _width="4." _height="3."];
+MakeList5 [type="vuo.list.make.4.VuoImageWrapMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="-183,-49" _1="\"none\"" _2="\"clamp\"" _3="\"repeat\"" _4="\"mirror\""];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="653,206" fillcolor="blue"];
+MakeNoiseImage [type="vuo.image.make.noise" version="1.2.0" label="Make Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<time>time\l|<scale>scale\l|<type>type\l|<grid>grid\l|<tile>tile\l|<range>range\l|<rangeMode>rangeMode\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<height>height\l|<image>image\r" pos="165,-15" fillcolor="orange" _colorA="\{\"r\":0,\"g\":0,\"b\":0.50196081399917603,\"a\":1\}" _colorB="\{\"r\":0,\"g\":0.50196081399917603,\"b\":1,\"a\":1\}" _center="\{\"x\":0,\"y\":0\}" _time="0" _scale="0.20000000000000001" _type="\"gradient\"" _grid="\"triangular\"" _tile="false" _range="\{\"minimum\":0.5,\"maximum\":0.59999999999999998\}" _levels="1" _roughness="0.5" _spacing="2.0" _width="512" _height="384"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="180,480" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\"left-center\"" _center="\{\"x\":-0.30000001192092896,\"y\":-0.25\}" _wrapWidth="Infinity" _opacity="1.0"];
+ProcessList2 [type="vuo.list.process.VuoImageWrapMode.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="120,-150" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList3 [type="vuo.list.process.VuoImageWrapMode.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="105,285" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="705,195" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 ShareList2 [type="vuo.data.share.list.VuoImageWrapMode" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-150,-60"];
 SummarizeValue [type="vuo.data.summarize.VuoImageWrapMode" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="300,585"];
 
+ArrangeLayersInGrid2:griddedLayer -> LockWindowAspectRatio:windowDescription [event=true];
 ArrangeLayersInGrid2:griddedLayer -> MakeList6:2;
 ArrangeLayersInGrid:griddedLayer -> MakeList6:1;
 ConvertImageToLayer2:layer -> ProcessList2:processedItem;
-FireOnStart2:started -> ShareList2:refresh;
-MakeList13:list -> RenderLayersToWindow:setWindowProperties;
+FireOnStart2:started -> MakeList5:1;
+LockWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
 MakeList5:list -> ShareList2:value;
 MakeList6:list -> RenderLayersToWindow:layers;
 MakeNoiseImage:image -> ConvertImageToLayer2:image;

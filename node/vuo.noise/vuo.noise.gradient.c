@@ -2,9 +2,9 @@
  * @file
  * vuo.noise.gradient node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -29,6 +29,9 @@ VuoModuleMetadata({
 					  }
 				  });
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 static void VuoReal_getGradientRange(VuoReal *start, VuoReal *end)
 {
 	*start = -1;
@@ -51,6 +54,8 @@ static void VuoPoint4d_getGradientRange(VuoPoint4d *start, VuoPoint4d *end)
 	*start = (VuoPoint4d){-1,-1,-1,-1};
 	*end = (VuoPoint4d){1,1,1,1};
 }
+
+#pragma clang diagnostic pop
 
 void nodeEvent
 (

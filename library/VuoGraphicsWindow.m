@@ -2,17 +2,18 @@
  * @file
  * VuoGraphicsWindow implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "module.h"
 #import "VuoApp.h"
+#import "VuoGraphicsLayer.h"
+#import "VuoGraphicsView.h"
 #import "VuoGraphicsWindow.h"
 #import "VuoGraphicsWindowDelegate.h"
 #import "VuoGraphicsWindowDrag.h"
-#import "VuoGraphicsView.h"
 #import "VuoScreenCommon.h"
 #import <Carbon/Carbon.h>
 
@@ -20,8 +21,10 @@
 VuoModuleMetadata({
 	"title" : "VuoGraphicsWindow",
 	"dependencies" : [
+		"VuoGraphicsLayer",
 		"VuoGraphicsView",
 		"VuoGraphicsWindowDelegate",
+		"VuoRenderedLayers",
 		"VuoScreenCommon",
 		"VuoWindowProperty",
 		"VuoWindowRecorder",
@@ -34,6 +37,9 @@ VuoModuleMetadata({
 /// Mac OS 10.8's Cocoa crashes below 5.
 /// macOS 10.12's Cocoa crashes below 4.
 const int VuoGraphicsWindowMinSize = 5;
+
+const NSInteger VuoViewMenuItemTag = 1000; ///< The "View" menu.
+const NSInteger VuoFullScreenMenuItemTag = 1001; ///< The menu item for toggling full screen mode.
 
 /// Serialize making windows fullscreen, since Mac OS X beeps at you (!) if you try to fullscreen two windows too quickly.
 dispatch_semaphore_t VuoGraphicsWindow_fullScreenTransitionSemaphore;
@@ -53,6 +59,8 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 @interface VuoGraphicsWindow ()
 @property(retain) NSMenuItem *recordMenuItem;  ///< The record/stop menu item.
 @property(retain) id<NSWindowDelegate> privateDelegate;  ///< Maintain our own reference-counted delegate (since NSWindow's delegate property is a weak reference).
+@property bool constrainToScreen;  ///< Allow compositions to programmatically make the window size greater than or equal to the screen.
+@property(retain) NSScreen *shouldGoFullscreen;  ///< If non-NULL, specifies the screen on which the window should go fullscreen after completing the previous exit-fullscreen transition.
 @end
 
 @implementation VuoGraphicsWindow
@@ -67,13 +75,15 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 							userData:(void *)userData
 {
 	NSRect mainScreenFrame = [[NSScreen mainScreen] frame];
-	_contentRectWhenWindowed = NSMakeRect(mainScreenFrame.origin.x, mainScreenFrame.origin.y, 1024, 768);
+	_contentRectWhenWindowed = NSMakeRect(mainScreenFrame.origin.x, mainScreenFrame.origin.y, VuoGraphicsWindowDefaultWidth, 768);
 	_styleMaskWhenWindowed = NSTitledWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
 	if (self = [super initWithContentRect:_contentRectWhenWindowed
 								styleMask:_styleMaskWhenWindowed
 								  backing:NSBackingStoreBuffered
 									defer:NO])
 	{
+		self.colorSpace = NSColorSpace.sRGBColorSpace;
+
 		self.privateDelegate = [[[VuoGraphicsWindowDelegate alloc] initWithWindow:self] autorelease];
 		self.delegate = self.privateDelegate;
 		self.releasedWhenClosed = NO;
@@ -91,6 +101,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 		_userResizedWindow = NO;
 		_programmaticallyResizingWindow = NO;
+		_constrainToScreen = YES;
 
 		char *title = VuoApp_getName();
 		self.title = [NSString stringWithUTF8String:title];
@@ -98,33 +109,42 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 		_backingScaleFactorCached = self.backingScaleFactor;
 
-		VuoGraphicsView *gv = [[VuoGraphicsView alloc] initWithInitCallback:initCallback
+		VuoGraphicsLayer *l = [[VuoGraphicsLayer alloc] initWithWindow:self
+																initCallback:initCallback
 													   updateBackingCallback:updateBackingCallback
 														  backingScaleFactor:_backingScaleFactorCached
 															  resizeCallback:resizeCallback
 																drawCallback:drawCallback
 																	userData:userData];
-		self.contentView = gv;
-		[gv release];
+		l.contentsScale = _backingScaleFactorCached;
 
-		_contentRectCached = gv.frame;
+		VuoGraphicsView *v = [[VuoGraphicsView alloc] init];
+		v.layer = l;
+		[l release];
 
-		// Remove the 2 grey pixels from bottom left/right corners.
-		self.backgroundColor = [NSColor clearColor];
+		self.contentView = v;
+		[v release];
+
+		_contentRectCached = l.frame;
 	}
 
 	return self;
 }
 
 /**
- * Schedules the OpenGL view to be redrawn. This can be used in both windowed and full-screen mode.
+ * Schedules the OpenGL view to be repainted.
+ * This can be used in both windowed and full-screen mode.
  *
  * @threadAny
  */
-- (void)scheduleRedraw
+- (void)draw
 {
-	VuoGraphicsView *gv = self.contentView;
-	gv.needsIOSurfaceRedraw = true;
+	__block VuoGraphicsLayer *l;
+	VuoApp_executeOnMainThread(^{
+		NSView *v = self.contentView;
+		l = (VuoGraphicsLayer *)v.layer;
+	});
+	[l draw];
 }
 
 /**
@@ -141,6 +161,12 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 - (BOOL)canBecomeKeyWindow
 {
 	return YES;
+}
+
+- (void)updateFullScreenMenu
+{
+	NSMenuItem *fullScreenMenuItem = [[[[[NSApplication sharedApplication] mainMenu] itemWithTag:VuoViewMenuItemTag] submenu] itemWithTag:VuoFullScreenMenuItemTag];
+	fullScreenMenuItem.title = self.isFullScreen ? @"Exit Full Screen" :  @"Enter Full Screen";
 }
 
 /**
@@ -163,15 +189,30 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	[fileMenuItem setSubmenu:fileMenu];
 
 	NSMenu *viewMenu = [[[NSMenu alloc] initWithTitle:@"View"] autorelease];
-	NSMenuItem *fullScreenMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Full Screen" action:@selector(toggleFullScreen) keyEquivalent:@"f"] autorelease];
+	NSMenuItem *fullScreenMenuItem = [[[NSMenuItem alloc] initWithTitle:@"" action:@selector(toggleFullScreen) keyEquivalent:@"f"] autorelease];
+	fullScreenMenuItem.tag = VuoFullScreenMenuItemTag;
 	[viewMenu addItem:fullScreenMenuItem];
 	NSMenuItem *viewMenuItem = [[NSMenuItem new] autorelease];
+	viewMenuItem.tag = VuoViewMenuItemTag;
 	[viewMenuItem setSubmenu:viewMenu];
+
+	NSMenu *windowMenu = [[[NSMenu alloc] initWithTitle:@"Window"] autorelease];
+	NSMenuItem *minimizeMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"] autorelease];
+	NSMenuItem *zoomMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""] autorelease];
+	NSMenuItem *cycleMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Cycle Through Windows" action:@selector(_cycleWindows:) keyEquivalent:@"`"] autorelease];
+	[windowMenu addItem:minimizeMenuItem];
+	[windowMenu addItem:zoomMenuItem];
+	[windowMenu addItem:cycleMenuItem];
+	NSMenuItem *windowMenuItem = [[NSMenuItem new] autorelease];
+	[windowMenuItem setSubmenu:windowMenu];
 
 	NSMutableArray *windowMenuItems = [NSMutableArray arrayWithCapacity:3];
 	[windowMenuItems addObject:fileMenuItem];
 	[windowMenuItems addObject:viewMenuItem];
+	[windowMenuItems addObject:windowMenuItem];
 	self.oldMenu = (NSMenu *)VuoApp_setMenuItems(windowMenuItems);
+
+	[self updateFullScreenMenu];
 
 	[self updateUI];
 }
@@ -222,6 +263,28 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  *
  * @threadAny
  */
+- (void)enableUpdatedWindowTrigger:(VuoGraphicsWindowUpdatedWindowCallback)updatedWindow
+{
+	_updatedWindow = updatedWindow;
+
+	VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+	VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(self));
+	_updatedWindow(rl);
+
+	__block VuoGraphicsLayer *l;
+	VuoApp_executeOnMainThread(^{
+		NSView *v = self.contentView;
+		l = (VuoGraphicsLayer *)v.layer;
+	});
+	[l enableTriggers];
+}
+
+/**
+ * Sets up the window to call trigger functions.
+ *
+ * @threadAny
+ * @deprecated
+ */
 - (void)enableShowedWindowTrigger:(VuoGraphicsWindowShowedWindowCallback)showedWindow requestedFrameTrigger:(VuoGraphicsWindowRequestedFrameCallback)requestedFrame
 {
 	_showedWindow = showedWindow;
@@ -229,8 +292,12 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 	_requestedFrame = requestedFrame;
 
-	VuoGraphicsView *gv = self.contentView;
-	[gv enableTriggers];
+	__block VuoGraphicsLayer *l;
+	VuoApp_executeOnMainThread(^{
+		NSView *v = self.contentView;
+		l = (VuoGraphicsLayer *)v.layer;
+	});
+	[l enableTriggers];
 }
 
 /**
@@ -240,19 +307,30 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  */
 - (void)disableTriggers
 {
-	VuoGraphicsView *gv = self.contentView;
-	[gv disableTriggers];
+	__block VuoGraphicsLayer *l;
+	VuoApp_executeOnMainThread(^{
+		NSView *v = self.contentView;
+		l = (VuoGraphicsLayer *)v.layer;
+	});
+	[l disableTriggers];
 
+	_updatedWindow = NULL;
 	_showedWindow = NULL;
 	_requestedFrame = NULL;
 }
 
 /**
  * Returns YES if this window is currently fullscreen.
+ *
+ * @threadAny
  */
 - (bool)isFullScreen
 {
-	return _isInMacFullScreenMode || self.styleMask == 0;
+	__block NSUInteger styleMask;
+	VuoApp_executeOnMainThread(^{
+		styleMask = self.styleMask;
+	});
+	return _isInMacFullScreenMode || styleMask == 0;
 }
 
 
@@ -276,7 +354,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	for (unsigned int i = 1; i <= propertyCount; ++i)
 	{
 		VuoWindowProperty property = VuoListGetValue_VuoWindowProperty(properties, i);
-//		VLog("%s",VuoWindowProperty_getSummary(property));
+		VDebugLog("%s", VuoWindowProperty_getSummary(property));
 
 		if (property.type == VuoWindowProperty_Title)
 			self.title = property.title ? [NSString stringWithUTF8String:property.title] : @"";
@@ -284,17 +362,38 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		{
 			NSScreen *requestedScreen = VuoScreen_getNSScreen(property.screen);
 
-			// If we're already fullscreen, and the property tells us to switch to a different screen,
-			// temporarily switch back to windowed mode, so that we can cleanly switch to fullscreen on the new screen.
-			if ([self isFullScreen] && property.fullScreen)
-			{
-				NSInteger requestedDeviceId = [[[requestedScreen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
-				NSInteger currentDeviceId = [[[self.screen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
-				if (requestedDeviceId != currentDeviceId)
-					[self setFullScreen:NO onScreen:nil];
-			}
+			bool isFullScreen = self.isFullScreen;
+			bool wantsFullScreen = property.fullScreen;
 
-			[self setFullScreen:property.fullScreen onScreen:requestedScreen];
+			// Only go fullscreen if the specific requested screen exists.
+			// https://b33p.net/kosada/node/14658
+			if (wantsFullScreen && !requestedScreen)
+				continue;
+
+			NSInteger requestedDeviceId = [[[requestedScreen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
+			NSInteger currentDeviceId = [[[self.screen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
+			bool changingScreen = requestedDeviceId != currentDeviceId;
+
+			if (isFullScreen && wantsFullScreen && changingScreen)
+			{
+				// Temporarily switch back to windowed mode so that we can switch to fullscreen on the new screen
+				// (since macOS doesn't let us directly move from one fullscreen to another).
+				[self setFullScreen:NO onScreen:nil];
+
+				// If `System Preferences > Mission Control > Displays have separate Spaces` is enabled…
+				if (NSScreen.screensHaveSeparateSpaces)
+					// Give macOS a chance to complete its exit-fullscreen transition.
+					self.shouldGoFullscreen = requestedScreen;
+				else
+					// If not, we can immediately go fullscreen on the new screen.
+					[self setFullScreen:YES onScreen:requestedScreen];
+			}
+			else if (isFullScreen != wantsFullScreen)
+				[self setFullScreen:property.fullScreen onScreen:requestedScreen];
+			else if (requestedScreen && !isFullScreen)
+				// Move the non-fullscreen window to the center of the specified screen.
+				[self setFrameOrigin:(NSPoint){ NSMidX(requestedScreen.visibleFrame) - self.frame.size.width / 2,
+												NSMidY(requestedScreen.visibleFrame) - self.frame.size.height /2 }];
 		}
 		else if (property.type == VuoWindowProperty_Position)
 		{
@@ -331,7 +430,9 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 				contentRect.size = NSMakeSize(propertyInPoints.size.width, propertyInPoints.size.height);
 				@try
 				{
+					_constrainToScreen = NO;
 					[self setFrame:[self frameRectForContentRect:contentRect] display:YES animate:NO];
+					_constrainToScreen = YES;
 				}
 				@catch (NSException *e)
 				{
@@ -414,6 +515,12 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 	if ([self isFullScreen])
 	{
+		if (_updatedWindow)
+		{
+			VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+			VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(self));
+			_updatedWindow(rl);
+		}
 		if (_showedWindow)
 			_showedWindow(VuoWindowReference_make(self));
 		return;
@@ -463,6 +570,12 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	[self setFrame:newWindowFrame display:YES];
 	_programmaticallyResizingWindow = NO;
 
+	if (_updatedWindow)
+	{
+		VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+		VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(self));
+		_updatedWindow(rl);
+	}
 	if (_showedWindow)
 		_showedWindow(VuoWindowReference_make(self));
 }
@@ -475,6 +588,18 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 - (void)unlockAspectRatio
 {
 	self.resizeIncrements = NSMakeSize(1,1);
+}
+
+/**
+ * Override NSWindow's default implementation,
+ * so compositions can programmatically make the window size greater than or equal to the screen.
+ */
+- (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen
+{
+	if (_constrainToScreen)
+		return [super constrainFrameRect:frameRect toScreen:screen];
+	else
+		return frameRect;
 }
 
 /**
@@ -562,29 +687,16 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		// when you focus a window on a different display (such as when livecoding during a performance).
 		bool useMacFullScreenMode = true;
 
-		SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-
-		// On Mac OS 10.8 and prior, only a single window could go Mac-fullscreen at once, so don't use Mac-fullscreen mode on those versions.
-		if (macMinorVersion <= 8)
-			useMacFullScreenMode = false;
-
-		// On Mac OS 10.9 and later, if `System Preferences > Mission Control > Displays have separate Spaces` is unchecked,
+		// If `System Preferences > Mission Control > Displays have separate Spaces` is unchecked,
 		// only a single window could go Mac-fullscreen at once, so don't use Mac-fullscreen mode in that case.
-		else
-		{
-			SEL screensHaveSeparateSpacesSel = @selector(screensHaveSeparateSpaces);
-			IMP screensHaveSeparateSpaces = [NSScreen methodForSelector:screensHaveSeparateSpacesSel];
-			if (!screensHaveSeparateSpaces([NSScreen class], screensHaveSeparateSpacesSel))
-				useMacFullScreenMode = false;
-		}
+		if (!NSScreen.screensHaveSeparateSpaces)
+			useMacFullScreenMode = false;
 
 
 		if (useMacFullScreenMode)
 		{
+			_isInMacFullScreenMode = YES;
+
 			// If a size-locked window enters Mac-fullscreen mode,
 			// its height increases upon exiting Mac-fullscreen mode.
 			// Mark it resizeable while fullscreen, to keep its size from changing (!).
@@ -595,6 +707,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 				dispatch_async(dispatch_get_main_queue(), ^{
 					_programmaticallyTransitioningFullScreen = true;
 					[self toggleFullScreen:nil];
+					[self updateFullScreenMenu];
 				});
 			});
 		}
@@ -611,6 +724,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 			[self setFrame:self.screen.frame display:YES];
 
 			[self finishFullScreenTransition];
+			[self updateFullScreenMenu];
 		}
 	}
 	else if (!wantsFullScreen && [self isFullScreen])
@@ -619,12 +733,15 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 		if (_isInMacFullScreenMode)
 		{
+			_isInMacFullScreenMode = NO;
+
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 				dispatch_semaphore_wait(VuoGraphicsWindow_fullScreenTransitionSemaphore, DISPATCH_TIME_FOREVER);
 				dispatch_async(dispatch_get_main_queue(), ^{
 					_programmaticallyTransitioningFullScreen = true;
 					[self toggleFullScreen:nil];
 					self.styleMask = _styleMaskWhenWindowed;
+					[self updateFullScreenMenu];
 				});
 			});
 		}
@@ -641,6 +758,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 			[self setFrame:[self frameRectForContentRect:_contentRectWhenWindowed] display:YES];
 
 			[self finishFullScreenTransition];
+			[self updateFullScreenMenu];
 		}
 	}
 }
@@ -655,9 +773,16 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	_programmaticallyResizingWindow = false;
 
 	[self.delegate windowDidResize:nil];
-//	((VuoGraphicsView *)self.contentView).needsIOSurfaceRedraw = true;
 
 	[self makeFirstResponder:self];
+
+	if (self.shouldGoFullscreen)
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSScreen *s = [self.shouldGoFullscreen retain];
+			self.shouldGoFullscreen = nil;
+			[self setFullScreen:true onScreen:s];
+			[s release];
+		});
 }
 
 /**
@@ -776,7 +901,8 @@ done:
  */
 - (void)close
 {
-	VuoGraphicsView *gv = self.contentView;
+	NSView *v = self.contentView;
+	VuoGraphicsLayer *gv = (VuoGraphicsLayer *)v.layer;
 	[gv close];
 
 	[super close];

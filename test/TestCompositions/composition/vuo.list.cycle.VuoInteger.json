@@ -2,14 +2,14 @@
  * @file
  * Expected outputs for the vuo.list.cycle node.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration": [
 	{	
-		"firingPort": "refresh",
+		"firingPort": "wrapMode",
 		"inputPortValues": {
 			"list": [1,2,3,4], 
 			"wrapMode": "wrap"
@@ -20,7 +20,7 @@
 		}
 	},
 	{	
-		"firingPort": "refresh",
+		"firingPort": "wrapMode",
 		"outputPortValues": {
 			"item": 1,
 			"position": 1
@@ -30,11 +30,6 @@
 	/* The first goForward should output the first item. */
 	{	
 		"firingPort": "goForward",
-		"inputPortValues": {
-			"goForwardEvent": true,
-			"goBackwardEvent": false,
-			"goToFirstEvent": false
-		},
 		"outputPortValues": {
 			"item": 1,
 			"position": 1
@@ -44,23 +39,9 @@
 	/* After a goToFirst, goForward should output the first item. */
 	{	
 		"firingPort": "goToFirst",
-		"inputPortValues": {
-			"goForwardEvent": false,
-			"goBackwardEvent": false,
-			"goToFirstEvent": true
-		},
-		"outputPortValues": {
-			"item": 1,
-			"position": 1
-		}
 	},
 	{	
-		"firingPort": "refresh",
-		"inputPortValues": {
-			"goForwardEvent": false,
-			"goBackwardEvent": false,
-			"goToFirstEvent": false
-		},
+		"firingPort": "wrapMode",
 		"outputPortValues": {
 			"item": 1,
 			"position": 1
@@ -68,11 +49,6 @@
 	},
 	{	
 		"firingPort": "goForward",
-		"inputPortValues": {
-			"goForwardEvent": true,
-			"goBackwardEvent": false,
-			"goToFirstEvent": false
-		},
 		"outputPortValues": {
 			"item": 1,
 			"position": 1
@@ -110,11 +86,6 @@
 	},
 	{	
 		"firingPort": "goBackward",
-		"inputPortValues": {
-			"goForwardEvent": false,
-			"goBackwardEvent": true,
-			"goToFirstEvent": false
-		},
 		"outputPortValues": {
 			"item": 4,
 			"position": 4

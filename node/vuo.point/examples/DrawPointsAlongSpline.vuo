@@ -1,66 +1,57 @@
 /**
  * @file
+ * @brief Draw Points along Spline
  * Plots points along a spline, varying the continuity, tension, and bias of the spline.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-285,105" fillcolor="yellow"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="330,705"];
 Convert2DPointToReal3 [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="405,570"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="165,706" _startPosition="-1" _endPosition="1" _duration="5" _curve="\"linear\"" _easing="\"out\"" _loop="\"mirror\"" _phase="0.0"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,210" fillcolor="yellow" _started_eventThrottling="enqueue"];
-LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="330,465" _minimum="-1" _maximum="1" _wrapMode="\"saturate\""];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="540,165"];
-Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="540,285"];
-MakeLineStripMesh2 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="300,285" _lineWidth="0.0030000000000000001"];
-MakeList15 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="132,-19"];
-MakeList2 [type="vuo.list.make.5.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="117,116" _1="{\"x\":-0.30000001192092896,\"y\":0.25}" _2="{\"x\":0.20000000298023224,\"y\":0.12999999523162842}" _3="{\"x\":0.30000001192092896,\"y\":-0.15000000596046448}" _4="{\"x\":0,\"y\":0.25}" _5="{\"x\":-0.10000000149011612,\"y\":-0.25}"];
-MakeList4 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="702,161" fillcolor="green"];
-MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="722,206" fillcolor="green"];
-MakePointMesh2 [type="vuo.mesh.make.points.VuoPoint2d" version="2.1.0" label="Make Point Mesh|<refresh>refresh\l|<positions>positions\l|<pointSize>pointSize\l|<mesh>mesh\r" pos="330,105" _pointSize="0.040000000000000001"];
-MakePointsAlongSpline2 [type="vuo.point.make.spline.VuoPoint2d" version="1.0.0" label="Make Points along Spline|<refresh>refresh\l|<controlPoints>controlPoints\l|<tweenPointCount>tweenPointCount\l|<tension>tension\l|<continuity>continuity\l|<bias>bias\l|<splinePoints>splinePoints\r" pos="90,285" fillcolor="violet" _tweenPointCount="16"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="-15,-30" _text="\"Move the mouse up and down to change the continuity.\\nMove the mouse left and right to change the tension.\\nObserve as bias changes with time.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="450,-30" _center="{\"x\":0,\"y\":-0.25000001192092896,\"z\":0.5}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.000000" _opacity="1.000000"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-120,465" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="195,-30" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.3.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="750,150" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="165,570" _start="-0.75" _end="0.75" _scaledStart="-1" _scaledEnd="1" _limitToRange="true"];
-ShadeWithOval [type="vuo.shader.make.oval" version="1.0.0" label="Make Oval Shader|<refresh>refresh\l|<ovalColor>ovalColor\l|<ovalWidth>ovalWidth\l|<ovalSharpness>ovalSharpness\l|<haloColor>haloColor\l|<shader>shader\r" pos="330,180" _ovalColor="{\"r\":0.95686274766921997,\"g\":0.73333334922790527,\"b\":0.35686275362968445,\"a\":1}" _ovalWidth="1" _ovalSharpness="1.0" _haloColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":0}"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="300,360" _color="{\"r\":0.42745098471641541,\"g\":0.64705884456634521,\"b\":0.44313725829124451,\"a\":1}"];
-ShareList2 [type="vuo.data.share.list.VuoPoint2d" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="150,105"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="-105,585" _startPosition="-1" _endPosition="1" _duration="5" _curve="\"linear\"" _easing="\"out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-495,225" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.1" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="-120,345" _minimum="-1" _maximum="1" _wrapMode="\"saturate\""];
+MakeLineStripObject [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoColor" version="1.0.0" label="Make Line Strip Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<object>object\r" pos="375,255" _material="\{\"r\":0.35133898258209229,\"g\":0.58297091722488403,\"b\":0.36748301982879639,\"a\":1\}" _lineWidth="0.0030000000000000001"];
+MakeList2 [type="vuo.list.make.5.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="-48,191" _1="\{\"x\":-0.30000001192092896,\"y\":0.25\}" _2="\{\"x\":0.20000000298023224,\"y\":0.12999999523162842\}" _3="\{\"x\":0.30000001192092896,\"y\":-0.15000000596046448\}" _4="\{\"x\":0,\"y\":0.25\}" _5="\{\"x\":-0.10000000149011612,\"y\":-0.25\}"];
+MakeList4 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="584,161" fillcolor="blue"];
+MakePointsAlongSpline2 [type="vuo.point.make.spline.VuoPoint2d" version="1.0.0" label="Make Points along Spline|<refresh>refresh\l|<controlPoints>controlPoints\l|<tweenPointCount>tweenPointCount\l|<tension>tension\l|<continuity>continuity\l|<bias>bias\l|<splinePoints>splinePoints\r" pos="135,300" fillcolor="orange" _tweenPointCount="16"];
+MakePointsObject [type="vuo.scene.make.points.VuoPoint2d.VuoShader" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<object>object\r" pos="390,135" _pointSize="0.040000000000000001"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="105,-30" _text="\"Move the mouse up and down to change the continuity.\\nMove the mouse left and right to change the tension.\\nObserve as bias changes with time.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0" _text_manuallyFirable];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="315,-30" _center="\{\"x\":0,\"y\":-0.25000001192092896,\"z\":0.5\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.75" _opacity="1.000000"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-450,390" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="630,150" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="-105,450" _start="-0.75" _end="0.75" _scaledStart="-1" _scaledEnd="1" _limitToRange="true"];
+ShadeWithOval [type="vuo.shader.make.oval" version="1.0.0" label="Make Oval Shader|<refresh>refresh\l|<ovalColor>ovalColor\l|<ovalWidth>ovalWidth\l|<ovalSharpness>ovalSharpness\l|<haloColor>haloColor\l|<shader>shader\r" pos="165,105" _ovalColor="\{\"r\":0.95686274766921997,\"g\":0.73333334922790527,\"b\":0.35686275362968445,\"a\":1\}" _ovalWidth="1" _ovalSharpness="1.0" _haloColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}"];
+ShareList2 [type="vuo.data.share.list.VuoPoint2d" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-15,180"];
 
+AllowFirstEvent:firstEvent -> MakeList2:1;
+AllowFirstEvent:firstEvent -> MakeTextImage:text;
+AllowFirstEvent:firstEvent -> ShadeWithOval:ovalColor;
 Convert2DPointToReal2:y -> Scale:value;
 Convert2DPointToReal3:x -> LimitToRange2:value;
 Curve2:value -> MakePointsAlongSpline2:bias;
-FireOnStart:started -> MakeTextLayer:refresh [style=invis];
-FireOnStart:started -> ShadeWithOval:refresh [style=invis];
-FireOnStart:started -> ShadeWithUnlitColor:refresh [style=invis];
-FireOnStart:started -> ShareList2:refresh [style=invis];
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
+FireOnDisplayRefresh:requestedFrame -> MakePointsAlongSpline2:controlPoints [event=true];
 LimitToRange2:limitedValue -> MakePointsAlongSpline2:tension;
-Make3DObject2:object -> MakeList4:1;
-Make3DObject:object -> MakeList4:2;
-MakeLineStripMesh2:mesh -> Make3DObject2:mesh;
-MakeList15:list -> RenderLayersToImage2:layers;
+MakeLineStripObject:object -> MakeList4:1;
 MakeList2:list -> ShareList2:value;
 MakeList4:list -> RenderSceneToWindow:objects;
-MakeList8:list -> RenderSceneToWindow:setWindowProperties;
-MakePointMesh2:mesh -> Make3DObject:mesh;
-MakePointsAlongSpline2:splinePoints -> MakeLineStripMesh2:positions;
-MakeTextLayer:layer -> MakeList15:1;
+MakePointsAlongSpline2:splinePoints -> MakeLineStripObject:positions;
+MakePointsObject:object -> MakeList4:2;
+MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
 MakeUnlit3DObjectFromImage:object -> MakeList4:3;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal3:xy;
-RenderLayersToImage2:image -> MakeUnlit3DObjectFromImage:image;
-RenderSceneToWindow:requestedFrame -> Curve2:time [style=invis];
-RenderSceneToWindow:requestedFrame -> MakePointsAlongSpline2:refresh;
-RenderSceneToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+RenderSceneToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
 Scale:scaledValue -> MakePointsAlongSpline2:continuity;
-ShadeWithOval:shader -> Make3DObject:shader;
-ShadeWithUnlitColor:shader -> Make3DObject2:shader;
-ShareList2:sameValue -> MakePointMesh2:positions;
+ShadeWithOval:shader -> MakePointsObject:material;
 ShareList2:sameValue -> MakePointsAlongSpline2:controlPoints;
+ShareList2:sameValue -> MakePointsObject:positions;
 }

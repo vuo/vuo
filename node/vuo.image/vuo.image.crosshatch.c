@@ -2,9 +2,9 @@
  * @file
  * vuo.image.crosshatch node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Crosshatch Image",
 					 "keywords" : [
-						 "illustration", "hand-drawn", "sketch", "line art", "stroke", "contour", "woodcut",
+						 "illustration", "hand-drawn", "sketch", "line art", "stroke", "contour", "woodcut", "hatch",
 						 "plaid", "tartan",
 						 "filter"
 					 ],
@@ -24,9 +24,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec2 viewportSize;
@@ -50,7 +50,7 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 tc = fragmentTextureCoordinate.xy;
+		vec2 tc = fragmentTextureCoordinate;
 
 		float luminance = dot(VuoGlsl_sample(texture, tc).rgb, W);
 

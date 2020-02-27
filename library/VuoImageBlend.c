@@ -2,9 +2,9 @@
  * @file
  * VuoImageBlend implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -45,15 +45,15 @@ void VuoImageBlend_free(void *blend)
 VuoImageBlend VuoImageBlend_make(void)
 {
 	const char *shaderSource = VUOSHADER_GLSL_SOURCE(120,
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 		uniform sampler2D textureA;
 		uniform sampler2D textureB;
 		uniform float factor;
 
 		void main(void)
 		{
-			vec4 colorA = texture2D(textureA, fragmentTextureCoordinate.xy);
-			vec4 colorB = texture2D(textureB, fragmentTextureCoordinate.xy);
+			vec4 colorA = texture2D(textureA, fragmentTextureCoordinate);
+			vec4 colorB = texture2D(textureB, fragmentTextureCoordinate);
 			vec4 mixed = mix(colorA, colorB, factor);
 			gl_FragColor = mixed;
 		}

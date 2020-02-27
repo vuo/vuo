@@ -2,9 +2,9 @@
  * @file
  * vuo.screen.capture node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "node.h"
@@ -18,9 +18,9 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ ],
-						 "isInterface" : true
 					 },
 					 "dependencies" : [
+						 "VuoRectangle",
 						 "VuoScreenCapture",
 						 "VuoScreenCommon"
 					 ]
@@ -33,6 +33,8 @@ struct nodeInstanceData
 
 	VuoScreen screen;
 	VuoRectangle rectangle;
+
+	bool triggersEnabled;
 };
 
 static void initialize(struct nodeInstanceData *context, VuoScreen screen, VuoRectangle rectangle, VuoOutputTrigger(capturedImage, VuoImage))
@@ -75,6 +77,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(capturedImage, VuoImage)
 )
 {
+	(*context)->triggersEnabled = true;
 	initialize(*context, screen, VuoRectangle_makeTopLeft(topLeft.x, topLeft.y, width, height), capturedImage);
 }
 
@@ -101,6 +104,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(capturedImage, VuoImage, {"eventThrottling":"drop"})
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	initialize(*context, screen, VuoRectangle_makeTopLeft(topLeft.x, topLeft.y, width, height), capturedImage);
 }
 
@@ -111,6 +117,7 @@ void nodeInstanceTriggerStop
 {
 	VuoRelease((*context)->capture);
 	VuoScreen_release((*context)->screen);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

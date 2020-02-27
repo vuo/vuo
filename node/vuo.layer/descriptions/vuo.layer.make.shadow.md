@@ -2,7 +2,7 @@ Creates a layer that can be combined with other layers to create a composite ima
 
 The image is drawn with a shadow behind it.  You can control the shadow's color, focus, and placement.
 
-The image used to create this layer may be resized in the composite image. If resizing makes the image larger, it may become blurry. If you want the image to be rendered at its original size, use the `Make Image Layer with Shadow (Real Size)` node instead.
+The image used to create this layer may be resized in the composite image. If resizing makes the image larger, it may become blurry. If you want the image to be rendered at its original size, use the [Make Image Layer with Shadow (Real Size)](vuo-node://vuo.layer.make.realSize.shadow) node instead.
 
    - `Name` — A name to identify the layer, allowing other nodes to select it from a group of layers.
    - `Image` — The image displayed in the layer. For the layer to be visible, you have to provide an image.

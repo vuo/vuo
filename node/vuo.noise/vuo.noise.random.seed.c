@@ -2,9 +2,9 @@
  * @file
  * vuo.noise.random.seed node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Random Value with Seed",
 					  "keywords" : [ "uncorrelated", "arbitrary", "aleatoric", "chance", "pseudorandom",
-							"prng", "rng", "arc4random", "uniform", "distribution", "white" ],
+							"number", "generate", "prng", "rng", "arc4random", "uniform", "distribution", "white" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node" : {
-						  "exampleCompositions" : [ "DisplayRandomImages.vuo" ]
+						  "exampleCompositions" : [ "DisplayRandomColors.vuo" ]
 					  }
 				  });
 
@@ -53,8 +53,4 @@ void nodeInstanceEvent
 		VuoInteger_setRandomState(*state, setSeed);
 
 	*value = VuoGenericType1_randomWithState(*state, minimum, maximum);
-}
-
-void nodeInstanceFini(VuoInstanceData(unsigned short *) state)
-{
 }

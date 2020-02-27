@@ -1,10 +1,11 @@
 Renders an image containing the specified text.
 
    - `Text` — The text to render.
-   - `Font` — The font used to render the text.  See also the `Make Font` node.
-   - `Image` — The image containing the rendered text.  The image is automatically sized to fit the specified text.
-   - `Anchor` — How to align the text relative to the transform's translation, both horizontally and vertically.
+   - `Font` — The font used to render the text.  See also the [Make Font](vuo-node://vuo.font.make) node.
+   - `Rotation` — The angle to rotate the text counterclockwise, in degrees.
+   - `Wrap Width` — The width, in pixels, at which long lines of text should be word-wrapped.  If set to `Auto`, the image will be as wide as necessary to accommodate the longest line of text.  Otherwise, the image's width may be less than the Wrap Width (since text is wrapped a word at a time) or more than the Wrap Width (if the Wrap Width is less than the widest single character).
+   - `Image` — An image containing the text. The image is sized to fit the text.
 
 To enter multiple lines of text in the `Text` port's input editor, use Option-Return to insert line breaks.
 
-If the output image is sent to a node that enlarges the image, then the text may become blurry. To keep the text sharp, either avoid using nodes that enlarge the image, or else choose a larger font size so that the output image is larger. For example, if creating a layer from the image, either use the `Make Image Layer (Real Size)` or `Make Image Layer with Shadow (Real Size)` nodes to keep the image at its original size, or else choose a larger font size and use the `Make Image Layer (Scaled)` or `Make Image Layer with Shadow (Scaled)` nodes.
+If you need to resize the output image, consider using the [Make Text Layer](vuo-node://vuo.layer.make.text2) node instead. This will keep the text sharp as it is enlarged.

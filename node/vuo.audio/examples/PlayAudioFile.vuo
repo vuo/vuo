@@ -2,17 +2,18 @@
  * @file
  * Plays an audio file aloud. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,15" _started_eventThrottling="enqueue"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="120,60" fillcolor="violet" _url="\"DeclineOfTheAmiga.mp3\"" _loop="\"loop\"" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="345,60" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="120,60" fillcolor="orange" _setTime="\"\"" _url="\"DeclineOfTheAmiga.mp3\"" _loop="\"loop\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="360,45" fillcolor="orange"];
 
 FireOnStart:started -> PlayAudioFile:play;
-PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
+PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
 }

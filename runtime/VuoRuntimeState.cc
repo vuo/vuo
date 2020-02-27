@@ -2,9 +2,9 @@
  * @file
  * VuoRuntimeState implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRuntimeState.hh"
@@ -12,9 +12,9 @@
 #include <dlfcn.h>
 #include <signal.h>
 #include <sstream>
-#include <stdexcept>
 #include "VuoCompositionDiff.hh"
 #include "VuoEventLoop.h"
+#include "VuoException.hh"
 #include "VuoHeap.h"
 #include "VuoNodeRegistry.hh"
 #include "VuoRuntimeCommunicator.hh"
@@ -41,7 +41,7 @@ VuoRuntimeState::~VuoRuntimeState(void)
  * Initializes a runtime state instance, updates its references to symbols defined in the composition binary,
  * and opens a connection between it and the runner.
  *
- * @throw std::runtime_error One of the symbols was not found in the composition binary.
+ * @throw VuoException One of the symbols was not found in the composition binary.
  */
 void VuoRuntimeState::init(void *zmqContext, const char *controlUrl, const char *telemetryUrl, bool isPaused,
 						   pid_t runnerPid, int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
@@ -105,7 +105,7 @@ void VuoRuntimeState::fini(void)
 /**
  * Updates references to symbols defined in the composition's generated code.
  *
- * @throw std::runtime_error One of the symbols was not found in the composition binary.
+ * @throw VuoException One of the symbols was not found in the composition binary.
  */
 void VuoRuntimeState::updateCompositionSymbols(void *compositionBinaryHandle)
 {
@@ -115,42 +115,42 @@ void VuoRuntimeState::updateCompositionSymbols(void *compositionBinaryHandle)
 	if (! vuoSetup)
 	{
 		errorMessage << "The composition couldn't be started because its vuoSetup() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoCleanup = (vuoCleanupType) dlsym(compositionBinaryHandle, "vuoCleanup");
 	if (! vuoCleanup)
 	{
 		errorMessage << "The composition couldn't be started because its vuoCleanup() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceInit = (vuoInstanceInitType) dlsym(compositionBinaryHandle, "vuoInstanceInit");
 	if (! vuoInstanceInit)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceInit() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceFini = (vuoInstanceFiniType) dlsym(compositionBinaryHandle, "vuoInstanceFini");
 	if (! vuoInstanceFini)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceFini() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceTriggerStart = (vuoInstanceTriggerStartType) dlsym(compositionBinaryHandle, "vuoInstanceTriggerStart");
 	if (! vuoInstanceTriggerStart)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceTriggerStart() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceTriggerStop = (vuoInstanceTriggerStopType) dlsym(compositionBinaryHandle, "vuoInstanceTriggerStop");
 	if (! vuoInstanceTriggerStop)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceTriggerStop() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	persistentState->communicator->updateCompositionSymbols(compositionBinaryHandle);
@@ -334,7 +334,7 @@ void VuoRuntimeState::stopCompositionAsOrderedByComposition(void)
 						   persistentState->communicator->sendStopRequested();
 
 						   // If we haven't received a response to VuoTelemetryStopRequested within 2 seconds, stop anyway.
-						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), persistentState->communicator->getControlQueue());
+						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, persistentState->communicator->getControlQueue());
 						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.), NSEC_PER_SEC * 2, NSEC_PER_SEC/10);
 						   waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
 
@@ -369,6 +369,8 @@ void VuoRuntimeState::stopCompositionAsOrderedByComposition(void)
  */
 void VuoRuntimeState::stopComposition(bool isBeingReplaced, int timeoutInSeconds)
 {
+	dispatch_retain(stopQueue);  // Prevent "Release of a locked queue" error if fini() releases stopQueue while this function is on it (https://b33p.net/kosada/node/15438)
+
 	dispatch_sync(stopQueue, ^{
 
 		// If we're stopping due to a user request, and we've already stopped, don't try to stop again.
@@ -404,6 +406,8 @@ void VuoRuntimeState::stopComposition(bool isBeingReplaced, int timeoutInSeconds
 		else
 			breakOutOfEventLoop();
 	});
+
+	dispatch_release(stopQueue);
 }
 
 /**
@@ -432,12 +436,31 @@ void VuoRuntimeState::killProcessAfterTimeout(int timeoutInSeconds)
 
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC),
 				   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		if (mayBeTerminated() && VuoEventLoop_mayBeTerminated())
+
+		// Since below we need to use the main thread to check whether the composition can be terminated,
+		// set a backup timer that fires if the main thread isn't responding.
+		dispatch_source_t backupTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+		dispatch_source_set_timer(backupTimer, dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC), timeoutInSeconds * NSEC_PER_SEC, NSEC_PER_SEC/10);
+		dispatch_source_set_event_handler(backupTimer, ^{
+			persistentState->communicator->sendCompositionStoppingAndCloseControl();
+			VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds * 2);
+			kill(getpid(), SIGKILL);
+		});
+		dispatch_resume(backupTimer);
+
+		__block bool eventLoopMayBeTerminated;
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			eventLoopMayBeTerminated = VuoEventLoop_mayBeTerminated();
+		});
+		if (mayBeTerminated() && eventLoopMayBeTerminated)
 		{
 			persistentState->communicator->sendCompositionStoppingAndCloseControl();
 			VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds);
 			kill(getpid(), SIGKILL);
 		}
+
+		dispatch_source_cancel(backupTimer);
+		dispatch_release(backupTimer);
 	});
 }
 

@@ -2,28 +2,28 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="390,240" _url="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="390,240" _url="\"https:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,45" _started_eventThrottling="enqueue"];
 MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="360,75" _width="640" _height="480"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="692,161"];
 MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="195,75" _red="1.0" _green="0.0" _blue="0.0" _opacity="1.0"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="720,135" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectLatest2 [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="570,135"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="735,135" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="570,135"];
 SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="195,210" _spunOff_eventThrottling="enqueue"];
 
-FetchImage:image -> SelectLatest2:option2;
+FetchImage:image -> SelectLatest:option2;
 FireOnStart:started -> MakeRGBColor:refresh;
 FireOnStart:started -> SpinOffEvent:refresh;
-MakeColorImage:image -> SelectLatest2:option1;
-MakeList3:list -> RenderImageToWindow:setWindowProperties;
+MakeColorImage:image -> SelectLatest:option1;
 MakeRGBColor:color -> MakeColorImage:color;
-SelectLatest2:latest -> RenderImageToWindow:image;
+SelectLatest:latest -> RenderImageToWindow:image;
 SpinOffEvent:spunOff -> FetchImage:refresh;
 }

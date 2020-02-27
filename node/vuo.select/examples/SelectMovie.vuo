@@ -2,31 +2,30 @@
  * @file
  * Displays one of two movies at a time, switching between them each time the mouse is pressed.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="660,180"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,105" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="529,86" fillcolor="green"];
-PlayMovie [type="vuo.video.play" version="2.0.2" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="120,30" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/RollerCoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-PlayMovie2 [type="vuo.video.play" version="2.0.2" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="120,180" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-15,-135" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="570,60" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectInput6 [type="vuo.select.in.boolean.VuoVideoFrame" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="330,60" fillcolor="violet"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="195,-135"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-15,30" fillcolor="lime" _started_eventThrottling="enqueue"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="195,30" fillcolor="lime" _setTime="\"\"" _url="\"\\/System\\/Library\\/Compositions\\/RollerCoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+PlayMovie2 [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="195,180" fillcolor="lime" _setTime="\"\"" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.1.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<forcePressed>forcePressed\r|<pressureChanged>pressureChanged\r|<released>released\r" pos="-15,-135" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _forcePressed_eventThrottling="enqueue" _pressureChanged_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="765,15" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+SelectInput6 [type="vuo.select.in.boolean.VuoVideoFrame" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,15" fillcolor="orange"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="285,-135"];
 
 ConvertFrameToImage3:image -> RenderImageToWindow:image;
 FireOnStart:started -> PlayMovie2:play;
 FireOnStart:started -> PlayMovie:play;
-MakeList3:list -> RenderImageToWindow:setWindowProperties;
 PlayMovie2:decodedVideo -> SelectInput6:trueOption;
 PlayMovie:decodedVideo -> SelectInput6:falseOption;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
-RenderImageToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderImageToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 SelectInput6:out -> ConvertFrameToImage3:frame;
 Toggle:value -> SelectInput6:which;
 }

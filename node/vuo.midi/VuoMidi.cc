@@ -2,16 +2,19 @@
  * @file
  * VuoMidi implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoMidi.h"
 
-#include "RtMidi.h"
-#include <dispatch/dispatch.h>
+#include <RtMidi/RtMidi.h>
+#include "VuoApp.h"
+#include "VuoOsStatus.h"
+#include "VuoTriggerSet.hh"
 
+#include <CoreMIDI/CoreMIDI.h>
 
 extern "C"
 {
@@ -21,11 +24,13 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoMidi",
 					 "dependencies" : [
+						 "VuoApp",
 						 "VuoMidiController",
 						 "VuoMidiInputDevice",
 						 "VuoMidiOutputDevice",
 						 "VuoMidiNote",
 						 "VuoMidiPitchBend",
+						 "VuoOsStatus",
 						 "VuoList_VuoMidiInputDevice",
 						 "VuoList_VuoMidiOutputDevice",
 						 "rtmidi",
@@ -36,6 +41,10 @@ VuoModuleMetadata({
 #endif
 }
 
+static VuoTriggerSet<VuoList_VuoMidiInputDevice>  VuoMidi_inputDeviceCallbacks;   ///< Trigger functions to call when the list of midi input devices changes.
+static VuoTriggerSet<VuoList_VuoMidiOutputDevice> VuoMidi_outputDeviceCallbacks;  ///< Trigger functions to call when the list of midi output devices changes.
+unsigned int VuoMidi_useCount = 0;  ///< Process-wide count of callers (typically node instances) interested in notifications about midi devices.
+MIDIClientRef VuoMidi_client;  ///< Core MIDI client, for device notifications.
 
 /**
  * Returns a list of the available MIDI input devices.
@@ -73,6 +82,92 @@ VuoList_VuoMidiOutputDevice VuoMidi_getOutputDevices(void)
 	return outputDevices;
 }
 
+/**
+ * Invoked by Core MIDI.
+ */
+static void VuoMidi_reconfigurationCallback(const MIDINotification *message, void *refCon)
+{
+	if (message->messageID != kMIDIMsgSetupChanged)
+		return;
+
+	VuoMidi_inputDeviceCallbacks.fire(VuoMidi_getInputDevices());
+	VuoMidi_outputDeviceCallbacks.fire(VuoMidi_getOutputDevices());
+}
+
+/**
+ * Indicates that the caller needs to get notifications about MIDI devices.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoMidi_use(void)
+{
+	if (__sync_add_and_fetch(&VuoMidi_useCount, 1) == 1)
+		VuoApp_executeOnMainThread(^{
+			OSStatus ret = MIDIClientCreate(CFSTR("VuoMidi_use"), VuoMidi_reconfigurationCallback, NULL, &VuoMidi_client);
+			if (ret)
+			{
+				char *description = VuoOsStatus_getText(ret);
+				VUserLog("Error: Couldn't register device change listener: %s", description);
+				free(description);
+			}
+		});
+}
+
+/**
+ * Indicates that the caller no longer needs notifications about MIDI devices.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoMidi_disuse(void)
+{
+	if (VuoMidi_useCount <= 0)
+	{
+		VUserLog("Error: Unbalanced VuoMidi_use() / _disuse() calls.");
+		return;
+	}
+
+	if (__sync_sub_and_fetch(&VuoMidi_useCount, 1) == 0)
+		VuoApp_executeOnMainThread(^{
+			OSStatus ret = MIDIClientDispose(VuoMidi_client);
+			if (ret)
+			{
+				char *description = VuoOsStatus_getText(ret);
+				VUserLog("Error: Couldn't unregister device change listener: %s", description);
+				free(description);
+			}
+		});
+}
+
+/**
+ * Adds a trigger callback, to be invoked whenever the list of known MIDI devices changes.
+ *
+ * Call `VuoMidi_use()` before calling this.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoMidi_addDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoMidiInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoMidiOutputDevice))
+{
+	VuoMidi_inputDeviceCallbacks.addTrigger(inputDevices);
+	VuoMidi_outputDeviceCallbacks.addTrigger(outputDevices);
+	inputDevices(VuoMidi_getInputDevices());
+	outputDevices(VuoMidi_getOutputDevices());
+}
+
+/**
+ * Removes a trigger callback previously added by @ref VuoMidi_addDevicesChangedTriggers.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoMidi_removeDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoMidiInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoMidiOutputDevice))
+{
+	VuoMidi_inputDeviceCallbacks.removeTrigger(inputDevices);
+	VuoMidi_outputDeviceCallbacks.removeTrigger(outputDevices);
+}
+
 void VuoMidiOut_destroy(VuoMidiOut mo);
 
 /**
@@ -80,32 +175,18 @@ void VuoMidiOut_destroy(VuoMidiOut mo);
  */
 VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 {
-	const char *vuoMIDIID = "VuoMidiOut_make";
-
 	RtMidiOut *midiout = NULL;
 	try
 	{
-		midiout = new RtMidiOut();
+		VuoMidiOutputDevice realizedDevice;
+		if (!VuoMidiOutputDevice_realize(md, &realizedDevice))
+			throw RtError("No matching device found");
+		VuoMidiOutputDevice_retain(realizedDevice);
 
-		if (md.id == -1 && strlen(md.name) == 0)
-			// Open the first MIDI device
-			midiout->openPort(0, vuoMIDIID);
-		else if (md.id == -1)
-		{
-			// Open the first MIDI %s device whose name contains mn.name
-			unsigned int portCount = midiout->getPortCount();
-			for (unsigned int i = 0; i < portCount; ++i)
-				if (midiout->getPortName(i).find(md.name) != std::string::npos)
-				{
-					midiout->openPort(i, vuoMIDIID);
-					break;
-				}
-		}
-		else
-		{
-			// Open the MIDI device specified by mn.id
-			midiout->openPort(md.id, vuoMIDIID);
-		}
+		midiout = new RtMidiOut();
+		midiout->openPort(realizedDevice.id, "VuoMidiOut_make");
+
+		VuoMidiOutputDevice_release(realizedDevice);
 	}
 	catch (RtError &error)
 	{
@@ -258,33 +339,19 @@ void VuoMidiIn_destroy(VuoMidiIn mi);
  */
 VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 {
-	const char *vuoMIDIID = "VuoMidiIn_make";
-
 	struct VuoMidiIn_internal *mii;
 	RtMidiIn *midiin = NULL;
 	try
 	{
-		midiin = new RtMidiIn();
+		VuoMidiInputDevice realizedDevice;
+		if (!VuoMidiInputDevice_realize(md, &realizedDevice))
+			throw RtError("No matching device found");
+		VuoMidiInputDevice_retain(realizedDevice);
 
-		if (md.id == -1 && strlen(md.name) == 0)
-			// Open the first MIDI device
-			midiin->openPort(0, vuoMIDIID);
-		else if (md.id == -1)
-		{
-			// Open the first MIDI %s device whose name contains mn.name
-			unsigned int portCount = midiin->getPortCount();
-			for (unsigned int i = 0; i < portCount; ++i)
-				if (midiin->getPortName(i).find(md.name) != std::string::npos)
-				{
-					midiin->openPort(i, vuoMIDIID);
-					break;
-				}
-		}
-		else
-		{
-			// Open the MIDI device specified by mn.id
-			midiin->openPort(md.id, vuoMIDIID);
-		}
+		midiin = new RtMidiIn();
+		midiin->openPort(realizedDevice.id, "VuoMidiIn_make");
+
+		VuoMidiInputDevice_release(realizedDevice);
 
 		mii = (struct VuoMidiIn_internal *)calloc(1, sizeof(struct VuoMidiIn_internal));
 		VuoRegister(mii, VuoMidiIn_destroy);
@@ -362,4 +429,151 @@ void VuoMidiIn_destroy(VuoMidiIn mi)
 	dispatch_release(mii->callbackQueue);
 	delete mii->midiin;
 	free(mii);
+}
+
+/// Helper for VuoMidiInputDevice_realize.
+#define setRealizedDevice(newDevice) \
+	realizedDevice->id = newDevice.id; \
+	realizedDevice->name = VuoText_make(newDevice.name);
+
+/**
+ * If `device`'s ID or name is unknown:
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If `device`'s ID and name are already known (presumably from the `List MIDI Devices` node),
+ * sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * @threadAny
+ */
+bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *realizedDevice)
+{
+	// Already have ID and name; nothing to do.
+	if (device.id != -1 && !VuoText_isEmpty(device.name))
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device:   %s", json_object_to_json_string(VuoMidiInputDevice_getJson(device)));
+	VuoList_VuoMidiInputDevice devices = VuoMidi_getInputDevices();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// First pass: try to find an exact match by ID.
+	VuoListForeach_VuoMidiInputDevice(devices, ^(const VuoMidiInputDevice item){
+		if (device.id != -1 && device.id == item.id)
+		{
+			VDebugLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+			return false;
+		}
+		return true;
+	});
+
+	// Second pass: try to find a match by name.
+	if (!found)
+		VuoListForeach_VuoMidiInputDevice(devices, ^(const VuoMidiInputDevice item){
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Third pass: if the user hasn't specified a device, use the first device.
+	if (!found && device.id == -1 && VuoText_isEmpty(device.name))
+	{
+		if (VuoListGetCount_VuoMidiInputDevice(devices))
+		{
+			VuoMidiInputDevice item = VuoListGetValue_VuoMidiInputDevice(devices, 1);
+			VDebugLog("Using first device: %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+		}
+	}
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
+}
+
+/**
+ * If `device`'s ID or name unknown:
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If `device`'s ID and name are already known (presumably from the `List MIDI Devices` node),
+ * sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * @threadAny
+ */
+bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice *realizedDevice)
+{
+	// Already have ID and name; nothing to do.
+	if (device.id != -1 && !VuoText_isEmpty(device.name))
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device:   %s", json_object_to_json_string(VuoMidiOutputDevice_getJson(device)));
+	VuoList_VuoMidiOutputDevice devices = VuoMidi_getOutputDevices();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// First pass: try to find an exact match by ID.
+	VuoListForeach_VuoMidiOutputDevice(devices, ^(const VuoMidiOutputDevice item){
+		if (device.id != -1 && device.id == item.id)
+		{
+			VDebugLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+			return false;
+		}
+		return true;
+	});
+
+	// Second pass: try to find a match by name.
+	if (!found)
+		VuoListForeach_VuoMidiOutputDevice(devices, ^(const VuoMidiOutputDevice item){
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// Third pass: if the user hasn't specified a device, use the first device.
+	if (!found && device.id == -1 && VuoText_isEmpty(device.name))
+	{
+		if (VuoListGetCount_VuoMidiOutputDevice(devices))
+		{
+			VuoMidiOutputDevice item = VuoListGetValue_VuoMidiOutputDevice(devices, 1);
+			VDebugLog("Using first device: %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+			setRealizedDevice(item);
+			found = true;
+		}
+	}
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
 }

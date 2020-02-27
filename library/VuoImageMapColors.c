@@ -2,9 +2,9 @@
  * @file
  * VuoImageMapColors implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -39,7 +39,7 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 		uniform sampler2D image;		// the unfiltered image
 		uniform sampler2D gradientStrip;// the gradient strip to map against
 		uniform float amount;			// the amount to mix gradient and image
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 
 		// https://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
 		float brightness(vec3 col)
@@ -50,7 +50,7 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 
 		void main(void)
 		{
-			vec4 orig = texture2D(image, fragmentTextureCoordinate.xy);
+			vec4 orig = texture2D(image, fragmentTextureCoordinate);
 
 			float lum = brightness(orig.rgb/orig.a);
 
@@ -86,8 +86,9 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(shader);
 
-	VuoShader_setUniform_VuoImage(shader, "gradientStrip", gradientStrip);
+	// Set `image` before `gradientStrip`, so that `image`'s scaleFactor is used for the output image.
 	VuoShader_setUniform_VuoImage(shader, "image", image);
+	VuoShader_setUniform_VuoImage(shader, "gradientStrip", gradientStrip);
 	VuoShader_setUniform_VuoReal (shader, "gradientCount", (float)len);
 	VuoShader_setUniform_VuoReal (shader, "amount", filterOpacity);
 

@@ -2,19 +2,20 @@
  * @file
  * VuoVideoPlayer interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#include "module.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "module.h"
 #include "VuoAudioFrame.h"
 #include "VuoVideoFrame.h"
 #include "VuoUrl.h"
@@ -80,13 +81,13 @@ private:
 	/// Timer for video thread
 	dispatch_source_t video_timer;
 
-	/// Semaphore for video thread
+	/// Signals when video_timer has stopped after a cancel was requested.
 	dispatch_semaphore_t video_semaphore;
 
 	/// Timer for audio thread
 	dispatch_source_t audio_timer;
 
-	/// Semaphore for audio thread
+	/// Signals when audio_timer has stopped after a cancel was requested.
 	dispatch_semaphore_t audio_semaphore;
 
 	/// time that next video frame send event is scheduled
@@ -160,7 +161,7 @@ private:
 	void _Pause();
 
 	/// Internal implementation bypasses decoder mutex lock
-	bool _Seek(double second);
+	bool _Seek(double second) VuoWarnUnusedResult;
 
 public:
 
@@ -223,7 +224,7 @@ public:
 	void Pause();
 	/// Seek to a position in the video track.  0 is always the start of playback.  `second` will be
 	/// clamped to 0 ≤ `second` ≤ duration.
-	bool Seek(double second);
+	bool Seek(double second) VuoWarnUnusedResult;
 	/// Returns the last decoded video frame timestamp.
 	double GetCurrentTimestamp();
 	/// Returns the last frame delta (current frame timestamp - last frame timestamp).  This is not guaranteed to be accurate to the framerate, as video can have variable rates.
@@ -232,9 +233,9 @@ public:
 	double GetDuration();
 	/// Get the last decoded image.  This may be null, and will return false in the event that no frame
 	/// is available.  Images associated with returned frames have a retain count of 1.
-	bool GetCurrentVideoFrame(VuoVideoFrame* frame);
+	bool GetCurrentVideoFrame(VuoVideoFrame* frame) VuoWarnUnusedResult;
 	/// Get a video frame at the requested second.
-	bool GetVideoFrameAtSecond(double second, VuoVideoFrame* videoFrame);
+	bool GetVideoFrameAtSecond(double second, VuoVideoFrame* videoFrame) VuoWarnUnusedResult;
 	/// Return the number of audio channels available.
 	unsigned int GetAudioChannels();
 	/// True if the video is loaded and ready to play, else false.  If false, some values may not yet be available (duration, channel counts, etc)
@@ -242,9 +243,9 @@ public:
 	/// True if the player is running, false otherwise.
 	bool IsPlaying() { return isPlaying; }
 	/// Get the next video frame.  Always false if currently playing.
-	bool NextVideoFrame(VuoVideoFrame* frame);
+	bool NextVideoFrame(VuoVideoFrame* frame) VuoWarnUnusedResult;
 	/// Get the next audio frame.  Always false if currently playing.
-	bool NextAudioFrame(VuoAudioFrame* frame);
+	bool NextAudioFrame(VuoAudioFrame* frame) VuoWarnUnusedResult;
 };
 
 #ifdef __cplusplus

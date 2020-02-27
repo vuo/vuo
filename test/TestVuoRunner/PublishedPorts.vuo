@@ -2,16 +2,20 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
+MakeVertexAttributeShader [type="vuo.shader.make.normal" version="1.3.0" label="Make Vertex Attribute Shader|<refresh>refresh\l|<attribute>attribute\l|<coordinateSpace>coordinateSpace\l|<xColor>xColor\l|<yColor>yColor\l|<zColor>zColor\l|<shader>shader\r" pos="255,240" _attribute="\"normal\"" _xColor="\{\"r\":1.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _yColor="\{\"r\":0.0,\"g\":1.0,\"b\":0.0,\"a\":1.0\}" _zColor="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}"];
 Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="255,105" _period="1.0" _center="0.0" _amplitude="1.0"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<Time>Time\r|<Wave>Wave\r|<Phase>Phase\r" _Time_type="VuoReal" _Time="0.0" _Wave_type="VuoWave" _Wave="\"sine\"" _Phase_type="VuoReal" _Phase="0.0" _Phase_suggestedMin="0" _Phase_suggestedMax="1" _Phase_suggestedStep="0.1"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Time>Time\r|<Wave>Wave\r|<Phase>Phase\r|<CoordinateSpace>CoordinateSpace\r" _Time_type="VuoReal" _Time="0.0" _Wave_type="VuoWave" _Wave_menuItems="[\{\"value\":\"sine\",\"name\":\"Sine\"\},\{\"value\":\"triangle\",\"name\":\"Triangle\"\},\{\"value\":\"sawtooth\",\"name\":\"Sawtooth\"\}]" _Wave="\"sine\"" _Phase_type="VuoReal" _Phase_suggestedMin="0" _Phase_suggestedMax="1" _Phase="0.0" _Phase_suggestedStep="0.1" _CoordinateSpace_type="VuoInteger" _CoordinateSpace_menuItems="\{\"0\":\"World\",\"1\":\"Local\"\}" _CoordinateSpace="0"];
 
+PublishedInputs:CoordinateSpace -> MakeVertexAttributeShader:coordinateSpace;
 PublishedInputs:Phase -> Wave:phase;
 PublishedInputs:Time -> Wave:time;
 PublishedInputs:Wave -> Wave:wave;

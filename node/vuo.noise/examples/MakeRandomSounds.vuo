@@ -2,37 +2,36 @@
  * @file
  * Generates a randomly fluctuating pitch, illustrated with a waveform diagram with randomly changing colors.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 AdjustLoudness2 [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="915,0" _loudness="0.500000"];
-FirePeriodically3 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-45,-30" fillcolor="yellow" _seconds="0.050000" _fired_eventThrottling="enqueue"];
-MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="660,0" _wave="\"sine\"" _setPhase="0.0"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="465,-75" fillcolor="lime" _requestedChannels_eventThrottling="enqueue"];
+FirePeriodically3 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-90,15" fillcolor="lime" _seconds="0.050000" _fired_eventThrottling="enqueue"];
+MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="660,-15" _wave="\"sine\"" _setPhase="0.0"];
 MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="645,180" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1082,191" fillcolor="green"];
 MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="861,11"];
-MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="135,15" fillcolor="violet" _minimum="0.000000" _maximum="1.000000"];
-MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="870,165" _height="256" _syncAmplitude="0.0"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1110,165" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="135,15" fillcolor="orange" _minimum="0.000000" _maximum="1.000000"];
+MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<syncCenter>syncCenter\l|<attenuateEnds>attenuateEnds\l|<image>image\r" pos="870,165" _height="256" _syncAmplitude="0.0" _syncCenter="0.0" _attenuateEnds="false"];
+RenderImageToWindow2 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1110,165" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
 Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="375,15" _start="0.000000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="8000.000000" _limitToRange="false"];
-SendLiveAudio3 [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="1110,-15" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="1110,-15" fillcolor="blue"];
 
-AdjustLoudness2:adjustedSamples -> SendLiveAudio3:sendChannels;
-FirePeriodically3:fired -> MakeRandomValue:refresh;
+AdjustLoudness2:adjustedSamples -> SendLiveAudio:sendChannels;
+FireAtAudioRate:requestedChannels -> MakeAudioWave2:calculateSamples;
+FirePeriodically3:fired -> MakeRandomValue:minimum [event=true];
 MakeAudioWave2:samples -> MakeList4:1;
 MakeAudioWave2:samples -> MakeWaveformImage:samples;
 MakeHSLColor:color -> MakeWaveformImage:fillColor;
 MakeHSLColor:color -> MakeWaveformImage:lineColor;
-MakeList0:list -> RenderImageToWindow2:setWindowProperties;
 MakeList4:list -> AdjustLoudness2:samples;
 MakeRandomValue:value -> MakeHSLColor:hue;
 MakeRandomValue:value -> Scale:value;
 MakeWaveformImage:image -> RenderImageToWindow2:image;
 Scale:scaledValue -> MakeAudioWave2:frequency;
-SendLiveAudio3:requestedChannels -> MakeAudioWave2:calculateSamples;
 }

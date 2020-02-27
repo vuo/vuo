@@ -2,9 +2,9 @@
  * @file
  * TestVuoTransform implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -435,15 +435,15 @@ private slots:
 
 		QTest::newRow("Euler transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeEuler(VuoPoint3d_make(1,1,1),VuoPoint3d_make(0,M_PI/2.,2.*M_PI),VuoPoint3d_make(2,2,2)))
 											<< true
-											<< "translation (1, 1, 1)<br>rotation (0°, 90°, 360°) euler<br>scale (2, 2, 2)";
+											<< "<div>translation (1, 1, 1)</div><div>rotation (0°, 90°, 360°) euler</div><div>scale (2, 2, 2)</div>";
 
 		QTest::newRow("Quaternion transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeQuaternion(VuoPoint3d_make(1,1,1),VuoPoint4d_make(.5,.5,.5,.5),VuoPoint3d_make(2,2,2)))
 												<< true
-												<< "translation (1, 1, 1)<br>rotation (0.5, 0.5, 0.5, 0.5) quaternion<br>scale (2, 2, 2)";
+												<< "<div>translation (1, 1, 1)</div><div>rotation (0.5, 0.5, 0.5, 0.5) quaternion</div><div>scale (2, 2, 2)</div>";
 
 		QTest::newRow("Targeted transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeFromTarget(VuoPoint3d_make(1,2,3),VuoPoint3d_make(4,5,6),VuoPoint3d_make(0,1,0)))
 											<< true
-											<< "position (1, 2, 3)<br>target (4, 5, 6)<br>up (0, 1, 0)";
+											<< "<div>position (1, 2, 3)</div><div>target (4, 5, 6)</div><div>up (0, 1, 0)</div>";
 	}
 	void testSerializationAndSummary()
 	{

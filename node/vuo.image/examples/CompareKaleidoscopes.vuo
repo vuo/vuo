@@ -2,48 +2,52 @@
  * @file
  * Shows four different variations of kaleidoscopes.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Image by Pexels on [Pixabay](https://pixabay.com/en/beach-surfing-wave-ocean-outdoors-1836366/).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1320,345" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="2" _height="1.400000" _rows="2"];
-ChangeWindowAspectRatio2 [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="1635,135" _width="4.000000" _height="3.000000"];
-ChangeWrapMode [type="vuo.image.wrapMode" version="2.0.0" label="Change Wrap Mode|<refresh>refresh\l|<image>image\l|<wrapMode>wrapMode\l|<outputImage>outputImage\r" pos="150,540" _wrapMode="\"mirror\""];
-ChangeWrapMode2 [type="vuo.image.wrapMode" version="2.0.0" label="Change Wrap Mode|<refresh>refresh\l|<image>image\l|<wrapMode>wrapMode\l|<outputImage>outputImage\r" pos="150,315" _wrapMode="\"none\""];
-CombineLayers [type="vuo.layer.combine.center" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1020,105" _center="{\"x\":0,\"y\":0}" _rotation="0" _scale="{\"x\":1.000000,\"y\":1.000000}"];
-CombineLayers2 [type="vuo.layer.combine.center" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1020,360" _center="{\"x\":0,\"y\":0}" _rotation="0" _scale="{\"x\":1.000000,\"y\":1.000000}"];
-CombineLayers3 [type="vuo.layer.combine.center" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1035,600" _center="{\"x\":0,\"y\":0}" _rotation="0" _scale="{\"x\":1.000000,\"y\":1.000000}"];
-CombineLayers4 [type="vuo.layer.combine.center" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1035,855" _center="{\"x\":0,\"y\":0}" _rotation="0" _scale="{\"x\":1.000000,\"y\":1.000000}"];
-CropImage [type="vuo.image.crop" version="1.1.1" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="30,405" _center="{\"x\":-0.500000,\"y\":0.000000}" _width="1" _height="1"];
-Curve2 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="225,0" _startPosition="{\"x\":-2.000000,\"y\":-2.000000}" _endPosition="{\"x\":1.000000,\"y\":1.000000}" _duration="8.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-150,105" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-150,405" _url="\"Vista.jpg\""];
-MakeKaleidoscopeImage2 [type="vuo.image.kaleidoscope" version="1.0.0" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,60" fillcolor="violet" _sides="6.000000" _angle="0.000000" _bladeCenter="{\"x\":0.000000,\"y\":0.000000}" _reflectOddSides="true"];
-MakeKaleidoscopeImage3 [type="vuo.image.kaleidoscope" version="1.0.0" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,555" fillcolor="violet" _sides="6.000000" _angle="0.000000" _bladeCenter="{\"x\":0.000000,\"y\":0.000000}" _reflectOddSides="false"];
-MakeKaleidoscopeImage4 [type="vuo.image.kaleidoscope" version="1.0.0" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,300" fillcolor="violet" _sides="6.000000" _angle="0.000000" _bladeCenter="{\"x\":0.000000,\"y\":0.000000}" _reflectOddSides="true"];
-MakeKaleidoscopeImage5 [type="vuo.image.kaleidoscope" version="1.0.0" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,810" fillcolor="violet" _sides="6.000000" _angle="0.000000" _bladeCenter="{\"x\":0.000000,\"y\":0.000000}" _reflectOddSides="false"];
-MakeList [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1620,-64" fillcolor="green"];
-MakeList11 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,416"];
-MakeList12 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1002,656"];
-MakeList13 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1002,911"];
-MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1589,-79" fillcolor="green"];
-MakeList6 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1256,356"];
-MakeList9 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,161"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,45" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,540" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,285" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
-MakeScaledLayer4 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,810" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="780,195" _text="\"Image not wrapped\\nOdd sides reflected\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.320000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="780,435" _text="\"Image wrapped\\nOdd sides reflected\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.320000}"];
-MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="765,690" _text="\"Image not wrapped\\nOdd sides not reflected\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.320000}"];
-MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="765,960" _text="\"Image wrapped\\nOdd sides not reflected\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.320000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1650,-90" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-480,420" fillcolor="lime"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1320,345" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="1.800000" _columns="2" _height="1.3999999999999999" _rows="2"];
+ChangeWrapMode [type="vuo.image.wrapMode" version="2.0.1" label="Change Wrap Mode|<refresh>refresh\l|<image>image\l|<wrapMode>wrapMode\l|<outputImage>outputImage\r" pos="150,690" _wrapMode="\"mirror\""];
+ChangeWrapMode2 [type="vuo.image.wrapMode" version="2.0.1" label="Change Wrap Mode|<refresh>refresh\l|<image>image\l|<wrapMode>wrapMode\l|<outputImage>outputImage\r" pos="150,315" _wrapMode="\"none\""];
+CombineLayers [type="vuo.layer.combine.center" version="1.1.0" label="Combine Layers|<refresh>refresh\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1050,45" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _scale="\{\"x\":1.000000,\"y\":1.000000\}"];
+CombineLayers2 [type="vuo.layer.combine.center" version="1.1.0" label="Combine Layers|<refresh>refresh\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1020,360" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _scale="\{\"x\":1.000000,\"y\":1.000000\}"];
+CombineLayers3 [type="vuo.layer.combine.center" version="1.1.0" label="Combine Layers|<refresh>refresh\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1050,735" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _scale="\{\"x\":1.000000,\"y\":1.000000\}"];
+CombineLayers4 [type="vuo.layer.combine.center" version="1.1.0" label="Combine Layers|<refresh>refresh\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="1035,1080" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _scale="\{\"x\":1.000000,\"y\":1.000000\}"];
+CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="-90,420" _center="\{\"x\":-0.500000,\"y\":0.000000\}" _width="1" _height="1"];
+Curve2 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="150,-45" _startPosition="\{\"x\":-1.7999999523162842,\"y\":-1.7999999523162842\}" _endPosition="\{\"x\":0.89999997615814209,\"y\":0.89999997615814209\}" _duration="8.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-90,-45" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-270,420" _url="\"Wave.jpg\""];
+LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="1605,345" _width="4." _height="3."];
+MakeKaleidoscopeImage2 [type="vuo.image.kaleidoscope" version="1.0.1" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,30" fillcolor="orange" _sides="6.000000" _angle="0.000000" _bladeCenter="\{\"x\":0.000000,\"y\":0.000000\}" _reflectOddSides="true"];
+MakeKaleidoscopeImage3 [type="vuo.image.kaleidoscope" version="1.0.1" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,720" fillcolor="orange" _sides="6.000000" _angle="0.000000" _bladeCenter="\{\"x\":0.000000,\"y\":0.000000\}" _reflectOddSides="false"];
+MakeKaleidoscopeImage4 [type="vuo.image.kaleidoscope" version="1.0.1" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="465,360" fillcolor="orange" _sides="6.000000" _angle="0.000000" _bladeCenter="\{\"x\":0.000000,\"y\":0.000000\}" _reflectOddSides="true"];
+MakeKaleidoscopeImage5 [type="vuo.image.kaleidoscope" version="1.0.1" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="480,1080" fillcolor="orange" _sides="6.000000" _angle="0.000000" _bladeCenter="\{\"x\":0.000000,\"y\":0.000000\}" _reflectOddSides="false"];
+MakeList11 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,431"];
+MakeList12 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1017,806"];
+MakeList13 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1002,1151"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1808,191" fillcolor="blue"];
+MakeList6 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1252,356"];
+MakeList9 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1017,116"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="780,30" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="780,720" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
+MakeScaledLayer3 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="780,360" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
+MakeScaledLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="780,1080" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.500000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,180" _text="\"Image not wrapped\\nOdd sides reflected\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.320000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,510" _text="\"Image wrapped\\nOdd sides reflected\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.320000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,870" _text="\"Image not wrapped\\nOdd sides not reflected\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.320000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,1230" _text="\"Image wrapped\\nOdd sides not reflected\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.320000\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1860,180" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> GetImage2:url;
+ArrangeLayersInGrid:griddedLayer -> LockWindowAspectRatio:width [event=true];
 ArrangeLayersInGrid:griddedLayer -> MakeList2:1;
-ChangeWindowAspectRatio2:property -> MakeList:1;
 ChangeWrapMode2:outputImage -> MakeKaleidoscopeImage2:image;
 ChangeWrapMode2:outputImage -> MakeKaleidoscopeImage3:image;
 ChangeWrapMode:outputImage -> MakeKaleidoscopeImage4:image;
@@ -58,24 +62,24 @@ Curve2:value -> MakeKaleidoscopeImage2:imageCenter;
 Curve2:value -> MakeKaleidoscopeImage3:imageCenter;
 Curve2:value -> MakeKaleidoscopeImage4:imageCenter;
 Curve2:value -> MakeKaleidoscopeImage5:imageCenter;
-FireOnStart:started -> ChangeWindowAspectRatio2:refresh;
-FireOnStart:started -> GetImage2:refresh;
-FireOnStart:started -> MakeTextLayer2:refresh;
-FireOnStart:started -> MakeTextLayer3:refresh;
-FireOnStart:started -> MakeTextLayer4:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 GetImage2:image -> CropImage:image;
+LockWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
 MakeKaleidoscopeImage2:reflectedImage -> MakeScaledLayer:image;
+MakeKaleidoscopeImage2:reflectedImage -> MakeTextLayer:center [event=true];
 MakeKaleidoscopeImage3:reflectedImage -> MakeScaledLayer2:image;
+MakeKaleidoscopeImage3:reflectedImage -> MakeTextLayer3:center [event=true];
 MakeKaleidoscopeImage4:reflectedImage -> MakeScaledLayer3:image;
+MakeKaleidoscopeImage4:reflectedImage -> MakeTextLayer2:center [event=true];
 MakeKaleidoscopeImage5:reflectedImage -> MakeScaledLayer4:image;
+MakeKaleidoscopeImage5:reflectedImage -> MakeTextLayer4:center [event=true];
 MakeList11:list -> CombineLayers2:layers;
 MakeList12:list -> CombineLayers3:layers;
 MakeList13:list -> CombineLayers4:layers;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList6:list -> ArrangeLayersInGrid:layers;
 MakeList9:list -> CombineLayers:layers;
-MakeList:list -> RenderLayersToWindow:setWindowProperties;
 MakeScaledLayer2:layer -> MakeList12:1;
 MakeScaledLayer3:layer -> MakeList11:1;
 MakeScaledLayer4:layer -> MakeList13:1;
@@ -84,5 +88,4 @@ MakeTextLayer2:layer -> MakeList11:2;
 MakeTextLayer3:layer -> MakeList12:2;
 MakeTextLayer4:layer -> MakeList13:2;
 MakeTextLayer:layer -> MakeList9:2;
-RenderLayersToWindow:requestedFrame -> Curve2:time;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.data.areEqual node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -23,18 +23,21 @@ VuoModuleMetadata({
 								  "VuoArtNetInputDevice", "VuoArtNetOutputDevice",
 								  "VuoAudioInputDevice", "VuoAudioOutputDevice", "VuoAudioFrame", "VuoData",
 								  "VuoCoordinateUnit", "VuoDistribution3d", "VuoDragEvent",
+								  "VuoGridType",
 								  "VuoHidControl", "VuoHidDevice",
 								  "VuoImageFormat",
 								  "VuoFont", "VuoMidiController", "VuoMidiInputDevice",
 								  "VuoMidiNote", "VuoMidiOutputDevice", "VuoMidiPitchBend",
 								  "VuoMultisample", "VuoBaudRate", "VuoParity",
 								  "VuoOscInputDevice", "VuoOscOutputDevice",
+								  "VuoRange",
+								  "VuoRectangle",
 								  "VuoRelativeTime", "VuoRoundingMethod",
 								  "VuoSerialDevice", "VuoVertexAttribute", "VuoSyphonServerDescription",
 								  "VuoTempoRange", "VuoNumberFormat", "VuoIconPosition", "VuoMovieFormat",
 								  "VuoVideoFrame", "VuoVideoInputDevice",
 								  "VuoTime", "VuoTimeUnit", "VuoTimeFormat", "VuoWeekday",
-								  "VuoHorizontalAlignment", "VuoVerticalAlignment"
+								  "VuoHorizontalAlignment", "VuoVerticalAlignment", "VuoAnchor"
 							  ]
 						  }
 					  },

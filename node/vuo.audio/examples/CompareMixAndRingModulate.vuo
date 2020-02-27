@@ -1,88 +1,88 @@
 /**
  * @file
+ * @brief Compare Mix and Ring Modulate
  * Shows the audible and visual difference between mixing two sine waves and ring modulating them.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AdjustLoudness3 [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="720,120" _loudness="0.5"];
-AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="825,300"];
-CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="720,195" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
+AdjustLoudness3 [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="825,60" _loudness="0.5"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-75,255" fillcolor="lime"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="870,330"];
+CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.1" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="750,195" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
 CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="1140,345"];
-CutList2 [type="vuo.list.cut.VuoReal" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1170,180" _startPosition="1" _itemCount="740"];
-FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="465,300" _format="\"decimal\"" _minimumIntegerDigits="3" _minimumDecimalPlaces="0" _decimalPlaces="0" _showThousandSeparator="true"];
-HoldList5 [type="vuo.data.hold.list.VuoReal" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1020,180"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1875,240" _transform="\"identity\""];
-MakeAudioWave3 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="75,60" _wave="\"sine\"" _setPhase="0.0"];
-MakeAudioWave4 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="75,-45" _wave="\"sine\"" _frequency="880" _setPhase="0"];
-MakeLineStripMesh2 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1680,165" _lineWidth="0.0040000000000000001"];
-MakeList [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,56" fillcolor="violet"];
-MakeList15 [type="vuo.list.make.0.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="992,191"];
-MakeList17 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="784,311" _2="\"\\n2 sine waves:\\n880 Hz\\n\"" _4="\" Hz\\n\\nClick to change.          \""];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1737,356" fillcolor="green"];
-MakeList25 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="669,131"];
-MakeList33 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,-34" fillcolor="violet"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1757,386" fillcolor="green"];
-MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="1305,240" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"exponential\"" _easing="\"out\""];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="975,330" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="1155,360" _center="{\"x\":0,\"y\":-0.30000001192092896,\"z\":0}" _rotation="{\"x\":0.0,\"y\":0.0,\"z\":0.0}" _width="0.5" _opacity="1.0"];
-MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1500,165"];
-MixAudioChannels2 [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="300,-45" fillcolor="violet"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="165,165" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1785,345" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RingModulateAudio [type="vuo.audio.ringModulate" version="1.0.0" label="Ring Modulate Audio|<refresh>refresh\l|<channels>channels\l|<modulatedSamples>modulatedSamples\r" pos="300,45" fillcolor="violet"];
-SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,210" _falseOption="\"Mixing (adding)\"" _trueOption="\"Ring modulating (multiplying)\""];
+CutList2 [type="vuo.list.cut.VuoReal" version="1.0.1" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="1200,180" _startPosition="1" _itemCount="740"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="-300,-45" fillcolor="lime" _requestedChannels_eventThrottling="enqueue"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-315,195" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="480,360" _format="\"decimal\"" _minimumIntegerDigits="3" _minimumDecimalPlaces="0" _decimalPlaces="0" _showThousandSeparator="true"];
+HoldList5 [type="vuo.data.hold.list2.VuoReal" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1050,180"];
+MakeAudioWave3 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="60,45" _wave="\"sine\"" _setPhase="0.0"];
+MakeAudioWave4 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="60,-60" _wave="\"sine\"" _frequency="880" _setPhase="0"];
+MakeLineStripObject [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoColor" version="1.0.0" label="Make Line Strip Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<object>object\r" pos="1905,120" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _lineWidth="0.0040000000000000001"];
+MakeList [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,41" fillcolor="orange"];
+MakeList17 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="829,341" _2="\"\\n2 sine waves:\\n880 Hz\\n\"" _4="\" Hz\\n\\nClick to change. \  \  \  \  \ \""];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1844,326" fillcolor="blue"];
+MakeList25 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="771,71"];
+MakeList33 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="282,-49" fillcolor="orange"];
+MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="1470,60" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"exponential\"" _easing="\"out\""];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="1170,330" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="1440,330" _center="\{\"x\":0,\"y\":-0.30000001192092896,\"z\":0\}" _rotation="\{\"x\":0.0,\"y\":0.0,\"z\":0.0\}" _opacity="1.0"];
+MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1725,165"];
+MixAudioChannels2 [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="315,-60" fillcolor="orange"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-105,360" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1890,315" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RingModulateAudio [type="vuo.audio.ringModulate" version="1.0.0" label="Ring Modulate Audio|<refresh>refresh\l|<channels>channels\l|<modulatedSamples>modulatedSamples\r" pos="300,30" fillcolor="orange"];
+SelectInput [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1170,450" _falseOption="0.25" _trueOption="0.5"];
+SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,240" _falseOption="\"Mixing (adding)\"" _trueOption="\"Ring modulating (multiplying)\""];
 SelectInput5 [type="vuo.select.in.boolean.VuoAudioSamples" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,120"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="900,105" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="1665,240" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="360,165"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="1035,45" fillcolor="blue"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="150,255"];
 Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-90,90" _wave="\"sine\"" _period="2" _center="220" _amplitude="110" _phase="0"];
 
-AdjustLoudness3:adjustedSamples -> SendLiveAudio:sendChannels;
+AdjustLoudness3:adjustedSamples -> SendLiveAudio2:sendChannels;
+AllowFirstEvent:firstEvent -> Toggle:toggle;
 AppendTexts:compositeText -> MakeTextImage:text;
-CalculateAmplitudeForFrequencies:amplitudes -> HoldList5:newValue;
+CalculateAmplitudeForFrequencies:amplitudes -> HoldList5:value;
 CountItemsInList2:itemCount -> MakePointsAlongCurve2:numberOfPoints;
 CutList2:partialList -> CountItemsInList2:list;
 CutList2:partialList -> MergeXYLists:y;
+FireAtAudioRate:requestedChannels -> MakeAudioWave3:calculateSamples;
+FireAtAudioRate:requestedChannels -> MakeAudioWave4:calculateSamples;
+FireAtAudioRate:requestedChannels -> Wave:time;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> HoldList5:update;
 FormatNumber:text -> MakeList17:3;
 HoldList5:heldValue -> CutList2:list;
-Make3DObject:object -> MakeList2:1;
 MakeAudioWave3:samples -> MakeList33:2;
 MakeAudioWave3:samples -> MakeList:2;
 MakeAudioWave4:samples -> MakeList33:1;
 MakeAudioWave4:samples -> MakeList:1;
-MakeLineStripMesh2:mesh -> Make3DObject:mesh;
-MakeList15:list -> HoldList5:initialValue;
+MakeLineStripObject:object -> MakeList2:1;
 MakeList17:list -> AppendTexts:texts;
 MakeList25:list -> AdjustLoudness3:samples;
 MakeList2:list -> RenderSceneToWindow:objects;
 MakeList33:list -> MixAudioChannels2:samples;
-MakeList5:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> RingModulateAudio:channels;
 MakePointsAlongCurve2:points -> MergeXYLists:x;
 MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
 MakeUnlit3DObjectFromImage:object -> MakeList2:2;
-MergeXYLists:points -> MakeLineStripMesh2:positions;
-MergeXYLists:points -> ShadeWithUnlitColor:refresh;
+MergeXYLists:points -> MakeLineStripObject:positions;
 MixAudioChannels2:mixedSamples -> SelectInput5:falseOption;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
-RenderSceneToWindow:requestedFrame -> HoldList5:refresh [style=invis];
-RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
-RingModulateAudio:modulatedSamples -> SelectInput4:refresh;
+RenderSceneToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 RingModulateAudio:modulatedSamples -> SelectInput5:trueOption;
 SelectInput4:out -> MakeList17:1;
 SelectInput5:out -> CalculateAmplitudeForFrequencies:samples;
 SelectInput5:out -> MakeList25:1;
-SendLiveAudio:requestedChannels -> MakeAudioWave3:calculateSamples [style=invis];
-SendLiveAudio:requestedChannels -> MakeAudioWave4:calculateSamples [style=invis];
-SendLiveAudio:requestedChannels -> Wave:time [style=invis];
-ShadeWithUnlitColor:shader -> Make3DObject:shader;
+SelectInput:out -> MakeUnlit3DObjectFromImage:width;
 Toggle:value -> SelectInput4:which;
 Toggle:value -> SelectInput5:which;
+Toggle:value -> SelectInput:which;
 Wave:value -> FormatNumber:value;
 Wave:value -> MakeAudioWave3:frequency;
 }

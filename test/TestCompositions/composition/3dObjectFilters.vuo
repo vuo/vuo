@@ -1,0 +1,95 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddNoiseTo3DObject [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="1965,405" _time="0.0" _amount="\{\"x\":0.2,\"y\":0.2,\"z\":0.2\}" _scale="1.0"];
+Bend3DObject [type="vuo.scene.bend" version="1.0.1" label="Bend 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<radius>radius\l|<direction>direction\l|<bentObject>bentObject\r" pos="1965,1140" _amount="30.0" _radius="0.5" _direction="0.0"];
+Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.1.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="1965,765" _channel="\"rec709\"" _distance="0.10000000000000001"];
+Divide3DObject [type="vuo.scene.divide" version="1.0.0" label="Divide 3D Object|<refresh>refresh\l|<object>object\l|<distance>distance\l|<dividedObject>dividedObject\r" pos="1965,1245" _distance="0.050000000000000003"];
+Explode3DObject [type="vuo.scene.explode" version="1.0.0" label="Explode 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<translationAmount>translationAmount\l|<rotationAmount>rotationAmount\l|<chaos>chaos\l|<center>center\l|<range>range\l|<gravity>gravity\l|<explodedObject>explodedObject\r" pos="1965,510" _time="0.01" _translationAmount="1.0" _rotationAmount="1.0" _chaos="1.0" _center="\{\"x\":0.5,\"y\":0.5,\"z\":0.5\}" _range="1" _gravity="\{\"x\":0,\"y\":-1,\"z\":0\}"];
+Facet3DObject [type="vuo.scene.facet" version="1.0.0" label="Facet 3D Object|<refresh>refresh\l|<object>object\l|<facetedObject>facetedObject\r" pos="1965,1320"];
+Get3DObjectBounds [type="vuo.scene.bounds" version="1.0.0" label="Get 3D Object Bounds|<refresh>refresh\l|<object>object\l|<center>center\r|<width>width\r|<height>height\r|<depth>depth\r" pos="2595,570"];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoInteger" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="1095,405" _b="8"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="2805,585"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="1665,780" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+Pinch3DObject [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="1965,675" _amount="0.10000000000000001" _center="\{\"x\":0.5,\"y\":0.5,\"z\":0.5\}"];
+Quantize3DObject [type="vuo.scene.quantize" version="1.0.1" label="Quantize 3D Object|<refresh>refresh\l|<object>object\l|<stepSize>stepSize\l|<center>center\l|<quantizedObject>quantizedObject\r" pos="1965,1380" _stepSize="\{\"x\":0.1,\"y\":0.1,\"z\":0.1\}" _center="\{\"x\":0.0,\"y\":0.0,\"z\":0.0\}"];
+Ripple3DObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="1965,870" _angle="135.0" _amplitude="0.05" _wavelength="0.02" _phase="0.0" _dispersion="\"linear\"" _displacement="\"transverse\""];
+SelectLatest2 [type="vuo.select.latest.8.VuoSceneObject" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="2310,570"];
+SelectLatest3 [type="vuo.select.latest.8.VuoSceneObject" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="2235,1320"];
+SelectLatest5 [type="vuo.select.latest.2.VuoSceneObject" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="2460,570"];
+SelectOutput2 [type="vuo.select.out.8.VuoSceneObject" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r|<option3>option3\r|<option4>option4\r|<option5>option5\r|<option6>option6\r|<option7>option7\r|<option8>option8\r" pos="1650,405"];
+SelectOutput3 [type="vuo.select.out.8.VuoSceneObject" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r|<option3>option3\r|<option4>option4\r|<option5>option5\r|<option6>option6\r|<option7>option7\r|<option8>option8\r" pos="1665,1320"];
+SelectOutput4 [type="vuo.select.out.boolean.VuoInteger" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1305,405"];
+SelectOutput5 [type="vuo.select.out.boolean.VuoSceneObject" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1305,480"];
+ShareValue [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="915,495"];
+Skew3DObject [type="vuo.scene.skew" version="1.0.1" label="Skew 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<direction>direction\l|<skewedObject>skewedObject\r" pos="1965,1470" _amount="0.5" _direction="0.0"];
+Spike3DObject [type="vuo.scene.spike" version="1.0.0" label="Spike 3D Object|<refresh>refresh\l|<object>object\l|<distance>distance\l|<spikedObject>spikedObject\r" pos="1965,1560" _distance="0.01"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="1500,1320" _b="8"];
+TestMeshTypes [type="vuo.test.mesh" version="1.0.0" label="Test Mesh Types|<refresh>refresh\l|<elementAssemblyMethod>elementAssemblyMethod\l|<includeElements>includeElements\l|<includeNTBTC>includeNTBTC\l|<object>object\r" pos="1080,495"];
+Trim3DObject [type="vuo.scene.trim" version="1.0.0" label="Trim 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<width>width\l|<height>height\l|<depth>depth\l|<trimmedObject>trimmedObject\r" pos="1965,1020" _center="\{\"x\":0.5,\"y\":0.5,\"z\":0.5\}" _width="1" _height="1" _depth="1"];
+Twirl3DObject [type="vuo.scene.twirl" version="1.0.1" label="Twirl 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<twirledObject>twirledObject\r" pos="1965,1635" _amount="5"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<object>object\r|<elements>elements\r|<ntbtc>ntbtc\r|<filter>filter\r" _object_type="VuoInteger" _object="1" _elements_type="VuoBoolean" _ntbtc_type="VuoBoolean" _filter_type="VuoInteger" _filter="9"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<center>center\l|<size>size\l" _center_type="VuoPoint3d" _size_type="VuoPoint3d"];
+
+AddNoiseTo3DObject:noisedObject -> SelectLatest2:option1;
+Bend3DObject:bentObject -> SelectLatest2:option7;
+Displace3DObjectWithImage:deformedObject -> SelectLatest2:option4;
+Divide3DObject:dividedObject -> SelectLatest2:option8;
+Explode3DObject:explodedObject -> SelectLatest2:option2;
+Facet3DObject:facetedObject -> SelectLatest3:option1;
+Get3DObjectBounds:center -> PublishedOutputs:center;
+Get3DObjectBounds:depth -> Make3DPoint:z;
+Get3DObjectBounds:height -> Make3DPoint:y;
+Get3DObjectBounds:width -> Make3DPoint:x;
+IsGreaterThan:greaterThan -> SelectOutput4:which;
+IsGreaterThan:greaterThan -> SelectOutput5:which;
+Make3DPoint:point -> PublishedOutputs:size;
+MakeCheckerboardImage:image -> Displace3DObjectWithImage:image;
+Pinch3DObject:pinchedObject -> SelectLatest2:option3;
+PublishedInputs:elements -> TestMeshTypes:includeElements;
+PublishedInputs:filter -> IsGreaterThan:a;
+PublishedInputs:filter -> SelectOutput4:in;
+PublishedInputs:ntbtc -> TestMeshTypes:includeNTBTC;
+PublishedInputs:object -> ShareValue:value;
+Quantize3DObject:quantizedObject -> SelectLatest3:option2;
+Ripple3DObject:rippledObject -> SelectLatest2:option5;
+SelectLatest2:latest -> SelectLatest5:option1;
+SelectLatest3:latest -> SelectLatest5:option2;
+SelectLatest5:latest -> Get3DObjectBounds:object;
+SelectOutput2:option1 -> AddNoiseTo3DObject:object;
+SelectOutput2:option2 -> Explode3DObject:object;
+SelectOutput2:option3 -> Pinch3DObject:object;
+SelectOutput2:option4 -> Displace3DObjectWithImage:object;
+SelectOutput2:option4 -> MakeCheckerboardImage:upperLeftColor [event=true];
+SelectOutput2:option5 -> Ripple3DObject:object;
+SelectOutput2:option6 -> Trim3DObject:object;
+SelectOutput2:option7 -> Bend3DObject:object;
+SelectOutput2:option8 -> Divide3DObject:object;
+SelectOutput3:option1 -> Facet3DObject:object;
+SelectOutput3:option2 -> Quantize3DObject:object;
+SelectOutput3:option3 -> Skew3DObject:object;
+SelectOutput3:option4 -> Spike3DObject:object;
+SelectOutput3:option5 -> Twirl3DObject:object;
+SelectOutput4:falseOption -> SelectOutput2:which;
+SelectOutput4:trueOption -> Subtract:a;
+SelectOutput5:falseOption -> SelectOutput2:in;
+SelectOutput5:trueOption -> SelectOutput3:in;
+ShareValue:sameValue -> IsGreaterThan:a [event=true];
+ShareValue:sameValue -> TestMeshTypes:elementAssemblyMethod;
+Skew3DObject:skewedObject -> SelectLatest3:option3;
+Spike3DObject:spikedObject -> SelectLatest3:option4;
+Subtract:difference -> SelectOutput3:which;
+TestMeshTypes:object -> SelectOutput5:in;
+Trim3DObject:trimmedObject -> SelectLatest2:option6;
+Twirl3DObject:twirledObject -> SelectLatest3:option5;
+}

@@ -2,32 +2,32 @@
  * @file
  * Generates a pitch controlled by the vertical position of the mouse.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="540,75"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="195,105" fillcolor="orange" _requestedChannels_eventThrottling="enqueue"];
 MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,165" _wave="\"triangle\"" _setPhase="0.0"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="857,311"];
-MakeList11 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="597,116" fillcolor="violet"];
-MakeWaveformImage3 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="630,285" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _height="256" _syncAmplitude="0.10000000000000001"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-60,195" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="885,285" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="180,195" _start="-2.500000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="900.000000"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="630,90" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="567,161" fillcolor="orange"];
+MakeWaveformImage3 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<syncCenter>syncCenter\l|<attenuateEnds>attenuateEnds\l|<image>image\r" pos="630,285" _fillColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25\}" _lineColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _height="256" _syncAmplitude="0" _syncCenter="0.0" _attenuateEnds="false"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-75,195" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="855,285" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="180,195" _start="-2.500000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="900.000000" _limitToRange="false"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="600,135" fillcolor="orange"];
 
 Convert2DPointToReal:y -> Scale:value;
-MakeAudioWave2:samples -> MakeList11:1;
-MakeAudioWave2:samples -> MakeList11:2;
+FireAtAudioRate:requestedChannels -> MakeAudioWave2:calculateSamples;
+MakeAudioWave2:samples -> MakeList:1;
+MakeAudioWave2:samples -> MakeList:2;
 MakeAudioWave2:samples -> MakeWaveformImage3:samples;
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
-MakeList11:list -> SendLiveAudio:sendChannels;
+MakeList:list -> SendLiveAudio2:sendChannels;
 MakeWaveformImage3:image -> RenderImageToWindow:image;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
-RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
+RenderImageToWindow:updatedWindow -> ReceiveMouseMoves:window;
 Scale:scaledValue -> MakeAudioWave2:frequency;
-SendLiveAudio:requestedChannels -> MakeAudioWave2:calculateSamples;
 }

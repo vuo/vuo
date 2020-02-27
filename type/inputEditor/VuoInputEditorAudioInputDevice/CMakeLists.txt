@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorAudioInputDevice SOURCE VuoInputEditorAudioInputDevice.cc)

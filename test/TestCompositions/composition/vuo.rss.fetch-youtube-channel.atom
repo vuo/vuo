@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <link rel="self" href="http://www.youtube.com/feeds/videos.xml?channel_id=UCV1-6fXv7Cdj83qbhMcvjjg"/>
+ <id>yt:channel:UCV1-6fXv7Cdj83qbhMcvjjg</id>
+ <yt:channelId>UCV1-6fXv7Cdj83qbhMcvjjg</yt:channelId>
+ <title>photonal</title>
+ <link rel="alternate" href="https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg"/>
+ <author>
+  <name>photonal</name>
+  <uri>https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg</uri>
+ </author>
+ <published>2007-12-28T20:22:31+00:00</published>
+ <entry>
+  <id>yt:video:sS-F9mnkxRE</id>
+  <yt:videoId>sS-F9mnkxRE</yt:videoId>
+  <yt:channelId>UCV1-6fXv7Cdj83qbhMcvjjg</yt:channelId>
+  <title>Physicality 128</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=sS-F9mnkxRE"/>
+  <author>
+   <name>photonal</name>
+   <uri>https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg</uri>
+  </author>
+  <published>2013-07-21T17:14:09+00:00</published>
+  <updated>2017-08-25T13:34:55+00:00</updated>
+  <media:group>
+   <media:title>Physicality 128</media:title>
+   <media:content url="https://www.youtube.com/v/sS-F9mnkxRE?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i4.ytimg.com/vi/sS-F9mnkxRE/hqdefault.jpg" width="480" height="360"/>
+   <media:description>Summertime at 128bpm</media:description>
+   <media:community>
+    <media:starRating count="2" average="5.00" min="1" max="5"/>
+    <media:statistics views="79"/>
+   </media:community>
+  </media:group>
+ </entry>
+</feed>

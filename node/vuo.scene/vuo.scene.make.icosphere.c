@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.icosphere node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -59,86 +59,110 @@ static inline VuoPoint4d VuoPoint4d_multiply3d(VuoPoint4d a, float b)
  *
  * Returns an array 4* larger than the provided.
  */
-static VuoPoint4d* SubdivideIcosahedron(VuoPoint4d* vertices, unsigned int vertexCount)
+static float *subdivideIcosahedron(float *positions, unsigned int vertexCount)
 {
-	VuoPoint4d* v = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount * 4);
+	float *p = (float *)malloc(sizeof(float) * 3 * vertexCount * 4);
 
 	unsigned int index = 0;
 
-	VuoPoint4d 	p0,	//	    5
-				p1,	//    3   4
-				p2,	//	0,  1,  2
+	VuoPoint3d  p0,  //      5
+				p1,  //    3   4
+				p2,  //  0   1   2
 				p3,
 				p4,
 				p5;
 
 	for(int i = 0; i < vertexCount; i+=3)
 	{
-		p0 = vertices[i+0];
-		p2 = vertices[i+1];
-		p5 = vertices[i+2];
+		p0 = VuoPoint3d_makeFromArray(&positions[ i      * 3]);
+		p2 = VuoPoint3d_makeFromArray(&positions[(i + 1) * 3]);
+		p5 = VuoPoint3d_makeFromArray(&positions[(i + 2) * 3]);
 
-		p1 = VuoPoint4d_normalize3d(VuoPoint4d_multiply(VuoPoint4d_add(p0, p2), .5f));
-		p3 = VuoPoint4d_normalize3d(VuoPoint4d_multiply(VuoPoint4d_add(p0, p5), .5f));
-		p4 = VuoPoint4d_normalize3d(VuoPoint4d_multiply(VuoPoint4d_add(p2, p5), .5f));
+		p1 = VuoPoint3d_normalize(p0 + p2);
+		p3 = VuoPoint3d_normalize(p0 + p5);
+		p4 = VuoPoint3d_normalize(p2 + p5);
 
-		v[index++] = p0;
-		v[index++] = p1;
-		v[index++] = p3;
+		VuoPoint3d_setArray(&p[index++ * 3], p0);
+		VuoPoint3d_setArray(&p[index++ * 3], p1);
+		VuoPoint3d_setArray(&p[index++ * 3], p3);
 
-		v[index++] = p1;
-		v[index++] = p2;
-		v[index++] = p4;
+		VuoPoint3d_setArray(&p[index++ * 3], p1);
+		VuoPoint3d_setArray(&p[index++ * 3], p2);
+		VuoPoint3d_setArray(&p[index++ * 3], p4);
 
-		v[index++] = p1;
-		v[index++] = p4;
-		v[index++] = p3;
+		VuoPoint3d_setArray(&p[index++ * 3], p1);
+		VuoPoint3d_setArray(&p[index++ * 3], p4);
+		VuoPoint3d_setArray(&p[index++ * 3], p3);
 
-		v[index++] = p3;
-		v[index++] = p4;
-		v[index++] = p5;
+		VuoPoint3d_setArray(&p[index++ * 3], p3);
+		VuoPoint3d_setArray(&p[index++ * 3], p4);
+		VuoPoint3d_setArray(&p[index++ * 3], p5);
 	}
 
-	return v;
+	return p;
 }
 
-static inline VuoPoint4d cross2d(VuoPoint4d a, VuoPoint4d b, VuoPoint4d c)
+static inline VuoPoint3d cross2d(VuoPoint2d a, VuoPoint2d b, VuoPoint2d c)
 {
-	a.z = 1;
-	b.z = 1;
-	c.z = 1;
-
-	VuoPoint4d a0 = VuoPoint4d_make(b.x - a.x, b.y - a.y, 1, 1);
-	VuoPoint4d a1 = VuoPoint4d_make(c.x - a.x, c.y - a.y, 1, 1);
-
-	return VuoPoint4d_crossProduct(a0, a1);
+	VuoPoint3d a0 = (VuoPoint3d){b.x - a.x, b.y - a.y, 1};
+	VuoPoint3d a1 = (VuoPoint3d){c.x - a.x, c.y - a.y, 1};
+	return VuoPoint3d_crossProduct(a0, a1);
 }
 
-void nodeEvent
+static VuoTransform icoTransform(VuoTransform transform)
+{
+	// Rotate so the seam is in the back (just like the lat/lon sphere).
+	return VuoTransform_composite(VuoTransform_makeEuler((VuoPoint3d){0,0,0}, (VuoPoint3d){0,-PI/2,0}, (VuoPoint3d){1,1,1}), transform);
+}
+
+struct nodeInstanceData
+{
+	VuoInteger subdivisions;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	context->subdivisions = -1;
+	return context;
+}
+
+void nodeInstanceEvent
 (
+	VuoInstanceData(struct nodeInstanceData *) context,
 	VuoInputData(VuoTransform) transform,
 	VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 	VuoInputData(VuoInteger, {"default":3,"suggestedMin":0, "suggestedMax":7}) subdivisions,
 	VuoOutputData(VuoSceneObject) object
 )
 {
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (subdivisions == (*context)->subdivisions)
+	{
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, icoTransform(transform));
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
+		return;
+	}
+
 	unsigned int i = 0;
 
 	// Template
-	VuoPoint4d ico[12] =
+	VuoPoint3d ico[] =
 	{
-		VuoPoint4d_normalize3d(VuoPoint4d_make(-1,  PHI,  0, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 1,  PHI,  0, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make(-1, -PHI,  0, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 1, -PHI,  0, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 0, -1,  PHI, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 0,  1,  PHI, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 0, -1, -PHI, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( 0,  1, -PHI, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make(  PHI, 0, -1, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make(  PHI, 0,  1, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( -PHI, 0, -1, 1)),
-		VuoPoint4d_normalize3d(VuoPoint4d_make( -PHI, 0,  1, 1))
+		VuoPoint3d_normalize((VuoPoint3d){-1,  PHI,  0}),
+		VuoPoint3d_normalize((VuoPoint3d){ 1,  PHI,  0}),
+		VuoPoint3d_normalize((VuoPoint3d){-1, -PHI,  0}),
+		VuoPoint3d_normalize((VuoPoint3d){ 1, -PHI,  0}),
+		VuoPoint3d_normalize((VuoPoint3d){ 0, -1,  PHI}),
+		VuoPoint3d_normalize((VuoPoint3d){ 0,  1,  PHI}),
+		VuoPoint3d_normalize((VuoPoint3d){ 0, -1, -PHI}),
+		VuoPoint3d_normalize((VuoPoint3d){ 0,  1, -PHI}),
+		VuoPoint3d_normalize((VuoPoint3d){  PHI, 0, -1}),
+		VuoPoint3d_normalize((VuoPoint3d){  PHI, 0,  1}),
+		VuoPoint3d_normalize((VuoPoint3d){ -PHI, 0, -1}),
+		VuoPoint3d_normalize((VuoPoint3d){ -PHI, 0,  1}),
 	};
 
 	unsigned int tri[60] =
@@ -169,88 +193,73 @@ void nodeEvent
 	};
 
 	unsigned int vertexCount = 60;
-	VuoPoint4d* vertices = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
+	float *positions;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, NULL, NULL, NULL, 0, NULL);
+	// Don't allocate normals and textureCoordinates since we don't yet know how many vertices there will be.
 
 	for(i = 0; i < vertexCount; i++)
-		vertices[i] = ico[tri[i]];
+		VuoPoint3d_setArray(&positions[i * 3], ico[tri[i]]);
 
 	unsigned int sub = MIN(MAX(0, subdivisions), 7);
 
 	for(i = 0; i < sub; i++)
 	{
-		VuoPoint4d* v = SubdivideIcosahedron(vertices, vertexCount);
+		float *v = subdivideIcosahedron(positions, vertexCount);
 		vertexCount *= 4;
-		free(vertices);
-		vertices = v;
+		free(positions);
+		positions = v;
 	}
 
-	VuoPoint4d* normals = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* textures = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-
+	float *normals, *textureCoordinates;
+	VuoMesh_allocateCPUBuffers(vertexCount, NULL, &normals, &textureCoordinates, NULL, 0, NULL);
 	for(int i = 0; i < vertexCount; ++i)
 	{
-		normals[i] = vertices[i];
-		normals[i].w = 1;
-		textures[i] = (VuoPoint4d)
-		{
-			1 - (.5 + (atan2(normals[i].z, normals[i].x) / (2 * PI))),
-			1. - (.5 - (asin(normals[i].y) / PI)),
-			0.,
-			1.
-		};
-		vertices[i] = VuoPoint4d_multiply3d(vertices[i],  ICO_RADIUS);
+		VuoPoint3d n = VuoPoint3d_makeFromArray(&positions[i * 3]);
+		VuoPoint3d_setArray(&normals[i * 3], n);
+
+		textureCoordinates[i * 2    ] = 1. - (.5 + (atan2(n.z, n.x) / (2 * PI)));
+		textureCoordinates[i * 2 + 1] = 1. - (.5 - (asin(n.y) / PI));
+
+		VuoPoint3d_setArray(&positions[i * 3], VuoPoint3d_makeFromArray(&positions[i * 3]) * ICO_RADIUS);
 	}
-
-	unsigned int* elements = (unsigned int*)malloc(sizeof(unsigned int) * vertexCount);
-
-	for(i = 0; i < vertexCount; i+=3)
-	{
-		elements[i+0] = i+0;
-		elements[i+1] = i+1;
-		elements[i+2] = i+2;
-	}
-
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													vertices, normals, NULL, NULL, textures,
-													vertexCount, elements, VuoMesh_IndividualTriangles);
 
 	VuoPoint2d min, max;
 
-	for(int i = 0; i < submesh.elementCount; i+=3)
+	for(int i = 0; i < vertexCount; i+=3)
 	{
-		int a = elements[i+0],
-			b = elements[i+1],
-			c = elements[i+2];
+		int a = i+0,
+			b = i+1,
+			c = i+2;
 
-		VuoPoint4d cross = cross2d(textures[a], textures[b], textures[c]);
+		VuoPoint2d ta = VuoPoint2d_makeFromArray(&textureCoordinates[a * 2]);
+		VuoPoint2d tb = VuoPoint2d_makeFromArray(&textureCoordinates[b * 2]);
+		VuoPoint2d tc = VuoPoint2d_makeFromArray(&textureCoordinates[c * 2]);
+
+		VuoPoint3d cross = cross2d(ta, tb, tc);
 
 		if(cross.z < 0)
 		{
-			if(textures[a].x < .2) textures[a].x += 1;
-			if(textures[b].x < .2) textures[b].x += 1;
-			if(textures[c].x < .2) textures[c].x += 1;
+			if (ta.x < .2) ++textureCoordinates[a * 2];
+			if (tb.x < .2) ++textureCoordinates[b * 2];
+			if (tc.x < .2) ++textureCoordinates[c * 2];
 		}
 
-		if( IS_POLE(normals[a]) )
-			textures[a].x = (textures[b].x + textures[c].x) * .5;
-		else
-		if( IS_POLE(normals[b]) )
-			textures[b].x = (textures[a].x + textures[c].x) * .5;
-		else
-		if( IS_POLE(normals[c]) )
-			textures[c].x = (textures[a].x + textures[b].x) * .5;
+		if (IS_POLE(VuoPoint3d_makeFromArray(&normals[a * 3])))
+			textureCoordinates[a * 2] = (tb.x + tc.x) / 2;
+		else if (IS_POLE(VuoPoint3d_makeFromArray(&normals[b * 3])))
+			textureCoordinates[b * 2] = (ta.x + tc.x) / 2;
+		else if (IS_POLE(VuoPoint3d_makeFromArray(&normals[c * 3])))
+			textureCoordinates[c * 2] = (ta.x + tb.x) / 2;
 
+		VuoPoint2d ti = VuoPoint2d_makeFromArray(&textureCoordinates[i * 2]);
 		if(i == 0)
-		{
-			min = (VuoPoint2d) { textures[i].x, textures[i].y };
-			max = (VuoPoint2d) { textures[i].x, textures[i].y };
-		}
+			min = max = ti;
 
-		min.x = fmin(min.x, textures[i].x);
-		min.y = fmin(min.y, textures[i].y);
+		min.x = fmin(min.x, ti.x);
+		min.y = fmin(min.y, ti.y);
 
-		max.x = fmax(max.x, textures[i].x);
-		max.y = fmax(max.y, textures[i].y);
+		max.x = fmax(max.x, ti.x);
+		max.y = fmax(max.y, ti.y);
 	}
 
 	// let uvs roam free
@@ -264,13 +273,19 @@ void nodeEvent
 	// 	textures[i].y *= scale.y;
 	// }
 
-	VuoMeshUtility_calculateTangents(&submesh);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(vertexCount,
+		positions, normals, textureCoordinates, NULL,
+		0, NULL, VuoMesh_IndividualTriangles);
 
-	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
+	*object = VuoSceneObject_makeMesh(mesh, VuoShader_make_VuoGenericType1(material), icoTransform(transform));
+	VuoSceneObject_setName(*object, VuoText_make("Icosphere"));
 
-	// Rotate so the seam is in the back (just like the lat/lon sphere).
-	VuoTransform t2 = VuoTransform_composite(VuoTransform_makeEuler((VuoPoint3d){0,0,0}, (VuoPoint3d){0,-PI/2,0}, (VuoPoint3d){1,1,1}), transform);
+	(*context)->subdivisions = subdivisions;
+}
 
-	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), t2, NULL);
-	object->name = VuoText_make("Icosphere");
+void nodeInstanceFini
+(
+	VuoInstanceData(struct nodeInstanceData *) context
+)
+{
 }

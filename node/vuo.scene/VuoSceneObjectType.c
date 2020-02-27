@@ -2,14 +2,11 @@
  * @file
  * VuoSceneObjectType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoSceneObjectType.h"
 #include "VuoList_VuoSceneObjectType.h"
@@ -84,27 +81,25 @@ VuoSceneObjectType VuoSceneObjectType_makeFromSubtype(VuoSceneObjectSubType subT
 {
 	switch(subType)
 	{
-	 	case VuoSceneObjectSubType_Empty:
-	 	case VuoSceneObjectSubType_Group:
-	 		return VuoSceneObjectType_Group;
+		case VuoSceneObjectSubType_Mesh:
+		case VuoSceneObjectSubType_Text:
+			return VuoSceneObjectType_Mesh;
 
-	 	case VuoSceneObjectSubType_Mesh:
-	 	case VuoSceneObjectSubType_Text:
-	 		return VuoSceneObjectType_Mesh;
+		case VuoSceneObjectSubType_PerspectiveCamera:
+		case VuoSceneObjectSubType_StereoCamera:
+		case VuoSceneObjectSubType_OrthographicCamera:
+		case VuoSceneObjectSubType_FisheyeCamera:
+			return VuoSceneObjectType_Camera;
 
-	 	case VuoSceneObjectSubType_PerspectiveCamera:
-	 	case VuoSceneObjectSubType_StereoCamera:
-	 	case VuoSceneObjectSubType_OrthographicCamera:
-	 	case VuoSceneObjectSubType_FisheyeCamera:
-	 		return VuoSceneObjectType_Camera;
+		case VuoSceneObjectSubType_AmbientLight:
+		case VuoSceneObjectSubType_PointLight:
+		case VuoSceneObjectSubType_Spotlight:
+			return VuoSceneObjectType_Light;
 
-	 	case VuoSceneObjectSubType_AmbientLight:
-	 	case VuoSceneObjectSubType_PointLight:
-	 	case VuoSceneObjectSubType_Spotlight:
-	 		return VuoSceneObjectType_Light;
-
-	 	default:
-	 		return VuoSceneObjectType_Group;
+		// VuoSceneObjectSubType_Empty
+		// VuoSceneObjectSubType_Group
+		default:
+			return VuoSceneObjectType_Group;
 	}
 }
 

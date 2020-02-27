@@ -2,9 +2,9 @@
  * @file
  * vuo.image.vignette node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,9 +21,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec4 edgeColor;
@@ -34,10 +34,10 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	// http://www.geeks3d.com/20091020/shader-library-lens-circle-post-processing-effect-glsl/
 	void main(void)
 	{
-		vec4 col = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 col = texture2D(texture, fragmentTextureCoordinate);
 		col.a = clamp(col.a, 0., 1.);	// for floating-point textures
 
-		float dist = distance(fragmentTextureCoordinate.xy, vec2(0.5,0.5));
+		float dist = distance(fragmentTextureCoordinate, vec2(0.5,0.5));
 		vec3 mixed = mix(edgeColor.rgb, col.rgb, smoothstep(outerRadius, innerRadius, dist) );
 		float a = mix(edgeColor.a, col.a, smoothstep(outerRadius, innerRadius, dist));
 

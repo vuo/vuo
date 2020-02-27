@@ -2,9 +2,9 @@
  * @file
  * Vuo prefix header.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -36,15 +36,12 @@
 
 using namespace std;
 
-#ifdef __i386__
 #include "VuoRunner.hh"
 #include "VuoComposition.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoPort.hh"
 #include "VuoProtocol.hh"
-#endif
 
-#ifdef __x86_64__
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
@@ -56,7 +53,10 @@ using namespace std;
 #define NO VUO_LLVM_NO_RENAMED
 
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wunreachable-code"
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wnull-dereference"
 #ifdef VUO_CLANG_32_OR_LATER
 	#pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
@@ -71,32 +71,32 @@ using namespace std;
 #include <clang/Frontend/CompilerInvocation.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <llvm/Support/DynamicLibrary.h>
-#include <llvm/Support/Host.h>
-#include <llvm/Support/Program.h>
+#include <llvm/Analysis/ValueTracking.h>
+#include <llvm/Analysis/Verifier.h>
 #include <llvm/Bitcode/Archive.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Constants.h>
-#include <llvm/Instructions.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/ExecutionEngine/Interpreter.h>
+#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/ValueSymbolTable.h>
+#include <llvm/IRReader/IRReader.h>
 #include <llvm/LinkAllPasses.h>
 #include <llvm/Linker.h>
 #include <llvm/PassManager.h>
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/Analysis/ValueTracking.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/ExecutionEngine/Interpreter.h>
-#include <llvm/ExecutionEngine/GenericValue.h>
-#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/DynamicLibrary.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/system_error.h>
-#include <llvm/Support/IRReader.h>
 #include <llvm/Support/PathV1.h>
+#include <llvm/Support/Program.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/system_error.h>
 #include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/ValueSymbolTable.h>
 #pragma clang diagnostic pop
 
 #undef NO
@@ -114,17 +114,7 @@ using namespace std;
 using namespace llvm;
 
 @INCLUDE_VUO_CXX_HEADERS@
-#endif // ifdef __x86_64__
 
 #endif // ifdef __cplusplus
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 @INCLUDE_VUO_C_HEADERS@
-
-#ifdef __cplusplus
-}
-#endif

@@ -2,9 +2,9 @@
  * @file
  * VuoShader implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
@@ -12,13 +12,16 @@
 #include <string.h>
 
 #include <map>
+#include <string>
+
+#include "node.h"
+#include "type.h"
 
 extern "C"
 {
-#include "node.h"
-#include "type.h"
 #include "VuoShader.h"
 #include "VuoGlPool.h"
+#include "VuoTime.h"
 
 #include <OpenGL/CGLMacro.h>
 
@@ -40,9 +43,15 @@ VuoModuleMetadata({
 						"VuoPoint4d",
 						"VuoReal",
 						"VuoText",
+						"VuoTime",
+						"VuoList_VuoBoolean",
 						"VuoList_VuoInteger",
 						"VuoList_VuoImage",
 						"VuoList_VuoColor",
+						"VuoList_VuoPoint2d",
+						"VuoList_VuoPoint3d",
+						"VuoList_VuoPoint4d",
+						"VuoList_VuoReal",
 						"VuoList_VuoText",
 						"VuoGlContext",
 						"VuoGlPool",
@@ -52,6 +61,8 @@ VuoModuleMetadata({
 #endif
 /// @}
 }
+
+#include "VuoShaderIssues.hh"
 
 /**
  * Frees the CPU memory and GPU objects associated with the shader.
@@ -82,7 +93,12 @@ void VuoShader_free(void *shader)
 	{
 		VuoRelease(s->uniforms[u].name);
 
-		if (strcmp(s->uniforms[u].type, "VuoImage") == 0)
+		if (strcmp(s->uniforms[u].type, "VuoImage") == 0
+		 || strncmp(s->uniforms[u].type, "VuoList_", 8) == 0
+		 || strcmp(s->uniforms[u].type, "mat2") == 0
+		 || strcmp(s->uniforms[u].type, "mat3") == 0
+		 || strcmp(s->uniforms[u].type, "mat4") == 0)
+			// It's equivalent to release any pointer in the union.
 			VuoRelease(s->uniforms[u].value.image);
 
 		VuoRelease(s->uniforms[u].type);
@@ -124,7 +140,33 @@ VuoShader VuoShader_make(const char *name)
 	t->colorBuffer = NULL;
 	t->depthBuffer = NULL;
 
+	t->activationCount = 0;
+	t->lastActivationTime = 0;
+
 	t->lock = dispatch_semaphore_create(1);
+
+	return t;
+}
+
+/**
+ * Creates a shader object from a @ref VuoShaderFile.
+ *
+ * Don't call @ref VuoShader_addSource;
+ * the sources are automatically retrieved from the VuoShaderFile.
+ *
+ * @threadAny
+ * @version200New
+ */
+VuoShader VuoShader_makeFromFile(VuoShaderFile *shaderFile)
+{
+	VuoShader t = VuoShader_make(shaderFile->name().c_str());
+
+	VuoShader_addSource(t, VuoMesh_IndividualTriangles,
+						shaderFile->expandedVertexSource().c_str(),
+						shaderFile->expandedGeometrySource().c_str(),
+						shaderFile->expandedFragmentSource().c_str());
+
+	/// @todo set geometry shader properties
 
 	return t;
 }
@@ -146,7 +188,10 @@ VuoShader VuoShader_make_VuoColor(VuoColor color)
  */
 VuoShader VuoShader_make_VuoShader(VuoShader shader)
 {
-	return shader;
+	if (!shader)
+		return VuoShader_makeDefaultShader();
+	else
+		return shader;
 }
 
 /**
@@ -237,31 +282,29 @@ VuoShader VuoShader_make_VuoImage(VuoImage image)
  *     uniform DirectionalLight directionalLights[16];
  *     uniform int directionalLightCount;
  *
- *     attribute vec4 position;  // required
- *     attribute vec4 normal;
- *     attribute vec4 tangent;
- *     attribute vec4 bitangent;
- *     attribute vec4 textureCoordinate;
+ *     attribute vec3 position;  // required
+ *     attribute vec3 normal;
+ *     attribute vec2 textureCoordinate;
+ *     attribute vec4 vertexColor;
  *     uniform bool hasTextureCoordinates;
+ *     uniform bool hasVertexColors;
  *
  * @ref VuoSceneObjectRenderer renders a @ref VuoSceneObject into a @ref VuoSceneObject,
  * and automatically provides several uniform values and vertex attributes to shaders:
  *
  *     uniform mat4 modelviewMatrix;
  *     uniform mat4 modelviewMatrixInverse;
- *     attribute vec4 position;
- *     attribute vec4 normal;
- *     attribute vec4 tangent;
- *     attribute vec4 bitangent;
- *     attribute vec4 textureCoordinate;
+ *     attribute vec3 position;
+ *     attribute vec3 normal;
+ *     attribute vec2 textureCoordinate;
+ *     attribute vec4 vertexColor;
  *
  * And it expects as output:
  *
- *     varying vec4 outPosition;
- *     varying vec4 outNormal;
- *     varying vec4 outTangent;
- *     varying vec4 outBitangent;
- *     varying vec4 outTextureCoordinate;
+ *     varying vec3 outPosition;
+ *     varying vec3 outNormal;
+ *     varying vec2 outTextureCoordinate;
+ *     varying vec4 outVertexColor;
  *
  * @threadAny
  */
@@ -274,39 +317,65 @@ void VuoShader_addSource(VuoShader shader, const VuoMesh_ElementAssemblyMethod i
 
 	DEFINE_PROGRAM();
 
-	if (vertexShaderSource)
+	if (!VuoText_isEmpty(vertexShaderSource))
 		program->vertexSource = VuoText_make(vertexShaderSource);
 	else
 	{
 		const char *defaultVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-			include(VuoGlslProjection)
+			\n#include "VuoGlslProjection.glsl"
 
 			// Inputs
 			uniform mat4 modelviewMatrix;
-			attribute vec4 position;
-			attribute vec4 textureCoordinate;
+			attribute vec3 position;
+			attribute vec2 textureCoordinate;
 
 			// Outputs to fragment shader
-			varying vec4 fragmentTextureCoordinate;
+			varying vec2 fragmentTextureCoordinate;
 
 			void main()
 			{
 				fragmentTextureCoordinate = textureCoordinate;
 
-				gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
+				gl_Position = VuoGlsl_projectPosition(modelviewMatrix * vec4(position, 1.));
 			}
 		);
-		program->vertexSource = VuoText_make(defaultVertexShaderSource);
+		const char *defaultVertexShaderWithColorSource = VUOSHADER_GLSL_SOURCE(120,
+			\n#include "VuoGlslProjection.glsl"
+
+			// Inputs
+			uniform mat4 modelviewMatrix;
+			attribute vec3 position;
+			attribute vec2 textureCoordinate;
+			attribute vec4 vertexColor;
+			uniform bool hasVertexColors;
+
+			// Outputs to fragment shader
+			varying vec2 fragmentTextureCoordinate;
+			varying vec4 fragmentVertexColor;
+
+			void main()
+			{
+				fragmentTextureCoordinate = textureCoordinate;
+				fragmentVertexColor = hasVertexColors ? vertexColor : vec4(1.);
+
+				gl_Position = VuoGlsl_projectPosition(modelviewMatrix * vec4(position, 1.));
+			}
+		);
+
+		if (strstr(fragmentShaderSource, "fragmentVertexColor"))
+			program->vertexSource = VuoText_make(defaultVertexShaderWithColorSource);
+		else
+			program->vertexSource = VuoText_make(defaultVertexShaderSource);
 	}
 	VuoRetain(program->vertexSource);
 
-	if (geometryShaderSource)
+	if (!VuoText_isEmpty(geometryShaderSource))
 	{
 		program->geometrySource = VuoText_make(geometryShaderSource);
 		VuoRetain(program->geometrySource);
 	}
 
-	if (fragmentShaderSource)
+	if (!VuoText_isEmpty(fragmentShaderSource))
 	{
 		program->fragmentSource = VuoText_make(fragmentShaderSource);
 		VuoRetain(program->fragmentSource);
@@ -364,6 +433,20 @@ void VuoShader_setMayChangeOutputPrimitiveCount(VuoShader shader, const VuoMesh_
 	program->mayChangeOutputPrimitiveCount = mayChangeOutputPrimitiveCount;
 
 	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
+}
+
+/**
+ * See @ref VuoShader::isTransparent.
+ *
+ * @threadAny
+ * @version200New
+ */
+void VuoShader_setTransparent(VuoShader shader, const bool isTransparent)
+{
+	if (!shader)
+		return;
+
+	shader->isTransparent = isTransparent;
 }
 
 /**
@@ -437,12 +520,140 @@ bool VuoShader_isTransformFeedback(VuoShader shader)
 }
 
 /**
+ * Converts
+ * `gl_FragColor = beforeFunction(inputImage, isf_FragNormCoord.xy);`
+ * to
+ * `gl_FragColor = afterFunction2D(inputImage, _inputImage_imgRect, _inputImage_imgSize, _inputImage_flip, isf_FragNormCoord.xy);`
+ * or `afterFunctionRect`, depending on the sampler type.
+ *
+ * If `isThis` is true, the function is expected to have 1 argument (the texture coordinate is implicit).
+ */
+static void VuoShader_replaceImageMacro(VuoShader shader, string &source, map<string, GLint> &imagesToDeclare, string beforeFunction, bool isThis, string afterFunction2D, string afterFunctionRect, VuoShaderFile::Stage stage, VuoShaderIssues *outIssues)
+{
+	string::size_type beforeFunctionLength = beforeFunction.length();
+	string::size_type pos = 0;
+	while ( (pos = source.find(beforeFunction, pos)) != string::npos )
+	{
+		size_t offset = pos + beforeFunctionLength;
+
+		while (isspace(source[offset]))
+			++offset;
+
+		if (source[offset] != '(')
+		{
+			/// @todo calculate line number
+			if (outIssues)
+				outIssues->addIssue(stage, VuoShaderIssues::NoLine, "Syntax error in " + beforeFunction + ": expected '('.");
+			else
+				VUserLog("Syntax error in %s: expected '('.", beforeFunction.c_str());
+			pos += beforeFunctionLength;
+			continue;
+		}
+		++offset;
+
+		size_t samplerStart = offset;
+		char samplerEndChar = isThis ? ')' : ',';
+		while (source[offset] != samplerEndChar)
+			++offset;
+		size_t samplerEnd = offset;
+
+		string sampler = source.substr(samplerStart, samplerEnd - samplerStart);
+
+		if (isThis)
+			source.insert(samplerEnd, ", isf_FragNormCoord");
+		else
+			source.insert(samplerEnd,
+						  ", _" + sampler + "_imgRect"
+						+ ", _" + sampler + "_imgSize"
+						+ ", _" + sampler + "_flip");
+
+		string replacement = afterFunction2D;
+		GLint target;
+		for (int i = 0; i < shader->uniformsCount; ++i)
+			if (strcmp(shader->uniforms[i].type, "VuoImage") == 0
+			 && shader->uniforms[i].name == sampler
+			 && shader->uniforms[i].value.image)
+			{
+				target = shader->uniforms[i].value.image->glTextureTarget;
+				if (shader->uniforms[i].value.image->glTextureTarget == GL_TEXTURE_RECTANGLE_EXT)
+					replacement = afterFunctionRect;
+				shader->uniforms[i].compiledTextureTarget = target;
+				break;
+			}
+
+		source.replace(pos, beforeFunctionLength, replacement);
+
+		imagesToDeclare.insert(std::make_pair(sampler, target));
+	}
+}
+
+/**
+ * Replaces `IMG_SIZE(someImage)` with `_someImage_imgSize`.
+ */
+static void VuoShader_replaceSizeMacro(VuoShader shader, string &source, string before, string after)
+{
+	string prefix(before + "(");
+	string::size_type prefixLength = prefix.length();
+	string::size_type pos = 0;
+	while ( (pos = source.find(prefix, pos)) != string::npos )
+	{
+		size_t offset = pos + prefixLength;
+		size_t samplerStart = offset;
+		while (source[offset] != ')')
+			++offset;
+		size_t samplerEnd = offset;
+		string sampler = source.substr(samplerStart, samplerEnd - samplerStart);
+		source.replace(pos, samplerEnd - samplerStart + prefixLength + 1, "_" + sampler + "_" + after);
+	}
+}
+
+/**
+ * Replaces the `IMG_PIXEL` and `IMG_NORM_PIXEL` macros with the appropriate function call
+ * depending on the image's OpenGL target, and fill in the placeholder image declarations.
+ */
+static void VuoShader_replaceImageMacros(VuoShader shader, string &source, VuoShaderFile::Stage stage, VuoShaderIssues *outIssues)
+{
+	map<string, GLint> imagesToDeclare;
+	VuoShader_replaceImageMacro(shader, source, imagesToDeclare, "IMG_PIXEL",           false, "VVSAMPLER_2DBYPIXEL", "VVSAMPLER_2DRECTBYPIXEL", stage, outIssues);
+	VuoShader_replaceImageMacro(shader, source, imagesToDeclare, "IMG_NORM_PIXEL",      false, "VVSAMPLER_2DBYNORM",  "VVSAMPLER_2DRECTBYNORM",  stage, outIssues);
+	VuoShader_replaceImageMacro(shader, source, imagesToDeclare, "IMG_THIS_PIXEL",      true,  "texture2D", "texture2DRect", stage, outIssues);
+	VuoShader_replaceImageMacro(shader, source, imagesToDeclare, "IMG_THIS_NORM_PIXEL", true,  "texture2D", "texture2DRect", stage, outIssues);
+
+	VuoShader_replaceSizeMacro(shader, source, "IMG_SIZE",    "imgSize");
+	VuoShader_replaceSizeMacro(shader, source, "LIST_LENGTH", "length");
+
+	// Fill in image declaration placeholders.
+	for (map<string, GLint>::iterator it = imagesToDeclare.begin(); it != imagesToDeclare.end(); ++it)
+	{
+		string samplerType;
+		if (it->second == GL_TEXTURE_RECTANGLE_EXT)
+			samplerType = "sampler2DRect";
+		else // if (target == GL_TEXTURE_2D)
+			samplerType = "sampler2D";
+
+		string placeholder = "//uniform VuoImage " + it->first;
+		string replacement = "uniform " + samplerType + " " + it->first;
+
+		string::size_type pos = source.find(placeholder);
+		if (pos == string::npos)
+		{
+			if (outIssues)
+				outIssues->addIssue(stage, VuoShaderIssues::NoLine, "Unknown image \"" + it->first + "\".");
+			else
+				VUserLog("Unknown image \"%s\".", it->first.c_str());
+			continue;
+		}
+		source.replace(pos, placeholder.length(), replacement);
+	}
+}
+
+/**
  * Ensures that the source code for the specified `inputPrimitiveMode` is compiled, linked, and uploaded.
  * If the shader is NULL, or there is no source code for the specified `inputPrimitiveMode`, or it fails to compile or link, returns `false`.
  *
  * Must be called while `shader->lock` is locked.
  */
-static bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext)
+static bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, VuoShaderIssues *outIssues)
 {
 	if (!shader)
 		return false;
@@ -451,20 +662,89 @@ static bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAsse
 
 	// Is the shader already compiled/linked/uploaded?
 	if (program->program.programName)
-		return true;
+	{
+		// If the shader is already compiled/linked/uploaded,
+		// are its image targets up-to-date with the current image uniforms?
+
+		bool upToDate = true;
+		for (unsigned int i = 0; i < shader->uniformsCount; ++i)
+			if (strcmp(shader->uniforms[i].type, "VuoImage") == 0)
+				if (shader->uniforms[i].value.image
+				 && shader->uniforms[i].compiledTextureTarget
+				 && shader->uniforms[i].value.image->glTextureTarget != shader->uniforms[i].compiledTextureTarget)
+				{
+					upToDate = false;
+					break;
+				}
+
+		if (upToDate)
+			return true;
+	}
+
 
 	// Is there source code available?
+	// By this point, if no vertex shader was provided, the default vertex shader should already have been filled in.
 	if (!program->vertexSource)
 		return false;
 
-	program->glVertexShaderName = VuoGlShader_use(glContext, GL_VERTEX_SHADER, program->vertexSource);
-	if (program->geometrySource)
-		program->glGeometryShaderName = VuoGlShader_use(glContext, GL_GEOMETRY_SHADER_EXT, program->geometrySource);
-	if (program->fragmentSource)
-		program->glFragmentShaderName = VuoGlShader_use(glContext, GL_FRAGMENT_SHADER, program->fragmentSource);
+	// If we previously attempted to compile this subshader and it failed, don't try again.
+	if (program->compilationAttempted)
+		return false;
+	program->compilationAttempted = true;
 
-	program->program = VuoGlProgram_use(glContext, shader->name, program->glVertexShaderName, program->glGeometryShaderName, program->glFragmentShaderName, inputPrimitiveMode, program->expectedOutputPrimitiveCount);
+	string vertexSource = program->vertexSource;
+	VuoShader_replaceImageMacros(shader, vertexSource, VuoShaderFile::Vertex, outIssues);
+	program->glVertexShaderName = VuoGlShader_use(glContext, GL_VERTEX_SHADER, vertexSource.c_str(), static_cast<void *>(outIssues));
+	if (!program->glVertexShaderName)
+		return false;
 
+	if (!VuoText_isEmpty(program->geometrySource))
+	{
+		string geometrySource = program->geometrySource;
+		VuoShader_replaceImageMacros(shader, geometrySource, VuoShaderFile::Geometry, outIssues);
+		program->glGeometryShaderName = VuoGlShader_use(glContext, GL_GEOMETRY_SHADER_EXT, geometrySource.c_str(), static_cast<void *>(outIssues));
+		if (!program->glGeometryShaderName)
+			return false;
+	}
+
+	if (!VuoText_isEmpty(program->fragmentSource))
+	{
+		string fragmentSource = program->fragmentSource;
+		VuoShader_replaceImageMacros(shader, fragmentSource, VuoShaderFile::Fragment, outIssues);
+		program->glFragmentShaderName = VuoGlShader_use(glContext, GL_FRAGMENT_SHADER, fragmentSource.c_str(), static_cast<void *>(outIssues));
+		if (!program->glFragmentShaderName)
+			return false;
+	}
+
+	program->program = VuoGlProgram_use(glContext, shader->name, program->glVertexShaderName, program->glGeometryShaderName, program->glFragmentShaderName, inputPrimitiveMode, program->expectedOutputPrimitiveCount, static_cast<void *>(outIssues));
+
+	return program->program.programName > 0 ? true : false;
+}
+
+/**
+ * Compiles and uploads the shader, outputting any issues in a @ref VuoShaderIssues instance.
+ *
+ * This is optional; the shader will automatically be compiled and uploaded when needed.
+ * It's only necessary if you want to get the compilation warnings/errors.
+ *
+ * @return `false` if the shader is NULL, or if it doesn't support the specified `primitiveMode`, or if the shader fails to compile or link.
+ *
+ * @threadAnyGL
+ * @version200New
+ */
+bool VuoShader_upload(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, void *outIssues)
+{
+	if (!shader)
+		return false;
+
+	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);
+	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext, static_cast<VuoShaderIssues *>(outIssues)))
+	{
+		dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
+		return false;
+	}
+
+	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 	return true;
 }
 
@@ -478,20 +758,19 @@ static bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAsse
  * @param glContext An OpenGL context to use.
  * @param[out] positionLocation Outputs the shader program's vertex position attribute location.  Pass `NULL` if you don't care.
  * @param[out] normalLocation Outputs the shader program's vertex normal attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
- * @param[out] tangentLocation Outputs the shader program's vertex tangent attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
- * @param[out] bitangentLocation Outputs the shader program's vertex bitangent attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
  * @param[out] textureCoordinateLocation Outputs the shader program's vertex texture coordinate attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
+ * @param[out] colorLocation Outputs the shader program's vertex color attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
  * @return `false` if the shader is NULL, or if it doesn't support the specified `primitiveMode`.
  *
  * @threadAnyGL
  */
-bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *tangentLocation, int *bitangentLocation, int *textureCoordinateLocation)
+bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *textureCoordinateLocation, int *colorLocation)
 {
 	if (!shader)
 		return false;
 
 	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);
-	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
+	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext, NULL))
 	{
 		dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 		return false;
@@ -507,12 +786,10 @@ bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAsse
 			*positionLocation = glGetAttribLocation(program->program.programName, "position");
 		if (normalLocation)
 			*normalLocation = glGetAttribLocation(program->program.programName, "normal");
-		if (tangentLocation)
-			*tangentLocation = glGetAttribLocation(program->program.programName, "tangent");
-		if (bitangentLocation)
-			*bitangentLocation = glGetAttribLocation(program->program.programName, "bitangent");
 		if (textureCoordinateLocation)
 			*textureCoordinateLocation = glGetAttribLocation(program->program.programName, "textureCoordinate");
+		if (colorLocation)
+			*colorLocation = glGetAttribLocation(program->program.programName, "vertexColor");
 	}
 
 	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
@@ -551,7 +828,7 @@ void VuoShader_initPerlinTexture(CGLContextObj cgl_ctx)
 						{1,1, 0},{ 1,-1, 0},{-1, 1,0},{-1,-1, 0}, // 12 cube edges
 						{1,0,-1},{-1, 0,-1},{ 0,-1,1},{ 0, 1, 1}}; // 4 more to make 16
 
-	glGenTextures(1, &VuoShader_perlinTexture);
+	VuoShader_perlinTexture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_NoAllocation, GL_TEXTURE_2D, GL_RGBA, 256, 256, GL_BGRA, NULL);
 	glBindTexture(GL_TEXTURE_2D, VuoShader_perlinTexture);
 
 	pixels = (char*)malloc( 256*256*4 );
@@ -566,6 +843,8 @@ void VuoShader_initPerlinTexture(CGLContextObj cgl_ctx)
 		}
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
@@ -607,7 +886,7 @@ void VuoShader_initGradTexture(CGLContextObj cgl_ctx)
 					   { 1, 1,1,0}, { 1, 1,-1, 0}, { 1,-1, 1,0}, { 1,-1,-1, 0},
 					   {-1, 1,1,0}, {-1, 1,-1, 0}, {-1,-1, 1,0}, {-1,-1,-1, 0}};
 
-	glGenTextures(1, &VuoShader_gradTexture);
+	VuoShader_gradTexture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_NoAllocation, GL_TEXTURE_2D, GL_RGBA, 256, 256, GL_BGRA, NULL);
 	glBindTexture(GL_TEXTURE_2D, VuoShader_gradTexture);
 
 	pixels = (char*)malloc( 256*256*4 );
@@ -622,6 +901,8 @@ void VuoShader_initGradTexture(CGLContextObj cgl_ctx)
 		}
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
@@ -661,7 +942,7 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 		return false;
 
 	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);
-	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
+	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext, NULL))
 	{
 		VUserLog("Error: '%s' doesn't have a program for inputPrimitiveMode '%s'.", shader->name, VuoMesh_cStringForElementAssemblyMethod(inputPrimitiveMode));
 		dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
@@ -677,7 +958,6 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 		bool alreadyActiveOnThisContext = false;
 		dispatch_semaphore_wait(VuoShaderContext_semaphore, DISPATCH_TIME_FOREVER);
 		{
-			VuoMesh_ElementAssemblyMethod epm = VuoMesh_getExpandedPrimitiveMode(inputPrimitiveMode);
 			VuoShaderContextType::iterator i = VuoShaderContextMap.find(glContext);
 			if (i != VuoShaderContextMap.end())
 			{
@@ -698,14 +978,11 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 				glValidateProgram(program->program.programName);
 
 				int infologLength = 0;
-				int charsWritten  = 0;
-				char *infoLog;
-
 				glGetProgramiv(program->program.programName, GL_INFO_LOG_LENGTH, &infologLength);
-
 				if (infologLength > 0)
 				{
-					infoLog = (char *)malloc(infologLength);
+					char *infoLog = (char *)malloc(infologLength);
+					int charsWritten  = 0;
 					glGetProgramInfoLog(program->program.programName, infologLength, &charsWritten, infoLog);
 					VUserLog("%s", infoLog);
 					free(infoLog);
@@ -720,6 +997,134 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 		for (unsigned int i = 0; i < shader->uniformsCount; ++i)
 		{
 			VuoShaderUniform uniform = shader->uniforms[i];
+
+
+			if (strncmp(uniform.type, "VuoList_", 8) == 0)
+			{
+				GLint location = VuoGlProgram_getUniformLocation(program->program, (string(uniform.name) + "[0]").c_str());
+				if (location == -1)
+				{
+					VDebugLog("Warning: Shader '%s' has a value for '%s', but the linked program has no uniform by that name.", shader->name, uniform.name);
+					continue;
+				}
+
+				size_t itemCount;
+				if (strcmp(uniform.type, "VuoList_VuoBoolean") == 0)
+				{
+					itemCount = VuoListGetCount_VuoBoolean(uniform.value.booleans);
+					VuoBoolean *itemData = VuoListGetData_VuoBoolean(uniform.value.booleans);
+					GLint *itemDataGL = (GLint *)malloc(sizeof(GLint) * itemCount);
+					for (size_t i = 0; i < itemCount; ++i)
+						itemDataGL[i] = itemData[i];
+					glUniform1iv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoInteger") == 0)
+				{
+					itemCount = VuoListGetCount_VuoInteger(uniform.value.integers);
+					VuoInteger *itemData = VuoListGetData_VuoInteger(uniform.value.integers);
+					GLint *itemDataGL = (GLint *)malloc(sizeof(GLint) * itemCount);
+					for (size_t i = 0; i < itemCount; ++i)
+						itemDataGL[i] = itemData[i];
+					glUniform1iv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoReal") == 0)
+				{
+					itemCount = VuoListGetCount_VuoReal(uniform.value.reals);
+					VuoReal *itemData = VuoListGetData_VuoReal(uniform.value.reals);
+					GLfloat *itemDataGL = (GLfloat *)malloc(sizeof(GLfloat) * itemCount);
+					for (size_t i = 0; i < itemCount; ++i)
+						itemDataGL[i] = itemData[i];
+					glUniform1fv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoPoint2d") == 0)
+				{
+					itemCount = VuoListGetCount_VuoPoint2d(uniform.value.point2ds);
+					VuoPoint2d *itemData = VuoListGetData_VuoPoint2d(uniform.value.point2ds);
+					GLfloat *itemDataGL = (GLfloat *)malloc(sizeof(GLfloat) * itemCount * 2);
+					for (size_t i = 0; i < itemCount; ++i)
+					{
+						itemDataGL[i*2 + 0] = itemData[i].x;
+						itemDataGL[i*2 + 1] = itemData[i].y;
+					}
+					glUniform2fv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoPoint3d") == 0)
+				{
+					itemCount = VuoListGetCount_VuoPoint3d(uniform.value.point3ds);
+					VuoPoint3d *itemData = VuoListGetData_VuoPoint3d(uniform.value.point3ds);
+					GLfloat *itemDataGL = (GLfloat *)malloc(sizeof(GLfloat) * itemCount * 3);
+					for (size_t i = 0; i < itemCount; ++i)
+					{
+						itemDataGL[i*3 + 0] = itemData[i].x;
+						itemDataGL[i*3 + 1] = itemData[i].y;
+						itemDataGL[i*3 + 2] = itemData[i].z;
+					}
+					glUniform3fv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoPoint4d") == 0)
+				{
+					itemCount = VuoListGetCount_VuoPoint4d(uniform.value.point4ds);
+					VuoPoint4d *itemData = VuoListGetData_VuoPoint4d(uniform.value.point4ds);
+					GLfloat *itemDataGL = (GLfloat *)malloc(sizeof(GLfloat) * itemCount * 4);
+					for (size_t i = 0; i < itemCount; ++i)
+					{
+						itemDataGL[i*4 + 0] = itemData[i].x;
+						itemDataGL[i*4 + 1] = itemData[i].y;
+						itemDataGL[i*4 + 2] = itemData[i].z;
+						itemDataGL[i*4 + 3] = itemData[i].w;
+					}
+					glUniform4fv(location, itemCount, itemDataGL);
+				}
+				else if (strcmp(uniform.type, "VuoList_VuoColor") == 0)
+				{
+					itemCount = VuoListGetCount_VuoColor(uniform.value.colors);
+					VuoColor *itemData = VuoListGetData_VuoColor(uniform.value.colors);
+					GLfloat *itemDataGL = (GLfloat *)malloc(sizeof(GLfloat) * itemCount * 4);
+					for (size_t i = 0; i < itemCount; ++i)
+					{
+						itemDataGL[i*4 + 0] = itemData[i].r;
+						itemDataGL[i*4 + 1] = itemData[i].g;
+						itemDataGL[i*4 + 2] = itemData[i].b;
+						itemDataGL[i*4 + 3] = itemData[i].a;
+					}
+					glUniform4fv(location, itemCount, itemDataGL);
+				}
+				else
+					VDebugLog("Warning: Shader '%s' has unknown type '%s' for uniform '%s'.", shader->name, uniform.type, uniform.name);
+
+				GLint listLengthUniform = VuoGlProgram_getUniformLocation(program->program, (string("_") + uniform.name + "_length").c_str());
+				if (listLengthUniform != -1)
+					glUniform1i(listLengthUniform, itemCount);
+
+				continue;
+			}
+
+
+			// Populate the ISF image-related uniforms, even if the image itself isn't used.
+			if (strcmp(uniform.type, "VuoImage") == 0 && uniform.value.image)
+			{
+				VuoImage image = uniform.value.image;
+
+				/// @todo https://b33p.net/kosada/node/9889
+				GLint imgRectUniform = VuoGlProgram_getUniformLocation(program->program, (string("_") + uniform.name + "_imgRect").c_str());
+				if (imgRectUniform != -1)
+				{
+					if (image->glTextureTarget == GL_TEXTURE_2D)
+						glUniform4f(imgRectUniform, 0, 0, 1, 1);
+					else
+						glUniform4f(imgRectUniform, 0, 0, image->pixelsWide, image->pixelsHigh);
+				}
+
+				GLint imgSizeUniform = VuoGlProgram_getUniformLocation(program->program, (string("_") + uniform.name + "_imgSize").c_str());
+				if (imgSizeUniform != -1)
+					glUniform2f(imgSizeUniform, image->pixelsWide, image->pixelsHigh);
+
+				/// @todo https://b33p.net/kosada/node/9889
+				GLint flipUniform = VuoGlProgram_getUniformLocation(program->program, (string("_") + uniform.name + "_flip").c_str());
+				if (flipUniform != -1)
+					glUniform1i(flipUniform, 0);
+			}
+
 			GLint location = VuoGlProgram_getUniformLocation(program->program, uniform.name);
 			if (location == -1)
 			{
@@ -764,6 +1169,12 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 				glUniform4f(location, uniform.value.point4d.x, uniform.value.point4d.y, uniform.value.point4d.z, uniform.value.point4d.w);
 			else if (strcmp(uniform.type, "VuoColor") == 0)
 				glUniform4f(location, uniform.value.color.r, uniform.value.color.g, uniform.value.color.b, uniform.value.color.a);
+			else if (strcmp(uniform.type, "mat2") == 0)
+				glUniformMatrix2fv(location, 1, GL_FALSE, uniform.value.mat2);
+			else if (strcmp(uniform.type, "mat3") == 0)
+				glUniformMatrix3fv(location, 1, GL_FALSE, uniform.value.mat3);
+			else if (strcmp(uniform.type, "mat4") == 0)
+				glUniformMatrix4fv(location, 1, GL_FALSE, uniform.value.mat4);
 			else
 				VUserLog("Error: Unknown type %s for '%s'", uniform.type, uniform.name);
 		}
@@ -817,7 +1228,7 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 			// Capture the context's current color image and feed it to the shader.
 			glActiveTexture(GL_TEXTURE0 + textureUnit);
 
-			GLuint colorBufferTexture = VuoGlTexturePool_use(cgl_ctx, GL_RGBA, width, height, GL_BGRA);
+			GLuint colorBufferTexture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_Allocate, GL_TEXTURE_2D, GL_RGBA, width, height, GL_BGRA, NULL);
 			glBindTexture(GL_TEXTURE_2D, colorBufferTexture);
 
 			GLint multisampling, multisampledFramebuffer;
@@ -861,7 +1272,7 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 			// Capture the context's current depth image and feed it to the shader.
 			glActiveTexture(GL_TEXTURE0 + textureUnit);
 
-			GLuint depthBufferTexture = VuoGlTexturePool_use(cgl_ctx, GL_DEPTH_COMPONENT16, width, height, GL_DEPTH_COMPONENT);
+			GLuint depthBufferTexture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_Allocate, GL_TEXTURE_2D, GL_DEPTH_COMPONENT16, width, height, GL_DEPTH_COMPONENT, NULL);
 			glBindTexture(GL_TEXTURE_2D, depthBufferTexture);
 
 			/// @todo support multisampled framebuffers (like the color image case above)
@@ -872,6 +1283,36 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 
 			glUniform1i(depthBufferUniform, textureUnit);
 			++textureUnit;
+		}
+
+		// ISF
+		{
+			// RENDERSIZE is provided by a #define in VuoShaderFile::insertPreamble.
+			// TIME is provided by an input port.
+
+			double now = VuoLogGetElapsedTime();
+			GLint timedeltaUniform = VuoGlProgram_getUniformLocation(program->program, "TIMEDELTA");
+			if (timedeltaUniform != -1)
+				glUniform1f(timedeltaUniform, now - shader->lastActivationTime);
+			shader->lastActivationTime = now;
+
+			GLint dateUniform = VuoGlProgram_getUniformLocation(program->program, "DATE");
+			if (dateUniform != -1)
+			{
+				VuoInteger year;
+				VuoInteger month;
+				VuoInteger dayOfMonth;
+				VuoInteger hour;
+				VuoInteger minute;
+				VuoReal    second;
+				if (VuoTime_getComponents(VuoTime_getCurrent(), &year, NULL, &month, &dayOfMonth, NULL, NULL, &hour, &minute, &second))
+					glUniform4f(dateUniform, (float)year, (float)month, (float)dayOfMonth, (float)(second + (minute + (hour * 60)) * 60));
+			}
+
+			GLint frameindexUniform = VuoGlProgram_getUniformLocation(program->program, "FRAMEINDEX");
+			if (frameindexUniform != -1)
+				glUniform1i(frameindexUniform, shader->activationCount);
+			++shader->activationCount;
 		}
 	}
 
@@ -898,7 +1339,7 @@ void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod 
 		return;
 
 //	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER); --- the lock is held while the shader is active
-	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
+	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext, NULL))
 	{
 //		dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 		return;
@@ -1039,7 +1480,7 @@ json_object * VuoShader_getInterprocessJson(const VuoShader value)
 char * VuoShader_getSummary(const VuoShader value)
 {
 	if (!value)
-		return strdup("(no shader)");
+		return strdup("No shader");
 
 	return strdup(value->name);
 }
@@ -1073,6 +1514,113 @@ VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize)
 {
 	return vuoSize/2.;
 }
+
+/**
+ * Converts the provided `normalizedCoordinates` into GLSL sampler2DRect coordinates relative to the provided width/height.
+ *
+ * GLSL Normalized Sampler Coordinates range from (0,0) in the bottom left to (1,1) in the top right.
+ *
+ * GLSL sampler2DRect Coordinates range from (0,0) to (imageWidth,imageHeight).
+ *
+ * @threadAny
+ * @version200New
+ */
+VuoPoint2d VuoShader_samplerRectCoordinatesFromNormalizedCoordinates(VuoPoint2d c, VuoInteger imageWidth, VuoInteger imageHeight)
+{
+	c.x *= imageWidth;
+	c.y *= imageHeight;
+	return c;
+}
+
+/**
+ * Returns true if the shader, as configured, will produce fully opaque output.
+ *
+ * Returns false if:
+ *
+ *    - the shader is explicitly transparent (if `isTransparent` or `useAlphaAsCoverage` is set)
+ *    - or the shader has one or more VuoColor uniforms whose alpha is less than 1
+ *    - or the shader has one or more VuoList_VuoColor uniforms having a color whose alpha is less than 1
+ *    - or the shader has a VuoReal uniform named `alpha` whose value is less than 1
+ *    - or the shader has one or more VuoImage uniforms with an alpha channel
+ *      (it doesn't actually check whether the image's alpha channel has less-than-1 values in it,
+ *      since that would be really slow)
+ *
+ * @version200New
+*/
+bool VuoShader_isOpaque(VuoShader shader)
+{
+	if (!shader)
+		return true;
+
+	if (shader->isTransparent || shader->useAlphaAsCoverage)
+	{
+//		VLog("Shader %p ('%s') isTransparent=%d useAlphaAsCoverage=%d", shader, shader->name, shader->isTransparent, shader->useAlphaAsCoverage);
+		return false;
+	}
+
+	bool opaque = true;
+
+	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);
+
+	for (int i = 0; i < shader->uniformsCount; ++i)
+	{
+		if (strcmp(shader->uniforms[i].type, "VuoColor") == 0
+		 && !VuoColor_isOpaque(shader->uniforms[i].value.color))
+		{
+//			VLog("Shader %p ('%s') has a transparent color: %s", shader, shader->name, VuoColor_getShortSummary(shader->uniforms[i].value.color));
+			opaque = false;
+			goto done;
+		}
+
+		if (strcmp(shader->uniforms[i].type, "VuoList_VuoColor") == 0
+		 && !VuoColor_areAllOpaque(shader->uniforms[i].value.colors))
+		{
+//			VLog("Shader %p ('%s') has a transparent color", shader, shader->name);
+			opaque = false;
+			goto done;
+		}
+
+		if (strcmp(shader->uniforms[i].type, "VuoReal") == 0
+		 && strcmp(shader->uniforms[i].name, "alpha") == 0
+		 && shader->uniforms[i].value.real < 1)
+		{
+//			VLog("Shader %p ('%s') has 'alpha' value %g", shader, shader->name, shader->uniforms[i].value.real);
+			opaque = false;
+			goto done;
+		}
+
+		if (strcmp(shader->uniforms[i].type, "VuoImage") == 0
+		 && shader->uniforms[i].value.image
+		 && VuoGlTexture_formatHasAlphaChannel(shader->uniforms[i].value.image->glInternalFormat))
+		{
+//			VLog("Shader %p ('%s') has an image with an alpha channel: %s", shader, shader->name, VuoImage_getSummary(shader->uniforms[i].value.image));
+			opaque = false;
+			goto done;
+		}
+	}
+
+done:
+	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
+
+	return opaque;
+}
+
+/**
+ * Returns true if the shader is anything other than the default (blue/purple gradient checkerboard).
+ *
+ * @version200New
+ */
+bool VuoShader_isPopulated(VuoShader shader)
+{
+	if (!shader)
+		return false;
+
+	if (shader == VuoShader_makeDefaultShader())
+		return false;
+
+	return true;
+}
+
 
 #include "VuoShaderShaders.h"
 #include "VuoShaderUniforms.h"

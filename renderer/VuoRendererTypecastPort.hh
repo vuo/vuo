@@ -2,9 +2,9 @@
  * @file
  * VuoRendererTypecastPort interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -27,8 +27,8 @@ public:
 	VuoRendererPort * getReplacedPort(void) const;
 	qreal getChildPortXOffset(void) const;
 
-	QPainterPath getPortPath(bool includeNormalPort, bool includeFlag, QPainterPath *outsetPath) const;
-	static QString getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort, bool inMenu);
+	QPainterPath getPortPath(bool includeNormalPort, bool includeFlag) const;
+	static QString getTypecastTitleForNodeClass(VuoNodeClass *typecastClass, bool inMenu);
 	QRectF getPortConstantTextRect(void) const;
 
 private:
@@ -37,8 +37,12 @@ private:
 	VuoRendererPort * childPort;
 	VuoRendererPort * replacedPort;
 	VuoRendererNode * uncollapsedTypecastNode;
+	static const qreal textPadding;
 
 	void setUncollapsedTypecastNode(VuoRendererNode *uncollapsedTypecastNode);
 	QString getCanvasTypecastTitle(void) const;
+
+	QRectF cachedBoundingRect;
+	void updateCachedBoundingRect();
 };
 

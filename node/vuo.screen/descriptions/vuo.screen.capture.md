@@ -1,6 +1,6 @@
 Periodically takes a screenshot of part of the screen.
 
-You can use this node to capture the output of another app and feed it into your Vuo composition.  (If the app supports Syphon, you could alternatively use Vuo's `Receive Syphon Image` node.)
+You can use this node to capture the output of another app and feed it into your Vuo composition.  (If the app supports Syphon, you could alternatively use Vuo's [Receive Syphon Video](vuo-node://vuo.syphon.receive) node.)
 
    - `Screen` — Which display to capture. If no screen is specified, a region is captured from the primary screen.  (In System Preferences > Displays > Arrangement, the primary screen is the one with the menu bar.)
    - `Top Left` — The coordinates, relative to `Screen`, of the top-left corner of the region to capture, in points (not pixels).

@@ -1,0 +1,50 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window2" version="2.0.0" label="Align Layer to Window|<refresh>refresh\l|<layer>layer\l|<window>window\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="525,240" _horizontalAlignment="\"center\"" _horizontalMargin="0.0" _verticalAlignment="\"bottom\""];
+CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="165,330"];
+GetLayerBounds6 [type="vuo.layer.bounds" version="1.0.0" label="Get Layer Bounds|<refresh>refresh\l|<layer>layer\l|<center>center\r|<width>width\r|<height>height\r" pos="1020,435"];
+HoldValue2 [type="vuo.data.hold2.VuoLayer" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="870,495"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="-180,225" _x="0.0"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="-225,420" _x="0.0"];
+Make2DTransform [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="-45,420" _rotation="0.0" _scale="\{\"x\":1.0,\"y\":1.0\}"];
+MakeList17 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="719,251"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="132,356"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Blue|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="-15,270" _text="\"blue\"" _font="\{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":\{\"r\":0.22499468922615051,\"g\":0.61143189668655396,\"b\":0.91469669342041016,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="765,240" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput2 [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="345,255"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<textY>textY\r|<useCombine>useCombine\r|<combineY>combineY\r|<verticalMargin>verticalMargin\r" _textY_type="VuoReal" _textY="0" _useCombine_type="VuoBoolean" _useCombine="false" _combineY_type="VuoReal" _combineY="0.0" _verticalMargin_type="VuoReal" _verticalMargin_suggestedMin="0.0" _verticalMargin_suggestedMax="1.0" _verticalMargin_suggestedStep="0.1" _verticalMargin="0.0"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<center>center\l|<width>width\l|<height>height\l" _center_type="VuoPoint2d" _width_type="VuoReal" _height_type="VuoReal"];
+
+AlignLayerToWindow:alignedLayer -> HoldValue2:value;
+AlignLayerToWindow:alignedLayer -> MakeList17:1;
+CombineLayers:layer -> SelectInput2:trueOption;
+GetLayerBounds6:center -> PublishedOutputs:center;
+GetLayerBounds6:height -> PublishedOutputs:height;
+GetLayerBounds6:width -> PublishedOutputs:width;
+HoldValue2:heldValue -> GetLayerBounds6:layer;
+Make2DPoint2:point -> Make2DTransform:translation;
+Make2DPoint:point -> MakeTextLayer:center;
+Make2DTransform:transform -> CombineLayers:transform;
+MakeList17:list -> RenderLayersToWindow:layers;
+MakeList5:list -> CombineLayers:layers;
+MakeTextLayer:layer -> MakeList5:1;
+MakeTextLayer:layer -> SelectInput2:falseOption;
+PublishedInputs:combineY -> Make2DPoint2:y;
+PublishedInputs:textY -> Make2DPoint:y;
+PublishedInputs:useCombine -> SelectInput2:which;
+PublishedInputs:verticalMargin -> AlignLayerToWindow:verticalMargin;
+RenderLayersToWindow:updatedWindow -> AlignLayerToWindow:window [style=invis];
+SelectInput2:out -> AlignLayerToWindow:layer;
+SelectInput2:out -> HoldValue2:update;
+}

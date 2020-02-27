@@ -1,41 +1,45 @@
 /**
  * @file
+ * @brief Reorder Ranges of Items
  * Displays two rows of rectangles, one derived from the other by swapping the first few and last few items.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="495,150" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":0.30000001192092896}" _width="1.8999999999999999" _columns="10" _height="2" _rows="1"];
-ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="495,315" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.30000001192092896}" _width="1.8999999999999999" _columns="10" _height="2" _rows="1"];
-BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="-60,150" _fire="10" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="525,165" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.30000001192092896\}" _width="1.8999999999999999" _columns="10" _height="2" _rows="1"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="525,345" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.30000001192092896\}" _width="1.8999999999999999" _columns="10" _height="2" _rows="1"];
+BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="-75,165" _fire="10" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
 ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="-120,465"];
-Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="90,-15" _b="20"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-240,150" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetItemRangesFromList2 [type="vuo.list.get.range.VuoLayer" version="1.0.0" label="Get Item Ranges from List|<refresh>refresh\l|<list>list\l|<ranges>ranges\l|<items>items\r" pos="240,315" fillcolor="violet"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="480,-105" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="0.10000000000000001"];
-MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="285,-90" _hue="0.0" _lightness="0.5" _opacity="1.0"];
-MakeList11 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="724,191" fillcolor="green"];
-MakeList12 [type="vuo.list.make.3.VuoIntegerRange" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="194,341" fillcolor="violet" _1="{\"minimum\":8,\"maximum\":10}" _2="{\"minimum\":4,\"maximum\":7}" _3="{\"minimum\":1,\"maximum\":3}"];
-MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="694,161" fillcolor="green"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="765,150" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="-135,660"];
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="-240,480" _b="10"];
+Divide2 [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="-240,570" _b="20"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-255,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetItemRangesFromList2 [type="vuo.list.get.range.VuoLayer" version="1.0.0" label="Get Item Ranges from List|<refresh>refresh\l|<list>list\l|<ranges>ranges\l|<items>items\r" pos="255,285" fillcolor="orange"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="180,495" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.050000000000000003" _sharpness="1.0" _roundness="1" _opacity="1.0"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="-15,465" _hue="0.55000000000000004" _lightness="0.5" _opacity="1.0"];
+MakeList12 [type="vuo.list.make.3.VuoIntegerRange" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="222,311" fillcolor="orange" _1="\{\"minimum\":8,\"maximum\":10\}" _2="\{\"minimum\":4,\"maximum\":7\}" _3="\{\"minimum\":1,\"maximum\":3\}"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="749,176" fillcolor="blue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="795,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 ArrangeLayersInGrid2:griddedLayer -> MakeList7:2;
 ArrangeLayersInGrid:griddedLayer -> MakeList7:1;
+BuildList2:buildItem -> ConvertIntegerToRealNumber2:integer;
 BuildList2:buildItem -> ConvertIntegerToRealNumber:integer;
 BuildList2:builtList -> ArrangeLayersInGrid:layers;
 BuildList2:builtList -> GetItemRangesFromList2:list;
+ConvertIntegerToRealNumber2:real -> Divide2:a;
 ConvertIntegerToRealNumber:real -> Divide:a;
-Divide:quotient -> MakeColorLayer:height;
+Divide2:quotient -> MakeColorLayer:height;
 Divide:quotient -> MakeHSLColor:saturation;
 FireOnStart:started -> BuildList2:fire;
 GetItemRangesFromList2:items -> ArrangeLayersInGrid2:layers;
 MakeColorLayer:layer -> BuildList2:builtItem;
 MakeHSLColor:color -> MakeColorLayer:color;
-MakeList11:list -> RenderLayersToWindow:setWindowProperties;
 MakeList12:list -> GetItemRangesFromList2:ranges;
 MakeList7:list -> RenderLayersToWindow:layers;
 }

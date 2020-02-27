@@ -2,21 +2,23 @@
  * @file
  * VuoCompilerDriver implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+#include "VuoCable.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerDriver.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerNode.hh"
-#include "VuoCompilerPort.hh"
 #include "VuoCompilerPublishedPort.hh"
+#include "VuoCompilerType.hh"
 #include "VuoComposition.hh"
 #include "VuoNode.hh"
-#include "VuoPort.hh"
+#include "VuoNodeClass.hh"
 #include "VuoProtocol.hh"
 #include "VuoPublishedPort.hh"
 #include "VuoType.hh"
@@ -29,7 +31,9 @@
  */
 VuoCompilerDriver::VuoCompilerDriver(VuoCompiler *compiler, const string &driverAsCompositionString)
 {
+	this->compiler = compiler;
 	this->parser = VuoCompilerGraphvizParser::newParserFromCompositionString(driverAsCompositionString, compiler);
+	this->compositionString = driverAsCompositionString;
 }
 
 /**
@@ -83,31 +87,34 @@ bool VuoCompilerDriver::isValidDriverForProtocol(VuoProtocol *protocol)
  * within the driver to identically named and typed published input ports within the
  * composition, and vice versa, and re-routing their connected cables appropriately.
  */
-void VuoCompilerDriver::applyToComposition(VuoCompilerComposition *composition)
+void VuoCompilerDriver::applyToComposition(VuoCompilerComposition *composition, VuoCompiler *compiler, bool canPublishedInputsBeEdited)
 {
+	// Copy the driver's contents so the original driver won't be affected.
+	VuoCompilerGraphvizParser *parserCopy = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionString, compiler);
+
 	// Add the (non-published) driver nodes to the composition.
-	vector<VuoNode *> nodes = parser->getNodes();
+	vector<VuoNode *> nodes = parserCopy->getNodes();
 	for (vector<VuoNode *>::iterator node = nodes.begin(); node != nodes.end(); ++node)
 	{
-		composition->getBase()->addNode(*node);
-
 		// Give the node an identifier that is different from any nodes in the current composition
 		// and any `Make List` nodes that have just been replaced during a live-coding reload.
 		if ((*node)->hasCompiler())
 		{
-			string nodeIdentifier = (*node)->getCompiler()->getGraphvizIdentifierPrefix() + "_Driver";
-			(*node)->getCompiler()->setGraphvizIdentifier(nodeIdentifier);
-			composition->setUniqueGraphvizIdentifierForNode(*node);
+			string nodeIdentifierPrefix = (*node)->getCompiler()->getGraphvizIdentifierPrefix() + "_Driver";
+			composition->setUniqueGraphvizIdentifierForNode(*node, nodeIdentifierPrefix, nodeIdentifierPrefix);
 		}
+
+		composition->getBase()->addNode(*node);
 	}
 
 	// Add the (non-published) driver cables to the composition.
-	vector<VuoCable *> cables = parser->getCables();
+	vector<VuoCable *> cables = parserCopy->getCables();
 	for (vector<VuoCable *>::iterator cable = cables.begin(); cable != cables.end(); ++cable)
-		composition->getBase()->addCable(*cable);
+		if (! (*cable)->isPublished())
+			composition->getBase()->addCable(*cable);
 
 	// Bridge each of the driver's published outputs with the matching composition published input.
-	vector<VuoPublishedPort *> driverBridgeInputs = parser->getPublishedOutputPorts();
+	vector<VuoPublishedPort *> driverBridgeInputs = parserCopy->getPublishedOutputPorts();
 	for (vector<VuoPublishedPort *>::iterator i = driverBridgeInputs.begin(); i != driverBridgeInputs.end(); ++i)
 	{
 		VuoPublishedPort *driverBridgeInput = (*i);
@@ -172,7 +179,7 @@ void VuoCompilerDriver::applyToComposition(VuoCompilerComposition *composition)
 	}
 
 	// Bridge each of the driver's published inputs with the matching composition published output.
-	vector<VuoPublishedPort *> driverBridgeOutputs = parser->getPublishedInputPorts();
+	vector<VuoPublishedPort *> driverBridgeOutputs = parserCopy->getPublishedInputPorts();
 	for (vector<VuoPublishedPort *>::iterator i = driverBridgeOutputs.begin(); i != driverBridgeOutputs.end(); ++i)
 	{
 		VuoPublishedPort *driverBridgeOutput = (*i);
@@ -236,38 +243,88 @@ void VuoCompilerDriver::applyToComposition(VuoCompilerComposition *composition)
 		}
 	}
 
-	// Add an event-only cable from the driver's first published output to each of the composition's non-protocol
-	// published inputs.
-	if (! driverBridgeInputs.empty())
+	// For each data published input in the composition that does not have a corresponding published output in the driver,
+	// add an `Allow Changes` or `Allow First Value` node with an incoming data cable from the published input port,
+	// an incoming event cable from the driver's `time` published output port, and an outgoing event cable to each
+	// internal input port connected to the published input port.
+	auto driverBridgeInput = std::find_if(driverBridgeInputs.begin(), driverBridgeInputs.end(),
+										  [] (VuoPublishedPort *p) { return p->getClass()->getName() == "time"; });
+	if (driverBridgeInput != driverBridgeInputs.end())
 	{
-		VuoPublishedPort *driverBridgeInput = driverBridgeInputs[0];
-		vector<VuoCable *> driverBridgeInputIncomingCables = driverBridgeInput->getConnectedCables();
+		vector<VuoCable *> driverBridgeInputIncomingCables = (*driverBridgeInput)->getConnectedCables();
 
-		vector<VuoPublishedPort *> nonProtocolPublishedInputs = composition->getBase()->getPublishedInputPorts();
-		for (vector<VuoPublishedPort *>::iterator i = nonProtocolPublishedInputs.begin(); i != nonProtocolPublishedInputs.end(); ++i)
+		vector<VuoPublishedPort *> compositionPublishedInputs = composition->getBase()->getPublishedInputPorts();
+		for (VuoPublishedPort *compositionPublishedInput : compositionPublishedInputs)
 		{
-			VuoPublishedPort *compositionPublishedInput = *i;
+			string name = compositionPublishedInput->getClass()->getName();
+			auto matchingDriverBridgeInput = std::find_if(driverBridgeInputs.begin(), driverBridgeInputs.end(),
+														  [&name] (VuoPublishedPort *p) { return p->getClass()->getName() == name; });
+			if (matchingDriverBridgeInput != driverBridgeInputs.end())
+				continue;
+
+			VuoType *type = static_cast<VuoCompilerPublishedPort *>(compositionPublishedInput->getCompiler())->getDataVuoType();
+			if (! type)
+				continue;
 
 			vector<VuoCable *> publishedInputOutgoingCables = compositionPublishedInput->getConnectedCables();
-			for (vector<VuoCable *>::iterator i = publishedInputOutgoingCables.begin(); i != publishedInputOutgoingCables.end(); ++i)
+
+			// Workaround for data types that don't support `Allow Changes`: Connect an event cable from the driver's `time`
+			// published output port directly to each internal input port connected to the published port.
+			if (canPublishedInputsBeEdited && ! type->getCompiler()->supportsComparison())
 			{
-				VuoCable *compositionCable = (*i);
-				VuoPort *toPort = compositionCable->getToPort();
-				VuoNode *toNode = compositionCable->getToNode();
-
-				for (vector<VuoCable *>::iterator j = driverBridgeInputIncomingCables.begin(); j != driverBridgeInputIncomingCables.end(); ++j)
+				for (VuoCable *driverCable : driverBridgeInputIncomingCables)
 				{
-					VuoCable *driverCable = (*j);
-					VuoPort *fromPort = driverCable->getFromPort();
-					VuoNode *fromNode = driverCable->getFromNode();
-
-					VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(fromPort->getCompiler());
-					VuoCompilerPort *toCompilerPort = static_cast<VuoCompilerPort *>(toPort->getCompiler());
-					VuoCompilerCable *newCable = new VuoCompilerCable(fromNode->getCompiler(), fromCompilerPort, toNode->getCompiler(), toCompilerPort);
-					newCable->setAlwaysEventOnly(true);
-
-					composition->getBase()->addCable(newCable->getBase());
+					for (VuoCable *compositionCable : publishedInputOutgoingCables)
+					{
+						// Event cable: driver output port -> composition input port
+						VuoCompilerNode *fromCompilerNode = driverCable->getFromNode()->getCompiler();
+						VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(driverCable->getFromPort()->getCompiler());
+						VuoCompilerNode *toCompilerNode = compositionCable->getToNode()->getCompiler();
+						VuoCompilerPort *toCompilerPort = static_cast<VuoCompilerPort *>(compositionCable->getToPort()->getCompiler());
+						VuoCompilerCable *cable = new VuoCompilerCable(fromCompilerNode, fromCompilerPort, toCompilerNode, toCompilerPort);
+						cable->setAlwaysEventOnly(true);
+						composition->getBase()->addCable(cable->getBase());
+					}
 				}
+				continue;
+			}
+
+			// Node: Allow Changes or Allow First Value
+			string allowNodeClassName = (canPublishedInputsBeEdited ? "vuo.event.allowChanges2" : "vuo.event.allowFirstValue");
+			VuoCompilerNodeClass *allowNodeClass = compiler->getNodeClass(allowNodeClassName + "." + type->getModuleKey());
+			VuoNode *allowNode = compiler->createNode(allowNodeClass);
+			string nodeIdentifierPrefix = allowNode->getCompiler()->getGraphvizIdentifierPrefix() + "_Driver";
+			composition->setUniqueGraphvizIdentifierForNode(allowNode, nodeIdentifierPrefix, nodeIdentifierPrefix);
+			composition->getBase()->addNode(allowNode);
+
+			VuoCompilerPort *allowInputPort = static_cast<VuoCompilerPort *>(allowNode->getInputPorts().at(VuoNodeClass::unreservedInputPortStartIndex)->getCompiler());
+			VuoCompilerPort *allowOutputPort = static_cast<VuoCompilerPort *>(allowNode->getOutputPorts().at(VuoNodeClass::unreservedOutputPortStartIndex)->getCompiler());
+
+			{
+				// Data cable: composition published input port -> Allow node
+				VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPublishedPort *>(compositionPublishedInput->getCompiler());
+				VuoCompilerCable *cable = new VuoCompilerCable(nullptr, fromCompilerPort, allowNode->getCompiler(), allowInputPort);
+				composition->getBase()->addCable(cable->getBase());
+			}
+
+			for (VuoCable *driverCable : driverBridgeInputIncomingCables)
+			{
+				// Event cable: driver output port -> Allow node
+				VuoCompilerNode *fromCompilerNode = driverCable->getFromNode()->getCompiler();
+				VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(driverCable->getFromPort()->getCompiler());
+				VuoCompilerCable *cable = new VuoCompilerCable(fromCompilerNode, fromCompilerPort, allowNode->getCompiler(), allowInputPort);
+				cable->setAlwaysEventOnly(true);
+				composition->getBase()->addCable(cable->getBase());
+			}
+
+			for (VuoCable *compositionCable : publishedInputOutgoingCables)
+			{
+				// Event cable: Allow node -> composition input port
+				VuoCompilerNode *toCompilerNode = compositionCable->getToNode()->getCompiler();
+				VuoCompilerPort *toCompilerPort = static_cast<VuoCompilerPort *>(compositionCable->getToPort()->getCompiler());
+				VuoCompilerCable *cable = new VuoCompilerCable(allowNode->getCompiler(), allowOutputPort, toCompilerNode, toCompilerPort);
+				cable->setAlwaysEventOnly(true);
+				composition->getBase()->addCable(cable->getBase());
 			}
 		}
 	}

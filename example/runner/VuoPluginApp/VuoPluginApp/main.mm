@@ -3,9 +3,9 @@
  * main.m
  * VuoPluginApp
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import <Cocoa/Cocoa.h>
@@ -23,7 +23,6 @@ void VuoPluginApp_createOpenGLContext(void)
 	NSOpenGLPixelFormatAttribute attrs[] =
 	{
 		NSOpenGLPFAAccelerated,
-		NSOpenGLPFAWindow,
 		NSOpenGLPFANoRecovery,
 		NSOpenGLPFADoubleBuffer,
 		NSOpenGLPFAColorSize, 24,
@@ -52,5 +51,5 @@ int main(int argc, const char * argv[])
 		[VuoRunnerCocoa prepareForFastBuild];
 	});
 
-    return NSApplicationMain(argc, argv);
+	return NSApplicationMain(argc, argv);
 }

@@ -2,9 +2,9 @@
  * @file
  * TestVuoUrl implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sys/stat.h>
@@ -50,9 +50,9 @@ private slots:
 		QString baseUrlParentParent = fileScheme + basePathParentParent;
 		baseUrlParentParent.replace("@", "%40");
 
-		QString resourcesPath = basePathParent + "/Resources";
-		QString resourcesPathParent = basePathParent;
-		QString resourcesPathParentParent = basePathParentParent;
+		QString resourcesPath             = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../Resources");
+		QString resourcesPathParent       = QDir::cleanPath(resourcesPath + "/..");
+		QString resourcesPathParentParent = QDir::cleanPath(resourcesPathParent + "/..");
 
 		QString desktopPath = homeDir + "/Desktop";
 
@@ -69,9 +69,9 @@ private slots:
 		QTest::newRow("relative file ?")            << "file?.wav"                  << baseUrl + "/file%3F.wav"                 << true  << basePath + "/file?.wav"             << resourcesPath + "/file?.wav"             << desktopPath + "/file?.wav";
 		QTest::newRow("relative dir/")				<< "dir/"						<< baseUrl + "/dir"							<< true  << basePath + "/dir"					<< resourcesPath + "/dir"					<< desktopPath + "/dir";
 		QTest::newRow("relative dir/file")			<< "dir/file"					<< baseUrl + "/dir/file"					<< true  << basePath + "/dir/file"				<< resourcesPath + "/dir/file"				<< desktopPath + "/dir/file";
-		QTest::newRow("relative ./file")			<< "./Makefile"					<< baseUrl + "/Makefile"					<< true  << basePath + "/Makefile"				<< resourcesPath + "/Makefile"				<< desktopPath + "/Makefile";
-		QTest::newRow("relative ../file")			<< "../Makefile"				<< baseUrlParent + "/Makefile"				<< true  << basePathParent + "/Makefile"		<< resourcesPathParent + "/Makefile"		<< desktopPath + "/../Makefile" /* Doesn't exist, so ".." remains. */;
-		QTest::newRow("relative ../../file")		<< "../../Makefile"				<< baseUrlParentParent + "/Makefile"		<< true  << basePathParentParent + "/Makefile"	<< resourcesPathParentParent + "/Makefile"	<< desktopPath + "/../../Makefile" /* Doesn't exist, so "../.." remains. */;
+		QTest::newRow("relative ./file")            << "./CMakeLists.txt"           << baseUrl + "/CMakeLists.txt"              << true  << basePath + "/CMakeLists.txt"        << resourcesPath + "/CMakeLists.txt"        << desktopPath + "/CMakeLists.txt";
+		QTest::newRow("relative ../file")           << "../CMakeLists.txt"          << baseUrlParent + "/CMakeLists.txt"        << true  << basePathParent + "/CMakeLists.txt"  << resourcesPathParent + "/CMakeLists.txt"  << desktopPath + "/../CMakeLists.txt" /* Doesn't exist, so ".." remains. */;
+		QTest::newRow("relative ../../file")        << "../../CMakeLists.txt"       << baseUrlParentParent + "/CMakeLists.txt"  << true  << basePathParentParent + "/CMakeLists.txt" << resourcesPathParentParent + "/CMakeLists.txt" << desktopPath + "/../../CMakeLists.txt" /* Doesn't exist, so "../.." remains. */;
 		QTest::newRow("absolute file")				<< "/mach_kernel"				<< fileScheme + "/mach_kernel"				<< true  << "/mach_kernel"						<< "/mach_kernel"							<< "/mach_kernel";
 		QTest::newRow("absolute file @")			<< "/mach_kernel@b"				<< fileScheme + "/mach_kernel%40b"			<< true  << "/mach_kernel@b"					<< "/mach_kernel@b"							<< "/mach_kernel@b";
 		QTest::newRow("absolute colon")             << "/ScreenShot 09:41:00"       << fileScheme + "/ScreenShot%2009%3A41%3A00"<< true  << "/ScreenShot 09꞉41꞉00"              << "/ScreenShot 09꞉41꞉00"                   << "/ScreenShot 09꞉41꞉00";
@@ -110,18 +110,20 @@ private slots:
 			QCOMPARE(QString("file://") + escapedPosixPath, QString(expectedNormalizedUrl));
 
 
+			/// @todo Find a more robust way to test this.
+#if 0
 			// Simulate being inside an exported app bundle.
 			{
-				QString resourcesDir = "../Resources";
+				QString resourcesDir = QCoreApplication::applicationDirPath() + "/../Resources";
 				mkdir(resourcesDir.toUtf8().data(), 0755);
 				QVERIFY(QDir(resourcesDir).exists());
 
 				// Create makefiles where the test data expect them to exist
-				QString resourcesMakefile = resourcesDir + "/Makefile";
+				QString resourcesMakefile = resourcesDir + "/CMakeLists.txt";
 				fclose(fopen(resourcesMakefile.toUtf8().data(), "w"));
 				QVERIFY(QFile(resourcesMakefile).exists());
 
-				QString desktopMakefile = QString(getenv("HOME")) + "/Desktop/Makefile";
+				QString desktopMakefile = QString(getenv("HOME")) + "/Desktop/CMakeLists.txt";
 				fclose(fopen(desktopMakefile.toUtf8().data(), "w"));
 				QVERIFY(QFile(desktopMakefile).exists());
 
@@ -160,6 +162,7 @@ private slots:
 				rmdir(resourcesDir.toUtf8().data());
 				QVERIFY(!QDir(resourcesDir).exists());
 			}
+#endif
 		}
 		else
 			QCOMPARE(posixPath, (VuoText)NULL);
@@ -339,8 +342,37 @@ private slots:
 			free(data);
 		}
 	}
+
+	void testFetch_data()
+	{
+		QTest::addColumn<QString>("uri");
+
+		QString fileScheme = "file://";
+		QString basePath = getcwd(NULL,0);
+		QString baseUrl = fileScheme + basePath;
+		baseUrl.replace("@", "%40");
+
+		// https://b33p.net/kosada/node/14924
+		QTest::newRow("relative path with colon")                 <<             "resources/2018-07-11 16:19:37Z.txt";
+		QTest::newRow("relative path with modifier letter colon") <<             "resources/2018-07-11 16꞉19꞉37Z.txt";
+		QTest::newRow("absolute path with colon")                 << basePath + "/resources/2018-07-11 16:19:37Z.txt";
+		QTest::newRow("absolute path with modifier letter colon") << basePath + "/resources/2018-07-11 16꞉19꞉37Z.txt";
+		QTest::newRow("url with colon")                           << baseUrl  + "/resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("url with modifier letter colon")           << baseUrl  + "/resources/2018-07-11%2016%EA%9E%8919%EA%9E%8937Z.txt";
+	}
+	void testFetch()
+	{
+		QFETCH(QString, uri);
+
+		void *data;
+		unsigned int dataLength;
+		bool valid = VuoUrl_fetch(uri.toUtf8().constData(), &data, &dataLength);
+		QVERIFY(valid);
+		QCOMPARE(QByteArray((const char *)data, dataLength), QByteArray("hi"));
+		free(data);
+	}
 };
 
-QTEST_APPLESS_MAIN(TestVuoUrl)
+QTEST_MAIN(TestVuoUrl)
 
 #include "TestVuoUrl.moc"

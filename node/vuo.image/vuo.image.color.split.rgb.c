@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.split.rgb node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -20,16 +20,16 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec4 colorMask;
 	uniform bool alpha;	// false = use texture's alpha; true = 100%
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		if (alpha && color.a > 0.)
 			color.rgb /= color.a;
 		float luminance = dot(color, colorMask);

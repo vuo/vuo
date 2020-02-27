@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.sort node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"list", "inputPortValues":{"list":[
+					"time-24",
+					"time-12",
+					"date-long",
+					"date-medium",
+					"date-short",
+					"datetime-long-24",
+					"datetime-long-12",
+					"datetime-medium-24",
+					"datetime-medium-12",
+					"datetime-short-24",
+					"datetime-short-12",
+					"datetime-sortable"
+				], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[
+					"datetime-sortable",
+					"datetime-short-12",
+					"datetime-short-24",
+					"datetime-medium-12",
+					"datetime-medium-24",
+					"datetime-long-12",
+					"datetime-long-24",
+					"date-short",
+					"date-medium",
+					"date-long",
+					"time-12",
+					"time-24"]}},
+]}

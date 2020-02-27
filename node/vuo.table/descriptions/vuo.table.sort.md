@@ -9,10 +9,10 @@ Sorts a table's rows by the values in the chosen column.
 
 To sort on multiple columns, use multiple copies of this node. For example, to sort a school roster by class year and then by last name, set up one `Sort Table` node to sort by the Last Name column, and feed its output into another `Sort Table` node that sorts by the Class Year column.
 
-To sort the table's columns instead of its rows, use the `Transpose Table` node before and after `Sort Table`.
+To sort the table's columns instead of its rows, use the [Transpose Table](vuo-node://vuo.table.transpose) node before and after `Sort Table`.
 
 If `Sort Type` is *Text (case-sensitive)*, uppercase letters come before lowercase letters in ascending order.
 
-If `Sort Type` is *Date*, the column values can have any of the formats available in the `Format Date-Time` node, or any the "Short" formats from that node with a 2-digit instead of a 4-digit year.
+If `Sort Type` is *Date*, the column values can have any of the formats available in the [Format Date-Time](vuo-node://vuo.time.format) node, or any the "Short" formats from that node with a 2-digit instead of a 4-digit year.
 
 If multiple items in the chosen column have the same value, this node keeps those rows in the same order as they were in the input table.

@@ -2,19 +2,23 @@
  * @file
  * VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 #include <math.h>
 #include <stdbool.h>
 struct json_object;
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoReal_struct { void *l; } * VuoList_VuoReal;
 #define VuoList_VuoReal_TYPE_DEFINED
 /// @}
@@ -208,30 +212,13 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 
 /// This type has _areEqual() and _isLessThan() functions.
 #define VuoReal_SUPPORTS_COMPARISON
-
-/**
- * Returns true if the two values are equal (within a small tolerance).
- */
-static inline bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
-{
-	// http://stackoverflow.com/questions/1565164/what-is-the-rationale-for-all-comparisons-returning-false-for-ieee754-nan-values
-	if( isnan(value1) || isnan(value2) )
-		return false;
-	// when comparing inf or -inf don't use fuzzy values
-	else if( !isfinite(value1) || !isfinite(value2) )
-		return value1 == value2;
-	else
-		return fabs(value1 - value2) <= 0.00001;
-}
-
-/**
- * Returns true if a < b.
- */
-static inline bool VuoReal_isLessThan(const VuoReal a, const VuoReal b)
-{
-	return a < b;
-}
+bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2);
+bool VuoReal_isLessThan(const VuoReal a, const VuoReal b);
 
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

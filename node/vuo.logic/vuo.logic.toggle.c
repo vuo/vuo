@@ -2,16 +2,16 @@
  * @file
  * vuo.logic.toggle node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					 "title" : "Toggle",
-					 "keywords" : [ "boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "alternate", "switch", "0", "1", "true", "false" ],
+					 "keywords" : [ "event to boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "alternate", "switch", "0", "1", "true", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						  "exampleCompositions" : [ ]

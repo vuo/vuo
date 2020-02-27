@@ -2,25 +2,13 @@
  * @file
  * TestVuoCompilerNodeClass interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <fcntl.h>
 #include "TestVuoCompiler.hh"
-#include "VuoCompiler.hh"
-#include "VuoCompilerInputDataClass.hh"
-#include "VuoCompilerInputEventPortClass.hh"
-#include "VuoCompilerNode.hh"
-#include "VuoCompilerNodeClass.hh"
-#include "VuoCompilerPortClass.hh"
-#include "VuoCompilerSpecializedNodeClass.hh"
-#include "VuoCompilerTriggerPortClass.hh"
-#include "VuoCompilerType.hh"
-#include "VuoGenericType.hh"
-#include "VuoPortClass.hh"
-
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(vector<string>);
@@ -234,7 +222,7 @@ private slots:
 		QCOMPARE(portClass->getEventBlocking(), expectedEventBlocking);
 	}
 
-	void testStructPorts_data()
+	void testAggregateTypePorts_data()
 	{
 		QTest::addColumn< QString >("nodeClassName");
 		QTest::addColumn< QString >("portClassName");
@@ -242,13 +230,15 @@ private slots:
 		QTest::addColumn< bool >("isInputPort");
 		QTest::addColumn< bool >("isLoweredToTwoParameters");
 
-		QTest::newRow("Not a struct port") << "vuo.point.make.VuoPoint2d" << "x" << "VuoReal" << true << false;
+		QTest::newRow("Not an aggregate type") << "vuo.point.make.VuoPoint2d" << "x" << "VuoReal" << true << false;
 		QTest::newRow("VuoPoint2d output port") << "vuo.point.make.VuoPoint2d" << "point" << "VuoPoint2d" << false << false;
 		QTest::newRow("VuoPoint2d input port") << "vuo.point.get.VuoPoint2d" << "point" << "VuoPoint2d" << true << false;
-		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.VuoPoint3d" << "point" << "VuoPoint3d" << true << true;
-		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.VuoPoint4d" << "point" << "VuoPoint4d" << true << true;
+		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.VuoPoint3d" << "point" << "VuoPoint3d" << true << false;
+		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.VuoPoint4d" << "point" << "VuoPoint4d" << true << false;
+		QTest::newRow("VuoColor input port") << "vuo.color.get.rgb" << "color" << "VuoColor" << true << true;
+		QTest::newRow("VuoAudioSamples input port") << "vuo.audio.analyze.fft2" << "samples" << "VuoAudioSamples" << true << false;
 	}
-	void testStructPorts()
+	void testAggregateTypePorts()
 	{
 		QFETCH(QString, nodeClassName);
 		QFETCH(QString, portClassName);
@@ -407,6 +397,201 @@ private slots:
 		}
 
 		QVERIFY(foundPort);
+	}
+
+private:
+
+	vector<VuoPublishedPort *> makePublishedPorts(QStringList names, QStringList types)
+	{
+		vector<VuoPublishedPort *> publishedPorts;
+
+		for (int i = 0; i < names.size(); ++i)
+		{
+			string portName = names[i].toStdString();
+			string typeName = types[i].toStdString();
+
+			VuoType *type = (typeName.empty() ? nullptr : compiler->getType(typeName)->getBase());
+
+			VuoCompilerPublishedPort *port = VuoCompilerPublishedPort::newPort(portName, type);
+			publishedPorts.push_back(static_cast<VuoPublishedPort *>(port->getBase()));
+		}
+
+		return publishedPorts;
+	}
+
+private slots:
+
+	void testPublishedInputNodeClass_data()
+	{
+		QTest::addColumn< QStringList >("publishedPortNames");
+		QTest::addColumn< QStringList >("publishedPortTypes");
+		QTest::addColumn< QStringList >("expectedInputPortNames");
+		QTest::addColumn< QStringList >("expectedOutputPortNames");
+
+		auto appendOut = [] (QStringList list)
+		{
+			for (int i = 0; i < list.size(); ++i)
+				list[i].append("Out");
+
+			return list;
+		};
+
+		{
+			QTest::newRow("no published ports") << QStringList() << QStringList() << QStringList() << QStringList();
+		}
+		{
+			QStringList names("a");
+			QStringList types("");
+			QTest::newRow("one event port") << names << types << names << appendOut(names);
+		}
+		{
+			QStringList names("b");
+			QStringList types("VuoInteger");
+			QTest::newRow("one data+event port") << names << types << names << appendOut(names);
+		}
+		{
+			QStringList names("c");
+			QStringList types("VuoGenericType1");
+			QTest::newRow("one unspecialized generic port") << names << types << names << appendOut(names);
+		}
+		{
+			QStringList names;
+			QStringList types;
+			names << "data1" << "event1" << "data2" << "event2";
+			types << "VuoText" << "" << "VuoLayer" << "";
+			QTest::newRow("multiple event and data+event ports") << names << types << names << appendOut(names);
+		}
+		{
+			QStringList names;
+			names << "refresh" << "a" << "aEvent" << "aOut" << "aOutEvent";
+			QStringList inNames;
+			inNames << "refresh2" << "a" << "aEvent" << "aOut" << "aOutEvent";
+			QStringList outNames;
+			outNames << "refresh2Out" << "aOut2" << "aEventOut" << "aOutOut" << "aOutEventOut";
+
+			QStringList specTypes;
+			specTypes << "VuoReal" << "VuoSceneObject" << "" << "" << "";
+			QTest::newRow("name collisions, no unspecialized generic ports") << names << specTypes << inNames << outNames;
+
+			QStringList unspecTypes;
+			unspecTypes << "VuoGenericType1" << "VuoGenericType2" << "" << "" << "";
+			QTest::newRow("name collisions, some unspecialized generic ports") << names << unspecTypes << inNames << outNames;
+		}
+	}
+	void testPublishedInputNodeClass()
+	{
+		QFETCH(QStringList, publishedPortNames);
+		QFETCH(QStringList, publishedPortTypes);
+		QFETCH(QStringList, expectedInputPortNames);
+		QFETCH(QStringList, expectedOutputPortNames);
+
+		vector<VuoPublishedPort *> publishedPorts = makePublishedPorts(publishedPortNames, publishedPortTypes);
+
+		VuoNode *publishedNode = compiler->createPublishedInputNode(publishedPorts);
+		VuoCompilerPublishedInputNodeClass *publishedNodeClass = static_cast<VuoCompilerPublishedInputNodeClass *>(publishedNode->getNodeClass()->getCompiler());
+
+		vector<VuoPortClass *> inputPortClasses = publishedNodeClass->getBase()->getInputPortClasses();
+		QCOMPARE(inputPortClasses.size(), publishedPorts.size() + VuoNodeClass::unreservedInputPortStartIndex);
+
+		vector<VuoPortClass *> outputPortClasses = publishedNodeClass->getBase()->getOutputPortClasses();
+		QCOMPARE(outputPortClasses.size(), publishedPorts.size() + VuoNodeClass::unreservedOutputPortStartIndex);
+
+		for (size_t i = 0; i < publishedPorts.size(); ++i)
+		{
+			size_t inputPortIndex = i + VuoNodeClass::unreservedInputPortStartIndex;
+			size_t outputPortIndex = i + VuoNodeClass::unreservedOutputPortStartIndex;
+
+			VuoPortClass *inputPortClass = inputPortClasses[inputPortIndex];
+			VuoPortClass *outputPortClass = outputPortClasses[outputPortIndex];
+
+			QCOMPARE(QString::fromStdString(inputPortClass->getName()), expectedInputPortNames[i]);
+			QCOMPARE(QString::fromStdString(outputPortClass->getName()), expectedOutputPortNames[i]);
+
+			QCOMPARE((int)inputPortClass->getEventBlocking(), (int)VuoPortClass::EventBlocking_Door);
+
+			QCOMPARE((int)inputPortClass->getPortType(), (int)(publishedPortTypes[i].isEmpty() ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort));
+			QCOMPARE((int)outputPortClass->getPortType(), (int)(publishedPortTypes[i].isEmpty() ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort));
+
+			QCOMPARE(publishedNodeClass->getInputPortIndexForPublishedInputPort(i), inputPortIndex);
+			QCOMPARE(publishedNodeClass->getOutputPortIndexForPublishedInputPort(i), outputPortIndex);
+		}
+	}
+
+	void testPublishedOutputNodeClass_data()
+	{
+		QTest::addColumn< QStringList >("publishedPortNames");
+		QTest::addColumn< QStringList >("publishedPortTypes");
+		QTest::addColumn< QStringList >("expectedInputPortNames");
+
+		{
+			QTest::newRow("no published ports") << QStringList() << QStringList() << QStringList();
+		}
+		{
+			QStringList names("a");
+			QStringList types("");
+			QTest::newRow("one event port") << names << types << names;
+		}
+		{
+			QStringList names("b");
+			QStringList types("VuoInteger");
+			QTest::newRow("one data+event port") << names << types << names;
+		}
+		{
+			QStringList names("c");
+			QStringList types("VuoGenericType1");
+			QTest::newRow("one unspecialized generic port") << names << types << names;
+		}
+		{
+			QStringList names;
+			QStringList types;
+			names << "data1" << "event1" << "data2" << "event2";
+			types << "VuoText" << "" << "VuoLayer" << "";
+			QTest::newRow("multiple event and data+event ports") << names << types << names;
+		}
+		{
+			QStringList names;
+			names << "refresh" << "a" << "aEvent" << "aOut" << "aOutEvent";
+			QStringList inNames;
+			inNames << "refresh2" << "a" << "aEvent" << "aOut" << "aOutEvent";
+
+			QStringList specTypes;
+			specTypes << "VuoReal" << "VuoSceneObject" << "" << "" << "";
+			QTest::newRow("name collisions, no unspecialized generic ports") << names << specTypes << inNames;
+
+			QStringList unspecTypes;
+			unspecTypes << "VuoGenericType1" << "VuoGenericType2" << "" << "" << "";
+			QTest::newRow("name collisions, some unspecialized generic ports") << names << unspecTypes << inNames;
+		}
+	}
+	void testPublishedOutputNodeClass()
+	{
+		QFETCH(QStringList, publishedPortNames);
+		QFETCH(QStringList, publishedPortTypes);
+		QFETCH(QStringList, expectedInputPortNames);
+
+		vector<VuoPublishedPort *> publishedPorts = makePublishedPorts(publishedPortNames, publishedPortTypes);
+
+		VuoNodeClass *publishedNodeClass = VuoCompilerPublishedOutputNodeClass::newNodeClass(publishedPorts);
+		VuoCompilerPublishedOutputNodeClass *publishedCompilerNodeClass = static_cast<VuoCompilerPublishedOutputNodeClass *>(publishedNodeClass->getCompiler());
+
+		vector<VuoPortClass *> inputPortClasses = publishedNodeClass->getInputPortClasses();
+		QCOMPARE(inputPortClasses.size(), publishedPorts.size() + 1 + VuoNodeClass::unreservedInputPortStartIndex);
+
+		vector<VuoPortClass *> outputPortClasses = publishedNodeClass->getOutputPortClasses();
+		QCOMPARE(outputPortClasses.size(), (size_t)VuoNodeClass::unreservedOutputPortStartIndex);
+
+		for (size_t i = 0; i < publishedPorts.size(); ++i)
+		{
+			size_t inputPortIndex = i + VuoNodeClass::unreservedInputPortStartIndex;
+
+			VuoPortClass *inputPortClass = inputPortClasses[inputPortIndex];
+
+			QCOMPARE(QString::fromStdString(inputPortClass->getName()), expectedInputPortNames[i]);
+
+			QCOMPARE((int)inputPortClass->getPortType(), (int)(publishedPortTypes[i].isEmpty() ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort));
+
+			QCOMPARE(publishedCompilerNodeClass->getInputPortIndexForPublishedOutputPort(i), inputPortIndex);
+		}
 	}
 
 };

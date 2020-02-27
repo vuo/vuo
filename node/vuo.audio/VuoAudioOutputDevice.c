@@ -2,14 +2,11 @@
  * @file
  * VuoAudioOutputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoAudioOutputDevice.h"
 
@@ -41,22 +38,12 @@ VuoModuleMetadata({
  */
 VuoAudioOutputDevice VuoAudioOutputDevice_makeFromJson(json_object *js)
 {
-	VuoAudioOutputDevice value = {-1, NULL, NULL, 0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "id", &o))
-		value.id = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "modelUid", &o))
-		value.modelUid = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "channelCount", &o))
-		value.channelCount = VuoInteger_makeFromJson(o);
-
-	return value;
+	return (VuoAudioOutputDevice){
+		VuoJson_getObjectValue(VuoInteger, js, "id",           -1),
+		VuoJson_getObjectValue(VuoText,    js, "modelUid",     NULL),
+		VuoJson_getObjectValue(VuoText,    js, "name",         NULL),
+		VuoJson_getObjectValue(VuoInteger, js, "channelCount", 0)
+	};
 }
 
 /**
@@ -66,8 +53,11 @@ json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_getJson(value.id);
-	json_object_object_add(js, "id", idObject);
+	if (value.id != -1)
+	{
+		json_object *idObject = VuoInteger_getJson(value.id);
+		json_object_object_add(js, "id", idObject);
+	}
 
 	if (value.modelUid)
 	{
@@ -81,8 +71,11 @@ json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value)
 		json_object_object_add(js, "name", nameObject);
 	}
 
-	json_object *channelCountObject = VuoInteger_getJson(value.channelCount);
-	json_object_object_add(js, "channelCount", channelCountObject);
+	if (value.channelCount)
+	{
+		json_object *channelCountObject = VuoInteger_getJson(value.channelCount);
+		json_object_object_add(js, "channelCount", channelCountObject);
+	}
 
 	return js;
 }
@@ -128,4 +121,13 @@ bool VuoAudioOutputDevice_areEqual(VuoAudioOutputDevice value1, VuoAudioOutputDe
 			VuoText_areEqual(value1.modelUid, value2.modelUid) &&
 			VuoText_areEqual(value1.name, value2.name) &&
 			value1.channelCount == value2.channelCount);
+}
+
+/**
+ * Returns true if the id of `a` is less than the id of `b`.
+ * @version200New
+ */
+bool VuoAudioOutputDevice_isLessThan(const VuoAudioOutputDevice a, const VuoAudioOutputDevice b)
+{
+	return a.id < b.id;
 }

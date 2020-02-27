@@ -2,9 +2,9 @@
  * @file
  * vuo.data.record node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,8 +12,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Record and Play Values",
-					 "keywords" : [ "write", "file", "output", "store", "remember", "memory", "playback" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "write", "file", "output", "store", "remember", "memory", "playback",
+						 "value historian",
+					 ],
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoUrl"
 					 ],
@@ -31,6 +33,7 @@ struct nodeInstanceData
 
 	struct json_object *recording;
 	int lastReadIndex;
+	bool atEnd;
 
 	// Copies of port data, so it can be used by fini.
 	VuoText url;
@@ -176,15 +179,16 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"wall", "data":"url"}) urlEvent,
 		VuoInputData(VuoBoolean, {"default":false, "name":"Overwrite URL"}) overwriteUrl,
 		VuoInputEvent({"eventBlocking":"wall", "data":"overwriteUrl"}) overwriteUrlEvent,
-		VuoInputData(VuoInteger, {"menuItems":{
-			"0":"Record",
-			"1":"Playback"
-		}, "default":0}) mode,
+		VuoInputData(VuoInteger, {"menuItems":[
+			{"value":0, "name":"Record"},
+			{"value":1, "name":"Playback"},
+		], "default":0}) mode,
 		VuoInputEvent({"eventBlocking":"wall", "data":"mode"}) modeEvent,
 		VuoInputEvent({"eventBlocking":"wall"}) finalize,
 
 		VuoOutputData(VuoGenericType1) value,
-		VuoOutputEvent({"data":"value"}) valueEvent
+		VuoOutputEvent({"data":"value"}) valueEvent,
+		VuoOutputEvent() finishedPlayback
 )
 {
 	bool wasRecording = ((*instance)->mode == 0);
@@ -297,11 +301,21 @@ void nodeInstanceEvent
 
 			// If we failed to get a frame, we must have seeked past the end. Output the last frame.
 			if (! gotFrame)
+			{
+				if (! (*instance)->atEnd)
+				{
+					*finishedPlayback = true;
+					(*instance)->atEnd = true;
+				}
 				goto found;
+			}
 
 			// If we found the frame, output it.
 			else if (t1 <= time && time < t2)
+			{
+				(*instance)->atEnd = false;
 				goto found;
+			}
 
 			i1 = i2;
 			t1 = t2;

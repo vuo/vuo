@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.cube node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Cone",
 					 "keywords" : [ "3D", "point", "hat", "wizard", "pyramid", "shape", "object" ],
-					 "version" : "1.0.1",
+					 "version" : "1.1.0",
 					 "genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -31,8 +31,22 @@ VuoModuleMetadata({
 
 static const double TWOPI = 6.28318530718;
 
-void nodeEvent
+struct nodeInstanceData
+{
+	VuoInteger rows;
+	VuoInteger columns;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoTransform) transform,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 		VuoInputData(VuoInteger, {"default":32, "suggestedMin":3, "suggestedMax": 256}) columns,
@@ -40,16 +54,26 @@ void nodeEvent
 		VuoOutputData(VuoSceneObject) cone
 )
 {
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (rows == (*context)->rows
+	 && columns == (*context)->columns)
+	{
+		*cone = VuoSceneObject_copy(*cone);
+		VuoSceneObject_setTransform(*cone, transform);
+		VuoSceneObject_setShader(*cone, VuoShader_make_VuoGenericType1(material));
+		return;
+	}
+
 	unsigned int c = MIN(MAX(3, columns), 256) + 1;	// add one for seam (the last vertex is unused)
 	unsigned int r = MIN(MAX(2, rows), 256) + 1;	// add one for base
 	unsigned int vertexCount = c * r + 1; // add one for base center vertex and one for tip top
 
-	VuoPoint4d* positions = (VuoPoint4d*) malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* textures = (VuoPoint4d*) malloc(sizeof(VuoPoint4d) * vertexCount);
-
 	// sides + (bottom + ?top)
 	unsigned int elementCount = (c-1)*(r-2)*6 + ((c-1)*3);
-	unsigned int* elements = (unsigned int*) malloc(sizeof(unsigned int) * elementCount );
+
+	float *positions, *textureCoordinates;
+	unsigned int *elements;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, NULL, &textureCoordinates, NULL, elementCount, &elements);
 
 	unsigned int v = 0;
 
@@ -69,17 +93,21 @@ void nodeEvent
 			float x =  (cos((i/(float)(c-1))*TWOPI) * .5) * per;
 			float z =  (sin((i/(float)(c-1))*TWOPI) * .5) * per;
 
-			positions[v] 	= VuoPoint4d_make(x, y, z, 1);
-			textures[v]     = VuoPoint4d_make((x+.5),
-											  n == 0 ? z+.5 : 1. - (z+.5),
-											  0, 1);
+			positions[v * 3    ] = x;
+			positions[v * 3 + 1] = y;
+			positions[v * 3 + 2] = z;
+			textureCoordinates[v * 2    ]  = x + .5;
+			textureCoordinates[v * 2 + 1]  = n == 0 ? z + .5 : 1. - (z + .5);
 			v++;
 		}
 	}
 
 	// Base center vertex
-	positions[vertexCount-1] = VuoPoint4d_make(0,-.5,0,1);
-	textures [vertexCount-1] = VuoPoint4d_make(.5,.5,0,1);
+	positions[(vertexCount - 1) * 3    ] = 0;
+	positions[(vertexCount - 1) * 3 + 1] = -.5;
+	positions[(vertexCount - 1) * 3 + 2] = 0;
+	textureCoordinates[(vertexCount - 1) * 2    ] = .5;
+	textureCoordinates[(vertexCount - 1) * 2 + 1] = .5;
 
 	v = 0;
 
@@ -115,11 +143,14 @@ void nodeEvent
 		}
 	}
 
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													positions, NULL, NULL, NULL, textures,
-													elementCount, elements, VuoMesh_IndividualTriangles);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(vertexCount,
+		positions, NULL, textureCoordinates, NULL,
+		elementCount, elements, VuoMesh_IndividualTriangles);
 
-	VuoMeshUtility_calculateNormals(&submesh);
+	VuoMeshUtility_calculateNormals(mesh);
+
+	float *normals;
+	VuoMesh_getCPUBuffers(mesh, NULL, NULL, &normals, NULL, NULL, NULL, NULL);
 
 	/**
 	 * average seams of sides
@@ -128,20 +159,20 @@ void nodeEvent
 	{
 		unsigned int a = i*c, b = a+c-1;
 
-		VuoPoint4d avg = VuoPoint4d_multiply(
-							VuoPoint4d_add(	submesh.normals[a],
-											submesh.normals[b]
-										),
-									.5);
+		VuoPoint3d na = VuoPoint3d_makeFromArray(&normals[a * 3]);
+		VuoPoint3d nb = VuoPoint3d_makeFromArray(&normals[b * 3]);
+		VuoPoint3d avg = (na + nb) / 2.f;
 
-		submesh.normals[a] = avg;
-		submesh.normals[b] = avg;
+		VuoPoint3d_setArray(&normals[a * 3], avg);
+		VuoPoint3d_setArray(&normals[b * 3], avg);
 	}
 
 	// make top vertex point up
 	for(int i = 0; i < c; i++)
 	{
-		submesh.normals[(r-1)*c+i] = VuoPoint4d_make(0,1,0,1);
+		normals[((r-1)*c+i) * 3    ] = 0;
+		normals[((r-1)*c+i) * 3 + 1] = 1;
+		normals[((r-1)*c+i) * 3 + 2] = 0;
 	}
 
 	// // Average the seam normals
@@ -156,13 +187,12 @@ void nodeEvent
 	// for(int i = 0; i < c; i++)
 	// 	submesh.normals[i] = VuoPoint4d_make(0,-1,0,1);
 
-	VuoMeshUtility_calculateTangents(&submesh);
-
-	*cone = VuoSceneObject_make(	VuoMesh_makeFromSingleSubmesh(submesh),
+	*cone = VuoSceneObject_makeMesh(mesh,
 									VuoShader_make_VuoGenericType1(material),
-									transform,
-									NULL);
+									transform);
 
-	cone->name = VuoText_make("Cone");
+	VuoSceneObject_setName(*cone, VuoText_make("Cone"));
 
+	(*context)->rows = rows;
+	(*context)->columns = columns;
 }

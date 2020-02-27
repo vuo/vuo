@@ -2,9 +2,9 @@
  * @file
  * vuo.osc.message.make.4 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@
 #pragma clang diagnostic pop
 
 VuoModuleMetadata({
-					 "title" : "Make Message",
+					 "title" : "Make Message (4)",
 					 "keywords" : [ ],
 					 "version" : "1.1.0",
 					 "genericTypes": {
@@ -45,13 +45,13 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"/example"}) address,
-		VuoInputData(VuoGenericType0) data1,
+		VuoInputData(VuoGenericType0, {"name":"Value 1"}) data1,
 		VuoInputData(VuoOscType, {"default":"auto"}) type1,
-		VuoInputData(VuoGenericType1) data2,
+		VuoInputData(VuoGenericType1, {"name":"Value 2"}) data2,
 		VuoInputData(VuoOscType, {"default":"auto"}) type2,
-		VuoInputData(VuoGenericType2) data3,
+		VuoInputData(VuoGenericType2, {"name":"Value 3"}) data3,
 		VuoInputData(VuoOscType, {"default":"auto"}) type3,
-		VuoInputData(VuoGenericType3) data4,
+		VuoInputData(VuoGenericType3, {"name":"Value 4"}) data4,
 		VuoInputData(VuoOscType, {"default":"auto"}) type4,
 		VuoOutputData(VuoOscMessage) message
 )

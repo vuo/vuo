@@ -2,9 +2,9 @@
  * @file
  * VuoEdgeBlend implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
@@ -39,20 +39,11 @@ VuoModuleMetadata({
  */
 VuoEdgeBlend VuoEdgeBlend_makeFromJson(json_object * js)
 {
-	VuoEdgeBlend edgeBlend = VuoEdgeBlend_make(0., 1., 0);
-
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "cutoff", &o))
-		edgeBlend.cutoff = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "gamma", &o))
-		edgeBlend.gamma = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "crop", &o))
-		edgeBlend.crop = VuoReal_makeFromJson(o);
-
-	return edgeBlend;
+	return (VuoEdgeBlend){
+		VuoJson_getObjectValue(VuoReal, js, "cutoff", 0),
+		VuoJson_getObjectValue(VuoReal, js, "gamma", 1),
+		VuoJson_getObjectValue(VuoReal, js, "crop", 0)
+	};
 }
 
 /**

@@ -2,12 +2,11 @@
  * @file
  * VuoKey implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <string.h>
 #include <Carbon/Carbon.h>
 #include "type.h"
 #include "VuoKey.h"
@@ -922,9 +921,10 @@ char * VuoKey_getSummary(const VuoKey value)
 	if (isVisibleChar && ((VuoKey_KeypadDecimal <= value && value <= VuoKey_Keypad9) || value == VuoKey_KeypadComma))
 	{
 		const char *prefix = "Keypad ";
-		char *tmp = malloc(strlen(summary) + strlen(prefix) + 1);
-		strcpy(tmp, prefix);
-		strcat(tmp, summary);
+		size_t mallocSize = strlen(summary) + strlen(prefix) + 1;
+		char *tmp = malloc(mallocSize);
+		strlcpy(tmp, prefix, mallocSize);
+		strlcat(tmp, summary, mallocSize);
 		free(summary);
 		summary = tmp;
 	}
@@ -947,9 +947,9 @@ char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned
 {
 	__block char *characters = NULL;
 	VuoApp_executeOnMainThread(^{
-	// http://stackoverflow.com/questions/22566665/how-to-capture-unicode-from-key-events-without-an-nstextview
-	// http://stackoverflow.com/questions/12547007/convert-key-code-into-key-equivalent-string
-	// http://stackoverflow.com/questions/8263618/convert-virtual-key-code-to-unicode-string
+	// https://stackoverflow.com/questions/22566665/how-to-capture-unicode-from-key-events-without-an-nstextview
+	// https://stackoverflow.com/questions/12547007/convert-key-code-into-key-equivalent-string
+	// https://stackoverflow.com/questions/8263618/convert-virtual-key-code-to-unicode-string
 
 	TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
 	CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);

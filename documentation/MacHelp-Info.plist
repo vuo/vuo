@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en-us</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.vuo.Editor.help</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleVersion</key>
+	<string>@BUNDLE_VERSION@</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@BUNDLE_SHORT_VERSION_STRING@</string>
+	<key>CFBundleSignature</key>
+	<string>hbwr</string>
+	<key>HPDBookAccessPath</key>
+	<string>_access.html</string>
+	<key>HPDBookIndexPath</key>
+	<string>Vuo.helpindex</string>
+	<key>HPDBookTitle</key>
+	<string>Vuo Manual</string>
+	<key>HPDBookIconPath</key>
+	<string>vuo.png</string>
+	<key>HPDBookType</key>
+	<string>3</string>
+</dict>
+</plist>

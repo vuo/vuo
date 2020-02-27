@@ -2,37 +2,38 @@
  * @file
  * Displays an original image and its red, green, and blue channels as separate images.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Image by Andreas Gücklhorn on [Unsplash](https://unsplash.com/photos/mawU2PoJWfU).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1200,150" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="3" _height="1.300000" _rows="2"];
-CombineImageRGBChannels [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,255" fillcolor="violet"];
-CombineImageRGBChannels2 [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,390" fillcolor="violet"];
-CombineImageRGBChannels3 [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,525" fillcolor="violet"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,135" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="195,180" _url="\"Sunset.jpg\""];
-MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1457,176" fillcolor="green"];
-MakeList5 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1136,161"];
-MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1437,161" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,105" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,240" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,375" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-MakeScaledLayer4 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,510" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1485,150" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SplitImageRGBChannels [type="vuo.image.color.split.rgb" version="1.1.0" label="Split Image RGB Channels|<refresh>refresh\l|<image>image\l|<preserveOpacity>preserveOpacity\l|<redImage>redImage\r|<greenImage>greenImage\r|<blueImage>blueImage\r|<opacityImage>opacityImage\r" pos="345,255" fillcolor="violet" _preserveOpacity="true"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1200,90" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="1.800000" _columns="3" _height="1.300000" _rows="2"];
+CombineImageRGBChannels [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,255" fillcolor="orange"];
+CombineImageRGBChannels2 [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,390" fillcolor="orange"];
+CombineImageRGBChannels3 [type="vuo.image.color.combine.rgb" version="1.1.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="615,525" fillcolor="orange"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,105" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="195,105" _url="\"Aerial.jpg\""];
+MakeList5 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1132,101"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1418,101" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,105" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,255" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeScaledLayer3 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,390" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeScaledLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="900,525" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1470,90" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SplitImageRGBChannels [type="vuo.image.color.split.rgb" version="1.1.1" label="Split Image RGB Channels|<refresh>refresh\l|<image>image\l|<preserveOpacity>preserveOpacity\l|<redImage>redImage\r|<greenImage>greenImage\r|<blueImage>blueImage\r|<opacityImage>opacityImage\r" pos="345,255" fillcolor="orange" _preserveOpacity="true"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList7:1;
 CombineImageRGBChannels2:combinedImage -> MakeScaledLayer3:image;
 CombineImageRGBChannels3:combinedImage -> MakeScaledLayer4:image;
 CombineImageRGBChannels:combinedImage -> MakeScaledLayer2:image;
-FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> GetImage:url;
 GetImage:image -> MakeScaledLayer:image;
 GetImage:image -> SplitImageRGBChannels:image;
-MakeList2:list -> RenderLayersToWindow:setWindowProperties;
 MakeList5:list -> ArrangeLayersInGrid:layers;
 MakeList7:list -> RenderLayersToWindow:layers;
 MakeScaledLayer2:layer -> MakeList5:4;

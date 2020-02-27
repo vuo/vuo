@@ -2,20 +2,16 @@
  * @file
  * VuoCompilerModule implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#include <json-c/json.h>
-#pragma clang diagnostic pop
-
-#include "VuoCompilerModule.hh"
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerType.hh"
+#include "VuoJsonUtilities.hh"
+#include "VuoNodeClass.hh"
 #include "VuoStringUtilities.hh"
 
 /**
@@ -24,11 +20,13 @@
  */
 VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 {
+#if VUO_PRO
+	init_Pro();
+#endif
 	this->base = base;
 	this->module = module;
 	this->moduleDetails = NULL;
 	this->parser = NULL;
-	this->isPremium = false;
 	this->builtIn = false;
 
 	if (module)
@@ -43,6 +41,9 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
  */
 VuoCompilerModule::~VuoCompilerModule(void)
 {
+#if VUO_PRO
+	fini_Pro();
+#endif
 	delete parser;
 	json_object_put(moduleDetails);
 }
@@ -72,6 +73,8 @@ VuoCompilerModule * VuoCompilerModule::newModule(const string &moduleKey, Module
 
 		m->modulePath = modulePath;
 	}
+	else if (moduleKey != "libmodule")
+		VUserLog("Warning: No VuoModuleMetadata found in \"%s\" so I'm not going to load it.", moduleKey.c_str());
 
 	return m;
 }
@@ -111,88 +114,13 @@ void VuoCompilerModule::parseMetadata(void)
 		return;
 	}
 
-	base->setDefaultTitle( parseString(moduleDetails, "title") );
-	base->setDescription( parseString(moduleDetails, "description") );
-	base->setVersion( parseString(moduleDetails, "version") );
-	base->setKeywords( parseArrayOfStrings(moduleDetails, "keywords") );
-	vector<string> dependenciesVector = parseArrayOfStrings(moduleDetails, "dependencies");
+	base->setDefaultTitle(VuoJsonUtilities::parseString(moduleDetails, "title"));
+	base->setDescription(VuoJsonUtilities::parseString(moduleDetails, "description"));
+	base->setVersion(VuoJsonUtilities::parseString(moduleDetails, "version"));
+	base->setKeywords(VuoJsonUtilities::parseArrayOfStrings(moduleDetails, "keywords"));
+	vector<string> dependenciesVector = VuoJsonUtilities::parseArrayOfStrings(moduleDetails, "dependencies");
 	dependencies = set<string>(dependenciesVector.begin(), dependenciesVector.end());
 	compatibleTargets = parseTargetSet(moduleDetails, "compatibleOperatingSystems");
-}
-
-/**
- * Parses the string value for @c key in the top level of the JSON object.
- *
- * If no such value is found, returns an empty string.
- */
-string VuoCompilerModule::parseString(json_object *o, string key, bool *foundValue)
-{
-	string s;
-	if (foundValue)
-		*foundValue = false;
-
-	json_object *stringObject = NULL;
-	if (json_object_object_get_ex(o, key.c_str(), &stringObject))
-	{
-		if (json_object_get_type(stringObject) == json_type_string)
-		{
-			s = json_object_get_string(stringObject);
-			if (foundValue)
-				*foundValue = true;
-		}
-	}
-
-	return s;
-}
-
-/**
- * Parses the integer value for @c key in the top level of the JSON object.
- *
- * If no such value is found, returns 0.
- */
-int VuoCompilerModule::parseInt(json_object *o, string key, bool *foundValue)
-{
-	int i = 0;
-	if (foundValue)
-		*foundValue = false;
-
-	json_object *intObject = NULL;
-	if (json_object_object_get_ex(o, key.c_str(), &intObject))
-	{
-		if (json_object_get_type(intObject) == json_type_int)
-		{
-			i = json_object_get_int(intObject);
-			if (foundValue)
-				*foundValue = true;
-		}
-	}
-
-	return i;
-}
-
-/**
- * Parses the boolean value for @c key in the top level of the JSON object.
- *
- * If no such value is found, returns false.
- */
-bool VuoCompilerModule::parseBool(json_object *o, string key, bool *foundValue)
-{
-	bool b = 0;
-	if (foundValue)
-		*foundValue = false;
-
-	json_object *boolObject = NULL;
-	if (json_object_object_get_ex(o, key.c_str(), &boolObject))
-	{
-		if (json_object_get_type(boolObject) == json_type_boolean)
-		{
-			b = json_object_get_boolean(boolObject);
-			if (foundValue)
-				*foundValue = true;
-		}
-	}
-
-	return b;
 }
 
 /**
@@ -211,8 +139,8 @@ VuoCompilerTargetSet VuoCompilerModule::parseTargetSet(json_object *o, string ke
 			json_object *macosObject = NULL;
 			if (json_object_object_get_ex(operatingSystemsObject, "macosx", &macosObject))
 			{
-				t.setMinMacVersion( parseMacVersion( parseString(macosObject, "min") ) );
-				t.setMaxMacVersion( parseMacVersion( parseString(macosObject, "max") ) );
+				t.setMinMacVersion( parseMacVersion(VuoJsonUtilities::parseString(macosObject, "min")) );
+				t.setMaxMacVersion( parseMacVersion(VuoJsonUtilities::parseString(macosObject, "max")) );
 			}
 		}
 	}
@@ -238,33 +166,14 @@ VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string versi
 		return VuoCompilerTargetSet::MacVersion_10_11;
 	if (version == "10.12")
 		return VuoCompilerTargetSet::MacVersion_10_12;
+	if (version == "10.13")
+		return VuoCompilerTargetSet::MacVersion_10_13;
+	if (version == "10.14")
+		return VuoCompilerTargetSet::MacVersion_10_14;
+	if (version == "10.15")
+		return VuoCompilerTargetSet::MacVersion_10_15;
 
 	return VuoCompilerTargetSet::MacVersion_Any;
-}
-
-/**
- * Parses the array-of-strings value for @c key in the top level of the JSON object.
- *
- * If no such value is found, returns an empty vector.
- */
-vector<string> VuoCompilerModule::parseArrayOfStrings(json_object *o, string key)
-{
-	vector<string> items;
-	json_object *arrayObject = NULL;
-	if (json_object_object_get_ex(o, key.c_str(), &arrayObject))
-	{
-		if (json_object_get_type(arrayObject) == json_type_array)
-		{
-			int itemCount = json_object_array_length(arrayObject);
-			for (int i = 0; i < itemCount; ++i)
-			{
-				json_object *item = json_object_array_get_idx(arrayObject, i);
-				if (json_object_get_type(item) == json_type_string)
-					items.push_back( json_object_get_string(item) );
-			}
-		}
-	}
-	return items;
 }
 
 /**
@@ -391,28 +300,11 @@ Module * VuoCompilerModule::getModule(void)
 }
 
 /**
- * Returns the (psuedo) base for this (psuedo) compiler detail class.
+ * Returns the (pseudo) base for this (pseudo) compiler detail class.
  */
 VuoModule * VuoCompilerModule::getPseudoBase(void)
 {
 	return base;
-}
-
-/**
- * Returns a boolean indicating whether this module contains premium content.
- */
-bool VuoCompilerModule::getPremium(void)
-{
-	return isPremium;
-}
-
-/**
- * Sets the boolean indicating whether this module contains premium content.
- * This attribute may be used, e.g., for purposes of automatic documentation generation.
- */
-void VuoCompilerModule::setPremium(bool premium)
-{
-	this->isPremium = premium;
 }
 
 /**

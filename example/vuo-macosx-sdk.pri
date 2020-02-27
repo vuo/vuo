@@ -1,1 +1,0 @@
-../vuo-macosx-sdk.pri

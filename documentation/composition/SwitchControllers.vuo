@@ -2,39 +2,39 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 Convert3DPointTo2DPoint [type="vuo.type.point3d.point2d.xy" version="1.0.1" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="600,390"];
 GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="315,540"];
-GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-60,435"];
-GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="210,435"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="529,731" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="499,716" fillcolor="green"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="345,705" _name="\"\"" _color="{\"r\":0.70618754625320435,\"g\":1,\"b\":0.68813610076904297,\"a\":1}" _rotation="0.0" _width="0.29999999999999999" _height="0.29999999999999999" _sharpness="1.0"];
-ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="105,270" fillcolor="yellow" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-255,435" fillcolor="yellow" _receivedFrame_eventThrottling="drop"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-255,345" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="570,705" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectInput3 [type="vuo.select.in.boolean.VuoPoint2d" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="480,360" fillcolor="violet"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="345,270" fillcolor="violet"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-75,465"];
+GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="165,480"];
+MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,581" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="390,570" _color="\{\"r\":0.70618754625320435,\"g\":1,\"b\":0.68813610076904297,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.29999999999999999" _height="0.29999999999999999" _sharpness="1.0" _opacity="1.0"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="105,300" fillcolor="lime" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-255,465" fillcolor="lime" _receivedFrame_eventThrottling="drop"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-255,375" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="585,570" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput3 [type="vuo.select.in.boolean.VuoPoint2d" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="480,360" fillcolor="orange"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="345,300" fillcolor="orange"];
 
 Convert3DPointTo2DPoint:xy -> SelectInput3:trueOption;
 GetFirstItemInList:firstItem -> GetHandValues:hand;
 GetFrameValues:hands -> GetFirstItemInList:list;
 GetHandValues:sphereCenter -> Convert3DPointTo2DPoint:xyz;
-MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList5:list -> RenderLayersToWindow:layers;
 MakeOvalLayer:layer -> MakeList5:1;
 ReceiveKeyboardButtons:pressed -> Toggle:toggle;
 ReceiveLeapFrame:receivedFrame -> GetFrameValues:frame;
 ReceiveMouseMoves:movedTo -> SelectInput3:falseOption;
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
 SelectInput3:out -> MakeOvalLayer:center;
 Toggle:value -> SelectInput3:which;
 }

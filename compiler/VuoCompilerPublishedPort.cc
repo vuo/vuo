@@ -2,23 +2,35 @@
  * @file
  * VuoCompilerPublishedPort implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+#include <dlfcn.h>
 #include <sstream>
-#include "VuoCompilerEventPort.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerPublishedPortClass.hh"
+#include "VuoCompilerType.hh"
 #include "VuoCable.hh"
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
-#include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoHeap.h"
 
+/**
+ * Creates a VuoCompilerPublishedPort along with its VuoCompilerPublishedPortClass.
+ */
+VuoCompilerPublishedPort * VuoCompilerPublishedPort::newPort(string name, VuoType *type)
+{
+	Type *llvmType = (type ? type->getCompiler()->getType() : nullptr);
+	VuoPortClass::PortType eventOrData = (type ? VuoPortClass::dataAndEventPort : VuoPortClass::eventOnlyPort);
+	VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass(name, eventOrData, llvmType);
+	portClass->setDataVuoType(type);
+	return static_cast<VuoCompilerPublishedPort *>( portClass->newPort() );
+}
 
 /**
  * Creates a published port that is not connected to any port in a running composition.
@@ -74,15 +86,20 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 	VuoType *type = static_cast<VuoCompilerPortClass *>(getBase()->getClass()->getCompiler())->getDataVuoType();
 	if (isInput && type)
 	{
+//		VLog("Coalescing input %s %s:", type->getModuleKey().c_str(), getIdentifier().c_str());
 		json_object *coalescedSuggestedMin = NULL;
 		json_object *coalescedSuggestedMax = NULL;
 		json_object *coalescedSuggestedStep = NULL;
+		json_object *coalescedAuto = NULL;
+		json_object *coalescedAutoSupersedesDefault = NULL;
+		json_object *coalescedMenuItems = NULL;
+		bool atLeastOneDataSourceCoalesced = false;
 
 		vector<VuoCable *> connectedCables = getBase()->getConnectedCables();
 		for (vector<VuoCable *>::iterator i = connectedCables.begin(); i != connectedCables.end(); ++i)
 		{
 			VuoPort *connectedPort = (*i)->getToPort();
-			if (!connectedPort)
+			if (! (connectedPort && connectedPort->hasCompiler()) )
 				continue;
 
 			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>(connectedPort->getClass()->getCompiler());
@@ -98,6 +115,7 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 
 					if (json_object_object_get_ex(js, "suggestedMin", &o))
 					{
+//						VLog("	Cable with suggestedMin %s", json_object_to_json_string(o));
 						if (!coalescedSuggestedMin)
 							coalescedSuggestedMin = o;
 						else
@@ -127,6 +145,7 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 
 					if (json_object_object_get_ex(js, "suggestedMax", &o))
 					{
+//						VLog("	Cable with suggestedMax %s", json_object_to_json_string(o));
 						if (!coalescedSuggestedMax)
 							coalescedSuggestedMax = o;
 						else
@@ -156,6 +175,7 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 
 					if (json_object_object_get_ex(js, "suggestedStep", &o))
 					{
+//						VLog("	Cable with suggestedStep %s", json_object_to_json_string(o));
 						if (!coalescedSuggestedStep)
 							coalescedSuggestedStep = o;
 						else
@@ -182,7 +202,38 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 								coalescedSuggestedStep = o;
 						}
 					}
-				}
+
+					if (json_object_object_get_ex(js, "auto", &o))
+					{
+//						VLog("	Cable with auto %s", json_object_to_json_string(o));
+						if (!atLeastOneDataSourceCoalesced)
+						{
+							coalescedAuto = o;
+
+							if (json_object_object_get_ex(js, "autoSupersedesDefault", &o))
+								coalescedAutoSupersedesDefault = o;
+						}
+						else if (coalescedAuto != o)
+						{
+							coalescedAuto = NULL;
+							coalescedAutoSupersedesDefault = NULL;
+						}
+					}
+					else
+					{
+						coalescedAuto = NULL;
+						coalescedAutoSupersedesDefault = NULL;
+					}
+
+					if (json_object_object_get_ex(js, "menuItems", &o))
+					{
+//						VLog("	Cable with menuItems %s", json_object_to_json_string(o));
+						if (!coalescedMenuItems)
+							coalescedMenuItems = o;
+					}
+
+					atLeastOneDataSourceCoalesced = true;
+				} // end if (connectedInputDataClass)
 			}
 		}
 
@@ -193,9 +244,77 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 		if (coalescedSuggestedStep)
 			json_object_object_add(coalescedDetails, "suggestedStep", coalescedSuggestedStep);
 
+		// Use the coalesced auto value only if it came from a single internal source and there
+		// are no connected data sources without auto values.
+		if (coalescedAuto)
+			json_object_object_add(coalescedDetails, "auto", coalescedAuto);
+		if (coalescedAutoSupersedesDefault)
+			json_object_object_add(coalescedDetails, "autoSupersedesDefault", coalescedAutoSupersedesDefault);
+
+		if (!coalescedMenuItems)
+		{
+			// If it's a hard-enum type, maybe we can get the menu items from the currently-loaded type.
+			// Copied from VuoRuntimeCommunicator::mergeEnumDetails.
+
+			string allowedValuesFunctionName = type->getModuleKey() + "_getAllowedValues";
+			typedef void *(*allowedValuesFunctionType)(void);
+			allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
+
+			string getJsonFunctionName = type->getModuleKey() + "_getJson";
+			typedef json_object *(*getJsonFunctionType)(int64_t);
+			getJsonFunctionType getJsonFunction = (getJsonFunctionType)dlsym(RTLD_SELF, getJsonFunctionName.c_str());
+
+			string summaryFunctionName = type->getModuleKey() + "_getSummary";
+			typedef char *(*summaryFunctionType)(int64_t);
+			summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.c_str());
+
+			string listCountFunctionName = "VuoListGetCount_" + type->getModuleKey();
+			typedef unsigned long (*listCountFunctionType)(void *);
+			listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.c_str());
+
+			string listValueFunctionName = "VuoListGetValue_" + type->getModuleKey();
+			typedef int64_t (*listValueFunctionType)(void *, unsigned long);
+			listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.c_str());
+
+			if (allowedValuesFunction && getJsonFunction && summaryFunction && listCountFunction && listValueFunction)
+			{
+				void *allowedValues = allowedValuesFunction();
+				VuoRetain(allowedValues);
+				unsigned long listCount = listCountFunction(allowedValues);
+				json_object *menuItems = json_object_new_array();
+				for (unsigned long i = 1; i <= listCount; ++i)
+				{
+					int64_t value = listValueFunction(allowedValues, i);
+					json_object *js = getJsonFunction(value);
+					if (!json_object_is_type(js, json_type_string))
+						continue;
+					const char *key = json_object_get_string(js);
+					char *summary = summaryFunction(value);
+
+					json_object *menuItem = json_object_new_object();
+					json_object_object_add(menuItem, "value", json_object_new_string(key));
+					json_object_object_add(menuItem, "name", json_object_new_string(summary));
+					json_object_array_add(menuItems, menuItem);
+
+					free(summary);
+				}
+				VuoRelease(allowedValues);
+
+				if (json_object_array_length(menuItems))
+					coalescedMenuItems = menuItems;
+			}
+		}
+		if (coalescedMenuItems)
+			json_object_object_add(coalescedDetails, "menuItems", coalescedMenuItems);
+
 		json_object_get(coalescedSuggestedMin);
 		json_object_get(coalescedSuggestedMax);
 		json_object_get(coalescedSuggestedStep);
+		json_object_get(coalescedAuto);
+		json_object_get(coalescedAutoSupersedesDefault);
+		json_object_get(coalescedMenuItems);
+
+//		VLog("	Result: %s", json_object_to_json_string(coalescedDetails));
 	}
 
 

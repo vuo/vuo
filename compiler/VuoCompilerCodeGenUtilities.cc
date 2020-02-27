@@ -2,21 +2,19 @@
  * @file
  * VuoCompilerCodeGenUtilities implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerConstantStringCache.hh"
-#include "VuoCompilerDataClass.hh"
-#include "VuoCompilerEventPortClass.hh"
-#include "VuoCompilerNodeArgumentClass.hh"
-#include "VuoCompilerPublishedPort.hh"
-#include "VuoCompilerTriggerPort.hh"
+#include "VuoCompilerPort.hh"
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoCompilerType.hh"
+#include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoType.hh"
 
 /**
  * Generates code that constructs a dispatch_semaphore_t.
@@ -977,37 +975,6 @@ void VuoCompilerCodeGenUtilities::generateSetNodeContextClaimingEventId(Module *
 }
 
 /**
- * Generates code that sets the `executingEventId` field of a NodeContext.
- *
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @param nodeContextValue A value of type `NodeContext *`.
- * @param executingEventIdValue The value to set the field to.
- */
-void VuoCompilerCodeGenUtilities::generateSetNodeContextExecutingEventId(Module *module, BasicBlock *block, Value *nodeContextValue, Value *executingEventIdValue)
-{
-	const char *functionName = "vuoSetNodeContextExecutingEventId";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		StructType *nodeContextType = getNodeContextType(module);
-		PointerType *pointerToNodeContext = PointerType::get(nodeContextType, 0);
-		Type *eventIdType = nodeContextType->getElementType(6);
-
-		vector<Type *> params;
-		params.push_back(pointerToNodeContext);
-		params.push_back(eventIdType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-
-	vector<Value *> args;
-	args.push_back(nodeContextValue);
-	args.push_back(executingEventIdValue);
-	CallInst::Create(function, args, "", block);
-}
-
-/**
  * Generates code that sets an element of the `outputEvents` field of a NodeContext.
  *
  * @param module The module in which to generate code.
@@ -1199,31 +1166,6 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeContextExecutingGroup(Module
 }
 
 /**
- * Generates code that gets the `executingEventId` field of a NodeContext.
- *
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @param nodeContextValue A value of type `NodeContext *`.
- * @return The value of the field.
- */
-Value * VuoCompilerCodeGenUtilities::generateGetNodeContextExecutingEventId(Module *module, BasicBlock *block, Value *nodeContextValue)
-{
-	const char *functionName = "vuoGetNodeContextExecutingEventId";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		StructType *nodeContextType = getNodeContextType(module);
-		PointerType *pointerToNodeContext = PointerType::get(nodeContextType, 0);
-		Type *eventIdType = nodeContextType->getElementType(6);
-
-		FunctionType *functionType = FunctionType::get(eventIdType, pointerToNodeContext, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-
-	return CallInst::Create(function, nodeContextValue, "", block);
-}
-
-/**
  * Generates code that gets an element of the `outputEvents` field of a NodeContext.
  *
  * @param module The module in which to generate code.
@@ -1287,24 +1229,25 @@ void VuoCompilerCodeGenUtilities::generateResetNodeContextEvents(Module *module,
 }
 
 /**
- * Generates code that frees a `NodeContext *` and its fields, including the port contexts within its `portContexts` field.
- *
- * The generated code does not release the data pointed to by the `instanceData` field, if any.
+ * Generates a call to `vuoStartedExecutingEvent`.
  *
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
- * @param nodeContextValue A value of type `NodeContext *`.
+ * @param nodeContextValue The composition's node context, a value of type `NodeContext *`.
+ * @param eventIdValue A value of type `unsigned long`.
  */
-void VuoCompilerCodeGenUtilities::generateFreeNodeContext(Module *module, BasicBlock *block, Value *nodeContextValue)
+void VuoCompilerCodeGenUtilities::generateStartedExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue)
 {
-	const char *functionName = "vuoFreeNodeContext";
+	const char *functionName = "vuoStartedExecutingEvent";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
 		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+		Type *eventIdType = generateNoEventIdConstant(module)->getType();
 
 		vector<Type *> params;
 		params.push_back(pointerToNodeContextType);
+		params.push_back(eventIdType);
 
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
@@ -1312,7 +1255,101 @@ void VuoCompilerCodeGenUtilities::generateFreeNodeContext(Module *module, BasicB
 
 	vector<Value *> args;
 	args.push_back(nodeContextValue);
+	args.push_back(eventIdValue);
 	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSpunOffExecutingEvent`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param nodeContextValue The composition's node context, a value of type `NodeContext *`.
+ * @param eventIdValue A value of type `unsigned long`.
+ */
+void VuoCompilerCodeGenUtilities::generateSpunOffExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue)
+{
+	const char *functionName = "vuoSpunOffExecutingEvent";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+		Type *eventIdType = generateNoEventIdConstant(module)->getType();
+
+		vector<Type *> params;
+		params.push_back(pointerToNodeContextType);
+		params.push_back(eventIdType);
+
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(nodeContextValue);
+	args.push_back(eventIdValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoFinishedExecutingEvent`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param nodeContextValue The composition's node context, a value of type `NodeContext *`.
+ * @param eventIdValue A value of type `unsigned long`.
+ * @return A value of type `bool`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateFinishedExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue)
+{
+	const char *functionName = "vuoFinishedExecutingEvent";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+		Type *eventIdType = generateNoEventIdConstant(module)->getType();
+		Type *boolType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> params;
+		params.push_back(pointerToNodeContextType);
+		params.push_back(eventIdType);
+
+		FunctionType *functionType = FunctionType::get(boolType, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(nodeContextValue);
+	args.push_back(eventIdValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoGetOneExecutingEvent`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param nodeContextValue The composition's node context, a value of type `NodeContext *`.
+ * @return A value of type `unsigned long`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetOneExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue)
+{
+	const char *functionName = "vuoGetOneExecutingEvent";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+		Type *eventIdType = generateNoEventIdConstant(module)->getType();
+
+		vector<Type *> params;
+		params.push_back(pointerToNodeContextType);
+
+		FunctionType *functionType = FunctionType::get(eventIdType, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(nodeContextValue);
+	return CallInst::Create(function, args, "", block);
 }
 
 /**
@@ -1779,12 +1816,29 @@ Value * VuoCompilerCodeGenUtilities::generateGetArrayElement(Module *module, Bas
 }
 
 /**
+ * Generates code that gets the array element at the given index.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, Value *elementIndexValue)
+{
+	Value *memberPointer = generateGetArrayElementVariable(module, block, arrayValue, elementIndexValue);
+	return new LoadInst(memberPointer, "", block);
+}
+
+/**
  * Generates code that gets the address of the array element at the given index.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex)
 {
 	ConstantInt *indexValue = ConstantInt::get(module->getContext(), APInt(32, elementIndex));
-	return GetElementPtrInst::Create(arrayValue, indexValue, "", block);
+	return generateGetArrayElementVariable(module, block, arrayValue, indexValue);
+}
+
+/**
+ * Generates code that gets the address of the array element at the given index.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *module, BasicBlock *block, Value *arrayValue, Value *elementIndexValue)
+{
+	return GetElementPtrInst::Create(arrayValue, elementIndexValue, "", block);
 }
 
 /**
@@ -2180,7 +2234,9 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCast(Module *module, BasicBlock
 	if (valueToCast->getType() == typeToCastTo)
 		return valueToCast;
 
-	if (valueToCast->getType()->isIntegerTy() && typeToCastTo->isPointerTy())
+	if (valueToCast->getType()->isIntegerTy() && typeToCastTo->isIntegerTy())
+		return CastInst::CreateIntegerCast(valueToCast, typeToCastTo, true, "", block);
+	else if (valueToCast->getType()->isIntegerTy() && typeToCastTo->isPointerTy())
 		return generateTypeCastFromIntegerToPointer(module, block, valueToCast, typeToCastTo);
 	else if (valueToCast->getType()->isFloatingPointTy() && typeToCastTo->isPointerTy())
 		return generateTypeCastFromFloatingPointToPointer(module, block, valueToCast, typeToCastTo);
@@ -2190,6 +2246,8 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCast(Module *module, BasicBlock
 		return generateTypeCastFromPointerToFloatingPoint(module, block, valueToCast, typeToCastTo);
 	else if (typeToCastTo->isStructTy())
 		return generateTypeCastFromLoweredTypeToStruct(block, valueToCast, typeToCastTo);
+	else if (typeToCastTo->isVectorTy())
+		return generateTypeCastFromLoweredTypeToVector(block, valueToCast, typeToCastTo);
 	else
 		return new BitCastInst(valueToCast, typeToCastTo, "", block);
 }
@@ -2317,14 +2375,14 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToStruct(Bas
 {
 	Value *originalValueToCast = valueToCast;
 
-	if (valueToCast->getType()->isVectorTy())
+	if (valueToCast->getType()->isVectorTy() || valueToCast->getType()->isDoubleTy())
 	{
-		// Struct was lowered to a vector.
-		PointerType *pointerToVectorType = PointerType::get(valueToCast->getType(), 0);
+		// Struct was lowered to a vector or double.
+		PointerType *pointerToLoweredType = PointerType::get(valueToCast->getType(), 0);
 
 		AllocaInst *structVariable = new AllocaInst(typeToCastTo, "", block);
-		CastInst *structVariableAsVector = new BitCastInst(structVariable, pointerToVectorType, "", block);
-		new StoreInst(valueToCast, structVariableAsVector, false, block);
+		CastInst *structVariableAsLoweredType = new BitCastInst(structVariable, pointerToLoweredType, "", block);
+		new StoreInst(valueToCast, structVariableAsLoweredType, false, block);
 		return new LoadInst(structVariable, "", false, block);
 	}
 
@@ -2348,10 +2406,50 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToStruct(Bas
 		return new LoadInst(otherStructAsTypeToCastTo, "", false, block);
 	}
 
-	fprintf(stderr, "Error: Couldn't cast from lowered type to struct:\n");
+	VUserLog("Error: Couldn't cast from lowered type to struct.");
 	originalValueToCast->getType()->dump();  fprintf(stderr, "\n");
 	typeToCastTo->dump();  fprintf(stderr, "\n");
 	return originalValueToCast;
+}
+
+/**
+ * Generates code to cast the value, whose type was lowered from a vector, to its original vector type.
+ *
+ * @return A value of type @c typeToCastTo.
+ */
+Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToVector(BasicBlock *block, Value *valueToCast, Type *typeToCastTo)
+{
+	if (typeToCastTo->isVectorTy() && static_cast<VectorType *>(typeToCastTo)->getElementType()->isFloatTy())
+	{
+		uint64_t elementCount = static_cast<VectorType *>(typeToCastTo)->getNumElements();
+		if (elementCount == 2 && valueToCast->getType()->isDoubleTy())
+		{
+			// VuoPoint2d — Vector of 2 floats was lowered to a double.
+			PointerType *pointerToDoubleType = PointerType::get(valueToCast->getType(), 0);
+
+			AllocaInst *vectorVariable = new AllocaInst(typeToCastTo, "", block);
+			CastInst *dstVectorVariableAsDouble = new BitCastInst(vectorVariable, pointerToDoubleType, "", block);
+			new StoreInst(valueToCast, dstVectorVariableAsDouble, false, block);
+			return new LoadInst(vectorVariable, "", false, block);
+		}
+		else if (elementCount == 3 && valueToCast->getType()->isVectorTy() &&
+				 static_cast<VectorType *>(valueToCast->getType())->getNumElements() == 2 &&
+				 static_cast<VectorType *>(valueToCast->getType())->getElementType()->isDoubleTy())
+		{
+			// VuoPoint3d — Vector of 3 floats was lowered to a vector of 2 doubles.
+			PointerType *pointerToDoubleVectorType = PointerType::get(valueToCast->getType(), 0);
+
+			AllocaInst *floatVectorVariable = new AllocaInst(typeToCastTo, "", block);
+			CastInst *floatVectorVariableAsDoubleVector = new BitCastInst(floatVectorVariable, pointerToDoubleVectorType, "", block);
+			new StoreInst(valueToCast, floatVectorVariableAsDoubleVector, false, block);
+			return new LoadInst(floatVectorVariable, "", false, block);
+		}
+	}
+
+	VUserLog("Error: Couldn't cast from lowered type to vector.");
+	valueToCast->getType()->dump();  fprintf(stderr, "\n");
+	typeToCastTo->dump();  fprintf(stderr, "\n");
+	return valueToCast;
 }
 
 /**
@@ -2424,19 +2522,10 @@ void VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(Module *module, Ba
 		AllocaInst *structPointer = new AllocaInst(argument->getType(), "", block);
 		new StoreInst(argument, structPointer, false, block);
 
-		ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(32, 0));
-
 		int numElements = static_cast<StructType *>(argument->getType())->getNumElements();
 		for (unsigned i = 0; i < numElements; ++i)
 		{
-			ConstantInt *iValue = ConstantInt::get(module->getContext(), APInt(32, i));
-
-			vector<Value *> memberIndices;
-			memberIndices.push_back(zeroValue);
-			memberIndices.push_back(iValue);
-			Value *memberPointer = GetElementPtrInst::Create(structPointer, memberIndices, "", block);
-			Value *member = new LoadInst(memberPointer, "", false, block);
-
+			Value *member = generateGetStructPointerElement(module, block, structPointer, i);
 			generateRetainOrReleaseCall(module, block, member, isRetain);
 		}
 	}
@@ -2607,6 +2696,20 @@ void VuoCompilerCodeGenUtilities::generateSendNodeExecutionFinished(Module *modu
  */
 void VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(Module *module, BasicBlock *block,
 																Value *compositionStateValue, Value *portIdentifierValue,
+																bool receivedEvent, bool receivedData,
+																Value *portDataSummaryValue)
+{
+	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+	Value *receivedEventValue = ConstantInt::get(boolType, receivedEvent ? 1 : 0);
+	Value *receivedDataValue = ConstantInt::get(boolType, receivedData ? 1 : 0);
+	generateSendInputPortsUpdated(module, block, compositionStateValue, portIdentifierValue, receivedEventValue, receivedDataValue, portDataSummaryValue);
+}
+
+/**
+ * Generates a call to `vuoSendInputPortsUpdated()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(Module *module, BasicBlock *block,
+																Value *compositionStateValue, Value *portIdentifierValue,
 																Value *receivedEventValue, Value *receivedDataValue,
 																Value *portDataSummaryValue)
 {
@@ -2642,7 +2745,8 @@ void VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(Module *module, 
  */
 void VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(Module *module, BasicBlock *block,
 																 Value *compositionStateValue, Value *portIdentifierValue,
-																 Value *sentDataValue, Value *portDataSummaryValue)
+																 Value *sentEventValue, Value *sentDataValue,
+																 Value *portDataSummaryValue)
 {
 	const char *functionName = "vuoSendOutputPortsUpdated";
 	Function *function = module->getFunction(functionName);
@@ -2656,6 +2760,7 @@ void VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(Module *module,
 		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(boolType);
+		functionParams.push_back(boolType);
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
@@ -2664,6 +2769,7 @@ void VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(Module *module,
 	vector<Value *> args;
 	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
+	args.push_back(sentEventValue);
 	args.push_back(sentDataValue);
 	args.push_back(portDataSummaryValue);
 	CallInst::Create(function, args, "", block);
@@ -2698,6 +2804,32 @@ void VuoCompilerCodeGenUtilities::generateSendPublishedOutputPortsUpdated(Module
 	args.push_back(portIdentifierValue);
 	args.push_back(sentDataValue);
 	args.push_back(portDataSummaryValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendEventFinished()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendEventFinished(Module *module, BasicBlock *block,
+															Value *compositionStateValue, Value *eventIdValue)
+{
+	const char *functionName = "vuoSendEventFinished";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		Type *eventIdType = generateNoEventIdConstant(module)->getType();
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(eventIdType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(eventIdValue);
 	CallInst::Create(function, args, "", block);
 }
 
@@ -2929,17 +3061,32 @@ Value * VuoCompilerCodeGenUtilities::generateGetCompositionContext(Module *modul
  * Generates a call to `vuoAddNodeMetadata()`.
  */
 void VuoCompilerCodeGenUtilities::generateAddNodeMetadata(Module *module, BasicBlock *block,
-														  Value *compositionStateValue, Value *nodeIdentifierValue)
+														  Value *compositionStateValue, Value *nodeIdentifierValue,
+														  Function *compositionCreateContextForNodeFunction,
+														  Function *compositionSetPortValueFunction,
+														  Function *compositionGetPortValueFunction,
+														  Function *compositionFireTriggerPortEventFunction,
+														  Function *compositionReleasePortDataFunction)
 {
 	const char *functionName = "vuoAddNodeMetadata";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *compositionCreateContextForNodeFunctionType = PointerType::getUnqual(getCompositionCreateContextForNodeFunction(module)->getFunctionType());
+		PointerType *compositionSetPortValueFunctionType = PointerType::getUnqual(getCompositionSetPortValueFunction(module)->getFunctionType());
+		PointerType *compositionGetPortValueFunctionType = PointerType::getUnqual(getCompositionGetPortValueFunction(module)->getFunctionType());
+		PointerType *compositionFireTriggerPortEventFunctionType = PointerType::getUnqual(getCompositionFireTriggerPortEventFunction(module)->getFunctionType());
+		PointerType *compositionReleasePortDataFunctionType = PointerType::getUnqual(getCompositionReleasePortDataFunction(module)->getFunctionType());
 
 		vector<Type *> functionParams;
 		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(compositionCreateContextForNodeFunctionType);
+		functionParams.push_back(compositionSetPortValueFunctionType);
+		functionParams.push_back(compositionGetPortValueFunctionType);
+		functionParams.push_back(compositionFireTriggerPortEventFunctionType);
+		functionParams.push_back(compositionReleasePortDataFunctionType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
@@ -2947,6 +3094,11 @@ void VuoCompilerCodeGenUtilities::generateAddNodeMetadata(Module *module, BasicB
 	vector<Value *> args;
 	args.push_back(compositionStateValue);
 	args.push_back(nodeIdentifierValue);
+	args.push_back(compositionCreateContextForNodeFunction);
+	args.push_back(compositionSetPortValueFunction);
+	args.push_back(compositionGetPortValueFunction);
+	args.push_back(compositionFireTriggerPortEventFunction);
+	args.push_back(compositionReleasePortDataFunction);
 	CallInst::Create(function, args, "", block);
 }
 
@@ -2987,34 +3139,25 @@ void VuoCompilerCodeGenUtilities::generateAddPortMetadata(Module *module, BasicB
 }
 
 /**
- * Generates a call to `vuoCompositionContextInitHelper()`.
+ * Generates a call to `vuoInitContextForTopLevelComposition()`.
  */
-Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module *module, BasicBlock *block, Value *compositionStateValue,
-																		  bool isStatefulComposition, size_t publishedOutputPortCount,
-																		  Function *createNodeContextsFunction, Function *destroyNodeContextFunction,
-																		  Function *setPortValueFunction)
+void VuoCompilerCodeGenUtilities::generateInitContextForTopLevelComposition(Module *module, BasicBlock *block, Value *compositionStateValue,
+																			bool isStatefulComposition, size_t publishedOutputPortCount)
 {
 	IntegerType *boolType = IntegerType::get(module->getContext(), 64);
 	IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
 
-	const char *functionName = "vuoCompositionContextInitHelper";
+	const char *functionName = "vuoInitContextForTopLevelComposition";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
 		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		PointerType *createNodeContextsFunctionType = PointerType::getUnqual(getCompositionCreateNodeContextsFunction(module)->getFunctionType());
-		PointerType *destroyNodeContextFunctionType = PointerType::getUnqual(getCompositionDestroyNodeContextFunction(module)->getFunctionType());
-		PointerType *setPortValueFunctionType = PointerType::getUnqual(getCompositionSetPortValueFunction(module)->getFunctionType());
-		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(boolType);
 		functionParams.push_back(unsignedLongType);
-		functionParams.push_back(createNodeContextsFunctionType);
-		functionParams.push_back(destroyNodeContextFunctionType);
-		functionParams.push_back(setPortValueFunctionType);
-		FunctionType *functionType = FunctionType::get(pointerToNodeContext, functionParams, false);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
@@ -3025,38 +3168,28 @@ Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module
 	args.push_back(compositionStateValue);
 	args.push_back(isStatefulCompositionValue);
 	args.push_back(publishedOutputPortCountValue);
-	args.push_back(createNodeContextsFunction);
-	args.push_back(destroyNodeContextFunction);
-	args.push_back(setPortValueFunction);
-	return CallInst::Create(function, args, "", block);
+	CallInst::Create(function, args, "", block);
 }
 
 /**
- * Generates a call to `vuoCompositionContextFiniHelper()`.
+ * Generates a call to `vuoFiniContextForTopLevelComposition()`.
  */
-void VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(Module *module, BasicBlock *block, Value *compositionStateValue,
-																	   Function *destroyNodeContextFunction, Function *releasePortDataFunction)
+void VuoCompilerCodeGenUtilities::generateFiniContextForTopLevelComposition(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
-	const char *functionName = "vuoCompositionContextFiniHelper";
+	const char *functionName = "vuoFiniContextForTopLevelComposition";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
 		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		PointerType *destroyNodeContextFunctionType = PointerType::getUnqual(getCompositionDestroyNodeContextFunction(module)->getFunctionType());
-		PointerType *releasePortDataFunctionType = PointerType::getUnqual(getCompositionReleasePortDataFunction(module)->getFunctionType());
 
 		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCompositionState);
-		functionParams.push_back(destroyNodeContextFunctionType);
-		functionParams.push_back(releasePortDataFunctionType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
 	vector<Value *> args;
 	args.push_back(compositionStateValue);
-	args.push_back(destroyNodeContextFunction);
-	args.push_back(releasePortDataFunction);
 	CallInst::Create(function, args, "", block);
 }
 
@@ -3181,6 +3314,91 @@ Value * VuoCompilerCodeGenUtilities::generateGetNextEventId(Module *module, Basi
 }
 
 /**
+ * Generates a call to `vuoCreateTriggerWorkerContext()`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateCreateTriggerWorkerContext(Module *module, BasicBlock *block,
+																		Value *compositionStateValue, Value *dataCopyValue,
+																		Value *eventIdCopyValue)
+{
+	const char *functionName = "vuoCreateTriggerWorkerContext";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToEventIdType = PointerType::get(generateNoEventIdConstant(module)->getType(), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(voidPointerType);
+		functionParams.push_back(pointerToEventIdType);
+		FunctionType *functionType = FunctionType::get(voidPointerType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(dataCopyValue);
+	args.push_back(eventIdCopyValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoFreeTriggerWorkerContext()`.
+ */
+void VuoCompilerCodeGenUtilities::generateFreeTriggerWorkerContext(Module *module, BasicBlock *block, Value *contextValue)
+{
+	const char *functionName = "vuoFreeTriggerWorkerContext";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(voidPointerType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(contextValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoCreatePublishedInputWorkerContext()`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateCreatePublishedInputWorkerContext(Module *module, BasicBlock *block,
+																			   Value *compositionStateValue, Value *inputPortIdentifierValue,
+																			   Value *valueAsStringValue, Value *isCompositionRunningValue)
+{
+	const char *functionName = "vuoCreatePublishedInputWorkerContext";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		Type *boolType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToChar);
+		functionParams.push_back(pointerToChar);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(voidPointerType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(inputPortIdentifierValue);
+	args.push_back(valueAsStringValue);
+	args.push_back(isCompositionRunningValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
  * Generates a call to `vuoAddCompositionStateToThreadLocalStorage()`.
  */
 void VuoCompilerCodeGenUtilities::generateAddCompositionStateToThreadLocalStorage(Module *module, BasicBlock *block,
@@ -3264,7 +3482,7 @@ void VuoCompilerCodeGenUtilities::generatePrint(Module *module, BasicBlock *bloc
 	CallInst::Create(fprintfFunction, fprintfArgs, "", block);
 }
 
-//@{
+///@{
 /**
  * Returns a Type reference, generating code for the declaration if needed.
  */
@@ -3421,14 +3639,37 @@ PointerType * VuoCompilerCodeGenUtilities::getPointerToFileType(Module *module)
 	return PointerType::get(fileType, 0);
 }
 
-PointerType * VuoCompilerCodeGenUtilities::getInstanceDataType(Module *module)
+PointerType * VuoCompilerCodeGenUtilities::getVuoShaderType(Module *module)
+{
+	StructType *shaderStructType = module->getTypeByName("struct._VuoShader");
+	if (! shaderStructType)
+		shaderStructType = StructType::create(module->getContext(), "struct._VuoShader");
+
+	return PointerType::get(shaderStructType, 0);
+}
+
+PointerType * VuoCompilerCodeGenUtilities::getVuoImageType(Module *module)
+{
+	StructType *imageStructType = module->getTypeByName("struct._VuoImage");
+	if (! imageStructType)
+		imageStructType = StructType::create(module->getContext(), "struct._VuoImage");
+
+	return PointerType::get(imageStructType, 0);
+}
+
+Type * VuoCompilerCodeGenUtilities::getVuoImageColorDepthType(Module *module)
+{
+	return IntegerType::get(module->getContext(), 32);
+}
+
+PointerType * VuoCompilerCodeGenUtilities::getCompositionInstanceDataType(Module *module)
 {
 	return PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 }
-//@}
+///@}
 
 
-//@{
+///@{
 /**
  * Returns a Function reference, generating code for the declaration if needed.
  */
@@ -3667,42 +3908,148 @@ Function * VuoCompilerCodeGenUtilities::getJsonTokenerParseFunction(Module *modu
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getCompositionContextInitFunction(Module *module, string moduleKey)
+Function * VuoCompilerCodeGenUtilities::getVuoShaderMakeFunction(Module *module)
 {
-	string functionName = "compositionContextInit";
-	if (! moduleKey.empty())
-		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
-	Function *function = module->getFunction(functionName.c_str());
+	const char *functionName = "VuoShader_make";
+	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		Type *shaderType = getVuoShaderType(module);
 
-		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, pointerToCompositionState, false);
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(shaderType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getCompositionContextFiniFunction(Module *module, string moduleKey)
+Function * VuoCompilerCodeGenUtilities::getVuoShaderAddSourceFunction(Module *module)
 {
-	string functionName = "compositionContextFini";
-	if (! moduleKey.empty())
-		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
-	Function *function = module->getFunction(functionName.c_str());
+	const char *functionName = "VuoShader_addSource";
+	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		Type *shaderType = getVuoShaderType(module);
+		Type *elementAsseblyMethodType = IntegerType::get(module->getContext(), 64);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), pointerToCompositionState, false);
+		vector<Type *> functionParams;
+		functionParams.push_back(shaderType);
+		functionParams.push_back(elementAsseblyMethodType);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getCompositionCreateNodeContextsFunction(Module *module)
+Function *VuoCompilerCodeGenUtilities::getVuoShaderSetTransparentFunction(Module *module)
 {
-	string functionName = "compositionCreateNodeContexts";
+	const char *functionName = "VuoShader_setTransparent";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		Type *shaderType = getVuoShaderType(module);
+		Type *boolType = IntegerType::get(module->getContext(), 1);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(shaderType);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getVuoShaderSetUniformFunction(Module *module, VuoCompilerType *type)
+{
+	string functionName = "VuoShader_setUniform_" + type->getBase()->getModuleKey();
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		Type *shaderType = getVuoShaderType(module);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		Type *dataSecondParam = nullptr;
+		Type *dataParam = type->getFunctionParameterType(&dataSecondParam);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(shaderType);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(dataParam);
+		if (dataSecondParam)
+			functionParams.push_back(dataSecondParam);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getVuoSamplerRectCoordinatesFromNormalizedCoordinatesFunction(Module *module)
+{
+	string functionName = "VuoShader_samplerRectCoordinatesFromNormalizedCoordinates";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		Type *loweredPoint2dType = Type::getDoubleTy(module->getContext());
+		Type *intType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(loweredPoint2dType);
+		functionParams.push_back(intType);
+		functionParams.push_back(intType);
+		FunctionType *functionType = FunctionType::get(loweredPoint2dType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getVuoImageGetColorDepthFunction(Module *module)
+{
+	const char *functionName = "VuoImage_getColorDepth";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		Type *imageType = getVuoImageType(module);
+		Type *imageColorDepthType = getVuoImageColorDepthType(module);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(imageType);
+		FunctionType *functionType = FunctionType::get(imageColorDepthType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getVuoImageRendererRenderFunction(Module *module)
+{
+	const char *functionName = "VuoImageRenderer_render";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		Type *shaderType = getVuoShaderType(module);
+		Type *intType = IntegerType::get(module->getContext(), 64);
+		Type *imageColorDepthType = getVuoImageColorDepthType(module);
+		Type *imageType = getVuoImageType(module);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(shaderType);
+		functionParams.push_back(intType);
+		functionParams.push_back(intType);
+		functionParams.push_back(imageColorDepthType);
+		FunctionType *functionType = FunctionType::get(imageType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getCompositionAddNodeMetadataFunction(Module *module)
+{
+	string functionName = "compositionAddNodeMetadata";
 	string moduleKey = module->getModuleIdentifier();
 	if (! moduleKey.empty())
 		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
@@ -3710,13 +4057,49 @@ Function * VuoCompilerCodeGenUtilities::getCompositionCreateNodeContextsFunction
 	if (! function)
 	{
 		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
-		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCompositionState);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getCompositionCreateContextForNodeFunction(Module *module)
+{
+	string functionName = "compositionCreateContextForNode";
+	string moduleKey = module->getModuleIdentifier();
+	if (! moduleKey.empty())
+		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
+
+		vector<Type *> functionParams;
 		functionParams.push_back(unsignedLongType);
-		FunctionType *functionType = FunctionType::get(pointerToNodeContext, functionParams, false);
+		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getCompositionPerformDataOnlyTransmissionsFunction(Module *module)
+{
+	string functionName = "compositionPerformDataOnlyTransmissions";
+	string moduleKey = module->getModuleIdentifier();
+	if (! moduleKey.empty())
+		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
@@ -3737,29 +4120,6 @@ Function * VuoCompilerCodeGenUtilities::getCompositionReleasePortDataFunction(Mo
 		vector<Type *> functionParams;
 		functionParams.push_back(voidPointer);
 		functionParams.push_back(unsignedLongType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getCompositionDestroyNodeContextFunction(Module *module)
-{
-	string functionName = "compositionDestroyNodeContext";
-	string moduleKey = module->getModuleIdentifier();
-	if (! moduleKey.empty())
-		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
-	Function *function = module->getFunction(functionName.c_str());
-	if (! function)
-	{
-		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCompositionState);
-		functionParams.push_back(pointerToChar);
-		functionParams.push_back(pointerToNodeContext);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
@@ -3820,7 +4180,7 @@ Function * VuoCompilerCodeGenUtilities::getInstanceTriggerStartFunction(Module *
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), PointerType::get(getInstanceDataType(module), 0), false);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), PointerType::get(getCompositionInstanceDataType(module), 0), false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
@@ -3832,66 +4192,72 @@ Function * VuoCompilerCodeGenUtilities::getInstanceTriggerStopFunction(Module *m
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), PointerType::get(getInstanceDataType(module), 0), false);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), PointerType::get(getCompositionInstanceDataType(module), 0), false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getNodeInstanceInitFunction(Module *module, string moduleKey,
+Function * VuoCompilerCodeGenUtilities::getNodeInstanceInitFunction(Module *module, string moduleKey, bool isSubcomposition,
+																	Type *instanceDataType,
 																	const vector<VuoPort *> &modelInputPorts,
 																	map<VuoPort *, size_t> &indexOfParameter,
 																	VuoCompilerConstantStringCache &constantStrings)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
-	return getNodeFunction(module, moduleKey, "nodeInstanceInit", true, false, true, false, modelInputPorts, vector<VuoPort *>(),
+	return getNodeFunction(module, moduleKey, "nodeInstanceInit", isSubcomposition, false, true, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceFiniFunction(Module *module, string moduleKey,
+																	Type *instanceDataType,
 																	VuoCompilerConstantStringCache &constantStrings)
 {
 	map<VuoPort *, size_t> indexOfParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
-	return getNodeFunction(module, moduleKey, "nodeInstanceFini", true, true, false, false, vector<VuoPort *>(), vector<VuoPort *>(),
+	return getNodeFunction(module, moduleKey, "nodeInstanceFini", true, true, false, false, instanceDataType, vector<VuoPort *>(), vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStartFunction(Module *module, string moduleKey,
+																			Type *instanceDataType,
 																			const vector<VuoPort *> &modelInputPorts,
 																			map<VuoPort *, size_t> &indexOfParameter,
 																			VuoCompilerConstantStringCache &constantStrings)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
-	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStart", true, true, false, false, modelInputPorts, vector<VuoPort *>(),
+	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStart", true, true, false, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(),  map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStopFunction(Module *module, string moduleKey,
+																		   Type *instanceDataType,
 																		   VuoCompilerConstantStringCache &constantStrings)
 {
 	map<VuoPort *, size_t> indexOfParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
-	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStop", true, true, false, false, vector<VuoPort *>(), vector<VuoPort *>(),
+	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStop", true, true, false, false, instanceDataType, vector<VuoPort *>(), vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerUpdateFunction(Module *module, string moduleKey,
+																			 Type *instanceDataType,
 																			 const vector<VuoPort *> &modelInputPorts,
 																			 map<VuoPort *, size_t> &indexOfParameter,
 																			 VuoCompilerConstantStringCache &constantStrings)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
-	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerUpdate", true, true, false, false, modelInputPorts, vector<VuoPort *>(),
+	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerUpdate", true, true, false, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeEventFunction(Module *module, string moduleKey, bool isSubcomposition, bool isStateful,
+															 Type *instanceDataType,
 															 const vector<VuoPort *> &modelInputPorts,
 															 const vector<VuoPort *> &modelOutputPorts,
 															 const map<VuoPort *, json_object *> &detailsForPorts,
@@ -3903,14 +4269,15 @@ Function * VuoCompilerCodeGenUtilities::getNodeEventFunction(Module *module, str
 															 VuoCompilerConstantStringCache &constantStrings)
 {
 	string functionName = (isStateful ? "nodeInstanceEvent" : "nodeEvent");
-	return getNodeFunction(module, moduleKey, functionName, isSubcomposition, isStateful, false, true, modelInputPorts, modelOutputPorts,
+	return getNodeFunction(module, moduleKey, functionName, isSubcomposition, isStateful, false, true, instanceDataType, modelInputPorts, modelOutputPorts,
 						   detailsForPorts, displayNamesForPorts, defaultValuesForInputPorts, eventBlockingForInputPorts,
 						   indexOfParameter, indexOfEventParameter, constantStrings);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string moduleKey, string functionName,
 														bool hasCompositionStateArg, bool hasInstanceDataArg,
-														bool hasInstanceDataReturn, bool hasEventOnlyInputArgs,
+														bool hasInstanceDataReturn, bool hasEventArgs,
+														Type *instanceDataType,
 														const vector<VuoPort *> &modelInputPorts, const vector<VuoPort *> &modelOutputPorts,
 														const map<VuoPort *, json_object *> &detailsForPorts,
 														const map<VuoPort *, string> &displayNamesForPorts,
@@ -3926,24 +4293,8 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 	if (! function)
 	{
-		bool hasDoorEventBlocking = false;
-		for (map<VuoPort *, VuoPortClass::EventBlocking>::const_iterator i = eventBlockingForInputPorts.begin(); i != eventBlockingForInputPorts.end(); ++i)
-		{
-			if (i->second == VuoPortClass::EventBlocking_Door)
-			{
-				hasDoorEventBlocking = true;
-				break;
-			}
-		}
-
-		set<string> argumentNamesUsed;
-		for (vector<VuoPort *>::const_iterator i = modelInputPorts.begin(); i != modelInputPorts.end(); ++i)
-			argumentNamesUsed.insert( (*i)->getClass()->getName() );
-		for (vector<VuoPort *>::const_iterator i = modelOutputPorts.begin(); i != modelOutputPorts.end(); ++i)
-			argumentNamesUsed.insert( (*i)->getClass()->getName() );
-
 		vector<Type *> functionParams;
-		map<int, Attributes> functionAttributes;
+		map<int, AttributeSet> functionAttributes;
 		map<VuoPort *, bool> hasSecondParam;
 		Type *boolType = IntegerType::get(module->getContext(), 1);
 		size_t indexInEventFunction = 0;
@@ -3957,7 +4308,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 		if (hasInstanceDataArg)
 		{
-			functionParams.push_back( PointerType::get(getInstanceDataType(module), 0) );
+			functionParams.push_back( PointerType::get(instanceDataType, 0) );
 			indexInEventFunction++;
 		}
 
@@ -3970,7 +4321,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 			{
 				Type *paramSecondType = NULL;
 				Type *paramType = type->getCompiler()->getFunctionParameterType(&paramSecondType);
-				Attributes paramAttributes = type->getCompiler()->getFunctionParameterAttributes();
+				AttributeSet paramAttributes = type->getCompiler()->getFunctionParameterAttributes();
 
 				functionParams.push_back(paramType);
 
@@ -3982,7 +4333,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 				// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
 				if (! (hasCompositionStateArg &&
 					   type->getCompiler()->getType()->isStructTy() &&
-					   paramAttributes.hasAttribute(Attributes::ByVal)) )
+					   paramAttributes.hasAttrSomewhere(Attribute::ByVal)) )
 				{
 					functionAttributes[ functionParams.size() - 1] = paramAttributes;
 				}
@@ -3998,15 +4349,14 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 					indexInEventFunction++;
 				}
 
-				map<VuoPort *, VuoPortClass::EventBlocking>::const_iterator eventBlockingIter = eventBlockingForInputPorts.find(modelInputPort->getBase());
-				if (eventBlockingIter != eventBlockingForInputPorts.end() && eventBlockingIter->second != VuoPortClass::EventBlocking_None)
+				if (hasEventArgs)
 				{
 					functionParams.push_back(boolType);
 
 					indexOfEventParameter[modelInputPort->getBase()] = indexInEventFunction++;
 				}
 			}
-			else if (hasEventOnlyInputArgs)
+			else if (hasEventArgs)
 			{
 				functionParams.push_back(boolType);
 
@@ -4036,7 +4386,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 					indexOfParameter[modelOutputPort->getBase()] = indexInEventFunction++;
 
-					if (hasDoorEventBlocking)
+					if (hasEventArgs)
 					{
 						PointerType *eventParamType = PointerType::get( boolType, 0 );
 						functionParams.push_back(eventParamType);
@@ -4044,7 +4394,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 						indexOfEventParameter[modelOutputPort->getBase()] = indexInEventFunction++;
 					}
 				}
-				else
+				else if (hasEventArgs)
 				{
 					PointerType *paramType = PointerType::get( boolType, 0 );
 					functionParams.push_back(paramType);
@@ -4054,17 +4404,18 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 			}
 		}
 
-		Type *returnType = (hasInstanceDataReturn ? getInstanceDataType(module) : Type::getVoidTy(module->getContext()));
+		Type *returnType = (hasInstanceDataReturn ? instanceDataType : Type::getVoidTy(module->getContext()));
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
-		for (map<int, Attributes>::iterator i = functionAttributes.begin(); i != functionAttributes.end(); ++i)
+		for (map<int, AttributeSet>::iterator i = functionAttributes.begin(); i != functionAttributes.end(); ++i)
 		{
 			int attributesIndex = i->first + 1;
-			Attributes attributes = i->second;
-			function->addAttribute(attributesIndex, attributes);
+			AttributeSet attributes = i->second;
+			function->addAttributes(attributesIndex, copyAttributesToIndex(attributes, attributesIndex));
 		}
 
+		set<string> argNamesUsed;
 
 		BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, 0);
 		Function::arg_iterator argIter = function->arg_begin();
@@ -4072,32 +4423,42 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 		if (hasCompositionStateArg)
 		{
 			Value *arg = argIter++;
-			arg->setName("compositionState");
+			string argName = "compositionState";
+			arg->setName(argName);
+			argNamesUsed.insert(argName);
 		}
 
 		if (hasInstanceDataArg)
 		{
 			Value *arg = argIter++;
-			arg->setName("instanceData");
+			string argName = "instanceData";
+			arg->setName(argName);
+			argNamesUsed.insert(argName);
 			generateAnnotation(module, block, arg, "vuoInstanceData", "", 0, constantStrings);
 		}
+
+		argNamesUsed.insert("refresh");
+
+		map<VuoPort *, string> primaryArgNames;
+		auto recordUniqueArgName = [&primaryArgNames, &argNamesUsed] (VuoPort *modelPort)
+		{
+			string argName = VuoStringUtilities::formUniqueIdentifier(argNamesUsed, modelPort->getClass()->getName());
+			primaryArgNames[modelPort] = argName;
+		};
+		std::for_each(modelInputPorts.begin(), modelInputPorts.end(), recordUniqueArgName);
+		std::for_each(modelOutputPorts.begin(), modelOutputPorts.end(), recordUniqueArgName);
 
 		for (vector<VuoPort *>::const_iterator i = modelInputPorts.begin(); i != modelInputPorts.end(); ++i)
 		{
 			VuoPort *modelInputPort = *i;
 			VuoType *type = static_cast<VuoCompilerPort *>( modelInputPort->getCompiler() )->getDataVuoType();
 
-			if (type || hasEventOnlyInputArgs)
+			if (type || hasEventArgs)
 			{
 				Value *arg = argIter++;
-				string argName = modelInputPort->getClass()->getName();
 
-				if (argName == "refresh")
-				{
-					argName = "refresh_";
-					generateAnnotation(module, block, arg, "vuoDetails:{\"name\":\"refresh\"}", "", 0, constantStrings);
-				}
-
+				string portName = modelInputPort->getClass()->getName();
+				string argName = primaryArgNames[modelInputPort];
 				arg->setName(argName);
 
 				map<VuoPort *, VuoPortClass::EventBlocking>::const_iterator eventBlockingIter = eventBlockingForInputPorts.find(modelInputPort);
@@ -4117,7 +4478,6 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 				map<VuoPort *, string>::const_iterator displayNameIter = displayNamesForPorts.find(modelInputPort);
 				if (displayNameIter != displayNamesForPorts.end())
 					json_object_object_add(details, "name", json_object_new_string(displayNameIter->second.c_str()));
-				Value *argWithDetails = arg;
 
 				if (type)
 				{
@@ -4130,25 +4490,30 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 					if (hasSecondParam[modelInputPort])
 					{
-						arg = argIter++;
-						arg->setName(argName + ".1");
+						Value *secondArg = argIter++;
+						secondArg->setName(argName + ".1");
 					}
 
-					if (hasNonDefaultEventBlocking)
+					if (hasEventArgs)
 					{
-						arg = argIter++;
-						string uniqueArgName = argName + "Event";
-						while (argumentNamesUsed.find(uniqueArgName) != argumentNamesUsed.end())
-							uniqueArgName += "_";
-						argumentNamesUsed.insert(uniqueArgName);
-						arg->setName(uniqueArgName);
+						Value *eventArg = argIter++;
 
-						generateAnnotation(module, block, arg, "vuoInputEvent", "", 0, constantStrings);
-						generateAnnotation(module, block, arg, "vuoDetails:{\"eventBlocking\":\"" + eventBlockingStr + "\",\"data\":\"" + argName + "\"}",
-										   "", 0, constantStrings);
+						string preferredEventArgName = portName + "Event";
+						string eventArgName = VuoStringUtilities::formUniqueIdentifier(argNamesUsed, preferredEventArgName);
+						eventArg->setName(eventArgName);
+
+						generateAnnotation(module, block, eventArg, "vuoInputEvent", "", 0, constantStrings);
+
+						json_object *eventDetails = json_object_new_object();
+						json_object_object_add(eventDetails, "data", json_object_new_string(argName.c_str()));
+						if (hasNonDefaultEventBlocking)
+							json_object_object_add(eventDetails, "eventBlocking", json_object_new_string(eventBlockingStr.c_str()));
+						string eventDetailsStr = json_object_to_json_string_ext(eventDetails, JSON_C_TO_STRING_PLAIN);
+						json_object_put(eventDetails);
+						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantStrings);
 					}
 				}
-				else if (hasEventOnlyInputArgs)
+				else if (hasEventArgs)
 				{
 					generateAnnotation(module, block, arg, "vuoInputEvent", "", 0, constantStrings);
 
@@ -4158,7 +4523,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 				string detailsStr = json_object_to_json_string_ext(details, JSON_C_TO_STRING_PLAIN);
 				json_object_put(details);
-				generateAnnotation(module, block, argWithDetails, "vuoDetails:" + detailsStr, "", 0, constantStrings);
+				generateAnnotation(module, block, arg, "vuoDetails:" + detailsStr, "", 0, constantStrings);
 			}
 		}
 
@@ -4167,7 +4532,9 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 			VuoPort *modelOutputPort = *i;
 
 			Value *arg = argIter++;
-			string argName = modelOutputPort->getClass()->getName();
+
+			string portName = modelOutputPort->getClass()->getName();
+			string argName = primaryArgNames[modelOutputPort];
 			arg->setName(argName);
 
 			json_object *details = json_object_new_object();
@@ -4200,20 +4567,24 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 					generateAnnotation(module, block, arg, "vuoOutputData", "", 0, constantStrings);
 					generateAnnotation(module, block, arg, "vuoType:" + type->getModuleKey(), "", 0, constantStrings);
 
-					if (hasDoorEventBlocking)
+					if (hasEventArgs)
 					{
-						arg = argIter++;
-						string uniqueArgName = argName + "Event";
-						while (argumentNamesUsed.find(uniqueArgName) != argumentNamesUsed.end())
-							uniqueArgName += "_";
-						argumentNamesUsed.insert(uniqueArgName);
-						arg->setName(uniqueArgName);
+						Value *eventArg = argIter++;
 
-						generateAnnotation(module, block, arg, "vuoOutputEvent", "", 0, constantStrings);
-						generateAnnotation(module, block, arg, "vuoDetails:{\"data\":\"" + argName + "\"}", "", 0, constantStrings);
+						string preferredEventArgName = portName + "Event";
+						string eventArgName = VuoStringUtilities::formUniqueIdentifier(argNamesUsed, preferredEventArgName);
+						eventArg->setName(eventArgName);
+
+						generateAnnotation(module, block, eventArg, "vuoOutputEvent", "", 0, constantStrings);
+
+						json_object *eventDetails = json_object_new_object();
+						json_object_object_add(eventDetails, "data", json_object_new_string(argName.c_str()));
+						string eventDetailsStr = json_object_to_json_string_ext(eventDetails, JSON_C_TO_STRING_PLAIN);
+						json_object_put(eventDetails);
+						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantStrings);
 					}
 				}
-				else
+				else if (hasEventArgs)
 				{
 					generateAnnotation(module, block, arg, "vuoOutputEvent", "", 0, constantStrings);
 				}
@@ -4359,19 +4730,22 @@ Function * VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(Modul
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getGetPortValueFunction(Module *module)
+Function * VuoCompilerCodeGenUtilities::getCompositionFireTriggerPortEventFunction(Module *module)
 {
-	const char *functionName = "vuoGetPortValue";
-	Function *function = module->getFunction(functionName);
+	string functionName = "compositionFireTriggerPortEvent";
+	string moduleKey = module->getModuleIdentifier();
+	if (! moduleKey.empty())
+		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
+	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *intType = IntegerType::get(module->getContext(), 32);
 
 		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
@@ -4430,6 +4804,30 @@ Function * VuoCompilerCodeGenUtilities::getGetPublishedOutputPortValueFunction(M
 	return function;
 }
 
+Function * VuoCompilerCodeGenUtilities::getCompositionSetPublishedInputPortValueFunction(Module *module)
+{
+	string functionName = "compositionSetPublishedInputPortValue";
+	string moduleKey = module->getModuleIdentifier();
+	if (! moduleKey.empty())
+		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		Type *boolType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
 Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Module *module)
 {
 	const char *functionName = "setPublishedInputPortValue";
@@ -4446,7 +4844,7 @@ Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Mo
 	}
 	return function;
 }
-//@}
+///@}
 
 /**
  * Guesses the type that the parameter of the function had in the source code, before it was possibly
@@ -4455,12 +4853,25 @@ Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Mo
  */
 Type * VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(Function *function, Module *module, string typeName)
 {
+	if (typeName == "VuoPoint2d")
+		return VectorType::get(Type::getFloatTy(module->getContext()), 2);
+	if (typeName == "VuoPoint3d")
+		return VectorType::get(Type::getFloatTy(module->getContext()), 3);
+	if (typeName == "VuoPoint4d")
+		return VectorType::get(Type::getFloatTy(module->getContext()), 4);
+
 	Type *type = function->getFunctionType()->getParamType(0);
 	bool hasSecondType = (function->getFunctionType()->getNumParams() == 2);
 
 	// Parameter was originally a struct, but was lowered to a "byval" pointer-to-struct, a vector, or two parameters.
 	if (isParameterPassedByValue(function, 0) || type->isVectorTy() || hasSecondType)
 		type = module->getTypeByName("struct." + typeName);
+
+	if (! type)
+	{
+		VUserLog("Couldn't guess the original type for %s", typeName.c_str());
+		function->getFunctionType()->dump();  fprintf(stderr, "\n");
+	}
 
 	return type;
 }
@@ -4490,7 +4901,34 @@ Value * VuoCompilerCodeGenUtilities::unlowerArgument(VuoCompilerType *unloweredV
 	Value *argument = argIter;
 	Value *secondArgument = (hasSecondArgument ? ++argIter : NULL);
 
-	if (unloweredType->isStructTy())
+	if (unloweredType->isVectorTy())
+	{
+		if (static_cast<VectorType *>(unloweredType)->getElementType()->isFloatTy())
+		{
+			uint64_t elementCount = static_cast<VectorType *>(unloweredType)->getNumElements();
+			if (elementCount == 2 && argument->getType()->isDoubleTy())
+			{
+				// VuoPoint2d — Argument is a vector of 2 floats lowered to a double.
+				PointerType *pointerToVectorType = PointerType::get(unloweredType, 0);
+
+				Value *vectorVariableAsDouble = generatePointerToValue(block, argument);
+				Value *vectorVariable = new BitCastInst(vectorVariableAsDouble, pointerToVectorType, "", block);
+				return new LoadInst(vectorVariable, "", false, block);
+			}
+			else if (elementCount == 3 && argument->getType()->isVectorTy() &&
+					 static_cast<VectorType *>(argument->getType())->getNumElements() == 2 &&
+					 static_cast<VectorType *>(argument->getType())->getElementType()->isDoubleTy())
+			{
+				// VuoPoint3d — Argument is a vector of 3 floats lowered to a vector of 2 doubles.
+				PointerType *pointerToFloatVectorType = PointerType::get(unloweredType, 0);
+
+				Value *floatVectorValueAsDoubleVector = generatePointerToValue(block, argument);
+				Value *floatVectorVariable = new BitCastInst(floatVectorValueAsDoubleVector, pointerToFloatVectorType, "", block);
+				return new LoadInst(floatVectorVariable, "", false, block);
+			}
+		}
+	}
+	else if (unloweredType->isStructTy())
 	{
 		if (! hasSecondArgument)
 		{
@@ -4618,7 +5056,40 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
 
 	Type *parameterType = functionType->getParamType(parameterIndex);
 
-	if (argument->getType()->isStructTy())
+	if (argument->getType()->isVectorTy())
+	{
+		if (static_cast<VectorType *>(argument->getType())->getElementType()->isFloatTy())
+		{
+			uint64_t elementCount = static_cast<VectorType *>(argument->getType())->getNumElements();
+			if (elementCount == 2 && parameterType->isDoubleTy())
+			{
+				// VuoPoint2d — Argument is a vector of 2 floats lowered to a double.
+				PointerType *pointerToDoubleType = PointerType::get(parameterType, 0);
+
+				Value *vectorVariable = generatePointerToValue(block, argument);
+				CastInst *vectorVariableAsDouble = new BitCastInst(vectorVariable, pointerToDoubleType, "", block);
+				return new LoadInst(vectorVariableAsDouble, "", false, block);
+			}
+			else if (elementCount == 3 && parameterType->isVectorTy() &&
+					 static_cast<VectorType *>(parameterType)->getNumElements() == 2 &&
+					 static_cast<VectorType *>(parameterType)->getElementType()->isDoubleTy())
+			{
+				// VuoPoint3d — Argument is a vector of 3 floats lowered to a vector of 2 doubles.
+				PointerType *pointerToDoubleVectorType = PointerType::get(parameterType, 0);
+
+				Value *floatVectorVariable = generatePointerToValue(block, argument);
+				CastInst *floatVectorVariableAsDoubleVector = new BitCastInst(floatVectorVariable, pointerToDoubleVectorType, "", block);
+				return new LoadInst(floatVectorVariableAsDoubleVector, "", false, block);
+			}
+			else if (elementCount == 2 && parameterType->isPointerTy() && static_cast<PointerType *>(parameterType)->getElementType() == argument->getType())
+			{
+				// Workaround for vuo.image.make.checkerboard2 center (https://b33p.net/kosada/node/15936)
+				// VuoPoint2d — Argument is a vector of 2 floats lowered to a pointer to a vector of 2 floats.
+				return generatePointerToValue(block, argument);
+			}
+		}
+	}
+	else if (argument->getType()->isStructTy())
 	{
 		if (! secondArgument)
 		{
@@ -4689,7 +5160,7 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
 			{
 				Type *sourceElementType = static_cast<PointerType *>(sourceType)->getElementType();
 				Type *destinationElementType = static_cast<PointerType *>(destinationType)->getElementType();
-				if (sourceElementType->isStructTy() && destinationElementType->isStructTy())
+				if (! sourceElementType->isPointerTy() && ! destinationElementType->isPointerTy())
 					return new BitCastInst(argument, parameterType, "", block);
 				sourceType = sourceElementType;
 				destinationType = destinationElementType;
@@ -4699,10 +5170,13 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
 
 	if (argument->getType() != parameterType)
 	{
-		VUserLog("Couldn't convert an argument to the type of parameter %d", parameterIndex);
-		functionType->dump();  fprintf(stderr, "\n");
-		argument->getType()->dump();  fprintf(stderr, "\n");
-		parameterType->dump();  fprintf(stderr, "\n");
+		string s;
+		raw_string_ostream oss(s);
+		oss << "functionType : "; functionType->print(oss);        oss << '\n';
+		oss << "argumentType : "; argument->getType()->print(oss); oss << '\n';
+		oss << "parameterType: "; parameterType->print(oss);
+		VUserLog("Warning: Couldn't convert an argument to the type of parameter %d:\n%s", parameterIndex, oss.str().c_str());
+		return nullptr;
 	}
 
 	return argument;
@@ -4715,9 +5189,9 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
  */
 bool VuoCompilerCodeGenUtilities::isParameterPassedByValue(Function *function, int parameterIndex)
 {
-	AttrListPtr functionAttrs = function->getAttributes();
-	Attributes paramAttrs = functionAttrs.getParamAttributes(parameterIndex + 1);
-	return paramAttrs.hasAttribute(Attributes::ByVal);
+	AttributeSet functionAttrs = function->getAttributes();
+	AttributeSet paramAttrs = functionAttrs.getParamAttributes(parameterIndex + 1);
+	return paramAttrs.hasAttrSomewhere(Attribute::ByVal);
 }
 
 /**
@@ -4739,9 +5213,9 @@ Value * VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(Function *func
  */
 bool VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(Function *function)
 {
-	AttrListPtr functionAttrs = function->getAttributes();
-	Attributes paramAttrs = functionAttrs.getParamAttributes(1);
-	return paramAttrs.hasAttribute(Attributes::StructRet);
+	AttributeSet functionAttrs = function->getAttributes();
+	AttributeSet paramAttrs = functionAttrs.getParamAttributes(1);
+	return paramAttrs.hasAttrSomewhere(Attribute::StructRet);
 }
 
 /**
@@ -4762,4 +5236,47 @@ FunctionType * VuoCompilerCodeGenUtilities::getFunctionType(Module *module, VuoT
 	}
 
 	return FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+}
+
+/**
+ * Returns the argument at @a index (numbered from 0) in the function's argument list.
+ */
+Value * VuoCompilerCodeGenUtilities::getArgumentAtIndex(Function *function, size_t index)
+{
+	Value *argValue = NULL;
+
+	Function::arg_iterator args = function->arg_begin();
+	for (size_t i = 0; i <= index && i < function->arg_size(); ++i)
+		argValue = args++;
+
+	return argValue;
+}
+
+/**
+ * Creates a new AttributeSet
+ * with the attributes from `attributesToCopy`'s index 1 (the AttributeSet's first function parameter)
+ * placed in the output AttributeSet's index `destinationIndex` (0 for the return value, 1 for the first parameter, …).
+ */
+AttributeSet VuoCompilerCodeGenUtilities::copyAttributesToIndex(AttributeSet attributesToCopy, int destinationIndex)
+{
+	if (attributesToCopy.getNumSlots() > 1)
+		VUserLog("Warning: I was expecting an AttributeSet with 0 or 1 slots, but got %d.", attributesToCopy.getNumSlots());
+
+	int inputIndex = AttributeSet::ReturnIndex + 1;
+
+	string attributeString = attributesToCopy.getAsString(inputIndex);
+	if (!attributeString.empty()
+		&& attributeString != "byval align 8"
+		&& attributeString != "byval align 16")
+		VUserLog("Warning: I don't know how to handle all the attributes in '%s'.", attributeString.c_str());
+
+	AttrBuilder builder;
+
+	if (attributesToCopy.hasAttribute(inputIndex, Attribute::ByVal))
+		builder.addAttribute(Attribute::ByVal);
+
+	if (attributesToCopy.hasAttribute(inputIndex, Attribute::Alignment))
+		builder.addAlignmentAttr(attributesToCopy.getParamAlignment(inputIndex));
+
+	return AttributeSet::get(getGlobalContext(), destinationIndex, builder);
 }

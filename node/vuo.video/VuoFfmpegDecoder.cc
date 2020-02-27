@@ -2,28 +2,22 @@
  * @file
  * VuoFfmpegDecoder implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoFfmpegDecoder.h"
 #include <OpenGL/CGLMacro.h>
-#include <CoreFoundation/CoreFoundation.h>
-#include "VuoGlPool.h"
-#include "VuoReal.h"
 #include "VuoFfmpegUtility.h"
-#include "VuoList_VuoReal.h"
 
 extern "C"
 {
-#include <dispatch/dispatch.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoFfmpegDecoder",
 					 "dependencies" : [
-						"VuoVideoDecoder",
 						"VuoImage",
 						"VuoAudioFrame",
 						"VuoAudioSamples",
@@ -43,23 +37,11 @@ VuoModuleMetadata({
 /// Used in calculating audio offset.
 #define AUDIO_DIFF_AVG_NB 20
 
-#if 0
-/**
- * Temporarily circumvent Vee-Log commit hook since this is a wip
- * and it's a pain to remove and add log statements that are used regularly.
- */
-#define DEBUG_LOG(format, ...) VUserLog(format, ##__VA_ARGS__)
-#else
-/// Do nothing
-#define DEBUG_LOG(x, ...)
-#endif
-
 VuoFfmpegDecoder::VuoFfmpegDecoder(VuoUrl url)
 {
 	static dispatch_once_t pred;
 	dispatch_once(&pred, ^
 	{
-		av_register_all();
 		avformat_network_init();
 
 		av_log_set_level(VuoIsDebugEnabled() ? AV_LOG_VERBOSE : AV_LOG_FATAL);
@@ -99,10 +81,13 @@ bool VuoFfmpegDecoder::Initialize()
 	lastSentVideoPts = 0;
 	lastAudioTimestamp = 0;
 	showedTimestampGapWarning = false;
+	showedSeekIgnoredWarning = false;
 
-	DEBUG_LOG("Initialize: %s", mVideoPath);
+	VDebugLog("Initialize: %s", mVideoPath);
 
-	int ret = avformat_open_input(&(container.formatCtx), mVideoPath, NULL, NULL);
+	AVDictionary *opts = 0;
+	av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+	int ret = avformat_open_input(&(container.formatCtx), mVideoPath, NULL, &opts);
 
 	// If opening the full normalized URL failed, try again with just the POSIX path.
 	// (FFmpeg doesn't seem to like percent-encoded `file:///` URLs.)
@@ -112,7 +97,7 @@ bool VuoFfmpegDecoder::Initialize()
 		if (path)
 		{
 			VuoLocal(path);
-			ret = avformat_open_input(&(container.formatCtx), path, NULL, NULL);
+			ret = avformat_open_input(&(container.formatCtx), path, NULL, &opts);
 		}
 	}
 
@@ -131,11 +116,9 @@ bool VuoFfmpegDecoder::Initialize()
 			container.formatCtx->iformat->raw_codec_id);
 
 	// Load video context
-	if(avformat_find_stream_info(container.formatCtx, NULL) < 0)
-	{
-		VUserLog("Error: FFmpeg could not find video stream information in file \"%s\".", mVideoPath);
-		return false;
-	}
+	ret = avformat_find_stream_info(container.formatCtx, NULL);
+	if (ret < 0)
+		VUserLog("Warning: FFmpeg could not find video stream information in \"%s\" — %s.", mVideoPath, av_err2str(ret));
 
 	container.videoStreamIndex = VuoFfmpegUtility::FirstStreamIndexWithMediaType(container.formatCtx, AVMEDIA_TYPE_VIDEO);
 	container.audioStreamIndex = VuoFfmpegUtility::FirstStreamIndexWithMediaType(container.formatCtx, AVMEDIA_TYPE_AUDIO);
@@ -172,10 +155,9 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 	}
 
 	container.videoStream = container.formatCtx->streams[container.videoStreamIndex];
-	container.videoCodecCtx = container.videoStream->codec;
 	// container.videoCodecCtx->thread_count = 1;
 
-	AVCodec* videoCodec = avcodec_find_decoder(container.videoCodecCtx->codec_id);
+	AVCodec* videoCodec = avcodec_find_decoder(container.videoStream->codecpar->codec_id);
 
 	if(videoCodec == NULL)
 	{
@@ -187,8 +169,21 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 		videoCodec->long_name,
 		videoCodec->name);
 
+	container.videoCodecCtx = avcodec_alloc_context3(videoCodec);
+	if (!container.videoCodecCtx)
+	{
+		VUserLog("Error: FFmpeg could not allocate the decoder context for \"%s\".", mVideoPath);
+		return false;
+	}
+	if (avcodec_parameters_to_context(container.videoCodecCtx, container.videoStream->codecpar) < 0)
+	{
+		VUserLog("Error: FFmpeg could not find the codec for \"%s\".", mVideoPath);
+		return false;
+	}
+
+
 	// Open video packet queue
-	videoPackets.destructor = av_free_packet;
+	videoPackets.destructor = av_packet_unref;
 	videoFrames.destructor = VideoFrame::Delete;
 
 	// this will be set in the Initialize() function after audio is also loaded
@@ -218,22 +213,33 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 		return false;
 	}
 
-	audioPackets.destructor = av_free_packet;
+	audioPackets.destructor = av_packet_unref;
 	audioFrames.destructor = AudioFrame::Delete;
 
 	// And the audio stream (if applicable)
 	AVCodec *audioCodec = NULL;
 
 	container.audioStream = container.formatCtx->streams[container.audioStreamIndex];
-	container.audioCodecCtx = container.audioStream->codec;
 	// container.audioCodecCtx->thread_count = 1;
 
-	audioCodec = avcodec_find_decoder(container.audioCodecCtx->codec_id);
+	audioCodec = avcodec_find_decoder(container.audioStream->codecpar->codec_id);
+
+	container.audioCodecCtx = avcodec_alloc_context3(audioCodec);
+	if (!container.audioCodecCtx)
+	{
+		VUserLog("Error: FFmpeg could not allocate the decoder context for \"%s\".", mVideoPath);
+		return false;
+	}
+	if (avcodec_parameters_to_context(container.audioCodecCtx, container.audioStream->codecpar) < 0)
+	{
+		VUserLog("Error: FFmpeg could not find the codec for \"%s\".", mVideoPath);
+		return false;
+	}
 
 	int ret = -1;
 	if (audioCodec == NULL || (ret = avcodec_open2(container.audioCodecCtx, audioCodec, NULL)) < 0)
 	{
-		VUserLog("Error: Unsupported audio codec %s: %s", VuoFfmpegUtility::AVCodecIDToString(container.audioCodecCtx->codec_id), av_err2str(ret));
+		VUserLog("Error: Unsupported audio codec %s: %s", avcodec_get_name(container.audioCodecCtx->codec_id), av_err2str(ret));
 		// container.audioStreamIndex = -1;
 		audio_channels = 0;
 		return false;
@@ -248,7 +254,7 @@ bool VuoFfmpegDecoder::InitializeAudio(VuoFfmpegDecoder::AVContainer& container)
 
 		if (!container.swr_ctx)
 		{
-			VUserLog("Error: FFmpeg could not allocate resampler context.\n");
+			VUserLog("Error: FFmpeg could not allocate resampler context.");
 			container.audioStreamIndex = -1;
 			audio_channels = 0;
 			return false;
@@ -319,7 +325,7 @@ bool VuoFfmpegDecoder::InitializeVideoInfo()
 {
 	if( !DecodeVideoFrame() )
 	{
-		DEBUG_LOG("Coudn't find first video frame!");
+		VDebugLog("Coudn't find first video frame!");
 		return false;
 	}
 
@@ -331,7 +337,7 @@ bool VuoFfmpegDecoder::InitializeVideoInfo()
 
 	if(!DecodeVideoFrame())
 	{
-		DEBUG_LOG("Couldn't decode first video frame (2)");
+		VDebugLog("Couldn't decode first video frame (2)");
 		return false;
 	}
 
@@ -354,7 +360,9 @@ bool VuoFfmpegDecoder::InitializeVideoInfo()
 
 	if(ContainsAudio())
 	{
-		DecodeAudioFrame();
+		if (!DecodeAudioFrame())
+			VUserLog("Warning: Couldn't decode the first audio frame.");
+
 		VideoInfo& ai = container.audioInfo;
 
 		AudioFrame aframe;
@@ -404,8 +412,6 @@ VuoFfmpegDecoder::~VuoFfmpegDecoder()
 		audioPackets.Clear();
 	}
 
-	if(container.videoCodecCtx != NULL) avcodec_close(container.videoCodecCtx);
-	if(container.audioCodecCtx != NULL) avcodec_close(container.audioCodecCtx);
 	if(container.formatCtx != NULL) avformat_close_input(&container.formatCtx);
 }
 
@@ -435,21 +441,20 @@ bool VuoFfmpegDecoder::NextPacket()
 		if( packet.stream_index == container.videoStreamIndex ||
 			packet.stream_index == container.audioStreamIndex )
 		{
-			AVPacket* pkt = &packet;
-
-			if( av_dup_packet(pkt) < 0 )
+			AVPacket pkt;
+			if (av_packet_ref(&pkt, &packet) < 0)
 				continue;
 
 			if( packet.stream_index == container.videoStreamIndex )
-				videoPackets.Add(*pkt);
+				videoPackets.Add(pkt);
 			else if( packet.stream_index == container.audioStreamIndex && audioIsEnabled )
-				audioPackets.Add(*pkt);
+				audioPackets.Add(pkt);
 
 			return true;
 		}
 		else
 		{
-			av_free_packet(&packet);
+			av_packet_unref(&packet);
 		}
 	}
 
@@ -488,9 +493,9 @@ bool VuoFfmpegDecoder::NextVideoFrame(VuoVideoFrame* videoFrame)
 	lastSentVideoPts = queuedFrame.pts;
 
 	// if the audio is behind video, put this last frame back in the front of the queue.
-	if( !seeking && AudioOffset() < MAX_AUDIO_LATENCY )
+	if (audioIsEnabled && !seeking && AudioOffset() < MAX_AUDIO_LATENCY)
 	{
-		DEBUG_LOG("dup video frame: v: %.3f, a: %.3f => %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
+		VDebugLog("dup video frame: v: %.3f, a: %.3f => %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
 		VuoRetain(queuedFrame.image);
 		videoFrames.Unshift(queuedFrame);
 	}
@@ -579,7 +584,7 @@ bool VuoFfmpegDecoder::DecodePreceedingVideoFrames()
 	{
 		if(vframe.pts <= container.videoInfo.first_pts)
 		{
-			DEBUG_LOG("current frame < 0");
+			VDebugLog("current frame < 0");
 			return false;
 		}
 	}
@@ -587,7 +592,7 @@ bool VuoFfmpegDecoder::DecodePreceedingVideoFrames()
 	{
 		if(lastSentVideoPts <= container.videoInfo.first_pts)
 		{
-			DEBUG_LOG("current frame < 0");
+			VDebugLog("current frame < 0");
 			return false;
 		}
 	}
@@ -635,7 +640,7 @@ bool VuoFfmpegDecoder::DecodePreceedingVideoFrames()
 
 bool VuoFfmpegDecoder::DecodeVideoFrame()
 {
-	AVFrame* frame = avcodec_alloc_frame();
+	AVFrame* frame = av_frame_alloc();
 	int frameFinished = 0;
 	AVPacket packet;
 	av_init_packet(&packet);
@@ -657,7 +662,31 @@ SKIP_VIDEO_FRAME:
 			}
 		}
 
+#if 1
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		avcodec_decode_video2(container.videoCodecCtx, frame, &frameFinished, &packet);
+#pragma clang diagnostic pop
+#else
+		int ret = avcodec_send_packet(container.videoCodecCtx, &packet);
+		if (ret == 0
+		 || ret == AVERROR(EAGAIN))
+		{
+			ret = avcodec_receive_frame(container.videoCodecCtx, frame);
+			if (ret == 0)
+				frameFinished = 1;
+			else if (ret == AVERROR(EAGAIN))
+				// FFmpeg is telling us we need to send more packets to it before it can decode the frame.
+				;
+			else
+				VUserLog("avcodec_receive_frame error: %s", av_err2str(ret));
+		}
+		else if (ret == AVERROR(EINVAL))
+			// FFmpeg is telling us we need to send more packets to it before it can decode the frame.
+			;
+		else
+			VUserLog("avcodec_send_packet error: %s", av_err2str(ret));
+#endif
 
 		if (frameFinished == 0 && packet.size == 0)
 		{
@@ -670,7 +699,7 @@ SKIP_VIDEO_FRAME:
 			if( v.last_pts == AV_NOPTS_VALUE && v.max_pts != AV_NOPTS_VALUE )
 				v.last_pts = v.max_pts;
 
-			av_free(frame);
+			av_frame_free(&frame);
 			return false;
 		}
 	}
@@ -678,7 +707,7 @@ SKIP_VIDEO_FRAME:
 	if( frameFinished && frame != NULL)
 	{
 		// Get PTS here because formats with predictive frames can return junk values before a full frame is found
-		int64_t pts = av_frame_get_best_effort_timestamp ( frame );
+		int64_t pts = frame->best_effort_timestamp;
 
 		// For unknown reasons, FFmpeg sometimes returns large PTS gaps when playing an RTSP stream.
 		// https://b33p.net/kosada/node/13972
@@ -710,17 +739,17 @@ SKIP_VIDEO_FRAME:
 			// happen if the video frame duration is greater than (abs(MAX_AUDIO_LATENCY) + MAX_AUDIO_LEAD).
 			if( lastAudioTimestamp - predicted_timestamp > MAX_AUDIO_LATENCY )
 			{
-				av_free_packet(&packet);
+				av_packet_unref(&packet);
 				av_init_packet(&packet);
-				av_free(frame);
-				frame = avcodec_alloc_frame();
+				av_frame_free(&frame);
+				frame = av_frame_alloc();
 				skips++;	// don't skip more than MAX_SFRAME_KIPS frame per-decode
 				frameFinished = false;
 				goto SKIP_VIDEO_FRAME;
 			}
 		}
 
-		av_free_packet(&packet);
+		av_packet_unref(&packet);
 
 		// if seeking and going forward in time, it's okay to skip decoding the image
 		VideoFrame vframe = (VideoFrame)
@@ -735,17 +764,18 @@ SKIP_VIDEO_FRAME:
 			VuoRetain(vframe.image);
 
 		videoFrames.Add(vframe);
-		av_free(frame);
+		av_frame_free(&frame);
 
 		if(skips > 0)
-			DEBUG_LOG("skip frame: v:%f  a:%f  ==> %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
+			VDebugLog("skip frame: v:%f  a:%f  ==> %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
 
 		return true;
 	}
 	else
 	{
-		if(frame != NULL) av_free(frame);
-		av_free_packet(&packet);
+		if (frame)
+			av_frame_free(&frame);
+		av_packet_unref(&packet);
 	}
 
 	return false;
@@ -857,7 +887,7 @@ double VuoFfmpegDecoder::AudioOffset()
 
 bool VuoFfmpegDecoder::DecodeAudioFrame()
 {
-	AVFrame* frame = avcodec_alloc_frame();
+	AVFrame* frame = av_frame_alloc();
 	container.audioCodecCtx->request_sample_fmt = AV_SAMPLE_FMT_FLTP;
 
 	// don't bother allocating samples array if seeking since we're just decoding packets for timestamps
@@ -868,11 +898,52 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 
 	for(;;)
 	{
+		// int packetsSent = 0;
+
 		while(audio_pkt_size > 0)
 		{
 			int got_frame = 0;
 
+#if 1
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			len1 = avcodec_decode_audio4(container.audioCodecCtx, frame, &got_frame, &audio_packet);
+#pragma clang diagnostic pop
+#else
+			int ret = avcodec_send_packet(container.audioCodecCtx, &audio_packet);
+			++packetsSent;
+			if (ret == 0
+			 || ret == AVERROR(EAGAIN))
+			{
+				ret = avcodec_receive_frame(container.audioCodecCtx, frame);
+				if (ret == 0)
+				{
+					got_frame = 1;
+					len1 = audio_packet.size;
+				}
+				else if (ret == AVERROR(EAGAIN))
+				{
+					// FFmpeg is telling us we need to send more packets to it before it can decode the frame.
+					// But sometimes it's never satiated, so give up after we've tried feeding it a few times.
+					// Fixes hang in `TestVuoVideo::testDecodePerformance(MPEG v4 HE AAC opt=1)`
+					if (packetsSent > 5)
+						return false;
+				}
+				else
+					VUserLog("avcodec_receive_frame error: %s", av_err2str(ret));
+			}
+			else if (ret == AVERROR(EINVAL))
+				// FFmpeg is telling us we need to send more packets to it before it can decode the frame.
+				;
+			else
+			{
+				VUserLog("avcodec_send_packet error: %s", av_err2str(ret));
+				// Sometimes, after seeking, just the first few packets are invalid,
+				// or all the packets are invalid.  Give up after a few tries.
+				if (ret == AVERROR_INVALIDDATA && packetsSent > 5)
+					return false;
+			}
+#endif
 
 			/* if error, skip frame */
 			if(len1 < 0)
@@ -886,7 +957,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 
 			if (got_frame)
 			{
-				int64_t pts = av_frame_get_best_effort_timestamp ( frame );
+				int64_t pts = frame->best_effort_timestamp;
 
 				if(seeking)
 				{
@@ -900,7 +971,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 
 					audioFrames.Add(audioFrame);
 
-					av_free(frame);
+					av_frame_free(&frame);
 					return true;
 				}
 
@@ -919,7 +990,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 
 				if(ret < 0)
 				{
-					VUserLog("av_samples_alloc_array_and_samples failed allocating double** array");
+					VUserLog("av_samples_alloc_array_and_samples error: %s", av_err2str(ret));
 					free(samples);
 					return false;
 				}
@@ -944,7 +1015,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 					memcpy(samples[i], dst_data[i], dst_linesize);
 				}
 
-				av_free(frame);
+				av_frame_free(&frame);
 
 				if (dst_data)
 				{
@@ -953,7 +1024,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 				}
 
 				AudioFrame audioFrame = {
-					converted_sample_count * sizeof(double),
+					(unsigned int)(converted_sample_count * sizeof(double)),
 					audio_channels,
 					pts,
 					VuoFfmpegUtility::AvTimeToSecond(container.audioStream, pts),
@@ -967,7 +1038,7 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 		}
 
 		if(audio_pkt_data != NULL)
-			av_free_packet(&audio_packet);
+			av_packet_unref(&audio_packet);
 
 		while( !audioPackets.Shift(&audio_packet) )
 		{
@@ -988,13 +1059,15 @@ bool VuoFfmpegDecoder::SeekToSecond(double second, VuoVideoFrame *frame)
 {
 	// Convert second to stream time
 	int64_t pts = VuoFfmpegUtility::SecondToAvTime(container.videoStream, fmax(second, 0));
-	return SeekToPts(pts, frame);
+	SeekToPts(pts, frame);
+	return true;
 }
 
 /**
  * Seek to timestamp in video stream time-base.
+ * @version200Changed{Changed return type to `void`.}
  */
-bool VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
+void VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 {
 	int64_t target_pts = pts;
 
@@ -1013,10 +1086,20 @@ bool VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 	}
 
 	// seek video & audio
-	int ret = av_seek_frame(container.formatCtx, container.videoStreamIndex, target_pts, AVSEEK_FLAG_BACKWARD);
+	int ret = 0;
+	if (container.formatCtx->iformat->flags & AVFMT_NOFILE)
+	{
+		if (!showedSeekIgnoredWarning)
+		{
+			VUserLog("Warning: Ignoring seeks, since this is a stream (not a file).");
+			showedSeekIgnoredWarning = true;
+		}
+	}
+	else
+		ret = av_seek_frame(container.formatCtx, container.videoStreamIndex, target_pts, AVSEEK_FLAG_BACKWARD);
 
 	if(ret < 0)
-		DEBUG_LOG("Failed seeking video - ?");
+		VDebugLog("Warning: av_seek_frame() failed: %s", av_err2str(ret));
 
 //	seeking = true;
 
@@ -1026,19 +1109,19 @@ bool VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 	lastSentVideoPts = target_pts;
 
 	// step video and audio til the frame timestamp matches pts
-	StepVideoFrame(pts, frame);
+	if (!StepVideoFrame(pts, frame))
+		VUserLog("Warning: Couldn't seek video.");
 
 	if(ContainsAudio())
 	{
 		int64_t audioPts = av_rescale_q(pts, container.videoStream->time_base, container.audioStream->time_base);
 
 		if( audioIsEnabled )
-			StepAudioFrame(audioPts);
+			if (!StepAudioFrame(audioPts))
+				VUserLog("Warning: Couldn't seek audio.");
 	}
 
 //	seeking = false;
-
-	return true;
 }
 
 bool VuoFfmpegDecoder::ContainsAudio()
@@ -1065,7 +1148,8 @@ double VuoFfmpegDecoder::GetDuration()
 			{
 				// need to manually run through video til end to get last pts value
 				seeking = true;
-				StepVideoFrame(INT64_MAX, NULL);
+				if (!StepVideoFrame(INT64_MAX, NULL))
+					VUserLog("Warning: Couldn't seek to end of video.");
 				seeking = false;
 				container.videoInfo.duration = container.videoInfo.last_pts - container.videoInfo.first_pts;
 			}

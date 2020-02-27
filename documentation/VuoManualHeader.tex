@@ -3,7 +3,7 @@
 \usepackage{url}
 \usepackage{calc}
 \usepackage{booktabs}
-\usepackage{marginfix}
+\usepackage{mparhack}
 
 \textwidth 13cm
 \setlength{\parskip}{3ex plus 2ex minus 2ex}
@@ -18,7 +18,8 @@
 	\fancyhfoffset[L]{3em}
 	\renewcommand{\headrule}{\vskip -2mm \color{base1}\rule{\headwidth}{0.5pt}}
 	\fancyfoot[L]{\color{base1}Revised \today}
-	\renewcommand{\footrule}{\vskip 8mm \color{base1}\rule{\headwidth}{0.5pt}\\\vskip -8mm}
+	\renewcommand{\footrule}{\vskip 10mm \color{base1}\rule{\headwidth}{0.5pt}\\\vskip -10mm}
+	\setlength{\headheight}{14.8pt}
 
 \usepackage{titlesec}
 	\newcommand{\sectionbreak}{\clearpage}
@@ -44,30 +45,22 @@
 \usepackage{tikz}
 	\usetikzlibrary{shapes,snakes}
 	\tikzstyle{sidebox} = [
-		draw=base1,
-		fill=base2,
-		very thick,
+		inner sep=15pt,
+		inner ysep=20pt,
+	]
+	\tikzstyle{sideboxtitle} = [
+		fill=base1,
 		rectangle,
 		rounded corners,
-		inner sep=10pt,
-		inner ysep=20pt
+		text=base3,
+		inner sep=5pt,
 	]
-	\tikzstyle{sideboxtitle} =[fill=base1, text=base3]
-
-\newcommand{\noteQCUsers}[1]{
-	\marginpar{
-		\begin{tikzpicture}
-			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
-			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/Magic_Wand.pdf}} \parbox{31mm}{\footnotesize Note for\\Quartz Composer users}};
-		\end{tikzpicture}%
-	}
-}
 
 \newcommand{\noteTextProgrammers}[1]{
 	\marginpar{
 		\begin{tikzpicture}
-			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
-			\node[sideboxtitle, right=10pt] at (box.north west) {\parbox{7mm}{\large \tt ();} \parbox{31mm}{\footnotesize Note for\\text programmers}};
+			\node[sidebox](box){\begin{minipage}{4.1cm}\linespread{1}\small #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[height=7mm]{PROJECT_SOURCE_DIR/documentation/image/fa-code.pdf}}\hspace{2mm}\parbox{29.5mm}{\linespread{1}\selectfont Note for\\text programmers}};
 		\end{tikzpicture}%
 	}
 }
@@ -75,26 +68,27 @@
 \newcommand{\tip}[1]{
 	\marginpar{
 		\begin{tikzpicture}
-			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
-			\node[sideboxtitle, right=10pt] at (box.north west) {\parbox[c][7mm][c]{7mm}{\hspace{1.5mm}\Huge +} \parbox{31mm}{\footnotesize Tip}};
+			\node[sidebox](box){\begin{minipage}{4.1cm}\linespread{1}\small #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\hspace{2mm}\includegraphics[height=7mm]{PROJECT_SOURCE_DIR/documentation/image/fa-info.pdf}}\hspace{4mm}\parbox{31.5mm}{Tip}};
 		\end{tikzpicture}%
 	}
 }
 
-\newcommand{\warning}[1]{
+\newcommand{\newInVersion}[1]{
 	\marginpar{
+		\vskip 0pt  % Move the top of the title closer to the command location.
 		\begin{tikzpicture}
-			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
-			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/warning.eps}} \parbox{31mm}{\footnotesize Watch Out}};
+			\node[sidebox](box){\begin{minipage}{4.1cm}\end{minipage}}; % To maintain consistent spacing with the other sidebars.
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[height=7mm]{PROJECT_SOURCE_DIR/documentation/image/fa-gift.pdf}}\hspace{2mm}\parbox{31.5mm}{New in Vuo #1}};
 		\end{tikzpicture}%
 	}
 }
 
-\newcommand{\tutorial}[1]{
+\newcommand{\changedInVersion}[2]{
 	\marginpar{
 		\begin{tikzpicture}
-			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
-			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/Stellaris_Clapper-board.eps}} \parbox{31mm}{\footnotesize Tutorial}};
+			\node[sidebox](box){\begin{minipage}{4.1cm}\linespread{1}\small #2\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\hspace{1mm}\includegraphics[height=7mm]{PROJECT_SOURCE_DIR/documentation/image/fa-highlighter.pdf}}\hspace{3mm}\parbox{31.5mm}{Changed in Vuo #1}};
 		\end{tikzpicture}%
 	}
 }
@@ -102,85 +96,64 @@
 \usepackage[multidot]{grffile}
 \newcommand{\doublequote}{\XeTeXglyph\XeTeXcharglyph"0022\relax}
 \newcommand{\code}[1]{{\tt #1}}
-\newcommand{\term}[1]{{\color{green}\bf #1}}
+
+
+
+% =====================================================================
+% Glossary
+
+% Workaround for "Package mathspec Error: 'amsmath' must be loaded earlier than `mathspec'."
+% https://tex.stackexchange.com/questions/85696/what-causes-this-strange-interaction-between-glossaries-and-amsmath/85700#85700
+\makeatletter % undo the wrong changes made by mathspec
+\let\RequirePackage\original@RequirePackage
+\let\usepackage\RequirePackage
+\makeatother
+
+\usepackage[nogroupskip,nopostdot,toc,xindy]{glossaries}
+\makeglossaries
+\usepackage[xindy]{imakeidx}
+\makeindex
+
+% Make term references green and bold.
+\renewcommand*{\glstextformat}[1]{\color{green}\bf{#1}}
+
+% Add more space between the definition and the page numbers.
+\renewcommand*{\glossentry}[2]{%
+  \item[\glsentryitem{#1}%
+        \glstarget{#1}{\glossentryname{#1}}]
+     \glossentrydesc{#1}\glspostdescription \hspace{1em} #2}%
+
+\newcommand{\term}[1]{\gls{#1}}
+\newcommand{\Term}[1]{\Gls{#1}}
+\newcommand{\definition}[2]{\newglossaryentry{#1}{name=#1,description={#2}}}
+% =====================================================================
+
+
+
 \newcommand{\vuoPort}[1]{{\bf #1}}
 \newcommand{\vuoNode}[1]{{\bf #1}}
 \newcommand{\vuoNodeClass}[1]{{\tt #1}}
-\newcommand{\vuoNodeClassImage}[1]{\includegraphics[scale=0.75]{image-generated/#1.pdf}}
-\newcommand{\vuoNodeClassImageWithCaption}[2]{
-	\vuoNodeClassImage{#1}\\
-	\nopagebreak
-	\centerline{#2}
+\newcommand{\vuoNodeClassImage}[1]{\includegraphics[scale=0.75]{../image-generated/#1.pdf}}
+
+\newcommand{\vuoImage}[2]{
+	\includegraphics[scale=#1]{PROJECT_SOURCE_DIR/documentation/image/#2}
 }
-\newcommand{\vuoNodeClassImageWithAnnotation}[2]{
-	\begin{tikzpicture}
-		\node[anchor=south west,inner sep=0] at (0,0) {\vuoNodeClassImage{#1}};
-		#2
-	\end{tikzpicture}
-}
-\newcommand{\vuoTypeConverter}[2]{\vuoNode{#1 $\rightarrow$ #2}}
 
 \newlength{\vuoImageWidth}
 \newcommand{\vuoScreenshot}[1]{
-	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.5]{image/#1}}
+	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.5]{PROJECT_SOURCE_DIR/documentation/image/#1}}
 	\setlength{\vuoImageWidth}{\minof{\vuoImageWidth}{\textwidth}}
-	\includegraphics[scale=0.5,width=\vuoImageWidth]{image/#1.png}
-}
-\newcommand{\vuoScreenshotWithAnnotation}[2]{
-	\begin{tikzpicture}
-		\node[anchor=south west,inner sep=0] at (0,0) {\vuoScreenshot{#1}};
-		#2
-	\end{tikzpicture}
+	\includegraphics[scale=0.5,width=\vuoImageWidth]{PROJECT_SOURCE_DIR/documentation/image/#1.png}
 }
 \newcommand{\vuoCompositionImage}[1]{
-	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.75]{image-generated/#1}}
+	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.75]{../image-generated/#1}}
 	\setlength{\vuoImageWidth}{\minof{\vuoImageWidth}{\textwidth}}
-	\includegraphics[scale=0.75,width=\vuoImageWidth]{image-generated/#1.pdf}
-}
-\newcommand{\vuoCompositionImageWithCaption}[2]{
-	\vuoCompositionImage{#1}\\
-	\nopagebreak
-	\centerline{#2}
-}
-\newcommand{\vuoCompositionImageWithAnnotation}[2]{
-	\begin{tikzpicture}
-		\node[anchor=south west,inner sep=0] at (0,0) {\vuoCompositionImage{#1}};
-		#2
-	\end{tikzpicture}
-}
-\newcommand{\vuoCompositionImageWithAnnotationAndCaption}[3]{
-	\begin{tikzpicture}
-		\node[anchor=south west,inner sep=0] at (0,0) {\vuoCompositionImage{#1}};
-		#2
-	\end{tikzpicture}\\
-	\nopagebreak
-	\centerline{#3}
+	\includegraphics[scale=0.75,width=\vuoImageWidth]{../image-generated/#1.pdf}
 }
 
-
-\usepackage{color}
-	% Solarized color definitions for use in LaTeX
-	% Contributed by: Valentin Haenel <valentin.haenel@gmx.de>
-	\definecolor{base03}{RGB}{0,43,54}
-	\definecolor{base02}{RGB}{7,54,66}
-	\definecolor{base01}{RGB}{88,110,117}
-	\definecolor{base00}{RGB}{101,123,131}
-	\definecolor{base0}{RGB}{131,148,150}
-	\definecolor{base1}{RGB}{147,161,161}
-	\definecolor{base1.5}{RGB}{192,196,187}
-	\definecolor{base2}{RGB}{238,232,213}
-	\definecolor{base3}{RGB}{253,246,227}
-	\definecolor{yellow}{RGB}{181,137, 0}
-	\definecolor{orange}{RGB}{203,75,22}
-	\definecolor{red}{RGB}{220,50,47}
-	\definecolor{magenta}{RGB}{211,54,130}
-	\definecolor{violet}{RGB}{108,113,196}
-	\definecolor{blue}{RGB}{38,139,210}
-	\definecolor{cyan}{RGB}{42,161,152}
-	%\definecolor{green}{RGB}{133,153,0}
-	\definecolor{green}{RGB}{66,153,0} % This isn't Solarized green.
-	\AtBeginDocument{\color{base01}}
-	\pagecolor{base3}
+\input{VuoManualColors.tex}
+\AtBeginDocument{\color{base01}}
+\pagecolor{base3}
 
 \hypersetup{linkcolor=blue, citecolor=blue, urlcolor=blue}
 
@@ -237,7 +210,7 @@
 	\DeclareCaptionFormat{listing}{\colorbox{base2}{\parbox{12.8cm}{#1#2#3}}}
 	\captionsetup[lstlisting]{format=listing, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
 
-\setmainfont[Path=../renderer/font/, BoldFont=Signika-Semibold.ttf, ItalicFont=Signika-Light-Italic.ttf, BoldItalicFont=Signika-Semibold-Italic.ttf]{Signika-Light.ttf}
+\setmainfont[Path=PROJECT_SOURCE_DIR/renderer/font/, BoldFont=PTS75F.ttf, ItalicFont=PTS56F.ttf, BoldItalicFont=PTS76F.ttf]{PTS55F.ttf}
 \setmonofont{Monaco}
 
 \usepackage{fontspec}

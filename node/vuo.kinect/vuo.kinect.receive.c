@@ -2,9 +2,9 @@
  * @file
  * vuo.kinect.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  "usb"
 					  ],
 					  "node": {
-						  "isInterface" : true,
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "DisplayKinectImages.vuo", "RideRollercoaster.vuo" ]
 					  }
 				 });
@@ -39,7 +39,7 @@ struct nodeInstanceData
 	void (*receivedDepthImage)(VuoImage);
 };
 
-void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint32_t timestamp)
+static void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)freenect_get_user(dev);
 	freenect_frame_mode mode = freenect_get_current_video_mode(dev);
@@ -69,14 +69,14 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 		}
 	}
 
-	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_16, ^(void *buffer){ free(buffer); });
+	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_32, ^(void *buffer){ free(buffer); });
 	dispatch_sync(context->triggerQueue, ^{
 		if (context->receivedDepthImage)
 			context->receivedDepthImage(image);
 	});
 }
 
-void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t timestamp)
+static void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)freenect_get_user(dev);
 	freenect_frame_mode mode = freenect_get_current_video_mode(dev);
@@ -96,7 +96,7 @@ void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t t
 	});
 }
 
-void vuo_kinect_receive_worker(void *ctx)
+static void vuo_kinect_receive_worker(void *ctx)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)ctx;
 

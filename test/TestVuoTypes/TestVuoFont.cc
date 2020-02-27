@@ -2,9 +2,9 @@
  * @file
  * TestVuoFont implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -29,7 +29,7 @@ private slots:
 
 		QTest::newRow("emptystring")	<< ""
 										<< false
-										<< "(no font) 0pt<ul><li>color <span style='background-color:#ffffff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 1.00, 1.00, 1.00, 1.00</li><li>left-aligned</li><li>character spacing: 1</li><li>line spacing: 1</li></ul>";
+										<< "No font 0pt<ul><li>color <span style='background-color:#ffffff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 1.00, 1.00, 1.00, 1.00</li><li>Left-aligned</li><li>character spacing: 1</li><li>line spacing: 1</li></ul>";
 
 		QTest::newRow("font")			<< (const char*)VuoFont_getString(VuoFont_make(
 																					"Helvetica",
@@ -40,7 +40,7 @@ private slots:
 																					0,
 																					2))
 										<< true
-										<< "Helvetica 12pt<ul><li>color <span style='background-color:#ffffff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 1.00, 1.00, 1.00, 1.00</li><li>underlined</li><li>right-aligned</li><li>character spacing: 0</li><li>line spacing: 2</li></ul>";
+										<< "Helvetica 12pt<ul><li>color <span style='background-color:#ffffff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 1.00, 1.00, 1.00, 1.00</li><li>underlined</li><li>Right-aligned</li><li>character spacing: 0</li><li>line spacing: 2</li></ul>";
 	}
 	void testSerializationAndSummary()
 	{

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.blur node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "gaussian", "linear", "ramp", "triangle", "box", "disc", "disk",
 						  "variable", "depth of field", "DOF",
 					  ],
-					  "version" : "1.3.0",
+					  "version" : "1.4.0",
 					  "dependencies" : [
 						  "VuoImageBlur"
 					  ],
@@ -37,16 +37,12 @@ void nodeInstanceEvent
 		VuoInstanceData(VuoImageBlur *) blur,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoImage) mask,
-		VuoInputData(VuoBlurShape, {"default":"gaussian"}) shape,
+		VuoInputData(VuoBlurShape, {"default":"linear"}) shape,
 		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":50}) radius,
 		VuoInputData(VuoBoolean, {"default":false}) expandBounds,
-		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":1}) quality,
+		VuoInputData(VuoReal, {"default":0.7, "suggestedMin":0, "suggestedMax":1}) quality,
 		VuoOutputData(VuoImage) blurredImage
 )
 {
 	*blurredImage = VuoImageBlur_blur(*blur, image, mask, shape, radius, quality, expandBounds);
-}
-
-void nodeInstanceFini(VuoInstanceData(VuoImageBlur *) blur)
-{
 }

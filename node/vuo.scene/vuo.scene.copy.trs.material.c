@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.copy.trs.material node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -47,7 +47,7 @@ void nodeEvent
 	// If any list is empty, don't make any copies.
 	if (m == 0 || t == 0 || r == 0 || s == 0)
 	{
-		*copies = VuoSceneObject_makeEmpty();
+		*copies = NULL;
 		return;
 	}
 
@@ -57,6 +57,7 @@ void nodeEvent
 
 	long priorMaterialIndex = 0;
 	VuoSceneObject objectWithNewShader;
+	VuoList_VuoSceneObject childObjects = VuoSceneObject_getChildObjects(*copies);
 	for (int i = 0; i < len; i++)
 	{
 		long materialIndex;
@@ -65,14 +66,15 @@ void nodeEvent
 		else // VuoExtrapolationMode_Stretch
 			materialIndex = ((float)i / len) * m + 1;
 
+		objectWithNewShader = VuoSceneObject_copy(object);
+
 		// Reuse the prior shader if possible.
 		if (materialIndex != priorMaterialIndex)
 		{
 			VuoShader shader = VuoShader_make_VuoGenericType1(VuoListGetValue_VuoGenericType1(materials, materialIndex));
-			objectWithNewShader = VuoSceneObject_copy(object);
-			VuoSceneObject_apply(&objectWithNewShader, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-									currentObject->shader = shader;
-								 });
+			VuoSceneObject_apply(objectWithNewShader, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+				VuoSceneObject_setShader(currentObject, shader);
+			});
 
 			priorMaterialIndex = materialIndex;
 		}
@@ -98,9 +100,8 @@ void nodeEvent
 				VuoPoint3d_multiply(VuoPoint3d_subtract(scale, VuoListGetValue_VuoPoint3d(scales, s-1)), i-(s-1))
 				);
 
-		objectWithNewShader.transform = VuoTransform_composite(object.transform,
-			VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale));
+		VuoSceneObject_transform(objectWithNewShader, VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale));
 
-		VuoListAppendValue_VuoSceneObject(copies->childObjects, objectWithNewShader);
+		VuoListAppendValue_VuoSceneObject(childObjects, objectWithNewShader);
 	}
 }

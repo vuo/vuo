@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorTextComparison implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorTextComparison.hh"
@@ -30,6 +30,8 @@ void VuoInputEditorTextComparison::setUpDialog(QDialog &dialog, json_object *ori
 	comboBoxComparisonType->addItem("Contains");
 	comboBoxComparisonType->addItem("Begins with");
 	comboBoxComparisonType->addItem("Ends with");
+	comboBoxComparisonType->addItem("Matches wildcard");
+	comboBoxComparisonType->addItem("Matches regular expression");
 	comboBoxComparisonType->setCurrentIndex(originalTextComparison.type);
 
 	checkBoxCaseSensitive = new QCheckBox("Case-sensitive");

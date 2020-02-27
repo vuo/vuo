@@ -2,14 +2,15 @@
  * @file
  * VuoTransform2d C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoPoint2d.h"
+#include "VuoPoint3d.h"
 #include "VuoReal.h"
 
 /**
@@ -37,6 +38,9 @@ VuoTransform2d VuoTransform2d_make(VuoPoint2d translation, VuoReal rotation, Vuo
 VuoTransform2d VuoTransform2d_makeFromJson(struct json_object *js);
 struct json_object * VuoTransform2d_getJson(const VuoTransform2d value);
 char * VuoTransform2d_getSummary(const VuoTransform2d value);
+
+VuoPoint2d VuoTransform2d_transform_VuoPoint2d(VuoTransform2d transform, VuoPoint2d point);
+VuoPoint3d VuoTransform2d_transform_VuoPoint3d(VuoTransform2d transform, VuoPoint3d point);
 
 /// @{
 /**

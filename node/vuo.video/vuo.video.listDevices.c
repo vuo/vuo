@@ -2,13 +2,13 @@
  * @file
  * vuo.video.listDevices node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
-#include "VuoQTCapture.h"
+#include "VuoVideoCapture.h"
 #include "VuoList_VuoVideoInputDevice.h"
 
 VuoModuleMetadata({
@@ -19,10 +19,9 @@ VuoModuleMetadata({
 					  ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoQTCapture"
+						 "VuoVideoCapture"
 					 ],
 					 "node": {
-						 "isInterface" : true,
 						 "exampleCompositions" : [ ]
 					 }
 				 });
@@ -38,7 +37,7 @@ void nodeInstanceTriggerStart
 	VuoOutputTrigger(inputDevices, VuoList_VuoVideoInputDevice)
 )
 {
-	VuoQTCapture_addOnDevicesChangedCallback(inputDevices);
+	VuoVideoCapture_addOnDevicesChangedCallback(inputDevices);
 }
 
 void nodeInstanceEvent(
@@ -54,7 +53,7 @@ void nodeInstanceTriggerStop(
 	VuoOutputTrigger(inputDevices, VuoList_VuoVideoInputDevice)
 	)
 {
-	VuoQTCapture_removeOnDevicesChangedCallback(inputDevices);
+	VuoVideoCapture_removeOnDevicesChangedCallback(inputDevices);
 }
 
 void nodeInstanceFini(

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.feedback node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -86,7 +86,7 @@ void nodeInstanceEvent
 												   0,
 												   (2.*previousFeedbackImage->pixelsWide)/realizedWidth,
 												   1. - pow(1. - feedbackOpacity, 3.));
-	previousFeedbackLayer.sceneObject.blendMode = feedbackBlendMode;
+	VuoSceneObject_setBlendMode((VuoSceneObject)previousFeedbackLayer, feedbackBlendMode);
 	VuoList_VuoLayer previousFeedbackLayerList = VuoListCreate_VuoLayer();
 	VuoListAppendValue_VuoLayer(previousFeedbackLayerList, previousFeedbackLayer);
 
@@ -112,12 +112,12 @@ void nodeInstanceEvent
 		VuoListAppendValue_VuoLayer(compositeLayerList, VuoLayer_makeGroup(previousFeedbackLayerList, feedbackTransform2));
 	}
 
-	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(compositeLayerList, VuoTransform2d_makeIdentity()).sceneObject;
+	VuoSceneObject rootSceneObject = (VuoSceneObject)VuoLayer_makeGroup(compositeLayerList, VuoTransform2d_makeIdentity());
 	VuoSceneRenderer_setRootSceneObject((*instance)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*instance)->sceneRenderer, realizedWidth, realizedHeight);
 
 	// Render the composite scene.
-	VuoSceneRenderer_renderToImage((*instance)->sceneRenderer, feedbackImage, colorDepth, VuoMultisample_Off, NULL);
+	VuoSceneRenderer_renderToImage((*instance)->sceneRenderer, feedbackImage, colorDepth, VuoMultisample_Off, NULL, false);
 
 	// Clean up.
 	if ((*instance)->previousFeedbackImage)

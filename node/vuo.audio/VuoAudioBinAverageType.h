@@ -2,14 +2,14 @@
  * @file
  * VuoAudioBinAverageType C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoAudioBinAverageType_struct { void *l; } * VuoList_VuoAudioBinAverageType;
 #define VuoList_VuoAudioBinAverageType_TYPE_DEFINED
 /// @}

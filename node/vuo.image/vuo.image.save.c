@@ -2,15 +2,16 @@
  * @file
  * vuo.image.save node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #include <FreeImage.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 #include <OpenGL/CGLMacro.h>
 #include "VuoImageColorDepth.h"
@@ -30,7 +31,6 @@ VuoModuleMetadata({
 						 "VuoUrl"
 					 ],
 					 "node": {
-						 "isInterface" : true,
 						 "exampleCompositions" : [ "SaveSepiaImage.vuo" ]
 					 }
 				 });
@@ -68,17 +68,13 @@ void nodeEvent
 	if(!saveImageEvent || saveImage == NULL)
 		return;
 
-	int length;
-	char** validExtensions = VuoImageFormat_getValidFileExtensions(format, &length);
+	struct json_object *validExtensions = VuoImageFormat_getValidFileExtensions(format);
 
 	// do the dance of the url format
-	VuoUrl extensioned_url = VuoUrl_appendFileExtension(url, (const char**) validExtensions, (unsigned int) length);
+	VuoUrl extensioned_url = VuoUrl_appendFileExtension(url, validExtensions);
 	VuoLocal(extensioned_url);
 
-	for(int n = 0; n < length; n++)
-		free(validExtensions[n]);
-
-	free(validExtensions);
+	json_object_put(validExtensions);
 
 	VuoUrl normalized_url = VuoUrl_normalize(extensioned_url, VuoUrlNormalize_forSaving);
 	VuoLocal(normalized_url);
@@ -102,7 +98,8 @@ void nodeEvent
 	if (saveImage->glInternalFormat == GL_DEPTH_COMPONENT)
 		bufferFormat = GL_DEPTH_COMPONENT16;
 	else if (saveImage->glInternalFormat == GL_LUMINANCE
-		  || saveImage->glInternalFormat == GL_LUMINANCE16F_ARB)
+		  || saveImage->glInternalFormat == GL_LUMINANCE16F_ARB
+		  || saveImage->glInternalFormat == GL_LUMINANCE32F_ARB)
 		bufferFormat = GL_R16;	// 1 channel, 16bit integer (just like depth)
 	else if (depth == 64
 		  || saveImage->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB)
@@ -259,12 +256,6 @@ void nodeEvent
 
 	switch(format)
 	{
-		case VuoImageFormat_PNG:
-		{
-			FreeImage_Save(FIF_PNG, fibmp, absolute_path, 0);
-		}
-		break;
-
 		case VuoImageFormat_JPEG:
 		{
 			FIBITMAP* img = FreeImage_ConvertTo24Bits(fibmp);
@@ -359,7 +350,7 @@ void nodeEvent
 		}
 		break;
 
-		default:
+		default: // VuoImageFormat_PNG
 		{
 			FreeImage_Save(FIF_PNG, fibmp, absolute_path, 0);
 		}

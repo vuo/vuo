@@ -2,14 +2,12 @@
  * @file
  * VuoCompilerPortClass implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerPortClass.hh"
-#include "VuoCompilerInputDataClass.hh"
-#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoStringUtilities.hh"
 
 /**
@@ -69,26 +67,6 @@ string VuoCompilerPortClass::getDisplayName(void)
 
 	// Failing that, attempt to format the port's C identifier.
 	string name = portClass->getName();
-	if (name == "x")
-		return "X";
-	else if (name == "y")
-		return "Y";
-	else if (name == "z")
-		return "Z";
-	else if (name == "w")
-		return "W";
-	else if (name == "xy")
-		return "XY";
-	else if (name == "xyz")
-		return "XYZ";
-	else if (name == "xyzw")
-		return "XYZW";
 
-	string formattedString = VuoStringUtilities::expandCamelCase(name);
-
-	VuoStringUtilities::replaceAll(formattedString, "2d", "2D");
-	VuoStringUtilities::replaceAll(formattedString, "3d", "3D");
-	VuoStringUtilities::replaceAll(formattedString, "4d", "4D");
-
-	return formattedString;
+	return VuoStringUtilities::expandCamelCase(name);
 }

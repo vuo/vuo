@@ -15,6 +15,6 @@ The math expressions can use:
    - Variable *U* — evenly spaced values ranging from `U Min` to `U Max`
    - Variable *I* — the integer index of the point, ranging from 1 to `Subdivisions`
 
-For a complete list of the operators and functions available, see the `Calculate` (`vuo.math.calculate`) node's description.
+For a complete list of the operators and functions available, see the [Calculate](vuo-node://vuo.math.calculate) node's description.
 
 For help understanding the math used by this node, see [Introduction to parametric equations](https://www.khanacademy.org/video/parametric-equations-1). 

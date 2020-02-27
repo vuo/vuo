@@ -1,36 +1,38 @@
 /**
  * @file
- * Sets up an OSC server.  The OSC messages received cause the rectangle to move.
+ * @brief Receive OSC
+ * Sets up an OSC server.  The OSC messages received cause the rectangle to move. This composition uses TouchOSC installed on a device in the same network as the device running the Vuo composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Run the composition. Under the TouchOSC settings, find the OSC: xxx.xxx.x.x connection and choose it. Choose the "Vuo OSC Server."  Set up the Layout for "Simple." There are several pages in this layout. Find the one with a yellow rectangle and crosshairs. Move the square at the intersection of cross hairs to see the Vuo rectangle move.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="240,450" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetMessageValues3 [type="vuo.osc.message.get.2.VuoReal.VuoReal" version="1.0.1" label="Get Message Values|<refresh>refresh\l|<message>message\l|<address>address\r|<data1>data1\r|<data2>data2\r" pos="-150,405" fillcolor="violet"];
-Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="210,525"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="420,495" _color="{\"r\":0.477180,\"g\":0.539696,\"b\":0.691524,\"a\":1.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,506" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,521" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="420,645" _text="\"Connect TouchOSC to \\\"Vuo OSC Server\\\" and select \\\"Simple\\\" layout, page 3.\\nMove the XY position.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.450000}"];
-ReceiveOSCMessages2 [type="vuo.osc.receive2" version="2.0.0" label="Receive OSC Messages|<refresh>refresh\l|<device>device\l|<receivedMessage>receivedMessage\r" pos="-360,405" fillcolor="violet" _receivedMessage_eventThrottling="enqueue"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="660,495" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="75,540" _start="0.000000" _end="1.000000" _scaledStart="1.000000" _scaledEnd="-1.000000"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="75,420" _start="0.000000" _end="1.000000" _scaledStart="-1.000000" _scaledEnd="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="60,690" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetMessageValues3 [type="vuo.osc.message.get.2.VuoReal.VuoReal" version="1.0.1" label="Get Message Values|<refresh>refresh\l|<message>message\l|<address>address\r|<data1>data1\r|<data2>data2\r" pos="-150,390" fillcolor="orange"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="240,495"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="420,480" _color="\{\"r\":0.40000000596046448,\"g\":0.80000001192092896,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.000000" _width="0.500000" _height="0.500000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="614,491" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="450,675" _text="\"Connect TouchOSC to the \\\"Vuo OSC Server.\\\"\\nSelect \\\"Simple\\\" layout, page 3.\\nMove the XY position in the layout.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.450000\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveOSCMessages2 [type="vuo.osc.receive2" version="2.0.0" label="Receive OSC Messages|<refresh>refresh\l|<device>device\l|<receivedMessage>receivedMessage\r" pos="-360,390" fillcolor="orange" _receivedMessage_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="660,480" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="75,495" _start="0.000000" _end="1.000000" _scaledStart="-1" _scaledEnd="1" _limitToRange="false"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="75,360" _start="0.000000" _end="1.000000" _scaledStart="-0.80000000000000004" _scaledEnd="0.80000000000000004" _limitToRange="false"];
 
-FireOnStart:started -> MakeColorLayer:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> MakeColorLayer:color;
+FireOnStart:started -> MakeTextLayer:text;
 GetMessageValues3:data1 -> Scale2:value;
 GetMessageValues3:data2 -> Scale:value;
 Make2DPoint:point -> MakeColorLayer:center;
 MakeColorLayer:layer -> MakeList:1;
-MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList:list -> RenderLayersToWindow2:layers;
 MakeTextLayer:layer -> MakeList:2;
 ReceiveOSCMessages2:receivedMessage -> GetMessageValues3:message;
-Scale2:scaledValue -> Make2DPoint:x;
-Scale:scaledValue -> Make2DPoint:y;
+Scale2:scaledValue -> Make2DPoint:y;
+Scale:scaledValue -> Make2DPoint:x;
 }

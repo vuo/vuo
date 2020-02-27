@@ -2,13 +2,12 @@
  * @file
  * VuoMathExpressionList implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoMathExpressionList.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -64,13 +63,7 @@ VuoMathExpressionList VuoMathExpressionList_make(VuoList_VuoText expressions)
  */
 VuoMathExpressionList VuoMathExpressionList_makeFromJson(json_object *js)
 {
-	json_object *o = NULL;
-
-	VuoList_VuoText expressions = NULL;
-	if (json_object_object_get_ex(js, "expressions", &o))
-		expressions = VuoList_VuoText_makeFromJson(o);
-
-	return VuoMathExpressionList_make(expressions);
+	return VuoMathExpressionList_make(VuoJson_getObjectValue(VuoList_VuoText, js, "expressions", NULL));
 }
 
 /**

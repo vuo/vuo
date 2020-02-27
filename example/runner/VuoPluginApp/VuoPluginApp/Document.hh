@@ -2,9 +2,9 @@
  * @file
  * VuoPluginApp interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  * 
  * Example application demonstrating the use of Vuo compositions as plugins.
  * This application expects the composition plugin to have the following published ports:
@@ -23,15 +23,6 @@
 	double time; // The current filter execution time.
 	NSImage *sourceImage; // The initial, unfiltered image.
 	VuoImageFilter *imageFilter; // Used to start, stop, control, and query the composition.
-
-	// Explicit property ivar declarations are required for 32-bit Objective-C.
-	NSButton *_setImageButton;
-	NSSlider *_timeSlider;
-	NSImageView *_outputImageView;
-	NSTextField *_imageTextField;
-	NSTextField *_imageLabel;
-	NSTextField *_timeLabel;
-	NSTextField *_outputImageLabel;
 }
 
 // UI elements

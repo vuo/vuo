@@ -22,13 +22,7 @@
 			}
 		},
 		"menuItems": {
-			"type": "object",
-			"patternProperties": {
-				"^[0-9]+$": {
-					"type": "string",
-				},
-			},
-			"additionalProperties": false,
+			"type": "array",
 		},
 		"auto": {},
 		"autoSupersedesDefault": { "type": "boolean" },

@@ -2,32 +2,31 @@
  * @file
  * Displays a grid of randomly colored ovals.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="586,42" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="10" _height="1.250000" _rows="10"];
-BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.0" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="291,41" fillcolor="violet" _fire="100" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="95,-45" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="81,18" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
-MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="321,296" _saturation="1.000000" _lightness="0.800000" _opacity="0.500000"];
-MakeList7 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="783,53" fillcolor="green"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="813,68" fillcolor="green"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="526,281" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.300000" _height="0.200000" _sharpness="1.000000"];
-MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="111,295" _minimum="0.000000" _maximum="1.000000"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="854,42" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="585,45" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="1.800000" _columns="10" _height="1.250000" _rows="10"];
+BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="285,45" fillcolor="orange" _fire="100" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="15,15" fillcolor="lime" _seconds="1.000000" _fired_eventThrottling="drop"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="315,300" _saturation="1.000000" _lightness="0.75" _opacity="0.500000"];
+MakeList7 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="809,56" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="525,300" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.300000" _height="0.200000" _sharpness="1.000000" _opacity="1.0"];
+MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="105,300" _minimum="0.000000" _maximum="1.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="855,45" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList7:1;
-BuildList2:buildItem -> MakeRandomValue:refresh;
+BuildList2:buildItem -> MakeRandomValue:minimum [event=true];
 BuildList2:builtList -> ArrangeLayersInGrid:layers;
 FireOnStart2:started -> BuildList2:fire;
 FirePeriodically:fired -> BuildList2:fire [event=true];
 MakeHSLColor:color -> MakeOvalLayer:color;
 MakeList7:list -> RenderLayersToWindow:layers;
-MakeList9:list -> RenderLayersToWindow:setWindowProperties;
 MakeOvalLayer:layer -> BuildList2:builtItem;
 MakeRandomValue:value -> MakeHSLColor:hue;
 }

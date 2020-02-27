@@ -2,15 +2,17 @@
  * @file
  * PortConfiguration implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <fstream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunreachable-code"
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Winvalid-constexpr"
 #include <QtTest/QtTest>
 #pragma clang diagnostic pop
 
@@ -59,21 +61,34 @@ string PortConfiguration::toString(void)
  */
 void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 {
+	map<VuoRunner::Port *, json_object *> m;
 	for (map<string, string>::iterator i = valueForInputPortName.begin(); i != valueForInputPortName.end(); ++i)
 	{
 		VuoRunner::Port *port = runner->getPublishedInputPortWithName(i->first);
 		QVERIFY2(port != NULL, ("Unknown input port: " + i->first + " ( " + toString() + " )").c_str());
 		string valueAsString = i->second;
 		json_object *value = json_tokener_parse(valueAsString.c_str());
-		runner->setPublishedInputPortValue(port, value);
-		json_object_put(value);
+		m[port] = value;
 	}
+	runner->setPublishedInputPortValues(m);
+	for (auto &kv : m)
+		json_object_put(kv.second);
 
 	if (! firingPortName.empty())
 	{
-		VuoRunner::Port *firingPort = runner->getPublishedInputPortWithName(firingPortName);
-		QVERIFY2(firingPort != NULL, ("Unknown firing port: " + firingPortName + " ( " + toString() + " )").c_str());
-		runner->firePublishedInputPortEvent(firingPort);
+		set<VuoRunner::Port *> firingPorts;
+		if (firingPortName == "*")
+		{
+			vector<VuoRunner::Port *> allPorts = runner->getPublishedInputPorts();
+			firingPorts.insert(allPorts.begin(), allPorts.end());
+		}
+		else
+		{
+			VuoRunner::Port *firingPort = runner->getPublishedInputPortWithName(firingPortName);
+			QVERIFY2(firingPort != NULL, ("Unknown firing port: " + firingPortName + " ( " + toString() + " )").c_str());
+			firingPorts.insert(firingPort);
+		}
+		runner->firePublishedInputPortEvent(firingPorts);
 	}
 }
 
@@ -130,6 +145,10 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 	enum json_tokener_error error;
 	json_object *rootObject = json_tokener_parse_verbose(fileContents.c_str(), &error);
 	QVERIFY2(rootObject != NULL, json_tokener_error_desc(error));
+
+	json_object *tolerance;
+	if (json_object_object_get_ex(rootObject, "tolerance", &tolerance))
+		TestCompositionExecution::setTolerance(json_object_get_double(tolerance));
 
 	json_object *portConfigurationListObject;
 	QVERIFY( json_object_object_get_ex(rootObject, "portConfiguration", &portConfigurationListObject) );

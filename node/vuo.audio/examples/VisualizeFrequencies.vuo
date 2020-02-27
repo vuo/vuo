@@ -2,54 +2,56 @@
  * @file
  * Displays a graph of the loudness of different frequency ranges in an audio file (like an equalizer display). 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,345" _expression="{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]}"];
-Calculate2 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,480" _expression="{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]}"];
-Calculate3 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,615" _expression="{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]}"];
-CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="360,435"];
-CalculateLoudness2 [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="360,510"];
-CalculateLoudness3 [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="360,585"];
-CopyLayer [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="1395,315"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-645,105" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetItemFromList2 [type="vuo.list.get.VuoAudioSamples" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,435" _which="1"];
-GetItemFromList3 [type="vuo.list.get.VuoAudioSamples" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,510" _which="2"];
-GetItemFromList4 [type="vuo.list.get.VuoAudioSamples" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,585" _which="3"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1185,135" _name="\"\"" _color="{\"r\":0.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1" _height="1"];
+AllowFirstEvent2 [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="540,105"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,345" _expression="\{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]\}"];
+Calculate2 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,480" _expression="\{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]\}"];
+Calculate3 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="930,615" _expression="\{\"expressions\":[\"height\\/2 - 0.5\"],\"inputVariables\":[\"height\"],\"outputVariables\":[\"result\"]\}"];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="375,390"];
+CalculateLoudness2 [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="360,525"];
+CalculateLoudness3 [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="375,660"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.1.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="1395,315"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="300,285" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+GetItemFromList2 [type="vuo.list.get.VuoAudioSamples" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,435" _which="1"];
+GetItemFromList3 [type="vuo.list.get.VuoAudioSamples" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,510" _which="2"];
+GetItemFromList4 [type="vuo.list.get.VuoAudioSamples" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="180,585" _which="3"];
 MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="720,405"];
 MakeDictionary3 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="720,525"];
 MakeDictionary4 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="720,660"];
-MakeList13 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-106,506" fillcolor="violet" _1="100.000000" _2="1000.000000"];
-MakeList22 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1349,356"];
-MakeList31 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1574,341" fillcolor="green"];
-MakeList33 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1524,326" fillcolor="green"];
-MakeList38 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="847,701" _1="0.400000"];
-MakeList39 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="884,716"];
-MakeList46 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1139,356"];
-MakeList47 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1102,341" _1="-0.500000" _3="0.500000"];
-MakeList52 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="862,371"];
+MakeList13 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-93,506" fillcolor="orange" _1="100.000000" _2="1000.000000"];
+MakeList22 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1343,356"];
+MakeList33 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1574,326" fillcolor="blue"];
+MakeList38 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="852,701" _1="0.400000"];
+MakeList39 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="897,716"];
+MakeList46 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1152,356"];
+MakeList47 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1107,341" _1="-0.500000" _3="0.500000"];
+MakeList52 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="875,371"];
 MakeList53 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="720,405" _1="\"height\""];
 MakeList54 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="720,525" _1="\"height\""];
-MakeList55 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="862,506"];
-MakeList56 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="862,641"];
+MakeList55 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="875,506"];
+MakeList56 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="875,641"];
 MakeList57 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="720,660" _1="\"height\""];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1140,105" _color="\{\"r\":0,\"g\":1,\"b\":0,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1" _height="1" _sharpness="1" _roundness="0.0" _opacity="1.0"];
 MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="930,690"];
 MergeXYLists2 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1185,330"];
 MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="-375,480"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="-450,480" _url="\"DeclineOfTheAmiga.mp3\"" _loop="true" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1620,315" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SendLiveAudio2 [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="-195,585" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-ShareValue4 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="420,360" fillcolor="green"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="-450,480" _setTime="\"\"" _url="\"DeclineOfTheAmiga.mp3\"" _loop="true" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1620,315" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="-150,615" fillcolor="blue"];
 SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="615,360" _setPosition="0.000000" _duration="0.020000" _curve="\"linear\"" _easing="\"in\""];
 SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="615,495" _setPosition="0.000000" _duration="0.020000" _curve="\"linear\"" _easing="\"in\""];
 SmoothWithDuration4 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="615,630" _setPosition="0.000000" _duration="0.020000" _curve="\"linear\"" _easing="\"in\""];
-SplitAudioByFrequency [type="vuo.audio.split.frequency" version="2.0.1" label="Split Audio by Frequency|<refresh>refresh\l|<samples>samples\l|<cutoffFrequencies>cutoffFrequencies\l|<splitSamples>splitSamples\r" pos="-60,480" fillcolor="violet"];
+SplitAudioByFrequency [type="vuo.audio.split.frequency" version="2.0.1" label="Split Audio by Frequency|<refresh>refresh\l|<samples>samples\l|<cutoffFrequencies>cutoffFrequencies\l|<splitSamples>splitSamples\r" pos="-60,480" fillcolor="orange"];
 
+AllowFirstEvent2:firstEvent -> MakeRectangleLayer:color;
+AllowFirstEvent2:firstEvent -> PlayAudioFile:play;
 Calculate2:result -> MakeList46:2;
 Calculate3:result -> MakeList46:3;
 Calculate:result -> MakeList46:1;
@@ -57,18 +59,18 @@ CalculateLoudness2:loudness -> SmoothWithDuration3:setTarget;
 CalculateLoudness3:loudness -> SmoothWithDuration4:setTarget;
 CalculateLoudness:loudness -> SmoothWithDuration2:setTarget;
 CopyLayer:copies -> MakeList33:1;
-FireOnStart:started -> MakeColorLayer:refresh;
-FireOnStart:started -> PlayAudioFile:play;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent2:event;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration3:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration4:time;
 GetItemFromList2:item -> CalculateLoudness:samples;
 GetItemFromList3:item -> CalculateLoudness2:samples;
 GetItemFromList4:item -> CalculateLoudness3:samples;
-MakeColorLayer:layer -> CopyLayer:layer;
 MakeDictionary2:dictionary -> Calculate:values;
 MakeDictionary3:dictionary -> Calculate2:values;
 MakeDictionary4:dictionary -> Calculate3:values;
 MakeList13:list -> SplitAudioByFrequency:cutoffFrequencies;
 MakeList22:list -> CopyLayer:rotations;
-MakeList31:list -> RenderLayersToWindow:setWindowProperties;
 MakeList33:list -> RenderLayersToWindow:layers;
 MakeList38:list -> MergeXYLists:x;
 MakeList39:list -> MergeXYLists:y;
@@ -80,15 +82,12 @@ MakeList54:list -> MakeDictionary3:keys;
 MakeList55:list -> MakeDictionary3:values;
 MakeList56:list -> MakeDictionary4:values;
 MakeList57:list -> MakeDictionary4:keys;
+MakeRectangleLayer:layer -> CopyLayer:layer;
 MergeXYLists2:points -> CopyLayer:translations;
 MergeXYLists:points -> CopyLayer:scales;
 MixAudioChannels:mixedSamples -> SplitAudioByFrequency:samples;
 PlayAudioFile:decodedChannels -> MixAudioChannels:samples;
-PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
-RenderLayersToWindow:requestedFrame -> ShareValue4:value [style=invis];
-ShareValue4:sameValue -> SmoothWithDuration2:time;
-ShareValue4:sameValue -> SmoothWithDuration3:time;
-ShareValue4:sameValue -> SmoothWithDuration4:time;
+PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
 SmoothWithDuration2:position -> MakeList39:1;
 SmoothWithDuration2:position -> MakeList52:1;
 SmoothWithDuration3:position -> MakeList39:2;

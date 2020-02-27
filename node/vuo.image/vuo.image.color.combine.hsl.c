@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.combine.hsl node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,12 @@
 
 VuoModuleMetadata({
 					  "title" : "Combine Image HSL Channels",
-					  "keywords" : [ "sum", "add", "colors", "filter", "alpha" ],
+ 					  "keywords" : [
+						  "filter", "sum", "add",
+ 						  "alpha", "transparent",
+ 						  "tone", "chroma", "colors",
+ 						  "brightness", "luminance", "luma",
+ 					  ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ "CapSaturation.vuo", "ZoomBlurHue.vuo" ]
@@ -20,10 +25,10 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(hsl)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslHsl.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D hueTexture;
 	uniform int hueExists;
@@ -39,10 +44,10 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 hueColor        = VuoGlsl_sample(hueTexture,        fragmentTextureCoordinate.xy);
-		vec4 saturationColor = VuoGlsl_sample(saturationTexture, fragmentTextureCoordinate.xy);
-		vec4 lightnessColor  = VuoGlsl_sample(lightnessTexture,  fragmentTextureCoordinate.xy);
-		vec4 alphaColor      = VuoGlsl_sample(alphaTexture,      fragmentTextureCoordinate.xy);
+		vec4 hueColor        = VuoGlsl_sample(hueTexture,        fragmentTextureCoordinate);
+		vec4 saturationColor = VuoGlsl_sample(saturationTexture, fragmentTextureCoordinate);
+		vec4 lightnessColor  = VuoGlsl_sample(lightnessTexture,  fragmentTextureCoordinate);
+		vec4 alphaColor      = VuoGlsl_sample(alphaTexture,      fragmentTextureCoordinate);
 
 		vec4 result = vec4(0.);
 
@@ -51,7 +56,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 		{
 			// Support both color and greyscale hue representations.
 			hueColor.rgb /= hueColor.a;
-			vec3 hueHsl = rgbToHsl(hueColor.rgb);
+			vec3 hueHsl = VuoGlsl_rgbToHsl(hueColor.rgb);
 			if (hueHsl.y > 0.01) // saturation > 1%
 				hue = hueHsl.x;  // hue
 			else
@@ -76,12 +81,12 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 			result.a += lightnessColor.a;
 		}
 
-		result.rgb = hslToRgb(vec3(hue, saturation, lightness));
+		result.rgb = VuoGlsl_hslToRgb(vec3(hue, saturation, lightness));
 
 		result.a /= float(hueExists + saturationExists + lightnessExists);
 
 		if (alphaExists == 1)
-			result.a *= rgbToHsl(alphaColor.rgb).z;
+			result.a *= VuoGlsl_rgbToHsl(alphaColor.rgb).z;
 
 		result.rgb *= result.a;
 
@@ -102,6 +107,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->shader = VuoShader_make("Combine Image RGB Colors Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
 	VuoRetain(instance->shader);
+
+	// An opaque, nonwhite `opacityImage` should output a semitransparent image with an alpha channel.
+	instance->shader->isTransparent = true;
 
 	return instance;
 }

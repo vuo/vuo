@@ -58,9 +58,6 @@
 				"isDeprecated": {
 					"type": "boolean",
 				},
-				"isInterface": {
-					"type": "boolean",
-				},
 				"exampleCompositions": {
 					"type": "array",
 					"items": {
@@ -79,7 +76,7 @@
 					"patternProperties": {
 						"(min|max)": {
 							"type": "string",
-							"pattern": "^10\\.(9|10|11|12)$",
+							"pattern": "^10\\.(9|10|11|12|13|14)$",
 						},
 					},
 				},

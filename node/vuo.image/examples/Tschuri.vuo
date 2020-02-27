@@ -1,0 +1,75 @@
+/**
+ * @file
+ * Creates a 3D warped rotating icosphere with a particle cloud and outputs it as an image.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2017 [mixfilet](https://vuo.org/user/1202767), used with permission.
+ * @license This composition may be modified and distributed under the terms of the Creative Commons: Attribution (CC BY) License. For more information, see https://creativecommons.org/licenses/by/4.0/ .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddNoiseTo3DObject [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="525,600" fillcolor="green" _scale="0.29999999999999999"];
+AddNoiseTo3DObject2 [type="vuo.scene.noise" version="1.0.1" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<noisedObject>noisedObject\r" pos="30,225" fillcolor="magenta" _amount="\{\"x\":0.15000000596046448,\"y\":0.15000000596046448,\"z\":0.15000000596046448\}" _scale="0.25"];
+AllowFirstEvent2 [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-1065,150"];
+BlendImageWithFeedback2 [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1395,270" fillcolor="cyan" _feedbackOpacity="0.77000000000000002" _feedbackBlendMode="\"lighter-components\"" _pixelAligned="false" _imageInForeground="true" _width="0" _height="0" _colorDepth="\"8bpc\""];
+BlurImageRadially [type="vuo.image.blur.radial" version="1.0.0" label="Blur Image Radially|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<center>center\l|<radius>radius\l|<dispersion>dispersion\l|<direction>direction\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="1125,270" fillcolor="cyan" _shape="\"linear\"" _center="\{\"x\":0.0,\"y\":0.0\}" _radius="5" _dispersion="\"linear\"" _direction="\"in+out\"" _expandBounds="true" _quality="1"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="-330,240" fillcolor="magenta" _time="0.0" _speed="0.11"];
+ChangeSpeed2 [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="60,615" fillcolor="green" _speed="0.33000000000000002"];
+Convert3DPointToRotation2 [type="vuo.type.rotate.point3d.transform" version="1.0.0" label="Convert 3D Point to Rotation|<refresh>refresh\l|<rotation>rotation\l|<transform>transform\r" pos="285,270"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="-75,-30" fillcolor="magenta"];
+ConvertRealTo3DPoint7 [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="600,855"];
+InvertImageColors [type="vuo.image.color.invert" version="1.1.2" label="Invert Image Colors|<refresh>refresh\l|<image>image\l|<invertedImage>invertedImage\r" pos="1650,270" fillcolor="tangerine"];
+Make2DTransform [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="1125,480" fillcolor="cyan" _translation="\{\"x\":0.0,\"y\":0.0\}" _scale="\{\"x\":1.0019999742507935,\"y\":1.003000020980835\}"];
+MakeIcosphere2 [type="vuo.scene.make.icosphere.VuoShader" version="1.0.1" label="Make Icosphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<subdivisions>subdivisions\l|<object>object\r" pos="-345,135" fillcolor="magenta" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.69999998807907104,0.69999998807907104,0.69999998807907104]\}" _subdivisions="3"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="824,281" fillcolor="cyan"];
+MakeRandomPointsObject2 [type="vuo.scene.make.random.points.VuoShader" version="1.1.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="-15,435" fillcolor="green" _distribution="\"sphere-surface\"" _count="12000" _pointSize="0.002" _seed="0"];
+MakeUnlitColorShader2 [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="-330,450" fillcolor="green" _color="\{\"r\":0.98718243837356567,\"g\":0.21829557418823242,\"b\":0.041809719055891037,\"a\":1\}"];
+MakeWireframeShader [type="vuo.shader.make.wireframe" version="1.1.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<uniformWidth>uniformWidth\l|<shader>shader\r" pos="-705,150" fillcolor="magenta" _frontColor="\{\"r\":0.062668800354003906,\"g\":0.51490044593811035,\"b\":0.88117802143096924,\"a\":1\}" _backColor="\{\"r\":0.085801482200622559,\"g\":0.69033342599868774,\"b\":0.9986419677734375,\"a\":1\}" _width="0.10000000000000001" _standoffWidth="0.070000000000000007" _showThirdEdge="true" _uniformWidth="false"];
+RenderSceneToImage2 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,270" fillcolor="cyan" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="510,165" fillcolor="magenta" _keepFront="true"];
+Transform3DObject [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="285,165" fillcolor="magenta"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-300,-30" fillcolor="magenta" _wave="\"sawtooth\"" _period="50" _center="0.0" _amplitude="180" _phase="0.0"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="900,495" fillcolor="cyan" _wave="\"sine\"" _period="6" _center="0.0" _amplitude="0.10000000000000001" _phase="0.0"];
+Wave3 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="90,720" fillcolor="green" _wave="\"sine\"" _period="5" _center="0.29999999999999999" _amplitude="0.10000000000000001" _phase="0.0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedMax="4096" _width_suggestedStep="256" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedMax="4096" _height_suggestedStep="256"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+Comment [type="vuo.comment" label="\"### Make and deform the wireframe object.\"" pos="-780,-105" width="1515" height="399" fillcolor="magenta"];
+Comment2 [type="vuo.comment" label="\"### Make and deform the particle cloud.\"" pos="-540,360" width="1290" height="461" fillcolor="green"];
+Comment3 [type="vuo.comment" label="\"### Turn the scene into an image, for feedback.\"" pos="810,150" width="795" height="458" fillcolor="cyan"];
+Comment4 [type="vuo.comment" label="\"### Invert colors to show a white wireframe standoff.\"" pos="1620,150" width="227" height="167" fillcolor="tangerine"];
+
+AddNoiseTo3DObject2:noisedObject -> Transform3DObject:object;
+AddNoiseTo3DObject:noisedObject -> MakeList:2;
+AllowFirstEvent2:firstEvent -> MakeUnlitColorShader2:color;
+AllowFirstEvent2:firstEvent -> MakeWireframeShader:frontColor;
+BlendImageWithFeedback2:feedbackImage -> InvertImageColors:image;
+BlurImageRadially:blurredImage -> BlendImageWithFeedback2:image;
+ChangeSpeed2:changedTime -> AddNoiseTo3DObject:time;
+ChangeSpeed:changedTime -> AddNoiseTo3DObject2:time;
+Convert3DPointToRotation2:transform -> Transform3DObject:transform;
+ConvertRealTo3DPoint7:point3d -> AddNoiseTo3DObject:amount;
+ConvertRealTo3DPoint:point3d -> Convert3DPointToRotation2:rotation;
+InvertImageColors:invertedImage -> PublishedOutputs:outputImage;
+Make2DTransform:transform -> BlendImageWithFeedback2:feedbackTransform;
+MakeIcosphere2:object -> AddNoiseTo3DObject2:object;
+MakeList:list -> RenderSceneToImage2:objects;
+MakeRandomPointsObject2:object -> AddNoiseTo3DObject:object;
+MakeUnlitColorShader2:shader -> MakeRandomPointsObject2:material;
+MakeWireframeShader:shader -> MakeIcosphere2:material;
+PublishedInputs:height -> RenderSceneToImage2:height;
+PublishedInputs:time -> AllowFirstEvent2:event;
+PublishedInputs:time -> ChangeSpeed2:time;
+PublishedInputs:time -> Wave2:time;
+PublishedInputs:time -> Wave3:time;
+PublishedInputs:time -> Wave:time;
+PublishedInputs:width -> RenderSceneToImage2:width;
+RenderSceneToImage2:image -> BlurImageRadially:image;
+ShowBackOf3DObject:backObject -> MakeList:1;
+Transform3DObject:transformedObject -> ShowBackOf3DObject:object;
+Wave2:value -> Make2DTransform:rotation;
+Wave3:value -> ConvertRealTo3DPoint7:x;
+Wave:value -> ConvertRealTo3DPoint:x;
+}

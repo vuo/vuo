@@ -2,24 +2,26 @@
  * @file
  * This composition outputs a count every second.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="214,126"];
-ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="521,176"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126" fillcolor="green" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="11,-21" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
-Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="180,0" fillcolor="violet" _initialValue="0"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="168,137" _2="1"];
+Add1 [type="vuo.math.add.VuoInteger" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="195,120" fillcolor="orange"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="420,120" fillcolor="blue" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-15,0" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+Hold1 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="180,0" fillcolor="orange"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="162,131" fillcolor="orange" _2="1"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="510,225"];
 
-Add1:sum -> ConvertIntegertoText1:integer;
-Add1:sum -> Hold1:newValue;
-ConvertIntegertoText1:text -> DisplayConsoleWindow:writeLine;
-FirePeriodically1:fired -> Hold1:refresh;
+Add1:sum -> Hold1:value;
+Add1:sum -> SummarizeValue:value;
+FirePeriodically:fired -> Hold1:update;
 Hold1:heldValue -> MakeList:1;
 MakeList:list -> Add1:values;
+SummarizeValue:summary -> DisplayConsoleWindow:writeLine;
 }

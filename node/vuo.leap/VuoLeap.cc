@@ -2,29 +2,26 @@
  * @file
  * VuoLeap implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-extern "C"
-{
 #include "VuoLeap.h"
 #include "VuoLeapHand.h"
 #include "VuoLeapPointable.h"
 #include "VuoList_VuoLeapHand.h"
 #include "VuoList_VuoLeapPointable.h"
-}
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #include <Leap.h>
 #pragma clang diagnostic pop
 
-extern "C"
-{
 #include "module.h"
 
+extern "C"
+{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoLeap",

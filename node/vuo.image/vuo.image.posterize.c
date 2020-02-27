@@ -2,9 +2,9 @@
  * @file
  * vuo.image.filter.posterize node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Posterize Image",
-					  "keywords" : [ "filter", "stroke", "alias", "contour", "edge", "banding", "raster", "gif", "quantize", "gradient", "reduce" ],
+					  "keywords" : [
+						  "filter",
+						  "stroke", "alias", "contour", "edge", "banding", "raster", "gif", "quantize", "gradient", "reduce",
+						  "retro", ],
 					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "PosterizeMovie.vuo" ]
@@ -23,16 +26,16 @@ VuoModuleMetadata({
  * http://www.geeks3d.com/20091027/shader-library-posterization-post-processing-effect-glsl/
  */
 static const char *posterizeFrag = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float gamma;
 	uniform int numColors;
 
 	void main()
 	{
-		vec4 ca = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 ca = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		vec3 c = ca.rgb;
 		c = pow(c, vec3(gamma));
 		c = c * numColors;

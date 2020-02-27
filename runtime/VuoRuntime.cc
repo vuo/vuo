@@ -2,30 +2,27 @@
  * @file
  * VuoRuntime implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <getopt.h>
 #include <mach-o/dyld.h> // for _NSGetExecutablePath()
-#include <libgen.h> // for dirname()
 #include <dirent.h>
 #include <dlfcn.h>
-#include <stdexcept>
-#include <sys/mman.h>
 
+#include "VuoApp.h"
+#include "VuoEventLoop.h"
+#include "VuoException.hh"
 #include "VuoRuntime.h"
 #include "VuoRuntimeCommunicator.hh"
 #include "VuoRuntimePersistentState.hh"
 #include "VuoRuntimeState.hh"
+#include "module.h"
 
 extern "C"
 {
-
-#ifndef DOXYGEN
-bool *VuoTrialRestrictionsEnabled;	///< If true, some nodes may restrict how they can be used.
-#endif
 
 static VuoRuntimeState *runtimeState = NULL;  ///< Runtime instance specific to this composition, keeping it separate from any other compositions running in the current process.
 void *vuoRuntimeState = NULL;  ///< Casted version of `runtimeState` for use by generated bitcode.
@@ -44,7 +41,6 @@ void vuoInit(int argc, char **argv)
 	bool continueIfRunnerDies = false;
 	bool doPrintHelp = false;
 	bool doPrintLicenses = false;
-	bool trialRestrictionsEnabled = false;
 
 	// parse commandline arguments
 	{
@@ -73,13 +69,16 @@ void vuoInit(int argc, char **argv)
 			{"vuo-runner-pipe", required_argument, NULL, 0},
 			{"vuo-continue-if-runner-dies", no_argument, NULL, 0},
 			{"vuo-licenses", no_argument, NULL, 0},
-			{"vuo-trial", no_argument, NULL, 0},
 			{"vuo-runner-pid", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(getoptArgC, getoptArgV, "", options, &optionIndex)) != -1)
+		int ret;
+		while ((ret = getopt_long(getoptArgC, getoptArgV, "", options, &optionIndex)) != -1)
 		{
+			if (ret == '?')
+				continue;
+
 			switch(optionIndex)
 			{
 				case 0:  // --help
@@ -88,14 +87,12 @@ void vuoInit(int argc, char **argv)
 				case 1:	 // --vuo-control
 					if (controlURL)
 						free(controlURL);
-					controlURL = (char *)malloc(strlen(optarg) + 1);
-					strcpy(controlURL, optarg);
+					controlURL = strdup(optarg);
 					break;
 				case 2:	 // --vuo-telemetry
 					if (telemetryURL)
 						free(telemetryURL);
-					telemetryURL = (char *)malloc(strlen(optarg) + 1);
-					strcpy(telemetryURL, optarg);
+					telemetryURL = strdup(optarg);
 					break;
 				case 3:  // --vuo-pause
 					isPaused = true;
@@ -111,16 +108,18 @@ void vuoInit(int argc, char **argv)
 				case 7:  // --vuo-licenses
 					doPrintLicenses = true;
 					break;
-				case 8:  // --vuo-trial
-					trialRestrictionsEnabled = true;
-					break;
-				case 9:  // --vuo-runner-pid
+				case 8:  // --vuo-runner-pid
 					runnerPid = atoi(optarg);
 					break;
 			}
 		}
 		free(getoptArgV);
 	}
+
+	// macOS 10.14 no longer provides the `-psn_` argument, so use an alternate method to detect LaunchServices.
+	// launchd is pid 1.
+	if (!doAppInit && !controlURL && getppid() == 1)
+		doAppInit = true;
 
 	// Get the exported executable path.
 	char rawExecutablePath[PATH_MAX+1];
@@ -141,25 +140,24 @@ void vuoInit(int argc, char **argv)
 	{
 		printf("This composition may include software licensed under the following terms:\n\n");
 
-		char cleanedExecutablePath[PATH_MAX+1];
-		realpath(rawExecutablePath, cleanedExecutablePath);
-
 		// Derive the path of the app bundle's "Licenses" directory from its executable path.
-		char executableDir[PATH_MAX+1];
-		strcpy(executableDir, dirname(cleanedExecutablePath));
-
-		const char *licensesPathFromExecutable = "/../Frameworks/Vuo.framework/Versions/" VUO_VERSION_STRING "/Documentation/Licenses";
-		char rawLicensesPath[strlen(executableDir)+strlen(licensesPathFromExecutable)+1];
-		strcpy(rawLicensesPath, executableDir);
-		strcat(rawLicensesPath, licensesPathFromExecutable);
-
-		char cleanedLicensesPath[PATH_MAX+1];
-		realpath(rawLicensesPath, cleanedLicensesPath);
+		char licensesPath[PATH_MAX+1];
+		licensesPath[0] = 0;
+		if (strlen(VuoGetFrameworkPath()))
+		{
+			strncpy(licensesPath, VuoGetFrameworkPath(), PATH_MAX);
+			strncat(licensesPath, "/Vuo.framework/Versions/" VUO_FRAMEWORK_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
+		}
+		else if (strlen(VuoGetRunnerFrameworkPath()))
+		{
+			strncpy(licensesPath, VuoGetRunnerFrameworkPath(), PATH_MAX);
+			strncat(licensesPath, "/VuoRunner.framework/Versions/" VUO_FRAMEWORK_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
+		}
 
 		bool foundLicenses = false;
-		if (access(cleanedLicensesPath, 0) == 0)
+		if (licensesPath[0] && access(licensesPath, 0) == 0)
 		{
-			DIR *dirp = opendir(cleanedLicensesPath);
+			DIR *dirp = opendir(licensesPath);
 			struct dirent *dp;
 			while ((dp = readdir(dirp)) != NULL)
 			{
@@ -168,10 +166,11 @@ void vuoInit(int argc, char **argv)
 
 				printf("=== %s =====================================================\n\n",dp->d_name);
 
-				char licensePath[strlen(cleanedLicensesPath) + dp->d_namlen + 2];
-				strcpy(licensePath, cleanedLicensesPath);
-				strcat(licensePath, "/");
-				strcat(licensePath, dp->d_name);
+				size_t pathSize = strlen(licensesPath) + dp->d_namlen + 2;
+				char licensePath[pathSize];
+				strlcpy(licensePath, licensesPath, pathSize);
+				strlcat(licensePath, "/", pathSize);
+				strlcat(licensePath, dp->d_name, pathSize);
 
 				int fd = open(licensePath, O_RDONLY);
 				char data[1024];
@@ -203,7 +202,7 @@ void vuoInit(int argc, char **argv)
 		return;
 	}
 
-	vuoInitInProcess(NULL, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, "",
+	vuoInitInProcess(NULL, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies, "",
 					 executableHandle, NULL, doAppInit);
 
 	dlclose(executableHandle);
@@ -224,7 +223,6 @@ void vuoInit(int argc, char **argv)
  *     If not needed, pass -1.
  * @param continueIfRunnerDies If true, the runtime should allow the composition to keep running if @a runnerPipe indicates that the
  *     runner process has ended. If false, the runtime should instead stop the composition.
- * @param trialRestrictionsEnabled If true, the composition should run in free-trial mode.
  * @param workingDirectory The directory that the composition should use to resolve relative paths.
  * @param compositionBinaryHandle The handle of the composition's dynamic library or executable returned by `dlopen()`.
  * @param previousRuntimeState If the composition is restarting for a live-coding reload, pass the value returned by the previous
@@ -232,58 +230,41 @@ void vuoInit(int argc, char **argv)
  * @param doAppInit Should we call VuoApp_init()?
  */
 void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
-					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
+					  int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
 					  void *compositionBinaryHandle, void *previousRuntimeState, bool doAppInit)
 {
 	runtimeState = (VuoRuntimeState *)previousRuntimeState;
 	if (! runtimeState)
+	{
 		runtimeState = new VuoRuntimeState();
+		VuoEventLoop_installSignalHandlers();
+		VuoEventLoop_disableAppNap();
+	}
 
 	vuoRuntimeState = (void *)runtimeState;
+
+	VuoCompositionState *compositionState = new VuoCompositionState;
+	compositionState->runtimeState = runtimeState;
+	compositionState->compositionIdentifier = "";
+	vuoAddCompositionStateToThreadLocalStorage(compositionState);
 
 	try
 	{
 		runtimeState->init(ZMQContext, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies,
 						   workingDirectory, compositionBinaryHandle);
 	}
-	catch (std::runtime_error &e)
+	catch (VuoException &e)
 	{
 		VUserLog("%s", e.what());
 		return;
 	}
 
-	// Set the `VuoTrialRestrictionsEnabled` global, and protect it.
-	{
-		VuoTrialRestrictionsEnabled = NULL;
-		int pagesize = sysconf(_SC_PAGE_SIZE);
-		if (pagesize == -1)
-		{
-//			VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
-		}
-		else
-		{
-			VuoTrialRestrictionsEnabled = (bool *)mmap(NULL, pagesize, PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-			if (VuoTrialRestrictionsEnabled == MAP_FAILED)
-			{
-//				VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
-			}
-			else
-			{
-				*VuoTrialRestrictionsEnabled = trialRestrictionsEnabled;
-				if (mprotect(VuoTrialRestrictionsEnabled, pagesize, PROT_READ) == -1)
-				{
-//					VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
-				}
-			}
-		}
-	}
-
 	if (doAppInit)
 	{
-		typedef void (*vuoAppInitType)(void);
+		typedef void (*vuoAppInitType)(bool requiresDockIcon);
 		vuoAppInitType vuoAppInit = (vuoAppInitType) dlsym(RTLD_SELF, "VuoApp_init");
 		if (vuoAppInit)
-			vuoAppInit();
+			vuoAppInit(true);
 	}
 
 	runtimeState->startComposition();
@@ -291,6 +272,8 @@ void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *tele
 	// If the composition had a pending call to vuoStopComposition() when it was stopped, call it again.
 	if (runtimeState->persistentState->isStopRequested())
 		runtimeState->stopCompositionAsOrderedByComposition();
+
+	vuoRemoveCompositionStateFromThreadLocalStorage();
 }
 
 /**

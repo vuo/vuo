@@ -2,35 +2,33 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="-45,390" _width="1" _height="1"];
-ChangeWindowPosition [type="vuo.window.position" version="1.0.0" label="Change Window Position|<refresh>refresh\l|<topLeft>topLeft\l|<unit>unit\l|<property>property\r" pos="-45,225" _topLeft="{\"x\":200,\"y\":100}" _unit="\"points\""];
-ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<unit>unit\l|<property>property\r" pos="-45,300" _width="512" _height="512" _unit="\"points\""];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Change Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="-30,495" _width="1" _height="1"];
+ChangeWindowPosition [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-15,240" _topLeft="\{\"x\":200,\"y\":100\}" _unit="\"points\""];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="0,360" _width="512" _height="512" _unit="\"points\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,180" _started_eventThrottling="enqueue"];
-MakeList2 [type="vuo.list.make.3.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="192,251"];
-MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="164,221"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="510,285" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="510,210" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="225,210" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="178,221"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="510,285" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="510,210" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="225,210" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<MovedTo>MovedTo\l|<Pressed>Pressed\l|<Released>Released\l" _MovedTo_type="VuoPoint2d" _Pressed_type="VuoPoint2d" _Released_type="VuoPoint2d"];
 
-ChangeWindowAspectRatio:property -> MakeList2:3;
-ChangeWindowPosition:property -> MakeList2:1;
-ChangeWindowSize:property -> MakeList2:2;
-FireOnStart:started -> ChangeWindowAspectRatio:refresh;
-FireOnStart:started -> ChangeWindowPosition:refresh;
-FireOnStart:started -> ChangeWindowSize:refresh;
-MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+ChangeWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+ChangeWindowPosition:changedWindowDescription -> ChangeWindowSize:windowDescription;
+ChangeWindowSize:changedWindowDescription -> ChangeWindowAspectRatio:windowDescription;
+FireOnStart:started -> ChangeWindowPosition:windowDescription;
 MakeList4:list -> RenderLayersToWindow:layers;
 ReceiveMouseButtons:pressed -> PublishedOutputs:Pressed;
 ReceiveMouseButtons:released -> PublishedOutputs:Released;
 ReceiveMouseMoves:movedTo -> PublishedOutputs:MovedTo;
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
-RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window;
 }

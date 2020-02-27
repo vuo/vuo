@@ -2,9 +2,9 @@
  * @file
  * VuoCompilerNode implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
@@ -19,9 +19,11 @@
 #include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoCompilerType.hh"
+#include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 #include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoType.hh"
 
 
 /**
@@ -89,12 +91,14 @@ Value * VuoCompilerNode::generateIdentifierValue(Module *module)
 /**
  * Generates a `char *` value prefixed with @a compositionIdentifierValue and suffixed with this node's identifier.
  * The caller is responsible for generating code to free the value.
+ *
+ * This needs to be kept in sync with @ref VuoStringUtilities::buildCompositionIdentifier().
  */
 Value * VuoCompilerNode::generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
 {
 	vector<Value *> identifierParts;
 	identifierParts.push_back(compositionIdentifierValue);
-	identifierParts.push_back(constantStrings->get(module, "__" + getIdentifier()));
+	identifierParts.push_back(constantStrings->get(module, "/" + getIdentifier()));
 	return VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, identifierParts, *constantStrings);
 }
 
@@ -108,12 +112,21 @@ Value * VuoCompilerNode::generateGetContext(Module *module, BasicBlock *block, V
 
 /**
  * Generates code to register metadata for this node and each of its ports with the runtime.
+ * If this node is a subcomposition, the generated code calls `compositionAddNodeMetadata()` for the subcomposition.
  */
 void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Value *compositionStateValue,
-										  const vector<VuoCompilerType *> &orderedTypes)
+										  const vector<VuoCompilerType *> &orderedTypes,
+										  Function *compositionCreateContextForNode,
+										  Function *compositionSetPortValueFunction, Function *compositionGetPortValueFunction,
+										  Function *compositionFireTriggerPortEventFunction, Function *compositionReleasePortDataFunction)
 {
+	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionAddNodeMetadataFunction();
+
 	Value *nodeIdentifierValue = generateIdentifierValue(module);
-	VuoCompilerCodeGenUtilities::generateAddNodeMetadata(module, block, compositionStateValue, nodeIdentifierValue);
+	VuoCompilerCodeGenUtilities::generateAddNodeMetadata(module, block, compositionStateValue, nodeIdentifierValue,
+														 compositionCreateContextForNode, compositionSetPortValueFunction,
+														 compositionGetPortValueFunction, compositionFireTriggerPortEventFunction,
+														 compositionReleasePortDataFunction);
 
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
 	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
@@ -149,18 +162,7 @@ void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Val
 		VuoCompilerCodeGenUtilities::generateAddPortMetadata(module, block, compositionStateValue, portIdentifierValue,
 															 portNameValue, typeIndex, initialValueValue);
 	}
-}
 
-/**
- * Generates code to create the node context for this node and the port context for each of its ports.
- * If this node is a subcomposition, the generated code calls `compositionContextInit()` for the subcomposition.
- */
-Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block, Value *compositionStateValue)
-{
-	// Create the node context.
-
-	Value *nodeContextValue;
-	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionContextInitFunction();
 	if (subcompositionFunctionSrc)
 	{
 		Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateRuntimeState(module, block, compositionStateValue);
@@ -170,18 +172,25 @@ Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block
 
 		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
 		Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(subcompositionStateValue, subcompositionFunctionDst, 0, NULL, module, block);
-		nodeContextValue = CallInst::Create(subcompositionFunctionDst, arg, "", block);
+		CallInst::Create(subcompositionFunctionDst, arg, "", block);
 
 		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, subcompositionStateValue);
 		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, subcompositionIdentifierValue);
+	}
+}
 
-		PointerType *pointerToNodeContextType = PointerType::get( VuoCompilerCodeGenUtilities::getNodeContextType(module), 0 );
-		nodeContextValue = new BitCastInst(nodeContextValue, pointerToNodeContextType, "", block);  // cast needed since NodeContext type comes from a different module
-	}
-	else
-	{
-		nodeContextValue = VuoCompilerCodeGenUtilities::generateCreateNodeContext(module, block, instanceData, false, 0);
-	}
+/**
+ * Generates code to create the node context for this node and the port context for each of its ports.
+ */
+Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block)
+{
+	// Create the node context.
+
+	bool isSubcomposition = getBase()->getNodeClass()->getCompiler()->isSubcomposition();
+	unsigned long publishedOutputPortCount = (isSubcomposition ?
+												  getBase()->getOutputPorts().size() - VuoNodeClass::unreservedOutputPortStartIndex : 0);
+
+	Value * nodeContextValue = VuoCompilerCodeGenUtilities::generateCreateNodeContext(module, block, instanceData, isSubcomposition, publishedOutputPortCount);
 
 	// Create each port's context.
 
@@ -202,31 +211,6 @@ Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block
 	VuoCompilerCodeGenUtilities::generateSetNodeContextPortContexts(module, block, nodeContextValue, portContextValues);
 
 	return nodeContextValue;
-}
-
-/**
- * Generates code to free the node context for this node.
- * If this node is a subcomposition, the generated code calls `compositionContextFini()` for the subcomposition.
- */
-void VuoCompilerNode::generateDestroyContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeContextValue)
-{
-	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionContextFiniFunction();
-	if (subcompositionFunctionSrc)
-	{
-		Value *runtimeStateValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateRuntimeState(module, block, compositionStateValue);
-		Value *compositionIdentifierValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateCompositionIdentifier(module, block, compositionStateValue);
-		Value *subcompositionIdentifierValue = generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
-		Value *subcompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, runtimeStateValue, subcompositionIdentifierValue);
-
-		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-		Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(subcompositionStateValue, subcompositionFunctionDst, 0, NULL, module, block);
-		CallInst::Create(subcompositionFunctionDst, arg, "", block);
-
-		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, subcompositionStateValue);
-		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, subcompositionIdentifierValue);
-	}
-
-	VuoCompilerCodeGenUtilities::generateFreeNodeContext(module, block, nodeContextValue);
 }
 
 /**
@@ -363,7 +347,8 @@ void VuoCompilerNode::generateFiniFunctionCall(Module *module, BasicBlock *block
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getFiniFunction();
 
 	Value *nodeContextValue = generateGetContext(module, block, compositionStateValue);
-	generateFunctionCall(functionSrc, module, block, compositionStateValue, nodeContextValue);
+	if (functionSrc)
+		generateFunctionCall(functionSrc, module, block, compositionStateValue, nodeContextValue);
 
 	// Release the instance data.
 	Value *instanceDataValue = instanceData->generateLoad(module, block, nodeContextValue);
@@ -488,7 +473,7 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 				// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
 				if (getBase()->getNodeClass()->getCompiler()->isSubcomposition() &&
 						arg->getType()->isStructTy() &&
-						eventPort->getDataVuoType()->getCompiler()->getFunctionParameterAttributes().hasAttribute(Attributes::ByVal))
+						eventPort->getDataVuoType()->getCompiler()->getFunctionParameterAttributes().hasAttrSomewhere(Attribute::ByVal))
 				{
 					Value *argAsPointer = VuoCompilerCodeGenUtilities::generatePointerToValue(block, arg);
 					arg = new BitCastInst(argAsPointer, functionSrc->getFunctionType()->getParamType(index), "", block);
@@ -498,6 +483,13 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 					bool isLoweredToTwoParameters = static_cast<VuoCompilerInputDataClass *>(data->getBase()->getClass()->getCompiler())->isLoweredToTwoParameters();
 					Value **secondArgIfNeeded = (isLoweredToTwoParameters ? &secondArg : NULL);
 					arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, functionDst, index, secondArgIfNeeded, module, block);
+					if (!arg)
+					{
+						VUserLog("Warning: Couldn't convert argument for input port '%s' of function %s; not generating call.",
+								 (*i)->getClass()->getName().c_str(),
+								 functionDst->getName().str().c_str());
+						return nullptr;
+					}
 				}
 
 				args[index] = arg;
@@ -543,6 +535,13 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 				outputPortDataVariables[eventPort] = dataVariable;
 
 				Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(dataVariable, functionDst, index, NULL, module, block);
+				if (!arg)
+				{
+					VUserLog("Warning: Couldn't convert argument for output port '%s' of function %s; not generating call.",
+							 (*i)->getClass()->getName().c_str(),
+							 functionDst->getName().str().c_str());
+					return nullptr;
+				}
 				args[index] = arg;
 			}
 		}
@@ -567,6 +566,11 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 		size_t index = getArgumentIndexInFunction(instanceData, functionSrc);
 		Value *arg = instanceDataVariable;
 		args[index] = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, functionDst, index, NULL, module, block);
+		if (!args[index])
+		{
+			VUserLog("Warning: Couldn't convert argument for instance data of function %s; not generating call.", functionDst->getName().str().c_str());
+			return nullptr;
+		}
 	}
 
 	// Save the old output port values so they can be released later.
@@ -754,30 +758,7 @@ string VuoCompilerNode::getIdentifier(void)
  */
 string VuoCompilerNode::getGraphvizIdentifierPrefix(void)
 {
-	string title = getBase()->getTitle();
-	string titleWithoutSpaces;
-	bool first = true;
-	bool uppercaseNext = true;
-	for (string::iterator i = title.begin(); i != title.end(); ++i)
-	{
-		if (first && !isalpha(*i))
-			continue;
-		first = false;
-
-		if (!isalnum(*i))
-		{
-			uppercaseNext = true;
-			continue;
-		}
-
-		if (uppercaseNext)
-		{
-			titleWithoutSpaces += toupper(*i);
-			uppercaseNext = false;
-		}
-		else
-			titleWithoutSpaces += *i;
-	}
+	string titleWithoutSpaces = VuoStringUtilities::convertToCamelCase(getBase()->getTitle(), true, false, false);
 
 	if (titleWithoutSpaces.empty())
 		return "Node";
@@ -805,7 +786,8 @@ string VuoCompilerNode::getGraphvizIdentifier(void)
  * Returns a string containing the declaration for this node
  * as it would appear in a .vuo (Graphviz dot format) file.
  */
-string VuoCompilerNode::getGraphvizDeclaration(bool shouldPrintPosition, double xPositionOffset, double yPositionOffset)
+string VuoCompilerNode::getGraphvizDeclaration(bool shouldPrintPosition, double xPositionOffset, double yPositionOffset,
+											   VuoPort *manuallyFirableInputPort)
 {
 	ostringstream declaration;
 
@@ -871,6 +853,10 @@ string VuoCompilerNode::getGraphvizDeclaration(bool shouldPrintPosition, double 
 			declaration << " _" << port->getClass()->getName() << "_eventThrottling=\"" << eventThrottling << "\"";
 		}
 	}
+
+	// manually firable input port
+	if (manuallyFirableInputPort)
+		declaration << " _" << manuallyFirableInputPort->getClass()->getName() << "_manuallyFirable";
 
 	declaration << "];";
 

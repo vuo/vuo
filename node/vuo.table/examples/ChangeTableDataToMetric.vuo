@@ -1,39 +1,40 @@
 /**
  * @file
+ * @brief Change Table Data to Metric
  * Changes temperature data in a table from Fahrenheit to Celsius, and saves the modified table to a CSV file.
  *
  * This composition does not display a window.
  *
  * Data source: Coldest recorded temperature on each continent from https://en.wikipedia.org/wiki/List_of_weather_records
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CalculateList [type="vuo.math.calculate.list" version="1.1.0" label="Calculate List|<refresh>refresh\l|<expression>expression\l|<xValues>xValues\l|<values>values\l|<results>results\r" pos="525,30" _expression="{\"expressions\":[\"(X - 32) \\/ 1.8\"],\"inputVariables\":[\"X\"],\"outputVariables\":[\"result\"]}"];
-ChangeTableColumn3 [type="vuo.table.change.column.VuoText" version="1.0.0" label="Change Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<newValues>newValues\l|<preserveHeader>preserveHeader\l|<modifiedTable>modifiedTable\r" pos="780,-30" fillcolor="violet" _column="\"Temperature\"" _preserveHeader="true"];
+CalculateList [type="vuo.math.calculate.list" version="1.1.0" label="Calculate List|<refresh>refresh\l|<expression>expression\l|<xValues>xValues\l|<values>values\l|<results>results\r" pos="525,30" _expression="\{\"expressions\":[\"(X - 32) \\/ 1.8\"],\"inputVariables\":[\"X\"],\"outputVariables\":[\"result\"]\}"];
+ChangeTableColumn3 [type="vuo.table.change.column.VuoText" version="1.0.0" label="Change Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<newValues>newValues\l|<preserveHeader>preserveHeader\l|<modifiedTable>modifiedTable\r" pos="780,-30" fillcolor="orange" _column="\"Temperature\"" _preserveHeader="true"];
 ConvertRealListToTextList [type="vuo.type.list.real.text" version="1.0.0" label="Convert Real List to Text List|<refresh>refresh\l|<reals>reals\l|<texts>texts\r" pos="915,90"];
 ConvertTextListToRealList [type="vuo.type.list.text.real" version="1.0.0" label="Convert Text List to Real List|<refresh>refresh\l|<texts>texts\l|<reals>reals\r" pos="660,60"];
 ConvertTextToData [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="1395,480"];
-FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,-75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="990,-30" fillcolor="violet" _format="\"csv\""];
-GetTableColumn3 [type="vuo.table.get.column.VuoText" version="1.0.0" label="Get Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<includeHeader>includeHeader\l|<values>values\r" pos="270,30" fillcolor="violet" _column="\"Temperature\"" _includeHeader="false"];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-300,-30" fillcolor="lime" _started_eventThrottling="enqueue"];
+FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="990,-30" fillcolor="orange" _format="\"csv\""];
+GetTableColumn3 [type="vuo.table.get.column.VuoText" version="1.0.0" label="Get Table Column|<refresh>refresh\l|<table>table\l|<column>column\l|<includeHeader>includeHeader\l|<values>values\r" pos="270,45" fillcolor="orange" _column="\"Temperature\"" _includeHeader="false"];
 MakeDictionary4 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="345,210"];
 MakeList10 [type="vuo.list.make.0.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="497,71"];
 MakeList11 [type="vuo.list.make.0.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="345,210"];
-MakeTableFromText [type="vuo.table.make.text" version="1.0.0" label="Make Table from Text|<refresh>refresh\l|<text>text\l|<format>format\l|<table>table\r" pos="30,-30" fillcolor="violet" _text="\"Continent,Country,Temperature,Year\\nAfrica,Morocco,-11.0,1935\\nAntarctica,,-128.6,1983\\nAsia,Russia,-90.0,1933\\nEurope,Russia,-72.6,1978\\nNorth America,Greenland,-87.0,1954\\nSouth America,Argentina,-27.0,1907\\nOceania,New Zealand,-14.1,1903\\n\"" _format="\"csv\""];
-SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1260,-45" fillcolor="green" _url="\"~\\/Desktop\\/ColdestTemperatures.csv\"" _overwriteUrl="false"];
+MakeTableFromText [type="vuo.table.make.text" version="1.0.0" label="Make Table from Text|<refresh>refresh\l|<text>text\l|<format>format\l|<table>table\r" pos="30,-30" fillcolor="orange" _text="\"Continent,Country,Temperature,Year\\nAfrica,Morocco,-11.0,1935\\nAntarctica,,-128.6,1983\\nAsia,Russia,-90.0,1933\\nEurope,Russia,-72.6,1978\\nNorth America,Greenland,-87.0,1954\\nSouth America,Argentina,-27.0,1907\\nOceania,New Zealand,-14.1,1903\\n\"" _format="\"csv\""];
+SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1260,-45" fillcolor="blue" _url="\"~\\/Desktop\\/ColdestTemperatures.csv\"" _overwriteUrl="false"];
 
 CalculateList:results -> ConvertRealListToTextList:reals;
 ChangeTableColumn3:modifiedTable -> FormatTable:table;
 ConvertRealListToTextList:texts -> ChangeTableColumn3:newValues;
 ConvertTextListToRealList:reals -> CalculateList:xValues;
 ConvertTextToData:data -> SaveData:saveData;
-FireOnStart3:started -> MakeTableFromText:refresh;
+FireOnStart3:started -> MakeTableFromText:text;
 FormatTable:text -> ConvertTextToData:text;
 GetTableColumn3:values -> ConvertTextListToRealList:texts;
 MakeDictionary4:dictionary -> CalculateList:values;

@@ -1,0 +1,3 @@
+
+attribute vec4 position;
+void isf_vertShaderInit();

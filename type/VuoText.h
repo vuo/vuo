@@ -2,9 +2,9 @@
  * @file
  * VuoText C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -58,6 +58,7 @@ VuoText VuoText_makeFromMacRoman(const char *string);
 size_t VuoText_length(const VuoText text);
 size_t VuoText_byteCount(const VuoText text);
 bool VuoText_isEmpty(const VuoText text);
+bool VuoText_isPopulated(const VuoText text);
 
 #define VuoText_SUPPORTS_COMPARISON
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);

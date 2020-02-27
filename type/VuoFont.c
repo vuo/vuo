@@ -2,17 +2,15 @@
  * @file
  * VuoFont implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoFont.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -50,35 +48,13 @@ VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, 
 }
 
 /**
- * Returns a string key for the specified horizontal alignment.
+ * Returns a new VuoFont using default values.
+ *
+ * @version200New
  */
-static const char *getStringForAlignment(VuoHorizontalAlignment a)
+VuoFont VuoFont_makeDefault()
 {
-	switch (a)
-	{
-		case VuoHorizontalAlignment_Left:
-			return "left";
-		case VuoHorizontalAlignment_Center:
-			return "center";
-		case VuoHorizontalAlignment_Right:
-			return "right";
-	}
-}
-
-/**
- * Returns the horizontal alignment for the specified string key.
- */
-static VuoHorizontalAlignment getAlignmentForString(const char *s)
-{
-	if (strcmp(s, getStringForAlignment(VuoHorizontalAlignment_Left))==0)
-		return VuoHorizontalAlignment_Left;
-	if (strcmp(s, getStringForAlignment(VuoHorizontalAlignment_Center))==0)
-		return VuoHorizontalAlignment_Center;
-	if (strcmp(s, getStringForAlignment(VuoHorizontalAlignment_Right))==0)
-		return VuoHorizontalAlignment_Right;
-
-	VUserLog("no alignment for [%s]",s);
-	return VuoHorizontalAlignment_Left;
+	return (VuoFont) { NULL, 18, false, (VuoColor){1,1,1,1}, VuoHorizontalAlignment_Center, 1, 1 };
 }
 
 /**
@@ -87,31 +63,15 @@ static VuoHorizontalAlignment getAlignmentForString(const char *s)
  */
 VuoFont VuoFont_makeFromJson(json_object * js)
 {
-	VuoFont font = {NULL, 0, false, VuoColor_makeWithRGBA(1,1,1,1), VuoHorizontalAlignment_Left, 1, 1};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "fontName", &o))
-		font.fontName = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "pointSize", &o))
-		font.pointSize = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "underline", &o))
-		font.underline = VuoBoolean_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "color", &o))
-		font.color = VuoColor_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "alignment", &o))
-		font.alignment = getAlignmentForString(json_object_get_string(o));
-
-	if (json_object_object_get_ex(js, "characterSpacing", &o))
-		font.characterSpacing = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "lineSpacing", &o))
-		font.lineSpacing = VuoReal_makeFromJson(o);
-
-	return font;
+	return (VuoFont){
+		VuoJson_getObjectValue(VuoText,                js, "fontName",         NULL),
+		VuoJson_getObjectValue(VuoReal,                js, "pointSize",        0),
+		VuoJson_getObjectValue(VuoBoolean,             js, "underline",        false),
+		VuoJson_getObjectValue(VuoColor,               js, "color",            (VuoColor){1,1,1,1}),
+		VuoJson_getObjectValue(VuoHorizontalAlignment, js, "alignment",        VuoHorizontalAlignment_Left),
+		VuoJson_getObjectValue(VuoReal,                js, "characterSpacing", 1),
+		VuoJson_getObjectValue(VuoReal,                js, "lineSpacing",      1)
+	};
 }
 
 /**
@@ -125,7 +85,7 @@ json_object * VuoFont_getJson(const VuoFont value)
 	json_object_object_add(js, "pointSize", VuoReal_getJson(value.pointSize));
 	json_object_object_add(js, "underline", VuoBoolean_getJson(value.underline));
 	json_object_object_add(js, "color", VuoColor_getJson(value.color));
-	json_object_object_add(js, "alignment", json_object_new_string(getStringForAlignment(value.alignment)));
+	json_object_object_add(js, "alignment", VuoHorizontalAlignment_getJson(value.alignment));
 	json_object_object_add(js, "characterSpacing", VuoReal_getJson(value.characterSpacing));
 	json_object_object_add(js, "lineSpacing", VuoReal_getJson(value.lineSpacing));
 	return js;
@@ -137,15 +97,16 @@ json_object * VuoFont_getJson(const VuoFont value)
  */
 char * VuoFont_getSummary(const VuoFont value)
 {
-	const char *fontName = value.fontName ? value.fontName : "(no font)";
+	const char *fontName = value.fontName ? value.fontName : "No font";
 	const char *underline = value.underline ? "<li>underlined</li>" : "";
 	char *color = VuoColor_getShortSummary(value.color);
-	const char *alignment = getStringForAlignment(value.alignment);
+	char *alignment = VuoHorizontalAlignment_getSummary(value.alignment);
 
 	char *summary = VuoText_format("%s %gpt<ul><li>color %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>",
 						  fontName, value.pointSize, color, underline, alignment, value.characterSpacing, value.lineSpacing);
 
 	free(color);
+	free(alignment);
 	return summary;
 }
 
@@ -168,33 +129,12 @@ bool VuoFont_areEqual(const VuoFont value1, const VuoFont value2)
  */
 bool VuoFont_isLessThan(const VuoFont a, const VuoFont b)
 {
-	if (a.fontName == NULL && b.fontName != NULL) return true;
-	if (a.fontName != NULL && b.fontName == NULL) return false;
-
-	if (a.fontName && b.fontName)
-	{
-		int fontNameComparison = strcmp(a.fontName, b.fontName);
-		if (fontNameComparison < 0) return true;
-		if (fontNameComparison > 0) return false;
-	}
-
-	if (a.pointSize < b.pointSize) return true;
-	if (a.pointSize > b.pointSize) return false;
-
-	if (a.underline < b.underline) return true;
-	if (a.underline > b.underline) return false;
-
-	if (VuoColor_isLessThan(a.color, b.color)) return true;
-	if (VuoColor_isLessThan(b.color, a.color)) return false;
-
-	if (a.alignment < b.alignment) return true;
-	if (a.alignment > b.alignment) return false;
-
-	if (a.characterSpacing < b.characterSpacing) return true;
-	if (a.characterSpacing > b.characterSpacing) return false;
-
-	if (a.lineSpacing < b.lineSpacing) return true;
-//	if (a.lineSpacing > b.lineSpacing) return false;
-
+	VuoType_returnInequality(VuoText,                a.fontName,         b.fontName);
+	VuoType_returnInequality(VuoReal,                a.pointSize,        b.pointSize);
+	VuoType_returnInequality(VuoBoolean,             a.underline,        b.underline);
+	VuoType_returnInequality(VuoColor,               a.color,            b.color);
+	VuoType_returnInequality(VuoHorizontalAlignment, a.alignment,        b.alignment);
+	VuoType_returnInequality(VuoReal,                a.characterSpacing, b.characterSpacing);
+	VuoType_returnInequality(VuoReal,                a.lineSpacing,      b.lineSpacing);
 	return false;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.file.list node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <dirent.h>
@@ -59,7 +59,6 @@ static VuoList_VuoText listFiles(VuoText folderPath, VuoBoolean includeSubfolder
 	for (int i = 1; i <= count; ++i)
 	{
 		const char *fileUrlPrefix = "file://";
-		size_t fileUrlPrefixLength = 7;
 		VuoText parts[] = { fileUrlPrefix, VuoUrl_escapePosixPath(folderPath), "/", VuoUrl_escapePosixPath(VuoListGetValue_VuoText(topLevelFileNames, i)) };
 		VuoText fileUrl = VuoText_append(parts, sizeof(parts)/sizeof(VuoText));
 		VuoRetain(parts[1]);

@@ -2,9 +2,9 @@
  * @file
  * TestEventDropping interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -21,8 +21,6 @@ class TestEventDropping : public TestCompositionExecution
 
 private:
 
-	VuoCompiler *compiler;
-
 	class TestEventDroppingRunnerDelegate : public TestRunnerDelegate
 	{
 	public:
@@ -37,14 +35,16 @@ private:
 			VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
 			string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 			string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file + "-linked", "");
-			compiler->compileComposition(compositionPath, compiledCompositionPath);
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+			delete issues;
 			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 			remove(compiledCompositionPath.c_str());
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, directory, false, true);
 
 			runner->setDelegate(this);
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			sleep(5);
 
@@ -52,13 +52,13 @@ private:
 			delete runner;
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			if (portIdentifier.find("fired") != string::npos)
 				++eventsFired[portIdentifier];
 		}
 
-		void receivedTelemetryEventDropped(string portIdentifier)
+		void receivedTelemetryEventDropped(string compositionIdentifier, string portIdentifier)
 		{
 			if (portIdentifier.find("fired") != string::npos)
 				++eventsDropped[portIdentifier];
@@ -66,16 +66,6 @@ private:
 	};
 
 private slots:
-
-	void initTestCase()
-	{
-		compiler = initCompiler();
-	}
-
-	void cleanupTestCase()
-	{
-		delete compiler;
-	}
 
 	void testWhetherEventsDropped_data()
 	{
@@ -94,6 +84,8 @@ private slots:
 		QFETCH(QString, triggerNodeIdentifier);
 		QFETCH(bool, shouldDrop);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
+
+		VuoCompiler *compiler = initCompiler();
 
 		TestEventDroppingRunnerDelegate delegate(compositionName.toStdString(), compiler);
 
@@ -120,6 +112,9 @@ private slots:
 			}
 		}
 		QVERIFY2(shouldDrop ? numEventsDropped > 0 : numEventsDropped == 0, QString("%1 events dropped").arg(numEventsDropped).toUtf8().data());
+
+		delete compiler;
+		VuoCompiler::reset();
 	}
 
 	void testPercentOfEventsDropped_data()
@@ -183,8 +178,10 @@ private slots:
 		{
 			string nodeClassName = s.toStdString();
 			string subcompositionPath = getCompositionPath(nodeClassName + ".vuo");
-			installSubcomposition(subcompositionPath, nodeClassName, compiler);
+			installSubcomposition(subcompositionPath, nodeClassName);
 		}
+
+		VuoCompiler *compiler = initCompiler();
 
 		TestEventDroppingRunnerDelegate delegate(compositionName.toStdString(), compiler);
 
@@ -217,8 +214,11 @@ private slots:
 		foreach (QString s, subcompositionNames)
 		{
 			string nodeClassName = s.toStdString();
-			uninstallSubcomposition(nodeClassName, compiler);
+			uninstallSubcomposition(nodeClassName);
 		}
+
+		delete compiler;
+		VuoCompiler::reset();
 	}
 };
 

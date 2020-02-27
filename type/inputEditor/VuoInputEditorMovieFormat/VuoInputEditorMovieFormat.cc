@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorMovieFormat implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorMovieFormat.hh"
@@ -94,13 +94,13 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		comboBoxImageEncoding = new VuoComboBox(&dialog);
 		comboBoxImageEncoding->setFont(font);
 		setUpComboBoxForType(comboBoxImageEncoding, "VuoMovieImageEncoding", originalMovieImageEncodingAsString);
-		connect(comboBoxImageEncoding, SIGNAL(currentIndexChanged(int)), this, SLOT(updateQualitySliderEnabledStatusAndEmitValueChanged()));
+		connect(comboBoxImageEncoding, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &VuoInputEditorMovieFormat::updateQualitySliderEnabledStatusAndEmitValueChanged);
 
 		string originalAudioEncodingAsString = json_object_to_json_string_ext(VuoAudioEncoding_getJson(VuoMovieFormat_makeFromJson(originalValue).audioEncoding), JSON_C_TO_STRING_PLAIN);
 		comboBoxAudioEncoding = new VuoComboBox(&dialog);
 		comboBoxAudioEncoding->setFont(font);
 		setUpComboBoxForType(comboBoxAudioEncoding, "VuoAudioEncoding", originalAudioEncodingAsString);
-		connect(comboBoxAudioEncoding, SIGNAL(currentIndexChanged(int)), this, SLOT(updateQualitySliderEnabledStatusAndEmitValueChanged()));
+		connect(comboBoxAudioEncoding, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &VuoInputEditorMovieFormat::updateQualitySliderEnabledStatusAndEmitValueChanged);
 	}
 
 	// Display sliders for "Image Quality" and "Audio Quality".
@@ -125,9 +125,9 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		int sliderValueImageQuality = lineEditValueToScaledSliderValue(lineEditValueImageQuality, imageQuality);
 		sliderImageQuality->setValue(sliderValueImageQuality);
 
-		connect(sliderImageQuality, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEditImageQuality, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-		connect(lineEditImageQuality, SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+		connect(sliderImageQuality, &QSlider::valueChanged, this, static_cast<void (VuoInputEditorMovieFormat::*)(int)>(&VuoInputEditorMovieFormat::updateLineEditValue));
+		connect(lineEditImageQuality, &QLineEdit::textEdited, this, &VuoInputEditorMovieFormat::updateSliderValue);
+		connect(lineEditImageQuality, &QLineEdit::editingFinished, this, &VuoInputEditorMovieFormat::emitValueChanged);
 
 		// Audio Quality
 		lineEditAudioQuality = new QLineEdit(&dialog);
@@ -149,9 +149,9 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		int sliderValueAudioQuality = lineEditValueToScaledSliderValue(lineEditValueAudioQuality, audioQuality);
 		sliderAudioQuality->setValue(sliderValueAudioQuality);
 
-		connect(sliderAudioQuality, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEditAudioQuality, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-		connect(lineEditAudioQuality, SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+		connect(sliderAudioQuality, &QSlider::valueChanged, this, static_cast<void (VuoInputEditorMovieFormat::*)(int)>(&VuoInputEditorMovieFormat::updateLineEditValue));
+		connect(lineEditAudioQuality, &QLineEdit::textEdited, this, &VuoInputEditorMovieFormat::updateSliderValue);
+		connect(lineEditAudioQuality, &QLineEdit::editingFinished, this, &VuoInputEditorMovieFormat::emitValueChanged);
 	}
 
 	// Layout details
@@ -275,9 +275,9 @@ void VuoInputEditorMovieFormat::updateSliderValue(QString newLineEditText)
 
 	QSlider *targetSlider = (whichQualityAttribute == imageQuality? sliderImageQuality : sliderAudioQuality);
 
-	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
+	disconnect(targetSlider, &QSlider::valueChanged, this, static_cast<void (VuoInputEditorMovieFormat::*)(int)>(&VuoInputEditorMovieFormat::updateLineEditValue));
 	targetSlider->setValue(newSliderValue);
-	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
+	connect(targetSlider, &QSlider::valueChanged, this, static_cast<void (VuoInputEditorMovieFormat::*)(int)>(&VuoInputEditorMovieFormat::updateLineEditValue));
 }
 
 /**
@@ -378,7 +378,9 @@ void VuoInputEditorMovieFormat::updateQualitySliderEnabledStatus()
 	json_object *acceptedFormatJson = getAcceptedValue();
 	VuoMovieFormat acceptedFormat = VuoMovieFormat_makeFromJson(acceptedFormatJson);
 	bool enableImageQualityWidgets = ((acceptedFormat.imageEncoding == VuoMovieImageEncoding_JPEG) ||
-									 (acceptedFormat.imageEncoding == VuoMovieImageEncoding_H264));
+									 (acceptedFormat.imageEncoding == VuoMovieImageEncoding_H264) ||
+									 (acceptedFormat.imageEncoding == VuoMovieImageEncoding_HEVC) ||
+									 (acceptedFormat.imageEncoding == VuoMovieImageEncoding_HEVCAlpha));
 
 	labelImageQuality->setEnabled(enableImageQualityWidgets);
 	lineEditImageQuality->setEnabled(enableImageQualityWidgets);
@@ -501,6 +503,26 @@ QComboBox * VuoInputEditorMovieFormat::setUpComboBoxForType(QComboBox *comboBox,
 			int value = listValueFunction(allowedValues, i);
 			char *summary = summaryFunction(value);
 			QVariant variantValue = QVariant::fromValue((void *)jsonFunction(value));
+
+			// Hide HEVC on OS versions where it isn't supported.
+			if (type == "VuoMovieImageEncoding"
+				&& value == VuoMovieImageEncoding_HEVC
+				&& QSysInfo::macVersion() < Q_MV_OSX(10, 13))
+			{
+				free(summary);
+				continue;
+			}
+			if (type == "VuoMovieImageEncoding"
+				&& (value == VuoMovieImageEncoding_HEVCAlpha
+				 || value == VuoMovieImageEncoding_ProRes422HQ
+				 || value == VuoMovieImageEncoding_ProRes422LT
+				 || value == VuoMovieImageEncoding_ProRes422Proxy)
+				&& QSysInfo::macVersion() < Q_MV_OSX(10, 15))
+			{
+				free(summary);
+				continue;
+			}
+
 			comboBox->addItem(summary, variantValue);
 
 			if (json_object_to_json_string_ext(jsonFunction(value), JSON_C_TO_STRING_PLAIN) == originalValueAsString)

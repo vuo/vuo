@@ -2,14 +2,15 @@
  * @file
  * VuoCompilerTargetSet implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerTargetSet.hh"
 
-#include <CoreServices/CoreServices.h>
+#include "VuoFileUtilitiesCocoa.hh"
+
 
 /**
  * Creates a target set that is unrestricted. It includes any operating system version.
@@ -28,6 +29,28 @@ void VuoCompilerTargetSet::setMinMacVersion(enum MacVersion min)
 }
 
 /**
+ * Returns a string (suitable for the `LSMinimumSystemVersion` Info.plist key) representing the minimum compatible OS version.
+ *
+ * If no minimum is specified, returns emptystring.
+ */
+string VuoCompilerTargetSet::getMinMacVersionString()
+{
+	switch (macVersionRange.first)
+	{
+		case MacVersion_Any:   return "";
+		case MacVersion_10_7:  return "10.7";
+		case MacVersion_10_8:  return "10.8";
+		case MacVersion_10_9:  return "10.9";
+		case MacVersion_10_10: return "10.10";
+		case MacVersion_10_11: return "10.11";
+		case MacVersion_10_12: return "10.12";
+		case MacVersion_10_13: return "10.13";
+		case MacVersion_10_14: return "10.14";
+		case MacVersion_10_15: return "10.15";
+	}
+}
+
+/**
  * Restricts the target set to Mac OS versions of @a max or below.
  */
 void VuoCompilerTargetSet::setMaxMacVersion(enum MacVersion max)
@@ -40,13 +63,7 @@ void VuoCompilerTargetSet::setMaxMacVersion(enum MacVersion max)
  */
 void VuoCompilerTargetSet::restrictToCurrentOperatingSystemVersion(void)
 {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	// http://stackoverflow.com/questions/11072804/mac-os-x-10-8-replacement-for-gestalt-for-testing-os-version-at-runtime
-	SInt32 macMinorVersion;
-	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-	MacVersion macVersion = (MacVersion)(MacVersion_10_7 + (macMinorVersion - 7));
+	MacVersion macVersion = (MacVersion)(MacVersion_10_7 + (VuoFileUtilitiesCocoa_getOSVersionMinor() - 7));
 	macVersionRange.first = macVersion;
 	macVersionRange.second = macVersion;
 }
@@ -112,5 +129,11 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 			return "OS X 10.11";
 		case MacVersion_10_12:
 			return "macOS 10.12";
+		case MacVersion_10_13:
+			return "macOS 10.13";
+		case MacVersion_10_14:
+			return "macOS 10.14";
+		case MacVersion_10_15:
+			return "macOS 10.15";
 	}
 }

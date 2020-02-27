@@ -2,9 +2,9 @@
  * @file
  * vuo.layer.drag node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -17,9 +17,9 @@ VuoModuleMetadata({
 					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true,
-					    "exampleCompositions" : [ "vuo-example://vuo.motion/SpringBack.vuo",
-								      "vuo-example://vuo.window/DragWithHandCursor.vuo" ]
+						"isDeprecated": true,
+						"exampleCompositions" : [ "vuo-example://vuo.motion/SpringBack.vuo",
+									  "vuo-example://vuo.window/DragWithHandCursor.vuo" ]
 					  }
 				  });
 
@@ -45,7 +45,7 @@ struct nodeInstanceData
 
 void vuo_layer_drag_dragStarted(VuoPoint2d startDragPoint, VuoOutputTrigger(startedDrag, VuoPoint2d), struct nodeInstanceData *context)
 {
-	dispatch_sync(context->layerQueue, ^{
+	dispatch_async(context->layerQueue, ^{
 					context->isDraggingLayer = VuoRenderedLayers_isPointInLayer(context->renderedLayers, context->layerName, startDragPoint);
 
 	if (context->isDraggingLayer)
@@ -62,7 +62,7 @@ void vuo_layer_drag_dragStarted(VuoPoint2d startDragPoint, VuoOutputTrigger(star
 			if(VuoRenderedLayers_getInverseTransformedPoint(context->renderedLayers, ancestors, dummy, startDragPoint, &localStartDrag))
 			{
 				context->startDrag = localStartDrag;
-				VuoPoint2d p = VuoPoint2d_make(target.transform.translation.x, target.transform.translation.y);
+				VuoPoint2d p = VuoSceneObject_getTranslation(target).xy;
 				context->dragOffset = VuoPoint2d_subtract(p, context->startDrag);
 				startedDrag(VuoPoint2d_add(context->startDrag, context->dragOffset));
 			}
@@ -71,9 +71,9 @@ void vuo_layer_drag_dragStarted(VuoPoint2d startDragPoint, VuoOutputTrigger(star
 	});
 }
 
-void vuo_layer_drag_dragMovedTo(VuoPoint2d midDragPoint, VuoOutputTrigger(draggedCenterTo, VuoPoint2d), struct nodeInstanceData *context)
+void vuo_layer_drag_dragMovedTo(VuoPoint2d midDragPoint, VuoOutputTrigger(draggedCenterTo, VuoPoint2d), struct nodeInstanceData *context, bool ended)
 {
-	dispatch_sync(context->layerQueue, ^{
+	dispatch_async(context->layerQueue, ^{
 	if (context->isDraggingLayer)
 	{
 		VuoList_VuoSceneObject ancestors = VuoListCreate_VuoSceneObject();
@@ -91,16 +91,11 @@ void vuo_layer_drag_dragMovedTo(VuoPoint2d midDragPoint, VuoOutputTrigger(dragge
 				draggedCenterTo( VuoPoint2d_add(localMidDrag, context->dragOffset) );
 			}
 		}
+		if (ended)
+			context->isDraggingLayer = false;
 	}
 	});
 }
-
-void vuo_layer_drag_dragEnded(VuoPoint2d endDragPoint, VuoOutputTrigger(endedDrag, VuoPoint2d), struct nodeInstanceData *context)
-{
-	vuo_layer_drag_dragMovedTo(endDragPoint, endedDrag, context);
-	context->isDraggingLayer = false;
-}
-
 
 void vuo_layer_drag_updateLayers(struct nodeInstanceData * context,
 								 VuoRenderedLayers renderedLayers,
@@ -124,27 +119,28 @@ void vuo_layer_drag_startTriggers(struct nodeInstanceData * context,
 								  VuoOutputTrigger(draggedCenterTo, VuoPoint2d),
 								  VuoOutputTrigger(endedDrag, VuoPoint2d))
 {
-	if (! context->renderedLayers.window)
-		return;
+	VuoWindowReference window = NULL;
+	(void)VuoRenderedLayers_getWindow(context->renderedLayers, &window);
 
 	context->button = button;
 	context->modifierKey = modifierKey;
 
 	VuoMouse_startListeningForPressesWithCallback(context->dragStartedListener,
 												  ^(VuoPoint2d point){ vuo_layer_drag_dragStarted(point, startedDrag, context); },
-												  button, context->renderedLayers.window, modifierKey);
+												  NULL,
+												  button, window, modifierKey);
 	VuoMouse_startListeningForDragsWithCallback(context->dragMovedToListener,
-												^(VuoPoint2d point){ vuo_layer_drag_dragMovedTo(point, draggedCenterTo, context); },
-												button, context->renderedLayers.window, modifierKey, true);
+												^(VuoPoint2d point){ vuo_layer_drag_dragMovedTo(point, draggedCenterTo, context, false); },
+												button, window, modifierKey, true);
 	VuoMouse_startListeningForReleasesWithCallback(context->dragEndedListener,
-												   ^(VuoPoint2d point){ vuo_layer_drag_dragEnded(point, endedDrag, context); },
-												   button, context->renderedLayers.window, modifierKey, true);
+												   ^(VuoPoint2d point){ vuo_layer_drag_dragMovedTo(point, endedDrag, context, true); },
+												   button, window, modifierKey, true);
 }
 
 void vuo_layer_drag_stopTriggers(struct nodeInstanceData *context)
 {
-	if (! context->renderedLayers.window)
-		return;
+	VuoWindowReference window = NULL;
+	(void)VuoRenderedLayers_getWindow(context->renderedLayers, &window);
 
 	VuoMouse_stopListening(context->dragStartedListener);
 	VuoMouse_stopListening(context->dragMovedToListener);
@@ -229,7 +225,12 @@ void nodeInstanceEvent
 	if ((*context)->isTriggerStopped)
 		return;
 
-	bool windowChanged = (renderedLayers.window != (*context)->renderedLayers.window);
+	VuoWindowReference contextWindow = NULL;
+	(void)VuoRenderedLayers_getWindow((*context)->renderedLayers, &contextWindow);
+	VuoWindowReference newWindow = NULL;
+	(void)VuoRenderedLayers_getWindow(renderedLayers, &newWindow);
+
+	bool windowChanged = contextWindow != newWindow;
 	bool buttonChanged = (button != (*context)->button);
 	bool modifierKeyChanged = (modifierKey != (*context)->modifierKey);
 

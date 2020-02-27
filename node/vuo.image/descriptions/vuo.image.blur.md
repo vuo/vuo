@@ -9,7 +9,7 @@ This node applies a gaussian blur to the passed image.  The radius determines ho
       - The **linear** shape is almost as smooth, and is faster to compute.
       - The **box** shape (constant) weights all pixels equally, resulting in relatively sharp edges, and is thus good for simulating motion blur.
       - The **disc** shape spreads pixels into a circular disc — good for simulating lens blur (bokeh) — and is the most expensive to compute.
-   - `Radius` — The maximum pixel radius to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
+   - `Radius` — The maximum radius, in points, to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
    - `Expand Bounds` — If false, the image size will remain the same.  If true, the image will expand to encapsulate the blurred pixels around the border.
    - `Quality` — The ratio of pixels to factor into the blur calculation.  When 1, all necessary pixels are examined, resulting in an accurate blur.  When less than 1, fewer pixels are examined, resulting in a faster-but-less-accurate blur.
 

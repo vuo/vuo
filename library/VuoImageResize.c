@@ -2,16 +2,15 @@
  * @file
  * VuoImageResize implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <OpenGL/CGLMacro.h>
 
 #include "node.h"
 #include "VuoImageResize.h"
-#include "../node/vuo.image/VuoSizingMode.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -28,9 +27,9 @@ VuoModuleMetadata({
  * Fragment shader that scales and offsets an image.
  */
 static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec2 scale;
 	uniform vec2 offset;
@@ -42,7 +41,7 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 uv = (fragmentTextureCoordinate.xy - offset) * scale;
+		vec2 uv = (fragmentTextureCoordinate - offset) * scale;
 		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : VuoGlsl_sample(texture, uv);
 	}
 );
@@ -51,9 +50,9 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
  * Fragment shader that scales and offsets an image.
  */
 static const char *applyScaleFragmentShaderRect = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2DRect texture;
 	uniform vec2 scale;
 	uniform vec2 offset;
@@ -66,7 +65,7 @@ static const char *applyScaleFragmentShaderRect = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 uv = (fragmentTextureCoordinate.xy - offset) * scale;
+		vec2 uv = (fragmentTextureCoordinate - offset) * scale;
 		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : VuoGlsl_sampleRect(texture, uv * textureSize);
 	}
 );
@@ -118,6 +117,26 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode 
 	if (!image)
 		return NULL;
 
+	if (sizingMode == VuoSizingMode_Proportional)
+	{
+		// Proportionately scale the image, without extra transparent borders.
+		int targetWidth = image->pixelsWide;
+		int targetHeight = image->pixelsHigh;
+		if (image->pixelsWide > width)
+		{
+			targetWidth = width;
+			targetHeight *= (float)width / image->pixelsWide;
+		}
+		if (targetHeight > height)
+		{
+			targetWidth *= (float)height / targetHeight;
+			targetHeight = height;
+		}
+
+		width = targetWidth;
+		height = targetHeight;
+	}
+
 	float u = width / (float)(image->pixelsWide);
 	float v = height / (float)(image->pixelsHigh);
 
@@ -126,9 +145,6 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode 
 
 	switch(sizingMode)
 	{
-		case VuoSizingMode_Stretch:
-			break;
-
 		case VuoSizingMode_Fit:
 			if( u < v && u * image->pixelsHigh < height)
 			{
@@ -153,6 +169,9 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode 
 				scale = (VuoPoint2d) { width/(image->pixelsWide*v), 1 };
 				offset = (VuoPoint2d) { ((width-(image->pixelsWide*v))/2)/width, 0 };
 			}
+			break;
+
+		default:
 			break;
 	}
 

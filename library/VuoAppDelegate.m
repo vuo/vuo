@@ -2,13 +2,14 @@
  * @file
  * VuoAppDelegate implementation.
  *
- * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "VuoAppDelegate.h"
 
+#include "VuoAppSplashWindow.h"
 #include "module.h"
 
 @implementation VuoAppDelegate
@@ -18,7 +19,11 @@
  */
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	VuoStopCurrentComposition();
+	// Ignore quit requests while the splash window is visible
+	// (since runtime initialization hasn't completed yet, it crashes).
+	if (!VuoApp_splashWindow)
+		VuoStopCurrentComposition();
+
 	return NSTerminateCancel;
 }
 

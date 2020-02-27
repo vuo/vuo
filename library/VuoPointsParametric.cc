@@ -2,21 +2,19 @@
  * @file
  * VuoPointsParametric implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
 #include "VuoPointsParametric.h"
 #include "VuoMathExpressionParser.h"
-#include "muParser.h"
+#include <muParser/muParser.h>
 
+#include "module.h"
 
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoPointsParametric",
@@ -89,9 +87,9 @@ VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 			iVar = x + 1;
 
 			pointsArray[x] = (VuoPoint3d){
-				xParser.Eval(),
-				yParser.Eval(),
-				zParser.Eval()};
+				(float)xParser.Eval(),
+				(float)yParser.Eval(),
+				(float)zParser.Eval()};
 		}
 	}
 	catch (mu::Parser::exception_type &e)
@@ -176,9 +174,9 @@ VuoList_VuoPoint3d VuoPointsParametric2d_generate(
 				jVar = y + 1;
 
 				pointsArray[y*columns + x] = (VuoPoint3d){
-					xParser.Eval(),
-					yParser.Eval(),
-					zParser.Eval()};
+					(float)xParser.Eval(),
+					(float)yParser.Eval(),
+					(float)zParser.Eval()};
 			}
 		}
 	}

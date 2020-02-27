@@ -2,16 +2,18 @@
  * @file
  * VuoText implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <string.h>
 #include <Carbon/Carbon.h>
+#include <fnmatch.h>
+#include <regex.h>
+#include <string.h>
+#include <xlocale.h>
+
 #include "type.h"
-#include "VuoText.h"
-#include "VuoData.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -177,9 +179,12 @@ VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength)
  */
 VuoText VuoText_makeFromCFString(const void *cfs)
 {
+	if (!cfs)
+		return NULL;
+
 	CFStringRef cfString = (CFStringRef)cfs;
 
-	// http://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
+	// https://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
 
 	const char *useUTF8StringPtr = NULL;
 	char *freeUTF8StringPtr = NULL;
@@ -205,7 +210,7 @@ VuoText VuoText_makeFromCFString(const void *cfs)
  * @ref VuoText_isValidUtf8 is based on code by Bjoern Hoehrmann.
  *
  * Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
- * See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
+ * See https://web.archive.org/web/20190528032751/http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -221,20 +226,20 @@ VuoText VuoText_makeFromCFString(const void *cfs)
  * The first part maps bytes to character classes, the second part encodes a deterministic finite automaton using these character classes as transitions.
  */
 static const uint8_t utf8d[] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40..5f
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 60..7f
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, // 80..9f
-  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, // a0..bf
-  8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // c0..df
-  0xa,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x4,0x3,0x3, // e0..ef
-  0xb,0x6,0x6,0x6,0x5,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8, // f0..ff
-  0x0,0x1,0x2,0x3,0x5,0x8,0x7,0x1,0x1,0x1,0x4,0x6,0x1,0x1,0x1,0x1, // s0..s0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1, // s1..s2
-  1,2,1,1,1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1, // s3..s4
-  1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1, // s5..s6
-  1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40..5f
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 60..7f
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, // 80..9f
+	7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, // a0..bf
+	8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // c0..df
+	0xa,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x4,0x3,0x3, // e0..ef
+	0xb,0x6,0x6,0x6,0x5,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8, // f0..ff
+	0x0,0x1,0x2,0x3,0x5,0x8,0x7,0x1,0x1,0x1,0x4,0x6,0x1,0x1,0x1,0x1, // s0..s0
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1, // s1..s2
+	1,2,1,1,1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1, // s3..s4
+	1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1, // s5..s6
+	1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
 };
 
 /**
@@ -373,6 +378,14 @@ bool VuoText_isEmpty(const VuoText text)
 }
 
 /**
+ * Returns true if `text` is not empty.
+ */
+bool VuoText_isPopulated(const VuoText text)
+{
+    return !VuoText_isEmpty(text);
+}
+
+/**
  * Returns true if the two texts represent the same Unicode string (even if they use different UTF-8 encodings
  * or Unicode character decompositions).
  *
@@ -380,6 +393,9 @@ bool VuoText_isEmpty(const VuoText text)
  */
 bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 {
+	if (text1 == text2)
+		return true;
+
 	if (! text1 || ! text2)
 		return (! text1 && ! text2);
 
@@ -406,8 +422,10 @@ bool VuoText_areEqual(const VuoText text1, const VuoText text2)
  */
 static bool isLessThan(const VuoText text1, const VuoText text2, CFStringCompareFlags flags)
 {
+	// Treat null text as greater than non-null text,
+	// so the more useful non-null text sorts to the beginning of the list.
 	if (! text1 || ! text2)
-		return (! text1) && text2;
+		return text1 && !text2;
 
 	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
 	if (!s1)
@@ -500,6 +518,54 @@ bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
 			VuoRetain(aSub);
 			VuoRelease(aSub);
 		}
+	}
+
+	else if (comparison.type == VuoTextComparison_MatchesWildcard)
+	{
+		bool t1empty = VuoText_isEmpty(text1);
+		bool t2empty = VuoText_isEmpty(text2);
+		if (t2empty)
+			return t1empty == t2empty;
+
+		locale_t oldLocale = uselocale(NULL);
+		locale_t locale = newlocale(LC_ALL_MASK, "en_US.UTF-8", NULL);
+		uselocale(locale);
+
+		match = fnmatch(text2, text1, 0) != FNM_NOMATCH;
+
+		uselocale(oldLocale);
+		freelocale(locale);
+	}
+
+	else if (comparison.type == VuoTextComparison_MatchesRegEx)
+	{
+		bool t1empty = VuoText_isEmpty(text1);
+		bool t2empty = VuoText_isEmpty(text2);
+		if (t2empty)
+			return t1empty == t2empty;
+
+		regex_t re;
+		int ret = regcomp(&re, text2, REG_EXTENDED);
+		if (ret)
+		{
+			char errstr[256];
+			regerror(ret, &re, errstr, sizeof(errstr));
+			VUserLog("Error compiling regular expression: %s", errstr);
+			return false;
+		}
+
+		ret = regexec(&re, text1, 0, NULL, 0);
+		if (ret == 0)
+			match = true;
+		else if (ret == REG_NOMATCH)
+			match = false;
+		else
+		{
+			char errstr[256];
+			regerror(ret, &re, errstr, sizeof(errstr));
+			VUserLog("Error executing regular expression: %s", errstr);
+		}
+		regfree(&re);
 	}
 
 	if (! comparison.isCaseSensitive)
@@ -912,6 +978,8 @@ char *VuoText_format(const char *format, ...)
  * Returns a new string consisting of `text` without the whitespace at the beginning and end.
  *
  * This function trims ASCII spaces, tabs, and linebreaks, but not other Unicode whitespace characters.
+ *
+ * @see VuoStringUtilities::trim
  */
 VuoText VuoText_trim(const VuoText text)
 {
@@ -1004,7 +1072,7 @@ VuoText VuoText_changeCase(const VuoText text, VuoTextCase textCase)
 
 			CFStringTokenizerTokenType tokenType = kCFStringTokenizerTokenNone;
 
-			// http://stackoverflow.com/questions/15515128/capitalize-first-letter-of-every-sentence-in-nsstring
+			// https://stackoverflow.com/questions/15515128/capitalize-first-letter-of-every-sentence-in-nsstring
 			while(kCFStringTokenizerTokenNone != (tokenType = CFStringTokenizerAdvanceToNextToken(tokenizer)))
 			{
 				CFRange tokenRange = CFStringTokenizerGetCurrentTokenRange(tokenizer);
@@ -1039,7 +1107,8 @@ VuoText VuoText_changeCase(const VuoText text, VuoTextCase textCase)
  * Returns an array of unicode 32 bit decimal values for each character in a string.
  *
  * If conversion fails, @c length will be set to 0 null is returned.  Otherwise an
- * array is returned and @c length is set to the size of the array.
+ * array is returned and @c length is set to the size of the array. Caller is
+ * responsible for freeing the returned array.
  *
  * \sa VuoText_makeFromUtf32
  */

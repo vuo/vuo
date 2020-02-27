@@ -2,20 +2,18 @@
  * @file
  * GLWidget interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#include <QtOpenGL/QGLBuffer>
-#include <QtOpenGL/QGLShaderProgram>
-#include <QtOpenGL/QGLWidget>
+#include <QtWidgets/QOpenGLWidget>
 
 #include <Vuo/Vuo.h>
 
-class GLWidget : public QGLWidget
+class GLWidget : public QOpenGLWidget
 {
 	Q_OBJECT
 public:
@@ -38,6 +36,9 @@ private:
 	GLuint fragmentShader;
 	GLuint program;
 	VuoRunner::Port *inputImagePort;
+	VuoRunner::Port *timePort;
+	bool isFirstEvent;
+	int elapsedMilliseconds;
 	GLint positionAttribute;
 	GLint textureUniform;
 	CGLContextObj cgl_ctx;

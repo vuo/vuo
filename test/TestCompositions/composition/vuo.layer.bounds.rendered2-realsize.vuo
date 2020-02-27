@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="270,225" _unit="\"pixels\""];
+GetRenderedLayerBounds2 [type="vuo.layer.bounds.rendered2" version="2.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<layer>layer\l|<window>window\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="750,30" _includeChildren="true"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="120,-120" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _color_manuallyFirable];
+MakeImageLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="300,-75" _center="\{\"x\":0.0,\"y\":0.0\}" _opacity="1.0" _preservePhysicalSize="false"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="443,101"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="495,90" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<imageWidth>imageWidth\r|<imageHeight>imageHeight\r|<windowWidth>windowWidth\r|<windowHeight>windowHeight\r" _imageWidth_type="VuoInteger" _imageWidth_suggestedMin="1" _imageWidth_suggestedStep="32" _imageWidth="512" _imageHeight_type="VuoInteger" _imageHeight_suggestedMin="1" _imageHeight_suggestedStep="32" _imageHeight="512" _windowWidth_type="VuoInteger" _windowWidth="1024" _windowHeight_type="VuoInteger" _windowHeight="1024"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputCenter>outputCenter\l|<outputWidth>outputWidth\l|<outputHeight>outputHeight\l|<outputPixelsWide>outputPixelsWide\l|<outputPixelsHigh>outputPixelsHigh\l" _outputCenter_type="VuoPoint2d" _outputWidth_type="VuoReal" _outputHeight_type="VuoReal" _outputPixelsWide_type="VuoInteger" _outputPixelsHigh_type="VuoInteger"];
+
+ChangeWindowSize:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+GetRenderedLayerBounds2:center -> PublishedOutputs:outputCenter;
+GetRenderedLayerBounds2:height -> PublishedOutputs:outputHeight;
+GetRenderedLayerBounds2:pixelsHigh -> PublishedOutputs:outputPixelsHigh;
+GetRenderedLayerBounds2:pixelsWide -> PublishedOutputs:outputPixelsWide;
+GetRenderedLayerBounds2:width -> PublishedOutputs:outputWidth;
+MakeColorImage:image -> MakeImageLayer:image;
+MakeImageLayer:layer -> ChangeWindowSize:windowDescription [event=true];
+MakeImageLayer:layer -> GetRenderedLayerBounds2:layer;
+MakeImageLayer:layer -> MakeList:1;
+MakeList:list -> RenderLayersToWindow:layers;
+PublishedInputs:imageHeight -> MakeColorImage:height;
+PublishedInputs:imageWidth -> MakeColorImage:width;
+PublishedInputs:windowHeight -> ChangeWindowSize:height;
+PublishedInputs:windowWidth -> ChangeWindowSize:width;
+RenderLayersToWindow:updatedWindow -> GetRenderedLayerBounds2:window;
+}

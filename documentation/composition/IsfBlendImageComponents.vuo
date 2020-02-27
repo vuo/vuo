@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImageComponents [type="me.isf.blend" version="" label="Blend Image Components|<refresh>refresh\l|<image1>image1\l|<image2>image2\l|<blendType>blendType\l|<outputImage>outputImage\r" pos="255,105" _blendType="1"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-600,75" _url="\"..\\/..\\/node\\/vuo.image\\/examples\\/Jellyfish.jpg\""];
+FetchImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-600,135" _url="\"..\\/..\\/node\\/vuo.image\\/examples\\/Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-810,30" _started_eventThrottling="enqueue"];
+
+FetchImage2:image -> BlendImageComponents:image2;
+FetchImage:image -> BlendImageComponents:image1;
+FireOnStart:started -> FetchImage2:url;
+FireOnStart:started -> FetchImage:url;
+}

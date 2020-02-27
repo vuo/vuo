@@ -2,9 +2,9 @@
  * @file
  * VuoCompositionDiff implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompositionDiff.hh"
@@ -42,19 +42,44 @@ void VuoCompositionDiff::setDiff(char *diff)
 /**
  * Constructs the identifier of a port on a node.
  *
- * This needs to be kept in sync with `VuoCompilerPort::getIdentifier()`.
+ * This needs to be kept in sync with `VuoStringUtilities::buildPortIdentifier()`.
  */
 string VuoCompositionDiff::joinPortIdentifier(const string &nodeIdentifier, const string &portName)
 {
-	return nodeIdentifier + "__" + portName;
+	return nodeIdentifier + ":" + portName;
+}
+
+/**
+ * Constructs the path of a node as it would be expressed in a diff.
+ */
+string VuoCompositionDiff::convertIdentifierToPath(const char *compositionIdentifier, const char *nodeIdentifier)
+{
+	return string(compositionIdentifier) + "/" + nodeIdentifier;
+}
+
+/**
+ * Extracts the composition identifier and node identifier from a node path in a diff.
+ */
+void VuoCompositionDiff::convertPathToIdentifier(const char *nodePath, string &compositionIdentifier, string &nodeIdentifier)
+{
+	string nodePathStr = nodePath;
+	size_t pos = nodePathStr.rfind("/");
+	if (pos == string::npos)
+		return;
+
+	compositionIdentifier = nodePathStr.substr(0, pos);
+	nodeIdentifier = nodePathStr.substr(pos+1);
 }
 
 /**
  * Searches `compositionDiff` for changes made to the node across a live-coding reload.
  *
- * This needs to be kept in sync with `VuoCompilerComposition::diffAgainstOlderComposition()`.
+ * This needs to be kept in sync with @ref VuoCompilerCompositionDiff::diff.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *nodeIdentifier, json_object **replacementObj)
+VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *compositionIdentifier, const char *nodeIdentifier,
+															json_object **replacementObj)
 {
 	if (! diff)
 		return ChangeStartStop;
@@ -66,6 +91,8 @@ VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *nodeIden
 		return ChangeNone;
 	}
 
+	string nodePath = convertIdentifierToPath(compositionIdentifier, nodeIdentifier);
+
 	set<string> keysFound;
 	int numChanges = json_object_array_length(diffJson);
 	for (int i = 0; i < numChanges; ++i)
@@ -73,11 +100,11 @@ VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *nodeIden
 		json_object *change = json_object_array_get_idx(diffJson, i);
 		json_object_object_foreach(change, key, val)
 		{
-			if (! strcmp(nodeIdentifier, json_object_get_string(val)))
+			if (! strcmp(nodePath.c_str(), json_object_get_string(val)))
 			{
 				keysFound.insert(key);
 
-				if (! strcmp(key, "map") || ! strcmp(key, "to"))
+				if (! strcmp(key, "replace") || ! strcmp(key, "with") || ! strcmp(key, "move") || ! strcmp(key, "to"))
 				{
 					json_object_get(change);
 					*replacementObj = change;
@@ -89,19 +116,13 @@ VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *nodeIden
 	json_object_put(diffJson);
 
 	if (keysFound.find("add") != keysFound.end())
-	{
-		if (keysFound.find("to") != keysFound.end())
-			return ChangeReplace;
-		else
-			return ChangeAdd;
-	}
+		return ChangeAdd;
 	else if (keysFound.find("remove") != keysFound.end())
-	{
-		if (keysFound.find("map") != keysFound.end())
-			return ChangeReplace;
-		else
-			return ChangeRemove;
-	}
+		return ChangeRemove;
+	else if (keysFound.find("replace") != keysFound.end() || keysFound.find("with") != keysFound.end())
+		return ChangeReplace;
+	else if (keysFound.find("move") != keysFound.end() || keysFound.find("to") != keysFound.end())
+		return ChangeMove;
 
 	return ChangeNone;
 }
@@ -109,20 +130,26 @@ VuoCompositionDiff::ChangeType VuoCompositionDiff::findNode(const char *nodeIden
 /**
  * Returns true if the node is among the removals or replacees across a live-coding reload,
  * or if the composition is being stopped (not a live-coding reload).
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-bool VuoCompositionDiff::isNodeBeingRemovedOrReplaced(const char *nodeIdentifier, json_object **replacementObj)
+bool VuoCompositionDiff::isNodeBeingRemovedOrReplaced(const char *compositionIdentifier, const char *nodeIdentifier,
+													  json_object **replacementObj)
 {
-	enum ChangeType changeType = findNode(nodeIdentifier, replacementObj);
+	enum ChangeType changeType = findNode(compositionIdentifier, nodeIdentifier, replacementObj);
 	return changeType == ChangeStartStop || changeType == ChangeRemove || changeType == ChangeReplace;
 }
 
 /**
  * Returns true if the node is among the additions or replacers across a live-coding reload,
  * or if the composition is being started (not a live-coding reload).
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-bool VuoCompositionDiff::isNodeBeingAddedOrReplaced(const char *nodeIdentifier, json_object **replacementObj)
+bool VuoCompositionDiff::isNodeBeingAddedOrReplaced(const char *compositionIdentifier, const char *nodeIdentifier,
+													json_object **replacementObj)
 {
-	enum ChangeType changeType = findNode(nodeIdentifier, replacementObj);
+	enum ChangeType changeType = findNode(compositionIdentifier, nodeIdentifier, replacementObj);
 	return changeType == ChangeStartStop || changeType == ChangeAdd || changeType == ChangeReplace;
 }
 
@@ -163,8 +190,12 @@ bool VuoCompositionDiff::isPortReplacingAnother(const char *portName, json_objec
 	{
 		json_object *o;
 
-		if (json_object_object_get_ex(replacementObj, "map", &o))
-			oldNodeIdentifier = json_object_get_string(o);
+		if (json_object_object_get_ex(replacementObj, "replace", &o))
+		{
+			const char *oldNodePath = json_object_get_string(o);
+			string oldCompositionIdentifier;
+			convertPathToIdentifier(oldNodePath, oldCompositionIdentifier, oldNodeIdentifier);
+		}
 
 		if (json_object_object_get_ex(replacementObj, "ports", &o))
 			portMappingArray = o;
@@ -197,7 +228,69 @@ bool VuoCompositionDiff::isPortReplacingAnother(const char *portName, json_objec
 }
 
 /**
- * Returns true the composition is either starting for the first time or stopping for the last time,
+ * Returns true if the node is being moved to the new composition across a live-coding reload.
+ */
+bool VuoCompositionDiff::isNodeBeingMovedToHere(const char *newCompositionIdentifier, const char *nodeIdentifier, json_object *replacementObj,
+												string &oldCompositionIdentifier)
+{
+	string moveFrom;
+	string moveTo;
+
+	json_object *o;
+	if (json_object_object_get_ex(replacementObj, "move", &o))
+		moveFrom = json_object_get_string(o);
+
+	if (json_object_object_get_ex(replacementObj, "to", &o))
+		moveTo = json_object_get_string(o);
+
+	if (moveTo == convertIdentifierToPath(newCompositionIdentifier, nodeIdentifier))
+	{
+		string unused;
+		convertPathToIdentifier(moveFrom.c_str(), oldCompositionIdentifier, unused);
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if the port's data is being copied to another port across a live-coding reload.
+ */
+bool VuoCompositionDiff::isPortBeingCopied(const char *portName, json_object *replacementObj,
+										   string &destinationCompositionIdentifier, string &destinationPortIdentifier)
+{
+	json_object *portMappingArray = NULL;
+	{
+		json_object *o;
+		if (json_object_object_get_ex(replacementObj, "ports", &o))
+			portMappingArray = o;
+	}
+	if (! portMappingArray)
+		return false;
+
+	int numPortMappings = json_object_array_length(portMappingArray);
+	for (int i = 0; i < numPortMappings; ++i)
+	{
+		json_object *portMapping = json_object_array_get_idx(portMappingArray, i);
+		json_object *o;
+
+		if (json_object_object_get_ex(portMapping, "copy", &o) && ! strcmp(json_object_get_string(o), portName))
+		{
+			if (json_object_object_get_ex(portMapping, "to", &o))
+			{
+				const char *destinationPortPath = json_object_get_string(o);
+				convertPathToIdentifier(destinationPortPath, destinationCompositionIdentifier, destinationPortIdentifier);
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if the composition is either starting for the first time or stopping for the last time,
  * false if the composition is being restarted for a live-coding reload.
  */
 bool VuoCompositionDiff::isCompositionStartingOrStopping(void)
@@ -222,7 +315,8 @@ void vuoSetCompositionDiff(VuoCompositionState *compositionState, char *diff)
 bool vuoIsNodeBeingRemovedOrReplaced(VuoCompositionState *compositionState, const char *nodeIdentifier, json_object **replacementObj)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->compositionDiff->isNodeBeingRemovedOrReplaced(nodeIdentifier, replacementObj);
+	return runtimeState->persistentState->compositionDiff->isNodeBeingRemovedOrReplaced(compositionState->compositionIdentifier,
+																						nodeIdentifier, replacementObj);
 }
 
 /**
@@ -231,7 +325,8 @@ bool vuoIsNodeBeingRemovedOrReplaced(VuoCompositionState *compositionState, cons
 bool vuoIsNodeBeingAddedOrReplaced(VuoCompositionState *compositionState, const char *nodeIdentifier, json_object **replacementObj)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->compositionDiff->isNodeBeingAddedOrReplaced(nodeIdentifier, replacementObj);
+	return runtimeState->persistentState->compositionDiff->isNodeBeingAddedOrReplaced(compositionState->compositionIdentifier,
+																					  nodeIdentifier, replacementObj);
 }
 
 }

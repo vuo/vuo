@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Expected outputs for the vuo.time.schedule node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{"firingPort":"time", "inputPortValues":{"time":0,   "schedule":[1,2], "durationType":"until next", "loop":"loop"}},
+	{"firingPort":"time", "inputPortValues":{"time":0.5, "schedule":[1,2], "durationType":"until next", "loop":"loop"}},
+	{"firingPort":"time", "inputPortValues":{"time":1,   "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":0  }},  // hit schedule 1 for the first time.
+	{"firingPort":"time", "inputPortValues":{"time":1.5, "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":0.5}},
+	{"firingPort":"time", "inputPortValues":{"time":2,   "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":1  }},  // hit the exact loop point; should output.
+	{"firingPort":"time", "inputPortValues":{"time":2.5, "schedule":[1,2], "durationType":"until next", "loop":"loop"}},
+	{"firingPort":"time", "inputPortValues":{"time":3,   "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":0  }},
+	{"firingPort":"time", "inputPortValues":{"time":3.5, "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":0.5}},
+	{"firingPort":"time", "inputPortValues":{"time":4.1, "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":1.1}},  // didn't hit the exact loop point; should output delta.
+	{"firingPort":"time", "inputPortValues":{"time":4.5, "schedule":[1,2], "durationType":"until next", "loop":"loop"}},
+	{"firingPort":"time", "inputPortValues":{"time":5,   "schedule":[1,2], "durationType":"until next", "loop":"loop"}, "outputPortValues":{"elapsedTime1":0  }},
+]}

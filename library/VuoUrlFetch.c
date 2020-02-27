@@ -2,12 +2,13 @@
  * @file
  * VuoUrlFetch implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
+#include <sys/errno.h>
 #include <unistd.h>
 
 #include <curl/curl.h>
@@ -134,14 +135,15 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 		VUserLog("Error: cURL initialization failed.");
 		return false;
 	}
+	VuoDefer(^{ curl_easy_cleanup(curl); });
 
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);  // Don't use signals for the timeout logic, since they're not thread-safe.
 
 	VuoText resolvedUrl = VuoUrl_normalize(url, VuoUrlNormalize_default);
-	VuoRetain(resolvedUrl);
+	VuoLocal(resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
 
-	curl_easy_setopt(curl, CURLOPT_USERAGENT, "Vuo/" VUO_VERSION_STRING " (http://vuo.org/)");
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "Vuo/" VUO_VERSION_STRING " (https://vuo.org/)");
 
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -153,16 +155,42 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 	if(res != CURLE_OK)
 	{
 		if (res == CURLE_FILE_COULDNT_READ_FILE)
-			VUserLog("Error: Could not read path: \"%s\"", resolvedUrl);
+		{
+			// If the path has colons (which aren't valid path characters on macOS),
+			// maybe they've been escaped as UTF-8 "Modifier Letter Colon".
+			// Try escaping them and see if that leads us to the file.
+			// https://b33p.net/kosada/node/14924
+			VuoText posixPath = VuoUrl_getPosixPath(resolvedUrl);
+			VuoLocal(posixPath);
+			if (!posixPath)
+			{
+				VUserLog("Error: Could not read URL \"%s\"", resolvedUrl);
+				return false;
+			}
+
+			FILE *fp = fopen(posixPath, "rb");
+			if (!fp)
+			{
+				VUserLog("Error: Could not read file \"%s\"", posixPath);
+				return false;
+			}
+			VuoDefer(^{ fclose(fp); });
+
+			fseek(fp, 0, SEEK_END);
+			*dataLength = ftell(fp);
+			rewind(fp);
+			*data = (char *)malloc(*dataLength);
+			if (fread(*data, 1, *dataLength, fp) != *dataLength)
+			{
+				VUserLog("Error: Could not read all the data from file \"%s\": %s", posixPath, strerror(errno));
+				return false;
+			}
+			return true;
+		}
 		else
-			VUserLog("Error: cURL request failed: %s (%d)\n", curl_easy_strerror(res), res);
-		VuoRelease(resolvedUrl);
-		curl_easy_cleanup(curl);
+			VUserLog("Error: cURL request failed: %s (%d)", curl_easy_strerror(res), res);
 		return false;
 	}
-	VuoRelease(resolvedUrl);
-
-	curl_easy_cleanup(curl);
 
 	*data = buffer.memory;
 	*dataLength = buffer.size;

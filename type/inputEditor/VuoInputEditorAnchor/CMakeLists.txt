@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorAnchor SOURCE VuoInputEditorAnchor.cc)

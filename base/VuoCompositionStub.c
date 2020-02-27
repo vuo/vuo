@@ -2,12 +2,12 @@
  * @file
  * VuoCompositionStub implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-//@{
+/// @{
 /**
  * Normally defined in a composition's generated code.
  * Defined here to prevent link errors when linking in VuoRuntime without also linking in a composition.
@@ -30,14 +30,7 @@ void vuoInstanceTriggerStart(void)
 void vuoInstanceTriggerStop(void)
 {
 }
-char * vuoGetPortValue(char *portIdentifier, int serializationType)
-{
-	return NULL;
-}
 void vuoSetInputPortValue(char *portIdentifier, char *valueAsString)
-{
-}
-void fireTriggerPortEvent(char *portIdentifier)
 {
 }
 unsigned int getPublishedInputPortCount(void)
@@ -88,7 +81,7 @@ char ** getPublishedOutputPortConnectedIdentifiers(char *name)
 {
 	return NULL;
 }
-void firePublishedInputPortEvent(char *name)
+void firePublishedInputPortEvent(char **names, unsigned int count)
 {
 }
 void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
@@ -102,4 +95,4 @@ char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterproce
 {
 	return NULL;
 }
-//@}
+/// @}

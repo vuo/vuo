@@ -2,18 +2,15 @@
  * @file
  * VuoPoint4d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoPoint4d.h"
-#include "VuoReal.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -47,10 +44,25 @@ VuoPoint4d VuoPoint4d_makeFromJson(json_object * js)
 {
 	VuoPoint4d point = {0,0,0,0};
 
-	if (json_object_get_type(js) == json_type_string)
+	json_type t = json_object_get_type(js);
+	if (t == json_type_string)
 	{
 		const char *s = json_object_get_string(js);
-		sscanf(s, "%20g, %20g, %20g, %20g", &point.x, &point.y, &point.z, &point.w);
+		float x, y, z, w;
+		sscanf(s, "%20g, %20g, %20g, %20g", &x, &y, &z, &w);
+		return (VuoPoint4d){x, y, z, w};
+	}
+	else if (t == json_type_array)
+	{
+		int len = json_object_array_length(js);
+		if (len >= 1)
+			point.x = json_object_get_double(json_object_array_get_idx(js, 0));
+		if (len >= 2)
+			point.y = json_object_get_double(json_object_array_get_idx(js, 1));
+		if (len >= 3)
+			point.z = json_object_get_double(json_object_array_get_idx(js, 2));
+		if (len >= 4)
+			point.w = json_object_get_double(json_object_array_get_idx(js, 3));
 		return point;
 	}
 
@@ -58,14 +70,22 @@ VuoPoint4d VuoPoint4d_makeFromJson(json_object * js)
 
 	if (json_object_object_get_ex(js, "x", &o))
 		point.x = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "X", &o))
+		point.x = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "y", &o))
+		point.y = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "Y", &o))
 		point.y = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "z", &o))
 		point.z = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "Z", &o))
+		point.z = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "w", &o))
+		point.w = VuoReal_makeFromJson(o);
+	else if (json_object_object_get_ex(js, "W", &o))
 		point.w = VuoReal_makeFromJson(o);
 
 	return point;
@@ -112,6 +132,22 @@ bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2)
 		&& VuoReal_areEqual(value1.y, value2.y)
 		&& VuoReal_areEqual(value1.z, value2.z)
 		&& VuoReal_areEqual(value1.w, value2.w);
+}
+
+/**
+ * Compares `a` to `b` primarily by `x`-value, secondarily by `y`-value,
+ * tertiarily by `z`-value, and finally by `w`-value,
+ * returning true if `a` is less than `b`.
+ *
+ * @version200New
+ */
+bool VuoPoint4d_isLessThan(const VuoPoint4d a, const VuoPoint4d b)
+{
+	VuoType_returnInequality(VuoReal, a.x, b.x);
+	VuoType_returnInequality(VuoReal, a.y, b.y);
+	VuoType_returnInequality(VuoReal, a.z, b.z);
+	VuoType_returnInequality(VuoReal, a.w, b.w);
+	return false;
 }
 
 /**

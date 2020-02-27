@@ -21,20 +21,20 @@ If any node class uses generic types, place the node class's source code (`.c`) 
 
 ## Node set description
 
-If you'd like to provide documentation that gives an overview of the node set, create a folder called `descriptions` in the top level of the node set folder, and create a file with the node set name plus the `.md` extension (e.g. `mycompany.speechSynthesis.md`) in the top level of that folder. Write the documentation in that file using [Markdown formatting](http://daringfireball.net/projects/markdown/). 
+If you'd like to provide documentation that gives an overview of the node set, create a folder called `descriptions` in the top level of the node set folder, and create a file with the node set name plus the `.md` extension (e.g. `mycompany.speechSynthesis.md`) in the top level of that folder. Write the documentation in that file using [Markdown formatting](https://daringfireball.net/projects/markdown/basics).
 
-The Vuo Editor displays a link to to the node set description in the node class documentation that pops up when you click on a node class in the Node Library. 
+The Vuo editor displays a link to to the node set description in the node class documentation that pops up when you click on a node class in the Node Library. 
 
 
 ## Node class descriptions
 
-As an alternative to the "description" key in @ref VuoModuleMetadata, you can place a node class's description in a separate [Markdown-formatted](http://daringfireball.net/projects/markdown/) file. Create a folder called `descriptions` in the top level of the node set folder, and add a file whose name is the node class name plus the `.md` extension. For example, a node class whose source file is `mycompany.math/mycompany.math.add.c` would have documentation in `mycompany.math/descriptions/mycompany.math.add.md`. This file is only used if the node class's @ref VuoModuleMetadata does not specify a description. 
+As an alternative to the "description" key in @ref VuoModuleMetadata, you can place a node class's description in a separate [Markdown-formatted](https://daringfireball.net/projects/markdown/basics) file. Create a folder called `descriptions` in the top level of the node set folder, and add a file whose name is the node class name plus the `.md` extension. For example, a node class whose source file is `mycompany.math/mycompany.math.add.c` would have documentation in `mycompany.math/descriptions/mycompany.math.add.md`. This file is only used if the node class's @ref VuoModuleMetadata does not specify a description.
 
 
 ## Example compositions
 
 If you have any example compositions, create a folder called `examples` in the top level of the node set folder. Place the composition (`.vuo`) files in the top level of that folder. 
 
-The Vuo Editor lists the example compositions for each node set in the File > Examples menu. 
+The Vuo editor lists the example compositions for each node set in the File > Examples menu. 
 
-The Vuo Editor can also display example compositions that pertain to a specific node class, if you set this up in the node class definition. In @ref VuoModuleMetadata, you can use the "exampleCompositions" key to provide a list of compositions. (See the documentation for @ref VuoModuleMetadata for details.) The Vuo Editor will display this list of compositions in the node class documentation that pops up when you click on the node class in the Node Library. 
+The Vuo editor can also display example compositions that pertain to a specific node class, if you set this up in the node class definition. In @ref VuoModuleMetadata, you can use the "exampleCompositions" key to provide a list of compositions. (See the documentation for @ref VuoModuleMetadata for details.) The Vuo editor will display this list of compositions in the node class documentation that pops up when you click on the node class in the Node Library. 

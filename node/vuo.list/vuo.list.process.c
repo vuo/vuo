@@ -2,9 +2,9 @@
  * @file
  * vuo.list.process node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -52,12 +52,12 @@ void nodeInstanceTriggerStart
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) fire,
+		VuoInputData(VuoList_VuoGenericType1, {"name":"Start Processing"}) fire,
 		VuoInputEvent({"data":"fire", "eventBlocking":"none"}) fireEvent,
 		VuoInputData(VuoGenericType2) processedItem,
 		VuoInputEvent({"data":"processedItem", "eventBlocking":"none"}) processedItemEvent,
-		VuoOutputTrigger(processedList, VuoList_VuoGenericType2),
-		VuoOutputTrigger(processItem, VuoGenericType1),
+		VuoOutputTrigger(processedList, VuoList_VuoGenericType2, {"name":"Finished Processing"}),
+		VuoOutputTrigger(processItem, VuoGenericType1, {"name":"Item"}),
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {

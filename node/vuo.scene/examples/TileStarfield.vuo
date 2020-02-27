@@ -2,32 +2,33 @@
  * @file
  * Animates a random points object shaded with ovals and tiled across the scene to simulate a starfield.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="90,180" _speed="0.02"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-420,15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeGradientNoise3 [type="vuo.noise.gradient.VuoReal.VuoPoint3d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="315,180" _gradientNoise="\"perlin\"" _scaledStart="{\"x\":-10,\"y\":-10,\"z\":-10}" _scaledEnd="{\"x\":10,\"y\":10,\"z\":10}"];
-MakeList11 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="709,326" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="739,371" fillcolor="green"];
-MakeRandomPointsObject6 [type="vuo.scene.make.random.points.VuoShader" version="1.0.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="15,45" _transform="{\"translation\":[0,0,-2],\"eulerRotation\":[0,0,0],\"scale\":[2,2,2]}" _distribution="\"cube-volume\"" _count="512" _pointSize="0.080000000000000002" _seed="1"];
-RemoveTextureCoordinates [type="vuo.scene.tc.remove" version="1.0.0" label="Remove Texture Coordinates|<refresh>refresh\l|<object>object\l|<modifiedObject>modifiedObject\r" pos="300,45" fillcolor="violet"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="780,315" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithOval [type="vuo.shader.make.oval" version="1.0.0" label="Make Oval Shader|<refresh>refresh\l|<ovalColor>ovalColor\l|<ovalWidth>ovalWidth\l|<ovalSharpness>ovalSharpness\l|<haloColor>haloColor\l|<shader>shader\r" pos="-270,60" fillcolor="violet" _ovalColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _ovalWidth="0.10000000000000001" _ovalSharpness="1" _haloColor="{\"r\":0.10000763088464737,\"g\":0.20000000298023224,\"b\":1,\"a\":0.50000762939453125}"];
-Tile3DObjectCopies [type="vuo.scene.tile" version="1.0.0" label="Tile 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<spacing>spacing\l|<fieldSize>fieldSize\l|<tiledObject>tiledObject\r" pos="555,165" fillcolor="violet" _spacing="{\"x\":2,\"y\":2,\"z\":2}" _fieldSize="{\"x\":10,\"y\":10,\"z\":5}"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-435,60"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="75,180" _speed="0.5"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.z" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<z>z\l|<point3d>point3d\r" pos="555,285"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-570,180" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeList11 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="629,176" fillcolor="blue"];
+MakeRandomPointsObject6 [type="vuo.scene.make.random.points.VuoShader" version="1.1.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="15,45" _transform="\{\"translation\":[0,0,-0.5],\"eulerRotation\":[0,0,0],\"scale\":[2,2,2]\}" _distribution="\"cube-volume\"" _count="36" _pointSize="0.080000000000000002" _seed="1"];
+RemoveTextureCoordinates [type="vuo.scene.tc.remove" version="1.0.0" label="Remove Texture Coordinates|<refresh>refresh\l|<object>object\l|<modifiedObject>modifiedObject\r" pos="240,45" fillcolor="orange"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="675,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeWithOval [type="vuo.shader.make.oval" version="1.0.0" label="Make Oval Shader|<refresh>refresh\l|<ovalColor>ovalColor\l|<ovalWidth>ovalWidth\l|<ovalSharpness>ovalSharpness\l|<haloColor>haloColor\l|<shader>shader\r" pos="-270,60" fillcolor="orange" _ovalColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _ovalWidth="0.10000000000000001" _ovalSharpness="1" _haloColor="\{\"r\":0.10000763088464737,\"g\":0.20000000298023224,\"b\":1,\"a\":0.50000762939453125\}"];
+Tile3DObjectCopies [type="vuo.scene.tile" version="1.0.0" label="Tile 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<spacing>spacing\l|<fieldSize>fieldSize\l|<tiledObject>tiledObject\r" pos="480,165" fillcolor="orange" _spacing="\{\"x\":2,\"y\":2,\"z\":2\}" _fieldSize="\{\"x\":10,\"y\":10,\"z\":10\}"];
 
-ChangeSpeed:changedTime -> MakeGradientNoise3:position;
-FireOnStart:started -> ShadeWithOval:refresh;
-MakeGradientNoise3:value -> Tile3DObjectCopies:center;
+AllowFirstEvent:firstEvent -> ShadeWithOval:ovalColor;
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint:z;
+ConvertRealTo3DPoint:point3d -> Tile3DObjectCopies:center;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
 MakeList11:list -> RenderSceneToWindow:objects;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeRandomPointsObject6:object -> RemoveTextureCoordinates:object;
 RemoveTextureCoordinates:modifiedObject -> Tile3DObjectCopies:object;
-RenderSceneToWindow:requestedFrame -> ChangeSpeed:time;
 ShadeWithOval:shader -> MakeRandomPointsObject6:material;
 Tile3DObjectCopies:tiledObject -> MakeList11:1;
 }

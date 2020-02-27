@@ -2,9 +2,9 @@
  * @file
  * TestVuoColor implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -32,15 +32,19 @@ private slots:
 		QTest::addColumn<VuoColor>("value");
 		QTest::addColumn<bool>("testTypeValueAsString");
 
+		VuoColor opaqueBlack = VuoColor_makeWithRGBA(0,0,0,1);
+		QTest::newRow("emptystring")            << ""                                                           << opaqueBlack      << false;
+
 		VuoColor transparentBlack = VuoColor_makeWithRGBA(0,0,0,0);
-		QTest::newRow("emptystring")            << ""                                                           << transparentBlack << false;
 		QTest::newRow("transparent black")      << QUOTE({"r":0,"g":0,"b":0,"a":0})								<< transparentBlack << true;
+		QTest::newRow("transparent black array")<< QUOTE([0,0,0,0])                                             << transparentBlack << false;
 		QTest::newRow("transparent black text") << QUOTE("0,0,0,0")                                             << transparentBlack << false;
 		QTest::newRow("transparent black hex4") << QUOTE("#0000")                                               << transparentBlack << false;
 		QTest::newRow("transparent black hex8") << QUOTE("#00000000")                                           << transparentBlack << false;
 
 		VuoColor opaqueWhite = VuoColor_makeWithRGBA(1,1,1,1);
 		QTest::newRow("opaque white")           << QUOTE({"r":1,"g":1,"b":1,"a":1})								<< opaqueWhite      << true;
+		QTest::newRow("opaque white array")     << QUOTE([1,1,1])                                               << opaqueWhite      << false;
 		QTest::newRow("opaque white text3")     << QUOTE("1,1,1")                                               << opaqueWhite      << false;
 		QTest::newRow("opaque white text4")     << QUOTE("1,1,1,1")                                             << opaqueWhite      << false;
 		QTest::newRow("opaque white hex3")      << QUOTE("#fff")                                                << opaqueWhite      << false;

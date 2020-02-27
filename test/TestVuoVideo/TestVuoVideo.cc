@@ -2,44 +2,51 @@
  * @file
  * TestVuoVideo interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <QtTest/QtTest>
-#include <CoreServices/CoreServices.h>
+#include <Vuo/Vuo.h>
 
-extern "C" {
-#include "type.h"
+#include <objc/objc-runtime.h>
+
+extern "C"
+{
 #include "VuoVideo.h"
-#include "VuoVideoOptimization.h"
-
-void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 }
+
+extern bool warnedAboutSlowFlip;
 
 /**
- * Get a reference to the main thread, so we can perform runtime thread assertions.
+ * C++ RAII wrapper for NSAutoreleasePool.
  */
-static void __attribute__((constructor)) TestVuoVideo_init(void)
+class AutoreleasePool
 {
-	VuoApp_mainThread = (void *)pthread_self();
+public:
+	AutoreleasePool()
+	{
+		// +[NSAutoreleasePool new];
+		Class poolClass = (Class)objc_getClass("NSAutoreleasePool");
+		pool = objc_msgSend((id)poolClass, sel_getUid("new"));
+	}
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	// Calls _TSGetMainThread().
-	// https://b33p.net/kosada/node/12944
-	YieldToAnyThread();
-#pragma clang diagnostic pop
-}
+	~AutoreleasePool()
+	{
+		// -[NSAutoreleasePool drain];
+		objc_msgSend(pool, sel_getUid("drain"));
+	}
+
+private:
+	id pool;
+};
 
 class TestVuoVideo : public QObject
 {
 	const int AVFOUNDATION_OPTIMIZED = 0;
 
 	/// AvFoundation loads asynchronously, this is the longest time to allow (in ms) prior to failing.
-	const unsigned int MAX_VIDEO_LOAD_TIME = 4000;
+	const unsigned int MAX_VIDEO_LOAD_TIME = 20000;
 
 	/// Video / audio timestamp delta in either direction shouldn't ever exceed .05 (video -.045 behind audio or video .022 ahead is noticeable)
 	// const double MAX_AUDIO_DRIFT = .05;
@@ -52,10 +59,20 @@ class TestVuoVideo : public QObject
 		return url.startsWith("rtsp://");
 	}
 
-	bool exists(QString url)
+	bool exists(QString &url)
 	{
-		return QFile(url).exists()
-		 || isNetworkStream(url);
+		if (isNetworkStream(url))
+			return false;
+
+		if (QFile(url).exists())
+			return true;
+
+		QString homeDir = getenv("HOME");
+		url = url.replace("/MovieGauntlet/", homeDir + "/Movies/Test Movies/");
+		if (QFile(url).exists())
+			return true;
+
+		return false;
 	}
 
 private slots:
@@ -79,6 +96,7 @@ private slots:
 		QTest::newRow(VuoText_format("MPEG v4 1 opt=%d",optimize))								<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.large1080p.mp4"								<<  24.0	<<  585	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG v4 AVC opt=%d",optimize))							<< "/MovieGauntlet/audio+video synchronization/Lip Sync Test Markers.m4v"								<<  67.9	<< 2044	<<  640 <<  480	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG v4 HE AAC opt=%d",optimize))							<< "/MovieGauntlet/Audio Codecs/fish-mpeg4-he-aac-mono.mp4"												<<  20.0	<<  598	<< 1280 <<  720 <<  999	<< optimize;
+		QTest::newRow(VuoText_format("MPEG v4 H.264 AAC opt=%d",optimize))                      << "/MovieGauntlet/mp4/cremaschi AUP ANIMO Festiwal 2014.mp4"                                           <<   6.2    <<  156 << 1280 <<  720 <<  2   << optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg LR opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.oggtheora.ogv"								<<  24.0	<< 	503	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg 5.1 opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.ogg"											<<  19.5	<<  466	<<  320 <<  240	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - Animation - None opt=%d",optimize))			<< "/MovieGauntlet/demo to mov3.mov"																	<<   1.0	<<   29	<<  640 <<  480	<<  0 	<< optimize;
@@ -90,24 +108,16 @@ private slots:
 		// QTest::newRow(VuoText_format("QuickTime - Photo JPEG - PCM LR opt=%d",optimize))		<< "/MovieGauntlet/pbourke/2.mov"																		<<   3.3	<<  100	<< 4096 << 2048	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("WebM opt=%d",optimize))									<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.webmhd.webm"								<<  19.9	<<  474	<<  320 <<  240	<<  2 	<< optimize;
 
-		// HapInAVFoundation.framework only works on OS X 10.10 or later.
-		SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-		if (macMinorVersion >= 10)
-		{
 		QTest::newRow(VuoText_format("QuickTime - AVFBatch - HapM opt=%d",optimize))			<< "/MovieGauntlet/Hap/crawling-avfbatch-HapM.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - AVFBatch - HapM 12 chunks opt=%d",optimize))	<< "/MovieGauntlet/Hap/crawling-avfbatch-HapM-12chunks.mov"												<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap1 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap1.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap1 12 chunks opt=%d",optimize))	<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap1-12chunks.mov"												<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap5 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap5.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - QT7 - HapY opt=%d",optimize))					<< "/MovieGauntlet/Hap/crawling-qt7-HapY.mov"															<<  10.5	<<  315	<<  320 <<  240	<<  0 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - Hap Sample Pack - Hap1 opt=%d",optimize))     << "/MovieGauntlet/Hap/(other)/Hap Sample Pack One 1080p/Movies/Gadane Fega Hap HD.mov"                 <<   8.0    <<  240 << 1920 << 1080 <<  2   << optimize;
 
-		QTest::newRow(VuoText_format("RTSP - H.264 opt=%d",optimize))                           << "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov"                                               << 6627.56  <<  0 <<  0 <<  0 <<  0   << optimize;
-		}
-
+		// Disabled for now since the server is often down.
+//		QTest::newRow(VuoText_format("RTSP - H.264 opt=%d",optimize))                           << "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov"                                               << 6627.56  <<  0 <<  0 <<  0 <<  0   << optimize;
 	}
 
 	void testInfoPerformance_data()
@@ -125,7 +135,7 @@ private slots:
 		QFETCH(int, optimize);
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 
 		// QBENCHMARK
 		{
@@ -161,9 +171,11 @@ private slots:
 		QFETCH(int, optimize);
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 		if (isNetworkStream(url))
-			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
+			QSKIP("Not running this test on an RTSP stream since it would take too long");
+
+		warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		QVERIFY(m != NULL);
@@ -194,13 +206,15 @@ private slots:
 		{
 			QBENCHMARK
 			{
-				VuoVideo_seekToSecond(m, 0);
+				QVERIFY(VuoVideo_seekToSecond(m, 0));
 				videoFrameCount = 0;
 				audioFrameCount = 0;
 				emptyAudioFrames = 0;
 
 				do
 				{
+					AutoreleasePool pool;
+
 					VuoVideoFrame videoFrame;
 
 					gotVideo = VuoVideo_nextVideoFrame(m, &videoFrame);
@@ -246,11 +260,13 @@ private slots:
 
 		QBENCHMARK
 		{
-			VuoVideo_seekToSecond(m, 0);
+			QVERIFY(VuoVideo_seekToSecond(m, 0));
 			videoFrameCount = 0;
 
 			do
 			{
+				AutoreleasePool pool;
+
 				VuoVideoFrame videoFrame;
 
 				gotVideo = VuoVideo_nextVideoFrame(m, &videoFrame);
@@ -274,6 +290,8 @@ private slots:
 		VuoRelease(lastImage);
 
 		VuoRelease(m);
+
+		QVERIFY(!warnedAboutSlowFlip);
 	}
 
 	/**
@@ -295,9 +313,11 @@ private slots:
 		VUserLog("[%s] optimize=%s",url.toUtf8().data(), (optimize == AVFOUNDATION_OPTIMIZED ? "AVFoundation" : "FFMPEG"));
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 		if (isNetworkStream(url))
-			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
+			QSKIP("Not running this test on an RTSP stream since it would take too long");
+
+		warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -310,9 +330,11 @@ private slots:
 
 		double duration = VuoVideo_getDuration(m);
 
-		VuoVideoFrame videoFrame = {NULL, 0};
+		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
 		QBENCHMARK
 		{
+			AutoreleasePool pool;
+
 			if(videoFrame.image != NULL)
 				VuoRelease(videoFrame.image);
 			double frameTime = (duration - .5) * (double)rand()/(double)RAND_MAX;
@@ -323,6 +345,8 @@ private slots:
 		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
 		VuoRelease(videoFrame.image);
 		VuoRelease(m);
+
+		QVERIFY(!warnedAboutSlowFlip);
 	}
 
 	/**
@@ -340,9 +364,9 @@ private slots:
 		QFETCH(QString, url);
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 		if (isNetworkStream(url))
-			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
+			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
 		if( url == QString("/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov") )
 		{
@@ -350,6 +374,8 @@ private slots:
 			// @todo Look into speeding this scenario up.
 			QSKIP("Skipping QuickTime - H.264 - Lossless 5.1 - #1");
 		}
+
+		warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -361,7 +387,7 @@ private slots:
 		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
 		double duration = VuoVideo_getDuration(m) - .5;
-		VuoVideoFrame videoFrame = {NULL, 0};
+		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
 
 		int64_t max = duration * 1000;
 
@@ -373,6 +399,8 @@ private slots:
 
 		for(int i = 0; i < duration * fps; i++)
 		{
+			AutoreleasePool pool;
+
 			double sec = i * frame;
 
 			if(videoFrame.image != NULL)
@@ -382,9 +410,11 @@ private slots:
 				VuoRetain(videoFrame.image);
 
 			int64_t elapsed = timer.elapsed();
-			if (elapsed > max)
-				QFAIL(QString("Taking too long to decode; after %1s (longer than the realtime duration of the movie) we're only %2% done decoding.")
+			const double leeway = 2;
+			if (elapsed > max * leeway)
+				QFAIL(QString("Taking too long to decode; after %1s (more than %2x as long as the realtime duration of the movie) we're only %3% done decoding.")
 					.arg(elapsed/1000.)
+					.arg(leeway)
 					.arg(i * 100. / (duration*fps))
 					.toUtf8().data());
 		}
@@ -392,6 +422,8 @@ private slots:
 		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
 		VuoRelease(videoFrame.image);
 		VuoRelease(m);
+
+		QVERIFY(!warnedAboutSlowFlip);
 	}
 
 	/**
@@ -409,7 +441,7 @@ private slots:
 		QFETCH(QString, url);
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 
 		if (url == "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts")
 			QSKIP("This movie starts at PTS 600");
@@ -454,9 +486,9 @@ private slots:
 		QFETCH(QString, url);
 
 		if (!exists(url))
-			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 		if (isNetworkStream(url))
-			QSKIP("Not running this test on an RTSP stream since it would take too long", SkipOne);
+			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
 		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -468,7 +500,7 @@ private slots:
 
 		double duration = VuoVideo_getDuration(m);
 
-		VuoVideoFrame videoFrame = { NULL, 0 };
+		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
 
 		QVERIFY2( VuoVideo_getFrameAtSecond(m, -1, &videoFrame), "VuoVideo_getFrameAtSecond(-1) returned false.");
 		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(-1) returned null image" );
@@ -477,6 +509,17 @@ private slots:
 		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(duration + 10) returned null image" );
 
 		VuoRelease(m);
+	}
+
+	void testRotoscopeAndStopComposition()
+	{
+		// Ensure the composition runs then stops, without hanging.
+		// https://b33p.net/kosada/node/15249
+		VuoCompilerIssues issues;
+		VuoRunner *r = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("composition/RotoscopeAndStopComposition.vuo", &issues);
+		r->start();
+		r->waitUntilStopped();
+		delete r;
 	}
 };
 

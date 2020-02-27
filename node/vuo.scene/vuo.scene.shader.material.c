@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.shader.material node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -34,13 +34,14 @@ void nodeEvent
 		s = VuoShader_makeDefaultShader();
 
 	bool applyToAll = !material || strlen(material) == 0;
-	VuoSceneObject_apply(&copy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-							if (!currentObject->shader)
-								return;
+	VuoSceneObject_apply(copy, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoShader shader = VuoSceneObject_getShader(currentObject);
+		if (!shader)
+			return;
 
-							if (applyToAll || strstr(currentObject->shader->name, material))
-								currentObject->shader = s;
-						 });
+		if (applyToAll || strstr(shader->name, material))
+			VuoSceneObject_setShader(currentObject, s);
+	});
 
 	*shadedObject = copy;
 }

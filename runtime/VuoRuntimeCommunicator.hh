@@ -2,9 +2,9 @@
  * @file
  * VuoRuntimeCommunicator interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -13,6 +13,7 @@
 #include "VuoTelemetry.h"
 
 class VuoRuntimePersistentState;
+struct NodeContext;
 
 /**
  * Manages communication between the runtime and the runner.
@@ -37,20 +38,32 @@ private:
 
 	int runnerPipe;  ///< Pipe between the runtime (read) and the runner (write), used to detect if the runner process ends.
 
-	bool isSendingAllTelemetry;  ///< True if all telemetry should be sent.
-	bool isSendingEventTelemetry;  ///< True if all telemetry about events (not including data) should be sent.
-	set<string> portsSendingDataTelemetry;  ///< Port identifiers for which data-and-event telemetry should be sent.
+	set<string> compositionsSendingAllTelemetry;  ///< Composition identifiers from which all telemetry should be sent.
+	set<string> compositionsSendingEventTelemetry;  ///< Composition identifiers for which all telemetry about events (not including data) should be sent.
+	map<string, set<string> > portsSendingDataTelemetry;  ///< Composition and port identifiers for which data-and-event telemetry should be sent.
 
 	VuoRuntimePersistentState *persistentState;  ///< Reference to the parent VuoRuntimePersistentState.
 
 	void sendControlReply(enum VuoControlReply reply, zmq_msg_t *messages, unsigned int messageCount);
 	void sendTelemetry(enum VuoTelemetry type, zmq_msg_t *messages, unsigned int messageCount);
 
-	char * getInputPortSummary(const char *portIdentifier);
-	char * getOutputPortSummary(const char *portIdentifier);
 	static char * mergeEnumDetails(string type, const char *details);
 
-	//@{
+	void subscribeToPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer);
+	void unsubscribeFromPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer);
+	bool isSubscribedToPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer);
+
+	void subscribeToEventTelemetry(const char *compositionIdentifier);
+	void unsubscribeFromEventTelemetry(const char *compositionIdentifier);
+	bool isSubscribedToEventTelemetry(const char *compositionIdentifier);
+
+	void subscribeToAllTelemetry(const char *compositionIdentifier);
+	void unsubscribeFromAllTelemetry(const char *compositionIdentifier);
+	bool isSubscribedToAllTelemetry(const char *compositionIdentifier);
+
+	void sendHeartbeat(bool blocking = false);
+
+	/// @{
 	/**
 	 * Defined in the composition's generated code.
 	 */
@@ -62,10 +75,6 @@ private:
 	vuoInstanceTriggerStopType vuoInstanceTriggerStop;
 	typedef void (*vuoSetInputPortValueType)(const char *portIdentifier, char *valueAsString);
 	vuoSetInputPortValueType vuoSetInputPortValue;
-	typedef void (*fireTriggerPortEventType)(const char *portIdentifier);
-	fireTriggerPortEventType fireTriggerPortEvent;
-	typedef char * (*vuoGetPortValueType)(const char *portIdentifier, int serializationType);
-	vuoGetPortValueType vuoGetPortValue;
 	typedef unsigned int (*getPublishedInputPortCountType)(void);
 	getPublishedInputPortCountType getPublishedInputPortCount;
 	typedef unsigned int (*getPublishedOutputPortCountType)(void);
@@ -82,7 +91,7 @@ private:
 	getPublishedInputPortDetailsType getPublishedInputPortDetails;
 	typedef char ** (*getPublishedOutputPortDetailsType)(void);
 	getPublishedOutputPortDetailsType getPublishedOutputPortDetails;
-	typedef void (*firePublishedInputPortEventType)(const char *name);
+	typedef void (*firePublishedInputPortEventType)(const char *const *names, unsigned int count);
 	firePublishedInputPortEventType firePublishedInputPortEvent;
 	typedef void (*setPublishedInputPortValueType)(const char *portIdentifier, const char *valueAsString);
 	setPublishedInputPortValueType setPublishedInputPortValue;
@@ -90,7 +99,7 @@ private:
 	getPublishedInputPortValueType getPublishedInputPortValue;
 	typedef char * (*getPublishedOutputPortValueType)(const char *portIdentifier, int shouldUseInterprocessSerialization);
 	getPublishedOutputPortValueType getPublishedOutputPortValue;
-	//@}
+	/// @}
 
 public:
 	VuoRuntimeCommunicator(VuoRuntimePersistentState *persistentState);
@@ -110,20 +119,18 @@ public:
 	void cleanUpControl(void);
 	void startListeningForRunnerExit(void);
 
-	void sendNodeExecutionStarted(const char *nodeIdentifier);
-	void sendNodeExecutionFinished(const char *nodeIdentifier);
-	void sendInputPortsUpdated(const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary);
-	void sendOutputPortsUpdated(const char *portIdentifier, bool sentData, const char *portDataSummary);
+	void sendNodeExecutionStarted(const char *compositionIdentifier, const char *nodeIdentifier);
+	void sendNodeExecutionFinished(const char *compositionIdentifier, const char *nodeIdentifier);
+	void sendInputPortsUpdated(const char *compositionIdentifier, const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary);
+	void sendOutputPortsUpdated(const char *compositionIdentifier, const char *portIdentifier, bool sentEvent, bool sentData, const char *portDataSummary);
 	void sendPublishedOutputPortsUpdated(const char *portIdentifier, bool sentData, const char *portDataSummary);
-	void sendEventDropped(const char *portIdentifier);
+	void sendEventFinished(unsigned long eventId, NodeContext *compositionContext);
+	void sendEventDropped(const char *compositionIdentifier, const char *portIdentifier);
 	void sendError(const char *message);
 	void sendStopRequested(void);
 	void sendCompositionStoppingAndCloseControl(void);
 
-	bool shouldSendPortDataTelemetry(const char *portIdentifier);
-
-	char * getInputPortString(const char *portIdentifier, bool shouldUseInterprocessSerialization);
-	char * getOutputPortString(const char *portIdentifier, bool shouldUseInterprocessSerialization);
+	bool shouldSendPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifier);
 };
 
 extern "C"
@@ -131,8 +138,9 @@ extern "C"
 void vuoSendNodeExecutionStarted(VuoCompositionState *compositionState, const char *nodeIdentifier);
 void vuoSendNodeExecutionFinished(VuoCompositionState *compositionState, const char *nodeIdentifier);
 void vuoSendInputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary);
-void vuoSendOutputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool sentData, const char *portDataSummary);
+void vuoSendOutputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool sentEvent, bool sentData, const char *portDataSummary);
 void vuoSendPublishedOutputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool sentData, const char *portDataSummary);
+void vuoSendEventFinished(VuoCompositionState *compositionState, unsigned long eventId);
 void vuoSendEventDropped(VuoCompositionState *compositionState, const char *portIdentifier);
 bool vuoShouldSendPortDataTelemetry(VuoCompositionState *compositionState, const char *portIdentifier);
 char * vuoGetInputPortString(VuoCompositionState *compositionState, const char *portIdentifier, bool shouldUseInterprocessSerialization);

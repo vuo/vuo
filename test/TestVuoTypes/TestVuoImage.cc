@@ -2,9 +2,9 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -15,8 +15,10 @@ extern "C" {
 #include "VuoImageRenderer.h"
 #include "VuoImageBlur.h"
 #include "VuoSceneRenderer.h"
+extern dispatch_once_t VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init;
 }
 
+#include <CoreFoundation/CoreFoundation.h>
 #include <OpenGL/CGLMacro.h>
 
 // Be able to use these types in QTest::addColumn()
@@ -30,6 +32,16 @@ void TestVuoImage_freeCallback(VuoImage imageToFree)
 }
 
 /**
+ * Does nothing.
+ */
+void TestVuoImage_doNothingCallback(VuoImage imageToFree)
+{
+}
+
+extern const double VuoGlPool_cleanupInterval = 0.1;
+
+
+/**
  * Tests the VuoImage type.
  */
 class TestVuoImage : public QObject
@@ -39,11 +51,11 @@ class TestVuoImage : public QObject
 	const char *solidColorVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		uniform mat4 projectionMatrix;
 		uniform mat4 modelviewMatrix;
-		attribute vec4 position;
+		attribute vec3 position;
 
 		void main()
 		{
-			gl_Position = projectionMatrix * modelviewMatrix * position;
+			gl_Position = projectionMatrix * modelviewMatrix * vec4(position, 1.);
 		}
 	);
 
@@ -61,13 +73,13 @@ class TestVuoImage : public QObject
 		uniform float amplitude;
 		uniform float wavelength;
 		uniform float phase;
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 
 		void main()
 		{
 			float samplerPhase = cos(angle)*fragmentTextureCoordinate.x + sin(angle)*fragmentTextureCoordinate.y;
 			float offset = sin(samplerPhase/wavelength + phase) * amplitude;
-			gl_FragColor = texture2D(texture, fragmentTextureCoordinate.xy + vec2(cos(angle)*offset,sin(angle)*offset));
+			gl_FragColor = texture2D(texture, fragmentTextureCoordinate + vec2(cos(angle)*offset,sin(angle)*offset));
 		}
 	);
 
@@ -77,7 +89,7 @@ private slots:
 	{
 		QCOMPARE(QString::fromUtf8(VuoImage_getString(NULL)), QString("null"));
 		QCOMPARE(QString::fromUtf8(VuoImage_getInterprocessString(NULL)), QString("null"));
-		QCOMPARE(QString::fromUtf8(VuoImage_getSummary(NULL)), QString("(no image)"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getSummary(NULL)), QString("No image"));
 	}
 
 	void testSerializationAndSummary_data()
@@ -92,7 +104,7 @@ private slots:
 
 		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,GL_RGBA,640,480)))
 										<< true
-										<< "GL Texture (ID 43)<br>Size: 640x480 pixels<br>Scale Factor: 1x<br>Type: RGBA, each channel stored as 8-bit unsigned integer (GL_RGBA)";
+										<< "<div>640×480 pixels @ 1x</div><div>RGBA, each channel 8-bit unsigned integer</div><div>OpenGL: GL_TEXTURE_2D, GL_RGBA, ID 43</div>";
 	}
 	void testSerializationAndSummary()
 	{
@@ -398,7 +410,7 @@ private slots:
 
 		// Ensure an unflipped copy has the expected color.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(image, false);
+			VuoImage copiedImage = VuoImage_makeCopy(image, false, 0, 0, false);
 			QVERIFY(copiedImage);
 			VuoLocal(copiedImage);
 
@@ -407,7 +419,7 @@ private slots:
 
 		// Ensure a flipped copy has the expected color.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(image, true);
+			VuoImage copiedImage = VuoImage_makeCopy(image, true, 0, 0, false);
 			QVERIFY(copiedImage);
 			VuoLocal(copiedImage);
 
@@ -423,7 +435,7 @@ private slots:
 
 		// Ensure an unflipped copy has the expected color.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(rectImage, false);
+			VuoImage copiedImage = VuoImage_makeCopy(rectImage, false, 0, 0, false);
 			QVERIFY(copiedImage);
 			VuoLocal(copiedImage);
 
@@ -432,7 +444,7 @@ private slots:
 
 		// Ensure a flipped copy has the expected color.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(rectImage, true);
+			VuoImage copiedImage = VuoImage_makeCopy(rectImage, true, 0, 0, false);
 			QVERIFY(copiedImage);
 			VuoLocal(copiedImage);
 
@@ -451,7 +463,7 @@ private slots:
 
 		// Test that it worked correctly.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false);
+			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false, 0, 0, false);
 			VuoRetain(copiedImage);
 
 			QCOMPARE(copiedImage->pixelsWide, width);
@@ -469,7 +481,7 @@ private slots:
 
 		// Test performance.
 		QBENCHMARK {
-			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false);
+			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false, 0, 0, false);
 			VuoRetain(copiedImage);
 			VuoRelease(copiedImage);
 		}
@@ -537,14 +549,14 @@ private slots:
 		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
-		VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), VuoListCreate_VuoSceneObject());
+		VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
 		VuoSceneObject_retain(rootSceneObject);
 
 		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 		VuoSceneRenderer_setCameraName(sr, NULL, true);
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 		VuoImage colorImage, depthImage;
-		VuoSceneRenderer_renderToImage(sr, &colorImage, VuoImageColorDepth_16, VuoMultisample_Off, &depthImage);
+		VuoSceneRenderer_renderToImage(sr, &colorImage, VuoImageColorDepth_16, VuoMultisample_Off, &depthImage, false);
 		VuoRetain(colorImage);
 		VuoRetain(depthImage);
 
@@ -611,9 +623,9 @@ private slots:
 		QTest::newRow("basn0g02.png") << GL_LUMINANCE8;       // 2 bit (4 level) grayscale
 		QTest::newRow("basn0g04.png") << GL_LUMINANCE8;       // 4 bit (16 level) grayscale
 		QTest::newRow("basn0g08.png") << GL_LUMINANCE8;       // 8 bit (256 level) grayscale
-		QTest::newRow("basn0g16.png") << GL_LUMINANCE16F_ARB; // 16 bit (64k level) grayscale
+		QTest::newRow("basn0g16.png") << GL_LUMINANCE32F_ARB; // 16 bit (64k level) grayscale, uploaded as 32 bit
 		QTest::newRow("basn2c08.png") << GL_RGB;              // 3x8 bits rgb color
-		QTest::newRow("basn2c16.png") << GL_RGB16F_ARB;       // 3x16 bits rgb color
+		QTest::newRow("basn2c16.png") << GL_RGB32F_ARB;       // 3x16 bits rgb color, uploaded as 32 bpc
 		QTest::newRow("basn3p01.png") << GL_RGB;              // 1 bit (2 color) paletted
 		QTest::newRow("basn3p02.png") << GL_RGB;              // 2 bit (4 color) paletted
 		QTest::newRow("basn3p04.png") << GL_RGB;              // 4 bit (16 color) paletted
@@ -621,7 +633,7 @@ private slots:
 		QTest::newRow("basn4a08.png") << GL_LUMINANCE_ALPHA;  // 8 bit grayscale + 8 bit alpha-channel
 		QTest::newRow("basn4a16.png") << GL_LUMINANCE_ALPHA;  // 16 bit grayscale + 16 bit alpha-channel
 		QTest::newRow("basn6a08.png") << GL_RGBA;             // 3x8 bits rgb color + 8 bit alpha-channel
-		QTest::newRow("basn6a16.png") << GL_RGBA16F_ARB;      // 3x16 bits rgb color + 16 bit alpha-channel
+		QTest::newRow("basn6a16.png") << GL_RGBA32F_ARB;      // 3x16 bits rgb color + 16 bit alpha-channel, uploaded as 32 bpc
 
 		QTest::newRow("../gif-alpha.gif") << GL_RGBA;
 	}
@@ -689,6 +701,197 @@ private slots:
 		QCOMPARE(i->pixelsWide, expectedWidth);
 		QCOMPARE(i->pixelsHigh, expectedHeight);
 		VuoLocal(i);
+	}
+
+	/**
+	 * Ensure Vuo determines the correct stride for an opaque RGB image with an odd width.
+	 * (FreeImage DWORD-alignment.)
+	 */
+	void testFetchOddStride_data()
+	{
+		QTest::addColumn<unsigned long>("expectedWidth");
+		QTest::addColumn<unsigned long>("expectedHeight");
+
+		QTest::newRow("3x3rgb.png")     <<   3UL <<   3UL;
+		QTest::newRow("201x303rgb.png") << 201UL << 303UL;
+	}
+	void testFetchOddStride()
+	{
+		QFETCH(unsigned long, expectedWidth);
+		QFETCH(unsigned long, expectedHeight);
+
+		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		QVERIFY(i);
+		QCOMPARE(i->pixelsWide, expectedWidth);
+		QCOMPARE(i->pixelsHigh, expectedHeight);
+		VuoLocal(i);
+
+		const unsigned char *pixelData = VuoImage_getBuffer(i, GL_BGR);
+		QVERIFY(pixelData);
+
+		// Ensure the top 3 rows are properly aligned
+		// (the first pixel in each of the top 3 rows should be red, green, and blue, respectively).
+		// The stride should be pixelsWide*3, without any extra padding.
+		// Since FreeImage adds padding by default,
+		// VuoImage_get() should convey that padding to VuoImage_makeFromBufferWithStride(),
+		// and VuoImage_getBuffer() should return a new buffer without any padding.
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 1) + 0],   0); // B
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 1) + 1],   0); // G
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 1) + 2], 255); // R
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 2) + 0],   0); // B
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 2) + 1], 255); // G
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 2) + 2],   0); // R
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 0], 255); // B
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 1],   0); // G
+		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 2],   0); // R
+	}
+
+	void testMakeFromJsonWithDimensions_data()
+	{
+		QTest::addColumn<bool>("isInterprocess");
+		QTest::addColumn<void *>("js");
+		QTest::addColumn<unsigned long>("requestedPixelsWide");
+		QTest::addColumn<unsigned long>("requestedPixelsHigh");
+		QTest::addColumn<VuoColor>("expectedColor");
+
+		auto color = (VuoColor){.4,.5,.6,1.};
+		QTest::newRow("same process same size")      << false << (void *)VuoImage_getJson(            VuoImage_makeColorImage(color, 640, 480)) <<  640UL << 480UL << color;
+		QTest::newRow("same process different size") << false << (void *)VuoImage_getJson(            VuoImage_makeColorImage(color, 640, 480)) << 1024UL << 768UL << color;
+		QTest::newRow("interprocess same size")      << true  << (void *)VuoImage_getInterprocessJson(VuoImage_makeColorImage(color, 640, 480)) <<  640UL << 480UL << color;
+		QTest::newRow("interprocess different size") << true  << (void *)VuoImage_getInterprocessJson(VuoImage_makeColorImage(color, 640, 480)) << 1024UL << 768UL << color;
+	}
+	void testMakeFromJsonWithDimensions()
+	{
+		QFETCH(bool, isInterprocess);
+		QFETCH(void *, js);
+		QFETCH(unsigned long, requestedPixelsWide);
+		QFETCH(unsigned long, requestedPixelsHigh);
+		QFETCH(VuoColor, expectedColor);
+
+		{
+			VuoImage i = VuoImage_makeFromJsonWithDimensions((json_object *)js, requestedPixelsWide, requestedPixelsHigh);
+			QVERIFY(i);
+			QCOMPARE(i->pixelsWide, requestedPixelsWide);
+			QCOMPARE(i->pixelsHigh, requestedPixelsHigh);
+			VuoLocal(i);
+
+			testImageCopy_verify(i, expectedColor);
+		}
+
+		if (isInterprocess)
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+				GLuint outputTexture;
+				glGenTextures(1, &outputTexture);
+
+				IOSurfaceRef ioSurface;
+				VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init = 0;
+				QVERIFY(VuoImage_resolveInterprocessJsonUsingClientTexture((json_object *)js, outputTexture, requestedPixelsWide, requestedPixelsHigh, &ioSurface));
+
+				VuoImage i = VuoImage_makeClientOwnedGlTextureRectangle(outputTexture, GL_RGBA, requestedPixelsWide, requestedPixelsHigh, TestVuoImage_doNothingCallback, nullptr);
+				VuoLocal(i);
+				VuoImage i2 = VuoImage_makeCopy(i, false, 0, 0, false);
+				VuoLocal(i2);
+				testImageCopy_verify(i2, expectedColor);
+
+				VuoIoSurfacePool_signal(ioSurface);
+				CFRelease(ioSurface);
+				glDeleteTextures(1, &outputTexture);
+			});
+	}
+
+
+	void testResolveInterprocessJsonOntoFramebuffer_data()
+	{
+		QTest::addColumn<bool>("isOpenGL32Core");
+
+		QTest::newRow("OpenGL 2.1")              << false;
+		QTest::newRow("OpenGL 3.2 Core Profile") << true;
+	}
+	void testResolveInterprocessJsonOntoFramebuffer()
+	{
+		QFETCH(bool, isOpenGL32Core);
+
+		auto color = (VuoColor){.4,.5,.6,1.};
+		json_object *js = VuoImage_getInterprocessJson(VuoImage_makeColorImage(color, 640, 480));
+
+		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, isOpenGL32Core, -1);
+		CGLContextObj cgl_ctx;
+		CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
+		if (error != kCGLNoError)
+			QFAIL(CGLErrorString(error));
+		QVERIFY(cgl_ctx);
+
+			GLuint framebufferTexture;
+			glGenTextures(1, &framebufferTexture);
+			glBindTexture(GL_TEXTURE_RECTANGLE_ARB, framebufferTexture);
+			glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, 640, 480, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+			glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+
+			GLuint framebuffer;
+			glGenFramebuffers(1, &framebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_ARB, framebufferTexture, 0);
+
+			glClearColor(0,1,0,1);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glViewport(0, 0, 640, 480);
+
+			VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init = 0;
+			QVERIFY(VuoImage_resolveInterprocessJsonOntoFramebuffer(js, cgl_ctx, false));
+
+			unsigned char imageBuffer[4];
+			glReadPixels(0, 0, 1, 1, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_ARB, 0, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDeleteFramebuffers(1, &framebuffer);
+			glDeleteTextures(1, &framebufferTexture);
+
+			QVERIFY(fabs(imageBuffer[2] - color.a*255*color.r) < 2.);
+			QVERIFY(fabs(imageBuffer[1] - color.a*255*color.g) < 2.);
+			QVERIFY(fabs(imageBuffer[0] - color.a*255*color.b) < 2.);
+			QVERIFY(fabs(imageBuffer[3] - color.a*255        ) < 2.);
+	}
+
+	void createAndCheckIOSurface(VuoColor color)
+	{
+		VuoImage im = VuoImage_makeColorImage(color, 10, 10);
+
+		// Create an IOSurface.
+		json_object *js = VuoImage_getInterprocessJson(im);
+
+		// Copy the IOSurface into a non-IOSurface texture, and release the IOSurface.
+		VuoImage im2 = VuoImage_makeFromJson(js);
+		json_object_put(js);
+
+		testImageCopy_verify(im2, color);
+	}
+
+	void testIOSurfaceBackingTextureRecycling_data()
+	{
+		QTest::addColumn<double>("delay");
+
+		QTest::newRow("don't wait for quarantine") << 0.;                              // Creates a second IOSurface since the first IOSurface's quarantine hasn't yet ended.
+		QTest::newRow("wait for quarantine 1")     << VuoGlPool_cleanupInterval * 1.;  // Reuses IOSurface.
+		QTest::newRow("wait for quarantine 2")     << VuoGlPool_cleanupInterval * 2.;  // Reuses IOSurface.
+		QTest::newRow("wait for purge 3")          << VuoGlPool_cleanupInterval * 3.;  // Creates a second IOSurface since the first IOSurface has been purged.
+		QTest::newRow("wait for purge 4")          << VuoGlPool_cleanupInterval * 4.;  // Creates a second IOSurface since the first IOSurface has been purged.
+	}
+	void testIOSurfaceBackingTextureRecycling()
+	{
+		QFETCH(double, delay);
+
+		// Create an IOSurface with a blueish color.
+		createAndCheckIOSurface((VuoColor){.4,.5,.6,1.});
+
+		// Wait for the IOSurface to be moved from the quarantine into the main pool.
+		usleep(USEC_PER_SEC * delay);
+
+		// Create an IOSurface with a greenish color.
+		createAndCheckIOSurface((VuoColor){.4,.6,.5,1.});
+
+		usleep(USEC_PER_SEC);
 	}
 };
 

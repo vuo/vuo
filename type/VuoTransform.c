@@ -2,17 +2,14 @@
  * @file
  * VuoTransform implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoTransform.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -98,22 +95,32 @@ void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatr
 		1
 	};
 
-	float inverseScale[16];
+	// Avoid propagating NaNs when the scale of one axis is zero.
+	VuoPoint3d inverseScale = (VuoPoint3d){
+		1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[0], matrix[1], matrix[2])),
+		1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[4], matrix[5], matrix[6])),
+		1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[8], matrix[9], matrix[10]))
+	};
+	if (isnan(inverseScale.x) || isinf(inverseScale.x))
+		inverseScale.x = 0;
+	if (isnan(inverseScale.y) || isinf(inverseScale.y))
+		inverseScale.y = 0;
+	if (isnan(inverseScale.z) || isinf(inverseScale.z))
+		inverseScale.z = 0;
+
+	float inverseScaleMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeEuler(
-							   VuoPoint3d_make(0,0,0),
-							   VuoPoint3d_make(0,0,0),
-							   VuoPoint3d_make(
-								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[0], matrix[1], matrix[2])),
-								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[4], matrix[5], matrix[6])),
-								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[8], matrix[9], matrix[10])))),
-			inverseScale);
+							   (VuoPoint3d){0,0,0},
+							   (VuoPoint3d){0,0,0},
+							   inverseScale),
+			inverseScaleMatrix);
 
 	VuoTransform_multiplyMatrices4x4(inverseTranslation, inverseRotation, outputInvertedMatrix);
 
-	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScale, outputInvertedMatrix);
+	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScaleMatrix, outputInvertedMatrix);
 
 	// Apply inverseScale a second time, since inverseRotation includes forward scale.
-	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScale, outputInvertedMatrix);
+	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScaleMatrix, outputInvertedMatrix);
 }
 
 /**
@@ -324,10 +331,7 @@ VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix)
 {
 	VuoTransform t;
 
-	t.scale = VuoPoint3d_make(
-				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[0], matrix[1], matrix[2])),
-				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[4], matrix[5], matrix[6])),
-				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[8], matrix[9], matrix[10])));
+	t.scale = VuoTransform_getMatrix4x4Scale(matrix);
 
 	t.rotation[0] = matrix[ 0] / t.scale.x;
 	t.rotation[1] = matrix[ 1] / t.scale.x;
@@ -345,9 +349,27 @@ VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix)
 
 	t.rotationSource.quaternion = VuoTransform_quaternionFromMatrix(t.rotation);
 
-	t.translation = VuoPoint3d_make(matrix[12], matrix[13], matrix[14]);
+	t.translation = VuoTransform_getMatrix4x4Translation(matrix);
 
 	return t;
+}
+
+/**
+ * Applies `transform` to `point`, using input Z coordinate 0 and discarding the transformed Z coordinate.
+ */
+VuoPoint2d VuoTransform_transform_VuoPoint2d(VuoTransform transform, VuoPoint2d point)
+{
+    return VuoTransform_transform_VuoPoint3d(transform, (VuoPoint3d){point.x, point.y, 0}).xy;
+}
+
+/**
+ * Applies `transform` to `point`.
+ */
+VuoPoint3d VuoTransform_transform_VuoPoint3d(VuoTransform transform, VuoPoint3d point)
+{
+	float matrix[16];
+	VuoTransform_getMatrix(transform, matrix);
+	return VuoTransform_transformPoint(matrix, point);
 }
 
 /**
@@ -385,8 +407,10 @@ VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle r
 
 /**
  * Returns a column-major matrix of 16 values that transforms a 1x1 quad so that it renders the specified image at real (pixel-perfect) size.
+ *
+ * @version200Changed{Changed `meshX` argument to `mesh0`.}
  */
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoReal meshX, float *billboardMatrix)
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoPoint2d mesh0, float *billboardMatrix)
 {
 	VuoReal combinedScaleFactor = 1;
 	if (preservePhysicalSize)
@@ -399,6 +423,17 @@ void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeig
 
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), billboardMatrix);
 
+	// If we don't know the viewport size, we don't know the image scale,
+	// so zero the scale (but keep the translation).
+	if (viewportWidth <= 0)
+	{
+		billboardMatrix[0] = 0;
+		billboardMatrix[5] = 0;
+		billboardMatrix[12] = translationX;
+		billboardMatrix[13] = translationY;
+		return;
+	}
+
 	// Apply scale to make the image appear at real size (1:1).
 	billboardMatrix[0] = 2. * imageWidth/viewportWidth;
 	billboardMatrix[5] = billboardMatrix[0] * imageHeight/imageWidth;
@@ -408,15 +443,15 @@ void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeig
 		billboardMatrix[12] = floor((translationX+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
 		billboardMatrix[13] = floor((translationY+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
 
-		// Account for odd-dimensioned image with horizontal-center anchor.
-		// (We know from VuoSceneText_make() that the mesh's first X coordinate
-		// is 0.0, -0.5, or -1.0, depending on whether the anchor is left, center, or right, respectively.)
-		bool meshCenteredX = VuoReal_areEqual(meshX, -.5);
+		// Account for odd-dimensioned image with center anchor.
+		// (We know from VuoSceneText_make() that the mesh's first coordinate
+		// is 0.0, -0.5, or -1.0, depending on whether the anchor is left/top, center, or right/bottom, respectively.)
+		bool meshCenteredX = VuoReal_areEqual(mesh0.x, -.5);
 		if (meshCenteredX)
-		{
 			billboardMatrix[12] += (imageWidth  % 2 ? (1./viewportWidth) : 0);
+		bool meshCenteredY = VuoReal_areEqual(mesh0.y, -.5);
+		if (meshCenteredY)
 			billboardMatrix[13] -= (imageHeight % 2 ? (1./viewportWidth) : 0);
-		}
 
 		// Account for odd-dimensioned viewport
 		billboardMatrix[13] += (viewportWidth  % 2 ? (1./viewportWidth) : 0);
@@ -629,7 +664,7 @@ char * VuoTransform_getSummary(const VuoTransform value)
 		return strdup("identity transform (no change)");
 
 	if (value.type == VuoTransformTypeTargeted)
-		return VuoText_format("position (%g, %g, %g)<br>target (%g, %g, %g)<br>up (%g, %g, %g)",
+		return VuoText_format("<div>position (%g, %g, %g)</div><div>target (%g, %g, %g)</div><div>up (%g, %g, %g)</div>",
 							  value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
 
 	char *rotation;
@@ -643,7 +678,7 @@ char * VuoTransform_getSummary(const VuoTransform value)
 								  r.x, r.y, r.z);
 	}
 
-	char *valueAsString = VuoText_format("translation (%g, %g, %g)<br>rotation %s<br>scale (%g, %g, %g)",
+	char *valueAsString = VuoText_format("<div>translation (%g, %g, %g)</div><div>rotation %s</div><div>scale (%g, %g, %g)</div>",
 										 value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
 	free(rotation);
 	return valueAsString;

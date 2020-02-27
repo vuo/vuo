@@ -2,9 +2,9 @@
  * @file
  * vuo.image.mask.brightness node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -22,17 +22,17 @@ VuoModuleMetadata({
 						  "magic", "wand", "green screen", "greenscreen",
 						  "filter"
 					  ],
-					  "version" : "2.0.0",
+					  "version" : "2.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
 					  }
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(VuoGlslBrightness)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslBrightness.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec2 threshold;
 	uniform float blur;
@@ -41,21 +41,24 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		color.rgb /= color.a > 0. ? color.a : 1.;
 
 		vec4 gray = VuoGlsl_gray(color, brightnessType);
 
 		if (!showImage)
 			color.rgba = vec4(1.);
+		else
+			color.rgb *= color.a;
 
-		color.r *= smoothstep(threshold.x - blur, threshold.x + blur, gray.r)
-				*  smoothstep(threshold.y + blur, threshold.y - blur, gray.r);
-		color.g *= smoothstep(threshold.x - blur, threshold.x + blur, gray.g)
-				*  smoothstep(threshold.y + blur, threshold.y - blur, gray.g);
-		color.b *= smoothstep(threshold.x - blur, threshold.x + blur, gray.b)
-				*  smoothstep(threshold.y + blur, threshold.y - blur, gray.b);
-//		color.rgb *= color.a;
+		color.r *= smoothstep(threshold.x - blur, threshold.x, gray.r)
+				*  smoothstep(threshold.y + blur, threshold.y, gray.r);
+		color.g *= smoothstep(threshold.x - blur, threshold.x, gray.g)
+				*  smoothstep(threshold.y + blur, threshold.y, gray.g);
+		color.b *= smoothstep(threshold.x - blur, threshold.x, gray.b)
+				*  smoothstep(threshold.y + blur, threshold.y, gray.b);
+		color.a *= smoothstep(threshold.x - blur, threshold.x, (gray.r + gray.g + gray.b) / 3.)
+				*  smoothstep(threshold.y + blur, threshold.y, (gray.r + gray.g + gray.b) / 3.);
 
 		gl_FragColor = color;
 	}
@@ -74,6 +77,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->shader = VuoShader_make("Mask Image by Brightness");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
 	VuoRetain(instance->shader);
+
+	// An opaque, nonwhite input image should output a semitransparent image with an alpha channel.
+	instance->shader->isTransparent = true;
 
 	return instance;
 }
@@ -106,7 +112,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoInteger((*instance)->shader, "brightnessType", brightnessType);
 	VuoRange or = VuoRange_makeNonzero(VuoRange_getOrderedRange(preservedBrightnesses));
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "threshold", (VuoPoint2d){ or.minimum, or.maximum });
-	VuoShader_setUniform_VuoReal((*instance)->shader, "blur", VuoReal_makeNonzero((1. - sharpness)/2.));
+	VuoShader_setUniform_VuoReal((*instance)->shader, "blur", VuoReal_makeNonzero(1. - sharpness));
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "showImage", showImage);
 
 	*maskedImage = VuoImageRenderer_render((*instance)->shader, w, h, VuoImage_getColorDepth(image));

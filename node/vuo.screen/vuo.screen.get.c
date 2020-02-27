@@ -2,9 +2,9 @@
  * @file
  * vuo.screen.get node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Screen Values",
 					  "keywords" : [ "display", "monitor", "device", "information" ],
-					  "version" : "1.1.0"
+					  "version" : "1.2.0"
 				 });
 
 void nodeEvent
@@ -35,5 +35,14 @@ void nodeEvent
 		*height        = realizedScreen.height;
 		*dpiHorizontal = realizedScreen.dpiHorizontal;
 		*dpiVertical   = realizedScreen.dpiVertical;
+	}
+	else
+	{
+		*name          = screen.name;
+		*topLeft       = screen.topLeft;
+		*width         = screen.width;
+		*height        = screen.height;
+		*dpiHorizontal = screen.dpiHorizontal;
+		*dpiVertical   = screen.dpiVertical;
 	}
 }

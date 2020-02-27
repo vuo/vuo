@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorMathExpressionList implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorMathExpressionList.hh"
@@ -15,24 +15,6 @@ extern "C"
 	#include "VuoHeap.h"
 	#include "VuoMathExpressionList.h"
 	#include "VuoMathExpressionParser.h"
-}
-
-/**
- * Returns the icon for an error within a line edit.
- */
-QPixmap * VuoInputEditorMathExpressionList::renderErrorPixmap(void)
-{
-	const int size = 12;
-	return VuoInputEditorIcon::renderPixmap(^(QPainter &p){
-												p.setPen(QPen(QColor(179, 43, 43), 1));
-												p.setBrush(QColor(230, 57, 57));
-												p.drawEllipse(0, 0, size, size);
-												p.setPen(Qt::white);
-												p.setBrush(Qt::white);
-												p.setFont(QFont(getDefaultFont().family(), 11, QFont::Normal));
-												p.drawText(0, 0, size, size, Qt::AlignCenter, "!");
-											},
-											size, size);
 }
 
 /**
@@ -81,7 +63,7 @@ QLayout * VuoInputEditorMathExpressionList::setUpRow(QDialog &dialog, QLineEdit 
 {
 	QLayout *rowLayout = VuoInputEditorWithLineEditList::setUpRow(dialog, lineEdit);
 
-	QPixmap *errorPixmap = renderErrorPixmap();
+	QPixmap *errorPixmap = VuoInputEditorIcon::renderErrorPixmap(isDark);
 	QLabel *errorLabel = new QLabel(lineEdit);
 	errorLabel->setPixmap(*errorPixmap);
 	errorLabel->adjustSize();
@@ -92,7 +74,7 @@ QLayout * VuoInputEditorMathExpressionList::setUpRow(QDialog &dialog, QLineEdit 
 	delete errorPixmap;
 
 	lineEdit->setValidator(validator);
-	connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(validateMathExpressionList()));
+	connect(lineEdit, &QLineEdit::editingFinished, this, &VuoInputEditorMathExpressionList::validate);
 
 	return rowLayout;
 }
@@ -206,6 +188,14 @@ QChar VuoInputEditorMathExpressionList::getDecimalPointInUserLocale(void)
 QChar VuoInputEditorMathExpressionList::getListSeparatorInUserLocale(void)
 {
 	return getDecimalPointInUserLocale() == '.' ? ',' : ';';
+}
+
+/**
+ * Checks if the current math expressions in the line edits are valid, and updates the UI accordingly.
+ */
+void VuoInputEditorMathExpressionList::validate()
+{
+	validateMathExpressionList(false);
 }
 
 /**

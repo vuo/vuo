@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.arrange.grid node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -23,12 +23,12 @@ void nodeEvent
 		VuoInputData(VuoList_VuoSceneObject) objects,
 		VuoInputData(VuoBoolean, {"name":"Scale to Fit", "default":true}) scaleToFit,
 		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":-1.0,"y":-1.0,"z":-1.0}, "suggestedMax":{"x":1.0,"y":1.0,"z":1.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
-		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
-		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1}) columns,
-		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) height,
-		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1}) rows,
-		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) depth,
-		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1}) slices,
+		VuoInputData(VuoReal, {"default":1.5, "suggestedMin":0.0, "suggestedMax":2.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1, "suggestedMax":8}) columns,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":2.0, "suggestedStep":0.1}) height,
+		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1, "suggestedMax":8}) rows,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":2.0, "suggestedStep":0.1}) depth,
+		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":8}) slices,
 		VuoOutputData(VuoSceneObject) griddedObject
 )
 {
@@ -53,9 +53,9 @@ void nodeEvent
 			{
 				VuoReal xPosition = center.x - width/2 + (width / columns) * (x + .5);
 
-				VuoSceneObject object = VuoListGetValue_VuoSceneObject(objects, currentObject);
+				VuoSceneObject object = VuoSceneObject_copy(VuoListGetValue_VuoSceneObject(objects, currentObject));
 
-				object.transform.translation = VuoPoint3d_add(object.transform.translation, VuoPoint3d_make(xPosition,yPosition,zPosition));
+				VuoSceneObject_translate(object, (VuoPoint3d){xPosition, yPosition, zPosition});
 
 				if (scaleToFit)
 				{
@@ -67,10 +67,10 @@ void nodeEvent
 						scaleFactor *= gridCellHeight / (bounds.size.y * scaleFactor);
 					if (bounds.size.z * scaleFactor > gridCellDepth)
 						scaleFactor *= gridCellDepth / (bounds.size.z * scaleFactor);
-					object.transform.scale = VuoPoint3d_multiply(object.transform.scale, scaleFactor);
+					VuoSceneObject_scale(object, (VuoPoint3d){scaleFactor, scaleFactor, scaleFactor});
 				}
 
-				VuoListAppendValue_VuoSceneObject((*griddedObject).childObjects, object);
+				VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects(*griddedObject), object);
 
 				++currentObject;
 				if (currentObject > objectCount)

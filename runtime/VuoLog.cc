@@ -2,9 +2,9 @@
  * @file
  * VuoLog implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <execinfo.h>
@@ -16,6 +16,9 @@
 #include <asl.h>
 #include <math.h>
 #include <dlfcn.h>
+#include <objc/objc-runtime.h>
+#include <cxxabi.h>
+#include <regex.h>
 
 #ifndef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
 	/// Avoid conflict between Cocoa and LLVM headers.
@@ -32,6 +35,44 @@
 #endif
 
 #include "VuoLog.h"
+#include "VuoStringUtilities.hh"
+
+/// The existing std::terminate handler before we installed ours.
+static std::terminate_handler nextTerminateHandler = nullptr;
+
+/**
+ * Log the timestamp at which std::terminate was called,
+ * so we can tell whether the logged exceptions are related to it.
+ */
+extern "C" [[noreturn]] void VuoTerminateHandler()
+{
+	if (auto ep = std::current_exception())
+		try
+		{
+			std::rethrow_exception(ep);
+		}
+		catch (std::exception const &e)
+		{
+			int status;
+			const char *typeName = typeid(e).name();
+			char *unmangled = abi::__cxa_demangle(typeName, 0, 0, &status);
+			if (status == 0)
+				typeName = unmangled;
+
+			VUserLog("Terminating due to uncaught %s: \"%s\"", typeName, e.what());
+		}
+		catch (...)
+		{
+			VUserLog("Terminating due to uncaught exception of unknown type");
+		}
+	else
+		// Could still be due to an exception:
+		// https://b33p.net/kosada/node/16404
+		VUserLog("Terminating because std::terminate was called (no exception data available)");
+
+	nextTerminateHandler();
+	abort();
+}
 
 /**
  * Returns the number of seconds (including fractional seconds) since an arbitrary start time.
@@ -60,7 +101,7 @@ const int VuoLogHistoryItems = 20;	///< How many VLog messages to include in cra
 char *VuoLogHistory[VuoLogHistoryItems];	///< VLog messages to include in crash reports.
 dispatch_queue_t VuoLogHistoryQueue;		///< Serializes access to @ref VuoLogHistory.
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 #include <map>
 #include <string>
 /// Profiler times, in seconds.
@@ -69,6 +110,7 @@ typedef struct
 	double total;
 	double min;
 	double max;
+	uint64_t count;
 } VuoLogProfileEntry;
 typedef std::map<std::string, VuoLogProfileEntry> VuoLogProfileType;	///< A profiler entry: description and times.
 static VuoLogProfileType *VuoLogProfile;	///< Keeps track of profiler times.
@@ -77,17 +119,22 @@ static dispatch_queue_t VuoLogProfileQueue;			///< Serializes access to @ref Vuo
 
 /**
  * Stores the time at which this module was loaded, for use by @ref VuoLogGetElapsedTime().
+ *
+ * Installs our C++ exception handler.
  */
 static void __attribute__((constructor)) VuoLog_init(void)
 {
 	VuoLogStartTime = VuoLogGetTime();
-#ifdef PROFILE
+
+	nextTerminateHandler = std::set_terminate(&VuoTerminateHandler);
+
+#ifdef VUO_PROFILE
 	VuoLogProfileQueue = dispatch_queue_create("VuoLogProfile", NULL);
 	VuoLogProfile = new VuoLogProfileType;
 #endif
 }
 
-#if defined(PROFILE) || defined(DOXYGEN)
+#if defined(VUO_PROFILE) || defined(DOXYGEN)
 /**
  * Adds time to the specified profile `name`.
  */
@@ -102,9 +149,10 @@ void VuoLog_recordTime(const char *name, double time)
 							  i->second.min = time;
 						  if (time > i->second.max)
 							  i->second.max = time;
+						  ++i->second.count;
 					  }
 					  else
-						  (*VuoLogProfile)[name] = (VuoLogProfileEntry){time, time, time};
+						  (*VuoLogProfile)[name] = (VuoLogProfileEntry){time, time, time, 1};
 				  });
 }
 
@@ -116,12 +164,14 @@ extern "C" void __attribute__((destructor)) VuoLog_dumpProfile(void)
 	dispatch_sync(VuoLogProfileQueue, ^{
 					  double totalRuntime = VuoLogGetElapsedTime();
 					  for (VuoLogProfileType::iterator i = VuoLogProfile->begin(); i != VuoLogProfile->end(); ++i)
-						  fprintf(stderr, "%30s   %12.9f s (%7.4f%%)   (min %12.9f, max %12.9f)\n",
+						  fprintf(stderr, "%30s   %12.9f s (%7.4f%%)   (min %12.9f, max %12.9f, avg %12.9f, count %lld)\n",
 							  i->first.c_str(),
 							  i->second.total,
 							  i->second.total * 100. / totalRuntime,
 							  i->second.min,
-							  i->second.max);
+							  i->second.max,
+							  i->second.total / i->second.count,
+							  i->second.count);
 				  });
 }
 #endif
@@ -138,21 +188,68 @@ double VuoLogGetElapsedTime(void)
 #define VuoCrashReport_alignment __attribute__((aligned(8)))
 
 /**
- * Data to be inserted into OS X crash reports.
+ * Data to be inserted into macOS crash reports.
  * Via http://alastairs-place.net/blog/2013/01/10/interesting-os-x-crash-report-tidbits/
  */
 typedef struct {
 	unsigned int version	VuoCrashReport_alignment;
-	char *message			VuoCrashReport_alignment;
+	char *message           VuoCrashReport_alignment;  ///< Shows up in the crash report's "Application Specific Information" section.
 	char *signature			VuoCrashReport_alignment;
 	char *backtrace			VuoCrashReport_alignment;
-	char *message2			VuoCrashReport_alignment;
+	char *message2          VuoCrashReport_alignment;  ///< Shows up in the crash report's "Application Specific Information" section, _above_ `message`.
 	void *reserved			VuoCrashReport_alignment;
 	void *reserved2			VuoCrashReport_alignment;
 } VuoCrashReport_infoType;
 
-/// Data to be inserted into OS X crash reports.
+/// Data to be inserted into macOS crash reports.
 VuoCrashReport_infoType VuoCrashReport __attribute__((section("__DATA,__crash_info"))) = { 4, NULL, NULL, NULL, NULL, NULL, NULL };
+
+void VuoLog_statusF(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
+{
+	static dispatch_once_t statusInitialized = 0;
+	static dispatch_queue_t statusQueue;
+	dispatch_once(&statusInitialized, ^{
+		statusQueue = dispatch_queue_create("VuoLogStatus", NULL);
+	});
+
+	char *message = nullptr;
+	if (format)
+	{
+		va_list args;
+		va_start(args, format);
+		vasprintf(&message, format, args);
+		va_end(args);
+	}
+
+	dispatch_sync(statusQueue, ^{
+		if (VuoCrashReport.message2)
+			free(VuoCrashReport.message2);
+
+		if (format)
+			VuoCrashReport.message2 = message;
+		else
+			VuoCrashReport.message2 = nullptr;
+	});
+}
+
+/**
+ * Returns the minor component of the OS version.
+ */
+int VuoLog_getOSVersionMinor(void)
+{
+	Class NSProcessInfoClass = objc_getClass("NSProcessInfo");
+	id processInfo = objc_msgSend((id)NSProcessInfoClass, sel_getUid("processInfo"));
+	struct NSOperatingSystemVersion
+	{
+		long majorVersion;
+		long minorVersion;
+		long patchVersion;
+	};
+	typedef NSOperatingSystemVersion (*operatingSystemVersionType)(id receiver, SEL selector);
+	operatingSystemVersionType operatingSystemVersionFunc = (operatingSystemVersionType)objc_msgSend_stret;
+	NSOperatingSystemVersion operatingSystemVersion = operatingSystemVersionFunc(processInfo, sel_getUid("operatingSystemVersion"));
+	return operatingSystemVersion.minorVersion;
+}
 
 void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
@@ -171,7 +268,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 
 	// This may be a mangled function name of the form `__6+[f g]_block_invoke`.
 	// Trim the prefix and suffix, since the line number is sufficient to locate the code within the function+block.
-	if (function[0] == '_' && function[1] == '_')
+	if (function && function[0] == '_' && function[1] == '_')
 	{
 		int actualFunctionLength = atoi(function + 2);
 		if (actualFunctionLength)
@@ -185,7 +282,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		if (strncmp(formattedFunction, "_ZN", 3) == 0)
 		{
 			int pos = 3;
-			int len, priorLen;
+			int len, priorLen = 0;
 			while ((len = atoi(formattedFunction + pos)))
 			{
 				pos += 1 + (int)log10(len) + len;
@@ -198,13 +295,16 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 	}
 
 	// Add a trailing `()`, unless it's an Objective-C method.
+	if (function)
 	{
 		const char *f = formattedFunction ? formattedFunction : function;
-		if (f[strlen(f) - 1] != ']')
+		size_t fLen   = strlen(f);
+		if (f[fLen - 1] != ']')
 		{
-			char *f2 = (char *)malloc(strlen(f) + 3);
-			strcpy(f2, f);
-			strcat(f2, "()");
+			size_t mallocSize = fLen + 2 + 1;
+			char *f2          = (char *)malloc(mallocSize);
+			strlcpy(f2, f, mallocSize);
+			strlcat(f2, "()", mallocSize);
 			if (formattedFunction)
 				free(formattedFunction);
 			formattedFunction = f2;
@@ -219,7 +319,16 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 
 	double time = VuoLogGetElapsedTime();
 
-	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4u  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+	// If it's been a while since the last log, add a separator.
+	static double priorTime = 0;
+	const char *separator = "";
+	if (priorTime > 0 && time - priorTime > 0.5)
+		separator = "\n";
+	priorTime = time;
+
+	// ANSI-256's 6x6x6 color cube begins at index 16 and spans 216 indices.
+	// Skip the first 72 indices, which are darker (illegible against a black terminal background).
+	fprintf(stderr, "%s\033[38;5;%dm# pid=%5d  t=%8.4fs %27.27s:%-4u  %41.41s  %s\033[0m\n", separator, getpid()%144+88, getpid(), time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
 
 
 	// Also send it to the macOS Console.
@@ -229,17 +338,49 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		// os_log(OS_LOG_DEFAULT, "...", ...);
 
 		extern struct mach_header __dso_handle;
+		typedef void *(*vuoMacOsLogCreateType)(const char *subsystem, const char *category);
 		typedef void (*vuoMacOsLogInternalType)(void *dso, void *log, uint8_t type, const char *message, ...);
+		typedef void (*vuoMacOsLogImplType)(void *dso, void *log, uint8_t type, const char *format, uint8_t *buf, uint32_t size);
+		static vuoMacOsLogCreateType vuoMacOsLogCreate = NULL;
 		static vuoMacOsLogInternalType vuoMacOsLogInternal = NULL;
-		static void *vuoMacOsLogDefault = NULL;
+		static vuoMacOsLogImplType vuoMacOsLogImpl = NULL;
 		static dispatch_once_t once = 0;
 		dispatch_once(&once, ^{
-			vuoMacOsLogInternal = (vuoMacOsLogInternalType)dlsym(RTLD_SELF, "_os_log_internal");
-			vuoMacOsLogDefault = dlsym(RTLD_SELF, "_os_log_default");
+			vuoMacOsLogCreate = (vuoMacOsLogCreateType)dlsym(RTLD_SELF, "os_log_create");
+			if (VuoLog_getOSVersionMinor() == 12) // _os_log_impl doesn't work on macOS 10.12.
+				vuoMacOsLogInternal = (vuoMacOsLogInternalType)dlsym(RTLD_SELF, "_os_log_internal");
+			else if (VuoLog_getOSVersionMinor() > 12) // _os_log_internal doesn't work on macOS 10.13+.
+				vuoMacOsLogImpl = (vuoMacOsLogImplType)dlsym(RTLD_SELF, "_os_log_impl");
 		});
 
-		if (vuoMacOsLogInternal)
-			vuoMacOsLogInternal(&__dso_handle, vuoMacOsLogDefault, 0 /*OS_LOG_TYPE_DEFAULT*/, "%{public}27s:%-4u  %{public}41s  %{public}s", formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+		if (vuoMacOsLogCreate)
+		{
+			void *log = vuoMacOsLogCreate("org.vuo", formattedFile);
+
+			if (vuoMacOsLogInternal)
+				vuoMacOsLogInternal(&__dso_handle, log, 0 /*OS_LOG_TYPE_DEFAULT*/, "%{public}41s:%-4u  %{public}s", formattedFunction ? formattedFunction : function, linenumber, formattedString);
+			else if (vuoMacOsLogImpl)
+			{
+				char *formattedForOsLog;
+				asprintf(&formattedForOsLog, "%41s:%-4u  %s", formattedFunction ? formattedFunction : function, linenumber, formattedString);
+
+				// https://reviews.llvm.org/rC284990#C2197511NL2613
+				uint8_t logFormatDescriptor[12] = {
+					2,  // "summary"       = HasNonScalarItems (a C string)
+					1,  // "numArgs"       = one C string
+					34, // "argDescriptor" = 2 (IsPublic) + 2 (StringKind) << 4
+					8,  // "argSize"       = one C string (a 64-bit pointer)
+				};
+				// …followed by the pointer itself.
+				memcpy(logFormatDescriptor + 4, &formattedForOsLog, 8);
+
+				vuoMacOsLogImpl(&__dso_handle, log, 0 /*OS_LOG_TYPE_DEFAULT*/, "%{public}s", logFormatDescriptor, sizeof(logFormatDescriptor));
+
+				free(formattedForOsLog);
+			}
+
+			os_release(log);
+		}
 
 		else // For Mac OS X 10.11 and prior
 		{
@@ -262,7 +403,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 	// Keep the most recent messages in VuoLogHistory.
 	{
 		char *formattedPrefixedString;
-		asprintf(&formattedPrefixedString, "t=%8.4fs  %s:%u  %s  %s", time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+		asprintf(&formattedPrefixedString, "t=%8.4fs %27.27s:%-4u  %41.41s  %s", time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
 		free(formattedString);
 		if (formattedFunction)
 			free(formattedFunction);
@@ -297,12 +438,12 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		size += 1 /* null terminator */;
 
 		char *message = (char *)malloc(size);
-		strcpy(message, VuoLogHistory[0]);
+		strlcpy(message, VuoLogHistory[0], size);
 		for (int i = 1; i < VuoLogHistoryItems; ++i)
 			if (VuoLogHistory[i])
 			{
-				strcat(message, "\n");
-				strcat(message, VuoLogHistory[i]);
+				strlcat(message, "\n", size);
+				strlcat(message, VuoLogHistory[i], size);
 			}
 
 		VuoCrashReport.message = message;
@@ -351,13 +492,143 @@ char *VuoLog_copyCFDescription(const void *variable)
  */
 void VuoLog_backtrace(void)
 {
-	void *array[100];
-	size_t size = backtrace(array, 100);
-	char **strings = backtrace_symbols(array, size);
+	vector<string> backtrace = VuoLog_getBacktrace();
 
-	// Start at 1 to skip the VuoLog_backtrace() function.
+	// Skip the VuoLog_backtrace() function.
+	backtrace.erase(backtrace.begin());
+
+	int i = 1;
+	for (auto line : backtrace)
+		fprintf(stderr, "%3d %s\n", i++, line.c_str());
+}
+
+/**
+ * Removes all occurrences of a substring.
+ *
+ * `replacement` must be shorter than the expanded `substringToRemove`.
+ */
+void VuoLog_replaceString(char *wholeString, const char *substringToRemove, const char *replacement)
+{
+	size_t replacementLen = strlen(replacement);
+	regex_t regex;
+	regcomp(&regex, substringToRemove, REG_EXTENDED);
+	size_t nmatch = 1;
+	regmatch_t pmatch[nmatch];
+	while (!regexec(&regex, wholeString, nmatch, pmatch, 0))
+	{
+		strncpy(wholeString + pmatch[0].rm_so, replacement, replacementLen);
+		memmove(wholeString + pmatch[0].rm_so + replacementLen, wholeString + pmatch[0].rm_eo, strlen(wholeString + pmatch[0].rm_eo) + 1);
+	}
+	regfree(&regex);
+}
+
+/**
+ * Returns the stack backtrace.
+ */
+vector<string> VuoLog_getBacktrace(void)
+{
+	void *array[100];
+	size_t size    = backtrace(array, 100);
+	char **strings = backtrace_symbols(array, size);
+	vector<string> outputStrings;
+
+	// Start at 1 to skip the VuoLog_getBacktrace() function.
 	for (size_t i = 1; i < size; i++)
-	   fprintf(stderr, "%s\n", strings[i]);
+	{
+		// Trim off the line number, since callees may want to skip additional stack frames.
+		const int lineNumberLen = 4;
+		string trimmedLine = strings[i] + lineNumberLen;
+
+		const int libraryLen = 36;
+		const int addressLen = 19;
+		string symbol = strings[i] + lineNumberLen + libraryLen + addressLen;
+		string instructionOffset = symbol.substr(symbol.find(' '));
+		symbol = symbol.substr(0, symbol.find(' '));
+
+		int status;
+		char *unmangled = abi::__cxa_demangle(symbol.c_str(), nullptr, nullptr, &status);
+		if (status == 0)
+		{
+			// Boil down the C++ standard library's bloviation.
+			VuoLog_replaceString(unmangled, "std::__1::", "");
+			VuoLog_replaceString(unmangled, "basic_string<char, char_traits<char>, allocator<char> >", "string");
+			VuoLog_replaceString(unmangled, ", less<[^>]*>, allocator<pair<[^>]*, [^>]*> > >", ">");  // map<…>
+			VuoLog_replaceString(unmangled, ", less<[^>]*>, allocator<[^>]*> >", ">");  // set<…>
+			VuoLog_replaceString(unmangled, ", allocator<[^>]*> >", ">");  // vector<…>
+
+			outputStrings.push_back(trimmedLine.substr(0, libraryLen + addressLen) + unmangled + instructionOffset);
+			free(unmangled);
+		}
+		else
+			outputStrings.push_back(trimmedLine);
+	}
+
+	// Hide uninformative stack frames.
+	{
+		// If the last stack frame is something like "??? 0x0000000000000010 0x0 + 16",
+		// the stack parser's gone off the rails.
+		auto last = outputStrings.back();
+		if (last.substr(0, 4) == "??? "
+		 && last.find(" 0x0 + ") != string::npos)
+			outputStrings.pop_back();
+
+		last = outputStrings.back();
+		if (last.substr(0, 13) == "libdyld.dylib"
+			&& last.find(" start + ") != string::npos)
+			outputStrings.pop_back();
+
+		outputStrings.erase(
+			remove_if(outputStrings.begin(), outputStrings.end(),
+				[](const string &s) {
+					return s.find("_dispatch_queue_override_invoke") != string::npos
+						|| s.find("_dispatch_root_queue_drain") != string::npos
+						|| s.find("_dispatch_worker_thread2") != string::npos
+						|| s.find("_dispatch_lane_serial_drain") != string::npos
+						|| s.find("_dispatch_lane_barrier_sync_invoke_and_complete") != string::npos
+						|| s.find("_dispatch_lane_invoke") != string::npos
+						|| s.find("_dispatch_workloop_worker_thread") != string::npos
+						|| s.find("_dispatch_continuation_pop") != string::npos
+						|| s.find("_dispatch_main_queue_callback_4CF") != string::npos
+						|| s.find("__CFRunLoopDoObservers") != string::npos
+						|| s.find("__CFRunLoopDoSource0") != string::npos
+						|| s.find("__CFRunLoopDoSources0") != string::npos
+						|| s.find("__CFRunLoopRun") != string::npos
+						|| s.find("__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__") != string::npos
+						|| s.find("__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__") != string::npos
+						|| s.find("__CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__") != string::npos
+						|| s.find("_CFXRegistrationPost") != string::npos
+						|| s.find("_CFXNotification") != string::npos
+						|| s.find("_NSWindowSendWindowDidMove") != string::npos
+						|| s.find("_NSSendEventToObservers") != string::npos
+						|| s.find("NSCarbonMenuImpl") != string::npos
+						|| s.find("NSSLMMenuEventHandler") != string::npos
+						|| s.find("CopyCarbonUIElementAttributeValue") != string::npos
+						|| s.find("NSApplication(NSEvent) _") != string::npos
+						|| s.find("NSApplication(NSAppleEventHandling) _") != string::npos
+						|| s.find("withWindowOrderingObserverHeuristic") != string::npos
+						|| s.find("aeProcessAppleEvent") != string::npos
+						|| s.find("dispatchEventAndSendReply") != string::npos
+						|| s.find("aeDispatchAppleEvent") != string::npos
+						|| s.find("_NSAppleEventManagerGenericHandler") != string::npos
+						|| s.find("NSWindow _") != string::npos
+						|| s.find("HIServices") != string::npos
+						|| s.find("HIToolbox") != string::npos
+						|| s.find("RunCurrentEventLoopInMode") != string::npos
+						|| s.find("ReceiveNextEventCommon") != string::npos
+						|| s.find("_BlockUntilNextEventMatchingListInModeWithFilter") != string::npos
+						|| s.find("_DPSNextEvent") != string::npos
+						|| s.find("_pthread_wqthread") != string::npos
+						|| s.find("qt_plugin_instance") != string::npos
+						|| s.find("QWindowSystemInterface::") != string::npos
+						|| s.find("QWidgetPrivate::") != string::npos
+						|| s.find("QApplicationPrivate::") != string::npos
+						|| s.find("QGuiApplicationPrivate::") != string::npos
+						|| s.find("QCoreApplication::notifyInternal2") != string::npos
+						|| s.find("QCoreApplicationPrivate::") != string::npos;
+				}),
+			outputStrings.end());
+	}
 
 	free(strings);
+	return outputStrings;
 }

@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorWave SOURCE VuoInputEditorWave.cc)

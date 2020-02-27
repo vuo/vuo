@@ -1,0 +1,62 @@
+{
+  "linters": {
+    "text": {
+      "type": "text",
+      "severity": {
+        "2": "disabled",
+        "3": "disabled",
+        "5": "disabled"
+      }
+    },
+    "cppcheck": {
+      "type": "cppcheck",
+      "include": "@\\.(c|h|cc|hh|cpp|m|mm)$@",
+      "flags": [
+        "--platform=unix64",
+        "--enable=information,warning,style,performance,portability",
+        "--std=c11",
+        "--std=c++11",
+        "--library=qt",
+        "--library=posix",
+        "--library=std",
+        "--suppressions-list=.cppcheck",
+        "--suppress=noValidConfiguration",
+        "--suppress=syntaxError",
+        "-i base/miniz.c",
+        "-i library/VuoBase64.cc",
+        "-i library/csgjs.cc",
+        "-i node/vuo.audio/VuoBeatDetektor.cc",
+        "-i node/vuo.hid/VuoUsbVendor.c",
+        "--force"
+      ]
+    },
+    "chmod": {
+      "type": "chmod"
+    },
+    "filename": {
+      "type": "filename"
+    },
+    "merge-conflict": {
+      "type": "merge-conflict"
+    },
+    "xml": {
+      "type": "xml",
+      "include": "@\\.xml$@"
+    },
+    "spelling": {
+      "type": "spelling"
+    },
+    "pylint": {
+      "type": "pylint",
+      "include": "@\\.py$@",
+      "severity": {
+        "C0111": "disabled",
+        "C0301": "disabled",
+        "E0401": "disabled"
+      }
+    },
+    "php": {
+      "type": "php"
+    }
+  }
+}

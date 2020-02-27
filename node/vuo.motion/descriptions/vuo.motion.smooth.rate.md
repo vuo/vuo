@@ -1,6 +1,6 @@
 Smoothly transitions from one position to another. 
 
-This node always moves toward its target at the same rate, regardless of the distance between the current position and the target position.  (See also the `Smooth with Duration` node.)
+This node always moves toward its target at the same rate, regardless of the distance between the current position and the target position.  (See also the [Smooth with Duration](vuo-node://vuo.motion.smooth.duration) node.)
 
 Starting when an event hits this node's `Set Target` input port, each time the `Time` input port receives an event, the `Position` port outputs the smoothed position, until it comes to rest.
 

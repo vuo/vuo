@@ -1,3 +1,11 @@
+#include "module.h"
+
+#if defined(VUO_COMPILER) && !defined(CSGJS_HEADER_ONLY)
+VuoModuleMetadata({
+	"title" : "CSGJS",
+});
+#endif
+
 // Original CSG.JS library by Evan Wallace (http://madebyevan.com), under the MIT license.
 // GitHub: https://github.com/evanw/csg.js/
 //

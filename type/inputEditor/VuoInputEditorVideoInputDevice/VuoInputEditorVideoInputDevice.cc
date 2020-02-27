@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorVideoInputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorVideoInputDevice.hh"
@@ -12,7 +12,7 @@
 extern "C"
 {
 	#include "VuoVideoInputDevice.h"
-	#include "VuoQTCapture.h"
+	#include "VuoVideoCapture.h"
 }
 
 /**
@@ -21,7 +21,7 @@ extern "C"
  */
 void __attribute__((constructor)) VuoInputEditorVideoInputDevice_init()
 {
-	VuoQTCapture_getInputDevices();
+	VuoVideoCapture_getInputDevices();
 }
 
 /**
@@ -39,11 +39,11 @@ VuoInputEditorMenuItem * VuoInputEditorVideoInputDevice::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	optionsTree->addItem(new VuoInputEditorMenuItem("First available device", NULL));
+	optionsTree->addItem(new VuoInputEditorMenuItem("Default device", NULL));
 	optionsTree->addSeparator();
 	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device", NULL, NULL, false));
 
-	VuoList_VuoVideoInputDevice devices = VuoQTCapture_getInputDevices();
+	VuoList_VuoVideoInputDevice devices = VuoVideoCapture_getInputDevices();
 	unsigned long deviceCount = VuoListGetCount_VuoVideoInputDevice(devices);
 
 	if (deviceCount)

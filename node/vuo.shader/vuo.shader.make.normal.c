@@ -3,9 +3,9 @@
  * vuo.shader.make.color node implementation.
  * @todo Rename to vuo.shader.make.vertex or something, to reflect the new breadth of the shader.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -25,21 +25,22 @@ VuoModuleMetadata({
 				 });
 
 
-static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslProjection)
+static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	\n#include "VuoGlslProjection.glsl"
 
-	// Inputs
+	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
-	uniform int attr;
 	uniform int local;
-	attribute vec4 position;
-	attribute vec4 normal;
-	attribute vec4 tangent;
-	attribute vec4 bitangent;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec2 textureCoordinate;
+	attribute vec4 vertexColor;
 
-	// Outputs to fragment shader
-	varying vec3 vertexColor;
+	// Outputs to geometry shader
+	varying vec3 geometryPosition;
+	varying vec3 geometryNormal;
+	varying vec2 geometryTextureCoordinate;
+	varying vec4 geometryVertexColor;
 
 	// Can't simply use `mat3(mat4 m)` since it doesn't work on NVIDIA GeForce 9400M on Mac OS 10.6.
 	mat3 mat4to3(mat4 m)
@@ -52,66 +53,64 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		if (attr == 1)
-			vertexColor = normalize(abs(local > 0 ? normal.xyz : mat4to3(modelviewMatrix) * normal.xyz));
-		else if (attr == 2)
-			vertexColor = normalize(abs(local > 0 ? tangent.xyz : mat4to3(modelviewMatrix) * tangent.xyz));
-		else if (attr == 3)
-			vertexColor = normalize(abs(local > 0 ? bitangent.xyz : mat4to3(modelviewMatrix) * bitangent.xyz));
-		else if (attr == 4 || attr == 5)
-			vertexColor = textureCoordinate.xyz;
-		else
-			vertexColor = abs(local > 0 ? position : modelviewMatrix * position).xyz;
-
-		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
+		geometryPosition = local > 0 ? position : (modelviewMatrix * vec4(position, 1.)).xyz;
+		geometryNormal = local > 0 ? normal : mat4to3(modelviewMatrix) * normal;
+		geometryTextureCoordinate = textureCoordinate;
+		geometryVertexColor = vertexColor;
+		gl_Position = VuoGlsl_projectPosition((modelviewMatrix * vec4(position, 1.)).xyz);
 	}
 );
 
-static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslProjection)
+static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, \n#include "trianglePoint.glsl");
+static const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, \n#include "triangleLine.glsl");
 
-	// Inputs provided by VuoSceneRenderer
-	uniform mat4 modelviewMatrix;
-	uniform int attr;
-	attribute vec4 position;
-	attribute vec4 textureCoordinate;
+static const char *triangleGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120,
+	\n#include "VuoGlslTangent.glsl"
 
-	// Outputs to geometry shader
-	varying vec4 positionForGeometry;
-	varying vec4 textureCoordinateForGeometry;
+	// Inputs
+	varying in vec3 geometryPosition[3];
+	varying in vec3 geometryNormal[3];
+	varying in vec2 geometryTextureCoordinate[3];
+	varying in vec4 geometryVertexColor[3];
+
+	// Outputs
+	varying out vec3 fragmentPosition;
+	varying out vec3 fragmentNormal;
+	varying out vec3 fragmentTangent;
+	varying out vec3 fragmentBitangent;
+	varying out vec2 fragmentTextureCoordinate;
+	varying out vec4 fragmentVertexColor;
 
 	void main()
 	{
-		attr;
-		positionForGeometry = modelviewMatrix * position;
-		textureCoordinateForGeometry = textureCoordinate;
-		gl_Position = VuoGlsl_projectPosition(positionForGeometry);
+		VuoGlslTangent_In ti;
+		for (int i = 0; i < 3; ++i)
+		{
+			ti.position[i] = geometryPosition[i];
+			ti.normal[i] = geometryNormal[i];
+			ti.textureCoordinate[i] = geometryTextureCoordinate[i];
+		}
+		VuoGlslTangent_Out to;
+		VuoGlsl_calculateTangent(ti, to);
+
+		for (int i = 0; i < 3; ++i)
+		{
+			gl_Position = gl_PositionIn[i];
+			fragmentPosition = geometryPosition[i];
+			fragmentNormal = geometryNormal[i];
+			fragmentTangent = to.tangent[i];
+			fragmentBitangent = to.bitangent[i];
+			fragmentTextureCoordinate = geometryTextureCoordinate[i];
+			fragmentVertexColor = geometryVertexColor[i];
+			EmitVertex();
+		}
+		EndPrimitive();
 	}
 );
 
-static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
-static const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
+static const char *triangleFragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	\n#include "VuoGlslTangent.glsl"
 
-static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	// Inputs from node
-	uniform vec4 xColor;
-	uniform vec4 yColor;
-	uniform vec4 zColor;
-
-	// Inputs from vertex shader
-	varying vec3 vertexColor;
-
-	void main()
-	{
-		vec4 c = mix(vec4(0.,0.,0.,1.), xColor, vertexColor.x)
-			   + mix(vec4(0.,0.,0.,1.), yColor, vertexColor.y)
-			   + mix(vec4(0.,0.,0.,1.), zColor, vertexColor.z);
-		c = clamp(c, 0., 1.);
-		gl_FragColor = c;
-	}
-);
-
-static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs from node
 	uniform int attr;
 	uniform vec4 xColor;
@@ -119,9 +118,12 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec4 zColor;
 
 	// Inputs from geometry shader
-	varying vec4 vertexPosition;
-	varying mat3 vertexPlaneToWorld;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec3 fragmentPosition;
+	varying vec3 fragmentNormal;
+	varying vec3 fragmentTangent;
+	varying vec3 fragmentBitangent;
+	varying vec2 fragmentTextureCoordinate;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -131,18 +133,19 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 		gl_FragColor = xColor;
 
 		fragmentTextureCoordinate;
+		fragmentVertexColor;
 
 		vec3 vertexColor;
 		if (attr == 1)	// normal
-			vertexColor = normalize(abs(vertexPlaneToWorld[2]));
+			vertexColor = normalize(abs(fragmentNormal));
 		else if (attr == 2)	// tangent
-			vertexColor = normalize(abs(vertexPlaneToWorld[0]));
+			vertexColor = normalize(abs(fragmentTangent));
 		else if (attr == 3)	// bitangent
-			vertexColor = normalize(abs(vertexPlaneToWorld[1]));
-		else if (attr == 5)
-			vertexColor = fragmentTextureCoordinate.xyz;
+			vertexColor = normalize(abs(fragmentBitangent));
+		else if (attr == 5)  // VuoVertexAttribute_TextureCoordinateGradient
+			vertexColor = vec3(fragmentTextureCoordinate, 0.);
 		else
-			vertexColor = abs(vertexPosition.xyz);
+			vertexColor = abs(fragmentPosition);
 
 		vec4 c = mix(vec4(0.,0.,0.,1.), xColor, vertexColor.x)
 			   + mix(vec4(0.,0.,0.,1.), yColor, vertexColor.y)
@@ -152,50 +155,74 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	}
 );
 
-static const char *checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	// Inputs
+static const char *pointLineFragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	// Inputs from node
+	uniform int attr;
 	uniform vec4 xColor;
 	uniform vec4 yColor;
-	varying vec3 vertexColor;
+	uniform vec4 zColor;
+
+	// Inputs from geometry shader
+	varying vec3 fragmentPosition;
+	varying vec3 fragmentNormal;
+	varying vec2 fragmentTextureCoordinate;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
-		// Based on the Gritz/Baldwin antialiased checkerboard shader.
+		// Work around ATI Radeon HD 5770 bug.
+		// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+		// https://b33p.net/kosada/node/11256
+		gl_FragColor = xColor;
 
-		vec3 color0 = xColor.rgb * vertexColor.x;
-		vec3 color1 = yColor.rgb * vertexColor.y;
-		float frequency = 8;
-		vec2 filterWidth = fwidth(vertexColor.xy) * frequency;
+		fragmentTextureCoordinate;
+		fragmentVertexColor;
 
-		vec2 checkPos = fract(vertexColor.xy * frequency);
-		vec2 p = smoothstep(vec2(0.5), filterWidth + vec2(0.5), checkPos) +
-			(1 - smoothstep(vec2(0),   filterWidth,             checkPos));
+		vec3 vertexColor;
+		if (attr == 1)  // normal
+			vertexColor = normalize(abs(fragmentNormal));
+		else if (attr == 2)  // tangent
+			vertexColor = vec3(1,0,0);
+		else if (attr == 3)  // bitangent
+			vertexColor = vec3(0,1,0);
+		else if (attr == 5)  // VuoVertexAttribute_TextureCoordinateGradient
+			vertexColor = vec3(fragmentTextureCoordinate, 0.);
+		else
+			vertexColor = abs(fragmentPosition);
 
-		gl_FragColor = vec4(mix(color0, color1, p.x*p.y + (1-p.x)*(1-p.y)), 1);
+		vec4 c = mix(vec4(0.,0.,0.,1.), xColor, vertexColor.x)
+			+ mix(vec4(0.,0.,0.,1.), yColor, vertexColor.y)
+			+ mix(vec4(0.,0.,0.,1.), zColor, vertexColor.z);
+		c = clamp(c, 0., 1.);
+		gl_FragColor = c;
 	}
-);
+	);
 
 static const char *checkerboardFragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
+	uniform int attr;
 	uniform vec4 xColor;
 	uniform vec4 yColor;
-	varying vec4 fragmentTextureCoordinate;
-	varying vec4 vertexPosition;
-	varying mat3 vertexPlaneToWorld;
+	varying vec3 fragmentPosition;
+	varying vec3 fragmentNormal;
+	varying vec2 fragmentTextureCoordinate;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
-		vertexPosition;
-		vertexPlaneToWorld;
+		attr;
+		fragmentPosition;
+		fragmentNormal;
+		fragmentVertexColor;
 
 		// Based on the Gritz/Baldwin antialiased checkerboard shader.
 
 		vec3 color0 = xColor.rgb * fragmentTextureCoordinate.x;
 		vec3 color1 = yColor.rgb * fragmentTextureCoordinate.y;
 		float frequency = 8;
-		vec2 filterWidth = fwidth(fragmentTextureCoordinate.xy) * frequency;
+		vec2 filterWidth = fwidth(fragmentTextureCoordinate) * frequency;
 
-		vec2 checkPos = fract(fragmentTextureCoordinate.xy * frequency);
+		vec2 checkPos = fract(fragmentTextureCoordinate * frequency);
 		// Add 0.00001 so that smoothstep() doesn't return NaN on ATI Radeon HD 5770.
 		// https://b33p.net/kosada/node/10467
 		vec2 p = smoothstep(vec2(0.5), filterWidth + vec2(0.5), checkPos) +
@@ -209,28 +236,28 @@ static const char *checkerboardFragmentShaderSourceForGeometry = VUOSHADER_GLSL_
 void nodeEvent
 (
 		VuoInputData(VuoVertexAttribute, {"default":"normal"}) attribute,
-		VuoInputData(VuoInteger, { "menuItems":{
-			"0":"World",
-			"1":"Local"
-		}, "default":0} ) coordinateSpace,
+		VuoInputData(VuoInteger, { "menuItems":[
+			{"value":0, "name":"World"},
+			{"value":1, "name":"Local"},
+		], "default":0} ) coordinateSpace,
 		VuoInputData(VuoColor, {"default":{"r":1.0,"g":0.0,"b":0.0,"a":1.0}}) xColor,
 		VuoInputData(VuoColor, {"default":{"r":0.0,"g":1.0,"b":0.0,"a":1.0}}) yColor,
 		VuoInputData(VuoColor, {"default":{"r":0.0,"g":0.0,"b":1.0,"a":1.0}}) zColor,
 		VuoOutputData(VuoShader) shader
 )
 {
-	const char *fs  = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSource            : fragmentShaderSource;
-	const char *fsg = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSourceForGeometry : fragmentShaderSourceForGeometry;
+	const char *plFsg = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSourceForGeometry : pointLineFragmentShaderSourceForGeometry;
+	const char *tFsg  = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSourceForGeometry : triangleFragmentShaderSourceForGeometry;
 
 	*shader = VuoShader_make("Vertex Attribute Shader");
 
-	VuoShader_addSource                      (*shader, VuoMesh_Points,              vertexShaderSourceForGeometry, pointGeometryShaderSource, fsg);
+	VuoShader_addSource                      (*shader, VuoMesh_Points,              vertexShaderSourceForGeometry, pointGeometryShaderSource, plFsg);
 	VuoShader_setExpectedOutputPrimitiveCount(*shader, VuoMesh_Points, 2);
 
-	VuoShader_addSource                      (*shader, VuoMesh_IndividualLines,     vertexShaderSourceForGeometry, lineGeometryShaderSource,  fsg);
+	VuoShader_addSource                      (*shader, VuoMesh_IndividualLines,     vertexShaderSourceForGeometry, lineGeometryShaderSource,  plFsg);
 	VuoShader_setExpectedOutputPrimitiveCount(*shader, VuoMesh_IndividualLines, 2);
 
-	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource,            NULL,                      fs);
+	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSourceForGeometry, triangleGeometryShaderSource, tFsg);
 
 	VuoShader_setUniform_VuoInteger(*shader, "attr", attribute);
 	VuoShader_setUniform_VuoInteger(*shader, "local", coordinateSpace);

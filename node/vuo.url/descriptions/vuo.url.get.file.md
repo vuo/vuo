@@ -1,6 +1,6 @@
 Gives information about the parts of a file URL.
 
-File URLs begin with `file:///` and refer to a file or folder on this computer.  (Other URLs, such as those that begin with `http://`, refer to network paths — see the `Get URL Values` node.)
+File URLs begin with `file:///` and refer to a file or folder on this computer.  (Other URLs, such as those that begin with `http://`, refer to network paths — see the [Get URL Values](vuo-node://vuo.url.get) node.)
 
    - `Path` — The full path of the file or folder the URL points to.
    - `Folder` — The full path of the folder the URL points to.  If the URL points to a file, the filename is excluded from this value (it includes everything up to, and including, the path's last slash).

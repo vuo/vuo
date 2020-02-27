@@ -1,40 +1,44 @@
 /**
  * @file
+ * @brief Rotate on Cue
  * Begins one animation when the mouse is pressed and another animation one second later.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="720,750" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
-BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="270,420"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="135,135" fillcolor="yellow" _started_eventThrottling="enqueue"];
-IsGreaterThan3 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="105,420" _b="1"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="720,180" _color="{\"r\":1.000000,\"g\":0.378454,\"b\":0.912825,\"a\":1.000000}" _center="{\"x\":-0.400000,\"y\":0.000000}" _width="0.250000" _height="0.250000"];
-MakeColorLayer2 [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="720,360" _color="{\"r\":0.500008,\"g\":0.000000,\"b\":0.500008,\"a\":1.000000}" _center="{\"x\":0.400000,\"y\":0.000000}" _width="0.250000" _height="0.250000"];
-MakeList2 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,656" fillcolor="green"];
-MakeList5 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="954,626" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="510,765" _text="\"Press the mouse to begin one animation.\\nAnother animation happens a second later.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="-60,420" fillcolor="violet"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-330,660" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1020,615" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+AlignLayerToWindow [type="vuo.layer.align.window2" version="2.0.0" label="Align Layer to Window|<refresh>refresh\l|<layer>layer\l|<window>window\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="735,570" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="0,180" fillcolor="lime"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="270,435"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-255,225" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+IsGreaterThan3 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="120,435" _b="1"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="735,180" _color="\{\"r\":1.000000,\"g\":0.378454,\"b\":0.912825,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.400000,\"y\":0.000000\}" _width="0.250000" _height="0.250000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="735,375" _color="\{\"r\":0.500008,\"g\":0.000000,\"b\":0.500008,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.400000,\"y\":0.000000\}" _width="0.250000" _height="0.250000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList5 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="929,371" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="510,570" _text="\"Press the mouse to begin one animation.\\nAnother animation happens a second later.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="-30,435" fillcolor="orange"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-255,360" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="975,360" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="465,225" _setPosition="0.000000" _setTarget="360.000000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\""];
-SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="465,405" _setPosition="0.000000" _setTarget="360.000000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\""];
+SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="465,420" _setPosition="0.000000" _setTarget="360.000000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\""];
 
 AlignLayerToWindow:alignedLayer -> MakeList5:3;
+AllowFirstEvent:firstEvent -> MakeColorLayer2:color;
+AllowFirstEvent:firstEvent -> MakeColorLayer:color;
+AllowFirstEvent:firstEvent -> MakeTextLayer:text;
 BecameTrue:becameTrue -> SmoothWithDuration3:setPosition;
 BecameTrue:becameTrue -> SmoothWithDuration3:setTarget;
-FireOnStart:started -> MakeColorLayer2:refresh;
-FireOnStart:started -> MakeColorLayer:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> MeasureTime:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration3:time;
 IsGreaterThan3:greaterThan -> BecameTrue:value;
 MakeColorLayer2:layer -> MakeList5:2;
 MakeColorLayer:layer -> MakeList5:1;
-MakeList2:list -> RenderLayersToWindow:setWindowProperties;
 MakeList5:list -> RenderLayersToWindow:layers;
 MakeTextLayer:layer -> AlignLayerToWindow:layer;
 MeasureTime:elapsedTime -> IsGreaterThan3:a;
@@ -42,11 +46,8 @@ ReceiveMouseButtons:pressed -> MeasureTime:reset;
 ReceiveMouseButtons:pressed -> MeasureTime:start;
 ReceiveMouseButtons:pressed -> SmoothWithDuration2:setPosition [event=true];
 ReceiveMouseButtons:pressed -> SmoothWithDuration2:setTarget [event=true];
-RenderLayersToWindow:requestedFrame -> MeasureTime:time;
-RenderLayersToWindow:requestedFrame -> SmoothWithDuration2:time;
-RenderLayersToWindow:requestedFrame -> SmoothWithDuration3:time;
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:updatedWindow -> AlignLayerToWindow:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 SmoothWithDuration2:position -> MakeColorLayer:rotation;
 SmoothWithDuration3:position -> MakeColorLayer2:rotation;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.reduceHaze node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -31,20 +31,20 @@ VuoModuleMetadata({
 				 });
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
 	// Inputs
 	uniform sampler2D texture;
 	uniform float reductionAtTop;
 	uniform float reductionAtBottom;
 	uniform vec4 hazeColor;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	void main()
 	{
 		float d = mix(reductionAtBottom, reductionAtTop, fragmentTextureCoordinate.y);
 
-		vec4 c = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 c = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		c.rgb /= c.a;
 
 		c.rgb = (c.rgb - d * hazeColor.rgb) / (1.0 - d);

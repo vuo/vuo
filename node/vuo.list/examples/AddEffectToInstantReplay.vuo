@@ -1,57 +1,52 @@
 /**
  * @file
+ * @brief Add Effect to Instant Replay
  * Toggles between a live video feed from your iSight camera and an instant replay. Some color effects are added to the instant replay.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="720,555" _saturation="0.000000" _hueShift="0" _contrast="1.000000" _brightness="0" _exposure="0.100000" _gamma="1.000000"];
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1575,255" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.3.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<vibrance>vibrance\l|<hueShift>hueShift\l|<temperature>temperature\l|<tint>tint\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="720,555" _saturation="0.000000" _vibrance="0" _hueShift="0" _temperature="0" _tint="0" _contrast="0.75" _brightness="0" _exposure="0.050000000000000003" _gamma="1.000000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="1185,240"];
 ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="975,150"];
 ConvertFrameToImage4 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="840,765"];
-CycleThroughList2 [type="vuo.list.cycle.VuoImage" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="930,285" _wrapMode="\"wrap\""];
-Enqueue2 [type="vuo.list.enqueue.VuoVideoFrame" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="360,315" _maxItemCount="30"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-15,90" fillcolor="yellow" _started_eventThrottling="enqueue"];
-HoldList2 [type="vuo.data.hold.list.VuoVideoFrame" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="525,330"];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1707,56" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1673,41" fillcolor="green"];
-MakeList7 [type="vuo.list.make.0.VuoVideoFrame" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="497,341"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1425,30" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1380,270" _text="\"Click to switch between live video and instant replay.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.100000}"];
-ProcessList3 [type="vuo.list.process.VuoVideoFrame.VuoImage" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="690,330" fillcolor="violet" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-ReceiveLiveVideo [type="vuo.video.receive" version="1.0.2" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="135,195" _receivedFrame_eventThrottling="drop"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="255,30" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1740,30" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SelectInput3 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1125,75"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoImage" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="930,285" _wrapMode="\"wrap\""];
+Enqueue2 [type="vuo.list.enqueue.VuoVideoFrame" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="285,345" _maxItemCount="45"];
+HoldList2 [type="vuo.data.hold.list2.VuoVideoFrame" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="465,330"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1649,56" fillcolor="blue"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1425,45" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1455,285" _text="\"Click to switch between live video and instant replay.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
+ProcessList3 [type="vuo.list.process.VuoVideoFrame.VuoImage" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="630,330" fillcolor="orange" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="75,195" fillcolor="lime" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="75,45" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1695,45" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput3 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1185,45"];
 Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="945,45"];
 
 AdjustImageColors:adjustedImage -> ProcessList3:processedItem;
-AlignLayerToWindow:alignedLayer -> MakeList2:2;
+AllowFirstEvent:firstEvent -> MakeTextLayer:text;
 ConvertFrameToImage3:image -> SelectInput3:falseOption;
 ConvertFrameToImage4:image -> AdjustImageColors:image;
 CycleThroughList2:item -> SelectInput3:trueOption;
-Enqueue2:list -> HoldList2:newValue;
-FireOnStart:started -> MakeTextLayer:refresh;
-FireOnStart:started -> ReceiveLiveVideo:start;
+Enqueue2:list -> HoldList2:value;
 HoldList2:heldValue -> ProcessList3:fire;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList7:list -> HoldList2:initialValue;
-MakeList:list -> RenderLayersToWindow:setWindowProperties;
 MakeScaledLayer2:layer -> MakeList2:1;
-MakeTextLayer:layer -> AlignLayerToWindow:layer;
+MakeTextLayer:layer -> MakeList2:2;
 ProcessList3:processItem -> ConvertFrameToImage4:frame;
 ProcessList3:processedList -> CycleThroughList2:list;
+ReceiveLiveVideo:receivedFrame -> AllowFirstEvent:event;
 ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage3:frame;
 ReceiveLiveVideo:receivedFrame -> CycleThroughList2:goForward;
 ReceiveLiveVideo:receivedFrame -> Enqueue2:addItem;
-ReceiveMouseButtons:pressed -> HoldList2:refresh;
+ReceiveMouseButtons:pressed -> HoldList2:update;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 SelectInput3:out -> MakeScaledLayer2:image;
 Toggle:value -> SelectInput3:which;
 }

@@ -14,4 +14,4 @@ The math expression can use:
    - Variable *X* — the value of the current list item
    - Variable *I* — the integer index of the current list item, ranging from 1 to the number of items in the list
 
-For a complete list of the operators and functions available, see the `Calculate` (`vuo.math.calculate`) node's description.
+For a complete list of the operators and functions available, see the [Calculate](vuo-node://vuo.math.calculate) node's description.

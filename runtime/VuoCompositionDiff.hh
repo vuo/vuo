@@ -2,9 +2,9 @@
  * @file
  * VuoCompositionDiff interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -27,23 +27,28 @@ public:
 		ChangeNone,  ///< The node is carried across the live-coding reload.
 		ChangeAdd,  ///< The node has been added.
 		ChangeRemove,  ///< The node has been removed.
-		ChangeReplace  ///< The node is being removed with a replacement provided or added as a replacement for another.
+		ChangeReplace,  ///< The node has been removed with a replacement provided or added as a replacement for another.
+		ChangeMove  ///< The node has been moved to a different (sub)composition.
 	};
 
 private:
 	char *diff;  ///< Differences between the old and new composition, when replacing compositions for live coding.
 
 	static string joinPortIdentifier(const string &nodeIdentifier, const string &portName);
+	static string convertIdentifierToPath(const char *compositionIdentifier, const char *nodeIdentifier);
+	static void convertPathToIdentifier(const char *nodePath, string &compositionIdentifier, string &nodeIdentifier);
 
 public:
 	VuoCompositionDiff(void);
 	~VuoCompositionDiff(void);
 	void setDiff(char *diff);
-	ChangeType findNode(const char *nodeIdentifier, json_object **replacementObj);
-	bool isNodeBeingRemovedOrReplaced(const char *nodeIdentifier, json_object **replacementObj);
-	bool isNodeBeingAddedOrReplaced(const char *nodeIdentifier, json_object **replacementObj);
+	ChangeType findNode(const char *compositionIdentifier, const char *nodeIdentifier, json_object **replacementObj);
+	bool isNodeBeingRemovedOrReplaced(const char *compositionIdentifier, const char *nodeIdentifier, json_object **replacementObj);
+	bool isNodeBeingAddedOrReplaced(const char *compositionIdentifier, const char *nodeIdentifier, json_object **replacementObj);
 	bool isPortBeingReplaced(const char *portName, json_object *replacementObj);
 	bool isPortReplacingAnother(const char *portName, json_object *replacementObj, string &oldNodeIdentifier, string &oldPortIdentifier);
+	bool isNodeBeingMovedToHere(const char *newCompositionIdentifier, const char *nodeIdentifier, json_object *replacementObj, string &oldCompositionIdentifier);
+	bool isPortBeingCopied(const char *portName, json_object *replacementObj, string &destinationCompositionIdentifier, string &destinationPortIdentifier);
 	bool isCompositionStartingOrStopping(void);
 };
 

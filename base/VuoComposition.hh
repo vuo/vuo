@@ -2,9 +2,9 @@
  * @file
  * VuoComposition interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -14,8 +14,10 @@
 class VuoCompilerComposition;
 class VuoRendererComposition;
 class VuoCable;
+class VuoComment;
+class VuoCompositionMetadata;
 class VuoNode;
-class VuoPort;
+class VuoProtocol;
 class VuoPublishedPort;
 
 /**
@@ -25,27 +27,25 @@ class VuoComposition : public VuoBase<VuoCompilerComposition,VuoRendererComposit
 {
 public:
 	VuoComposition(void);
+	~VuoComposition(void);
 
-	void setName(string name);
-	string getName(void);
+	void setMetadata(VuoCompositionMetadata *metadata, bool takeOwnership);
+	VuoCompositionMetadata * getMetadata(void);
 
 	void setDirectory(string directory);
 	string getDirectory(void);
 
-	void setDescription(string description);
-	string getDescription(void);
-
-	void setCopyright(string copyright);
-	string getCopyright(void);
-
 	void addNode(VuoNode *node);
 	void removeNode(VuoNode *node);
-	void replaceNode(VuoNode *oldNode, VuoNode *newNode);
 	set<VuoNode *> getNodes(void);
 
 	void addCable(VuoCable *cable);
 	void removeCable(VuoCable *cable);
 	set<VuoCable *> getCables(void);
+
+	void addComment(VuoComment *comment);
+	void removeComment(VuoComment *comment);
+	set<VuoComment *> getComments(void);
 
 	void addPublishedInputPort(VuoPublishedPort *port, int index);
 	void addPublishedOutputPort(VuoPublishedPort *port, int index);
@@ -56,17 +56,16 @@ public:
 	VuoPublishedPort * getPublishedInputPortWithName(string name);
 	VuoPublishedPort * getPublishedOutputPortWithName(string name);
 	int getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput);
-
-	static void parseHeader(const string &compositionAsString, string &name, string &description, string &copyright);
+	vector<VuoPublishedPort *> getProtocolAwarePublishedPortOrder(VuoProtocol *protocol, bool publishedInputs);
 
 private:
-	string name;
+	VuoCompositionMetadata *metadata;
+	bool ownsMetadata;
 	string directory;
-	string description;
-	string copyright;
 
 	set<VuoNode *> nodes;
 	set<VuoCable *> cables;
+	set<VuoComment *> comments;
 	vector<VuoPublishedPort *> publishedInputPorts;
 	vector<VuoPublishedPort *> publishedOutputPorts;
 

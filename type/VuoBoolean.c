@@ -2,17 +2,15 @@
  * @file
  * VuoBoolean implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "type.h"
-#include "VuoBoolean.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -71,5 +69,22 @@ VuoList_VuoBoolean VuoBoolean_getAllowedValues(void)
  */
 char * VuoBoolean_getSummary(const VuoBoolean value)
 {
-	return strdup(value ? "true" : "false");
+	return strdup(value ? "True" : "False");
+}
+
+/**
+ * Returns true if the two values are equal.
+ */
+bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean value2)
+{
+	return value1 == value2;
+}
+
+/**
+ * Returns true if `a` is false and `b` is true.
+ * @version200New
+ */
+bool VuoBoolean_isLessThan(const VuoBoolean a, const VuoBoolean b)
+{
+	return !a && b;
 }

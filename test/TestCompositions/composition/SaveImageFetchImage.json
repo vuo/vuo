@@ -2,9 +2,9 @@
  * @file
  * Expected outputs for the SaveImageFetchImage.vuo composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration": [
@@ -12,59 +12,59 @@
 	//    - generate an image with an opaque gradient and retrieve an identical image.
 	//	  - generate an image with a semitransparent orange gradient and retrieve an identical image (for image formats that support alpha)
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "PNG"  }, "outputPortValues":{"equal":true}},
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "JPEG" }, "outputPortValues":{"equal":true}},
 	// JPEG doesn't support alpha.
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
-	// {"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
-	// {"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	// {"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
+	// {"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "TIFF" }, "outputPortValues":{"equal":true}},
 	// FreeImage 3.17.0 supports writing 32bpc TIFFs, but not reading them — https://sourceforge.net/p/freeimage/bugs/256/
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "BMP"  }, "outputPortValues":{"equal":true}},
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "HDR"  }, "outputPortValues":{"equal":true}},
 	// HDR doesn't support alpha.
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "EXR"  }, "outputPortValues":{"equal":true}},
 	// EXR doesn't support alpha.
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "GIF"  }, "outputPortValues":{"equal":true}},
 	// GIF only supports binary alpha, not covered by this test.
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "TARGA"}, "outputPortValues":{"equal":true}},
 
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
-	{"firingPort":"color", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth": "8bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"16bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":1         }, "colorDepth":"32bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth": "8bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"16bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
+	{"firingPort":"*", "inputPortValues":{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "colorDepth":"32bpc", "format": "WEBP" }, "outputPortValues":{"equal":true}},
 ]}

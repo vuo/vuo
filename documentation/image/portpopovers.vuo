@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-135,-15" _seconds="1.0" _fired_eventThrottling="drop"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="224,-4" _1="\{\"r\":1,\"g\":0.999969482421875,\"b\":0.9999847412109375,\"a\":1\}" _2="\{\"r\":0.65799951553344727,\"g\":0.65806055068969727,\"b\":0.998565673828125,\"a\":1\}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="285,-15" _center="\{\"x\":0.0,\"y\":0.0\}" _radius="1" _noiseAmount="0.2" _width="640" _height="480" _center_manuallyFirable];
+
+FirePeriodically:fired -> MakeList:1 [event=true];
+MakeList:list -> MakeRadialGradientImage:colors;
+}

@@ -2,9 +2,9 @@
  * @file
  * vuo.app.openUrl node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -33,7 +33,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoText, {"name":"URL", "default":"http://vuo.org"}) url,
+		VuoInputData(VuoText, {"name":"URL", "default":"https://vuo.org"}) url,
 		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent
 )
 {

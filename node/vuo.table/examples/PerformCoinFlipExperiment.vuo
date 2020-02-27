@@ -4,49 +4,51 @@
  *
  * This composition does not display a window.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 Add3 [type="vuo.math.add.VuoInteger" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="255,660"];
-AddTableRow [type="vuo.table.add.row" version="1.0.0" label="Add Table Row|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="525,570" fillcolor="violet" _position="\"end\""];
+AddTableRow [type="vuo.table.add.row" version="1.0.0" label="Add Table Row|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="525,570" fillcolor="orange" _position="\"end\""];
 CompareNumbers3 [type="vuo.math.compareNumbers.VuoInteger" version="1.0.0" label="Compare Numbers|<refresh>refresh\l|<a>a\l|<comparison>comparison\l|<b>b\l|<result>result\r" pos="75,765" _comparison="\"=\""];
 ConvertTextToData [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="1005,900"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,540" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="960,780" fillcolor="violet" _format="\"csv\""];
-HoldValue3 [type="vuo.data.hold.VuoTable" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="525,435"];
-MakeList13 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="492,611" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-510,570" fillcolor="lime" _started_eventThrottling="enqueue"];
+FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="960,780" fillcolor="orange" _format="\"csv\""];
+HoldValue3 [type="vuo.data.hold2.VuoTable" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="555,420"];
+MakeList13 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="492,611" fillcolor="orange"];
 MakeRandomList4 [type="vuo.noise.random.list.VuoInteger" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="75,660" _minimum="0" _maximum="1" _count="10"];
-MakeTableFromText2 [type="vuo.table.make.text" version="1.0.0" label="Make Table from Text|<refresh>refresh\l|<text>text\l|<format>format\l|<table>table\r" pos="315,435" fillcolor="violet" _text="\"Trial,Number of Heads\"" _format="\"csv\""];
-SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1215,765" fillcolor="green" _url="\"~\\/Desktop\\/CoinFlips.csv\"" _overwriteUrl="false"];
+MakeTableFromText2 [type="vuo.table.make.text" version="1.0.0" label="Make Table from Text|<refresh>refresh\l|<text>text\l|<format>format\l|<table>table\r" pos="180,435" fillcolor="orange" _text="\"Trial,Number of Heads\"" _format="\"csv\""];
+SaveData [type="vuo.data.save" version="1.1.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1215,765" fillcolor="blue" _url="\"~\\/Desktop\\/CoinFlips.csv\"" _overwriteUrl="false"];
+SelectLatest2 [type="vuo.select.latest.2.VuoTable" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="390,435"];
 SelectOutput2 [type="vuo.select.out.boolean.VuoTable" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="735,765"];
 ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-315,600" _value="15"];
-SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="-165,600" fillcolor="yellow" _spunOffIndex_eventThrottling="enqueue"];
+SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="-165,600" fillcolor="orange" _spunOffIndex_eventThrottling="enqueue"];
 SummarizeValue10 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1005,255"];
 SummarizeValue9 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1005,240"];
 
 Add3:sum -> SummarizeValue10:value;
-AddTableRow:modifiedTable -> HoldValue3:newValue;
+AddTableRow:modifiedTable -> SelectLatest2:option2;
 AddTableRow:modifiedTable -> SelectOutput2:in;
 CompareNumbers3:result -> SelectOutput2:which;
 ConvertTextToData:data -> SaveData:saveData;
-FireOnStart:started -> MakeTableFromText2:refresh;
-FireOnStart:started -> ShareValue2:refresh;
+FireOnStart:started -> MakeTableFromText2:text;
+FireOnStart:started -> ShareValue2:value;
 FormatTable:text -> ConvertTextToData:text;
 HoldValue3:heldValue -> AddTableRow:table;
 MakeList13:list -> AddTableRow:values;
 MakeRandomList4:list -> Add3:values;
-MakeTableFromText2:table -> HoldValue3:initialValue;
+MakeTableFromText2:table -> SelectLatest2:option1;
+SelectLatest2:latest -> HoldValue3:value;
 SelectOutput2:trueOption -> FormatTable:table;
 ShareValue2:sameValue -> CompareNumbers3:b;
 ShareValue2:sameValue -> SpinOffEvents:fire;
 SpinOffEvents:spunOffIndex -> CompareNumbers3:a;
-SpinOffEvents:spunOffIndex -> HoldValue3:refresh;
-SpinOffEvents:spunOffIndex -> MakeRandomList4:refresh;
+SpinOffEvents:spunOffIndex -> HoldValue3:update;
+SpinOffEvents:spunOffIndex -> MakeRandomList4:minimum [event=true];
 SpinOffEvents:spunOffIndex -> SummarizeValue9:value;
 SummarizeValue10:summary -> MakeList13:2;
 SummarizeValue9:summary -> MakeList13:1;

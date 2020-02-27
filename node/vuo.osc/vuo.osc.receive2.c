@@ -2,9 +2,9 @@
  * @file
  * vuo.osc.receive2 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -18,7 +18,6 @@ VuoModuleMetadata({
 						 "VuoOsc"
 					 ],
 					 "node": {
-						 "isInterface" : true,
 						 "exampleCompositions": [ "ReceiveOsc.vuo" ]
 					 }
 				 });
@@ -28,6 +27,7 @@ struct nodeInstanceData
 {
 	VuoOscInputDevice device;
 	VuoOscIn manager;
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoOscInputDevice device)
@@ -61,6 +61,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoOscIn_enableTriggers((*context)->manager, receivedMessage);
 }
 
@@ -86,6 +87,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (!(*context)->manager || !VuoOscInputDevice_areEqual(device, (*context)->device))
 	{
 		VuoOscIn_disableTriggers((*context)->manager);
@@ -100,6 +104,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoOscIn_disableTriggers((*context)->manager);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

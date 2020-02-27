@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.copy node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -31,8 +31,8 @@ void nodeEvent
 	{
 		VuoTransform transform = VuoListGetValue_VuoTransform(transforms, i+1);
 
-		VuoSceneObject so = object;
-		so.transform = VuoTransform_composite(object.transform, transform);
-		VuoListAppendValue_VuoSceneObject(copies->childObjects, so);
+		VuoSceneObject so = VuoSceneObject_copy(object);
+		VuoSceneObject_transform(so, transform);
+		VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects(*copies), so);
 	}
 }

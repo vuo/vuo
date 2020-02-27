@@ -2,9 +2,9 @@
  * @file
  * TestInputEditors implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorManager.hh"
@@ -13,6 +13,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
+#include <objc/objc-runtime.h>
+#include <dlfcn.h>
 
 extern "C" {
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
@@ -45,6 +47,16 @@ private:
 
 	static QString keypressesToSend;
 
+	static void breakFromNSApplicationRun()
+	{
+		// [NSApp stop:nil];
+		id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
+		objc_msgSend(*nsAppGlobal, sel_getUid("stop:"), nil);
+
+		// After sending the `stop:` message, the event loop needs to wake up and process another event in order to finish.
+		VuoEventLoop_break();
+	}
+
 	/**
 	 * Simulate key events.
 	 *
@@ -71,6 +83,8 @@ private:
 			usleep(USEC_PER_SEC/30);
 			QApplication::processEvents();
 		}
+
+		breakFromNSApplicationRun();
 	}
 
 	/**
@@ -85,13 +99,16 @@ private:
 
 		e = CGEventCreateKeyboardEvent(NULL, kVK_Return, false);
 		CGEventPost(kCGHIDEventTap, e);
+
+		breakFromNSApplicationRun();
 	}
 
 
 private slots:
 	void initTestCase()
 	{
-		iem = new VuoInputEditorManager;
+		QList<QDir> pluginDirectories{ QString(BINARY_DIR) + "/lib" };
+		iem = new VuoInputEditorManager(pluginDirectories);
 	}
 
 	/**
@@ -127,9 +144,9 @@ private slots:
 		QTest::newRow("VuoIntegerRange fr_FR") << "VuoIntegerRange" << fr_FR << "1 234\t5 678\n" << "{\"minimum\":1234,\"maximum\":5678}";
 		QTest::newRow("VuoIntegerRange de_DE") << "VuoIntegerRange" << de_DE << "1.234\t5.678\n" << "{\"minimum\":1234,\"maximum\":5678}";
 
-		QTest::newRow("VuoMovieFormat en_US") << "VuoMovieFormat" << en_US << "1,234.56\t7,890.12\n" << "{\"imageEncoding\":\"H264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
-		QTest::newRow("VuoMovieFormat fr_FR") << "VuoMovieFormat" << fr_FR << "1 234,56\t7 890,12\n" << "{\"imageEncoding\":\"H264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
-		QTest::newRow("VuoMovieFormat de_DE") << "VuoMovieFormat" << de_DE << "1.234,56\t7.890,12\n" << "{\"imageEncoding\":\"H264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
+		QTest::newRow("VuoMovieFormat en_US") << "VuoMovieFormat" << en_US << "1,234.56\t7,890.12\n" << "{\"imageEncoding\":\"h264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
+		QTest::newRow("VuoMovieFormat fr_FR") << "VuoMovieFormat" << fr_FR << "1 234,56\t7 890,12\n" << "{\"imageEncoding\":\"h264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
+		QTest::newRow("VuoMovieFormat de_DE") << "VuoMovieFormat" << de_DE << "1.234,56\t7.890,12\n" << "{\"imageEncoding\":\"h264\",\"imageQuality\":1234.56,\"audioEncoding\":\"AAC\",\"audioQuality\":7890.12}";
 
 		QTest::newRow("VuoPoint2d en_US") << "VuoPoint2d" << en_US << "1,234.56\t7,890.12\n" << "{\"x\":1234.56006,\"y\":7890.12012}";
 		QTest::newRow("VuoPoint2d fr_FR") << "VuoPoint2d" << fr_FR << "1 234,56\t7 890,12\n" << "{\"x\":1234.56006,\"y\":7890.12012}";
@@ -150,6 +167,8 @@ private slots:
 		QTest::newRow("VuoReal en_US") << "VuoReal" << en_US << "1,234.56\n" << "1234.56";
 		QTest::newRow("VuoReal fr_FR") << "VuoReal" << fr_FR << "1 234,56\n" << "1234.56";
 		QTest::newRow("VuoReal de_DE") << "VuoReal" << de_DE << "1.234,56\n" << "1234.56";
+
+		QTest::newRow("VuoReal en_US precise") << "VuoReal" << en_US << "1.0000000001\n" << "1.0000000001";
 
 		QTest::newRow("VuoRealRegulation en_US") << "VuoRealRegulation" << en_US << "test\t1,234.56\t7,890.12\t3,456.78\t9,012.34\n" << "{\"name\":\"test\",\"minimumValue\":1234.56,\"maximumValue\":7890.12,\"defaultValue\":3456.78,\"smoothDuration\":9012.34}";
 		QTest::newRow("VuoRealRegulation fr_FR") << "VuoRealRegulation" << fr_FR << "test\t1 234,56\t7 890,12\t3 456,78\t9 012,34\n" << "{\"name\":\"test\",\"minimumValue\":1234.56,\"maximumValue\":7890.12,\"defaultValue\":3456.78,\"smoothDuration\":9012.34}";
@@ -173,6 +192,7 @@ private slots:
 		QLocale::setDefault(locale);
 
 		VuoType *t = new VuoType(inputEditorType.toUtf8().constData());
+		QVERIFY(t);
 		VuoInputEditorWithDialog *ie = dynamic_cast<VuoInputEditorWithDialog *>(iem->newInputEditor(t));
 		QVERIFY(ie);
 
@@ -186,9 +206,9 @@ private slots:
 
 		// Enqueue the keypresses so they happen during `show`.
 		TestInputEditors::keypressesToSend = keypressesToSend;
-		QTimer::singleShot(0, this, sendKeypresses);
+		QTimer::singleShot(100, this, sendKeypresses);
 
-		json_object *acceptedValue = ie->show(QPoint(200,200), originalValue, NULL, map<QString, json_object *>());
+		json_object *acceptedValue = ie->show(QPoint(200, 200), originalValue, NULL, map<QString, json_object *>());
 
 		TestCompositionExecution::checkEqual(QTest::currentDataTag(), inputEditorType.toUtf8().constData(), acceptedValue, json_tokener_parse(expectedValue.toUtf8().constData()));
 
@@ -201,7 +221,7 @@ private slots:
 		ie = dynamic_cast<VuoInputEditorWithDialog *>(iem->newInputEditor(t));
 		QVERIFY(ie);
 
-		QTimer::singleShot(0, this, sendReturn);
+		QTimer::singleShot(100, this, sendReturn);
 
 		json_object *acceptedValue2 = ie->show(QPoint(200,200), acceptedValue, NULL, map<QString, json_object *>());
 
@@ -216,5 +236,14 @@ private slots:
 
 QString TestInputEditors::keypressesToSend;
 
-QTEST_MAIN(TestInputEditors)
+int main(int argc, char *argv[])
+{
+	// Tell Qt where to find its plugins.
+	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../QtPlugins").c_str()));
+
+	QApplication app(argc, argv);
+	TestInputEditors t;
+	return QTest::qExec(&t, argc, argv);
+}
+
 #include "TestInputEditors.moc"

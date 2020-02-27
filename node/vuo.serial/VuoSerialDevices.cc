@@ -2,27 +2,21 @@
  * @file
  * VuoSerial implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoSerial.h"
-#include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 
-#include <dispatch/dispatch.h>
-#include <vector>
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
-#include <IOKit/IOTypes.h>
 #include <IOKit/serial/IOSerialKeys.h>
 #include <IOKit/usb/USBSpec.h>
 
 extern "C"
 {
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({

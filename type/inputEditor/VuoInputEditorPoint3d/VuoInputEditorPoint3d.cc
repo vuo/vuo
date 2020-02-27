@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorPoint3d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorPoint3d.hh"
@@ -32,9 +32,10 @@ QLabel* makeLabel(const char* text)
  */
 VuoDoubleSpinBox* VuoInputEditorPoint3d::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 7);
 	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 	spin->setDecimals(decimalPrecision);
+	spin->setFixedWidth(100);
 	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
 	spin->setButtonMaximum(suggestedMaxForCoord[whichCoord]);
 	spin->setSingleStep(suggestedStepForCoord[whichCoord]);
@@ -127,9 +128,9 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 	spinboxForCoord[coord_y] = initSpinBox(coord_y, dialog, current.y);
 	spinboxForCoord[coord_z] = initSpinBox(coord_z, dialog, current.z);
 
-	connect(spinboxForCoord[coord_x], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
-	connect(spinboxForCoord[coord_y], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
-	connect(spinboxForCoord[coord_z], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[coord_x], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint3d::onSpinboxUpdate);
+	connect(spinboxForCoord[coord_y], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint3d::onSpinboxUpdate);
+	connect(spinboxForCoord[coord_z], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint3d::onSpinboxUpdate);
 
 	if(hasMinMax)
 	{
@@ -137,9 +138,9 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		sliderForCoord[coord_y] = initSlider(coord_y, dialog, current.y);
 		sliderForCoord[coord_z] = initSlider(coord_z, dialog, current.z);
 
-		connect(sliderForCoord[coord_x], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-		connect(sliderForCoord[coord_y], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-		connect(sliderForCoord[coord_z], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(sliderForCoord[coord_x], &QSlider::valueChanged, this, &VuoInputEditorPoint3d::onSliderUpdate);
+		connect(sliderForCoord[coord_y], &QSlider::valueChanged, this, &VuoInputEditorPoint3d::onSliderUpdate);
+		connect(sliderForCoord[coord_z], &QSlider::valueChanged, this, &VuoInputEditorPoint3d::onSliderUpdate);
 	}
 
 	// layout dialog
@@ -227,9 +228,9 @@ void VuoInputEditorPoint3d::onSliderUpdate(int sliderValue)
 	setCoord(whichCoord, value);
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	disconnect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint3d::onSpinboxUpdate);
 	spinboxForCoord[whichCoord]->setValue( value );
-	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorPoint3d::onSpinboxUpdate);
 
 	spinboxForCoord[whichCoord]->setFocus();
 	spinboxForCoord[whichCoord]->selectAll();
@@ -255,9 +256,9 @@ void VuoInputEditorPoint3d::onSpinboxUpdate(QString spinboxValue)
 	if(targetSlider != NULL)
 	{
 		int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
-		disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		disconnect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorPoint3d::onSliderUpdate);
 		targetSlider->setValue( sliderValue );
-		connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorPoint3d::onSliderUpdate);
 	}
 
 	emitValueChanged();

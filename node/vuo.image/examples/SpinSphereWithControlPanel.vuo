@@ -1,0 +1,66 @@
+/**
+ * @file
+ * @brief Spin Sphere with Control Panel
+ * Demonstrates using web anchor links to control other parts of a composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AreEqual [type="vuo.data.areEqual.VuoText" version="1.0.0" label="Are Equal|<refresh>refresh\l|<values>values\l|<equal>equal\r" pos="300,315"];
+AreEqual2 [type="vuo.data.areEqual.VuoText" version="1.0.0" label="Are Equal|<refresh>refresh\l|<values>values\l|<equal>equal\r" pos="300,375"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="450,315"];
+BecameTrue2 [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="450,375"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="810,210"];
+ChangeWindowPosition [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="1005,285" _topLeft="\{\"x\":250,\"y\":0\}" _unit="\"points\""];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="30,0" _width="160" _height="120" _unit="\"points\""];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="1035,330"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="615,210" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-285,105" fillcolor="lime" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="645,150" fillcolor="lime" _started_eventThrottling="enqueue"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="1035,195" _translation="\{\"x\":0,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeCheckerboardImage2 [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="990,15" _upperLeftColor="\{\"r\":0.50000762939453125,\"g\":0.50000762939453125,\"b\":0.50000762939453125,\"a\":1\}" _upperRightColor="\{\"r\":0.25000381469726562,\"g\":0.25000381469726562,\"b\":0.25000381469726562,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2048" _height="1024"];
+MakeImageFromWebsite [type="vuo.image.make.web" version="1.0.0" label="Make Image from Web Page|<refresh>refresh\l|<loadURL>loadURL\l|<loadHTML>loadHTML\l|<rerender>rerender\l|<scrollMouse>scrollMouse\l|<clickMouse>clickMouse\l|<goBack>goBack\l|<goForward>goForward\l|<width>width\l|<height>height\l|<startedLoading>startedLoading\r|<updatedProgress>updatedProgress\r|<finishedLoading>finishedLoading\r|<updatedImage>updatedImage\r" pos="-15,105" fillcolor="orange" _loadURL="\"\"" _loadHTML="\"\<a href=\\\"#start\\\"\>Start\<\\/a\>\\n\<a href=\\\"#stop\\\"\>Stop\<\\/a\>\\n\<style\>a \{ font: 2em Avenir; display: block; background: #ddd; color: #000; padding: .5em; margin: 1em; text-decoration: none; \}\<\\/style\>\"" _scrollMouse="\{\"x\":0.0,\"y\":0.0\}" _width="320" _height="240" _startedLoading_eventThrottling="enqueue" _updatedProgress_eventThrottling="enqueue" _finishedLoading_eventThrottling="enqueue" _updatedImage_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,326" _2="\"#start\""];
+MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,386" _2="\"#stop\""];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1373,11" fillcolor="blue"];
+MakeSphere [type="vuo.scene.make.sphere.VuoImage" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="1230,0" _rows="64" _columns="64"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-315,165" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="285,150" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1425,0" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest3 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="660,315" _option1="50"];
+
+Comment [type="vuo.comment" label="\"# Control Panel\"" pos="-360,-45" width="855" height="304"];
+Comment2 [type="vuo.comment" label="\"# Output\"" pos="600,-45" width="1020" height="403"];
+
+AreEqual2:equal -> BecameTrue2:value;
+AreEqual:equal -> BecameTrue:value;
+BecameTrue2:becameTrue -> SelectLatest3:option2;
+BecameTrue:becameTrue -> SelectLatest3:option1;
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint:y;
+ChangeWindowPosition:changedWindowDescription -> RenderSceneToWindow:setWindowDescription;
+ChangeWindowSize:changedWindowDescription -> RenderImageToWindow:setWindowDescription;
+ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+FireOnStart2:started -> ChangeWindowPosition:topLeft;
+FireOnStart2:started -> MakeCheckerboardImage2:upperLeftColor;
+FireOnStart2:started -> SelectLatest3:option2;
+FireOnStart:started -> ChangeWindowSize:width;
+FireOnStart:started -> MakeImageFromWebsite:loadHTML;
+Make3DTransform:transform -> MakeSphere:transform;
+MakeCheckerboardImage2:image -> MakeSphere:material;
+MakeImageFromWebsite:finishedLoading -> MakeList2:1;
+MakeImageFromWebsite:finishedLoading -> MakeList:1;
+MakeImageFromWebsite:updatedImage -> RenderImageToWindow:image;
+MakeList2:list -> AreEqual2:values;
+MakeList3:list -> RenderSceneToWindow:objects;
+MakeList:list -> AreEqual:values;
+MakeSphere:object -> MakeList3:1;
+ReceiveMouseButtons:pressed -> MakeImageFromWebsite:clickMouse;
+RenderImageToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+SelectLatest3:latest -> ChangeSpeed:speed;
+}

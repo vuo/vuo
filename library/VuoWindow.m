@@ -2,9 +2,9 @@
  * @file
  * VuoWindow implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "VuoWindow.h"
@@ -13,6 +13,7 @@
 #include "VuoEventLoop.h"
 #include "VuoCompositionState.h"
 #include "VuoApp.h"
+#import "VuoAppSplashWindow.h"
 
 #include "module.h"
 
@@ -46,9 +47,20 @@ VuoWindowText VuoWindowText_make(void)
 					  VUOLOG_PROFILE_END(mainQueue);
 					  vuoAddCompositionStateToThreadLocalStorage(compositionState);
 
-					  VuoApp_init();
+					  VuoApp_init(true);
 					  window = [[VuoWindowTextInternal alloc] init];
-					  [window makeKeyAndOrderFront:NSApp];
+
+					  window.alphaValue = 0;
+					  if (VuoApp_splashWindow)
+						  [window orderWindow:NSWindowBelow relativeTo:VuoApp_splashWindow.windowNumber];
+					  else
+						  [window orderFront:NSApp];
+					  [window makeKeyWindow];
+
+					  [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+						  context.duration = VuoApp_windowFadeSeconds;
+						  window.animator.alphaValue = 1;
+					  } completionHandler:^{}];
 
 					  vuoRemoveCompositionStateFromThreadLocalStorage();
 					  free(compositionState);
@@ -100,11 +112,8 @@ void VuoWindowText_disableTriggers(VuoWindowText w)
  */
 void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 {
-	if (!text)
-		return;
-
 	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
-	char *textCopy = strdup(text);  // ... in case the caller frees text before the asynchronous block uses it.
+	char *textCopy = text ? strdup(text) : strdup("");  // ... in case the caller frees text before the asynchronous block uses it.
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_async(dispatch_get_main_queue(), ^{
 					   VUOLOG_PROFILE_END(mainQueue);
@@ -121,26 +130,38 @@ void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 void VuoWindowText_close(VuoWindowText vw)
 {
 	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
+	VuoRetain(window);
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
-					  [window close];
+
+					  void (^completionHandler)(void) = ^{
+						  [window close];
+						  VuoRelease(window);
+					  };
+
+					  // When fullscreen, macOS performs its own close animation, so only apply our fade-out animation when windowed.
+					  if (window.styleMask & NSFullScreenWindowMask)
+						  completionHandler();
+					  else
+						  [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+							  context.duration = VuoApp_windowFadeSeconds;
+							  window.animator.alphaValue = 0;
+						  } completionHandler:completionHandler];
 				  });
 }
 
 /**
  * Deallocates the window.
  *
- * @threadNoMain
+ * @threadAny
  */
 void VuoWindowText_destroy(VuoWindowText vw)
 {
 	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
-	VUOLOG_PROFILE_BEGIN(mainQueue);
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VUOLOG_PROFILE_END(mainQueue);
-					  [window release];
-				  });
+	VuoApp_executeOnMainThread(^{
+		[window release];
+	});
 }
 
 
@@ -170,14 +191,25 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 					  VUOLOG_PROFILE_END(mainQueue);
 					  vuoAddCompositionStateToThreadLocalStorage(compositionState);
 
-					  VuoApp_init();
+					  VuoApp_init(true);
 					  window = [[VuoGraphicsWindow alloc] initWithInitCallback:initCallback
 														 updateBackingCallback:updateBackingCallback
 																resizeCallback:resizeCallback
 																  drawCallback:drawCallback
 																	  userData:context];
-					  [window makeKeyAndOrderFront:nil];
 					  window.compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+
+					  window.alphaValue = 0;
+					  if (VuoApp_splashWindow)
+						  [window orderWindow:NSWindowBelow relativeTo:VuoApp_splashWindow.windowNumber];
+					  else
+						  [window orderFront:NSApp];
+					  [window makeKeyWindow];
+
+					  [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+						  context.duration = VuoApp_windowFadeSeconds;
+						  window.animator.alphaValue = 1;
+					  } completionHandler:^{}];
 
 					  vuoRemoveCompositionStateFromThreadLocalStorage();
 					  free(compositionState);
@@ -190,8 +222,25 @@ VuoWindowOpenGl VuoWindowOpenGl_make
  * Sets up the window to call the trigger functions when events occur.
  *
  * @threadNoMain
+ * @version200New
  */
 void VuoWindowOpenGl_enableTriggers
+(
+		VuoWindowOpenGl w,
+		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
+)
+{
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
+	[window enableUpdatedWindowTrigger:updatedWindow];
+}
+
+/**
+ * Sets up the window to call the trigger functions when events occur.
+ *
+ * @threadNoMain
+ * @deprecated
+ */
+void VuoWindowOpenGl_enableTriggers_deprecated
 (
 		VuoWindowOpenGl w,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
@@ -214,14 +263,15 @@ void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w)
 }
 
 /**
- * Schedules the specified window to be redrawn.
+ * Draws the specified window
+ * (unless the current display frame has already been drawn).
  *
  * @threadAny
  */
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
 {
 	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
-	[window scheduleRedraw];
+	[window draw];
 }
 
 /**
@@ -274,32 +324,42 @@ void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w)
  * Closes the window.
  *
  * @threadNoMain
+ * @version200Changed{Added `closedHandler` argument.}
  */
-void VuoWindowOpenGl_close(VuoWindowOpenGl vw)
+void VuoWindowOpenGl_close(VuoWindowOpenGl vw, void (^closedHandler)(void))
 {
 	VuoGraphicsWindow *window = (VuoGraphicsWindow *)vw;
+	VuoRetain(window);
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
-					  [window close];
+
+					  void (^completionHandler)(void) = ^{
+						  [window close];
+						  VuoRelease(window);
+						  closedHandler();
+					  };
+
+					  // When fullscreen, macOS performs its own close animation, so only apply our fade-out animation when windowed.
+					  if (window.isFullScreen)
+						  completionHandler();
+					  else
+						  [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+							  context.duration = VuoApp_windowFadeSeconds;
+							  window.animator.alphaValue = 0;
+						  } completionHandler:completionHandler];
 				  });
 }
 
 /**
  * Deallocates a @c VuoWindowOpenGl window.
  *
- * @threadNoMain
+ * @threadAny
  */
 void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
 {
 	VuoGraphicsWindow *window = (VuoGraphicsWindow *)vw;
-	VUOLOG_PROFILE_BEGIN(mainQueue);
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VUOLOG_PROFILE_END(mainQueue);
-					  [window release];
-
-					  // -[NSWindow release] apparently doesn't actually dealloc the window; it adds the dealloc to the NSRunLoop.
-					  // Make sure the dealloc actually happens now.
-					  VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
-				  });
+	VuoApp_executeOnMainThread(^{
+		[window release];
+	});
 }

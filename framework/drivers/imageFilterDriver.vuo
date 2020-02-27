@@ -2,33 +2,85 @@
  * @file
  * Vuo Image Filter driver.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="90,-75" fillcolor="cyan" _started_eventThrottling="enqueue"];
-GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="240,135"];
+AreAnyTrue [type="vuo.logic.areAnyTrue" version="2.0.0" label="Are Any True|<refresh>refresh\l|<values>values\l|<anyTrue>anyTrue\r" pos="555,390"];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="-120,225"];
+ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="30,345"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-210,-165" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-45,-60" fillcolor="cyan" _started_eventThrottling="enqueue"];
+GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="285,135"];
+GetDragValues2 [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="-360,345"];
 GetFirstItemInList [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,495"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="375,-45" fillcolor="cyan"];
-HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="540,-45" fillcolor="cyan"];
-ReceiveFileDrags [type="vuo.ui.drag.file" version="1.0.0" label="Receive File Drags|<refresh>refresh\l|<window>window\l|<dragEntered>dragEntered\r|<dragMovedTo>dragMovedTo\r|<dragCompleted>dragCompleted\r|<dragExited>dragExited\r" pos="60,105" _dragEntered_eventThrottling="enqueue" _dragMovedTo_eventThrottling="enqueue" _dragCompleted_eventThrottling="enqueue" _dragExited_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="120,270" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="240,-45" fillcolor="cyan" _option1="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/3.jpg\""];
+GetWindowDimensions [type="vuo.window.get.dimensions2" version="2.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r|<isFullscreen>isFullscreen\r" pos="-240,525"];
+HoldValue [type="vuo.data.hold2.VuoLayer" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-330,420"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="510,-60" fillcolor="cyan"];
+IsImagePopulated [type="vuo.image.populated" version="1.0.0" label="Is Image Populated|<refresh>refresh\l|<image>image\l|<populated>populated\r" pos="945,495"];
+IsPointWithinLayer [type="vuo.layer.within2" version="2.0.0" label="Is Point within Layer|<refresh>refresh\l|<point>point\l|<layer>layer\l|<window>window\l|<withinLayer>withinLayer\r" pos="-195,405"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-219,116" fillcolor="magenta"];
+MakeList2 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="522,401"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="387,641"];
+MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="347,626"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="165,465" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="1.8" _sharpness="1.0" _roundness="0.10000000000000001"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="165,645" _text="\"Drag an image here\\nto filter it.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+Negate2 [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<notValue>notValue\r" pos="390,390"];
+ReceiveFileDrags [type="vuo.ui.drag.file2" version="2.0.0" label="Receive File Drags|<refresh>refresh\l|<window>window\l|<dragEntered>dragEntered\r|<dragMovedTo>dragMovedTo\r|<dragCompleted>dragCompleted\r|<dragExited>dragExited\r" pos="45,105" _dragEntered_eventThrottling="enqueue" _dragMovedTo_eventThrottling="enqueue" _dragCompleted_eventThrottling="enqueue" _dragExited_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="-165,105" fillcolor="magenta" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="0,405" _falseOption="0.20000000000000001" _trueOption="0.40000000000000002"];
+SelectInputList [type="vuo.select.in.list.boolean.VuoLayer" version="2.0.0" label="Select Input List|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="420,600"];
+SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="240,-45" fillcolor="cyan" _option1="\"\\/tmp\\/Hummingbird-1024.jpg\""];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="-15,540" _b="0.20000000000000001"];
+Switch [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<value>value\r" pos="285,210"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<image>image\l|<time>time\l" _image_type="VuoImage" _time_type="VuoReal"];
 
+AreAnyTrue:anyTrue -> SelectInputList:which;
+CombineLayers:combinedLayer -> MakeList:2;
+ConvertImageToLayer:layer -> MakeList:1;
+FireOnDisplayRefresh:requestedFrame -> HoldValue2:update;
+FireOnDisplayRefresh:requestedFrame -> PublishedOutputs:time;
+FireOnStart:started -> SelectInput:falseOption;
 FireOnStart:started -> SelectLatest2:option1;
+GetDragValues2:position -> IsPointWithinLayer:point;
+GetDragValues:position -> HoldValue:update;
 GetDragValues:urls -> GetFirstItemInList:list;
 GetFirstItemInList:firstItem -> SelectLatest2:option2;
-GetImage:image -> HoldValue2:initialValue;
-ReceiveFileDrags:dragCompleted -> GetDragValues:drag;
-RenderImageToWindow:requestedFrame -> HoldValue2:refresh;
-RenderImageToWindow:showedWindow -> ReceiveFileDrags:window;
-SelectLatest2:latest -> GetImage:url;
-PublishedInputs:outputImage -> RenderImageToWindow:image;
+GetImage:image -> HoldValue2:value;
+GetImage:image -> IsImagePopulated:image;
+GetWindowDimensions:height -> MakeTextLayer:text [event=true];
+GetWindowDimensions:height -> Subtract:a;
 HoldValue2:heldValue -> PublishedOutputs:image;
-RenderImageToWindow:requestedFrame -> PublishedOutputs:time;
+HoldValue:heldValue -> IsPointWithinLayer:layer;
+IsImagePopulated:populated -> Negate2:value;
+IsPointWithinLayer:withinLayer -> SelectInput:which;
+MakeList2:list -> AreAnyTrue:values;
+MakeList3:list -> SelectInputList:trueOption;
+MakeList4:list -> SelectInputList:falseOption;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeRectangleLayer:layer -> HoldValue:value;
+MakeRectangleLayer:layer -> MakeList3:1;
+MakeTextLayer:layer -> MakeList3:2;
+Negate2:notValue -> MakeList2:1;
+PublishedInputs:outputImage -> ConvertImageToLayer:image;
+ReceiveFileDrags:dragCompleted -> GetDragValues:drag;
+ReceiveFileDrags:dragCompleted -> Switch:turnOff;
+ReceiveFileDrags:dragEntered -> Switch:turnOn;
+ReceiveFileDrags:dragExited -> Switch:turnOff;
+ReceiveFileDrags:dragMovedTo -> GetDragValues2:drag;
+RenderLayersToWindow:updatedWindow -> GetWindowDimensions:window [style=invis];
+RenderLayersToWindow:updatedWindow -> IsPointWithinLayer:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveFileDrags:window;
+SelectInput:out -> MakeRectangleLayer:opacity;
+SelectInputList:out -> CombineLayers:layers;
+SelectLatest2:latest -> GetImage:url;
+Subtract:difference -> MakeRectangleLayer:height;
+Switch:value -> MakeList2:2;
 }

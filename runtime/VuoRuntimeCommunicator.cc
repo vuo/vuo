@@ -2,18 +2,19 @@
  * @file
  * VuoRuntimeCommunicator implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRuntimeCommunicator.hh"
 
 #include <dlfcn.h>
 #include <sstream>
-#include <stdexcept>
 #include "VuoEventLoop.h"
+#include "VuoException.hh"
 #include "VuoHeap.h"
+#include "VuoNodeRegistry.hh"
 #include "VuoRuntimePersistentState.hh"
 #include "VuoRuntimeState.hh"
 
@@ -41,15 +42,10 @@ VuoRuntimeCommunicator::VuoRuntimeCommunicator(VuoRuntimePersistentState *persis
 
 	runnerPipe = -1;
 
-	isSendingAllTelemetry = false;
-	isSendingEventTelemetry = false;
-
 	vuoInstanceInit = NULL;
 	vuoInstanceTriggerStart = NULL;
 	vuoInstanceTriggerStop = NULL;
 	vuoSetInputPortValue = NULL;
-	fireTriggerPortEvent = NULL;
-	vuoGetPortValue = NULL;
 	getPublishedInputPortCount = NULL;
 	getPublishedOutputPortCount = NULL;
 	getPublishedInputPortNames = NULL;
@@ -78,7 +74,7 @@ VuoRuntimeCommunicator::~VuoRuntimeCommunicator(void)
 /**
  * Updates references to symbols defined in the composition's generated code.
  *
- * @throw std::runtime_error One of the symbols was not found in the composition binary.
+ * @throw VuoException One of the symbols was not found in the composition binary.
  */
 void VuoRuntimeCommunicator::updateCompositionSymbols(void *compositionBinaryHandle)
 {
@@ -88,133 +84,119 @@ void VuoRuntimeCommunicator::updateCompositionSymbols(void *compositionBinaryHan
 	if (! vuoInstanceInit)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceInit() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceTriggerStart = (vuoInstanceTriggerStartType) dlsym(compositionBinaryHandle, "vuoInstanceTriggerStart");
 	if (! vuoInstanceTriggerStart)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceTriggerStart() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoInstanceTriggerStop = (vuoInstanceTriggerStopType) dlsym(compositionBinaryHandle, "vuoInstanceTriggerStop");
 	if (! vuoInstanceTriggerStop)
 	{
 		errorMessage << "The composition couldn't be started because its vuoInstanceTriggerStop() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	vuoSetInputPortValue = (vuoSetInputPortValueType) dlsym(compositionBinaryHandle, "vuoSetInputPortValue");
 	if (! vuoSetInputPortValue)
 	{
 		errorMessage << "The composition couldn't be started because its vuoSetInputPortValue() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
-	}
-
-	fireTriggerPortEvent = (fireTriggerPortEventType) dlsym(compositionBinaryHandle, "fireTriggerPortEvent");
-	if (! fireTriggerPortEvent)
-	{
-		errorMessage << "The composition couldn't be started because its fireTriggerPortEvent() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
-	}
-
-	vuoGetPortValue = (vuoGetPortValueType) dlsym(compositionBinaryHandle, "vuoGetPortValue");
-	if (! vuoGetPortValue)
-	{
-		errorMessage << "The composition couldn't be started because its vuoGetPortValue() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedInputPortCount = (getPublishedInputPortCountType) dlsym(compositionBinaryHandle, "getPublishedInputPortCount");
 	if (! getPublishedInputPortCount)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedInputPortCount() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedOutputPortCount = (getPublishedOutputPortCountType) dlsym(compositionBinaryHandle, "getPublishedOutputPortCount");
 	if (! getPublishedOutputPortCount)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedOutputPortCount() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedInputPortNames = (getPublishedInputPortNamesType) dlsym(compositionBinaryHandle, "getPublishedInputPortNames");
 	if (! getPublishedInputPortNames)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedInputPortNames() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedOutputPortNames = (getPublishedOutputPortNamesType) dlsym(compositionBinaryHandle, "getPublishedOutputPortNames");
 	if (! getPublishedOutputPortNames)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedOutputPortNames() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedInputPortTypes = (getPublishedInputPortTypesType) dlsym(compositionBinaryHandle, "getPublishedInputPortTypes");
 	if (! getPublishedInputPortTypes)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedInputPortTypes() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedOutputPortTypes = (getPublishedOutputPortTypesType) dlsym(compositionBinaryHandle, "getPublishedOutputPortTypes");
 	if (! getPublishedOutputPortTypes)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedOutputPortTypes() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedInputPortDetails = (getPublishedInputPortDetailsType) dlsym(compositionBinaryHandle, "getPublishedInputPortDetails");
 	if (! getPublishedInputPortDetails)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedInputPortDetails() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedOutputPortDetails = (getPublishedOutputPortDetailsType) dlsym(compositionBinaryHandle, "getPublishedOutputPortDetails");
 	if (! getPublishedOutputPortDetails)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedOutputPortDetails() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	firePublishedInputPortEvent = (firePublishedInputPortEventType) dlsym(compositionBinaryHandle, "firePublishedInputPortEvent");
 	if (! firePublishedInputPortEvent)
 	{
 		errorMessage << "The composition couldn't be started because its firePublishedInputPortEvent() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	setPublishedInputPortValue = (setPublishedInputPortValueType) dlsym(compositionBinaryHandle, "setPublishedInputPortValue");
 	if (! setPublishedInputPortValue)
 	{
 		errorMessage << "The composition couldn't be started because its setPublishedInputPortValue() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedInputPortValue = (getPublishedInputPortValueType) dlsym(compositionBinaryHandle, "getPublishedInputPortValue");
 	if (! getPublishedInputPortValue)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedInputPortValue() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 
 	getPublishedOutputPortValue = (getPublishedOutputPortValueType) dlsym(compositionBinaryHandle, "getPublishedOutputPortValue");
 	if (! getPublishedOutputPortValue)
 	{
 		errorMessage << "The composition couldn't be started because its getPublishedOutputPortValue() function couldn't be found : " << dlerror();
-		throw std::runtime_error(errorMessage.str());
+		throw VuoException(errorMessage.str());
 	}
 }
 
 /**
  * Sets up the ZMQ connection and pipe between this class and the runner.
  *
- * @throw std::runtime_error @a controlURL and @a telemetryURL were provided, but the ZMQ connections couldn't be established.
+ * @throw VuoException @a controlURL and @a telemetryURL were provided, but the ZMQ connections couldn't be established.
  */
 void VuoRuntimeCommunicator::openConnection(void *_zmqContext, const char *controlURL, const char *telemetryURL, int runnerPipe)
 {
@@ -233,27 +215,27 @@ void VuoRuntimeCommunicator::openConnection(void *_zmqContext, const char *contr
 
 		if(zmq_bind(zmqControl,controlURL))
 		{
-			errorMessage << "The composition couldn't start because it couldn't establish communication to be controlled by the runner : " << strerror(errno) << endl;
+			errorMessage << "The composition couldn't start because it couldn't establish communication to be controlled by the runner : " << zmq_strerror(errno) << endl;
 			error = true;
 		}
 
 		zmqSelfReceive = zmq_socket(zmqContext, ZMQ_PAIR);
 		if (zmq_bind(zmqSelfReceive, "inproc://vuo-runtime-self") != 0)
 		{
-			errorMessage << "Couldn't bind self-receive socket: " << strerror(errno) << " " << errno << endl;
+			errorMessage << "Couldn't bind self-receive socket: " << zmq_strerror(errno) << " " << errno << endl;
 			error = true;
 		}
 
 		zmqSelfSend = zmq_socket(zmqContext, ZMQ_PAIR);
 		if (zmq_connect(zmqSelfSend, "inproc://vuo-runtime-self") != 0)
 		{
-			errorMessage << "Couldn't connect self-send socket: " << strerror(errno) << " " << errno << endl;
+			errorMessage << "Couldn't connect self-send socket: " << zmq_strerror(errno) << " " << errno << endl;
 			error = true;
 		}
 
 		if(zmq_bind(zmqTelemetry,telemetryURL))
 		{
-			errorMessage << "The composition couldn't start because it couldn't establish communication to be listened to by the runner : " << strerror(errno) << endl;
+			errorMessage << "The composition couldn't start because it couldn't establish communication to be listened to by the runner : " << zmq_strerror(errno) << endl;
 			error = true;
 		}
 
@@ -267,7 +249,7 @@ void VuoRuntimeCommunicator::openConnection(void *_zmqContext, const char *contr
 			zmqSelfReceive = NULL;
 			zmq_close(zmqTelemetry);
 			zmqTelemetry = NULL;
-			throw std::runtime_error(errorMessage.str());
+			throw VuoException(errorMessage.str());
 		}
 	}
 }
@@ -327,65 +309,80 @@ void VuoRuntimeCommunicator::sendTelemetry(enum VuoTelemetry type, zmq_msg_t *me
 
 /**
  * Constructs and sends a message on the telemetry socket, indicating that a node has started execution.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-void VuoRuntimeCommunicator::sendNodeExecutionStarted(const char *nodeIdentifier)
+void VuoRuntimeCommunicator::sendNodeExecutionStarted(const char *compositionIdentifier, const char *nodeIdentifier)
 {
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry))
+	if (! (isSubscribedToAllTelemetry(compositionIdentifier) || isSubscribedToEventTelemetry(compositionIdentifier)))
 		return;
 
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], nodeIdentifier);
+	zmq_msg_t messages[2];
+	vuoInitMessageWithString(&messages[0], compositionIdentifier);
+	vuoInitMessageWithString(&messages[1], nodeIdentifier);
 
-	sendTelemetry(VuoTelemetryNodeExecutionStarted, messages, 1);
+	sendTelemetry(VuoTelemetryNodeExecutionStarted, messages, 2);
 }
 
 /**
  * Constructs and sends a message on the telemetry socket, indicating that a node has finished execution.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-void VuoRuntimeCommunicator::sendNodeExecutionFinished(const char *nodeIdentifier)
+void VuoRuntimeCommunicator::sendNodeExecutionFinished(const char *compositionIdentifier, const char *nodeIdentifier)
 {
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry))
+	if (! (isSubscribedToAllTelemetry(compositionIdentifier) || isSubscribedToEventTelemetry(compositionIdentifier)))
 		return;
 
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], nodeIdentifier);
+	zmq_msg_t messages[2];
+	vuoInitMessageWithString(&messages[0], compositionIdentifier);
+	vuoInitMessageWithString(&messages[1], nodeIdentifier);
 
-	sendTelemetry(VuoTelemetryNodeExecutionFinished, messages, 1);
+	sendTelemetry(VuoTelemetryNodeExecutionFinished, messages, 2);
 }
 
 /**
- * Constructs and sends a message on the telemetry socket, indicating that an input port has received an event or data.
+ * Constructs and sends a message on the telemetry socket, indicating that an input port has received an event and/or data.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-void VuoRuntimeCommunicator::sendInputPortsUpdated(const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary)
+void VuoRuntimeCommunicator::sendInputPortsUpdated(const char *compositionIdentifier, const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary)
 {
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
+	bool isSendingAllTelemetry = isSubscribedToAllTelemetry(compositionIdentifier);
+	bool isSendingPortTelemetry = isSubscribedToPortDataTelemetry(compositionIdentifier, portIdentifier);
+	if (! (isSendingAllTelemetry || isSubscribedToEventTelemetry(compositionIdentifier) || isSendingPortTelemetry))
 		return;
 
-	zmq_msg_t messages[4];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-	vuoInitMessageWithBool(&messages[1], receivedEvent);
-	vuoInitMessageWithBool(&messages[2], receivedData);
-	vuoInitMessageWithString(&messages[3], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
+	zmq_msg_t messages[5];
+	vuoInitMessageWithString(&messages[0], compositionIdentifier);
+	vuoInitMessageWithString(&messages[1], portIdentifier);
+	vuoInitMessageWithBool(&messages[2], receivedEvent);
+	vuoInitMessageWithBool(&messages[3], receivedData);
+	vuoInitMessageWithString(&messages[4], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
 
-	sendTelemetry(VuoTelemetryInputPortsUpdated, messages, 4);
+	sendTelemetry(VuoTelemetryInputPortsUpdated, messages, 5);
 }
 
 /**
- * Constructs and sends a message on the telemetry socket, indicating that an output port has transmitted or fired an event.
+ * Constructs and sends a message on the telemetry socket, indicating that an output port has transmitted/fired an event and/or data.
+ *
+ * @version200Changed{Added `compositionIdentifier`, `sentEvent` arguments.}
  */
-void VuoRuntimeCommunicator::sendOutputPortsUpdated(const char *portIdentifier, bool sentData, const char *portDataSummary)
+void VuoRuntimeCommunicator::sendOutputPortsUpdated(const char *compositionIdentifier, const char *portIdentifier, bool sentEvent, bool sentData, const char *portDataSummary)
 {
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
+	bool isSendingAllTelemetry = isSubscribedToAllTelemetry(compositionIdentifier);
+	bool isSendingPortTelemetry = isSubscribedToPortDataTelemetry(compositionIdentifier, portIdentifier);
+	if (! (isSendingAllTelemetry || isSubscribedToEventTelemetry(compositionIdentifier) || isSendingPortTelemetry))
 		return;
 
-	zmq_msg_t messages[3];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
-	vuoInitMessageWithBool(&messages[1], sentData);
-	vuoInitMessageWithString(&messages[2], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
+	zmq_msg_t messages[5];
+	vuoInitMessageWithString(&messages[0], compositionIdentifier);
+	vuoInitMessageWithString(&messages[1], portIdentifier);
+	vuoInitMessageWithBool(&messages[2], sentEvent);
+	vuoInitMessageWithBool(&messages[3], sentData);
+	vuoInitMessageWithString(&messages[4], (portDataSummary && (isSendingAllTelemetry || isSendingPortTelemetry)) ? portDataSummary : "");
 
-	sendTelemetry(VuoTelemetryOutputPortsUpdated, messages, 3);
+	sendTelemetry(VuoTelemetryOutputPortsUpdated, messages, 5);
 }
 
 /**
@@ -402,18 +399,34 @@ void VuoRuntimeCommunicator::sendPublishedOutputPortsUpdated(const char *portIde
 }
 
 /**
- * Constructs and sends a message on the telemetry socket, indicating that a trigger port has dropped an event.
+ * Constructs and sends a message on the telemetry socket, indicating that an event has finished propagating through the top-level composition.
+ *
+ * @version200New
  */
-void VuoRuntimeCommunicator::sendEventDropped(const char *portIdentifier)
+void VuoRuntimeCommunicator::sendEventFinished(unsigned long eventId, NodeContext *compositionContext)
 {
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	if (! (isSendingAllTelemetry || isSendingEventTelemetry || isSendingPortTelemetry))
+	if (! vuoFinishedExecutingEvent(compositionContext, eventId))
 		return;
 
-	zmq_msg_t messages[1];
-	vuoInitMessageWithString(&messages[0], portIdentifier);
+	sendTelemetry(VuoTelemetryEventFinished, NULL, 0);
+}
 
-	sendTelemetry(VuoTelemetryEventDropped, messages, 1);
+/**
+ * Constructs and sends a message on the telemetry socket, indicating that a trigger port has dropped an event.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
+ */
+void VuoRuntimeCommunicator::sendEventDropped(const char *compositionIdentifier, const char *portIdentifier)
+{
+	bool isSendingPortTelemetry = isSubscribedToPortDataTelemetry(compositionIdentifier, portIdentifier);
+	if (! (isSubscribedToAllTelemetry(compositionIdentifier) || isSubscribedToEventTelemetry(compositionIdentifier) || isSendingPortTelemetry))
+		return;
+
+	zmq_msg_t messages[2];
+	vuoInitMessageWithString(&messages[0], compositionIdentifier);
+	vuoInitMessageWithString(&messages[1], portIdentifier);
+
+	sendTelemetry(VuoTelemetryEventDropped, messages, 2);
 }
 
 /**
@@ -450,44 +463,105 @@ void VuoRuntimeCommunicator::sendCompositionStoppingAndCloseControl(void)
 }
 
 /**
+ * Adds the port to the list of those subscribed to telemetry.
+ */
+void VuoRuntimeCommunicator::subscribeToPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer)
+{
+	portsSendingDataTelemetry[compositionIdentifier].insert(portIdentifer);
+}
+
+/**
+ * Removes the port to the list of those subscribed to telemetry.
+ */
+void VuoRuntimeCommunicator::unsubscribeFromPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer)
+{
+	map<string, set<string> >::iterator iter1 = portsSendingDataTelemetry.find(compositionIdentifier);
+	if (iter1 != portsSendingDataTelemetry.end())
+	{
+		set<string>::iterator iter2 = iter1->second.find(portIdentifer);
+		if (iter2 != iter1->second.end())
+		{
+			iter1->second.erase(iter2);
+			if (iter1->second.empty())
+				portsSendingDataTelemetry.erase(iter1);
+		}
+	}
+}
+
+/**
+ * Returns true if this port is subscribed to telemetry.
+ */
+bool VuoRuntimeCommunicator::isSubscribedToPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifer)
+{
+	map<string, set<string> >::iterator iter = portsSendingDataTelemetry.find(compositionIdentifier);
+	if (iter != portsSendingDataTelemetry.end())
+		return (iter->second.find(portIdentifer) != iter->second.end());
+
+	return false;
+}
+
+/**
+ * Adds the (sub)composition instance to the list of those subscribed to event telemetry.
+ */
+void VuoRuntimeCommunicator::subscribeToEventTelemetry(const char *compositionIdentifier)
+{
+	compositionsSendingEventTelemetry.insert(compositionIdentifier);
+}
+
+/**
+ * Removes the (sub)composition instance from the list of those subscribed to event telemetry.
+ */
+void VuoRuntimeCommunicator::unsubscribeFromEventTelemetry(const char *compositionIdentifier)
+{
+	set<string>::iterator iter = compositionsSendingEventTelemetry.find(compositionIdentifier);
+	if (iter != compositionsSendingEventTelemetry.end())
+		compositionsSendingEventTelemetry.erase(iter);
+}
+
+/**
+ * Returns true if the (sub)composition instance is subscribed to event telemetry.
+ */
+bool VuoRuntimeCommunicator::isSubscribedToEventTelemetry(const char *compositionIdentifier)
+{
+	set<string>::iterator iter = compositionsSendingEventTelemetry.find(compositionIdentifier);
+	return (iter != compositionsSendingEventTelemetry.end());
+}
+
+/**
+ * Adds the (sub)composition instance to the list of those subscribed to all telemetry.
+ */
+void VuoRuntimeCommunicator::subscribeToAllTelemetry(const char *compositionIdentifier)
+{
+	compositionsSendingAllTelemetry.insert(compositionIdentifier);
+}
+
+/**
+ * Removes the (sub)composition instance from the list of those subscribed to all telemetry.
+ */
+void VuoRuntimeCommunicator::unsubscribeFromAllTelemetry(const char *compositionIdentifier)
+{
+	set<string>::iterator iter = compositionsSendingAllTelemetry.find(compositionIdentifier);
+	if (iter != compositionsSendingAllTelemetry.end())
+		compositionsSendingAllTelemetry.erase(iter);
+}
+
+/**
+ * Returns true if the (sub)composition instance is subscribed to all telemetry.
+ */
+bool VuoRuntimeCommunicator::isSubscribedToAllTelemetry(const char *compositionIdentifier)
+{
+	set<string>::iterator iter = compositionsSendingAllTelemetry.find(compositionIdentifier);
+	return (iter != compositionsSendingAllTelemetry.end());
+}
+
+/**
  * Returns true if telemetry containing the port data summary should be sent for this port.
+ *
+ * @version200Changed{Added `compositionIdentifier` argument.}
  */
-bool VuoRuntimeCommunicator::shouldSendPortDataTelemetry(const char *portIdentifier)
+bool VuoRuntimeCommunicator::shouldSendPortDataTelemetry(const char *compositionIdentifier, const char *portIdentifier)
 {
-	bool isSendingPortTelemetry = (portsSendingDataTelemetry.find(portIdentifier) != portsSendingDataTelemetry.end());
-	return (isSendingAllTelemetry || isSendingPortTelemetry);
-}
-
-/**
- * Returns a string representation of the input port's current value.
- */
-char * VuoRuntimeCommunicator::getInputPortString(const char *portIdentifier, bool shouldUseInterprocessSerialization)
-{
-	return vuoGetPortValue(portIdentifier, shouldUseInterprocessSerialization ? 2 : 1);
-}
-
-/**
- * Returns a string representation of the output port's current value.
- */
-char * VuoRuntimeCommunicator::getOutputPortString(const char *portIdentifier, bool shouldUseInterprocessSerialization)
-{
-	return vuoGetPortValue(portIdentifier, shouldUseInterprocessSerialization ? 2 : 1);
-}
-
-/**
- * Returns a summary of the input port's current value.
- */
-char * VuoRuntimeCommunicator::getInputPortSummary(const char *portIdentifier)
-{
-	return vuoGetPortValue(portIdentifier, 0);
-}
-
-/**
- * Returns a summary of the output port's current value.
- */
-char * VuoRuntimeCommunicator::getOutputPortSummary(const char *portIdentifier)
-{
-	return vuoGetPortValue(portIdentifier, 0);
+	return (isSubscribedToAllTelemetry(compositionIdentifier) || isSubscribedToPortDataTelemetry(compositionIdentifier, portIdentifier));
 }
 
 /**
@@ -504,13 +578,13 @@ char * VuoRuntimeCommunicator::mergeEnumDetails(string type, const char *details
 		return NULL;
 
 	string getJsonFunctionName = type + "_getJson";
-	typedef json_object *(*getJsonFunctionType)(int);
+	typedef json_object *(*getJsonFunctionType)(int64_t);
 	getJsonFunctionType getJsonFunction = (getJsonFunctionType)dlsym(RTLD_SELF, getJsonFunctionName.c_str());
 	if (!getJsonFunction)
 		return NULL;
 
 	string summaryFunctionName = type + "_getSummary";
-	typedef char *(*summaryFunctionType)(int);
+	typedef char *(*summaryFunctionType)(int64_t);
 	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.c_str());
 	if (!summaryFunction)
 		return NULL;
@@ -522,7 +596,7 @@ char * VuoRuntimeCommunicator::mergeEnumDetails(string type, const char *details
 		return NULL;
 
 	string listValueFunctionName = "VuoListGetValue_" + type;
-	typedef int (*listValueFunctionType)(void *, unsigned long);
+	typedef int64_t (*listValueFunctionType)(void *, unsigned long);
 	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.c_str());
 	if (!listValueFunction)
 		return NULL;
@@ -537,7 +611,7 @@ char * VuoRuntimeCommunicator::mergeEnumDetails(string type, const char *details
 	json_object *menuItems = json_object_new_array();
 	for (unsigned long i = 1; i <= listCount; ++i)
 	{
-		int value = listValueFunction(allowedValues, i);
+		int64_t value = listValueFunction(allowedValues, i);
 		json_object *js = getJsonFunction(value);
 		if (!json_object_is_type(js, json_type_string))
 			continue;
@@ -553,11 +627,43 @@ char * VuoRuntimeCommunicator::mergeEnumDetails(string type, const char *details
 	}
 	VuoRelease(allowedValues);
 
-	json_object_object_add(detailsJson, "menuItems", menuItems);
+	if (json_object_array_length(menuItems))
+		json_object_object_add(detailsJson, "menuItems", menuItems);
+
 	char *newDetails = strdup(json_object_to_json_string(detailsJson));
 	json_object_put(detailsJson);
 
 	return newDetails;
+}
+
+void VuoRuntimeCommunicator::sendHeartbeat(bool blocking)
+{
+	struct rusage r;
+	if(getrusage(RUSAGE_SELF,&r))
+	{
+		VUserLog("The composition couldn't get the information to send for VuoTelemetryStats : %s", strerror(errno));
+		return;
+	}
+
+	zmq_msg_t messages[2];
+
+	{
+		uint64_t utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
+		zmq_msg_init_size(&messages[0], sizeof utime);
+		memcpy(zmq_msg_data(&messages[0]), &utime, sizeof utime);
+	}
+
+	{
+		uint64_t stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
+		zmq_msg_init_size(&messages[1], sizeof stime);
+		memcpy(zmq_msg_data(&messages[1]), &stime, sizeof stime);
+	}
+
+	if (blocking)
+		// When called with blocking=true, we're already on telemetryQueue.
+		vuoSend("VuoTelemetry", zmqTelemetry, VuoTelemetryStats, messages, 2, false, NULL);
+	else
+		sendTelemetry(VuoTelemetryStats, messages, 2);
 }
 
 /**
@@ -569,34 +675,11 @@ void VuoRuntimeCommunicator::startSendingHeartbeat(void)
 		return;
 
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-	telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
+	telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, queue);
 	dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 
 	dispatch_source_set_event_handler(telemetryTimer, ^{
-
-		struct rusage r;
-		if(getrusage(RUSAGE_SELF,&r))
-		{
-		  VUserLog("The composition couldn't get the information to send for VuoTelemetryStats : %s", strerror(errno));
-		  return;
-		}
-
-		zmq_msg_t messages[2];
-
-		{
-		  uint64_t utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
-		  zmq_msg_init_size(&messages[0], sizeof utime);
-		  memcpy(zmq_msg_data(&messages[0]), &utime, sizeof utime);
-		}
-
-		{
-		  uint64_t stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
-		  zmq_msg_init_size(&messages[1], sizeof stime);
-		  memcpy(zmq_msg_data(&messages[1]), &stime, sizeof stime);
-		}
-
-		sendTelemetry(VuoTelemetryStats, messages, 2);
-
+		sendHeartbeat();
 	});
 
 	dispatch_source_set_cancel_handler(telemetryTimer, ^{
@@ -617,6 +700,11 @@ void VuoRuntimeCommunicator::stopSendingAndCleanUpHeartbeat(void)
 	dispatch_source_cancel(telemetryTimer);
 	dispatch_semaphore_wait(telemetryCanceled, DISPATCH_TIME_FOREVER);
 	dispatch_sync(telemetryQueue, ^{
+					  // zmq_close calls POSIX close(), whose documentation says "queued data are discarded".
+					  // Since telemetry uses non-blocking sends, issue one final _blocking_ send
+					  // to ensure that the queue is drained before we close.
+					  sendHeartbeat(true);
+
 					  zmq_close(zmqTelemetry);
 					  zmqTelemetry = NULL;
 				  });
@@ -633,7 +721,7 @@ void VuoRuntimeCommunicator::startListeningForControl(void)
 	if (! zmqControl)
 		return;
 
-	controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), controlQueue);
+	controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, controlQueue);
 	dispatch_source_set_timer(controlTimer, dispatch_walltime(NULL,0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 
 	dispatch_source_set_event_handler(controlTimer, ^{
@@ -652,6 +740,7 @@ void VuoRuntimeCommunicator::startListeningForControl(void)
 			return;
 
 		enum VuoControlRequest control = (enum VuoControlRequest) vuoReceiveInt(zmqControl, NULL);
+		VuoCompositionState compositionState = { (void *)persistentState->runtimeState, "" };
 
 		switch (control)
 		{
@@ -688,63 +777,74 @@ void VuoRuntimeCommunicator::startListeningForControl(void)
 				break;
 			}
 			case VuoControlRequestInputPortValueRetrieve:
-			{
-				bool shouldUseInterprocessSerialization = vuoReceiveBool(zmqControl, NULL);
-				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				char *valueAsString = getInputPortString(portIdentifier, shouldUseInterprocessSerialization);
-				zmq_msg_t messages[1];
-				vuoInitMessageWithString(&messages[0], valueAsString);
-				free(valueAsString);
-				sendControlReply(VuoControlReplyInputPortValueRetrieved,messages,1);
-				break;
-			}
 			case VuoControlRequestOutputPortValueRetrieve:
 			{
 				bool shouldUseInterprocessSerialization = vuoReceiveBool(zmqControl, NULL);
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				char *valueAsString = getOutputPortString(portIdentifier, shouldUseInterprocessSerialization);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				char *valueAsString = persistentState->nodeRegistry->getPortValue(&compositionState, portIdentifier, shouldUseInterprocessSerialization);
+
 				zmq_msg_t messages[1];
 				vuoInitMessageWithString(&messages[0], valueAsString);
+				sendControlReply(control == VuoControlRequestInputPortValueRetrieve ?
+									VuoControlReplyInputPortValueRetrieved : VuoControlReplyOutputPortValueRetrieved,
+									messages,1);
+
+				free(compositionIdentifier);
+				free(portIdentifier);
 				free(valueAsString);
-				sendControlReply(VuoControlReplyOutputPortValueRetrieved,messages,1);
 				break;
 			}
 			case VuoControlRequestInputPortSummaryRetrieve:
-			{
-				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				char *summary = getInputPortSummary(portIdentifier);
-				zmq_msg_t messages[1];
-				vuoInitMessageWithString(&messages[0], summary);
-				free(summary);
-				sendControlReply(VuoControlReplyInputPortSummaryRetrieved,messages,1);
-				break;
-			}
 			case VuoControlRequestOutputPortSummaryRetrieve:
 			{
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				char *summary = getOutputPortSummary(portIdentifier);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				char *summary = persistentState->nodeRegistry->getPortSummary(&compositionState, portIdentifier);
+
 				zmq_msg_t messages[1];
 				vuoInitMessageWithString(&messages[0], summary);
+				sendControlReply(control == VuoControlRequestInputPortSummaryRetrieve ?
+									 VuoControlReplyInputPortSummaryRetrieved : VuoControlReplyOutputPortSummaryRetrieved,
+									 messages,1);
+
+				free(compositionIdentifier);
+				free(portIdentifier);
 				free(summary);
-				sendControlReply(VuoControlReplyOutputPortSummaryRetrieved,messages,1);
 				break;
 			}
 			case VuoControlRequestTriggerPortFireEvent:
 			{
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				fireTriggerPortEvent(portIdentifier);
-				free(portIdentifier);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				persistentState->nodeRegistry->fireTriggerPortEvent(&compositionState, portIdentifier);
+
 				sendControlReply(VuoControlReplyTriggerPortFiredEvent,NULL,0);
+
+				free(compositionIdentifier);
+				free(portIdentifier);
 				break;
 			}
 			case VuoControlRequestInputPortValueModify:
 			{
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *valueAsString = vuoReceiveAndCopyString(zmqControl, NULL);
-				vuoSetInputPortValue(portIdentifier, valueAsString);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				persistentState->nodeRegistry->setPortValue(&compositionState, portIdentifier, valueAsString);
+
+				sendControlReply(VuoControlReplyInputPortValueModified,NULL,0);
+
+				free(compositionIdentifier);
 				free(portIdentifier);
 				free(valueAsString);
-				sendControlReply(VuoControlReplyInputPortValueModified,NULL,0);
 				break;
 			}
 			case VuoControlRequestPublishedInputPortNamesRetrieve:
@@ -829,91 +929,158 @@ void VuoRuntimeCommunicator::startListeningForControl(void)
 			}
 			case VuoControlRequestPublishedInputPortFireEvent:
 			{
-				char *name = vuoReceiveAndCopyString(zmqControl, NULL);
-				firePublishedInputPortEvent(name);
-				free(name);
+				int count = vuoReceiveInt(zmqControl, NULL);
+
+				char **names = (char **)malloc(count * sizeof(char *));
+				for (int i = 0; i < count; ++i)
+					names[i] = vuoReceiveAndCopyString(zmqControl, NULL);
+
+				firePublishedInputPortEvent(names, count);
+
+				for (int i = 0; i < count; ++i)
+					free(names[i]);
+				free(names);
 
 				sendControlReply(VuoControlReplyPublishedInputPortFiredEvent,NULL,0);
 				break;
 			}
 			case VuoControlRequestPublishedInputPortValueModify:
 			{
-				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				char *valueAsString = vuoReceiveAndCopyString(zmqControl, NULL);
-				setPublishedInputPortValue(portIdentifier, valueAsString);
-				free(portIdentifier);
-				free(valueAsString);
+				vuoAddCompositionStateToThreadLocalStorage(&compositionState);
+
+				while (VuoTelemetry_hasMoreToReceive(zmqControl))
+				{
+					char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
+					char *valueAsString = vuoReceiveAndCopyString(zmqControl, NULL);
+
+					setPublishedInputPortValue(portIdentifier, valueAsString);
+
+					free(portIdentifier);
+					free(valueAsString);
+				}
+
 				sendControlReply(VuoControlReplyPublishedInputPortValueModified,NULL,0);
+
+				vuoRemoveCompositionStateFromThreadLocalStorage();
 				break;
 			}
 			case VuoControlRequestPublishedInputPortValueRetrieve:
 			{
+				vuoAddCompositionStateToThreadLocalStorage(&compositionState);
+
 				bool shouldUseInterprocessSerialization = vuoReceiveBool(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *valueAsString = getPublishedInputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+				free(portIdentifier);
 				zmq_msg_t messages[1];
 				vuoInitMessageWithString(&messages[0], valueAsString);
 				free(valueAsString);
 				sendControlReply(VuoControlReplyPublishedInputPortValueRetrieved,messages,1);
+
+				vuoRemoveCompositionStateFromThreadLocalStorage();
 				break;
 			}
 			case VuoControlRequestPublishedOutputPortValueRetrieve:
 			{
+				vuoAddCompositionStateToThreadLocalStorage(&compositionState);
+
 				bool shouldUseInterprocessSerialization = vuoReceiveBool(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *valueAsString = getPublishedOutputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+				free(portIdentifier);
 				zmq_msg_t messages[1];
 				vuoInitMessageWithString(&messages[0], valueAsString);
 				free(valueAsString);
 				sendControlReply(VuoControlReplyPublishedOutputPortValueRetrieved,messages,1);
+
+				vuoRemoveCompositionStateFromThreadLocalStorage();
 				break;
 			}
 			case VuoControlRequestInputPortTelemetrySubscribe:
 			case VuoControlRequestOutputPortTelemetrySubscribe:
 			{
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				portsSendingDataTelemetry.insert(portIdentifier);
-				bool isInput = (control == VuoControlRequestInputPortTelemetrySubscribe);
-				char *summary = (isInput ? getInputPortSummary(portIdentifier) : getOutputPortSummary(portIdentifier));
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				subscribeToPortDataTelemetry(compositionState.compositionIdentifier, portIdentifier);
+
+				char *summary = persistentState->nodeRegistry->getPortSummary(&compositionState, portIdentifier);
+
 				zmq_msg_t messages[1];
 				vuoInitMessageWithString(&messages[0], summary);
+				sendControlReply(control == VuoControlRequestInputPortTelemetrySubscribe ?
+									 VuoControlReplyInputPortTelemetrySubscribed : VuoControlReplyOutputPortTelemetrySubscribed,
+									 messages,1);
+
+				free(compositionIdentifier);
 				free(portIdentifier);
 				free(summary);
-				sendControlReply(isInput ? VuoControlReplyInputPortTelemetrySubscribed : VuoControlReplyOutputPortTelemetrySubscribed,messages,1);
 				break;
 			}
 			case VuoControlRequestInputPortTelemetryUnsubscribe:
 			case VuoControlRequestOutputPortTelemetryUnsubscribe:
 			{
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
 				char *portIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
-				portsSendingDataTelemetry.erase(portIdentifier);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				unsubscribeFromPortDataTelemetry(compositionState.compositionIdentifier, portIdentifier);
+
+				sendControlReply(control == VuoControlRequestInputPortTelemetryUnsubscribe ?
+									 VuoControlReplyInputPortTelemetryUnsubscribed : VuoControlReplyOutputPortTelemetryUnsubscribed,
+									 NULL,0);
+
+				free(compositionIdentifier);
 				free(portIdentifier);
-				bool isInput = (control == VuoControlRequestInputPortTelemetryUnsubscribe);
-				sendControlReply(isInput ? VuoControlReplyInputPortTelemetryUnsubscribed : VuoControlReplyOutputPortTelemetryUnsubscribed,NULL,0);
 				break;
 			}
 			case VuoControlRequestEventTelemetrySubscribe:
 			{
-				isSendingEventTelemetry = true;
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				subscribeToEventTelemetry(compositionState.compositionIdentifier);
+
 				sendControlReply(VuoControlReplyEventTelemetrySubscribed,NULL,0);
+
+				free(compositionIdentifier);
 				break;
 			}
 			case VuoControlRequestEventTelemetryUnsubscribe:
 			{
-				isSendingEventTelemetry = false;
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				unsubscribeFromEventTelemetry(compositionState.compositionIdentifier);
+
 				sendControlReply(VuoControlReplyEventTelemetryUnsubscribed,NULL,0);
+
+				free(compositionIdentifier);
 				break;
 			}
 			case VuoControlRequestAllTelemetrySubscribe:
 			{
-				isSendingAllTelemetry = true;
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				subscribeToAllTelemetry(compositionState.compositionIdentifier);
+
 				sendControlReply(VuoControlReplyAllTelemetrySubscribed,NULL,0);
+
+				free(compositionIdentifier);
 				break;
 			}
 			case VuoControlRequestAllTelemetryUnsubscribe:
 			{
-				isSendingAllTelemetry = false;
+				char *compositionIdentifier = vuoReceiveAndCopyString(zmqControl, NULL);
+
+				compositionState.compositionIdentifier = persistentState->nodeRegistry->defaultToTopLevelCompositionIdentifier(compositionIdentifier);
+				unsubscribeFromAllTelemetry(compositionState.compositionIdentifier);
+
 				sendControlReply(VuoControlReplyAllTelemetryUnsubscribed,NULL,0);
+
+				free(compositionIdentifier);
 				break;
 			}
 		}
@@ -953,7 +1120,7 @@ void VuoRuntimeCommunicator::interruptListeningForControl(void)
 	zmq_msg_init_size(&message, sizeof z);
 	memcpy(zmq_msg_data(&message), &z, sizeof z);
 	if (zmq_send(zmqSelfSend, &message, 0) != 0)
-		VUserLog("Couldn't break: %s (%d)", strerror(errno), errno);
+		VUserLog("Couldn't break: %s (%d)", zmq_strerror(errno), errno);
 	zmq_msg_close(&message);
 }
 
@@ -1000,9 +1167,12 @@ void VuoRuntimeCommunicator::startListeningForRunnerExit(void)
 	dispatch_async(queue, ^{
 					   char buf[1];
 					   int ret;
+					   int readError;
 					   do {
 						   ret = read(runnerPipe, &buf, 1);
-					   } while (ret < 0);
+						   readError = errno;
+						   usleep(USEC_PER_SEC / 100);
+					   } while (ret == -1 && readError == EAGAIN);
 
 					   _hasZmqConnection = false;
 					   persistentState->runtimeState->stopCompositionAsOrderedByComposition();
@@ -1017,7 +1187,7 @@ extern "C"
 void vuoSendNodeExecutionStarted(VuoCompositionState *compositionState, const char *nodeIdentifier)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->sendNodeExecutionStarted(nodeIdentifier);
+	return runtimeState->persistentState->communicator->sendNodeExecutionStarted(compositionState->compositionIdentifier, nodeIdentifier);
 }
 
 /**
@@ -1026,7 +1196,7 @@ void vuoSendNodeExecutionStarted(VuoCompositionState *compositionState, const ch
 void vuoSendNodeExecutionFinished(VuoCompositionState *compositionState, const char *nodeIdentifier)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->sendNodeExecutionFinished(nodeIdentifier);
+	return runtimeState->persistentState->communicator->sendNodeExecutionFinished(compositionState->compositionIdentifier, nodeIdentifier);
 }
 
 /**
@@ -1035,16 +1205,18 @@ void vuoSendNodeExecutionFinished(VuoCompositionState *compositionState, const c
 void vuoSendInputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool receivedEvent, bool receivedData, const char *portDataSummary)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->sendInputPortsUpdated(portIdentifier, receivedEvent, receivedData, portDataSummary);
+	return runtimeState->persistentState->communicator->sendInputPortsUpdated(compositionState->compositionIdentifier, portIdentifier, receivedEvent, receivedData, portDataSummary);
 }
 
 /**
  * C wrapper for VuoRuntimeCommunicator::sendOutputPortsUpdated().
+ *
+ * @version200Changed{Added `sentEvent` argument.}
  */
-void vuoSendOutputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool sentData, const char *portDataSummary)
+void vuoSendOutputPortsUpdated(VuoCompositionState *compositionState, const char *portIdentifier, bool sentEvent, bool sentData, const char *portDataSummary)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->sendOutputPortsUpdated(portIdentifier, sentData, portDataSummary);
+	return runtimeState->persistentState->communicator->sendOutputPortsUpdated(compositionState->compositionIdentifier, portIdentifier, sentEvent, sentData, portDataSummary);
 }
 
 /**
@@ -1057,12 +1229,24 @@ void vuoSendPublishedOutputPortsUpdated(VuoCompositionState *compositionState, c
 }
 
 /**
+ * C wrapper for VuoRuntimeCommunicator::sendEventFinished().
+ *
+ * @version200New
+ */
+void vuoSendEventFinished(VuoCompositionState *compositionState, unsigned long eventId)
+{
+	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
+	NodeContext *compositionContext = runtimeState->persistentState->nodeRegistry->getCompositionContext(compositionState->compositionIdentifier);
+	return runtimeState->persistentState->communicator->sendEventFinished(eventId, compositionContext);
+}
+
+/**
  * C wrapper for VuoRuntimeCommunicator::sendEventDropped().
  */
 void vuoSendEventDropped(VuoCompositionState *compositionState, const char *portIdentifier)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->sendEventDropped(portIdentifier);
+	return runtimeState->persistentState->communicator->sendEventDropped(compositionState->compositionIdentifier, portIdentifier);
 }
 
 /**
@@ -1080,25 +1264,25 @@ void vuoSendError(VuoCompositionState *compositionState, const char *message)
 bool vuoShouldSendPortDataTelemetry(VuoCompositionState *compositionState, const char *portIdentifier)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->shouldSendPortDataTelemetry(portIdentifier);
+	return runtimeState->persistentState->communicator->shouldSendPortDataTelemetry(compositionState->compositionIdentifier, portIdentifier);
 }
 
 /**
- * C wrapper for VuoRuntimeCommunicator::getInputPortString().
+ * Returns the value of the input port, serialized to string.
  */
 char * vuoGetInputPortString(VuoCompositionState *compositionState, const char *portIdentifier, bool shouldUseInterprocessSerialization)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->getInputPortString(portIdentifier, shouldUseInterprocessSerialization);
+	return runtimeState->persistentState->nodeRegistry->getPortValue(compositionState, portIdentifier, shouldUseInterprocessSerialization);
 }
 
 /**
- * C wrapper for VuoRuntimeCommunicator::getOutputPortString().
+ * Returns the value of the output port, serialized to string.
  */
 char * vuoGetOutputPortString(VuoCompositionState *compositionState, const char *portIdentifier, bool shouldUseInterprocessSerialization)
 {
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	return runtimeState->persistentState->communicator->getOutputPortString(portIdentifier, shouldUseInterprocessSerialization);
+	return runtimeState->persistentState->nodeRegistry->getPortValue(compositionState, portIdentifier, shouldUseInterprocessSerialization);
 }
 
 }  // extern "C"

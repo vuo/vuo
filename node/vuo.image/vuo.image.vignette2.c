@@ -2,9 +2,9 @@
  * @file
  * vuo.image.vignette node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Vignette Image",
-					  "keywords" : [ "border", "surround", "encapsulate", "darken", "post-process", "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "filter" ],
+					  "keywords" : [
+						  "filter",
+						  "border", "surround", "encapsulate", "darken", "post-process",
+						  "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "vintage", ],
 					  "version" : "2.0.0",
 					  "node": {
 						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
@@ -20,9 +23,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec2 center;
@@ -39,10 +42,10 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 col = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 col = texture2D(texture, fragmentTextureCoordinate);
 		col.a = clamp(col.a, 0., 1.);	// for floating-point textures
 
-		vec2 uv = (fragmentTextureCoordinate.xy - center) / size;
+		vec2 uv = (fragmentTextureCoordinate - center) / size;
 		float f = smootherstep(.5 + blur, .5 - blur, length(uv));
 		vec3 mixed = mix(edgeColor.rgb, col.rgb, f);
 		float a = mix(edgeColor.a, col.a, f);

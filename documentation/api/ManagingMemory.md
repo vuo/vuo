@@ -2,7 +2,7 @@
 
 When a node allocates memory on the heap and sends the pointer through an output port, the pointer travels to other nodes. The other nodes can hold onto that pointer for any amount of time. There's no guarantee of which node will be the last to use the pointer. Who owns that heap-allocated data? Who is responsible for deallocating it? 
 
-The answer is that the Vuo runtime takes ownership of the data as soon as it leaves the node, and is responsible for deallocating it. The Vuo runtime uses [reference counting](http://en.wikipedia.org/wiki/Reference_counting) to keep track of heap-allocated memory and deallocate it when all nodes are finished using it. 
+The answer is that the Vuo runtime takes ownership of the data as soon as it leaves the node, and is responsible for deallocating it. The Vuo runtime uses [reference counting](https://en.wikipedia.org/wiki/Reference_counting) to keep track of heap-allocated memory and deallocate it when all nodes are finished using it.
 
 You need to use Vuo's reference-counting system to manage memory if: 
 

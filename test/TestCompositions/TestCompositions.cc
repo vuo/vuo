@@ -2,9 +2,9 @@
  * @file
  * TestCompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
@@ -60,7 +60,8 @@ public:
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
-		compiler->compileCompositionString(composition, compiledCompositionPath);
+		VuoCompilerIssues issues;
+		compiler->compileCompositionString(composition, compiledCompositionPath, true, &issues);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
@@ -143,7 +144,9 @@ private slots:
 	void initTestCase()
 	{
 		compiler = initCompiler();
-		compiler->loadStoredLicense();
+#if VUO_PRO
+		compiler->load_Pro(true);
+#endif
 	}
 
 	void cleanupTestCase()
@@ -203,9 +206,13 @@ private slots:
 				composition.append( (istreambuf_iterator<char>(fin)), (istreambuf_iterator<char>()) );
 				fin.close();
 			}
-			else
+			else if (compiler)
 			{
 				VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(name);
+				if (!nodeClass)
+					// Trim off the optional hyphenated extension.
+					// E.g., `vuo.time.schedule-single-none.json` should wrap the `vuo.time.schedule` node.
+					nodeClass = compiler->getNodeClass(VuoStringUtilities::split(name, '-')[0]);
 				QVERIFY(nodeClass != NULL);
 				composition = wrapNodeInComposition(nodeClass, compiler);
 			}
@@ -228,7 +235,7 @@ private slots:
 		{
 			TestCompositionsRunnerDelegate delegate(composition, compositionDir, portConfigurations, compiler);
 		}
-		catch (exception &e)
+		catch (VuoException &e)
 		{
 			QFAIL(e.what());
 		}

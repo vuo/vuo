@@ -2,13 +2,10 @@
  * @file
  * VuoSyphonServerDescription implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
-
-#include <stdio.h>
-#include <string.h>
 
 #include "type.h"
 #include "VuoSyphonServerDescription.h"
@@ -21,6 +18,7 @@ VuoModuleMetadata({
 					  "keywords" : ["syphon", "server", "pipe"],
 					  "version" : "1.0.0",
 					  "dependencies" : [
+						"VuoBoolean",
 						"VuoText"
 					  ]
 				  });
@@ -39,19 +37,12 @@ VuoModuleMetadata({
  */
 VuoSyphonServerDescription VuoSyphonServerDescription_makeFromJson(json_object * js)
 {
-	VuoSyphonServerDescription server = {NULL, NULL, NULL};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "serverUUID", &o))
-		server.serverUUID = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "serverName", &o))
-		server.serverName = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "applicationName", &o))
-		server.applicationName = VuoText_makeFromJson(o);
-
-	return server;
+	return (VuoSyphonServerDescription){
+		VuoJson_getObjectValue(VuoText, js, "serverUUID", NULL),
+		VuoJson_getObjectValue(VuoText, js, "serverName", NULL),
+		VuoJson_getObjectValue(VuoText, js, "applicationName", NULL),
+		VuoJson_getObjectValue(VuoBoolean, js, "useWildcard", false)
+	};
 }
 
 /**
@@ -80,6 +71,8 @@ json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescriptio
 		json_object_object_add(js, "applicationName", applicationName);
 	}
 
+	json_object_object_add(js, "useWildcard", VuoBoolean_getJson(value.useWildcard));
+
 	return js;
 }
 
@@ -100,14 +93,17 @@ char * VuoSyphonServerDescription_getSummary(const VuoSyphonServerDescription va
 /**
  * @ingroup VuoSyphonServerDescription
  * Creates a new server from the specified values.
+ *
+ * @version200Changed{Added `useWildcard` argument.}
  */
-VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, VuoText serverName, VuoText applicationName)
+VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, VuoText serverName, VuoText applicationName, bool useWildcard)
 {
 	VuoSyphonServerDescription server;
 
 	server.serverUUID = serverUUID;
 	server.serverName = serverName;
 	server.applicationName = applicationName;
+	server.useWildcard = useWildcard;
 
 	return server;
 }
@@ -120,5 +116,19 @@ bool VuoSyphonServerDescription_areEqual(const VuoSyphonServerDescription value1
 {
 	return (VuoText_areEqual(value1.serverUUID, value2.serverUUID) &&
 			VuoText_areEqual(value1.serverName, value2.serverName) &&
-			VuoText_areEqual(value1.applicationName, value2.applicationName));
+			VuoText_areEqual(value1.applicationName, value2.applicationName) &&
+			value1.useWildcard == value2.useWildcard);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoSyphonServerDescription_isLessThan(const VuoSyphonServerDescription a, const VuoSyphonServerDescription b)
+{
+	VuoType_returnInequality(VuoText,    a.serverUUID,      b.serverUUID);
+	VuoType_returnInequality(VuoText,    a.serverName,      b.serverName);
+	VuoType_returnInequality(VuoText,    a.applicationName, b.applicationName);
+	VuoType_returnInequality(VuoBoolean, a.useWildcard,     b.useWildcard);
+	return false;
 }

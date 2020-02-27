@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorOscOutputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorOscOutputDevice.hh"
@@ -19,7 +19,9 @@ extern "C"
  */
 static void __attribute__((constructor)) VuoInputEditorOscOutputDevice_init(void)
 {
-	VuoOsc_use();
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		VuoOsc_use();
+	});
 }
 
 /**
@@ -37,7 +39,7 @@ VuoInputEditorMenuItem * VuoInputEditorOscOutputDevice::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	optionsTree->addItem(new VuoInputEditorMenuItem("Automatic", NULL));
+	optionsTree->addItem(new VuoInputEditorMenuItem("Auto", NULL));
 
 	optionsTree->addSeparator();
 	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device", NULL, NULL, false));

@@ -2,13 +2,11 @@
  * @file
  * VuoInputEditorEdgeBlend implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 #include "VuoInputEditorEdgeBlend.hh"
-#include "VuoDoubleSpinBox.hh"
-#include <stdio.h>
 
 /**
  * Constructs a VuoInputEditorEdgeBlend object.
@@ -112,9 +110,9 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 
 	// crop spinbox
 	{
-		spinBox_crop = new VuoDoubleSpinBox(&dialog);
+		spinBox_crop = new VuoDoubleSpinBox(&dialog, 7);
 		setupSpinBox(spinBox_crop, suggestedMin.crop, suggestedMax.crop, suggestedStep.crop, currentValue.crop);
-		connect(spinBox_crop, SIGNAL(valueChanged(QString)), this, SLOT(setCrop(QString)));
+		connect(spinBox_crop, static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorEdgeBlend::setCrop);
 
 		layout->addWidget( new QLabel("Crop"), row, 0 );
 		layout->addWidget( spinBox_crop, row, 1 );
@@ -127,7 +125,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 			slider_crop = new QSlider;
 			setupSlider(slider_crop, suggestedMin.crop, suggestedMax.crop, suggestedStep.crop, currentValue.crop);
 			crop_slider_range = slider_crop->maximum();
-			connect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+			connect(slider_crop, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCropSlider);
 
 			layout->addWidget(slider_crop, row, 1);
 			row++;
@@ -142,10 +140,10 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 
 	// cutoff spinbox
 	{
-		spinBox_cutoff = new VuoDoubleSpinBox(&dialog);
+		spinBox_cutoff = new VuoDoubleSpinBox(&dialog, 7);
 		setupSpinBox(spinBox_cutoff, suggestedMin.cutoff, suggestedMax.cutoff, suggestedStep.cutoff, currentValue.cutoff);
 
-		connect(spinBox_cutoff, SIGNAL(valueChanged(QString)), this, SLOT(setCutoff(QString)));
+		connect(spinBox_cutoff, static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorEdgeBlend::setCutoff);
 		layout->addWidget( new QLabel("Cutoff"), row, 0 );
 		layout->addWidget( spinBox_cutoff, row, 1);
 
@@ -157,7 +155,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 			slider_cutoff = new QSlider;
 			setupSlider(slider_cutoff, suggestedMin.cutoff, suggestedMax.cutoff, suggestedStep.cutoff, currentValue.cutoff);
 			cutoff_slider_range = slider_cutoff->maximum();
-			connect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+			connect(slider_cutoff, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCutoffSlider);
 
 			layout->addWidget(slider_cutoff, row, 1);
 
@@ -173,9 +171,9 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 
 	// gamma spinbox
 	{
-		spinBox_gamma = new VuoDoubleSpinBox(&dialog);
+		spinBox_gamma = new VuoDoubleSpinBox(&dialog, 7);
 		setupSpinBox(spinBox_gamma, suggestedMin.gamma, suggestedMax.gamma, suggestedStep.gamma, currentValue.gamma);
-		connect(spinBox_gamma, SIGNAL(valueChanged(QString)), this, SLOT(setGamma(QString)));
+		connect(spinBox_gamma, static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorEdgeBlend::setGamma);
 
 		layout->addWidget( new QLabel("Gamma"), row, 0 );
 		layout->addWidget( spinBox_gamma, row, 1 );
@@ -188,7 +186,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 			slider_gamma = new QSlider;
 			setupSlider(slider_gamma, suggestedMin.gamma, suggestedMax.gamma, suggestedStep.gamma, currentValue.gamma);
 			gamma_slider_range = slider_gamma->maximum();
-			connect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+			connect(slider_gamma, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setGammaSlider);
 
 			layout->addWidget(slider_gamma, row, 1);
 			row++;
@@ -247,9 +245,9 @@ void VuoInputEditorEdgeBlend::setCutoff(QString newLineEditText)
 	if(slider_cutoff != NULL)
 	{
 		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_cutoff->minimum(), slider_cutoff->maximum(), suggestedMin.cutoff, suggestedMax.cutoff, newLineEditValue);
-		disconnect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+		disconnect(slider_cutoff, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCutoffSlider);
 		slider_cutoff->setValue(newSliderValue);
-		connect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+		connect(slider_cutoff, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCutoffSlider);
 	}
 
 	currentValue.cutoff = newLineEditValue;
@@ -264,9 +262,9 @@ void VuoInputEditorEdgeBlend::setGamma(QString newLineEditText)
 	{
 		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_gamma->minimum(), slider_gamma->maximum(), suggestedMin.gamma, suggestedMax.gamma, newLineEditValue);
 
-		disconnect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+		disconnect(slider_gamma, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setGammaSlider);
 		slider_gamma->setValue(newSliderValue);
-		connect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+		connect(slider_gamma, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setGammaSlider);
 	}
 
 	currentValue.gamma = newLineEditValue;
@@ -281,9 +279,9 @@ void VuoInputEditorEdgeBlend::setCrop(QString newLineEditText)
 	{
 		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_crop->minimum(), slider_crop->maximum(), suggestedMin.crop, suggestedMax.crop, newLineEditValue);
 
-		disconnect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+		disconnect(slider_crop, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCropSlider);
 		slider_crop->setValue(newSliderValue);
-		connect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+		connect(slider_crop, &QSlider::valueChanged, this, &VuoInputEditorEdgeBlend::setCropSlider);
 	}
 
 	currentValue.crop = newLineEditValue;

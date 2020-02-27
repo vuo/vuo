@@ -2,26 +2,26 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
 {
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="93,174" _seconds="1.0" _fired_eventThrottling="drop"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="93,174" _seconds="1.0" _fired_eventThrottling="drop"];
 FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically2|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="167,383" _seconds="1.0" _fired_eventThrottling="drop"];
-ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue1|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="305,172"];
-ShareValue22 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue5|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="801,193"];
-ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue4|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="643,245"];
-ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="480,131"];
-ShareValue5 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue3|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="484,246"];
+ShareValue1 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue1|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="305,172"];
+ShareValue5 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue5|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="801,193"];
+ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue4|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="643,245"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="480,131"];
+ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue3|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="484,246"];
 
-FirePeriodically2:fired -> ShareValue5:value;
-FirePeriodically:fired -> ShareValue2:value;
-ShareValue2:sameValue -> ShareValue4:value;
+FirePeriodically2:fired -> ShareValue3:value;
+FirePeriodically1:fired -> ShareValue1:value;
+ShareValue1:sameValue -> ShareValue2:value;
+ShareValue1:sameValue -> ShareValue3:refresh;
+ShareValue4:sameValue -> ShareValue5:value;
 ShareValue2:sameValue -> ShareValue5:refresh;
-ShareValue3:sameValue -> ShareValue22:value;
-ShareValue4:sameValue -> ShareValue22:refresh;
-ShareValue5:sameValue -> ShareValue3:value;
+ShareValue3:sameValue -> ShareValue4:value;
 }

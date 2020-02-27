@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorCurve implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorCurve.hh"
@@ -31,11 +31,17 @@ VuoInputEditorMenuItem * VuoInputEditorCurve::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(VuoCurve_Linear),		VuoCurve_getJson(VuoCurve_Linear),		renderMenuIconWithCurve(VuoCurve_Linear)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(VuoCurve_Quadratic),		VuoCurve_getJson(VuoCurve_Quadratic),		renderMenuIconWithCurve(VuoCurve_Quadratic)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(VuoCurve_Cubic),			VuoCurve_getJson(VuoCurve_Cubic),			renderMenuIconWithCurve(VuoCurve_Cubic)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(VuoCurve_Circular),		VuoCurve_getJson(VuoCurve_Circular),		renderMenuIconWithCurve(VuoCurve_Circular)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(VuoCurve_Exponential),	VuoCurve_getJson(VuoCurve_Exponential),	renderMenuIconWithCurve(VuoCurve_Exponential)));
+	VuoCurve curves[] = {
+		VuoCurve_Linear,
+		VuoCurve_Quadratic,
+		VuoCurve_Cubic,
+		VuoCurve_Circular,
+		VuoCurve_Exponential,
+	};
+	for (int i = 0; i < sizeof(curves)/sizeof(VuoCurve); ++i)
+		rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurve_getSummary(curves[i]),
+														 VuoCurve_getJson(curves[i]),
+														 renderMenuIconWithCurve(curves[i], VuoCurveEasing_In, isInterfaceDark())));
 
 	return rootMenuItem;
 }

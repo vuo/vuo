@@ -2,9 +2,9 @@
  * @file
  * vuo.mouse.drag node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.3",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true,
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ ]
 					  }
 				  });
@@ -55,7 +55,7 @@ void nodeInstanceTriggerStart
 )
 {
 	(*context)->isTriggerStopped = false;
-	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }
@@ -76,7 +76,7 @@ void nodeInstanceTriggerUpdate
 	VuoMouse_stopListening((*context)->dragStartedListener);
 	VuoMouse_stopListening((*context)->dragMovedToListener);
 	VuoMouse_stopListening((*context)->dragEndedListener);
-	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }
@@ -97,7 +97,7 @@ void nodeInstanceEvent
 	VuoMouse_stopListening((*context)->dragStartedListener);
 	VuoMouse_stopListening((*context)->dragMovedToListener);
 	VuoMouse_stopListening((*context)->dragEndedListener);
-	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
+	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, NULL, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
 	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }

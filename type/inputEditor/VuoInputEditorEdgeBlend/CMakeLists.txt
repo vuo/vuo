@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorEdgeBlend SOURCE VuoInputEditorEdgeBlend.cc)

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.findBarcode node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -28,7 +28,8 @@ VuoModuleMetadata({
 						  "VuoBarcode"
 					  ],
 					  "node" : {
-						  "exampleCompositions" : [ "ScanBarcodes.vuo", "FindBarcodeInSyphonImage.vuo" ]
+						  "isDeprecated" : true,
+						  "exampleCompositions" : [ "ScanBarcodes.vuo", "FindBarcodeInImage.vuo" ]
 					  }
 				 });
 
@@ -36,29 +37,29 @@ void nodeEvent
 (
 		VuoInputData(VuoImage) image,
 		VuoInputEvent({"eventBlocking":"door","data":"image"}) imageEvent,
-		VuoInputData(VuoInteger, {"menuItems":{
-			 "0":"Auto",
-			 "Separator0":"-",
-			 "Section 1D":"1D",
-			 "10":"    Codabar",
-			 "20":"    Code 39",
-			 "30":"    Code 93",
-			 "40":"    Code 128",
-			 "50":"    EAN-8",
-			 "60":"    EAN-13",
-//			 "70":"    GS1 DataBar-14 (RSS-14)",             // Not implemented in zxing-cpp.
-//			 "80":"    GS1 DataBar Expanded (RSS Expanded)", // Not implemented in zxing-cpp.
-			 "90":"    Interleaved 2 of 5 (ITF)",
-			"100":"    UPC-A",
-			"110":"    UPC-E",
-			"Separator1":"-",
-			"Section 2D":"2D",
-			"200":"    Aztec",
-			"210":"    Data Matrix",
-//			"220":"    MaxiCode",                            // Not implemented in zxing-cpp.
-			"230":"    PDF417",
-			"240":"    QR Code"
-		},"default":0}) format,
+		VuoInputData(VuoInteger, {"menuItems":[
+			{"value":  0, "name":"Auto"},
+			"---",
+			"1D",
+			{"value": 10, "name":"    Codabar"},
+			{"value": 20, "name":"    Code 39"},
+			{"value": 30, "name":"    Code 93"},
+			{"value": 40, "name":"    Code 128"},
+			{"value": 50, "name":"    EAN-8"},
+			{"value": 60, "name":"    EAN-13"},
+//			{"value": 70, "name":"    GS1 DataBar-14 (RSS-14)"},             // Not implemented in zxing-cpp.
+//			{"value": 80, "name":"    GS1 DataBar Expanded (RSS Expanded)"}, // Not implemented in zxing-cpp.
+			{"value": 90, "name":"    Interleaved 2 of 5 (ITF)"},
+			{"value":100, "name":"    UPC-A"},
+			{"value":110, "name":"    UPC-E"},
+			"---",
+			"2D",
+			{"value":200, "name":"    Aztec"},
+			{"value":210, "name":"    Data Matrix"},
+//			{"value":220, "name":"    MaxiCode"},                            // Not implemented in zxing-cpp.
+			{"value":230, "name":"    PDF417"},
+			{"value":240, "name":"    QR Code"},
+		], "default":0}) format,
 		VuoInputEvent({"eventBlocking":"door","data":"format"}) formatEvent,
 
 		VuoOutputData(VuoText) barcode,

@@ -2,13 +2,14 @@
  * @file
  * VuoInputEditorWithDialog interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
+#include "VuoHeap.h"
 #include "VuoInputEditor.hh"
 
 /**
@@ -24,15 +25,15 @@ protected:
 	QDialog * getDialog(void);
 	void setFirstWidgetInTabOrder(QWidget *widget);
 	void setLastWidgetInTabOrder(QWidget *widget);
-	bool eventFilter(QObject *object, QEvent *event);
+	bool eventFilter(QObject *object, QEvent *event) VuoWarnUnusedResult;
 
 	/**
 	 * Adds widgets to the dialog and configures them to display the dialog's initial value.
 	 *
 	 * @param dialog The dialog, which is initially empty. It has a style sheet that makes the dialog and any
-	 *		widgets added to it default to a standard style, which depends on the Vuo Editor's "Dark Interface"
-	 *		setting. If changing fonts of widgest, you may need to use `QWidget::setStyleSheet()` instead of
-	 *		`QWidget::setFont()`, since the latter may have no effect (http://doc.qt.io/qt-5/qwidget.html#font-prop).
+	 *    widgets added to it default to a standard style, which depends on the Vuo Editor's "Dark Interface"
+	 *    setting. If changing fonts of widgest, you may need to use `QWidget::setStyleSheet()` instead of
+	 *    `QWidget::setFont()`, since the latter may have no effect (https://doc.qt.io/qt-5/qwidget.html#font-prop).
 	 * @param originalValue The value to display initially in the dialog.
 	 * @param details Additional details (e.g., suggested min. and max. values) pertaining to the port data.
 	 */
@@ -42,6 +43,8 @@ protected:
 	 * Returns the value currently set in the dialog's widgets.
 	 */
 	virtual json_object * getAcceptedValue(void) = 0;
+
+	bool isDark; ///< Is Vuo Editor in Dark Interface Mode?
 
 private:
 	QDialog *dialogPointer;

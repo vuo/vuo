@@ -2,9 +2,9 @@
  * @file
  * vuo.layer.align.window node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -15,6 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "anchor", "position", "top", "right", "bottom", "left", "arrange", "snap" ],
 					  "version" : "1.1.0",
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "AlignLayersToWindow.vuo" ]
 					  }
 				 });
@@ -30,7 +31,7 @@ void nodeEvent
 		VuoOutputData(VuoLayer) alignedLayer
 )
 {
-	*alignedLayer = layer;
+	*alignedLayer = (VuoLayer)VuoSceneObject_copy((VuoSceneObject)layer);
 
 	if (!window)
 		return;
@@ -43,12 +44,12 @@ void nodeEvent
 	VuoRectangle layerBoundingRectangle = VuoLayer_getBoundingRectangle(layer, viewportWidth, viewportHeight, backingScaleFactor);
 
 	if (horizontalAlignment == VuoHorizontalAlignment_Left)
-		(*alignedLayer).sceneObject.transform.translation.x -= 1. - horizontalMargin + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
+		VuoSceneObject_translate((VuoSceneObject)*alignedLayer, (VuoPoint3d){-(1. - horizontalMargin - layerBoundingRectangle.size.x/2.), 0, 0});
 	else if (horizontalAlignment == VuoHorizontalAlignment_Right)
-		(*alignedLayer).sceneObject.transform.translation.x += 1. - horizontalMargin + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
+		VuoSceneObject_translate((VuoSceneObject)*alignedLayer, (VuoPoint3d){1. - horizontalMargin - layerBoundingRectangle.size.x/2., 0, 0});
 
 	if (verticalAlignment == VuoVerticalAlignment_Top)
-		(*alignedLayer).sceneObject.transform.translation.y += 1./windowAspectRatio - verticalMargin - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
+		VuoSceneObject_translate((VuoSceneObject)*alignedLayer, (VuoPoint3d){0, 1./windowAspectRatio - verticalMargin - layerBoundingRectangle.size.y/2., 0});
 	else if (verticalAlignment == VuoVerticalAlignment_Bottom)
-		(*alignedLayer).sceneObject.transform.translation.y -= 1./windowAspectRatio - verticalMargin - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
+		VuoSceneObject_translate((VuoSceneObject)*alignedLayer, (VuoPoint3d){0, -(1./windowAspectRatio - verticalMargin - layerBoundingRectangle.size.y/2.)});
 }

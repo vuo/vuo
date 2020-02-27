@@ -1,40 +1,42 @@
 /**
  * @file
+ * @brief Replace Colors in Gradient
  * Every one second, replaces one of the colors in the gradient with a randomly chosen color.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeItemInList2 [type="vuo.list.change.VuoColor" version="1.1.0" label="Change Item in List|<refresh>refresh\l|<list>list\l|<position>position\l|<newItem>newItem\l|<expandListIfNeeded>expandListIfNeeded\l|<modifiedList>modifiedList\r" pos="585,285" fillcolor="violet" _expandListIfNeeded="false"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,-15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="15,-75" fillcolor="yellow" _seconds="1.0" _fired_eventThrottling="drop"];
-HoldList2 [type="vuo.data.hold.list.VuoColor" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="390,60"];
-MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="405,360" _saturation="1.0" _lightness="0.5" _opacity="1.0"];
-MakeLinearGradientImage [type="vuo.image.make.gradient.linear2" version="2.0.0" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="825,285" _start="{\"x\":-1,\"y\":0}" _end="{\"x\":1,\"y\":0}" _noiseAmount="0.2" _width="640" _height="480"];
-MakeList18 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1067,311" fillcolor="green"];
-MakeList4 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="143,71" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
-MakeRandomValue3 [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="180,285" _minimum="1" _maximum="10"];
-MakeRandomValue6 [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="180,360" _minimum="0." _maximum="1."];
-RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1095,285" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SpreadListItems2 [type="vuo.list.spread.VuoColor" version="1.0.0" label="Copy List Items|<refresh>refresh\l|<list>list\l|<copies>copies\l|<outputList>outputList\r" pos="195,60" _copies="10"];
+ChangeItemInList2 [type="vuo.list.change.VuoColor" version="1.1.0" label="Change Item in List|<refresh>refresh\l|<list>list\l|<position>position\l|<newItem>newItem\l|<expandListIfNeeded>expandListIfNeeded\l|<modifiedList>modifiedList\r" pos="645,285" fillcolor="orange" _expandListIfNeeded="false"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,75" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="30,0" fillcolor="lime" _seconds="1" _fired_eventThrottling="drop"];
+HoldList2 [type="vuo.data.hold.list2.VuoColor" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="465,0"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="450,420" _saturation="1.0" _lightness="0.69999999999999996" _opacity="1.0"];
+MakeLinearGradientImage [type="vuo.image.make.gradient.linear2" version="2.0.0" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="855,285" _start="\{\"x\":-1,\"y\":0\}" _end="\{\"x\":1,\"y\":0\}" _noiseAmount="0.2" _width="800" _height="500"];
+MakeList4 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="194,176" _1="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}"];
+MakeRandomValue3 [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="225,300" _minimum="1" _maximum="7"];
+MakeRandomValue6 [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="225,420" _minimum="0." _maximum="1."];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1095,285" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+SelectLatestList2 [type="vuo.select.latest.list.2.VuoColor" version="1.0.0" label="Select Latest List|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="465,165"];
+SpreadListItems2 [type="vuo.list.spread.VuoColor" version="1.0.1" label="Copy List Items|<refresh>refresh\l|<list>list\l|<copies>copies\l|<outputList>outputList\r" pos="240,165" _copies="7"];
 
-ChangeItemInList2:modifiedList -> HoldList2:newValue;
+ChangeItemInList2:modifiedList -> HoldList2:value;
 ChangeItemInList2:modifiedList -> MakeLinearGradientImage:colors;
-FireOnStart:started -> HoldList2:refresh;
-FireOnStart:started -> SpreadListItems2:refresh;
-FirePeriodically:fired -> HoldList2:refresh [event=true];
-HoldList2:heldValue -> ChangeItemInList2:list;
-HoldList2:heldValue -> MakeRandomValue3:refresh;
-HoldList2:heldValue -> MakeRandomValue6:refresh;
+FireOnStart:started -> HoldList2:update;
+FireOnStart:started -> MakeList4:1;
+FirePeriodically:fired -> HoldList2:update;
+HoldList2:heldValue -> MakeRandomValue3:minimum [event=true];
+HoldList2:heldValue -> MakeRandomValue6:minimum [event=true];
+HoldList2:heldValue -> SelectLatestList2:option2;
 MakeHSLColor:color -> ChangeItemInList2:newItem;
 MakeLinearGradientImage:image -> RenderImageToWindow:image;
-MakeList18:list -> RenderImageToWindow:setWindowProperties;
 MakeList4:list -> SpreadListItems2:list;
 MakeRandomValue3:value -> ChangeItemInList2:position;
 MakeRandomValue6:value -> MakeHSLColor:hue;
-SpreadListItems2:outputList -> HoldList2:initialValue;
+SelectLatestList2:latest -> ChangeItemInList2:list;
+SpreadListItems2:outputList -> SelectLatestList2:option1;
 }

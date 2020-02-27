@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorText SOURCE VuoInputEditorText.cc)

@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="-30,210"];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="-30,285"];
+AreEqual [type="vuo.image.areEqual" version="1.0.0" label="Are Equal|<refresh>refresh\l|<images>images\l|<tolerance>tolerance\l|<equal>equal\r" pos="615,270" _tolerance="0.03"];
+ConvertDataToText [type="vuo.type.data.text" version="1.0.0" label="Convert Data to Text|<refresh>refresh\l|<data>data\l|<text>text\r" pos="90,180"];
+FetchData [type="vuo.data.fetch" version="1.0.0" label="Fetch Data|<refresh>refresh\l|<url>url\l|<data>data\r" pos="105,210"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="105,285"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-30,360" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.0625" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+MakeImageWithShadertoy [type="vuo.image.make.shadertoy2" version="3.0.0" label="Make Image with Shadertoy|<refresh>refresh\l|<fragmentShader>fragmentShader\l|<time>time\l|<channel0>channel0\l|<channel1>channel1\l|<channel2>channel2\l|<channel3>channel3\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<mousePosition>mousePosition\l|<mouseIsPressed>mouseIsPressed\l|<shaderImage>shaderImage\r" pos="330,105" _width="640" _height="480" _colorDepth="\"8bpc\""];
+MakeList [type="vuo.list.make.2.VuoImage" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="556,281"];
+MakeList3 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-71,221" _1="\"vuo.image.make.shadertoy2\\/\"" _3="\".glsl\""];
+MakeList4 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-71,296" _1="\"vuo.image.make.shadertoy2\\/\"" _3="\".png\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Shader>Shader\r" _Shader_type="VuoText" _Shader="\"\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Equal>Equal\l" _Equal_type="VuoBoolean"];
+
+AppendTexts2:compositeText -> FetchImage:url;
+AppendTexts:compositeText -> FetchData:url;
+AreEqual:equal -> PublishedOutputs:Equal;
+ConvertDataToText:text -> MakeImageWithShadertoy:fragmentShader;
+FetchData:data -> ConvertDataToText:data;
+FetchImage:image -> MakeList:2;
+MakeImageWithShadertoy:shaderImage -> MakeList:1;
+MakeList3:list -> AppendTexts:texts;
+MakeList4:list -> AppendTexts2:texts;
+MakeList:list -> AreEqual:images;
+PublishedInputs:Shader -> MakeCheckerboardImage:upperLeftColor [event=true];
+PublishedInputs:Shader -> MakeList3:2;
+PublishedInputs:Shader -> MakeList4:2;
+}

@@ -1,6 +1,6 @@
 Creates an orthographic camera that can be added to a 3D scene. 
 
-The camera uses an [orthographic projection](http://en.wikipedia.org/wiki/Graphical_projection). Unlike a human eye or a typical camera lens, the orthographic projection makes objects appear the same size regardless of their distance from the camera. It doesn't have a vanishing point. 
+The camera uses an [orthographic projection](https://en.wikipedia.org/wiki/Graphical_projection). Unlike a human eye or a typical camera lens, the orthographic projection makes objects appear the same size regardless of their distance from the camera. It doesn't have a vanishing point.
 
    - `Name` — A name to identify the camera, allowing other nodes to select it from a list of cameras. 
    - `Position` — The position of the camera, in Vuo Coordinates. 

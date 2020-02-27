@@ -2,9 +2,9 @@
  * @file
  * VuoRuntimeState interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -35,7 +35,7 @@ private:
 	dispatch_source_t waitForStopTimer;  ///< Timer for checking if the runner will stop the composition.
 	dispatch_semaphore_t waitForStopCanceledSemaphore;  ///< Signaled when no longer checking if the runner will stop the composition.
 
-	//@{
+	/// @{
 	/**
 	 * Defined in the composition's generated code.
 	 */
@@ -51,7 +51,7 @@ private:
 	vuoInstanceTriggerStartType vuoInstanceTriggerStart;
 	typedef void (*vuoInstanceTriggerStopType)(void);
 	vuoInstanceTriggerStopType vuoInstanceTriggerStop;
-	//@}
+	/// @}
 
 	bool mayBeTerminated(void);
 	void stopComposition(bool isBeingReplaced, int timeoutInSeconds);

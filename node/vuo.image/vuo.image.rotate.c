@@ -2,9 +2,9 @@
  * @file
  * vuo.image.rotate node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -94,12 +94,13 @@ void nodeInstanceEvent
 		aspect = fmax( (image->pixelsWide/(float)width), (image->pixelsHigh/(float)height) ) * 2;
 	}
 
-	VuoSceneObject rootSceneObject = VuoLayer_make(VuoText_make("Rotated Image"), image, (VuoPoint2d){0,0}, rotation, aspect, 1.).sceneObject;
+	VuoSceneObject rootSceneObject = (VuoSceneObject)VuoLayer_make(VuoText_make("Rotated Image"), image, (VuoPoint2d){0,0}, rotation, aspect, 1.);
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
 
-	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, rotatedImage, VuoImage_getColorDepth(image), VuoMultisample_4, NULL);
+	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, rotatedImage, VuoImage_getColorDepth(image), VuoMultisample_4, NULL, false);
+	(*rotatedImage)->scaleFactor = image->scaleFactor;
 }
 
 void nodeInstanceFini

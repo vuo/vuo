@@ -2,9 +2,9 @@
  * @file
  * vuo.image.sample.color node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  "average",
 						  "minimum", "darker", "darkest",
 						  "maximum", "lighter", "lightest", "brighter", "brightest",
-						  "box", "rectangle", "square", "area",
+						  "box", "rectangle", "square", "area", "pixel",
 					  ],
 					  "version" : "1.1.0",
 					  "node": {
@@ -83,7 +83,6 @@ void nodeEvent
 
 	unsigned int w = image->pixelsWide;
 	unsigned int h = image->pixelsHigh;
-	float aspect = h/(float)w;
 	unsigned int pixelRadius = clampi(((fmax(0, fmin(2, width))/2.) * (w/2)), 0, (w/2));	// clamp radius from 1px to image width / 2
 	float 	r, g, b, a, rf = 0.f, gf = 0.f, bf = 0.f, af = 0.f;
 	float lf = (sampleType == VuoColorSample_DarkestColor ? 1. : 0.);

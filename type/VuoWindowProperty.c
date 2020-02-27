@@ -2,16 +2,14 @@
  * @file
  * VuoWindowProperty implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoWindowProperty.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -27,7 +25,9 @@ VuoModuleMetadata({
 						"VuoInteger",
 						"VuoReal",
 						"VuoScreen",
-						"VuoText"
+						"VuoText",
+						"VuoInteraction",
+						"VuoList_VuoWindowProperty"
 					  ]
 				  });
 #endif
@@ -44,7 +44,8 @@ VuoModuleMetadata({
  */
 VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 {
-	VuoWindowProperty value = {-1};
+	VuoWindowProperty value = { -1, NULL, false, {-1, -1, -1, NULL, false, {0,0}, 0, 0, 0, 0}, -1, 0, 0, 0, 0, 0, false, -1, {{"", ""}, {0,0}, false, -1, {0,0}, 0, 0} };
+
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "unit", &o))
@@ -103,6 +104,12 @@ VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 		value.cursor = VuoCursor_makeFromJson(o);
 		return value;
 	}
+	else if (json_object_object_get_ex(js, "interaction", &o))
+	{
+		value.type = VuoWindowProperty_Interaction;
+		value.interaction = VuoInteraction_makeFromJson(o);
+		return value;
+	}
 
 	return value;
 }
@@ -141,6 +148,8 @@ json_object * VuoWindowProperty_getJson(const VuoWindowProperty value)
 		json_object_object_add(js, "resizable", VuoBoolean_getJson(value.resizable));
 	else if (value.type == VuoWindowProperty_Cursor)
 		json_object_object_add(js, "cursor", VuoCursor_getJson(value.cursor));
+	else if (value.type == VuoWindowProperty_Interaction)
+		json_object_object_add(js, "interaction", VuoInteraction_getJson(value.interaction));
 
 	return js;
 }
@@ -154,15 +163,12 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 		return VuoText_format("Change Window Title: \"%s\"", value.title);
 	else if (value.type == VuoWindowProperty_FullScreen)
 	{
-		if (value.fullScreen)
-		{
-			char *screenSummary = VuoScreen_getSummary(value.screen);
-			char *summary = VuoText_format("Change to Fullscreen<br>%s", screenSummary);
-			free(screenSummary);
-			return summary;
-		}
-		else
-			return strdup("Change to Windowed");
+		char *screenSummary = VuoScreen_getSummary(value.screen);
+		char *summary = VuoText_format("<div>Change to %s</div><div>%s</div>",
+									   value.fullScreen ? "Fullscreen" : "Windowed",
+									   screenSummary);
+		free(screenSummary);
+		return summary;
 	}
 	else if (value.type == VuoWindowProperty_Position)
 	{
@@ -191,6 +197,27 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 		free(cursorSummary);
 		return summary;
 	}
+	else if (value.type == VuoWindowProperty_Interaction)
+		return VuoInteraction_getSummary(value.interaction);
 
-	return strdup("(unknown window property)");
+	return strdup("Unknown window property");
+}
+
+/**
+ * Returns a list of window properties matching windowPropertyType in the windowProperties list.
+ *
+ * @version200New
+ */
+VuoList_VuoWindowProperty VuoWindowProperty_getPropertiesWithType(const VuoList_VuoWindowProperty windowProperties, const VuoWindowPropertyType windowPropertyType)
+{
+	VuoList_VuoWindowProperty properties = VuoListCreate_VuoWindowProperty();
+
+	for(int i = 1; i <= VuoListGetCount_VuoWindowProperty(windowProperties); i++)
+	{
+		VuoWindowProperty prop = VuoListGetValue_VuoWindowProperty(windowProperties, i);
+		if(prop.type == windowPropertyType)
+			VuoListAppendValue_VuoWindowProperty(properties, prop);
+	}
+
+	return properties;
 }

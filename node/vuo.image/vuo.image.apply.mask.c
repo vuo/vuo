@@ -2,9 +2,9 @@
  * @file
  * vuo.image.apply.mask node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -15,27 +15,27 @@ VuoModuleMetadata({
 					  "keywords" : [ "transparency", "alpha", "luma", "brightness", "opacity", "negative", "remove", "cut", "magic", "wand" ],
 					  "version" : "1.1.2",
 					  "node": {
-						  "exampleCompositions" : [ "MaskMovieWithStar.vuo" ]
+						  "exampleCompositions" : [ "MaskMovieWithImage.vuo" ]
 					  }
 				 });
 
 static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(hsl)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslHsl.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform sampler2D mask;
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
-		vec4 maskColor = VuoGlsl_sample(mask, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
+		vec4 maskColor = VuoGlsl_sample(mask, fragmentTextureCoordinate);
 
 		// VuoGlsl_sample() returns premultiplied colors,
 		// so we can take into account both the mask's luminance and alpha
 		// by just looking at its (premultiplied) luminance.
-		float maskAmount = rgbToHsl(maskColor.rgb).z;
+		float maskAmount = VuoGlsl_rgbToHsl(maskColor.rgb).z;
 
 		gl_FragColor = color * maskAmount;
 	}
@@ -54,6 +54,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->shader = VuoShader_make("Apply Mask");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, maskFragmentShader);
 	VuoRetain(instance->shader);
+
+	// An opaque, nonwhite input image should output a semitransparent image with an alpha channel.
+	instance->shader->isTransparent = true;
 
 	return instance;
 }

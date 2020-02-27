@@ -2,9 +2,9 @@
  * @file
  * VuoBarcode implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoBarcode.h"
@@ -16,15 +16,16 @@
 #include <zxing/MultiFormatReader.h>
 #include <zxing/ReaderException.h>
 
-extern "C"
-{
 #include "module.h"
 
+extern "C"
+{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoBarcode",
 					 "dependencies" : [
 						 "VuoImage",
+						 "VuoRectangle",
 						 "VuoText",
 						 "VuoList_VuoText",
 						 "iconv",
@@ -108,7 +109,7 @@ VuoText VuoBarcode_read(VuoImage image, VuoInteger format, VuoText *outputFormat
 					*outputPosition = r;
 				}
 				else
-					*outputPosition = VuoPoint2d_rectangleUnion(*outputPosition, r);
+					*outputPosition = VuoRectangle_union(*outputPosition, r);
 			}
 		}
 		free(lumaFlipped);

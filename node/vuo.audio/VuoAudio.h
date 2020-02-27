@@ -2,17 +2,18 @@
  * @file
  * VuoAudio interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#include "node.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "node.h"
 #include "VuoAudioSamples.h"
 #include "VuoAudioInputDevice.h"
 #include "VuoAudioOutputDevice.h"
@@ -20,8 +21,15 @@ extern "C"
 #include "VuoList_VuoAudioInputDevice.h"
 #include "VuoList_VuoAudioOutputDevice.h"
 
+void VuoAudio_use(void);
+void VuoAudio_disuse(void);
+void VuoAudio_addDevicesChangedTriggers   (VuoOutputTrigger(inputDevices, VuoList_VuoAudioInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoAudioOutputDevice));
+void VuoAudio_removeDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoAudioInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoAudioOutputDevice));
 VuoList_VuoAudioInputDevice VuoAudio_getInputDevices(void);
 VuoList_VuoAudioOutputDevice VuoAudio_getOutputDevices(void);
+
+bool VuoAudioInputDevice_realize (VuoAudioInputDevice device,  VuoAudioInputDevice  *realizedDevice) VuoWarnUnusedResult;
+bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDevice *realizedDevice) VuoWarnUnusedResult;
 
 /**
  * Manages sending audio output.

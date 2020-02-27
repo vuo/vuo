@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+StopComposition [type="vuo.app.stopComposition" version="1.0.0" label="Stop Composition|<refresh>refresh\l|<stop>stop\l" pos="165,30"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<in>in\r" _in_type="VuoInteger" _in="0"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<out>out\l" _out_type="VuoInteger"];
+
+PublishedInputs:in -> StopComposition:stop;
+}

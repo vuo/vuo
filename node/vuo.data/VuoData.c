@@ -2,14 +2,13 @@
  * @file
  * VuoData implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
 #include "VuoData.h"
-#include "VuoText.h"
 #include "VuoBase64.h"
 
 /// @{
@@ -34,7 +33,7 @@ VuoModuleMetadata({
  */
 VuoData VuoData_makeFromJson(json_object *js)
 {
-	VuoData value = {0, NULL};
+	VuoData value = {0, NULL, ""};
 
 	if (json_object_get_type(js) != json_type_string)
 		return value;
@@ -77,10 +76,16 @@ bool VuoData_areEqual(const VuoData valueA, const VuoData valueB)
  */
 bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB)
 {
+	// Treat null data as greater than non-null data,
+	// so the more useful non-null data sorts to the beginning of the list.
 	if (!valueA.data || !valueB.data)
 		return valueA.data && !valueB.data;
 
-	return memcmp(valueA.data, valueB.data, MIN(valueA.size, valueB.size)) < 0;
+	int prefixCmp = memcmp(valueA.data, valueB.data, MIN(valueA.size, valueB.size));
+	if (!prefixCmp)
+		return (valueA.size < valueB.size);
+	else
+		return (prefixCmp < 0);
 }
 
 /**

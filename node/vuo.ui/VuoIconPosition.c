@@ -2,14 +2,11 @@
  * @file
  * VuoIconPosition implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoIconPosition.h"
 #include "VuoList_VuoIconPosition.h"
@@ -113,4 +110,13 @@ char *VuoIconPosition_getSummary(const VuoIconPosition value)
 bool VuoIconPosition_areEqual(const VuoIconPosition value1, const VuoIconPosition value2)
 {
 	return value1 == value2;
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoIconPosition_isLessThan(const VuoIconPosition a, const VuoIconPosition b)
+{
+	return a < b;
 }

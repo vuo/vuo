@@ -1,4 +1,4 @@
-These nodes are for working with screens (monitors or displays).
+Nodes for listing and getting information from screens (monitors or displays).
 
 The dimensions of a screen are measured in **points**. For non-Retina displays, points are equivalent to pixels. For Retina displays, each point is 2 pixels.
 

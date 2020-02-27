@@ -2,14 +2,11 @@
  * @file
  * VuoOscType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoOscType.h"
 #include "VuoList_VuoOscType.h"
@@ -83,7 +80,7 @@ VuoList_VuoOscType VuoOscType_getAllowedValues(void)
  */
 char *VuoOscType_getSummary(const VuoOscType value)
 {
-	char *valueAsString = "(auto)";
+	char *valueAsString = "Auto";
 
 	if (value == VuoOscType_Int32)
 		valueAsString = "Integer (32-bit)";

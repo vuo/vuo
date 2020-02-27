@@ -1,39 +1,39 @@
 /**
  * @file
- * Displays a spinning sphere with an animated noise image stretched seamlessly across the surface.
+ * Displays a spinning sphere with an animated noise image stretched seamlessly across the surface. Use the mouse to control the draggable camera.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 ConvertRealTo3DPoint3 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="360,675"];
 ConvertRealTo3DPoint4 [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="75,480"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="270,630" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
-MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.1" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="615,165" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="14,656" _2="30"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="544,416" fillcolor="green"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="574,461" fillcolor="green"];
-MakeSphere4 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="300,405" _rows="32" _columns="32"];
-MakeSphericalNoiseImage [type="vuo.image.make.noise.sphere" version="1.0.0" label="Make Spherical Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<scale>scale\l|<type>type\l|<grid>grid\l|<range>range\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<image>image\r" pos="-15,360" fillcolor="violet" _colorA="{\"r\":0.0078431377187371254,\"g\":0.12156862765550613,\"b\":0.28627452254295349,\"a\":1}" _colorB="{\"r\":0.67058825492858887,\"g\":0.7450980544090271,\"b\":0.99607843160629272,\"a\":1}" _scale="0.029999999999999999" _type="\"gradient\"" _grid="\"triangular\"" _range="{\"minimum\":0.40000000000000002,\"maximum\":0.59999999999999998}" _levels="2" _roughness="0.5" _spacing="2.0" _width="1024"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="60,645"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="615,405" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="255,285" _opacity="1.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-15,630" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="600,480" _translation="\{\"x\":0,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag2" version="2.0.0" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="810,660" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="297,506" _2="30"];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1034,506" fillcolor="blue"];
+MakeSphere4 [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="840,495" _rows="32" _columns="32"];
+MakeSphericalNoiseImage [type="vuo.image.make.noise.sphere" version="1.1.0" label="Make Spherical Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<scale>scale\l|<type>type\l|<grid>grid\l|<range>range\l|<rangeMode>rangeMode\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<image>image\r" pos="315,600" fillcolor="orange" _colorA="\{\"r\":0.0078431377187371254,\"g\":0.12156862765550613,\"b\":0.28627452254295349,\"a\":1\}" _colorB="\{\"r\":0.67058825492858887,\"g\":0.7450980544090271,\"b\":0.99607843160629272,\"a\":1\}" _scale="0.029999999999999999" _type="\"gradient\"" _grid="\"triangular\"" _range="\{\"minimum\":0.40000000000000002,\"maximum\":0.59999999999999998\}" _rangeMode="\"clamp\"" _levels="2" _roughness="0.5" _spacing="2.0" _width="1024"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="330,495"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1080,495" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="570,600" _opacity="1.0"];
 
 ConvertRealTo3DPoint3:point3d -> Make3DTransform:rotation;
 ConvertRealTo3DPoint4:point3d -> MakeSphericalNoiseImage:center;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo3DPoint4:x;
+FireOnDisplayRefresh:requestedFrame -> MakeList:1;
 Make3DTransform:transform -> MakeSphere4:transform;
 MakeDraggableCamera:updatedCamera -> MakeList2:2;
 MakeList2:list -> RenderSceneToWindow:objects;
-MakeList6:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> Multiply:values;
 MakeSphere4:object -> MakeList2:1;
 MakeSphericalNoiseImage:image -> ShadeWithUnlitImage:image;
 Multiply:product -> ConvertRealTo3DPoint3:y;
-RenderSceneToWindow:requestedFrame -> ConvertRealTo3DPoint4:x;
-RenderSceneToWindow:requestedFrame -> MakeList:1;
-RenderSceneToWindow:showedWindow -> MakeDraggableCamera:window;
+RenderSceneToWindow:updatedWindow -> MakeDraggableCamera:window [style=invis];
 ShadeWithUnlitImage:shader -> MakeSphere4:material;
 }

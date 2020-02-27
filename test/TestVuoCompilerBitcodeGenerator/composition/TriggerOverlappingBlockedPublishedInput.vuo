@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+BuildList2 [type="vuo.list.build.VuoInteger" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="210,75" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Fire>Fire\r" _Fire_type="VuoInteger" _Fire="10"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<BuiltList>BuiltList\l" _BuiltList_type="VuoList_VuoInteger"];
+
+BuildList2:buildItem -> BuildList2:builtItem;
+BuildList2:builtList -> PublishedOutputs:BuiltList;
+PublishedInputs:Fire -> BuildList2:fire;
+}

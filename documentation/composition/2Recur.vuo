@@ -2,27 +2,29 @@
  * @file
  * Demo graph.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
-digraph G 
+digraph G
 {
-Add2 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="407,37"];
-ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="557,271"];
-Count4 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,0" _increment="1" _decrement="1" _setCount="0"];
-Count5 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,100" _increment="1" _decrement="1" _setCount="0"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="458,161" fillcolor="green" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,0" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
-FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,100" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
-MakeList3 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="361,48"];
+Add2 [type="vuo.math.add.VuoInteger" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="420,45"];
+Count4 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="195,0" _increment="1" _decrement="1" _setCount="0"];
+Count5 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="195,105" _increment="1" _decrement="1" _setCount="0"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="405,225" fillcolor="blue" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,0" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+FirePeriodically3 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,105" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+MakeList3 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="387,56"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="495,330"];
 
-Add2:sum -> ConvertIntegerToText:integer;
-ConvertIntegerToText:text -> DisplayConsoleWindow:writeLine;
+Add2:sum -> SummarizeValue:value;
 Count4:count -> MakeList3:1;
 Count5:count -> MakeList3:2;
-FirePeriodically1:fired -> Count4:increment;
-FirePeriodically2:fired -> Count5:increment;
+FirePeriodically3:fired -> Count5:increment [event=true];
+FirePeriodically:fired -> Count4:increment [event=true];
 MakeList3:list -> Add2:values;
+SummarizeValue:summary -> DisplayConsoleWindow:writeLine;
 }

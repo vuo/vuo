@@ -2,9 +2,9 @@
  * @file
  * vuo-link implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <getopt.h>
@@ -20,7 +20,7 @@ void printHelp(char *argv0)
 		   "  --help                         Display this information.\n"
 		   "  --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>                Place the compiled code into <file>.\n"
-//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.8.0').\n"
+//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.10.0').\n"
 		   "  --format <arg>                 Output the given type of binary file. <arg> can be 'executable' or 'dylib'. The default is 'executable'.\n"
 		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 		   "  --framework-search-path <dir>  Search for macOS frameworks in <dir>. This option may be specified more than once.\n"
@@ -33,6 +33,8 @@ int main (int argc, char * const argv[])
 {
 	bool hasInputFile = false;
 	string inputPath;
+	VuoCompilerIssues *issues = new VuoCompilerIssues();
+	int ret = 0;
 
 	try
 	{
@@ -47,7 +49,6 @@ int main (int argc, char * const argv[])
 		vector<char *> frameworkSearchPaths;
 		string optimizationOption;
 		VuoCompiler compiler;
-		bool showLicenseWarning = true;
 
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
@@ -59,13 +60,15 @@ int main (int argc, char * const argv[])
 			{"framework-search-path", required_argument, NULL, 0},
 			{"optimization", required_argument, NULL, 0},
 			{"verbose", no_argument, NULL, 0},
-			{"omit-license-warning", no_argument, NULL, 0},
-			{"prepare-for-fast-build", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+		int ret;
+		while ((ret = getopt_long(argc, argv, "", options, &optionIndex)) != -1)
 		{
+			if (ret == '?')
+				continue;
+
 			switch(optionIndex)
 			{
 				case 0:  // --help
@@ -98,12 +101,6 @@ int main (int argc, char * const argv[])
 					isVerbose = true;
 					compiler.setVerbose(true);
 					break;
-				case 9:  // --omit-license-warning
-					showLicenseWarning = false;
-					break;
-				case 10:  // --prepare-for-fast-build
-					compiler.prepareForFastBuild();
-					return 0;
 			}
 		}
 
@@ -115,7 +112,9 @@ int main (int argc, char * const argv[])
 		for (vector<char *>::iterator i = frameworkSearchPaths.begin(); i != frameworkSearchPaths.end(); ++i)
 			compiler.addFrameworkSearchPath(*i);
 
-		compiler.loadStoredLicense(showLicenseWarning);
+#if VUO_PRO
+		compiler.load_Pro(true);
+#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);
@@ -124,7 +123,7 @@ int main (int argc, char * const argv[])
 			if (listNodeClassesOption == "" || listNodeClassesOption == "path" || listNodeClassesOption == "dot")
 				compiler.listNodeClasses(listNodeClassesOption);
 			else
-				throw std::runtime_error("unrecognized option '" + listNodeClassesOption + "' for --list-node-classes");
+				throw VuoException("unrecognized option '" + listNodeClassesOption + "' for --list-node-classes");
 		}
 		else if (isVerbose && ! hasInputFile)
 		{
@@ -133,7 +132,7 @@ int main (int argc, char * const argv[])
 		else
 		{
 			if (! hasInputFile)
-				throw std::runtime_error("no input file");
+				throw VuoException("no input file");
 			inputPath = argv[optind];
 
 			string inputDir, inputFile, inputExtension;
@@ -145,6 +144,8 @@ int main (int argc, char * const argv[])
 				if (format == "dylib")
 					outputPath += ".dylib";
 			}
+
+			compiler.setCompositionPath(inputPath);
 
 			/// @todo https://b33p.net/kosada/node/12220
 //			if (! target.empty())
@@ -160,7 +161,7 @@ int main (int argc, char * const argv[])
 				else if (optimizationOption == "small-binary")
 					optimization = VuoCompiler::Optimization_SmallBinary;
 				else
-					throw std::runtime_error("unrecognized option '" + optimizationOption + "' for --optimization");
+					throw VuoException("unrecognized option '" + optimizationOption + "' for --optimization");
 			}
 
 			if (format == "executable")
@@ -168,12 +169,17 @@ int main (int argc, char * const argv[])
 			else if (format == "dylib")
 				compiler.linkCompositionToCreateDynamicLibrary(inputPath, outputPath, optimization);
 			else
-				throw std::runtime_error("unrecognized option '" + format + "' for --format");
+				throw VuoException("unrecognized option '" + format + "' for --format");
 		}
-
-		return 0;
 	}
-	catch (std::exception &e)
+	catch (VuoCompilerException &e)
+	{
+		if (issues != e.getIssues())
+			issues->append(e.getIssues());
+
+		ret = 1;
+	}
+	catch (VuoException &e)
 	{
 		fprintf(stderr, "%s: error: %s\n", hasInputFile ? inputPath.c_str() : argv[0], e.what());
 		if (!hasInputFile)
@@ -181,6 +187,15 @@ int main (int argc, char * const argv[])
 			fprintf(stderr, "\n");
 			printHelp(argv[0]);
 		}
-		return 1;
+		fprintf(stderr, "\n");
+
+		ret = 1;
 	}
+
+	vector<VuoCompilerIssue> issueList = issues->getList();
+	for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i)
+		fprintf(stderr, "%s: %s: %s\n\n", hasInputFile ? inputPath.c_str() : argv[0],
+		        (*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning", (*i).getShortDescription(false).c_str());
+
+	return ret;
 }

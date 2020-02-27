@@ -2,19 +2,19 @@
  * @file
  * VuoRendererInputDrawer implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererInputDrawer.hh"
-#include "VuoRendererPort.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoNodeClass.hh"
+#include "VuoPort.hh"
 
-const qreal VuoRendererInputDrawer::drawerInteriorHorizontalPadding = VuoRendererFonts::thickPenWidth*3./4.+5;
-const qreal VuoRendererInputDrawer::drawerHorizontalSpacing = VuoRendererFonts::thickPenWidth*1./4.;
+const qreal VuoRendererInputDrawer::drawerInteriorHorizontalPadding = 20;  // VuoRendererFonts::thickPenWidth*3./4.+5
+const qreal VuoRendererInputDrawer::drawerHorizontalSpacing         = 2;   // VuoRendererFonts::thickPenWidth*2./20.
 
 /**
  * Creates a collapsed "Make List" node that takes the form of an input drawer.
@@ -26,10 +26,7 @@ VuoRendererInputDrawer::VuoRendererInputDrawer(VuoNode *baseNode, VuoRendererSig
 	for (int i = VuoNodeClass::unreservedInputPortStartIndex; i < inputPorts.size(); ++i)
 		drawerPorts.push_back(inputPorts[i]->getRenderer());
 
-	QPainterPath outsetPath;
-	VuoRendererPort::getPortConstantPath(VuoRendererPort::getPortRect(), QString::fromUtf8(""),&outsetPath);
-	qreal minimumDrawerArmLength = outsetPath.boundingRect().width();
-	this->horizontalDrawerOffset = 0.5*VuoRendererPort::getPortRect().width() + minimumDrawerArmLength + getMaxDrawerLabelWidth();
+	this->horizontalDrawerOffset = 0.5*VuoRendererPort::getPortRect().width() + getMaxDrawerLabelWidth();
 	this->drawerBottomExtensionHeight = VuoRendererPort::portSpacing*(fmax(1,drawerPorts.size())-1);
 
 	layoutPorts();
@@ -49,11 +46,10 @@ void VuoRendererInputDrawer::setHorizontalDrawerOffset(qreal offset)
 qreal VuoRendererInputDrawer::getMaxDrawerLabelWidth(void) const
 {
 	qreal maxLabelWidth = 0;
-	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortConstantFont();
 	foreach (VuoRendererPort *port, drawerPorts)
 	{
 		string portTitle = port->getPortNameToRender();
-		qreal labelWidth = QFontMetricsF(labelFont).boundingRect(QString::fromUtf8(portTitle.c_str())).width();
+		qreal labelWidth = VuoRendererPort::getTextWidth(QString::fromUtf8(portTitle.c_str()));
 
 		if (labelWidth > maxLabelWidth)
 			maxLabelWidth = labelWidth;
@@ -69,42 +65,25 @@ qreal VuoRendererInputDrawer::getMaxDrawerLabelWidth(void) const
  */
 qreal VuoRendererInputDrawer::getMaxDrawerChainedLabelWidth(void) const
 {
-	qreal maxLabelWidth = 0;
-	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortConstantFont();
+	qreal maxPortWidth = -10;
 	foreach (VuoRendererPort *port, drawerPorts)
 	{
-		string portTitle = port->getPortNameToRender();
-		qreal labelWidth = QFontMetricsF(labelFont).boundingRect(QString::fromUtf8(portTitle.c_str())).width();
-
-		// Accommodate the width of the child port.
-		labelWidth += 0.5*VuoRendererPort::getPortRect().width();
+		qreal portWidth = port->boundingRect().width() - VuoRendererPort::portRadius*2;
 
 		// Accommodate the width of any collapsed typecast attached to the child port.
 		if (dynamic_cast<VuoRendererTypecastPort *>(port->getBase()->getRenderer()))
 		{
 			VuoRendererTypecastPort *tp = (VuoRendererTypecastPort *)(port->getBase()->getRenderer());
-			QPainterPath outsetPath;
-			tp->getPortPath(false, true, &outsetPath);
-			labelWidth += outsetPath.boundingRect().width();
-
-			// Accommodate the width of the attached typecast's child port.
-			labelWidth += 0.5*VuoRendererPort::getPortRect().width();
+			portWidth = tp->getPortPath(true, true).boundingRect().width() + VuoRendererPort::portRadius*3 + 5;
 		}
-		else
+		else if (!port->getBase()->getConnectedCables(true).empty()) // Leave room for the cable's rounded corner.
+			portWidth += VuoRendererPort::portRadius + 3;
 
-		// Accommodate the width of any constant flag attached to the child port.
-		if (port->isConstant())
-		{
-			QPainterPath outsetPath;
-			port->getPortConstantPath(VuoRendererPort::getPortRect(), QString::fromUtf8(port->getConstantAsTruncatedStringToRender().c_str()),&outsetPath);
-			labelWidth += outsetPath.boundingRect().width();
-		}
-
-		if (labelWidth > maxLabelWidth)
-			maxLabelWidth = labelWidth;
+		if (portWidth > maxPortWidth)
+			maxPortWidth = portWidth;
 	}
 
-	return maxLabelWidth + drawerInteriorHorizontalPadding;
+	return maxPortWidth + drawerInteriorHorizontalPadding + VuoRendererPort::portRadius;
 }
 
 /**
@@ -112,10 +91,10 @@ qreal VuoRendererInputDrawer::getMaxDrawerChainedLabelWidth(void) const
   */
 void VuoRendererInputDrawer::layoutPorts(void)
 {
-	QList<VuoRendererPort *> inputPorts = this->inputPorts->childItems();
-	for (unsigned int i = 0; i < inputPorts.size(); ++i)
+	unsigned int i = 0;
+	for (vector<VuoRendererPort *>::iterator it = inputPorts.begin(); it != inputPorts.end(); ++it, ++i)
 	{
-		VuoRendererPort *p = inputPorts[i];
+		VuoRendererPort *p = *it;
 
 		if (i < VuoNodeClass::unreservedInputPortStartIndex)
 			p->setVisible(false);
@@ -124,7 +103,7 @@ void VuoRendererInputDrawer::layoutPorts(void)
 		{
 			p->setVisible(true);
 			int adjustedPortIndex = i-VuoNodeClass::unreservedInputPortStartIndex;
-			qreal portPointY = adjustedPortIndex*VuoRendererPort::portSpacing;
+			qreal portPointY = adjustedPortIndex*VuoRendererPort::portSpacing - .15;
 			p->setPos(QPointF(0,portPointY));
 
 			VuoRendererTypecastPort *tp = dynamic_cast<VuoRendererTypecastPort *>(p);
@@ -134,9 +113,8 @@ void VuoRendererInputDrawer::layoutPorts(void)
 	}
 
 	// Do not display output ports.
-	QList<VuoRendererPort *> outputPorts = this->outputPorts->childItems();
-	for (unsigned int i = 0; i < outputPorts.size(); ++i)
-		outputPorts[i]->setVisible(false);
+	for (vector<VuoRendererPort *>::iterator it = outputPorts.begin(); it != outputPorts.end(); ++it)
+		(*it)->setVisible(false);
 }
 
 /**
@@ -145,4 +123,36 @@ void VuoRendererInputDrawer::layoutPorts(void)
 vector<VuoRendererPort *> VuoRendererInputDrawer::getDrawerPorts(void) const
 {
 	return drawerPorts;
+}
+
+/**
+ * Returns a path representing the drawer.
+ */
+QPainterPath VuoRendererInputDrawer::getDrawerPath(bool includeDragHandle) const
+{
+	QRectF hostPortRect = VuoRendererPort::getPortRect();
+	qreal drawerBottomExtensionWidth = qRound(getMaxDrawerLabelWidth());
+
+	QPainterPath p;
+
+	// Arm right edge (hide behind the parent port)
+	p.moveTo(horizontalDrawerOffset, -0.5*hostPortRect.height() + 1);
+	p.lineTo(horizontalDrawerOffset,  0.5*hostPortRect.height() - 2);
+
+	// Arm bottom edge
+	p.lineTo(drawerBottomExtensionWidth,  0.5*hostPortRect.height() - 2);
+
+	// Right drawer wall
+	qreal adjustedPortRadius = VuoRendererPort::portRadius - 2;
+	qreal drawerBottomExtensionHeight = this->drawerBottomExtensionHeight + (includeDragHandle ? adjustedPortRadius : 0);
+	if (drawerBottomExtensionHeight > 0)
+		addRoundedCorner(p, true, QPointF(drawerBottomExtensionWidth, 0.5*hostPortRect.height() + 1 + drawerBottomExtensionHeight - 3), adjustedPortRadius, false, false);
+
+	// Far drawer bottom
+	addRoundedCorner(p, true, QPointF(hostPortRect.width()/2 - 1, 0.5*hostPortRect.height() + 1 + drawerBottomExtensionHeight - 3), adjustedPortRadius, false, true);
+
+	// Drawer top left
+	addRoundedCorner(p, true, QPointF(hostPortRect.width()/2 - 1, -0.5*hostPortRect.height() + 1), adjustedPortRadius, true, true);
+
+	return p;
 }

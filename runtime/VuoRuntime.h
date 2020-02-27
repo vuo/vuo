@@ -2,9 +2,9 @@
  * @file
  * VuoRuntime interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #ifdef __cplusplus
@@ -20,11 +20,11 @@ void vuoInit(int argc, char **argv);
  * Type for @ref vuoInitInProcess.
  */
 typedef void (VuoInitInProcessType)(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
-									int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
+									int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
 									void *compositionBinaryHandle, void *runtimePersistentState, bool doAppInit);
 
 void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
-					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
+					  int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
 					  void *compositionBinaryHandle, void *previousRuntimeState, bool doAppInit);
 
 /**

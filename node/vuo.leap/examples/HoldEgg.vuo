@@ -2,36 +2,38 @@
  * @file
  * Simulates an object being held in the palm of your hand. The object follows your hand's movements as tracked by your Leap Motion device.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Place your hand about 15 cm/6 in directly above the Leap Motion device.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CombineTransforms [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="855,-30"];
-CombineTransforms2 [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="855,180"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="555,-60" fillcolor="yellow" _started_eventThrottling="enqueue"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="225,-120"];
+CombineTransforms [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="870,15"];
+CombineTransforms2 [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="885,255"];
 GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="390,165"];
-GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="105,-75"];
-GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="495,15" fillcolor="violet"];
-MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="1050,30"];
-MakeList12 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="809,191" _1="{\"translation\":[0,-0.40000000596046448,0],\"eulerRotation\":[0,0,0],\"scale\":[0.30000001192092896,0.5,0.30000001192092896]}"];
-MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1264,221" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1294,251" fillcolor="green"];
-MakeList5 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="809,-19" _1="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,0.10000000149011612,1]}"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="1065,225" _rows="32" _columns="32"];
-ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-90,-75" fillcolor="yellow" _receivedFrame_eventThrottling="drop"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1335,210" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="885,240" _color="{\"r\":0.244678,\"g\":0.194369,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.700000"];
-ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="840,45" _frontColor="{\"r\":0.321324,\"g\":0.000000,\"b\":0.050568,\"a\":1.000000}" _backColor="{\"r\":0.110948,\"g\":0.000000,\"b\":0.033005,\"a\":1.000000}" _width="0.050000" _standoffWidth="0.100000" _showThirdEdge="false"];
-ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="1230,30" _keepFront="true"];
-SortHandsByDistance [type="vuo.leap.hand.sort.distance" version="1.0.0" label="Sort Hands by Distance|<refresh>refresh\l|<Hands>Hands\l|<target>target\l|<sortedHands>sortedHands\r" pos="285,-30" _target="{\"x\":0,\"y\":0,\"z\":0}"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="15,0"];
+GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="495,15" fillcolor="orange"];
+MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="1065,90"];
+MakeList12 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="852,266" _1="\{\"translation\":[0,-0.40000000596046448,0],\"eulerRotation\":[0,0,0],\"scale\":[0.30000001192092896,0.5,0.30000001192092896]\}"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1544,101" fillcolor="blue"];
+MakeList5 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="837,26" _1="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,0.10000000149011612,1]\}"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="1290,270" _rows="32" _columns="32"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-180,0" fillcolor="lime" _receivedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1590,90" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="870,330" _color="\{\"r\":0.244678,\"g\":0.194369,\"b\":1.000000,\"a\":1.000000\}" _highlightColor="\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\}" _shininess="0.700000"];
+ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.1.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<uniformWidth>uniformWidth\l|<shader>shader\r" pos="855,105" _frontColor="\{\"r\":0.37300679087638855,\"g\":0,\"b\":0.056198976933956146,\"a\":1\}" _backColor="\{\"r\":0.110948,\"g\":0.000000,\"b\":0.033005,\"a\":1.000000\}" _width="0.040000000000000001" _standoffWidth="0.10000000000000001" _showThirdEdge="false" _uniformWidth="false"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="1245,90" _keepFront="true"];
+SortHandsByDistance [type="vuo.leap.hand.sort.distance" version="1.0.1" label="Sort Hands by Distance|<refresh>refresh\l|<Hands>Hands\l|<target>target\l|<sortedHands>sortedHands\r" pos="195,15" _target="\{\"x\":0,\"y\":0,\"z\":0\}"];
 
+AllowFirstEvent:firstEvent -> ShadeWithColor2:color;
+AllowFirstEvent:firstEvent -> ShadeWithWireframe:width;
 CombineTransforms2:composite -> MakeSphere2:transform;
 CombineTransforms:composite -> MakeCube3:transform;
-FireOnStart:started -> ShadeWithColor2:refresh;
-FireOnStart:started -> ShadeWithWireframe:refresh;
 GetFirstItemInList:firstItem -> GetHandValues:hand;
 GetFrameValues:hands -> SortHandsByDistance:Hands;
 GetHandValues:transform -> MakeList12:2;
@@ -39,9 +41,9 @@ GetHandValues:transform -> MakeList5:2;
 MakeCube3:cube -> ShowBackOf3DObject:object;
 MakeList12:list -> CombineTransforms2:transforms;
 MakeList3:list -> RenderSceneToWindow:objects;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> CombineTransforms:transforms;
 MakeSphere2:object -> MakeList3:2;
+ReceiveLeapFrame:receivedFrame -> AllowFirstEvent:event;
 ReceiveLeapFrame:receivedFrame -> GetFrameValues:frame;
 ShadeWithColor2:shader -> MakeSphere2:material;
 ShadeWithWireframe:shader -> MakeCube3:material;

@@ -2,15 +2,16 @@
  * @file
  * VuoTable C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoListPosition.h"
 #include "VuoTableFormat.h"
+#include "VuoTextComparison.h"
 #include "VuoTextSort.h"
 #include "VuoSortOrder.h"
 #include "VuoList_VuoText.h"
@@ -35,7 +36,11 @@ typedef struct
 
 VuoTable VuoTable_makeFromJson(struct json_object *js);
 struct json_object * VuoTable_getJson(const VuoTable value);
+
+/// This type has a _getInterprocessJson() function.
+#define VuoTable_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoTable_getInterprocessJson(const VuoTable value);
+
 char * VuoTable_getSummary(const VuoTable value);
 
 VuoTable VuoTable_makeEmpty(void);
@@ -64,6 +69,9 @@ VuoTable VuoTable_changeItem_VuoText_VuoInteger(VuoTable table, VuoText rowHeade
 VuoTable VuoTable_changeItem_VuoText_VuoText(VuoTable table, VuoText rowHeader, VuoText columnHeader, VuoText newValue);
 VuoTable VuoTable_removeRow(VuoTable table, VuoListPosition position);
 VuoTable VuoTable_removeColumn(VuoTable table, VuoListPosition position);
+
+VuoList_VuoText VuoTable_findFirstMatchingRow_VuoInteger(VuoTable table, VuoInteger columnIndex, VuoText valueToFind, VuoTextComparison valueComparison, bool includeHeader);
+VuoList_VuoText VuoTable_findFirstMatchingRow_VuoText(VuoTable table, VuoText columnHeader, VuoText valueToFind, VuoTextComparison valueComparison, bool includeHeader);
 
 void VuoTable_retain(VuoTable value);
 void VuoTable_release(VuoTable value);

@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-90,75" _seconds="1.0" _fired_eventThrottling="drop"];
+MakeRandomValue3 [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="105,75" _minimum="3" _maximum="32"];
+PosterizeImage [type="vuo.image.posterize" version="1.0.1" label="Posterize Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<posterizedImage>posterizedImage\r" pos="285,-15"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<image>image\r" _time_type="VuoReal" _image_type="VuoImage"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+FirePeriodically:fired -> MakeRandomValue3:minimum [event=true];
+MakeRandomValue3:value -> PosterizeImage:colors;
+PosterizeImage:posterizedImage -> PublishedOutputs:outputImage;
+PublishedInputs:image -> PosterizeImage:image;
+}

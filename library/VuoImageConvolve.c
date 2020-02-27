@@ -2,9 +2,9 @@
  * @file
  * VuoImageConvolve implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -116,7 +116,7 @@ VuoImage VuoImageConvolve_generateMatrix(VuoImageConvolveFunction f, unsigned in
 //	else
 //		printf("sum = %g\n", sum);
 
-	return VuoImage_makeFromBuffer(pixelFloats, GL_LUMINANCE, pixelsWide, pixelsWide, VuoImageColorDepth_16, ^(void *buffer){ free(pixelFloats); });
+	return VuoImage_makeFromBuffer(pixelFloats, GL_LUMINANCE, pixelsWide, pixelsWide, VuoImageColorDepth_32, ^(void *buffer){ free(pixelFloats); });
 }
 
 /**
@@ -128,10 +128,10 @@ VuoImageConvolve VuoImageConvolve_make(void)
 	VuoRegister(bi, VuoImageConvolve_free);
 
 	static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-		include(VuoGlslAlpha)
-		include(VuoGlslBrightness)
+		\n#include "VuoGlslAlpha.glsl"
+		\n#include "VuoGlslBrightness.glsl"
 
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 
 		uniform sampler2D image;
 		uniform vec2 viewportSize;
@@ -148,7 +148,7 @@ VuoImageConvolve VuoImageConvolve_make(void)
 
 		void main(void)
 		{
-			vec2 uv = fragmentTextureCoordinate.xy;
+			vec2 uv = fragmentTextureCoordinate;
 
 			vec4 colorSum = vec4(0.);
 

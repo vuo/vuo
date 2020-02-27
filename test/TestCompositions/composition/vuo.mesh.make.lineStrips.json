@@ -2,9 +2,9 @@
  * @file
  * Expected outputs for the MakeLineMesh composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration" : [
@@ -15,7 +15,7 @@
 			"Positions" : [ ]
 		},
 		"outputPortValues" : {
-			"Summary" : "(empty mesh)"
+			"Summary" : "Empty mesh"
 		}
 	},
 
@@ -28,7 +28,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "(empty mesh)"
+			"Summary" : "Empty mesh"
 		}
 	},
 
@@ -42,7 +42,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "Mesh containing: 2 vertices in a strip of 1 linewith first position (0, 0, 0, 1)✓ positions◻ normals◻ tangents◻ bitangents◻ texture coordinates"
+			"Summary" : "2 vertices in a strip of 1 linewith first position (0, 0, 0)✓ positions✓ normals◻ texture coordinates◻ vertex colors"
 		}
 	},
 
@@ -57,7 +57,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "Mesh containing: 3 vertices in a strip of 2 lineswith first position (0, 0, 0, 1)✓ positions◻ normals◻ tangents◻ bitangents◻ texture coordinates"
+			"Summary" : "3 vertices in a strip of 2 lineswith first position (0, 0, 0)✓ positions✓ normals◻ texture coordinates◻ vertex colors"
 		}
 	},
 

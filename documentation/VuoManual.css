@@ -2,31 +2,41 @@
 /* Global styles */
 /*****************/
 
-@import url(http://fonts.googleapis.com/css?family=Signika:300,600);
+@import url(https://fonts.googleapis.com/css?family=PT+Sans:400,700&subset=latin-ext);
 
 body {
 	background-color: rgb(253,246,227); /* solarized base3 */
 	color: rgb(88,110,117); /* solarized base01 */
-	font-family: 'Signika', sans-serif;
+	font-family: 'PT Sans', sans-serif;
 	font-weight: 300;
 	font-size: 12pt;
 	line-height: 1.5;
 	margin: 0 auto;
+	padding: 0 1em 0 18em;
 	max-width: 800px;
+}
+@media (max-width: 800px) {
+	body {
+		padding-left: 1em;
+	}
 }
 
 a {
-	color: rgb(38,139,210); /* solarized blue */
+	color: #0099a9; /* Vuo 2017 Logo blue */
 	text-decoration: none;
 }
 a:hover {
 	text-decoration: underline;
 }
+a.current {
+	font-weight: bold;
+	color: rgb(88,110,117);
+}
 
 h2,
 h3,
 h4 {
-	color: rgb(38,139,210); /* solarized blue */
+	color: #0099a9; /* Vuo 2017 Logo blue */
 	font-weight: 300;
 	margin: 0px;
 }
@@ -48,6 +58,33 @@ hr {
 	border: 2px solid rgb(238,232,213); /* solarized base2 */
 	clear: both;
 }
+@media (min-width: 800px) {
+	.titlepage hr {
+		margin-left: -17em;
+	}
+}
+
+/* Previous/Next buttons */
+.navheader tr:last-child td:first-child a,
+.navheader tr:last-child td:last-child a,
+.navfooter tr:first-child td:first-child a,
+.navfooter tr:first-child td:last-child a {
+	color: rgb(88,110,117); /* solarized base01 */
+	font-size: 1.3em;
+	display: inline-block;
+	padding: 0 .5em;
+}
+.navheader tr:last-child td:first-child a:hover,
+.navheader tr:last-child td:last-child a:hover,
+.navfooter tr:first-child td:first-child a:hover,
+.navfooter tr:first-child td:last-child a:hover {
+	text-decoration: none;
+}
+
+/* Section name */
+.navheader tr:last-child th:nth-child(2) {
+	font-weight: normal;
+}
 
 .informaltable table {
 	border: none !important;
@@ -63,6 +100,7 @@ hr {
 .informaltable table td {
 	border: none !important;
 	padding: .1em .5em .1em .5em;
+	vertical-align: top;
 }
 
 .vuo-term {
@@ -82,12 +120,13 @@ hr {
 	background-color: rgb(238,232,213); /* solarized base2 */
 	border: 1px solid rgb(147,161,161); /* solarized base1 */
 	border-radius: 4px;
-	padding: .1em .2em .1em .2em;
+	padding: .02em .2em .02em .2em;
 }
 
 .vuo-tip,
 .vuo-note-text,
-.vuo-note-qc {
+.vuo-note-new,
+.vuo-note-changed {
 	clear: right;
 	float: right;
 	width: 33%;
@@ -99,7 +138,8 @@ hr {
 }
 .vuo-tip:before,
 .vuo-note-text:before,
-.vuo-note-qc:before {
+.vuo-note-new .title,
+.vuo-note-changed .title {
 	font-weight: 600;
 	display: block;
 	background-size: auto 1.3em;
@@ -118,9 +158,14 @@ hr {
 	margin-left: -2.2em;
 	padding-left: 2.2em;
 }
-.vuo-note-qc:before {
-	content: 'Note for Quartz Composer users';
-	background-image: url("image/fa-magic.svg");
+.vuo-note-new .title {
+	background-image: url("image/fa-gift.svg");
+	margin-left: -2em;
+	padding-left: 2em;
+	padding-bottom: 0;
+}
+.vuo-note-changed .title {
+	background-image: url("image/fa-highlighter.svg");
 	margin-left: -2em;
 	padding-left: 2em;
 }
@@ -133,55 +178,134 @@ hr {
 
 /* Title page */
 
-section.article > div.titlepage div {
+.article > div.titlepage div {
 	display: inline;
 }
-section.article > div.titlepage h2.title:before {
-	background-image: url("image/vuo.png");
-	width: 128px;
-	height: 128px;
-	background-size: 128px;
-	display: block;
-	content: '';
+.article > div.titlepage h2.title {
+	margin-left: -2.8em;
+	width: 248px;
+	background-image: url("image/vuo-wordmark-teal-cropped.svg");
+	background-size: 248px;
+	background-repeat: no-repeat;
+	text-indent: -9999px;
+	font-size: 72pt;
+	display: inline-block;
+	position: relative;
+	top: -12px;
 }
-section.article > div.titlepage h2.title {
-	color: rgb(0,43,54); /* solarized base03 */
-	font-size: 64pt;
-	line-height: 0;
-	display: inline;
-}
-section.article > div.titlepage p.releaseinfo {
+.article > div.titlepage p.releaseinfo {
 	color: rgb(192,196,187); /* solarized base1.5 */
-	font-size: 48pt;
-	display: inline;
+	font-size: 72pt;
+	display: inline-block;
+	margin: 0;
+	padding-top: 42px;
 }
-section.article > div.titlepage p.pubdate {
+.article > div.titlepage p.pubdate {
+	color: rgb(192,196,187); /* solarized base1.5 */
 	float: right;
-	margin-top: 38pt;
+	margin-top: 99pt;
+}
+.article > div.titlepage hr {
+	margin-top: -1em;
+}
+@media (max-width: 800px) {
+	.article > div.titlepage h2.title {
+		margin-left: 0;
+		margin-right: 10px;
+		width: 124px;
+		background-size: 124px;
+		font-size: 33pt;
+	}
+	.article > div.titlepage p.releaseinfo {
+		font-size: 36pt;
+		display: inline-block;
+		margin: 0;
+		padding-top: .6em;
+	}
+	.article > div.titlepage p.pubdate {
+		margin-top: 47pt;
+	}
+}
+@media (max-width: 396px) {
+	.article > div.titlepage p.pubdate {
+		margin-top: 0;
+	}
 }
 
+div.toc-title,
+div.toc > p > strong {
+	display: none;
+}
+#toc iframe {
+	border: none;
+	width: 13em;
+	margin: 1em 0 0 -17em;
+}
 div.toc {
 	background-color: rgb(238,232,213); /* solarized base2 */
 	border-radius: 6px;
 	padding: 1em;
-	float: right;
-	width: 40%;
-	margin: 0 0 1em 1em;
+	position: absolute;
+	width: 13em;
+	margin: 1em 0 0 -17em;
+	min-height: 50em;
 }
-ul.toc {
+@media (max-width: 800px) {
+	div.toc {
+		display: none;
+	}
+}
+.titlepage div.navheader {
+	display: none;
+}
+.titlepage div.toc {
+	margin-top: 13em;
+}
+div.toc p {
 	margin: 0;
-	padding: 0 0 0 1em;
 }
-ul.toc li {
+ul.toc,
+dl.toc {
+	margin: 0;
+	padding: 0;
+}
+ul.toc li,
+dl.toc dt {
 	list-style: none;
 }
-ul.toc ul {
+ul.toc ul,
+dl.toc dl {
 	padding: 0 0 0 1.2em;
 	font-size: 84%;
 	opacity: 0.8;
 }
+dl.toc dd {
+	margin: 0;
+}
+/* Scale down this image so it fits next to the "tip" sidebars (rather than leaving a gap). */
+.quickstart-noiseglass-output img {
+	width: 52%;
+}
 
-#introduction h2 {
+#glossary h4 {
+	color: inherit;
+	font-size: inherit;
+	font-weight: bold;
+	float: left;
+	margin-right: 1em;
+}
+#glossary p {
+	margin-left: 2em;
+}
+
+.titlepage h2 {
 	clear: none !important;
 }
 
+.abstract {
+	display: none;
+}
+
+.navfooter tr:nth-child(2) td:nth-child(2) {
+	visibility: hidden;
+}

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Drawing Units="in" PPU="128" Major="1" Subdivisions="8" Zoom="0.369025735294118" ViewPositionX="94.4705882352941" ViewPositionY="141.705882352941" ActiveLayer="0" PrintSize="8.5,11">
+  <Layer Name="Layer 2" Visible="True" Locked="False">
+    <Oval X="-2" Y="-3" Width="10" Height="10" FillColor="#BFBFBF" Stroked="False" />
+    <Group Rotation="45">
+      <Line X1="3" Y1="-1" X2="3" Y2="5" StrokeColor="#FFFFFF" StrokeSize="128" />
+      <Line X1="0" Y1="2" X2="6" Y2="2" StrokeColor="#FFFFFF" StrokeSize="128" />
+    </Group>
+  </Layer>
+</Drawing>

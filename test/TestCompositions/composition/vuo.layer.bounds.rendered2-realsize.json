@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Expected outputs for the vuo.layer.bounds.rendered2 node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":[
+	// On each line, change either the layer size of the window size (not both), since each change causes the composition to output an event.
+	{"firingPort":"imageWidth", "inputPortValues":{"imageWidth":640,"imageHeight":640,"windowWidth": 640,"windowHeight": 640}, "outputPortValues":{"outputCenter":{"x":0,"y":0},"outputWidth":2   ,"outputHeight":2  ,"outputPixelsWide":640,"outputPixelsHigh":640}},
+	{"firingPort":"imageWidth", "inputPortValues":{"imageWidth":640,"imageHeight":640,"windowWidth":1024,"windowHeight":1024}, "outputPortValues":{"outputCenter":{"x":0,"y":0},"outputWidth":1.25,"outputHeight":1.25,"outputPixelsWide":640,"outputPixelsHigh":640}},
+	{"firingPort":"imageWidth", "inputPortValues":{"imageWidth":640,"imageHeight":512,"windowWidth":1024,"windowHeight":1024}, "outputPortValues":{"outputCenter":{"x":0,"y":0},"outputWidth":1.25,"outputHeight":1  ,"outputPixelsWide":640,"outputPixelsHigh":512}},
+	{"firingPort":"imageWidth", "inputPortValues":{"imageWidth":640,"imageHeight":512,"windowWidth":1280,"windowHeight": 720}, "outputPortValues":{"outputCenter":{"x":0,"y":0},"outputWidth":1   ,"outputHeight":0.8,"outputPixelsWide":640,"outputPixelsHigh":512}},
+]}

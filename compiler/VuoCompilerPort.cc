@@ -2,20 +2,21 @@
  * @file
  * VuoCompilerPort implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+#include "VuoCable.hh"
 #include "VuoCompilerPort.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerConstantStringCache.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerType.hh"
+#include "VuoException.hh"
 #include "VuoPort.hh"
+#include "VuoStringUtilities.hh"
 #include "VuoType.hh"
-#include <stdexcept>
 
 /**
  * Creates a compiler detail from a given @c basePort.
@@ -89,9 +90,9 @@ void VuoCompilerPort::setNodeIdentifier(string nodeIdentifier)
 string VuoCompilerPort::getIdentifier(void)
 {
 	if (nodeIdentifier.empty())
-		throw std::logic_error("VuoCompilerPort::setNodeIdentifier() must be called before VuoCompilerPort::getIdentifier().");
+		throw VuoException("VuoCompilerPort::setNodeIdentifier() must be called before VuoCompilerPort::getIdentifier().");
 
-	return nodeIdentifier + "__" + getBase()->getClass()->getName();
+	return VuoStringUtilities::buildPortIdentifier(nodeIdentifier, getBase()->getClass()->getName());
 }
 
 /**
@@ -133,7 +134,7 @@ Value * VuoCompilerPort::getDataVariable(Module *module, BasicBlock *block, Valu
 Value * VuoCompilerPort::generateGetPortContext(Module *module, BasicBlock *block, Value *nodeContextValue)
 {
 	if (indexInPortContexts < 0)
-		throw std::logic_error("VuoCompilerPort::setIndexInportContexts() must be called before VuoCompilerPort::generateGetPortContext().");
+		throw VuoException("VuoCompilerPort::setIndexInPortContexts() must be called before VuoCompilerPort::generateGetPortContext().");
 
 	return VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, block, nodeContextValue, indexInPortContexts);
 }

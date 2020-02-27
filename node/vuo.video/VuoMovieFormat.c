@@ -2,14 +2,11 @@
  * @file
  * VuoMovieFormat implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoMovieFormat.h"
 
@@ -44,30 +41,12 @@ VuoModuleMetadata({
  */
 VuoMovieFormat VuoMovieFormat_makeFromJson(json_object *js)
 {
-	VuoMovieFormat value = { VuoMovieImageEncoding_JPEG, 1, VuoAudioEncoding_LinearPCM, 1 };
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "imageEncoding", &o))
-		value.imageEncoding = VuoMovieImageEncoding_makeFromJson(o);
-	else
-		value.imageEncoding = VuoMovieImageEncoding_JPEG;
-
-	if (json_object_object_get_ex(js, "imageQuality", &o))
-		value.imageQuality = VuoReal_makeFromJson(o);
-	else
-		value.imageQuality = 1.f;
-
-	if (json_object_object_get_ex(js, "audioEncoding", &o))
-		value.audioEncoding = VuoAudioEncoding_makeFromJson(o);
-	else
-		value.audioEncoding = VuoAudioEncoding_LinearPCM;
-
-	if (json_object_object_get_ex(js, "audioQuality", &o))
-		value.audioQuality = VuoReal_makeFromJson(o);
-	else
-		value.audioQuality = 1.f;
-
-	return value;
+	return (VuoMovieFormat){
+		VuoJson_getObjectValue(VuoMovieImageEncoding, js, "imageEncoding", VuoMovieImageEncoding_JPEG),
+		VuoJson_getObjectValue(VuoReal,               js, "imageQuality",  1),
+		VuoJson_getObjectValue(VuoAudioEncoding,      js, "audioEncoding", VuoAudioEncoding_LinearPCM),
+		VuoJson_getObjectValue(VuoReal,               js, "audioQuality",  1)
+	};
 }
 
 /**
@@ -114,4 +93,23 @@ bool VuoMovieFormat_areEqual(VuoMovieFormat value1, VuoMovieFormat value2)
 			value1.audioEncoding == value2.audioEncoding &&
 			VuoReal_areEqual(value1.audioQuality, value2.audioQuality)
 			);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoMovieFormat_isLessThan(const VuoMovieFormat a, const VuoMovieFormat b)
+{
+	if (a.imageEncoding < b.imageEncoding) return true;
+	if (b.imageEncoding < a.imageEncoding) return false;
+
+	if (a.imageQuality < b.imageQuality) return true;
+	if (b.imageQuality < a.imageQuality) return false;
+
+	if (a.audioEncoding < b.audioEncoding) return true;
+	if (b.audioEncoding < a.audioEncoding) return false;
+
+	if (a.audioQuality < b.audioQuality) return true;
+	/*if (b.audioQuality < a.audioQuality)*/ return false;
 }

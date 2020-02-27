@@ -2,9 +2,9 @@
  * @file
  * VuoTime C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -16,7 +16,7 @@
 #include "VuoTimeFormat.h"
 #include "VuoTimeUnit.h"
 
-/// @{
+/// @{ List type.
 typedef void * VuoList_VuoTime;
 #define VuoList_VuoTime_TYPE_DEFINED
 /// @}
@@ -59,8 +59,9 @@ bool VuoTime_isTimeOfDayLessThan(const VuoTime valueA, const VuoTime valueB, con
 VuoTime VuoTime_getCurrent(void);
 VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, VuoInteger hour, VuoInteger minute, VuoReal second);
 VuoTime VuoTime_makeFromRFC822(const char *rfc822);
+VuoTime VuoTime_makeFromISO8601(const char *iso8601);
 VuoTime VuoTime_makeFromUnknownFormat(const char *str);
-bool VuoTime_getComponents(VuoTime time, VuoInteger *year, VuoInteger *dayOfYear, VuoInteger *month, VuoInteger *dayOfMonth, VuoInteger *week, VuoWeekday *dayOfWeek, VuoInteger *hour, VuoInteger *minute, VuoReal *second);
+bool VuoTime_getComponents(VuoTime time, VuoInteger *year, VuoInteger *dayOfYear, VuoInteger *month, VuoInteger *dayOfMonth, VuoInteger *week, VuoWeekday *dayOfWeek, VuoInteger *hour, VuoInteger *minute, VuoReal *second) VuoWarnUnusedResult;
 VuoTime VuoTime_round(const VuoTime value, const VuoTimeUnit unit, const int roundingMethod);
 VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format);
 VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, const VuoText localeIdentifier);

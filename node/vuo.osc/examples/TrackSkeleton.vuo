@@ -2,28 +2,28 @@
  * @file
  * Receives skeleton-tracking data from Delicode NI mate 2 and your connected Kinect and/or Leap Motion device and renders the moving skeleton within a room.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="870,150"];
-FilterBasicSkeleton [type="vuo.osc.skeleton.basic" version="1.0.0" label="Filter Skeleton|<refresh>refresh\l|<message>message\l|<user>user\l|<head>head\r|<neck>neck\r|<torso>torso\r|<rightShoulder>rightShoulder\r|<leftShoulder>leftShoulder\r|<rightElbow>rightElbow\r|<leftElbow>leftElbow\r|<rightHand>rightHand\r|<leftHand>leftHand\r|<rightHip>rightHip\r|<leftHip>leftHip\r|<rightKnee>rightKnee\r|<leftKnee>leftKnee\r|<rightFoot>rightFoot\r|<leftFoot>leftFoot\r" pos="495,165" fillcolor="violet" _user="0"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,120" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeCube2 [type="vuo.scene.make.cube.1.VuoColor" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="495,-15" _transform="{\"translation\":[0,2,-3],\"eulerRotation\":[0,0,0],\"scale\":[4,4,6]}" _material="{\"r\":1,\"g\":0.93951326608657837,\"b\":0.89671170711517334,\"a\":1}"];
-MakeList11 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1069,191" fillcolor="green"];
-MakeList16 [type="vuo.list.make.15.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<15>15\l|<list>list\r" pos="657,176"];
-MakeList2 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="743,191" _1="{\"x\":0,\"y\":0,\"z\":0}"];
-MakeList3 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="824,206" _1="{\"x\":1,\"y\":1,\"z\":1}"];
-MakeList4 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1039,146" fillcolor="green"];
-MakeOSCInput [type="vuo.osc.make.input" version="1.0.0" label="Make OSC Input|<refresh>refresh\l|<name>name\l|<port>port\l|<device>device\r" pos="120,165" _name="\"Vuo OSC Server\"" _port="7000"];
-MakeSphere [type="vuo.scene.make.sphere.VuoColor" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="495,60" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.20000000298023224,0.20000000298023224,0.20000000298023224]}" _material="{\"r\":0.86700236797332764,\"g\":0.92735177278518677,\"b\":1,\"a\":1}" _rows="16" _columns="16"];
-MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="495,435" _name="\"camera\"" _position="{\"x\":0,\"y\":1,\"z\":1}" _target="{\"x\":0,\"y\":1,\"z\":-1}" _upDirection="{\"x\":0.,\"y\":1.,\"z\":0.}" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0"];
-ReceiveOSCMessages [type="vuo.osc.receive2" version="2.0.0" label="Receive OSC Messages|<refresh>refresh\l|<device>device\l|<receivedMessage>receivedMessage\r" pos="285,165" _receivedMessage_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1110,135" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="660,-15" _keepFront="false"];
+Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="795,150"];
+FilterBasicSkeleton [type="vuo.osc.skeleton.basic" version="1.0.0" label="Filter Skeleton|<refresh>refresh\l|<message>message\l|<user>user\l|<head>head\r|<neck>neck\r|<torso>torso\r|<rightShoulder>rightShoulder\r|<leftShoulder>leftShoulder\r|<rightElbow>rightElbow\r|<leftElbow>leftElbow\r|<rightHand>rightHand\r|<leftHand>leftHand\r|<rightHip>rightHip\r|<leftHip>leftHip\r|<rightKnee>rightKnee\r|<leftKnee>leftKnee\r|<rightFoot>rightFoot\r|<leftFoot>leftFoot\r" pos="465,165" fillcolor="orange" _user="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-120,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeCube2 [type="vuo.scene.make.cube.1.VuoColor" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="465,-15" _transform="\{\"translation\":[0,2,-3],\"eulerRotation\":[0,0,0],\"scale\":[4,4,6]\}" _material="\{\"r\":1,\"g\":0.93951326608657837,\"b\":0.89671170711517334,\"a\":1\}"];
+MakeList16 [type="vuo.list.make.15.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<15>15\l|<list>list\r" pos="629,176"];
+MakeList2 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="698,191" _1="\{\"x\":0,\"y\":0,\"z\":0\}"];
+MakeList3 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="762,206" _1="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeList4 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="944,146" fillcolor="blue"];
+MakeOSCInput [type="vuo.osc.make.input" version="1.0.0" label="Specify OSC Input|<refresh>refresh\l|<name>name\l|<port>port\l|<device>device\r" pos="120,165" _name="\"Vuo OSC Server\"" _port="7000"];
+MakeSphere [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="465,60" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.20000000298023224,0.20000000298023224,0.20000000298023224]\}" _material="\{\"r\":0.86700236797332764,\"g\":0.92735177278518677,\"b\":1,\"a\":1\}" _rows="16" _columns="16"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="465,435" _name="\"camera\"" _position="\{\"x\":0,\"y\":1,\"z\":1\}" _target="\{\"x\":0,\"y\":1,\"z\":-1\}" _upDirection="\{\"x\":0.,\"y\":1.,\"z\":0.\}" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0"];
+ReceiveOSCMessages [type="vuo.osc.receive2" version="2.0.0" label="Receive OSC Messages|<refresh>refresh\l|<device>device\l|<receivedMessage>receivedMessage\r" pos="270,165" _receivedMessage_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="990,135" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="630,-15" _keepFront="false"];
 
 Copy3DObject:copies -> MakeList4:2;
 FilterBasicSkeleton:head -> MakeList16:1;
@@ -41,12 +41,11 @@ FilterBasicSkeleton:rightHip -> MakeList16:10;
 FilterBasicSkeleton:rightKnee -> MakeList16:12;
 FilterBasicSkeleton:rightShoulder -> MakeList16:4;
 FilterBasicSkeleton:torso -> MakeList16:3;
-FireOnStart:started -> MakeCube2:refresh;
-FireOnStart:started -> MakeOSCInput:refresh;
-FireOnStart:started -> MakeSphere:refresh;
-FireOnStart:started -> MakeTargetedPerspectiveCamera:refresh;
+FireOnStart:started -> MakeCube2:material;
+FireOnStart:started -> MakeOSCInput:name;
+FireOnStart:started -> MakeSphere:material;
+FireOnStart:started -> MakeTargetedPerspectiveCamera:name;
 MakeCube2:cube -> ShowBackOf3DObject:object;
-MakeList11:list -> RenderSceneToWindow:setWindowProperties;
 MakeList16:list -> Copy3DObject:translations;
 MakeList2:list -> Copy3DObject:rotations;
 MakeList3:list -> Copy3DObject:scales;

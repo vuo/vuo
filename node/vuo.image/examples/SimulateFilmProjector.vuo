@@ -2,30 +2,45 @@
  * @file
  * Plays a movie, and applies filters to make it look like an old-fashioned film projection.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="375,105" _saturation="-1" _hueShift="0" _contrast="0" _brightness="0" _exposure="0" _gamma="1"];
-BlendImages2 [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="555,240" fillcolor="violet" _blendMode="\"multiply\"" _foregroundOpacity="1.000000" _replaceOpacity="true"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.3.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<vibrance>vibrance\l|<hueShift>hueShift\l|<temperature>temperature\l|<tint>tint\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="375,90" _saturation="-1" _vibrance="0" _hueShift="0" _temperature="0" _tint="0" _contrast="0" _brightness="0" _exposure="0" _gamma="1"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="960,225" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2.0" _columns="2" _height="2" _rows="1"];
+BlendImages2 [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="615,240" fillcolor="orange" _blendMode="\"multiply\"" _foregroundOpacity="1.000000" _replaceOpacity="true"];
 ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="690,300"];
 ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="510,45"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="679,266" fillcolor="green"];
-PlayMovie [type="vuo.video.play" version="2.0.2" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="135,105" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-PlayMovie3 [type="vuo.video.play" version="2.0.2" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="135,255" _url="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="720,240" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="345,0"];
+ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="735,90"];
+ConvertImageToLayer3 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="735,105"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-375,0" fillcolor="lime" _started_eventThrottling="enqueue"];
+LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="930,405" _width="2" _height="0.75"];
+MakeList11 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="892,236"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1208,236" fillcolor="blue"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="45,0" _setTime="\"\"" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+PlayMovie3 [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="45,255" _setTime="\"\"" _url="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1260,225" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
 AdjustImageColors:adjustedImage -> BlendImages2:background;
-BlendImages2:blended -> RenderImageToWindow:image;
+ArrangeLayersInGrid:griddedLayer -> MakeList2:1;
+BlendImages2:blended -> ConvertImageToLayer3:image;
 ConvertFrameToImage2:image -> AdjustImageColors:image;
+ConvertFrameToImage3:image -> ConvertImageToLayer:image;
 ConvertFrameToImage:image -> BlendImages2:foreground;
+ConvertImageToLayer3:layer -> MakeList11:2;
+ConvertImageToLayer:layer -> MakeList11:1;
+FireOnStart:started -> LockWindowAspectRatio:width;
 FireOnStart:started -> PlayMovie3:play;
 FireOnStart:started -> PlayMovie:play;
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
+LockWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+MakeList11:list -> ArrangeLayersInGrid:layers;
+MakeList2:list -> RenderLayersToWindow:layers;
 PlayMovie3:decodedVideo -> ConvertFrameToImage:frame;
 PlayMovie:decodedVideo -> ConvertFrameToImage2:frame;
+PlayMovie:decodedVideo -> ConvertFrameToImage3:frame;
 }

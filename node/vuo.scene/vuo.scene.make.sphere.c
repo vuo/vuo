@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.sphere node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Sphere",
 					  "keywords" : [ "mesh", "3d", "scene", "sphere", "ball", "round", "ellipsoid", "circle", "globe", "shape" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -28,8 +28,26 @@ VuoModuleMetadata({
 					  }
 				  });
 
-void nodeEvent
+static const char *xExp = "sin((u-.5)*360) * cos((v-.5)*180) / 2.";
+static const char *yExp = "sin((v-.5)*180) / 2.";
+static const char *zExp = "cos((u-.5)*360) * cos((v-.5)*180) / 2.";
+
+struct nodeInstanceData
+{
+	VuoInteger rows;
+	VuoInteger columns;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
+}
+
+void nodeInstanceEvent
 (
+	VuoInstanceData(struct nodeInstanceData *) context,
 	VuoInputData(VuoTransform) transform,
 	VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 	VuoInputData(VuoInteger, {"default":32,"suggestedMin":4, "suggestedMax":256}) rows,
@@ -37,9 +55,15 @@ void nodeEvent
 	VuoOutputData(VuoSceneObject) object
 )
 {
-	char *xExp = "sin((u-.5)*360) * cos((v-.5)*180) / 2.";
-	char *yExp = "sin((v-.5)*180) / 2.";
-	char *zExp = "cos((u-.5)*360) * cos((v-.5)*180) / 2.";
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (rows == (*context)->rows
+	 && columns == (*context)->columns)
+	{
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, transform);
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
+		return;
+	}
 
 	unsigned int r = MAX(4, MIN(512, rows));
 	unsigned int c = MAX(4, MIN(512, columns));
@@ -53,6 +77,16 @@ void nodeEvent
 												0, 1,
 												NULL);
 
-	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
-	object->name = VuoText_make("Sphere");
+	*object = VuoSceneObject_makeMesh(mesh, VuoShader_make_VuoGenericType1(material), transform);
+	VuoSceneObject_setName(*object, VuoText_make("Sphere"));
+
+	(*context)->rows = rows;
+	(*context)->columns = columns;
+}
+
+void nodeInstanceFini
+(
+	VuoInstanceData(struct nodeInstanceData *) context
+)
+{
 }

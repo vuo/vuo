@@ -2,17 +2,17 @@
  * @file
  * VuoCompilerTriggerPort implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerConstantStringCache.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoCompilerType.hh"
 #include "VuoPort.hh"
+#include "VuoType.hh"
 
 /**
  * Creates a trigger port based on @c portClass.
@@ -74,23 +74,13 @@ void VuoCompilerTriggerPort::generateScheduleWorker(Module *module, Function *fu
 	Type *eventIdType = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module)->getType();
 	Value *eventIdCopyAddress = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, eventIdType, 1);
 	new StoreInst(eventIdValue, eventIdCopyAddress, false, block);
-	Value *eventIdAsVoidPointer = new BitCastInst(eventIdCopyAddress, voidPointer, "", block);
 
-	// void **context = (void **)malloc(3 * sizeof(void *));
-	// context[0] = (void *)compositionState;
-	// context[1] = (void *)dataCopy;
-	// context[2] = (void *)eventIdCopy;
-	ConstantInt *sizeValue = ConstantInt::get(module->getContext(), APInt(64, 3));
-	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointer, sizeValue);
-	Value *compositionStateAsVoidPointer = new BitCastInst(compositionStateValue, voidPointer, "", block);
-	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionStateAsVoidPointer);
-	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 1, dataCopyAsVoidPointer);
-	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 2, eventIdAsVoidPointer);
-	Value *contextAsVoidPointer = new BitCastInst(contextValue, voidPointer, "", block);
+	Value *contextValue = VuoCompilerCodeGenUtilities::generateCreateTriggerWorkerContext(module, block, compositionStateValue,
+																						  dataCopyAsVoidPointer, eventIdCopyAddress);
 
 	Value *dispatchQueueValue = VuoCompilerCodeGenUtilities::generateGetPortContextTriggerQueue(module, block, portContextValue);
 
-	VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(module, block, dispatchQueueValue, contextAsVoidPointer, workerFunction,
+	VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(module, block, dispatchQueueValue, contextValue, workerFunction,
 															   minThreadsNeeded, maxThreadsNeeded,
 															   eventIdValue, compositionStateValue, chainCount);
 }
@@ -197,21 +187,8 @@ Value * VuoCompilerTriggerPort::generateLoadPreviousData(Module *module, BasicBl
  */
 void VuoCompilerTriggerPort::generateFreeContext(Module *module, BasicBlock *block, Function *workerFunction)
 {
-	// free(((void **)context)[1]);
-	// free(((void **)context)[2]);
-	// free(context);
-
 	Value *contextValue = workerFunction->arg_begin();
-	Type *voidPointerType = contextValue->getType();
-	PointerType *voidPointerPointerType = PointerType::get(voidPointerType, 0);
-
-	BitCastInst *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *dataValue = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 1);
-	Value *eventIdValue = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 2);
-
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, dataValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, eventIdValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, contextValue);
+	VuoCompilerCodeGenUtilities::generateFreeTriggerWorkerContext(module, block, contextValue);
 }
 
 /**
@@ -228,7 +205,7 @@ Value * VuoCompilerTriggerPort::generateCompositionStateValue(Module *module, Ba
 	Type *compositionStatePointerType = PointerType::get(VuoCompilerCodeGenUtilities::getCompositionStateType(module), 0);
 
 	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *compositionStateAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 0);
+	Value *compositionStateAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, (size_t)0);
 	return new BitCastInst(compositionStateAsVoidPointer, compositionStatePointerType, "", block);
 }
 

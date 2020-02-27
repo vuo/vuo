@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="420,375"];
+ConvertFrameToTimestamp [type="vuo.type.videoframe.real" version="1.0.0" label="Convert Frame to Timestamp|<refresh>refresh\l|<frame>frame\l|<timestamp>timestamp\r" pos="480,555"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,180" _started_eventThrottling="enqueue"];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="270,375" _b="8.9000000000000004"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="180,195" _setTime="\"\"" _url="\"\\/MovieGauntlet\\/JackYarnNest2018Sound.mp4\"" _loop="\"none\"" _playbackRate="1" _optimization="\"auto\"" _decodedVideo_eventThrottling="enqueue" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+SaveFramesToMovie [type="vuo.video.save2" version="2.0.0" label="Save Frames to Movie|<refresh>refresh\l|<url>url\l|<saveVideoFrame>saveVideoFrame\l|<saveAudioFrame>saveAudioFrame\l|<finalize>finalize\l|<overwriteUrl>overwriteUrl\l|<format>format\l" pos="570,180" _url="\"\\/tmp\\/JackYarnNest2018NOSound\"" _overwriteUrl="true" _format="\{\"imageEncoding\":\"H264\",\"imageQuality\":1,\"audioEncoding\":\"LinearPCM\",\"audioQuality\":1\}"];
+StopComposition [type="vuo.app.stopComposition" version="1.0.0" label="Stop Composition|<refresh>refresh\l|<stop>stop\l" pos="570,375"];
+
+BecameTrue:becameTrue -> StopComposition:stop;
+ConvertFrameToTimestamp:timestamp -> IsGreaterThan:a;
+FireOnStart:started -> PlayMovie:play;
+IsGreaterThan:greaterThan -> BecameTrue:value;
+PlayMovie:decodedVideo -> ConvertFrameToTimestamp:frame;
+PlayMovie:decodedVideo -> SaveFramesToMovie:saveVideoFrame;
+}

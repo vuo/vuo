@@ -2,55 +2,54 @@
  * @file
  * Detects barcodes within image files, and displays the information encoded by each one. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 Append [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1710,480"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="450,210" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="3" _height="1.000000" _rows="1"];
-ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2310,450" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="1" _height="1.000000" _rows="2"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="450,210" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="2.000000" _columns="3" _height="1.000000" _rows="1"];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2325,450" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="2.000000" _columns="1" _height="1.000000" _rows="2"];
 BecameFalse [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="-120,585"];
-Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="465,570" _expression="{\"expressions\":[\"(count - 1) * 2\\/3 - 2\\/3\"],\"inputVariables\":[\"count\"],\"outputVariables\":[\"result\"]}"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="465,570" _expression="\{\"expressions\":[\"(count - 1) * 2\\/3 - 2\\/3\"],\"inputVariables\":[\"count\"],\"outputVariables\":[\"result\"]\}"];
 ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="1200,675"];
 ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="1125,330"];
 CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="60,570" _increment="1" _decrement="1" _setCount="2" _minimum="1" _maximum="3" _wrapMode="\"wrap\""];
-CropImage [type="vuo.image.crop" version="1.1.1" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="1020,210" _width="0.670000" _height="1"];
-FindBarcodeInImage [type="vuo.image.findBarcode" version="1.0.0" label="Find Barcode in Image|<refresh>refresh\l|<image>image\l|<barcode>barcode\r|<center>center\r|<width>width\r|<height>height\r" pos="1230,210" fillcolor="violet"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-255,-30" fillcolor="yellow" _started_eventThrottling="enqueue"];
+CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="1020,210" _width="0.670000" _height="1"];
+FindBarcodeInImage [type="vuo.image.findBarcode2" version="2.0.0" label="Find Barcode in Image|<refresh>refresh\l|<image>image\l|<format>format\l|<barcode>barcode\r|<foundFormat>foundFormat\r|<rectangle>rectangle\r" pos="1230,210" fillcolor="orange" _format="0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-690,480" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,0" fillcolor="lime" _started_eventThrottling="enqueue"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="0,330" _url="\"upce-2_04.png\""];
 GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="0,225" _url="\"datamatrix-2_02.png\""];
 GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="0,120" _url="\"qrcode-4_36.png\""];
-HoldValue3 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1125,105"];
+HoldValue3 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1125,105"];
 IsLessThan3 [type="vuo.data.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="-285,585" _b="2"];
 MakeDictionary9 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="255,615"];
-MakeLayer4 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,90" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeLayer5 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,210" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeLayer6 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="2085,555" _center="{\"x\":0.000000,\"y\":0.000000}" _preservePhysicalSize="false"];
-MakeLayer7 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="2070,420" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeLayer8 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,330" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeList17 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1669,491" _1="\"Decoded barcode:   \""];
-MakeList24 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="411,596"];
+MakeLayer4 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,90" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeLayer5 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,210" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeLayer6 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="2085,555" _center="\{\"x\":0.000000,\"y\":0.000000\}" _preservePhysicalSize="false"];
+MakeLayer7 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="2070,420" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeLayer8 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="195,330" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList17 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1669,491" _1="\"Decoded barcode: \  \""];
+MakeList24 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="414,596"];
 MakeList25 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="255,615" _1="\"count\""];
-MakeList26 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2246,461"];
-MakeList27 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2561,491" fillcolor="green"];
-MakeList4 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2592,506" fillcolor="green"];
-MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="386,221"];
+MakeList26 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2257,461"];
+MakeList27 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2519,461" fillcolor="blue"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="382,221"];
 MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="674,221"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="1875,555" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="1875,555" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
 MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="-465,585"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="1845,15" fillcolor="yellow" _url="\"sproing.mp3\"" _loop="\"none\"" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
-RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="735,210" _width="750" _height="240" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="2625,480" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="1845,15" fillcolor="lime" _setTime="\"\"" _url="\"sproing.mp3\"" _loop="\"none\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="735,210" _width="750" _height="240" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2565,450" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1545,420" _option2="\"(none)\""];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="2025,0" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-ShareValue5 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-690,795"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="2085,0" fillcolor="blue"];
 SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="660,540" _setPosition="-0.670000" _duration="0.200000" _curve="\"linear\"" _easing="\"in\""];
 SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="1815,195" _setPosition="1.000000" _setTarget="0.000000" _duration="2.500000" _curve="\"linear\"" _easing="\"in\""];
-SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="885,570" fillcolor="yellow" _spunOff_eventThrottling="enqueue"];
+SpinOffEvent2 [type="vuo.event.spinOffEvent2" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<fire>fire\l|<spunOff>spunOff\r" pos="900,555" fillcolor="lime" _spunOff_eventThrottling="enqueue"];
 
 Append:compositeText -> MakeTextImage:text;
 ArrangeLayersInGrid2:griddedLayer -> MakeList27:1;
@@ -60,7 +59,7 @@ Calculate:result -> SmoothWithDuration2:setTarget;
 ConvertIntegerToRealNumber:real -> MakeList24:1;
 ConvertRealTo2DPoint2:point2d -> CropImage:center;
 CountWithinRange:count -> ConvertIntegerToRealNumber:integer;
-CropImage:croppedImage -> HoldValue3:newValue;
+CropImage:croppedImage -> HoldValue3:value;
 CropImage:croppedImage -> MakeLayer7:image;
 FindBarcodeInImage:barcode -> MeasureTime:reset;
 FindBarcodeInImage:barcode -> MeasureTime:start;
@@ -69,10 +68,13 @@ FindBarcodeInImage:barcode -> PlayAudioFile:setTime [event=true];
 FindBarcodeInImage:barcode -> SelectLatest2:option1;
 FindBarcodeInImage:barcode -> SmoothWithDuration3:setPosition [event=true];
 FindBarcodeInImage:barcode -> SmoothWithDuration3:setTarget [event=true];
-FireOnStart:started -> GetImage2:refresh;
-FireOnStart:started -> GetImage3:refresh;
-FireOnStart:started -> GetImage:refresh;
-FireOnStart:started -> HoldValue3:refresh;
+FireOnDisplayRefresh:requestedFrame -> MeasureTime:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration3:time;
+FireOnStart:started -> GetImage2:url;
+FireOnStart:started -> GetImage3:url;
+FireOnStart:started -> GetImage:url;
+FireOnStart:started -> HoldValue3:update;
 FireOnStart:started -> PlayAudioFile:url;
 GetImage2:image -> MakeLayer5:image;
 GetImage3:image -> MakeLayer4:image;
@@ -91,20 +93,15 @@ MakeList24:list -> MakeDictionary9:values;
 MakeList25:list -> MakeDictionary9:keys;
 MakeList26:list -> ArrangeLayersInGrid2:layers;
 MakeList27:list -> RenderLayersToWindow:layers;
-MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList7:list -> ArrangeLayersInGrid:layers;
 MakeList9:list -> RenderLayersToImage:layers;
 MakeTextImage:image -> MakeLayer6:image;
 MeasureTime:elapsedTime -> IsLessThan3:a;
-PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
+PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
 RenderLayersToImage:image -> CropImage:image;
-RenderLayersToWindow:requestedFrame -> ShareValue5:value;
-RenderLayersToWindow:requestedFrame -> SmoothWithDuration3:time;
 SelectLatest2:latest -> MakeList17:2;
-ShareValue5:sameValue -> MeasureTime:time;
-ShareValue5:sameValue -> SmoothWithDuration2:time;
 SmoothWithDuration2:position -> ConvertRealTo2DPoint2:x;
-SmoothWithDuration2:reachedTarget -> SpinOffEvent:refresh;
+SmoothWithDuration2:reachedTarget -> SpinOffEvent2:fire;
 SmoothWithDuration3:position -> MakeLayer6:opacity;
-SpinOffEvent:spunOff -> HoldValue3:refresh;
+SpinOffEvent2:spunOff -> HoldValue3:update;
 }

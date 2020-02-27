@@ -9,7 +9,7 @@ This node simulates the effect of adjusting the camera lens's zoom or roll (rota
       - The **linear** distribution is almost as smooth, and is faster to compute.
       - The **box** distribution (constant) weights all pixels equally, resulting in relatively sharp edges, and is thus good for simulating motion blur.
    - `Center` — The position from which the effect originates.  At (0,0), the effect originates from the center; at (-1,0), the effect originates from the left edge.
-   - `Radius` — The maximum pixel radius to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
+   - `Radius` — The maximum radius, in points, to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
    - `Dispersion` — The pattern the blur follows — linear (zoom) or radial (roll).
    - `Direction` — Whether the blur causes the image to streak inward (clockwise if radial), outward (counterclockwise), or symmetrically in both directions.
    - `Expand Bounds` — If false, the image size will remain the same.  If true, the image will expand to encapsulate the blurred pixels around the border.

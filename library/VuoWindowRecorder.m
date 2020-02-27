@@ -2,15 +2,15 @@
  * @file
  * VuoWindowRecorder implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoWindowRecorder.h"
 
 #include "VuoGraphicsWindow.h"
-#include "VuoGraphicsView.h"
+#include "VuoGraphicsLayer.h"
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -18,7 +18,6 @@
 
 #include "VuoGlPool.h"
 #include "VuoImageResize.h"
-#include "VuoImageWatermark.h"
 
 #include "module.h"
 
@@ -32,7 +31,7 @@ VuoModuleMetadata({
 						 "VuoFont",
 						 "VuoGlPool",
 						 "VuoGraphicsWindow",
-						 "VuoGraphicsView",
+						 "VuoGraphicsLayer",
 						 "VuoImage",
 						 "VuoImageRenderer",
 						 "VuoImageResize",
@@ -85,8 +84,9 @@ VuoModuleMetadata({
 		_first = true;
 		_priorFrameTime = CMTimeMake(-1, TIMEBASE);
 
-		VuoGraphicsView *gv = window.contentView;
-		NSRect frameInPoints = gv.frame;
+		NSView *v = window.contentView;
+		VuoGraphicsLayer *l = (VuoGraphicsLayer *)v.layer;
+		NSRect frameInPoints = v.frame;
 		NSRect frameInPixels = [window convertRectToBacking:frameInPoints];
 		_originalWidth  = _priorWidth  = frameInPixels.size.width;
 		_originalHeight = _priorHeight = frameInPixels.size.height;
@@ -138,7 +138,7 @@ VuoModuleMetadata({
 
 
 		// Save the current image (to ensure the movie has a frame, even if the composition is stationary).
-		[self saveImage:gv.ioSurface];
+		[self saveImage:l.ioSurface];
 	}
 
 	return self;
@@ -254,14 +254,13 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 		dispatch_sync(_queue, ^{
 			if (!_stopping)
 			{
-				bool applyWatermark = VuoIsTrial();
 				VuoImage image = VuoImage_makeClientOwnedGlTextureRectangle(VuoIoSurfacePool_getTexture(vis), GL_RGBA8, width, height, VuoWindowRecorder_doNothingCallback, NULL);
 				VuoRetain(image);
 
-				if (!applyWatermark && width == _originalWidth && height == _originalHeight)
+				if (width == _originalWidth && height == _originalHeight)
 				{
 					// rdar://23547737 — glGetTexImage() returns garbage for OpenGL textures backed by IOSurfaces
-					VuoImage copiedImage = VuoImage_makeCopy(image, false);
+					VuoImage copiedImage = VuoImage_makeCopy(image, false, 0, 0, false);
 					VuoRetain(copiedImage);
 					VuoRelease(image);
 					image = copiedImage;
@@ -282,15 +281,6 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 						VuoRetain(resizedImage);
 						VuoRelease(image);
 						image = resizedImage;
-					}
-
-					// Watermark.
-					if (applyWatermark)
-					{
-						VuoImage watermarkedImage = VuoImage_watermark(image);
-						VuoRetain(watermarkedImage);
-						VuoRelease(image);
-						image = watermarkedImage;
 					}
 				}
 
@@ -329,16 +319,15 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 	_stopping = true;
 
 	dispatch_sync(_queue, ^{
-					  // Fancy dance to ensure -finishWriting isn't called on the main thread, since that needlessly throws a warning.
 					  dispatch_semaphore_t finishedWriting = dispatch_semaphore_create(0);
-					  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-						  /// @todo Replace with -finishWritingWithCompletionHandler: when we drop Mac OS 10.8 support.
-						  if (![_assetWriter finishWriting])
-							  VUserLog("Error: %s", [[_assetWriter.error localizedDescription] UTF8String]);
+					  [_assetWriter finishWritingWithCompletionHandler:^{
 						  dispatch_semaphore_signal(finishedWriting);
-					  });
+					  }];
 					  dispatch_semaphore_wait(finishedWriting, DISPATCH_TIME_FOREVER);
 					  dispatch_release(finishedWriting);
+
+					  if (_assetWriter.status != AVAssetWriterStatusCompleted)
+						  VUserLog("Error: %s", [[_assetWriter.error localizedDescription] UTF8String]);
 				  });
 	dispatch_release(_queue);
 

@@ -1,0 +1,26 @@
+/**
+ * @file
+ * This composition highlights the position where the mouse was last pressed, demonstrating how to use Vuo's mouse status within a Shadertoy shader.
+ *
+ * @author [jstrecker](https://vuo.org/user/22)
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+CheckMouseStatus [type="vuo.mouse.status2" version="2.0.0" label="Check Mouse Status|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<position>position\r|<isPressed>isPressed\r" pos="210,240" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="0,120" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeImageWithShadertoy [type="vuo.image.make.shadertoy2" version="3.0.0" label="Make Image with Shadertoy|<refresh>refresh\l|<fragmentShader>fragmentShader\l|<time>time\l|<channel0>channel0\l|<channel1>channel1\l|<channel2>channel2\l|<channel3>channel3\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<mousePosition>mousePosition\l|<mouseIsPressed>mouseIsPressed\l|<shaderImage>shaderImage\r" pos="435,105" fillcolor="orange" _fragmentShader="\"void mainImage(out vec4 fragColor, vec2 fragCoord)\\n\{\\n\\tfloat d = distance(iMouse.xy, fragCoord) \\/ iResolution.x;\\n\\tfloat r = pow(1.-d, 4.);\\n\\tfragColor = vec4(r, 0, 0, 1);\\n\}\"" _width="640" _height="480" _colorDepth="\"8bpc\"" _fragmentShader_manuallyFirable];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="660,105" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+
+CheckMouseStatus:isPressed -> MakeImageWithShadertoy:mouseIsPressed;
+CheckMouseStatus:position -> MakeImageWithShadertoy:mousePosition;
+FireOnDisplayRefresh:requestedFrame -> CheckMouseStatus:button [event=true];
+FireOnDisplayRefresh:requestedFrame -> MakeImageWithShadertoy:time;
+MakeImageWithShadertoy:shaderImage -> RenderImageToWindow:image;
+RenderImageToWindow:updatedWindow -> CheckMouseStatus:window;
+}

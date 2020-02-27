@@ -2,43 +2,44 @@
  * @file
  * Crossfades between two different sizes of rounded rectangle in response to button presses.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Crossfade2 [type="vuo.motion.crossfade.VuoReal" version="1.0.0" label="Crossfade|<refresh>refresh\l|<time>time\l|<toggle>toggle\l|<crossfadeTo1>crossfadeTo1\l|<crossfadeTo2>crossfadeTo2\l|<offValue>offValue\l|<onValue>onValue\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<channel1Value>channel1Value\r|<channel2Value>channel2Value\r|<reachedTarget>reachedTarget\r" pos="330,195" fillcolor="violet" _offValue="0.02" _onValue="0.40000000000000002" _duration="1" _curve="\"quadratic\"" _easing="\"out\""];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="525,-45" _started_eventThrottling="enqueue"];
-MakeButton4 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="30,30" _label="\"Toggle\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.38240635395050049,\"g\":0.51435112953186035,\"b\":0.64046692848205566,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0,\"y\":-0.30000001192092896}" _width="0.29999999999999999" _height="0.100000" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeButton5 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="30,210" _label="\"Crossfade to 1\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.38431373238563538,\"g\":0.51372551918029785,\"b\":0.63921570777893066,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":-0.5,\"y\":-0.30000001192092896}" _width="0.40000000000000002" _height="0.100000" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeButton6 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="30,390" _label="\"Crossfade to 2\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.38431373238563538,\"g\":0.51372551918029785,\"b\":0.63921570777893066,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0.5,\"y\":-0.30000001192092896}" _width="0.40000000000000002" _height="0.100000" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="705,-15" _color="{\"r\":0.25000381469726562,\"g\":0.25000381469726562,\"b\":0.25000381469726562,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _height="2.0"];
-MakeList12 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="889,131" fillcolor="green"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="919,161" fillcolor="green"];
-MakeRoundedRectangleLayer [type="vuo.layer.make.roundedRectangle" version="1.0.0" label="Make Rounded Rectangle Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<layer>layer\r" pos="615,135" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.5,\"y\":0}" _rotation="0.0" _sharpness="1" _roundness="0.5"];
-MakeRoundedRectangleLayer2 [type="vuo.layer.make.roundedRectangle" version="1.0.0" label="Make Rounded Rectangle Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<layer>layer\r" pos="615,315" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.5,\"y\":0}" _rotation="0.0" _sharpness="1" _roundness="0.5"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="960,120" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="405,-60"];
+Crossfade2 [type="vuo.motion.crossfade.VuoReal" version="1.0.0" label="Crossfade|<refresh>refresh\l|<time>time\l|<toggle>toggle\l|<crossfadeTo1>crossfadeTo1\l|<crossfadeTo2>crossfadeTo2\l|<offValue>offValue\l|<onValue>onValue\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<channel1Value>channel1Value\r|<channel2Value>channel2Value\r|<reachedTarget>reachedTarget\r" pos="330,195" fillcolor="orange" _offValue="0.02" _onValue="0.40000000000000002" _duration="1" _curve="\"quadratic\"" _easing="\"out\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="75,-60" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeActionButton [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="75,210" _label="\"Crossfade to 1\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":-0.5,\"y\":-0.30000001192092896\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeActionButton2 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="75,90" _label="\"Toggle\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":-0.30000001192092896\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeActionButton3 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="75,330" _label="\"Crossfade to 2\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.5,\"y\":-0.30000001192092896\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList12 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="801,116" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="600,-60" _color="\{\"r\":0.25000381469726562,\"g\":0.25000381469726562,\"b\":0.25000381469726562,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="600,120" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":0\}" _rotation="0" _sharpness="1.0" _roundness="0.5" _opacity="1.0"];
+MakeRectangleLayer3 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="600,300" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":0\}" _rotation="0" _sharpness="1.0" _roundness="0.5" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="855,105" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
-Crossfade2:channel1Value -> MakeRoundedRectangleLayer:height;
-Crossfade2:channel1Value -> MakeRoundedRectangleLayer:width;
-Crossfade2:channel2Value -> MakeRoundedRectangleLayer2:height;
-Crossfade2:channel2Value -> MakeRoundedRectangleLayer2:width;
-FireOnStart2:started -> MakeColorLayer2:refresh;
-MakeButton4:pressed -> Crossfade2:toggle;
-MakeButton4:updatedLayer -> MakeList12:6 [style=invis];
-MakeButton5:pressed -> Crossfade2:crossfadeTo1;
-MakeButton5:updatedLayer -> MakeList12:3 [style=invis];
-MakeButton6:pressed -> Crossfade2:crossfadeTo2;
-MakeButton6:updatedLayer -> MakeList12:5 [style=invis];
-MakeColorLayer2:layer -> MakeList12:1;
+AllowFirstEvent:firstEvent -> MakeRectangleLayer:color;
+Crossfade2:channel1Value -> MakeRectangleLayer2:height;
+Crossfade2:channel1Value -> MakeRectangleLayer2:width;
+Crossfade2:channel2Value -> MakeRectangleLayer3:height;
+Crossfade2:channel2Value -> MakeRectangleLayer3:width;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Crossfade2:time;
+MakeActionButton2:pressed -> Crossfade2:toggle;
+MakeActionButton2:updatedLayer -> MakeList12:5 [style=invis];
+MakeActionButton3:pressed -> Crossfade2:crossfadeTo2;
+MakeActionButton3:updatedLayer -> MakeList12:4 [style=invis];
+MakeActionButton:pressed -> Crossfade2:crossfadeTo1;
+MakeActionButton:updatedLayer -> MakeList12:3 [style=invis];
 MakeList12:list -> RenderLayersToWindow:layers;
-MakeList9:list -> RenderLayersToWindow:setWindowProperties;
-MakeRoundedRectangleLayer2:layer -> MakeList12:4;
-MakeRoundedRectangleLayer:layer -> MakeList12:2;
-RenderLayersToWindow:renderedLayers -> MakeButton4:renderedLayers [style=invis];
-RenderLayersToWindow:renderedLayers -> MakeButton5:renderedLayers [style=invis];
-RenderLayersToWindow:renderedLayers -> MakeButton6:renderedLayers [style=invis];
-RenderLayersToWindow:requestedFrame -> Crossfade2:time [style=invis];
+MakeRectangleLayer2:layer -> MakeList12:2;
+MakeRectangleLayer3:layer -> MakeList12:6;
+MakeRectangleLayer:layer -> MakeList12:1;
+RenderLayersToWindow:updatedWindow -> MakeActionButton2:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton3:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton:window [style=invis];
 }

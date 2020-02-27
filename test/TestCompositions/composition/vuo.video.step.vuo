@@ -2,21 +2,23 @@
  * @file
  * Test composition.
  *
- * @lastSavedInVuoVersion 1.3.0
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 GetFrameValues [type="vuo.video.get.videoframe" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<videoFrame>videoFrame\l|<image>image\r|<timestamp>timestamp\r" pos="825,60"];
-StepMovieFrame [type="vuo.video.step" version="1.0.0" label="Step Movie Frame|<refresh>refresh\l|<next>next\l|<previous>previous\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<videoFrame>videoFrame\r" pos="645,60" _setTime="0" _url="\"..\\/..\\/..\\/node\\/vuo.video\\/examples\\/chess.mov\"" _loop="\"none\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<GoForward>GoForward\r" _GoForward_type="event"];
+StepMovieFrame [type="vuo.video.step" version="1.0.0" label="Step Movie Frame|<refresh>refresh\l|<next>next\l|<previous>previous\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<videoFrame>videoFrame\r" pos="645,60" _setTime="0" _loop="\"none\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<GoForward>GoForward\r|<URL>URL\r" _GoForward_type="event" _URL_type="VuoText" _URL="\"\""];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Timestamp>Timestamp\l" _Timestamp_type="VuoReal"];
 
 GetFrameValues:timestamp -> PublishedOutputs:Timestamp;
 PublishedInputs:GoForward -> StepMovieFrame:next;
+PublishedInputs:URL -> GetFrameValues:videoFrame [event=true];
+PublishedInputs:URL -> StepMovieFrame:url;
 StepMovieFrame:videoFrame -> GetFrameValues:videoFrame;
 }

@@ -1,0 +1,39 @@
+VuoCompileLibraries(
+	VuoLeap.cc
+)
+target_include_directories(vuo.leap.libraries
+	PRIVATE
+	Leap
+)
+
+VuoCompileTypes(
+	VuoHorizontalSide.c
+	VuoLeapFrame.c
+	VuoLeapHand.c
+	VuoLeapPointable.c
+	VuoLeapPointableType.c
+	VuoLeapTouchZone.c
+)
+
+VuoCompileNodes(
+	vuo.leap.find.hand.confidence.c
+	vuo.leap.find.hand.id.c
+	vuo.leap.find.hand.side.c
+	vuo.leap.find.pointable.id.c
+	vuo.leap.find.pointable.touchZone.c
+	vuo.leap.find.pointable.type.c
+	vuo.leap.get.frame.c
+	vuo.leap.get.hand.c
+	vuo.leap.get.pointable.c
+	vuo.leap.hand.sort.distance.c
+	vuo.leap.hand.sort.distance.x.c
+	vuo.leap.hand.sort.distance.y.c
+	vuo.leap.hand.sort.distance.z.c
+	vuo.leap.pointable.sort.distance.c
+	vuo.leap.pointable.sort.distance.x.c
+	vuo.leap.pointable.sort.distance.y.c
+	vuo.leap.pointable.sort.distance.z.c
+	vuo.leap.receive.c
+)
+
+VuoNodeSet()

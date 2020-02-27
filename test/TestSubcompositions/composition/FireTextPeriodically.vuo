@@ -2,20 +2,20 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
 {
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="150,45" _fired_eventThrottling="drop"];
-ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,15"];
+HoldValue2 [type="vuo.data.hold2.VuoText" version="3.0.0" label="Hold Value|<refresh>refresh\l|<value>value\l|<update>update\l|<heldValue>heldValue\r" pos="330,105"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<Text>Text\r|<Seconds>Seconds\r" _Text_type="VuoText" _Text="\"my text\"" _Seconds_type="VuoReal" _Seconds="0.10000000000000001" _Seconds_suggestedMin="0" _Seconds_suggestedStep="0.10000000000000001"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<FiredText>FiredText\l" _FiredText_type="VuoText"];
 
-FirePeriodically:fired -> ShareValue2:value;
+FirePeriodically:fired -> HoldValue2:update;
+HoldValue2:heldValue -> PublishedOutputs:FiredText;
 PublishedInputs:Seconds -> FirePeriodically:seconds;
-PublishedInputs:Text -> ShareValue2:value;
-ShareValue2:sameValue -> PublishedOutputs:FiredText;
+PublishedInputs:Text -> HoldValue2:value;
 }

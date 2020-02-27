@@ -2,9 +2,9 @@
  * @file
  * vuo.shader.make.shadertoy node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,6 +21,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 					 ],
 					 "node" : {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "AnimateConcentricCircles.vuo" ]
 					 }
 				 });
@@ -54,10 +55,10 @@ const float 	  iSampleRate = 44100;      \n  \
 #line 0\n";
 
 static const char* shadertoyVertexShader = "#version 120\n 	\
-attribute vec4 position;									\
+attribute vec3 position;                                    \
 void main()													\
 {															\
-	gl_Position = position; 								\
+	gl_Position = vec4(position, 1.);                       \
 }";
 
 struct nodeInstanceData
@@ -81,12 +82,18 @@ struct nodeInstanceData * nodeInstanceInit(
 	instance->shader = VuoShader_make("Shadertoy Fragment Shader");
 	VuoRetain(instance->shader);
 
+	// There isn't a straightforward way to know
+	// whether the user-defined shader can produce transparent output,
+	// so assume that it can.
+	instance->shader->isTransparent = true;
+
 	if (fragmentShader)
 	{
-		char *fragmentSource = (char *)malloc(strlen(ShaderHeader) + strlen(fragmentShader) + 1);
+		size_t mallocSize = strlen(ShaderHeader) + strlen(fragmentShader) + 1;
+		char *fragmentSource = (char *)malloc(mallocSize);
 
-		strcpy(fragmentSource, ShaderHeader);
-		strcat(fragmentSource, fragmentShader);
+		strlcpy(fragmentSource, ShaderHeader, mallocSize);
+		strlcat(fragmentSource, fragmentShader, mallocSize);
 
 		// VLog("\n\n=============================\n\n%s\n\n=============================\n", fragmentSource);
 
@@ -102,12 +109,15 @@ struct nodeInstanceData * nodeInstanceInit(
 	return instance;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 /**
  *	[wip and unused]
  *  Convert an audio samples array to a 2xSampleCount image, where the first row of pixels represents an FFT in grayscale, and the second
  *  is the normalized PCM data.
  *  https://www.mikeash.com/pyblog/friday-qa-2012-10-26-fourier-transforms-and-ffts.html
- *  http://stackoverflow.com/questions/3398753/using-the-apple-fft-and-accelerate-framework
+ *  https://stackoverflow.com/questions/3398753/using-the-apple-fft-and-accelerate-framework
  */
 static VuoImage convertAudioToImage(VuoAudioSamples audio)
 {
@@ -127,6 +137,8 @@ static VuoImage convertAudioToImage(VuoAudioSamples audio)
 
 	return audioImage;
 }
+
+#pragma clang diagnostic pop
 
 /**
  *	Converts a Vuo coordinate to a pixel coordinate.
@@ -178,10 +190,16 @@ void nodeInstanceEvent
 		(*instance)->shader = VuoShader_make("Shadertoy Fragment Shader");
 		VuoRetain((*instance)->shader);
 
-		char* fragmentSource = (char*)malloc(strlen(ShaderHeader) + strlen(fragmentShader) + 1);
+		// There isn't a straightforward way to know
+		// whether the user-defined shader can produce transparent output,
+		// so assume that it can.
+		(*instance)->shader->isTransparent = true;
 
-		strcpy(fragmentSource, ShaderHeader);
-		strcat(fragmentSource, fragmentShader);
+		size_t mallocSize = strlen(ShaderHeader) + strlen(fragmentShader) + 1;
+		char* fragmentSource = (char*)malloc(mallocSize);
+
+		strlcpy(fragmentSource, ShaderHeader, mallocSize);
+		strlcat(fragmentSource, fragmentShader, mallocSize);
 
 		VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, shadertoyVertexShader, NULL, fragmentSource);
 
@@ -250,10 +268,8 @@ void nodeInstanceEvent
 		VuoShader_setUniform_VuoImage((*instance)->shader, "iChannel3", Channel3);
 	}
 
-	/**
-	 *	Date and time.
-	 * 	http://stackoverflow.com/questions/1442116/how-to-get-date-and-time-value-in-c-program
-	 */
+	// Date and time.
+	// https://stackoverflow.com/questions/1442116/how-to-get-date-and-time-value-in-c-program
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
 

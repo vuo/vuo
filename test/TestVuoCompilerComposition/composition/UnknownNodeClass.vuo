@@ -2,27 +2,27 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 BlendImages [type="unknown.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="465,45" _blendMode="\"normal\"" _foregroundOpacity="0.5" _replaceOpacity="true"];
-BlurImage [type="vuo.image.blur" version="1.2.1" label="Blur Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<expandBounds>expandBounds\l|<blurredImage>blurredImage\r" pos="-30,45" _radius="4" _expandBounds="false"];
-CaptureImageOfScreen2 [type="vuo.screen.capture" version="1.0.0" label="Capture Image of Screen|<refresh>refresh\l|<screen>screen\l|<topLeft>topLeft\l|<width>width\l|<height>height\l|<capturedImage>capturedImage\r" pos="30,195" _screen="{\"type\":\"secondary\"}" _width="640" _height="480" _capturedImage_eventThrottling="drop"];
+BlurImage [type="vuo.image.blur" version="1.3.0" label="Blur Image|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<radius>radius\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="-30,45" _shape="\"gaussian\"" _radius="4" _expandBounds="false" _quality="1"];
+CaptureImageOfScreen2 [type="vuo.screen.capture" version="1.0.0" label="Capture Image of Screen|<refresh>refresh\l|<screen>screen\l|<topLeft>topLeft\l|<width>width\l|<height>height\l|<capturedImage>capturedImage\r" pos="30,195" _screen="\{\"type\":\"secondary\"\}" _width="640" _height="480" _capturedImage_eventThrottling="drop"];
 HoldValue3 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="285,195"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,71"];
-OffsetImageRGBChannels [type="vuo.image.color.offset.rgb" version="1.0.0" label="Offset Image RGB Channels|<refresh>refresh\l|<image>image\l|<redOffset>redOffset\l|<greenOffset>greenOffset\l|<blueOffset>blueOffset\l|<offsetImage>offsetImage\r" pos="165,45" _redOffset="{\"x\":0.01,\"y\":0.0}" _greenOffset="{\"x\":0.0,\"y\":0.01}" _blueOffset="{\"x\":-0.01,\"y\":-0.01}"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="660,45" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+OffsetImageRGBChannels [type="vuo.image.color.offset.rgb" version="1.0.1" label="Offset Image RGB Channels|<refresh>refresh\l|<image>image\l|<redOffset>redOffset\l|<greenOffset>greenOffset\l|<blueOffset>blueOffset\l|<offsetImage>offsetImage\r" pos="165,45" _redOffset="\{\"x\":0.01,\"y\":0.0\}" _greenOffset="\{\"x\":0.0,\"y\":0.01\}" _blueOffset="\{\"x\":-0.01,\"y\":-0.01\}"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="660,45" _updatedWindow_eventThrottling="enqueue"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<Image>Image\r|<Unused>Unused\r" _Image_type="VuoImage" _Unused_type="VuoInteger" _Unused="640"];
 
 BlendImages:blended -> RenderImageToWindow:image;
 BlurImage:blurredImage -> OffsetImageRGBChannels:image;
 CaptureImageOfScreen2:capturedImage -> HoldValue3:newValue;
 HoldValue3:heldValue -> BlendImages:background;
-MakeList5:list -> RenderImageToWindow:setWindowProperties;
 OffsetImageRGBChannels:offsetImage -> BlendImages:foreground;
 PublishedInputs:Image -> BlurImage:image;
 }

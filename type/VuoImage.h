@@ -2,12 +2,16 @@
  * @file
  * VuoImage C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef DISPATCH_RETURNS_RETAINED_BLOCK
 	/// Disable DISPATCH_RETURNS_RETAINED_BLOCK, which emits warnings on Mac OS 10.10.
@@ -19,9 +23,11 @@
 #include "VuoBoolean.h"
 #include "VuoColor.h"
 #include "VuoGlContext.h"
+#include "VuoHeap.h"
 #include "VuoImageColorDepth.h"
 #include "VuoImageWrapMode.h"
 #include "VuoPoint2d.h"
+#include "VuoRectangle.h"
 
 /**
  * @ingroup VuoTypes
@@ -77,7 +83,7 @@ VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, 
 VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels)) __attribute__((nonnull(1)));
 VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, unsigned int bytesPerRow, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels)) __attribute__((nonnull(1)));
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
-VuoImage VuoImage_makeCopy(VuoImage image, bool flip);
+VuoImage VuoImage_makeCopy(VuoImage image, bool flip, unsigned int forcePixelsWide, unsigned int forcePixelsHigh, bool forceAlpha);
 VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image);
 const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFormat);
 
@@ -86,7 +92,11 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode);
 
 VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal filterOpacity);
 
+/// This type has _areEqual() and _isLessThan() functions.
+#define VuoImage_SUPPORTS_COMPARISON
 bool VuoImage_areEqual(const VuoImage a, const VuoImage b);
+bool VuoImage_isLessThan(const VuoImage a, const VuoImage b);
+
 bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const unsigned char tolerance);
 bool VuoImage_isEmpty(const VuoImage image);
 bool VuoImage_isPopulated(const VuoImage image);
@@ -95,9 +105,16 @@ VuoRectangle VuoImage_getRectangle(const VuoImage image);
 VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image);
 
 VuoImage VuoImage_makeFromJson(struct json_object * js);
-GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *js, GLuint (^provider)(unsigned int pixelsWide, unsigned int pixelsHigh), unsigned int *outputPixelsWide, unsigned int *outputPixelsHigh, void *outputIOSurface);
+VuoImage VuoImage_makeFromJsonWithDimensions(struct json_object *js, unsigned int requestedPixelsWide, unsigned int requestedPixelsHigh) VuoWarnUnusedResult;
+GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *js, GLuint (^provider)(unsigned int pixelsWide, unsigned int pixelsHigh), unsigned int *outputPixelsWide, unsigned int *outputPixelsHigh, void *outputIOSurface) VuoWarnUnusedResult;
+bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, GLuint textureName, unsigned int pixelsWide, unsigned int pixelsHigh, void *outputIOSurface) VuoWarnUnusedResult;
+bool VuoImage_resolveInterprocessJsonOntoFramebuffer(struct json_object *js, VuoGlContext context, bool flip) VuoWarnUnusedResult;
 struct json_object * VuoImage_getJson(const VuoImage value);
+
+/// This type has a _getInterprocessJson() function.
+#define VuoImage_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoImage_getInterprocessJson(const VuoImage value);
+
 char * VuoImage_getSummary(const VuoImage value);
 
 /// @{
@@ -114,3 +131,7 @@ void VuoImage_release(VuoImage value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+GetRenderedLayerBounds2 [type="vuo.layer.bounds.rendered2" version="2.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<layer>layer\l|<window>window\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="975,15" _includeChildren="true"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="150,-45" _y="1"];
+Make2DTransform [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="330,-75" _translation="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="674,86"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="270,30" _text="\"Line 1\\nLine 2: The real nitty gritty is that, young and old, they're just a buncha happy-go-lucky whippersnappers and cantankerous old fuddyduddies who don't know diddly. I poked among the gewgaws, tchotchkes, gimcracks, and knickknacks, there in the doodad, but I found zilch, zero, zippo, nil, nada and null. So-and-so told me such-and-such about the deeleebob, but I just don't know where that little gizmo is. Sheesh! It's a big whoopdedoo when you can't even remember where the gosh diddly darned whaddyacallit is!\\nLine 3\"" _font="\{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28\}" _center="\{\"x\":0.0,\"y\":0.0\}" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="720,75" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SnapValue2 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="1200,30" _spacing="0.29999999999999999" _center="0.0"];
+TransformLayer [type="vuo.layer.transform" version="1.0.0" label="Transform Layer|<refresh>refresh\l|<transform>transform\l|<layer>layer\l|<transformedLayer>transformedLayer\r" pos="510,15"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<WrapWidth>WrapWidth\r|<Anchor>Anchor\r|<XScale>XScale\r" _WrapWidth_type="VuoReal" _WrapWidth_suggestedMin="0" _WrapWidth_suggestedMax="2" _WrapWidth_suggestedStep="0.1" _WrapWidth="Infinity" _Anchor_type="VuoAnchor" _Anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _XScale_type="VuoReal" _XScale="0.0"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputWidth>outputWidth\l" _outputWidth_type="VuoReal"];
+
+GetRenderedLayerBounds2:width -> SnapValue2:value;
+Make2DPoint:point -> Make2DTransform:scale;
+Make2DTransform:transform -> TransformLayer:transform;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> TransformLayer:layer;
+PublishedInputs:Anchor -> MakeTextLayer:anchor;
+PublishedInputs:WrapWidth -> MakeTextLayer:wrapWidth;
+PublishedInputs:XScale -> Make2DPoint:x;
+RenderLayersToWindow:updatedWindow -> GetRenderedLayerBounds2:window;
+SnapValue2:snappedValue -> PublishedOutputs:outputWidth;
+TransformLayer:transformedLayer -> GetRenderedLayerBounds2:layer;
+TransformLayer:transformedLayer -> MakeList2:1;
+}

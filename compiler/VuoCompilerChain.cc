@@ -2,14 +2,15 @@
  * @file
  * VuoCompilerChain implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerChain.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerNode.hh"
+#include "VuoStringUtilities.hh"
 
 /**
  * Creates a chain consisting of the given list of nodes.
@@ -73,7 +74,7 @@ Value * VuoCompilerChain::generateCompositionStateValue(Module *module, BasicBlo
 	// VuoCompositionState *compositionState = (VuoCompositionState *)((void **)context)[0]);
 
 	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *compositionStateAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 0);
+	Value *compositionStateAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, (size_t)0);
 	return new BitCastInst(compositionStateAsVoidPointer, compositionStatePointerType, "", block);
 }
 
@@ -154,7 +155,7 @@ Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *
 	Type *voidPointerType = contextValue->getType();
 	FunctionType *workerFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), voidPointerType, false);
 
-	string workerFunctionName = triggerIdentifier + "__" + nodes.front()->getIdentifier();
+	string workerFunctionName = VuoStringUtilities::prefixSymbolName(nodes.front()->getIdentifier(), triggerIdentifier);
 	if (lastNodeInLoop)
 		workerFunctionName += "__loop";
 	workerFunctionName += "__worker";

@@ -2,9 +2,9 @@
  * @file
  * VuoNodeClass implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoNodeClass.hh"
@@ -12,7 +12,6 @@
 #include "VuoNode.hh"
 
 #include "VuoPort.hh"
-#include "VuoPortClass.hh"
 
 #include "VuoStringUtilities.hh"
 
@@ -40,19 +39,20 @@ VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames,
 	: VuoBase<VuoCompilerNodeClass,void>("VuoNodeClass with string ports"),
 	  VuoModule(className)
 {
+	updateTypecastNodeClassStatus();
+
 	this->refreshPortClass = new VuoPortClass("refresh", VuoPortClass::eventOnlyPort);
 	inputPortClasses.push_back(this->refreshPortClass);
-	this->interface = false;
 	this->deprecated = false;
 
 	for (vector<string>::iterator i = inputPortClassNames.begin(); i != inputPortClassNames.end(); ++i)
 	{
-		VuoPortClass *portClass = new VuoPortClass(*i, VuoPortClass::notAPort);
+		VuoPortClass *portClass = new VuoPortClass(*i, VuoPortClass::dataAndEventPort);
 		inputPortClasses.push_back(portClass);
 	}
 	for (vector<string>::iterator i = outputPortClassNames.begin(); i != outputPortClassNames.end(); ++i)
 	{
-		VuoPortClass *portClass = new VuoPortClass(*i, VuoPortClass::notAPort);
+		VuoPortClass *portClass = new VuoPortClass(*i, VuoPortClass::dataAndEventPort);
 		outputPortClasses.push_back(portClass);
 	}
 }
@@ -69,6 +69,8 @@ VuoNodeClass::VuoNodeClass(string className, VuoPortClass * refreshPortClass, ve
 	: VuoBase<VuoCompilerNodeClass,void>("VuoNodeClass with actual ports"),
 	  VuoModule(className)
 {
+	updateTypecastNodeClassStatus();
+
 	this->refreshPortClass = refreshPortClass;
 	this->inputPortClasses = inputPortClasses;
 	this->outputPortClasses = outputPortClasses;
@@ -151,9 +153,14 @@ string VuoNodeClass::getClassName(void)
  */
 bool VuoNodeClass::isTypecastNodeClass(void)
 {
+	return _isTypecastNodeClass;
+}
+
+void VuoNodeClass::updateTypecastNodeClassStatus()
+{
 	/// @todo Temporary workaround. Instead use VuoNode::isCollapsed() elsewhere. (https://b33p.net/kosada/node/5477)
 	string nodeClassName = getClassName();
-	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
+	_isTypecastNodeClass = (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
 			|| (VuoStringUtilities::beginsWith(nodeClassName, "vuo.data.summarize") && nodeClassName != "vuo.data.summarize.VuoData")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.count.")
@@ -169,8 +176,12 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 			|| nodeClassName == "vuo.image.get.height"
 			|| nodeClassName == "vuo.image.get.width"
 			|| nodeClassName == "vuo.image.populated"
+			|| nodeClassName == "vuo.layer.combine.group"
+			|| nodeClassName == "vuo.layer.get.child"
 			|| nodeClassName == "vuo.layer.populated"
 			|| nodeClassName == "vuo.mesh.populated"
+			|| nodeClassName == "vuo.scene.combine.group"
+			|| nodeClassName == "vuo.scene.get.child"
 			|| nodeClassName == "vuo.scene.populated"
 			|| nodeClassName == "vuo.text.populated"
 			|| nodeClassName == "vuo.window.cursor.populated");
@@ -199,27 +210,6 @@ bool VuoNodeClass::isDrawerNodeClass(void)
 	string nodeClassName = getClassName();
 	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.make.") ||
 			VuoStringUtilities::beginsWith(nodeClassName, "vuo.dictionary.make."));
-}
-
-/**
- * If true, this node class sends data to or receives data from somewhere external to the composition
- * (e.g., input device, file, network).
- *
- * @see VuoModuleMetadata
- */
-bool VuoNodeClass::isInterface(void)
-{
-	return interface;
-}
-
-/**
- * Sets whether this node class is an interface.
- *
- * @see VuoModuleMetadata
- */
-void VuoNodeClass::setInterface(bool isInterface)
-{
-	this->interface = isInterface;
 }
 
 /**

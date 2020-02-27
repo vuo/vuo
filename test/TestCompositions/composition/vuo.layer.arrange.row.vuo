@@ -1,0 +1,76 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="1065,90"];
+AreEqual [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="870,210" _tolerance="0.01"];
+AreEqual2 [type="vuo.data.areEqual.VuoInteger" version="1.0.0" label="Are Equal|<refresh>refresh\l|<values>values\l|<equal>equal\r" pos="870,90"];
+AreEqual3 [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="870,285" _tolerance="0.01"];
+ArrangeLayersInRow [type="vuo.layer.arrange.row" version="1.0.0" label="Arrange Layers in Row|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<verticalAlignment>verticalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="360,90" _verticalAlignment="\"center\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0\}"];
+CountItemsInList [type="vuo.list.count.VuoLayer" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="780,105"];
+GetLayerBounds [type="vuo.layer.bounds" version="1.0.0" label="Get Layer Bounds|<refresh>refresh\l|<layer>layer\l|<center>center\r|<width>width\r|<height>height\r" pos="585,165"];
+GetLayerValues [type="vuo.layer.get" version="1.0.0" label="Get Layer Values|<refresh>refresh\l|<layer>layer\l|<transform>transform\r|<childLayers>childLayers\r" pos="585,90"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="811,221"];
+MakeList10 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="152,221"];
+MakeList11 [type="vuo.list.make.3.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1032,101"];
+MakeList12 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="811,296"];
+MakeList2 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="837,101"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="18,146"];
+MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="-67,116"];
+MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-27,131"];
+MakeList6 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="63,161"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="108,176"];
+MakeList8 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="126,191"];
+MakeList9 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="139,206"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="-270,120" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.5" _height="0.5" _sharpness="1" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="-240,300" _text="\"Hello World!\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0" _text_manuallyFirable];
+SelectInputList [type="vuo.select.in.list.8.VuoLayer" version="2.0.0" label="Select Input List|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<out>out\r" pos="180,90"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<which>which\r|<spacing>spacing\r|<expectedCount>expectedCount\r|<expectedWidth>expectedWidth\r|<expectedHeight>expectedHeight\r" _which_type="VuoInteger" _which_suggestedMin="1" _which_suggestedMax="8" _which="4" _spacing_type="VuoReal" _spacing_suggestedMin="0" _spacing_suggestedMax="0.25" _spacing_suggestedStep="0.001" _spacing="0" _expectedCount_type="VuoInteger" _expectedWidth_type="VuoReal" _expectedHeight_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ok>ok\l" _ok_type="VuoBoolean"];
+
+AreAllTrue:allTrue -> PublishedOutputs:ok;
+AreEqual2:equal -> MakeList11:1;
+AreEqual3:equal -> MakeList11:3;
+AreEqual:equal -> MakeList11:2;
+ArrangeLayersInRow:arrangedLayer -> GetLayerBounds:layer;
+ArrangeLayersInRow:arrangedLayer -> GetLayerValues:layer;
+CountItemsInList:itemCount -> MakeList2:2;
+GetLayerBounds:height -> MakeList12:1;
+GetLayerBounds:width -> MakeList:1;
+GetLayerValues:childLayers -> CountItemsInList:list;
+MakeList10:list -> SelectInputList:option8;
+MakeList11:list -> AreAllTrue:values;
+MakeList12:list -> AreEqual3:values;
+MakeList2:list -> AreEqual2:values;
+MakeList3:list -> SelectInputList:option3;
+MakeList4:list -> SelectInputList:option1;
+MakeList5:list -> SelectInputList:option2;
+MakeList6:list -> SelectInputList:option4;
+MakeList7:list -> SelectInputList:option5;
+MakeList8:list -> SelectInputList:option6;
+MakeList9:list -> SelectInputList:option7;
+MakeList:list -> AreEqual:values;
+MakeRectangleLayer:layer -> MakeList3:1;
+MakeRectangleLayer:layer -> MakeList3:2;
+MakeRectangleLayer:layer -> MakeList5:1;
+MakeTextLayer:layer -> MakeList6:1;
+MakeTextLayer:layer -> MakeList7:1;
+MakeTextLayer:layer -> MakeList7:2;
+PublishedInputs:expectedCount -> MakeList2:1;
+PublishedInputs:expectedHeight -> MakeList12:2;
+PublishedInputs:expectedWidth -> MakeList:2;
+PublishedInputs:spacing -> ArrangeLayersInRow:spacing;
+PublishedInputs:which -> MakeRectangleLayer:color [event=true];
+PublishedInputs:which -> MakeTextLayer:text [event=true];
+PublishedInputs:which -> SelectInputList:which;
+SelectInputList:out -> ArrangeLayersInRow:layers;
+}

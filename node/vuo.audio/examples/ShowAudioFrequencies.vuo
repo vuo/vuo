@@ -2,67 +2,53 @@
  * @file
  * Plays a stereo audio file, and displays an amplitude/frequency chart for the left and right audio channels.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,330" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
-CalculateAmplitudeForFrequencies2 [type="vuo.audio.analyze.fft2" version="2.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,525" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="45,165"];
+CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.1" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="540,165" fillcolor="orange" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
+CalculateAmplitudeForFrequencies2 [type="vuo.audio.analyze.fft2" version="2.0.1" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="540,360" fillcolor="orange" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
 CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="420,480"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="780,600" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-15,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-165,285" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 GetFirstItemInList [type="vuo.list.get.first.VuoAudioSamples" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="165,375"];
 GetLastItemInList [type="vuo.list.get.last.VuoAudioSamples" version="1.0.0" label="Get Last Item in List|<refresh>refresh\l|<list>list\l|<lastItem>lastItem\r" pos="165,675"];
-HoldList5 [type="vuo.data.hold.list.VuoReal" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="435,315"];
-HoldList6 [type="vuo.data.hold.list.VuoReal" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="435,510"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,375" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,8,1]}"];
-Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,570" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,-8,1]}"];
-MakeLineStripMesh2 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1005,300" _lineWidth="0.002000"];
-MakeLineStripMesh3 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1005,495" _lineWidth="0.002000"];
-MakeList15 [type="vuo.list.make.0.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="394,326"];
-MakeList17 [type="vuo.list.make.0.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="394,521"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1354,386" fillcolor="green"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1384,416" fillcolor="green"];
-MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="585,375" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"exponential\"" _easing="\"out\""];
-MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="810,300"];
-MergeXYLists2 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="810,495"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="150,75" _url="\"OndesMartenot.mp3\"" _loop="true" _setTime="0.000000" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1425,375" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SendLiveAudio2 [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="360,60" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="990,375" _color="{\"r\":0.659998,\"g\":0.659998,\"b\":0.659998,\"a\":1.000000}"];
-ShadeWithUnlitColor2 [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="990,570" _color="{\"r\":1.000000,\"g\":0.466438,\"b\":0.475029,\"a\":1.000000}"];
+HoldList5 [type="vuo.data.hold.list2.VuoReal" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="825,150"];
+HoldList6 [type="vuo.data.hold.list2.VuoReal" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="825,345"];
+MakeLineStripObject [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoColor" version="1.0.0" label="Make Line Strip Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<object>object\r" pos="1365,75" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,8,1]\}" _material="\{\"r\":0.59519338607788086,\"g\":0.59530019760131836,\"b\":0.59517812728881836,\"a\":1\}" _lineWidth="0.002"];
+MakeLineStripObject2 [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoColor" version="1.0.0" label="Make Line Strip Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<object>object\r" pos="1365,270" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,-8,1]\}" _material="\{\"r\":0.98854047060012817,\"g\":0.36958876252174377,\"b\":0.38838788866996765,\"a\":1\}" _lineWidth="0.002"];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1574,266" fillcolor="blue"];
+MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="975,210" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"exponential\"" _easing="\"out\""];
+MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1200,135"];
+MergeXYLists2 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1200,330"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="225,165" _setTime="0.000000" _url="\"OndesMartenot.mp3\"" _loop="true" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1620,255" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="540,75" fillcolor="blue"];
 
-CalculateAmplitudeForFrequencies2:amplitudes -> HoldList6:newValue;
-CalculateAmplitudeForFrequencies:amplitudes -> HoldList5:newValue;
+AllowFirstEvent:firstEvent -> PlayAudioFile:play;
+CalculateAmplitudeForFrequencies2:amplitudes -> HoldList6:value;
+CalculateAmplitudeForFrequencies:amplitudes -> HoldList5:value;
 CountItemsInList2:itemCount -> MakePointsAlongCurve2:numberOfPoints;
-FireOnStart2:started -> PlayAudioFile:play;
-FireOnStart:started -> ShadeWithUnlitColor2:refresh;
-FireOnStart:started -> ShadeWithUnlitColor:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> HoldList5:update;
+FireOnDisplayRefresh:requestedFrame -> HoldList6:update;
 GetFirstItemInList:firstItem -> CalculateAmplitudeForFrequencies:samples;
 GetLastItemInList:lastItem -> CalculateAmplitudeForFrequencies2:samples;
 HoldList5:heldValue -> CountItemsInList2:list;
 HoldList5:heldValue -> MergeXYLists:y;
 HoldList6:heldValue -> MergeXYLists2:y;
-Make3DObject2:object -> MakeList2:2;
-Make3DObject:object -> MakeList2:1;
-MakeLineStripMesh2:mesh -> Make3DObject:mesh;
-MakeLineStripMesh3:mesh -> Make3DObject2:mesh;
-MakeList15:list -> HoldList5:initialValue;
-MakeList17:list -> HoldList6:initialValue;
+MakeLineStripObject2:object -> MakeList2:2;
+MakeLineStripObject:object -> MakeList2:1;
 MakeList2:list -> RenderSceneToWindow:objects;
-MakeList5:list -> RenderSceneToWindow:setWindowProperties;
 MakePointsAlongCurve2:points -> MergeXYLists2:x;
 MakePointsAlongCurve2:points -> MergeXYLists:x;
-MergeXYLists2:points -> MakeLineStripMesh3:positions;
-MergeXYLists:points -> MakeLineStripMesh2:positions;
+MergeXYLists2:points -> MakeLineStripObject2:positions;
+MergeXYLists:points -> MakeLineStripObject:positions;
 PlayAudioFile:decodedChannels -> GetFirstItemInList:list;
 PlayAudioFile:decodedChannels -> GetLastItemInList:list;
-PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
-RenderSceneToWindow:requestedFrame -> HoldList5:refresh [style=invis];
-RenderSceneToWindow:requestedFrame -> HoldList6:refresh [style=invis];
-ShadeWithUnlitColor2:shader -> Make3DObject2:shader;
-ShadeWithUnlitColor:shader -> Make3DObject:shader;
+PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
 }

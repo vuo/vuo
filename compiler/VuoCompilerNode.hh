@@ -2,15 +2,14 @@
  * @file
  * VuoCompilerNode interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoBaseDetail.hh"
-#include "VuoNode.hh"
 
 class VuoCompilerEventPort;
 class VuoCompilerConstantStringCache;
@@ -44,9 +43,8 @@ public:
 	Value * generateIdentifierValue(Module *module);
 	Value * generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
 	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionStateValue);
-	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, const vector<VuoCompilerType *> &orderedTypes);
-	Value * generateCreateContext(Module *module, BasicBlock *block, Value *compositionStateValue);
-	void generateDestroyContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeContextValue);
+	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, const vector<VuoCompilerType *> &orderedTypes, Function *compositionCreateContextForNode, Function *compositionSetPortValueFunction, Function *compositionGetPortValueFunction, Function *compositionFireTriggerPortEventFunction, Function *compositionReleasePortDataFunction);
+	Value * generateCreateContext(Module *module, BasicBlock *block);
 	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *compositionStateValue);
 	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
@@ -61,5 +59,5 @@ public:
 	string getGraphvizIdentifierPrefix(void);
 	void setGraphvizIdentifier(string graphvizIdentifier);
 	string getGraphvizIdentifier(void);
-	string getGraphvizDeclaration(bool shouldPrintPosition = false, double xPositionOffset = 0, double yPositionOffset = 0);
+	string getGraphvizDeclaration(bool shouldPrintPosition = false, double xPositionOffset = 0, double yPositionOffset = 0, VuoPort *manuallyFirableInputPort = nullptr);
 };

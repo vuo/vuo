@@ -2,9 +2,9 @@
  * @file
  * VuoWindowReference implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
@@ -19,6 +19,7 @@
 #include "VuoGraphicsWindow.h"
 #include "VuoGraphicsWindowDrag.h"
 #include "VuoText.h"
+#include "VuoApp.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -26,6 +27,7 @@ VuoModuleMetadata({
 					  "title" : "Window",
 					  "version" : "1.0.0",
 					  "dependencies" : [
+						"VuoApp",
 						"VuoGraphicsWindow",
 						"VuoGraphicsWindowDrag",
 						"VuoInteger",
@@ -91,7 +93,7 @@ json_object * VuoWindowReference_getInterprocessJson(const VuoWindowReference va
 char * VuoWindowReference_getSummary(const VuoWindowReference value)
 {
 	if (value == 0)
-		return strdup("(no window)");
+		return strdup("No window");
 
 	return VuoText_format("window ID %p", value);
 }
@@ -112,15 +114,17 @@ VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
  *
  * On Retina displays, this function returns the physical number of pixels (device/backing resolution, not logical resolution).
  *
- * @threadNoMain
+ * @threadAny
  */
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor)
 {
-	VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
-	NSRect contentRect = [window convertRectToBacking:[window contentRectCached]];
-	*width = contentRect.size.width;
-	*height = contentRect.size.height;
-	*backingScaleFactor = [window backingScaleFactorCached];
+	VuoApp_executeOnMainThread(^{
+		VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
+		NSRect contentRect = [window convertRectToBacking:[window contentRectCached]];
+		*width = contentRect.size.width;
+		*height = contentRect.size.height;
+		*backingScaleFactor = [window backingScaleFactorCached];
+	});
 }
 
 /**

@@ -2,13 +2,12 @@
  * @file
  * VuoInteger implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoInteger.h"
 #include <limits.h>
 #include <string.h>
 
@@ -279,4 +278,20 @@ static const char VuoInteger_hexToDec[256] =
 VuoInteger VuoInteger_makeFromHexByte(unsigned char byte)
 {
 	return VuoInteger_hexToDec[byte];
+}
+
+/**
+ * Returns true if the two values are equal.
+ */
+bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2)
+{
+	return value1 == value2;
+}
+
+/**
+ * Returns true if a < b.
+ */
+bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b)
+{
+	return a < b;
 }

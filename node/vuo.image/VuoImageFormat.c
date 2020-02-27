@@ -2,14 +2,11 @@
  * @file
  * VuoImageFormat implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoImageFormat.h"
 #include "VuoList_VuoImageFormat.h"
@@ -167,104 +164,39 @@ char * VuoImageFormat_getSummary(const VuoImageFormat value)
  * @ingroup VuoImageFormat
  * Return an array of valid file extensions for this format (ex, JPEG returns {"jpeg", "jpg"}).
  */
-char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* length)
+struct json_object *VuoImageFormat_getValidFileExtensions(const VuoImageFormat format)
 {
-	switch (value)
+	struct json_object *js = json_object_new_array();
+
+	if (format == VuoImageFormat_PNG)
+		json_object_array_add(js, json_object_new_string("png"));
+	else if (format == VuoImageFormat_JPEG)
 	{
-		case VuoImageFormat_PNG:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("png"));
-			strcpy(fileExtensions[0], "png");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_JPEG:
-		{
-			*length = 2;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-
-			fileExtensions[0] = (char*)malloc(strlen("jpg") * sizeof(char));
-			fileExtensions[1] = (char*)malloc(strlen("jpeg") * sizeof(char));
-
-			strcpy(fileExtensions[0], "jpg");
-			strcpy(fileExtensions[1], "jpeg");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_TIFF:
-		{
-			*length = 2;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-
-			fileExtensions[0] = (char*)malloc(strlen("tif") * sizeof(char));
-			fileExtensions[1] = (char*)malloc(strlen("tiff") * sizeof(char));
-
-			strcpy(fileExtensions[0], "tif");
-			strcpy(fileExtensions[1], "tiff");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_BMP:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("bmp"));
-			strcpy(fileExtensions[0], "bmp");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_HDR:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("hdr"));
-			strcpy(fileExtensions[0], "hdr");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_EXR:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("exr"));
-			strcpy(fileExtensions[0], "exr");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_GIF:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("gif"));
-			strcpy(fileExtensions[0], "gif");
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_TARGA:
-		{
-			*length = 2;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("tga"));
-			fileExtensions[1] = (char*)malloc(sizeof(char) * strlen("targa"));
-
-			strcpy(fileExtensions[0], "tga");
-			strcpy(fileExtensions[1], "targa");
-
-			return fileExtensions;
-		}
-
-		case VuoImageFormat_WEBP:
-		{
-			*length = 1;
-			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("webp"));
-			strcpy(fileExtensions[0], "webp");
-			return fileExtensions;
-		}
+		json_object_array_add(js, json_object_new_string("jpg"));
+		json_object_array_add(js, json_object_new_string("jpeg"));
 	}
+	else if (format == VuoImageFormat_TIFF)
+	{
+		json_object_array_add(js, json_object_new_string("tif"));
+		json_object_array_add(js, json_object_new_string("tiff"));
+	}
+	else if (format == VuoImageFormat_BMP)
+		json_object_array_add(js, json_object_new_string("bmp"));
+	else if (format == VuoImageFormat_HDR)
+		json_object_array_add(js, json_object_new_string("hdr"));
+	else if (format == VuoImageFormat_EXR)
+		json_object_array_add(js, json_object_new_string("exr"));
+	else if (format == VuoImageFormat_GIF)
+		json_object_array_add(js, json_object_new_string("gif"));
+	else if (format == VuoImageFormat_TARGA)
+	{
+		json_object_array_add(js, json_object_new_string("tga"));
+		json_object_array_add(js, json_object_new_string("targa"));
+	}
+	else if (format == VuoImageFormat_WEBP)
+		json_object_array_add(js, json_object_new_string("webp"));
+
+	return js;
 }
 
 /**

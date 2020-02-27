@@ -2,16 +2,16 @@
  * @file
  * vuo.quaternion.combine node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					 "title" : "Combine Quaternion Rotations",
-					 "keywords" : [ "composite", "product", "multiply", "*", "homogenous", "xyzw", "rotation", "angle", "versor", "merge" ],
+					 "keywords" : [ "composite", "product", "multiply", "*", "•", "×", "x", "homogenous", "xyzw", "rotation", "angle", "versor", "merge" ],
 					 "version" : "3.0.0",
 					 "node": {
 						  "exampleCompositions" : [ ]

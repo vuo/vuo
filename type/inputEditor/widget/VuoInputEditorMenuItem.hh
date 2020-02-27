@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorMenuItem interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -68,10 +68,18 @@ public:
 	{
 		for(std::vector<VuoInputEditorMenuItem *>::iterator it = item->childItems.begin(); it != item->childItems.end(); ++it)
 		{
+			QString title = QString::fromStdString((*it)->title);
+
+			// Qt uses '&' as a prefix for keyboard shortcuts.
+			// These menus never have shortcuts, so double the ampersands to ensure they're visible.
+			// Example: VuoTimeFormat
+			// https://doc.qt.io/qt-5/qmenubar.html#details
+			title.replace("&", "&&");
+
 			if ((*it)->childItems.size() > 0)
 			{
 				QMenu *submenu = new QMenu(menu);
-				submenu->setTitle(QString::fromStdString((*it)->title));
+				submenu->setTitle(title);
 				if ((*it)->icon)
 					submenu->setIcon(*(*it)->icon);
 				menu->addMenu(submenu);
@@ -85,7 +93,7 @@ public:
 					continue;
 				}
 
-				QAction *action = new QAction(QString::fromStdString((*it)->title), menu);
+				QAction *action = new QAction(title, menu);
 				if ((*it)->icon)
 					action->setIcon(*(*it)->icon);
 				action->setEnabled((*it)->isEnabled);

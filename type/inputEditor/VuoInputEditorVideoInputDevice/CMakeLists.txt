@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorVideoInputDevice SOURCE VuoInputEditorVideoInputDevice.cc)

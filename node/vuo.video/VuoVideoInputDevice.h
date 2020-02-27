@@ -2,9 +2,9 @@
  * @file
  * VUOVIDEOINPUTDEVICE C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -12,7 +12,7 @@
 /**
  * @ingroup VuoTypes
  * @defgroup VuoVideoInputDevice VuoVideoInputDevice
- * Information about an Quicktime input device.
+ * Information about a video input device.
  *
  * @{
  */
@@ -45,7 +45,10 @@ typedef struct
 VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoVideoInputDevice_getJson(const VuoVideoInputDevice value);
 char * VuoVideoInputDevice_getSummary(const VuoVideoInputDevice value);
+
+#define VuoVideoInputDevice_SUPPORTS_COMPARISON
 bool VuoVideoInputDevice_areEqual(VuoVideoInputDevice value1, VuoVideoInputDevice value2);
+bool VuoVideoInputDevice_isLessThan(const VuoVideoInputDevice a, const VuoVideoInputDevice b);
 
 /**
  * Automatically generated function.
@@ -63,12 +66,10 @@ void VuoVideoInputDevice_release(VuoVideoInputDevice value);
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name) __attribute__((const));
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name)
 {
-	VuoVideoInputDevice device = { VuoVideoInputDevice_MatchIdThenName, id, name };
+	VuoVideoInputDevice device = { VuoVideoInputDevice_MatchIdThenName, id, name, "" };
 	return device;
 }
 
 /**
  * @}
  */
-
-

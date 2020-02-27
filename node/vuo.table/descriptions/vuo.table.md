@@ -1,6 +1,6 @@
-These nodes are for working with information that has a tabular structure made up of rows and columns, like a spreadsheet.
+Nodes for working with information that has a tabular structure made up of rows and columns, like a spreadsheet.
 
-You can import a spreadsheet into a Vuo composition by exporting it from your spreadsheet application in [CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) or [TSV (Tab-Separated Values)](https://en.wikipedia.org/wiki/Tab-separated_values) format and using the `Fetch Data` and `Make Table from Text` nodes. You can export CSV or TSV data from a Vuo composition, to be imported into your spreadsheet application, by using the `Format Table` and `Save Data` nodes.
+You can import a spreadsheet into a Vuo composition by exporting it from your spreadsheet application in [CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) or [TSV (Tab-Separated Values)](https://en.wikipedia.org/wiki/Tab-separated_values) format and using the [Fetch Data](vuo-node://vuo.data.fetch) and [Make Table from Text](vuo-node://vuo.table.make.text) nodes. You can export CSV or TSV data from a Vuo composition, to be imported into your spreadsheet application, by using the [Format Table](vuo-node://vuo.table.format) and [Save Data](vuo-node://vuo.data.save) nodes.
 
 Like a spreadsheet, Vuo's Table data type stores information in a grid of rows and columns. For example, here's a table of top-ranking tennis players <small>(source: http://www.wtatennis.com/rankings)</small>:
 
@@ -13,8 +13,10 @@ Like a spreadsheet, Vuo's Table data type stores information in a grid of rows a
    <tr><td>5</td><td>Simona Halep</td><td>Romania</td><td>5021</td></tr>
 </table>
 
-This table has 6 rows and 4 columns. In several nodes, such as `Get Table Row` and `Get Table Column`, you can refer to rows and columns by number, counting left-to-right or top-to-bottom starting from 1. For example, the header row of this table is row 1, and the bottom row (Simona Halep) is row 6.
+This table has 6 rows and 4 columns. In several nodes, such as [Get Table Row](vuo-node://vuo.table.get.row) and [Get Table Column](vuo-node://vuo.table.get.column), you can refer to rows and columns by number, counting left-to-right or top-to-bottom starting from 1. For example, the header row of this table is row 1, and the bottom row (Simona Halep) is row 6.
 
-You can also refer to rows and columns by header if there is one. The table above has headers for the columns (but not for the rows). With the `Get Table Column` node, you could request the row with header *Player* to get a list of all of the players' names.
+You can also refer to rows and columns by header if there is one. The table above has headers for the columns (but not for the rows). With the [Get Table Column](vuo-node://vuo.table.get.column) node, you could request the row with header *Player* to get a list of all of the players' names.
 
-Vuo stores each item of the table as text (even if it's a number or date). With the `Sort Table` node, you have the option to treat the sorted column as a number or date, instead of sorting it alphabetically like text. When you retrieve table items with the `Get Table Row`, `Get Table Column`, or `Get Table Item` node, the items are output as text. You can convert them to numbers using nodes such as `Convert Text to Integer` and `Convert Text List to Real List`.
+To switch between these two modes of referring to rows/columns — numbers or headers — change the data type of the Row/Column port. (Right-click on the port and select Integer or Text from the Set Data Type submenu.)
+
+Vuo stores each item of the table as text (even if it's a number or date). With the [Sort Table](vuo-node://vuo.table.sort) node, you have the option to treat the sorted column as a number or date, instead of sorting it alphabetically like text. When you retrieve table items with the [Get Table Row](vuo-node://vuo.table.get.row), [Get Table Column](vuo-node://vuo.table.get.column), or [Get Table Item](vuo-node://vuo.table.get.item) node, the items are output as text. You can convert them to numbers using nodes such as [Convert Text to Integer](vuo-node://vuo.type.text.integer) and [Convert Text List to Real List](vuo-node://vuo.type.list.text.real).

@@ -2,9 +2,9 @@
  * @file
  * This file specifies the structure and order of the API documentation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 
@@ -32,4 +32,20 @@
 
 /**
  * @defgroup DevelopingApplications Developing Applications that Use Vuo
+ */
+
+/**
+ * @defgroup Changes Changes to Vuo's APIs
+ * @{
+ */
+
+	/**
+	 * @defgroup Changes_2_0_0 Changes in Vuo 2.0.0
+	 * @{
+	 * @page Changes_2_0_0
+	 * @}
+	 */
+
+/**
+ * @}
  */

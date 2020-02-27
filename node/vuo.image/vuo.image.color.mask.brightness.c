@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.mask.brightness node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -29,10 +29,10 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(VuoGlslBrightness)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslBrightness.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float threshold;
 	uniform float sharpness;
@@ -40,7 +40,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		color.rgb /= color.a > 0. ? color.a : 1.;
 
 		color *= smoothstep(threshold*sharpness, threshold*(2-sharpness), VuoGlsl_brightness(color, brightnessType));
@@ -63,6 +63,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->shader = VuoShader_make("Mask Image by Brightness");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
 	VuoRetain(instance->shader);
+
+	// An opaque, nonwhite input image should output a semitransparent image with an alpha channel.
+	instance->shader->isTransparent = true;
 
 	return instance;
 }

@@ -2,14 +2,11 @@
  * @file
  * VuoSizingMode implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoSizingMode.h"
 #include "VuoList_VuoSizingMode.h"
@@ -38,17 +35,14 @@ VuoSizingMode VuoSizingMode_makeFromJson(json_object *js)
 	if (json_object_get_type(js) == json_type_string)
 		valueAsString = json_object_get_string(js);
 
-	VuoSizingMode value = VuoSizingMode_Stretch;
-
-	if (! strcmp(valueAsString, "stretch")) {
-		value = VuoSizingMode_Stretch;
-	} else if (! strcmp(valueAsString, "fit")) {
-		value = VuoSizingMode_Fit;
-	} else if (! strcmp(valueAsString, "fill")) {
-		value = VuoSizingMode_Fill;
-	}
-
-	return value;
+	if (strcmp(valueAsString, "fit") == 0)
+		return VuoSizingMode_Fit;
+	else if (strcmp(valueAsString, "fill") == 0)
+		return VuoSizingMode_Fill;
+	else if (strcmp(valueAsString, "proportional") == 0)
+		return VuoSizingMode_Proportional;
+	else
+		return VuoSizingMode_Stretch;
 }
 
 /**
@@ -57,21 +51,14 @@ VuoSizingMode VuoSizingMode_makeFromJson(json_object *js)
  */
 json_object * VuoSizingMode_getJson(const VuoSizingMode value)
 {
-	char *valueAsString = "";
-
-	switch (value) {
-		case VuoSizingMode_Stretch:
-			valueAsString = "stretch";
-			break;
-		case VuoSizingMode_Fit:
-			valueAsString = "fit";
-			break;
-		case VuoSizingMode_Fill:
-			valueAsString = "fill";
-			break;
-	}
-
-	return json_object_new_string(valueAsString);
+	if (value == VuoSizingMode_Fit)
+		return json_object_new_string("fit");
+	else if (value == VuoSizingMode_Fill)
+		return json_object_new_string("fill");
+	else if (value == VuoSizingMode_Proportional)
+		return json_object_new_string("proportional");
+	else
+		return json_object_new_string("stretch");
 }
 
 /**
@@ -83,6 +70,7 @@ VuoList_VuoSizingMode VuoSizingMode_getAllowedValues(void)
 	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Stretch);
 	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Fit);
 	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Fill);
+	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Proportional);
 	return l;
 }
 
@@ -92,19 +80,12 @@ VuoList_VuoSizingMode VuoSizingMode_getAllowedValues(void)
  */
 char * VuoSizingMode_getSummary(const VuoSizingMode value)
 {
-	char *valueAsString = "";
-
-	switch (value) {
-		case VuoSizingMode_Stretch:
-			valueAsString = "Stretch";
-			break;
-		case VuoSizingMode_Fit:
-			valueAsString = "Fit";
-			break;
-		case VuoSizingMode_Fill:
-			valueAsString = "Fill";
-			break;
-	}
-
-	return strdup(valueAsString);
+	if (value == VuoSizingMode_Fit)
+		return strdup("Fit");
+	else if (value == VuoSizingMode_Fill)
+		return strdup("Fill");
+	else if (value == VuoSizingMode_Proportional)
+		return strdup("Proportional");
+	else
+		return strdup("Stretch");
 }

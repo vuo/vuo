@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorMathExpressionList interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -53,13 +53,13 @@ private:
 	QString convertFromUserLocale(QString valueAsString);
 	QChar getDecimalPointInUserLocale(void);
 	QChar getListSeparatorInUserLocale(void);
-	bool eventFilter(QObject *o, QEvent *event);
+	bool eventFilter(QObject *o, QEvent *event) VuoWarnUnusedResult;
 
 private slots:
+	void validate();
 	void validateMathExpressionList(bool shouldCheckForAtLeastOneExpression=false);
 
 private:
-	QPixmap * renderErrorPixmap(void);
 	bool isMathExpressionListValid(void);
 
 	bool hasError;

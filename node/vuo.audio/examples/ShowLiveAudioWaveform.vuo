@@ -2,21 +2,20 @@
  * @file
  * Renders live audio input as a waveform image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-GetFirstItemInList [type="vuo.list.get.first.VuoAudioSamples" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="513,408"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="590,324"];
-MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<image>image\r" pos="414,298" fillcolor="violet" _fillColor="{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":0.250004}" _lineColor="{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":1.000000}"];
-ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="135,298" fillcolor="violet" _receivedChannels_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="631,298" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+GetFirstItemInList [type="vuo.list.get.first.VuoAudioSamples" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,405"];
+MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<syncCenter>syncCenter\l|<attenuateEnds>attenuateEnds\l|<image>image\r" pos="420,300" fillcolor="orange" _fillColor="\{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":0.250004\}" _lineColor="\{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":1.000000\}" _height="256" _syncAmplitude="0.0" _syncCenter="0.0" _attenuateEnds="false"];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.1" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="135,300" fillcolor="orange" _receivedChannels_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="630,300" _updatedWindow_eventThrottling="enqueue"];
 
 GetFirstItemInList:firstItem -> MakeWaveformImage:samples;
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MakeWaveformImage:image -> RenderImageToWindow:image;
 ReceiveLiveAudio:receivedChannels -> GetFirstItemInList:list;
 }

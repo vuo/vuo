@@ -2,33 +2,33 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AllowChanges2 [type="vuo.event.allowChanges2.VuoText" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="270,240" fillcolor="violet"];
-CutList2 [type="vuo.list.cut.VuoText" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="105,75" _startPosition="4" _itemCount="3"];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="465,240"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-225,15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-195,210" fillcolor="yellow" _seconds="1.0" _fired_eventThrottling="drop"];
-GetRandomItemFromList2 [type="vuo.list.get.random.VuoText" version="1.0.0" label="Get Random Item from List|<refresh>refresh\l|<list>list\l|<randomItem>randomItem\r" pos="15,240"];
-ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="-75,75" _folder="\"\\/Library\\/Desktop Pictures\"" _includeSubfolders="false" _fileType="\"image\""];
-MakeList10 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="450,401" fillcolor="green"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="467,416" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="240,390" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _opacity="1.0"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="495,390" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+AllowChanges2 [type="vuo.event.allowChanges2.VuoText" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="345,240" fillcolor="orange"];
+CutList2 [type="vuo.list.cut.VuoText" version="1.0.1" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="90,135" _startPosition="4" _itemCount="3"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="510,240"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-240,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically2 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="30,240" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+GetRandomItemFromList [type="vuo.list.get.random.VuoText" version="1.0.0" label="Get Random Item from List|<refresh>refresh\l|<list>list\l|<randomItem>randomItem\r" pos="-15,330"];
+ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="-90,135" _folder="\"\\/Library\\/Desktop Pictures\"" _includeSubfolders="false" _fileType="\"image\""];
+MakeList10 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="389,371" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="165,360" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="435,360" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 AllowChanges2:changedValue -> FetchImage:url;
-CutList2:partialList -> GetRandomItemFromList2:list;
+CutList2:partialList -> GetRandomItemFromList:list;
 FetchImage:image -> MakeScaledLayer:image;
-FireOnStart:started -> ListFiles:refresh;
-FirePeriodically:fired -> GetRandomItemFromList2:refresh;
-GetRandomItemFromList2:randomItem -> AllowChanges2:value;
+FireOnStart:started -> ListFiles:folder;
+FirePeriodically2:fired -> GetRandomItemFromList:list [event=true];
+GetRandomItemFromList:randomItem -> AllowChanges2:value;
 ListFiles:files -> CutList2:list;
 MakeList10:list -> RenderLayersToWindow:layers;
-MakeList9:list -> RenderLayersToWindow:setWindowProperties;
 MakeScaledLayer:layer -> MakeList10:1;
 }

@@ -4,4 +4,4 @@ Adds text into other text.
 
 If `Position` is 1 (or less), the new text is inserted at the beginning.  If `Position` is greater than the number of characters in the original text, then the new text is inserted at the end.
 
-To always insert text at the end (no matter how long the original text is), use the `Append Texts` node.
+To always insert text at the end (no matter how long the original text is), use the [Append Texts](vuo-node://vuo.text.append) node.

@@ -2,27 +2,15 @@
  * @file
  * TestVuoCompilerGraphvizParser interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <libgen.h>
 #include <fcntl.h>
 #include <fstream>
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerCable.hh"
-#include "VuoCompilerGraphvizParser.hh"
-#include "VuoCompilerInputData.hh"
-#include "VuoCompilerInputDataClass.hh"
-#include "VuoCompilerInputEventPort.hh"
-#include "VuoCompilerOutputDataClass.hh"
-#include "VuoCompilerOutputEventPort.hh"
-#include "VuoCompilerPublishedPort.hh"
-#include "VuoPort.hh"
-#include "VuoPublishedPort.hh"
-#include "VuoType.hh"
-
 
 class TestVuoCompilerGraphvizParser;
 typedef Module * (TestVuoCompilerGraphvizParser::*moduleFunction_t)(void);  ///< A function that creates a @c Module.
@@ -63,6 +51,7 @@ private slots:
 		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "a" << "33";
 		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "b" << "44";
 		QTest::newRow("non-ASCII text") << "LengthOfConstantString.vuo" << "Count Characters" << "text" << "流";
+		QTest::newRow("UTF-8 4-byte characters") << "utf8-4byte.vuo" << "🙏🏽" << "text" << "\"🙏🏽\"";
 		QTest::newRow("empty text overriding non-empty default value") << "NonEmptyDefaultString.vuo" << "UnicodeDefaultString1" << "string" << "\"\"";
 		QTest::newRow("published data-and-event cable with published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "a" << "10";
 		QTest::newRow("published data-and-event cable without published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "b" << "";
@@ -187,7 +176,7 @@ private slots:
 		delete parser;
 	}
 
-	void testDummyNodes_data()
+	void testNodes_data()
 	{
 		QTest::addColumn< QString >("nodeTitle");
 		QTest::addColumn< QString >("expectedNodeClass");
@@ -208,28 +197,28 @@ private slots:
 			inputs.push_back("refresh");
 			inputs.push_back("increment");
 			inputs.push_back("decrement");
+			inputs.push_back("setCount");
 			vector<string> outputs;
 			outputs.push_back("count");
 			QTest::newRow("Count node") << "Count1" << "vuo.math.count.VuoInteger" << inputs << outputs;
 		}
 	}
-	void testDummyNodes()
+	void testNodes()
 	{
 		QFETCH(QString, nodeTitle);
 		QFETCH(QString, expectedNodeClass);
 		QFETCH(vector<string>, expectedInputPortNames);
 		QFETCH(vector<string>, expectedOutputPortNames);
 
-		// Instantiate parser _without_ a compiler.
 		string compositionPath = getCompositionPath("Recur_Count.vuo");
-		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		vector<VuoNode *> nodes = parser->getNodes();
 		QCOMPARE(nodes.size(), (size_t)2);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(nodes);
 		VuoNode *node = nodeForTitle[qPrintable(nodeTitle)];
-		QVERIFY(! node->hasCompiler());
+		QVERIFY(node->hasCompiler());
 
 		string actualNodeClass = node->getNodeClass()->getClassName();
 		QCOMPARE(QString(actualNodeClass.c_str()), expectedNodeClass);
@@ -298,6 +287,12 @@ private slots:
 		QTest::newRow("all from published output port") << "color" << false << "{}" << " _color_type=\"VuoColor\"";
 		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":0.1}" << " _saturation_type=\"VuoReal\" _saturation_suggestedMin=\"0\" _saturation_suggestedMax=\"1\" _saturation_suggestedStep=\"0.1\" _saturation=\"0.500000\"";
 		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}" << " _image_type=\"VuoImage\"";
+		QTest::newRow("hard enum") << "hardEnum" << true
+			<< VUO_QSTRINGIFY( {"default":"longitudinal", "menuItems": [ { "value": "transverse", "name": "Transverse" }, { "value": "longitudinal", "name": "Longitudinal" } ] })
+			<< " _hardEnum_type=\"VuoDisplacement\" _hardEnum_menuItems=\"[\\{\\\"value\\\":\\\"transverse\\\",\\\"name\\\":\\\"Transverse\\\"\\},\\{\\\"value\\\":\\\"longitudinal\\\",\\\"name\\\":\\\"Longitudinal\\\"\\}]\" _hardEnum=\"\\\"longitudinal\\\"\"";
+		QTest::newRow("easy enum") << "easyEnum" << true
+			<< VUO_QSTRINGIFY( {"default":0, "menuItems": [ { "value": 0, "name": "Record"}, { "value": 1, "name": "Playback" } ] } )
+			<< " _easyEnum_type=\"VuoInteger\" _easyEnum_menuItems=\"[\\{\\\"value\\\":0,\\\"name\\\":\\\"Record\\\"\\},\\{\\\"value\\\":1,\\\"name\\\":\\\"Playback\\\"\\}]\" _easyEnum=\"0\"";
 	}
 	void testPublishedPortDetails()
 	{
@@ -455,7 +450,7 @@ private slots:
 
 		{
 			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath.toStdString(), compiler);
-			QCOMPARE(QString::fromStdString( parser->getDescription() ), expectedDescription);
+			QCOMPARE(QString::fromStdString( parser->getMetadata()->getDescription() ), expectedDescription);
 			delete parser;
 		}
 
@@ -466,7 +461,7 @@ private slots:
 			while (getline(fin, line))
 				compositionAsString += line + "\n";
 			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionAsString, compiler);
-			QCOMPARE(QString::fromStdString( parser->getDescription() ), expectedDescription);
+			QCOMPARE(QString::fromStdString( parser->getMetadata()->getDescription() ), expectedDescription);
 			delete parser;
 		}
 	}

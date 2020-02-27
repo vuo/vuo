@@ -1,45 +1,44 @@
 /**
  * @file
- * Flashes the small square whenever any MIDI note is received, and plays a special animation when the C#5 (just above middle C) is received.
+ * @brief Animate for MIDI Note
+ * Flashes the small square whenever any MIDI note is received and while the note is held, and plays a special animation when the C#5 (just above middle C) is received.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="735,60" _endPosition="720.000000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"none\""];
-Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="630,300" _endPosition="0.750000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"none\""];
-FilterNote [type="vuo.midi.filter.note" version="2.0.0" label="Filter Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumber>noteNumber\l|<velocity>velocity\r" pos="315,60" fillcolor="violet" _channel="1" _noteNumber="61"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="615,-90" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1035,300" _center="{\"x\":0.000000,\"y\":-0.300000}" _rotation="0.000000" _width="0.100000" _height="0.100000"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1227,161" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1247,176" fillcolor="green"];
-MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="810,315" _red="1.000000" _green="1.000000" _blue="1.000000"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="960,30" _center="{\"x\":0.000000,\"y\":0.200000}" _width="0.600000" _opacity="0.750000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="795,-45" _text="\"C♯\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="525,45"];
-MeasureTime2 [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="435,285"];
-ReceiveMIDIEvents [type="vuo.midi.receive" version="2.1.1" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r|<receivedPitchBend>receivedPitchBend\r" pos="90,60" fillcolor="yellow" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue" _receivedPitchBend_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1275,150" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="315,-60"];
+Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="525,60" _endPosition="720.000000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"none\"" _phase="0.0"];
+FilterNote2 [type="vuo.midi.filter.note" version="2.0.0" label="Filter Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumber>noteNumber\l|<velocity>velocity\r" pos="105,75" fillcolor="orange" _channel="1" _noteNumber="61"];
+FireOnDisplayRefresh2 [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-105,-60" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+GetNoteValues [type="vuo.midi.get.note" version="1.0.0" label="Get Note Values|<refresh>refresh\l|<note>note\l|<channel>channel\r|<isNoteOn>isNoteOn\r|<velocity>velocity\r|<noteNumber>noteNumber\r" pos="90,255" fillcolor="orange"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1019,176" fillcolor="blue"];
+MakeRGBColor2 [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="525,255" _red="0" _opacity="1"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="795,255" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.300000\}" _rotation="0.000000" _width="0.100000" _height="0.100000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,0" _text="\"C♯\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":96,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MeasureTime3 [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="315,60"];
+ReceiveMIDIEvents2 [type="vuo.midi.receive" version="2.1.1" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r|<receivedPitchBend>receivedPitchBend\r" pos="-120,75" fillcolor="lime" _device="null" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue" _receivedPitchBend_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1065,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="345,270" _trueOption="1"];
 
-Curve2:value -> MakeScaledLayer:rotation;
-Curve3:value -> MakeRGBColor:opacity;
-FilterNote:velocity -> MeasureTime:reset;
-FilterNote:velocity -> MeasureTime:start;
-FireOnStart:started -> MakeTextImage:refresh;
-MakeColorLayer:layer -> MakeList2:2;
-MakeList2:list -> RenderLayersToWindow:layers;
-MakeList4:list -> RenderLayersToWindow:setWindowProperties;
-MakeRGBColor:color -> MakeColorLayer:color;
-MakeScaledLayer:layer -> MakeList2:1;
-MakeTextImage:image -> MakeScaledLayer:image;
-MeasureTime2:elapsedTime -> Curve3:time;
-MeasureTime:elapsedTime -> Curve2:time;
-ReceiveMIDIEvents:receivedNote -> FilterNote:note;
-ReceiveMIDIEvents:receivedNote -> MeasureTime2:reset;
-ReceiveMIDIEvents:receivedNote -> MeasureTime2:start;
-RenderLayersToWindow:requestedFrame -> MeasureTime2:time;
-RenderLayersToWindow:requestedFrame -> MeasureTime:time;
+AllowFirstEvent:firstEvent -> MakeTextLayer:text;
+Curve4:value -> MakeTextLayer:rotation;
+FilterNote2:velocity -> MeasureTime3:reset;
+FilterNote2:velocity -> MeasureTime3:start;
+FireOnDisplayRefresh2:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh2:requestedFrame -> MeasureTime3:time;
+GetNoteValues:isNoteOn -> SelectInput:which;
+MakeList3:list -> RenderLayersToWindow2:layers;
+MakeRGBColor2:color -> MakeRectangleLayer2:color;
+MakeRectangleLayer2:layer -> MakeList3:2;
+MakeTextLayer:layer -> MakeList3:1;
+MeasureTime3:elapsedTime -> Curve4:time;
+ReceiveMIDIEvents2:receivedNote -> FilterNote2:note;
+ReceiveMIDIEvents2:receivedNote -> GetNoteValues:note;
+SelectInput:out -> MakeRGBColor2:blue;
+SelectInput:out -> MakeRGBColor2:green;
 }

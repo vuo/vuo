@@ -1,0 +1,23 @@
+#define VUO_VERSION                   @Vuo_VERSION@
+#define VUO_VERSION_STRING           "@Vuo_VERSION@"
+#define VUO_VERSION_AND_BUILD_STRING "@VUO_VERSION_AND_BUILD@"
+#define VUO_FRAMEWORK_VERSION_STRING "@VuoFrameworkVersion@"
+
+#define VUO_SOURCE_DIR               "@PROJECT_SOURCE_DIR@"
+#define VUO_BUILD_DIR                "@PROJECT_BINARY_DIR@"
+
+#define LLVM_ROOT                    "@CONAN_LLVM_ROOT@"
+#define GRAPHVIZ_ROOT                "@CONAN_GRAPHVIZ_ROOT@"
+#define JSONC_ROOT                   "@CONAN_JSONC_ROOT@"
+#define OPENSSL_ROOT                 "@CONAN_OPENSSL_ROOT@"
+#define LEAP_ROOT                    "@PROJECT_SOURCE_DIR@/node/vuo.leap/Leap"
+#define SYPHON_ROOT                  "@PROJECT_SOURCE_DIR@/node/vuo.syphon/Syphon"
+
+#define CONAN_LIBRARY_PATHS          "@CONAN_LIB_DIRS@"
+
+// Issue warnings for deprecated APIs.
+#define QT_DEPRECATED_WARNINGS
+// Issue errors for APIs deprecated prior to Qt 5.6.
+#define QT_DISABLE_DEPRECATED_BEFORE 0x050600
+
+#include "VuoLog.h"

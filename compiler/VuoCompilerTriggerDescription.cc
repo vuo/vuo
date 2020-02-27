@@ -2,17 +2,20 @@
  * @file
  * VuoCompilerTriggerDescription implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerGraph.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerTriggerDescription.hh"
 #include "VuoCompilerTriggerPort.hh"
+#include "VuoNode.hh"
 #include "VuoNodeClass.hh"
+#include "VuoPort.hh"
 #include "VuoType.hh"
+#include "VuoStringUtilities.hh"
 
 /**
  * Private constructor.
@@ -35,6 +38,7 @@ json_object * VuoCompilerTriggerDescription::getJson(VuoCompilerNode *triggerNod
 {
 	size_t nodeIndex = triggerNode->getIndexInOrderedNodes();
 	string nodeIdentifier = triggerNode->getGraphvizIdentifier();
+	string nodeClassName = triggerNode->getBase()->getNodeClass()->getClassName();
 	string portName = trigger->getBase()->getClass()->getName();
 	int portContextIndex = trigger->getIndexInPortContexts();
 	VuoPortClass::EventThrottling eventThrottling = trigger->getBase()->getEventThrottling();
@@ -49,6 +53,7 @@ json_object * VuoCompilerTriggerDescription::getJson(VuoCompilerNode *triggerNod
 
 	json_object_object_add(js, "nodeIndex", json_object_new_int64(nodeIndex));
 	json_object_object_add(js, "nodeIdentifier", json_object_new_string(nodeIdentifier.c_str()));
+	json_object_object_add(js, "nodeClassName", json_object_new_string(nodeClassName.c_str()));
 	json_object_object_add(js, "portName", json_object_new_string(portName.c_str()));
 	json_object_object_add(js, "portContextIndex", json_object_new_int(portContextIndex));
 	json_object_object_add(js, "eventThrottling", json_object_new_string(eventThrottlingStr.c_str()));
@@ -79,6 +84,8 @@ vector<VuoCompilerTriggerDescription *> VuoCompilerTriggerDescription::parseFrom
 			trigger->nodeIndex = json_object_get_int64(o);
 		if (json_object_object_get_ex(itemJs, "nodeIdentifier", &o))
 			trigger->nodeIdentifier = json_object_get_string(o);
+		if (json_object_object_get_ex(itemJs, "nodeClassName", &o))
+			trigger->nodeClassName = json_object_get_string(o);
 		if (json_object_object_get_ex(itemJs, "portName", &o))
 			trigger->portName = json_object_get_string(o);
 		if (json_object_object_get_ex(itemJs, "portContextIndex", &o))
@@ -120,14 +127,15 @@ json_object * VuoCompilerTriggerDescription::getJsonWithinSubcomposition(VuoComp
 	string dataTypeStr = (dataType ? dataType->getModuleKey() : "event");
 	string subcompositionNodeClassNameStr = (subcompositionNodeClassName.empty() ?
 												 subcompositionNode->getBase()->getNodeClass()->getClassName() : subcompositionNodeClassName);
-	string subcompositionNodeIdentifierStr = subcompositionNode->getGraphvizIdentifier() +
-											 (subcompositionNodeIdentifier.empty() ?
-												  "" : ("__" + subcompositionNodeIdentifier));
+	string subcompositionNodeIdentifierStr = (subcompositionNodeIdentifier.empty() ?
+												  subcompositionNode->getGraphvizIdentifier() :
+												  VuoStringUtilities::buildCompositionIdentifier(subcompositionNode->getGraphvizIdentifier(), subcompositionNodeIdentifier));
 
 	json_object *js = json_object_new_object();
 
 	json_object_object_add(js, "nodeIndex", json_object_new_int64(nodeIndex));
 	json_object_object_add(js, "nodeIdentifier", json_object_new_string(nodeIdentifier.c_str()));
+	json_object_object_add(js, "nodeClassName", json_object_new_string(nodeClassName.c_str()));
 	json_object_object_add(js, "portName", json_object_new_string(portName.c_str()));
 	json_object_object_add(js, "portContextIndex", json_object_new_int(portContextIndex));
 	json_object_object_add(js, "eventThrottling", json_object_new_string(eventThrottlingStr.c_str()));
@@ -155,6 +163,14 @@ size_t VuoCompilerTriggerDescription::getNodeIndex(void)
 string VuoCompilerTriggerDescription::getNodeIdentifier(void)
 {
 	return nodeIdentifier;
+}
+
+/**
+ * Returns the node class name of the node on which the trigger port appears.
+ */
+string VuoCompilerTriggerDescription::getNodeClassName(void)
+{
+	return nodeClassName;
 }
 
 /**

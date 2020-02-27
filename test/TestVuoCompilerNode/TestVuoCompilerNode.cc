@@ -2,22 +2,14 @@
  * @file
  * TestVuoCompilerNode interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <libgen.h>
 #include <fcntl.h>
 #include "TestVuoCompiler.hh"
-#include "VuoCompiler.hh"
-#include "VuoCompilerInputEventPort.hh"
-#include "VuoCompilerNode.hh"
-#include "VuoCompilerTriggerPort.hh"
-#include "VuoCompilerOutputEventPort.hh"
-#include "VuoPort.hh"
-#include "../../type/VuoInteger.h"
-
 
 class TestVuoCompilerNode;
 typedef Module * (TestVuoCompilerNode::*moduleFunction_t)(void);  ///< A function that creates a @c Module.

@@ -2,39 +2,42 @@
  * @file
  * Displays a row of ovals, with each rotating back and forth at its own randomly chosen pace.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ConvertRealListTo2DPointList [type="vuo.type.list.real.point2d.x" version="1.0.1" label="Convert Real List to 2D Point List|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="990,45"];
-CopyLayer [type="vuo.layer.copy.trs" version="2.0.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="870,-105"];
-Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="1020,270" _startPosition="-30.000000" _endPosition="30.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\""];
-CycleThroughList2 [type="vuo.list.cycle.VuoReal" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="675,315" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,60" fillcolor="yellow" _started_eventThrottling="enqueue"];
-HoldValue2 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="855,270"];
-MakeList11 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1024,-79" fillcolor="green"];
-MakeList8 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="824,-49" _1="{\"x\":1,\"y\":1}"];
-MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="994,-94" fillcolor="green"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="570,-240" _color="{\"r\":0.501961,\"g\":1.000000,\"b\":0.796078,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.14999999999999999" _height="0.25" _sharpness="1"];
-MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="330,90" _endPosition="0.000000" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
-MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="570,-90" _startPosition="-0.800000" _endPosition="0.800000" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
-MakeRandomList [type="vuo.noise.random.list.VuoReal" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="480,315" _minimum="0.500000" _maximum="5.000000" _count="9"];
-ProcessList3 [type="vuo.list.process.VuoReal.VuoReal" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="570,90" fillcolor="violet" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1065,-105" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="120,90" fillcolor="lime"];
+ConvertRealListTo2DPointList [type="vuo.type.list.real.point2d.x" version="1.0.2" label="Convert Real List to 2D Point List|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="990,45"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="1215,-75"];
+Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="1230,300" _startPosition="-30.000000" _endPosition="30.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoReal" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="840,345" _wrapMode="\"wrap\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-105,300" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+HoldValue2 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1065,270"];
+MakeList8 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1182,-19" _1="\{\"x\":1,\"y\":1\}"];
+MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1364,-64" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="615,-270" _color="\{\"r\":0.501961,\"g\":1.000000,\"b\":0.796078,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.14999999999999999" _height="0.25" _sharpness="1" _opacity="1.0"];
+MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="570,90" _endPosition="0.000000" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
+MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="570,-60" _startPosition="-0.800000" _endPosition="0.800000" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
+MakeRandomList [type="vuo.noise.random.list.VuoReal" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="615,390" _minimum="0.500000" _maximum="5.000000" _count="9"];
+ProcessList3 [type="vuo.list.process.VuoReal.VuoReal" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="900,90" fillcolor="orange" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1410,-75" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> MakeOvalLayer:color;
+AllowFirstEvent:firstEvent -> MakePointsAlongCurve2:startPosition;
+AllowFirstEvent:firstEvent -> MakePointsAlongCurve4:startPosition;
+AllowFirstEvent:firstEvent -> MakeRandomList:minimum;
 ConvertRealListTo2DPointList:point2d -> CopyLayer:translations;
 CopyLayer:copies -> MakeList9:1;
 Curve4:value -> ProcessList3:processedItem;
 CycleThroughList2:item -> Curve4:duration;
-FireOnStart:started -> MakeOvalLayer:refresh;
-FireOnStart:started -> MakePointsAlongCurve2:refresh;
-FireOnStart:started -> MakePointsAlongCurve4:refresh;
-FireOnStart:started -> MakeRandomList:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> HoldValue2:value;
+FireOnDisplayRefresh:requestedFrame -> ProcessList3:fire [event=true];
 HoldValue2:heldValue -> Curve4:time;
-MakeList11:list -> RenderLayersToWindow:setWindowProperties;
 MakeList8:list -> CopyLayer:scales;
 MakeList9:list -> RenderLayersToWindow:layers;
 MakeOvalLayer:layer -> CopyLayer:layer;
@@ -42,8 +45,6 @@ MakePointsAlongCurve2:points -> ProcessList3:fire;
 MakePointsAlongCurve4:points -> ConvertRealListTo2DPointList:x;
 MakeRandomList:list -> CycleThroughList2:list;
 ProcessList3:processItem -> CycleThroughList2:goForward;
-ProcessList3:processItem -> HoldValue2:refresh;
+ProcessList3:processItem -> HoldValue2:update;
 ProcessList3:processedList -> CopyLayer:rotations;
-RenderLayersToWindow:requestedFrame -> HoldValue2:newValue;
-RenderLayersToWindow:requestedFrame -> ProcessList3:fire [event=true];
 }

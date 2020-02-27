@@ -2,9 +2,9 @@
  * @file
  * VuoFont C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -39,6 +39,7 @@ typedef struct
 } VuoFont;
 
 VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, VuoColor color, VuoHorizontalAlignment alignment, VuoReal characterSpacing, VuoReal lineSpacing);
+VuoFont VuoFont_makeDefault();
 
 VuoFont VuoFont_makeFromJson(struct json_object * js);
 struct json_object * VuoFont_getJson(const VuoFont value);

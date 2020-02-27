@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.split.hsl node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,12 @@
 
 VuoModuleMetadata({
 					  "title" : "Split Image HSL Channels",
-					  "keywords" : [ "separate", "colors", "filter", "alpha" ],
+ 					  "keywords" : [
+						  "filter", "separate",
+ 						  "alpha", "transparent",
+ 						  "tone", "chroma", "colors",
+ 						  "brightness", "luminance", "luma",
+ 					  ],
 					  "version" : "1.0.1",
 					  "node" : {
 						  "exampleCompositions" : [ "SeparateHueSaturationLightness.vuo", "CapSaturation.vuo", "ZoomBlurHue.vuo" ]
@@ -20,10 +25,10 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(hsl)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslHsl.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec4 colorMask;
 	uniform bool alpha;	// false = use texture's alpha; true = 100%
@@ -31,13 +36,13 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		color.rgb /= color.a > 0. ? color.a : 1.;
-		vec4 hsla = vec4(rgbToHsl(color.rgb), color.a);
+		vec4 hsla = vec4(VuoGlsl_rgbToHsl(color.rgb), color.a);
 
 		vec4 rgba;
 		if (colorHueImage)
-			rgba = vec4(hslToRgb(vec3(hsla.x, 1., .5)), alpha ? 1. : color.a);
+			rgba = vec4(VuoGlsl_hslToRgb(vec3(hsla.x, 1., .5)), alpha ? 1. : color.a);
 		else
 		{
 			float luminance = dot(hsla, colorMask);

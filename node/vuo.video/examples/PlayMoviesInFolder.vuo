@@ -1,0 +1,31 @@
+/**
+ * @file
+ * @brief Play Movies in Folder
+ * Plays movies sequentially by using the `Finished Playback` port.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Changed2 [type="vuo.event.changed2.VuoText" version="2.0.0" label="Changed|<refresh>refresh\l|<value>value\l|<changed>changed\r" pos="465,90"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="1110,240"];
+CycleThroughList [type="vuo.list.cycle2.VuoText" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="210,90" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="0,135" _folder="\".\"" _includeSubfolders="false" _fileType="\"movie\""];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="645,240" fillcolor="magenta" _setTime="0" _loop="\"none\"" _playbackRate="1" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderImageToWindow2 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1035,240" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+
+Changed2:changed -> PlayMovie:play;
+ConvertFrameToImage2:image -> RenderImageToWindow2:image;
+CycleThroughList:item -> Changed2:value;
+CycleThroughList:item -> PlayMovie:url;
+FireOnStart:started -> CycleThroughList:goForward;
+FireOnStart:started -> ListFiles:folder;
+ListFiles:files -> CycleThroughList:list;
+PlayMovie:decodedVideo -> ConvertFrameToImage2:frame;
+PlayMovie:finishedPlayback -> CycleThroughList:goForward;
+}

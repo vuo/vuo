@@ -2,9 +2,9 @@
  * @file
  * This composition generates the description image for the vuo.scene.tc.remove node.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
@@ -18,7 +18,7 @@ MakeList3 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make 
 MakeList5 [type="vuo.list.make.8.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="844,131"];
 RemoveTextureCoordinates [type="vuo.scene.tc.remove" version="1.0.0" label="Remove Texture Coordinates|<refresh>refresh\l|<object>object\l|<modifiedObject>modifiedObject\r" pos="600,75"];
 RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1245,135" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="855,375" _width="206" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+RenderSceneToImage [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="855,375" _width="206" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
 SaveImage [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1170,390" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
 ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="135,210" _opacity="1.0"];
 

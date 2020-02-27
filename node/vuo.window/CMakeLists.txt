@@ -1,0 +1,23 @@
+VuoCompileNodes(
+	vuo.window.aspectRatio.c
+	vuo.window.aspectRatio.reset.c
+	vuo.window.aspectRatio.reset2.c
+	vuo.window.aspectRatio2.c
+	vuo.window.cursor.c
+	vuo.window.cursor.populated.c
+	vuo.window.cursor2.c
+	vuo.window.fullscreen.c
+	vuo.window.fullscreen2.c
+	vuo.window.get.dimensions.c
+	vuo.window.get.dimensions2.c
+	vuo.window.position.c
+	vuo.window.position2.c
+	vuo.window.resizable.c
+	vuo.window.resizable2.c
+	vuo.window.size.c
+	vuo.window.size2.c
+	vuo.window.title.c
+	vuo.window.title2.c
+)
+
+VuoNodeSet()

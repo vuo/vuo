@@ -2,57 +2,52 @@
  * @file
  * Demonstrates the difference between mouse button events and mouse click events.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="975,-60" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1185,150" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}" _preservePhysicalSize="false"];
-MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1170,585" _name="\"\"" _center="{\"x\":0.000000,\"y\":-0.200000}" _preservePhysicalSize="false"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1382,161" fillcolor="green"];
-MakeList10 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1382,161" fillcolor="green"];
-MakeList14 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1362,146" fillcolor="green"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="495,180" _text="\"released\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.989434,\"g\":0.957944,\"b\":0.864060,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="990,600" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.146795,\"g\":0.570824,\"b\":0.525023,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1170,-15" _text="\"The \\\"Receive Mouse Buttons\\\" node fires events immediately.\\nThe \\\"Receive Mouse Clicks\\\" node waits to fire an event\\nuntil it's clear whether the mouse was clicked, double-clicked, or triple-clicked.\\n\\nClick, double-click, or triple-click to see these nodes in action.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.400000}"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="90,285" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseClicks3 [type="vuo.mouse.click" version="1.0.2" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="180,480" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1410,135" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SelectLatest5 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="525,480" _option1="\"singleClicked\"" _option2="\"doubleClicked\""];
-SelectLatest6 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="705,480" _option2="\"tripleClicked\""];
-ShareValue2 [type="vuo.data.share.VuoWindowReference" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-60,480"];
-ShareValue5 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="735,285"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="915,-30"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="645,390" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1215,150" _center="\{\"x\":0.000000,\"y\":0.000000\}" _preservePhysicalSize="false"];
+MakeLayer2 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1245,630" _center="\{\"x\":0.000000,\"y\":-0.200000\}" _preservePhysicalSize="false"];
+MakeList14 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1559,161" fillcolor="blue"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="1020,150" _text="\"released\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":0.98943400382995605,\"g\":0.95794397592544556,\"b\":0.86405998468399048,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="1020,630" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":0.14679500460624695,\"g\":0.5708240270614624,\"b\":0.52502298355102539,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1230,-30" _text="\"The \\\"Receive Mouse Buttons\\\" node fires events immediately.\\nThe \\\"Receive Mouse Clicks\\\" node waits to fire an event\\nuntil it's clear whether the mouse was clicked, double-clicked, or triple-clicked.\\n\\nClick, double-click, or triple-click to see these nodes in action.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.400000\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="375,300" fillcolor="orange" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseClicks3 [type="vuo.mouse.click2" version="2.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="345,480" fillcolor="orange" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1605,150" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest2 [type="vuo.select.latest.8.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="690,480" _option1="\"single clicked\"" _option2="\"double clicked\"" _option3="\"triple clicked\""];
+ShareValue [type="vuo.data.share.VuoRenderedLayers" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="195,300" fillcolor="blue"];
 SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="960,285" _setPosition="1.000000" _setTarget="0.000000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"out\""];
 SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="960,465" _setPosition="1.000000" _setTarget="0.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"out\""];
 
-FireOnStart:started -> MakeTextLayer:refresh;
+AllowFirstEvent:firstEvent -> MakeTextLayer:text;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration3:time;
 MakeLayer2:layer -> MakeList14:3;
 MakeLayer:layer -> MakeList14:2;
-MakeList0:list -> RenderLayersToWindow:setWindowProperties;
-MakeList10:list -> RenderLayersToWindow:setWindowProperties;
 MakeList14:list -> RenderLayersToWindow:layers;
 MakeTextImage2:image -> MakeLayer2:image;
 MakeTextImage:image -> MakeLayer:image;
 MakeTextLayer:layer -> MakeList14:1;
-ReceiveMouseButtons:released -> MakeTextImage:refresh;
+ReceiveMouseButtons:released -> MakeTextImage:text [event=true];
 ReceiveMouseButtons:released -> SmoothWithDuration2:setPosition [event=true];
 ReceiveMouseButtons:released -> SmoothWithDuration2:setTarget [event=true];
-ReceiveMouseClicks3:doubleClicked -> SelectLatest5:option2 [event=true];
-ReceiveMouseClicks3:singleClicked -> SelectLatest5:option1 [event=true];
-ReceiveMouseClicks3:tripleClicked -> SelectLatest6:option2 [event=true];
-RenderLayersToWindow:requestedFrame -> ShareValue5:value;
-RenderLayersToWindow:showedWindow -> ShareValue2:value;
-SelectLatest5:latest -> SelectLatest6:option1;
-SelectLatest6:latest -> MakeTextImage2:text;
-SelectLatest6:latest -> SmoothWithDuration3:setPosition [event=true];
-SelectLatest6:latest -> SmoothWithDuration3:setTarget [event=true];
-ShareValue2:sameValue -> ReceiveMouseButtons:window;
-ShareValue2:sameValue -> ReceiveMouseClicks3:window;
-ShareValue5:sameValue -> SmoothWithDuration2:time;
-ShareValue5:sameValue -> SmoothWithDuration3:time;
+ReceiveMouseClicks3:doubleClicked -> SelectLatest2:option2 [event=true];
+ReceiveMouseClicks3:singleClicked -> SelectLatest2:option1 [event=true];
+ReceiveMouseClicks3:tripleClicked -> SelectLatest2:option3 [event=true];
+RenderLayersToWindow:updatedWindow -> ShareValue:value;
+SelectLatest2:latest -> MakeTextImage2:text;
+SelectLatest2:latest -> SmoothWithDuration3:setPosition [event=true];
+SelectLatest2:latest -> SmoothWithDuration3:setTarget [event=true];
+ShareValue:sameValue -> ReceiveMouseButtons:window;
+ShareValue:sameValue -> ReceiveMouseClicks3:window;
 SmoothWithDuration2:position -> MakeLayer:opacity;
 SmoothWithDuration3:position -> MakeLayer2:opacity;
 }

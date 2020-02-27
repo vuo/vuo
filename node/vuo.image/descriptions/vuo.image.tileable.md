@@ -6,6 +6,6 @@ This node crops the edges off the image, then blends each edge into the opposite
 
 ![](tileable.png)
 
-You can then connect the output of this node to `Tile Image`:
+You can then connect the output of this node to [Tile Image](vuo-node://vuo.image.tile):
 
 ![](tileable-tiled.png)

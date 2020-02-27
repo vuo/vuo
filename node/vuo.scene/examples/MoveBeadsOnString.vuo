@@ -1,42 +1,44 @@
 /**
  * @file
+ * @brief Move Beads on String
  * Creates a simple bead and string scene, then applies wave motion to it.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1395,-150"];
-Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="1185,-240"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="1410,-60" _endPosition="1.000000" _duration="1.500000" _curve="\"linear\"" _easing="\"middle\"" _loop="\"loop\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="540,-150" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1744,-109" fillcolor="green"];
-MakeList10 [type="vuo.list.make.3.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="953,-214" _1="{\"x\":-0.550000,\"y\":0.000000,\"z\":0.000000}" _3="{\"x\":0.550000,\"y\":0.000000,\"z\":0.000000}"];
-MakeList4 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1349,-124"];
-MakeList7 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1034,-199" _1="{\"x\":0,\"y\":0,\"z\":0}"];
-MakeList8 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1139,-184" _1="{\"x\":0.200000,\"y\":0.200000,\"z\":0.200000}"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1774,-79" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoColor" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="735,-240" fillcolor="violet" _material="{\"r\":0.855009,\"g\":0.506691,\"b\":0.801373,\"a\":1.000000}" _rows="32" _columns="32"];
-MakeTube4 [type="vuo.scene.make.tube.VuoColor.VuoGenericType2.VuoGenericType3.VuoGenericType4" version="1.0.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="1185,-120" fillcolor="violet" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,1.5707963705062866],\"scale\":[0.10000000149011612,1.25,0.10000000149011612]}" _outsideMaterial="{\"r\":0.821057,\"g\":0.771405,\"b\":0.731945,\"a\":1.000000}" _rows="60" _columns="120" _thickness="0.100000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1815,-120" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Ripple3DObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="1590,-120" fillcolor="violet" _angle="180.000000" _amplitude="0.050000" _wavelength="0.030000" _dispersion="\"linear\"" _displacement="\"transverse\""];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="525,-150" fillcolor="lime"];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1380,-270"];
+Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="1185,-315"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="1410,-45" _endPosition="1.000000" _duration="1.500000" _curve="\"linear\"" _easing="\"middle\"" _loop="\"loop\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="435,-45" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1769,-169" fillcolor="blue"];
+MakeList10 [type="vuo.list.make.3.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1002,-289" _1="\{\"x\":-0.550000,\"y\":0.000000,\"z\":0.000000\}" _3="\{\"x\":0.550000,\"y\":0.000000,\"z\":0.000000\}"];
+MakeList4 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1347,-244"];
+MakeList7 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1066,-274" _1="\{\"x\":0,\"y\":0,\"z\":0\}"];
+MakeList8 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1152,-259" _1="\{\"x\":0.200000,\"y\":0.200000,\"z\":0.200000\}"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="735,-315" fillcolor="orange" _transform="\"identity\"" _material="\{\"r\":0.855009,\"g\":0.506691,\"b\":0.801373,\"a\":1.000000\}" _rows="16" _columns="16"];
+MakeTube4 [type="vuo.scene.make.tube.VuoColor.VuoGenericType2.VuoGenericType3.VuoGenericType4" version="1.1.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="1185,-195" fillcolor="orange" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,1.5707963705062866],\"scale\":[0.029999999329447746,1.25,0.029999999329447746]\}" _outsideMaterial="\{\"r\":0.821057,\"g\":0.771405,\"b\":0.731945,\"a\":1.000000\}" _rows="32" _columns="8" _thickness="1"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1815,-180" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Ripple3DObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="1605,-180" fillcolor="orange" _angle="180.000000" _amplitude="0.050000" _wavelength="0.030000" _dispersion="\"linear\"" _displacement="\"transverse\""];
 
+AllowFirstEvent:firstEvent -> MakeSphere2:transform;
+AllowFirstEvent:firstEvent -> MakeTube4:transform;
 Combine3DObjects:object -> Ripple3DObject:object;
 Copy3DObject:copies -> MakeList4:1;
 Curve2:value -> Ripple3DObject:phase;
-FireOnStart:started -> MakeSphere2:refresh;
-FireOnStart:started -> MakeTube4:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeList10:list -> Copy3DObject:translations;
 MakeList4:list -> Combine3DObjects:childObjects;
 MakeList7:list -> Copy3DObject:rotations;
 MakeList8:list -> Copy3DObject:scales;
-MakeList9:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> RenderSceneToWindow:objects;
 MakeSphere2:object -> Copy3DObject:object;
 MakeTube4:object -> MakeList4:2;
-RenderSceneToWindow:requestedFrame -> Curve2:time [style=invis];
 Ripple3DObject:rippledObject -> MakeList:1;
 }

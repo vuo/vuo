@@ -2,9 +2,9 @@
  * @file
  * VuoRendererSignaler implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererSignaler.hh"
@@ -23,6 +23,14 @@ VuoRendererSignaler::VuoRendererSignaler(void) :
 void VuoRendererSignaler::signalNodesMoved(set<VuoRendererNode *> nodes, qreal dx, qreal dy, bool movedByDragging)
 {
 	emit nodesMoved(nodes, dx, dy, movedByDragging);
+}
+
+/**
+ * Emits a @c commentsMoved signal.
+ */
+void VuoRendererSignaler::signalCommentsMoved(set<VuoRendererComment *> comments, qreal dx, qreal dy, bool movedByDragging)
+{
+	emit commentsMoved(comments, dx, dy, movedByDragging);
 }
 
 /**
@@ -50,11 +58,35 @@ void VuoRendererSignaler::signalNodeTitleEditorRequested(VuoRendererNode *node)
 }
 
 /**
- * Emits a @c nodeTitleEditorRequested signal.
+ * Emits a @c commentEditorRequested signal.
  */
-void VuoRendererSignaler::signalSubcompositionEditRequested(VuoRendererNode *node)
+void VuoRendererSignaler::signalCommentEditorRequested(VuoRendererComment *comment)
 {
-	emit subcompositionEditRequested(node);
+	emit commentEditorRequested(comment);
+}
+
+/**
+ * Emits a @c commentZoomRequested signal.
+ */
+void VuoRendererSignaler::signalCommentZoomRequested(VuoRendererComment *comment)
+{
+	emit commentZoomRequested(comment);
+}
+
+/**
+ * Emits a @c commentResized signal.
+ */
+void VuoRendererSignaler::signalCommentResized(VuoRendererComment *comment, qreal dx, qreal dy)
+{
+	emit commentResized(comment, dx, dy);
+}
+
+/**
+ * Emits a @c nodeSourceEditorRequested signal.
+ */
+void VuoRendererSignaler::signalNodeSourceEditorRequested(VuoRendererNode *node)
+{
+	emit nodeSourceEditorRequested(node);
 }
 
 /**
@@ -71,4 +103,12 @@ void VuoRendererSignaler::signalInputPortCountAdjustmentRequested(VuoRendererNod
 void VuoRendererSignaler::signalDisableDragStickiness(bool disable)
 {
 	emit dragStickinessDisableRequested(disable);
+}
+
+/**
+ * Emits an `openUrlRequested` signal.
+ */
+void VuoRendererSignaler::signalOpenUrl(QString url)
+{
+	emit openUrl(url);
 }

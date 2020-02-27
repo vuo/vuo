@@ -2,10 +2,12 @@
  * @file
  * VuoMidi interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#include "node.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -20,8 +22,15 @@ extern "C"
 #include "VuoList_VuoMidiInputDevice.h"
 #include "VuoList_VuoMidiOutputDevice.h"
 
+void VuoMidi_use(void);
+void VuoMidi_disuse(void);
+void VuoMidi_addDevicesChangedTriggers   (VuoOutputTrigger(inputDevices, VuoList_VuoMidiInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoMidiOutputDevice));
+void VuoMidi_removeDevicesChangedTriggers(VuoOutputTrigger(inputDevices, VuoList_VuoMidiInputDevice), VuoOutputTrigger(outputDevices, VuoList_VuoMidiOutputDevice));
 VuoList_VuoMidiInputDevice VuoMidi_getInputDevices(void);
 VuoList_VuoMidiOutputDevice VuoMidi_getOutputDevices(void);
+
+bool VuoMidiInputDevice_realize (VuoMidiInputDevice device,  VuoMidiInputDevice *realizedDevice);
+bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice *realizedDevice);
 
 /**
  * Manages sending messages to a MIDI device.

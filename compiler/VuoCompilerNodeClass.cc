@@ -2,36 +2,29 @@
  * @file
  * VuoCompilerNodeClass implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#include <json-c/json.h>
-#pragma clang diagnostic pop
-
-#include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeParser.hh"
-#include "VuoCompilerDataClass.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerInstanceDataClass.hh"
 #include "VuoCompilerNode.hh"
-#include "VuoCompilerNodeArgumentClass.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerOutputDataClass.hh"
 #include "VuoCompilerOutputEventPortClass.hh"
 #include "VuoCompilerPort.hh"
-#include "VuoCompilerPortClass.hh"
-#include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoCompilerTriggerDescription.hh"
 #include "VuoCompilerTriggerPortClass.hh"
+#include "VuoFileUtilities.hh"
 #include "VuoGenericType.hh"
+#include "VuoJsonUtilities.hh"
+#include "VuoNode.hh"
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
-#include "VuoPortClass.hh"
 #include "VuoStringUtilities.hh"
 
 
@@ -69,6 +62,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(string className, Module *module)
 	callbackStartFunction = NULL;
 	callbackUpdateFunction = NULL;
 	callbackStopFunction = NULL;
+	_isSubcomposition = false;
 
 	parse();
 }
@@ -91,8 +85,11 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	getBase()->setDescription(compilerNodeClass->getBase()->getDescription());
 	getBase()->setVersion(compilerNodeClass->getBase()->getVersion());
 	getBase()->setKeywords(compilerNodeClass->getBase()->getKeywords());
-	getBase()->setInterface(compilerNodeClass->getBase()->isInterface());
 	getBase()->setNodeSet(compilerNodeClass->getBase()->getNodeSet());
+#if VUO_PRO
+	getBase()->setPro(compilerNodeClass->getBase()->isPro());
+	setDependsOnPro(compilerNodeClass->dependsOnPro());
+#endif
 	getBase()->setExampleCompositionFileNames(compilerNodeClass->getBase()->getExampleCompositionFileNames());
 	getBase()->setDeprecated(compilerNodeClass->getBase()->getDeprecated());
 	getBase()->setCompiler(this);
@@ -106,11 +103,19 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	this->callbackStopFunction = compilerNodeClass->callbackStopFunction;
 	this->instanceDataClass = compilerNodeClass->instanceDataClass;
 	this->triggerDescriptions = compilerNodeClass->triggerDescriptions;
+	this->compatibleSpecializedForGenericTypeName = compilerNodeClass->compatibleSpecializedForGenericTypeName;
+	this->portsWithExplicitEventBlockingNone = compilerNodeClass->portsWithExplicitEventBlockingNone;
+	this->sourcePath = compilerNodeClass->sourcePath;
+	this->sourceCode = compilerNodeClass->sourceCode;
+	this->containedNodes = compilerNodeClass->containedNodes;
 	this->defaultSpecializedForGenericTypeName = compilerNodeClass->defaultSpecializedForGenericTypeName;
 
 	compilerNodeClass->getBase()->setInputPortClasses(vector<VuoPortClass *>());
 	compilerNodeClass->getBase()->setOutputPortClasses(vector<VuoPortClass *>());
 	compilerNodeClass->instanceDataClass = NULL;
+
+	_isSubcomposition = false;
+	updateSubcompositionStatus();
 }
 
 /**
@@ -129,6 +134,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoNodeClass *baseNodeClass)
 	callbackStartFunction = NULL;
 	callbackUpdateFunction = NULL;
 	callbackStopFunction = NULL;
+	_isSubcomposition = false;
 }
 
 /**
@@ -264,6 +270,8 @@ void VuoCompilerNodeClass::parse(void)
 			dependencies.insert(innermostTypeName);
 		}
 	}
+
+	updateSubcompositionStatus();
 }
 
 /**
@@ -292,13 +300,26 @@ void VuoCompilerNodeClass::parseMetadata(void)
 	json_object *nodeDetails = NULL;
 	if (json_object_object_get_ex(moduleDetails, "node", &nodeDetails))
 	{
-		getBase()->setInterface( parseBool(nodeDetails, "isInterface") );
-		getBase()->setExampleCompositionFileNames( parseArrayOfStrings(nodeDetails, "exampleCompositions") );
-		getBase()->setDeprecated( parseBool(nodeDetails, "isDeprecated") );
+		getBase()->setExampleCompositionFileNames(VuoJsonUtilities::parseArrayOfStrings(nodeDetails, "exampleCompositions"));
+		getBase()->setDeprecated(VuoJsonUtilities::parseBool(nodeDetails, "isDeprecated"));
+
+#if VUO_PRO
+		setDependsOnPro(VuoJsonUtilities::parseBool(nodeDetails, "dependsOnPro"));
+#endif
 
 		json_object *triggersArray = NULL;
 		if (json_object_object_get_ex(nodeDetails, "triggers", &triggersArray))
 			triggerDescriptions = VuoCompilerTriggerDescription::parseFromJson(triggersArray);
+
+		json_object *nodesObj = NULL;
+		if (json_object_object_get_ex(nodeDetails, "nodes", &nodesObj))
+		{
+			json_object_object_foreach(nodesObj, nodeIdentifier, nodeClassNameObj)
+			{
+				string nodeClassName = json_object_get_string(nodeClassNameObj);
+				containedNodes.insert(make_pair(nodeIdentifier, nodeClassName));
+			}
+		}
 	}
 
 	parseGenericTypes(moduleDetails, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
@@ -318,11 +339,11 @@ void VuoCompilerNodeClass::parseGenericTypes(json_object *moduleDetails,
 	{
 		json_object_object_foreach(genericTypeDetails, genericTypeName, genericTypeDetailsForOneType)
 		{
-			string defaultType = parseString(genericTypeDetailsForOneType, "defaultType");
+			string defaultType = VuoJsonUtilities::parseString(genericTypeDetailsForOneType, "defaultType");
 			if (! defaultType.empty())
 				defaultSpecializedForGenericTypeName[genericTypeName] = defaultType;
 
-			vector<string> compatibleTypes = parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
+			vector<string> compatibleTypes = VuoJsonUtilities::parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
 			if (! compatibleTypes.empty())
 				compatibleSpecializedForGenericTypeName[genericTypeName] = compatibleTypes;
 		}
@@ -629,7 +650,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		if (eventPortClass)
 		{
 			bool isDataInDetails = false;
-			string dataPortName = parseString(detailsForArgumentName[argumentName], "data", &isDataInDetails);
+			string dataPortName = VuoJsonUtilities::parseString(detailsForArgumentName[argumentName], "data", "", &isDataInDetails);
 			if (isDataInDetails)
 			{
 				eventPortClass->getBase()->setName(dataPortName);
@@ -646,7 +667,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		if (eventPortClass)
 		{
 			bool isDataInDetails = false;
-			string dataPortName = parseString(detailsForArgumentName[argumentName], "data", &isDataInDetails);
+			string dataPortName = VuoJsonUtilities::parseString(detailsForArgumentName[argumentName], "data", "", &isDataInDetails);
 			if (isDataInDetails)
 			{
 				eventPortClass->getBase()->setName(dataPortName);
@@ -796,7 +817,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 	{
 		VuoCompilerInputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>( (*i)->getCompiler() );
 		bool isEventBlockingInDetails = false;
-		string eventBlockingStr = parseString(eventPortClass->getDetails(), "eventBlocking", &isEventBlockingInDetails);
+		string eventBlockingStr = VuoJsonUtilities::parseString(eventPortClass->getDetails(), "eventBlocking", "", &isEventBlockingInDetails);
 		if (isEventBlockingInDetails)
 		{
 			VuoPortClass::EventBlocking eventBlocking;
@@ -808,7 +829,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 				eventBlocking = VuoPortClass::EventBlocking_Wall;
 			else
 			{
-				VUserLog("Error: Unknown option for \"eventBlocking\": %s\n", eventBlockingStr.c_str());
+				VUserLog("Error: Unknown option for \"eventBlocking\": %s", eventBlockingStr.c_str());
 				continue;
 			}
 			eventPortClass->getBase()->setEventBlocking(eventBlocking);
@@ -825,7 +846,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		if (triggerPortClass)
 		{
 			bool isEventThrottlingInDetails = false;
-			string eventThrottlingStr = parseString(triggerPortClass->getDetails(), "eventThrottling", &isEventThrottlingInDetails);
+			string eventThrottlingStr = VuoJsonUtilities::parseString(triggerPortClass->getDetails(), "eventThrottling", "", &isEventThrottlingInDetails);
 			if (isEventThrottlingInDetails)
 			{
 				VuoPortClass::EventThrottling eventThrottling;
@@ -835,7 +856,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 					eventThrottling = VuoPortClass::EventThrottling_Drop;
 				else
 				{
-					VUserLog("Error: Unknown option for \"throttling\": %s\n", eventThrottlingStr.c_str());
+					VUserLog("Error: Unknown option for \"throttling\": %s", eventThrottlingStr.c_str());
 					continue;
 				}
 				triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
@@ -851,7 +872,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		if (eventPortClass->getBase() != getBase()->getRefreshPortClass())
 		{
 			bool isPortActionInDetails = false;
-			bool hasPortAction = parseBool(eventPortClass->getDetails(), "hasPortAction", &isPortActionInDetails);
+			bool hasPortAction = VuoJsonUtilities::parseBool(eventPortClass->getDetails(), "hasPortAction", false, &isPortActionInDetails);
 
 			if (isPortActionInDetails)
 				portClass->setPortAction(hasPortAction);
@@ -889,7 +910,7 @@ VuoCompilerOutputDataClass * VuoCompilerNodeClass::parseOutputDataParameter(stri
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VUserLog("Error: Output port data %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output port data %s must be a pointer.", argumentName.c_str());
 		return NULL;
 	}
 
@@ -924,7 +945,7 @@ VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParamete
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VUserLog("Error: Output port %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output port %s must be a pointer.", argumentName.c_str());
 		return NULL;
 	}
 
@@ -944,7 +965,7 @@ VuoCompilerTriggerPortClass * VuoCompilerNodeClass::parseTriggerParameter(string
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VUserLog("Error: Output trigger %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output trigger %s must be a pointer.", argumentName.c_str());
 		return NULL;
 	}
 
@@ -964,7 +985,7 @@ VuoCompilerInstanceDataClass * VuoCompilerNodeClass::parseInstanceDataParameter(
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VUserLog("Error: Node instance data %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Node instance data %s must be a pointer.", argumentName.c_str());
 		return NULL;
 	}
 
@@ -1024,7 +1045,7 @@ json_object * VuoCompilerNodeClass::parseDetailsParameter(string annotation)
 	{
 		detailsObj = json_tokener_parse(details.c_str());
 		if (! detailsObj)
-			VUserLog("Error: Couldn't parse vuoDetails for `%s`: %s\n", getBase()->getClassName().c_str(), details.c_str());
+			VUserLog("Error: Couldn't parse vuoDetails for `%s`: %s", getBase()->getClassName().c_str(), details.c_str());
 	}
 	return detailsObj;
 }
@@ -1047,7 +1068,7 @@ VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumen
 		}
 		else if ((isInput && existingOutputPortClass) || (! isInput && existingInputPortClass))
 		{
-			VUserLog("Error: Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
+			VUserLog("Error: Port %s is declared as an input port in one function and an output port in another function.", argumentName.c_str());
 			return NULL;
 		}
 
@@ -1124,19 +1145,27 @@ Function * VuoCompilerNodeClass::getCallbackStopFunction(void)
 }
 
 /**
- * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionContextInit function.  Otherwise null.
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionAddNodeMetadata function.  Otherwise null.
  */
-Function * VuoCompilerNodeClass::getCompositionContextInitFunction(void)
+Function * VuoCompilerNodeClass::getCompositionAddNodeMetadataFunction(void)
 {
-	return parser->getFunction(nameForGlobal("compositionContextInit"));
+	return parser->getFunction(nameForGlobal("compositionAddNodeMetadata"));
 }
 
 /**
- * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionContextFini function.  Otherwise null.
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionAddNodeMetadata function.  Otherwise null.
  */
-Function * VuoCompilerNodeClass::getCompositionContextFiniFunction(void)
+Function * VuoCompilerNodeClass::getCompositionPerformDataOnlyTransmissionsFunction(void)
 {
-	return parser->getFunction(nameForGlobal("compositionContextFini"));
+	return parser->getFunction(nameForGlobal("compositionPerformDataOnlyTransmissions"));
+}
+
+/**
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionSetPublishedInputPortValue function.  Otherwise null.
+ */
+Function * VuoCompilerNodeClass::getCompositionSetPublishedInputPortValueFunction(void)
+{
+	return parser->getFunction(nameForGlobal("compositionSetPublishedInputPortValue"));
 }
 
 /**
@@ -1144,7 +1173,7 @@ Function * VuoCompilerNodeClass::getCompositionContextFiniFunction(void)
  */
 Function * VuoCompilerNodeClass::getTriggerWorkerFunction(string portIdentifier)
 {
-	return parser->getFunction(nameForGlobal(portIdentifier));
+	return parser->getFunction(nameForGlobal(VuoStringUtilities::transcodeToIdentifier(portIdentifier)));
 }
 
 /**
@@ -1252,7 +1281,9 @@ string VuoCompilerNodeClass::getDefaultSpecializedTypeName(string genericTypeNam
 
 /**
  * Returns a list of keywords automatically associated with this node class,
- * based on attributes such as its port classes and premium status.
+ * based on attributes such as its port classes and pro status.
+ *
+ * Keep in sync with `//etsi/solr/vuo/conf/synonyms.txt`.
  */
 vector<string> VuoCompilerNodeClass::getAutomaticKeywords(void)
 {
@@ -1302,10 +1333,86 @@ vector<string> VuoCompilerNodeClass::getAutomaticKeywords(void)
 	if (VuoStringUtilities::beginsWith(getBase()->getClassName(), "vuo.type."))
 		keywords.push_back("conversion");
 
-	if (getPremium())
+	if (isSubcomposition())
+		keywords.push_back("subcomposition");
+
+	if (isLikelyImageFilter())
+		keywords.push_back("filter");
+
+	if (isLikelyImageGenerator())
+		keywords.push_back("generator");
+
+	if (isLikelyImageTransition())
+		keywords.push_back("transition");
+
+#if VUO_PRO
+	if (getBase()->isPro())
+	{
 		keywords.push_back("premium");
+		keywords.push_back("pro");
+	}
+#endif
 
 	return keywords;
+}
+
+/**
+ * Returns true if this node class is likely an image filter, based on its
+ * image-type input and output port counts.
+ */
+bool VuoCompilerNodeClass::isLikelyImageFilter(void)
+{
+	return ((getImagePortCount(true) == 1) && ((getImagePortCount(false) == 1)));
+}
+
+/**
+ * Returns true if this node class is likely an image generator, based on its
+ * image-type input and output port counts.
+ */
+bool VuoCompilerNodeClass::isLikelyImageGenerator(void)
+{
+	return ((getImagePortCount(true) == 0) && ((getImagePortCount(false) == 1)));
+}
+
+/**
+ * Returns true if this node class is likely an image transition, based on its
+ * image-type input and output port counts.
+ */
+bool VuoCompilerNodeClass::isLikelyImageTransition(void)
+{
+	return ((getImagePortCount(true) == 2) && ((getImagePortCount(false) == 1)));
+}
+
+/**
+ * Returns the number of image-type input or output ports belonging to this node class.
+ * If @c isInput is true, searches input ports; otherwise searches output ports.
+ * Excludes ports named "mask" from the count.
+ *
+ * Helper function for isLikelyImageFilter(), isLikelyImageGenerator(), and isLikelyImageTransition().
+ */
+int VuoCompilerNodeClass::getImagePortCount(bool isInput)
+{
+	int imagePortCount = 0;
+
+	auto portsToSearch = isInput ? getBase()->getInputPortClasses() : getBase()->getOutputPortClasses();
+	for (VuoPortClass *p : portsToSearch)
+	{
+		string name = p->getName();
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		if (isInput && (name == "mask"))
+			continue;
+
+		VuoCompilerPortClass *cpc = dynamic_cast<VuoCompilerPortClass *>(p->getCompiler());
+		if (!cpc)
+			continue;
+		VuoType *dataType = cpc->getDataVuoType();
+		if (!dataType)
+			continue;
+		if (dataType->getModuleKey() == "VuoImage")
+			imagePortCount++;
+	}
+
+	return imagePortCount;
 }
 
 /**
@@ -1321,5 +1428,60 @@ bool VuoCompilerNodeClass::isStateful(void)
  */
 bool VuoCompilerNodeClass::isSubcomposition(void)
 {
-	return parser && (getCompositionContextInitFunction() != NULL);
+	return _isSubcomposition;
+}
+
+void VuoCompilerNodeClass::updateSubcompositionStatus()
+{
+	_isSubcomposition = parser && (getCompositionAddNodeMetadataFunction() != NULL);
+}
+
+/**
+ * Returns true if this node class is implemented in ISF text code.
+ */
+bool VuoCompilerNodeClass::isIsf(void)
+{
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(sourcePath, dir, file, ext);
+	return ext == "fs";
+}
+
+/**
+ * Stores the path of the source file for this node class. Currently for subcompositions only.
+ */
+void VuoCompilerNodeClass::setSourcePath(const string &sourcePath)
+{
+	this->sourcePath = sourcePath;
+}
+
+/**
+ * Returns the stored path of the source file for this node class. Currently for subcompositions only.
+ */
+string VuoCompilerNodeClass::getSourcePath(void)
+{
+	return sourcePath;
+}
+
+/**
+ * Stores the source code for this node class. Currently for subcompositions only.
+ */
+void VuoCompilerNodeClass::setSourceCode(const string &sourceCode)
+{
+	this->sourceCode = sourceCode;
+}
+
+/**
+ * Returns the stored source code for this node class. Currently for subcompositions only.
+ */
+string VuoCompilerNodeClass::getSourceCode(void)
+{
+	return sourceCode;
+}
+
+/**
+ * Returns the nodes (node identifier and node class name) contained within this subcomposition.
+ */
+set< pair<string, string> > VuoCompilerNodeClass::getContainedNodes(void)
+{
+	return containedNodes;
 }

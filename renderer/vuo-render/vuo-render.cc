@@ -2,14 +2,18 @@
  * @file
  * vuo-render implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <getopt.h>
+
+#include <QtSvg/QSvgGenerator>
+
 #include <Vuo/Vuo.h>
 
+#include "VuoRendererCommon.hh"
 #include "VuoRendererComposition.hh"
 
 void printHelp(char *argv0)
@@ -17,15 +21,17 @@ void printHelp(char *argv0)
 	printf("Creates a visual representation of the specified Vuo composition source code or node class.\n"
 		   "\n"
 		   "Usage:\n"
-		   "  %s [options] composition.vuo    Renders composition.vuo's source code (i.e., what the composition looks like in Vuo Editor).\n"
+		   "  %s [options] composition.vuo    Renders composition.vuo's source code (i.e., what the composition looks like in the Vuo editor).\n"
 		   "  %s [options] node.class.name    Renders a single node class.\n"
 		   "\n"
 		   "Options:\n"
 		   "  --help                       Display this information.\n"
 		   "  --output <file>              Place the rendered image into <file>.\n"
-		   "  --output-format=<format>     <format> can be 'png' or 'pdf'. The default is 'png'.\n"
+		   "  --output-format=<format>     <format> can be 'png', 'pdf', or 'svg'. The default is 'png'.\n"
 		   "  --draw-bounding-rects        Draws red bounding rectangles around items in the composition canvas.\n"
 		   "  --render-missing-as-present  Render missing node classes as though they were present.\n"
+		   "  --color-scheme=<mode>        Use either the \"light\" (default) or \"dark\" color scheme.\n"
+		   "  --background=<mode>          Render nodes on either a \"transparent\" (default) or \"opaque\" background.\n"
 		   "  --scale <factor>             Changes the resolution.  For example, to render a PNG at Retina resolution, use '2'.\n",
 		   argv0, argv0);
 }
@@ -40,13 +46,20 @@ int main (int argc, char * argv[])
 	// https://bugreports.qt-project.org/browse/QTBUG-29197
 	qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1");
 
+	qInstallMessageHandler(VuoRendererCommon::messageHandler);
+
 	// Tell Qt where to find its plugins.
-	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../resources/QtPlugins").c_str()));
+	QApplication::setLibraryPaths(QStringList{
+		QString::fromStdString(VuoFileUtilities::getVuoFrameworkPath() + "/../resources/QtPlugins"),                           // In the SDK tree
+		QString::fromStdString(VuoFileUtilities::getVuoFrameworkPath() + "/../../bin/Vuo.app/Contents/Frameworks/QtPlugins"),  // In the build tree
+	});
 
 	QApplication app(argc, argv);
 
 	bool hasInputFile = false;
 	string inputPath;
+	VuoCompilerIssues *issues = new VuoCompilerIssues();
+	int ret = 0;
 
 	try
 	{
@@ -55,6 +68,7 @@ int main (int argc, char * argv[])
 		bool doPrintHelp = false;
 		bool doRenderMissingAsPresent = false;
 		double scale = 1;
+		bool backgroundTransparent = true;
 		VuoCompiler compiler;
 
 		static struct option options[] = {
@@ -64,11 +78,17 @@ int main (int argc, char * argv[])
 			{"render-missing-as-present", no_argument, NULL, 0},
 			{"draw-bounding-rects", no_argument, NULL, 0},
 			{"scale", required_argument, NULL, 0},
+			{"color-scheme", required_argument, NULL, 0},
+			{"background", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+		int ret;
+		while ((ret = getopt_long(argc, argv, "", options, &optionIndex)) != -1)
 		{
+			if (ret == '?')
+				continue;
+
 			switch(optionIndex)
 			{
 				case 0:  // --help
@@ -89,21 +109,33 @@ int main (int argc, char * argv[])
 				case 5:	 // --scale
 					scale = atof(optarg);
 					break;
+				case 6:	 // --color-scheme
+					VuoRendererColors::setDark(strcmp(optarg, "dark") == 0);
+					break;
+				case 7:	 // --background
+					backgroundTransparent = strcmp(optarg, "opaque") != 0;
+					break;
 			}
 		}
 
 		hasInputFile = (optind < argc) && ! doPrintHelp;
+
+#if VUO_PRO
+		compiler.load_Pro(true);
+#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);
 		else
 		{
 			if (! hasInputFile)
-				throw std::runtime_error("no input composition file or node class name");
+				throw VuoException("no input composition file or node class name");
 			inputPath = argv[optind];
 
 			string inputDir, inputFile, inputExtension;
 			VuoFileUtilities::splitPath(inputPath, inputDir, inputFile, inputExtension);
+
+			compiler.setCompositionPath(inputPath);
 
 			if (outputPath.empty())
 			{
@@ -137,7 +169,7 @@ int main (int argc, char * argv[])
 			{
 				VuoCompilerNodeClass *nodeClass;
 				if (!(nodeClass = compiler.getNodeClass(inputPath)))
-					throw std::runtime_error("input file must be a composition ('.vuo' extension) or a node class name (without a file extension)");
+					throw VuoException("input file must be a composition ('.vuo' extension) or a node class name (without a file extension)");
 
 				VuoNode * n = nodeClass->newNode();
 				composition->addNode(n);
@@ -162,8 +194,16 @@ int main (int argc, char * argv[])
 				p->setOutputFileName(QString::fromUtf8(outputPath.c_str()));
 				outputDevice = p;
 			}
+			else if (outputFormat == "svg")
+			{
+				QSvgGenerator *p = new QSvgGenerator();
+				p->setSize(boundingRect.size().toSize());
+				p->setViewBox(boundingRect.translated(-boundingRect.topLeft()));
+				p->setFileName(QString::fromStdString(outputPath));
+				outputDevice = p;
+			}
 			else
-				throw std::runtime_error("unrecognized option '" + outputFormat + "' for --outputFormat");
+				throw VuoException("unrecognized option '" + outputFormat + "' for --outputFormat");
 
 			QPainter *painter = new QPainter(outputDevice);
 			painter->setRenderHint(QPainter::Antialiasing, true);
@@ -172,11 +212,15 @@ int main (int argc, char * argv[])
 
 			painter->scale(scale, scale);
 
-			composition->setBackgroundTransparent(true);
+			composition->setBackgroundTransparent(backgroundTransparent);
 			composition->render(painter, QRectF(QPoint(),boundingRect.size()), boundingRect);
 
 			if (outputFormat == "png")
-				((QImage*)outputDevice)->save(QString::fromUtf8(outputPath.c_str()));
+			{
+				bool successful = ((QImage*)outputDevice)->save(QString::fromUtf8(outputPath.c_str()));
+				if (!successful)
+					throw VuoException("saving failed");
+			}
 
 			delete painter;
 			delete outputDevice;
@@ -184,10 +228,15 @@ int main (int argc, char * argv[])
 			delete compilerComposition;
 			delete baseComposition;
 		}
-
-		return 0;
 	}
-	catch (std::exception &e)
+	catch (VuoCompilerException &e)
+	{
+		if (issues != e.getIssues())
+			issues->append(e.getIssues());
+
+		ret = 1;
+	}
+	catch (VuoException &e)
 	{
 		fprintf(stderr, "%s: error: %s\n", hasInputFile ? inputPath.c_str() : argv[0], e.what());
 		if (!hasInputFile)
@@ -195,6 +244,15 @@ int main (int argc, char * argv[])
 			fprintf(stderr, "\n");
 			printHelp(argv[0]);
 		}
-		return 1;
+		fprintf(stderr, "\n");
+
+		ret = 1;
 	}
+
+	vector<VuoCompilerIssue> issueList = issues->getList();
+	for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i)
+		fprintf(stderr, "%s: %s: %s\n\n", hasInputFile ? inputPath.c_str() : argv[0],
+		        (*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning", (*i).getShortDescription(false).c_str());
+
+	return ret;
 }

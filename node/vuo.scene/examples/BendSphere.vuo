@@ -2,28 +2,29 @@
  * @file
  * Deforms a sphere by bending it around a focal point. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-BendObject [type="vuo.scene.bend" version="1.0.1" label="Bend 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<radius>radius\l|<direction>direction\l|<bentObject>bentObject\r" pos="555,165" fillcolor="violet" _radius="0.500000" _direction="0.000000"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,330" _startPosition="-360.000000" _endPosition="360.000000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,180" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="724,176" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="754,206" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="375,165" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.5,0.5,0.5]}" _rows="64" _columns="64"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="795,165" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="195,225" _color="{\"r\":0.469978,\"g\":0.665995,\"b\":0.433402,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-15,225" fillcolor="lime"];
+BendObject [type="vuo.scene.bend" version="1.0.1" label="Bend 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<radius>radius\l|<direction>direction\l|<bentObject>bentObject\r" pos="585,165" fillcolor="orange" _radius="0.500000" _direction="0.000000"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="390,330" _startPosition="-360.000000" _endPosition="360.000000" _duration="3" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-75,330" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="749,176" fillcolor="blue"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="375,165" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.40000000596046448,0.40000000596046448,0.40000000596046448]\}" _rows="64" _columns="64"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="795,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="150,225" _color="\{\"r\":0,\"g\":1,\"b\":0,\"a\":1\}" _highlightColor="\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\}" _shininess="0.900000"];
 
+AllowFirstEvent:firstEvent -> ShadeWithColor2:color;
 BendObject:bentObject -> MakeList:1;
 Curve2:value -> BendObject:amount;
-FireOnStart2:started -> ShadeWithColor2:refresh;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeList:list -> RenderSceneToWindow:objects;
 MakeSphere2:object -> BendObject:object;
-RenderSceneToWindow:requestedFrame -> Curve2:time;
 ShadeWithColor2:shader -> MakeSphere2:material;
 }

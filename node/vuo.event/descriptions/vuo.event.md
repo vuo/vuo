@@ -1,9 +1,9 @@
-These nodes are for working with events. 
+Nodes for working with events, which control the timing of when different parts of a composition execute.
 
-**Events** are a fundamental concept in Vuo. They're what make things happen in a composition. For more information, see the <a href="http://vuo.org/manual.pdf">Vuo Manual</a>. 
+**Events** are a fundamental concept in Vuo. They're what make things happen in a composition. For more information, see the <a href="https://vuo.org/manual.pdf">Vuo Manual</a>.
 
-These nodes fire events in response to certain basic activity as a composition is running, such as when the composition first starts or when the display refreshes. 
+Some of these nodes fire events in response to certain basic activity as a composition is running, such as when the composition first starts or when the display refreshes.
 
-To fire events at certain time intervals, see the `vuo.time` node set. 
+To fire events at certain time intervals, see the [vuo.time](vuo-nodeset://vuo.time) node set. 
 
 Many other node sets also have nodes that fire events (for example, in response to activity from a device). 

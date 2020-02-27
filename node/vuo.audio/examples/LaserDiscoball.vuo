@@ -1,0 +1,123 @@
+/**
+ * @file
+ * Creates a rotating sphere with lines of different lengths and changing color based on audio input.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2018 [Bodysoulspirit](https://vuo.org/user/2475), used with permission.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="945,375" fillcolor="cyan"];
+AddLists2 [type="vuo.math.add.list.2.VuoPoint3d" version="1.0.0" label="Add Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<summedList>summedList\r" pos="1455,105" fillcolor="magenta"];
+AllowChanges2 [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="-330,450" fillcolor="orange"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-1665,720" fillcolor="lime"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="15,30" fillcolor="orange" _expression="\{\"expressions\":[\"round(sqrt(AmountItems))\"],\"inputVariables\":[\"AmountItems\"],\"outputVariables\":[\"result\"]\}"];
+CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.1" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="-735,450" fillcolor="orange" _frequencyBins="\"4095\"" _frequencyBinAveraging="\"quadratic\""];
+CalculateLoudness2 [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="-945,870" fillcolor="tangerine"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="945,675" fillcolor="violet"];
+ChangeSpeed2 [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="675,420" fillcolor="cyan" _speed="0.01"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="315,990"];
+ConvertRealListTo3DPointList3 [type="vuo.type.list.real.point3d.xyz" version="1.0.0" label="Convert Real List to 3D Point List|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="1410,390"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="1320,675"];
+ConvertRealTo3DPoint4 [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="1125,915"];
+ConvertRealTo3DPoint5 [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="1290,210"];
+CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="285,705"];
+Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="1185,675" fillcolor="violet" _endPosition="360" _duration="12" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\"" _phase="0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-1440,570" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-1080,795" fillcolor="lime" _seconds="0.010000" _fired_eventThrottling="drop"];
+HoldList [type="vuo.data.hold.list2.VuoAudioSamples" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-1110,450" fillcolor="green"];
+HoldValue3 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-735,855" fillcolor="tangerine"];
+InterleaveLists2 [type="vuo.list.interleave.VuoPoint3d" version="1.0.0" label="Interleave Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<interleavedList>interleavedList\r" pos="1620,-45" fillcolor="green"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="1485,735" fillcolor="violet" _translation="\{\"x\":0,\"y\":0,\"z\":0\}"];
+MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-915,585"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="1170,375" fillcolor="cyan" _saturation="1.0" _lightness="0.5" _opacity="1.0"];
+MakeLineObject [type="vuo.scene.make.lines.VuoPoint3d.VuoShader" version="1.0.0" label="Make Line Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<object>object\r" pos="1875,-90" fillcolor="green" _lineWidth="0.0050000000000000001"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="912,386" fillcolor="cyan"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2069,-79" fillcolor="blue"];
+MakeList7 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-70,56" fillcolor="orange"];
+MakeList8 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-915,585" _1="\"AmountItems\""];
+MakeLitColorShader [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="1470,375" fillcolor="cyan" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
+MakeParametricGridPoints [type="vuo.point.make.parametric.grid" version="1.0.1" label="Make Parametric Grid Points|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uMin>uMin\l|<uMax>uMax\l|<vMin>vMin\l|<vMax>vMax\l|<points>points\r" pos="285,-45" fillcolor="orange" _time="0.0" _xExpression="\"(cos(v)*cos(u))\"" _yExpression="\"(cos(v)*sin(u))\"" _zExpression="\"(sin(v))\"" _uMin="0.0" _uMax="360" _vMin="-180" _vMax="180"];
+MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="-645,555"];
+MixAudioChannels2 [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="-1125,870"];
+MultiplyLists8 [type="vuo.math.multiply.list.2.VuoPoint3d" version="1.0.0" label="Multiply Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<productList>productList\r" pos="1230,210" fillcolor="magenta"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.2.0" label="Play Audio File|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="-1410,720" fillcolor="lime" _setTime="\"\"" _url="\"DeclineOfTheAmiga.mp3\"" _loop="\"loop\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderSceneToWindow2 [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2115,-90" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="0,450"];
+Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="0,465"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Rotation Speed|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="675,690" fillcolor="violet" _start="0.10000000000000001" _end="1." _scaledStart="0." _scaledEnd="3" _limitToRange="true"];
+Scale3 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale On Audio|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="1185,840" fillcolor="violet" _start="0." _end="1." _scaledStart="0.01" _scaledEnd="5" _limitToRange="false"];
+ScaleList2 [type="vuo.math.scale.list.VuoPoint3d" version="1.0.0" label="Base Size|<refresh>refresh\l|<scale>scale\l|<list>list\l|<scaledList>scaledList\r" pos="615,-60" fillcolor="orange" _scale="\{\"x\":0.02500000037252903,\"y\":0.02500000037252903,\"z\":0.02500000037252903\}"];
+ScaleList3 [type="vuo.math.scale.list.VuoPoint3d" version="1.0.0" label="Minimum Line Length|<refresh>refresh\l|<scale>scale\l|<list>list\l|<scaledList>scaledList\r" pos="885,105" fillcolor="magenta"];
+ScaleList5 [type="vuo.math.scale.list.VuoReal" version="1.0.0" label="Maximum Line Length - amplitudes|<refresh>refresh\l|<scale>scale\l|<list>list\l|<scaledList>scaledList\r" pos="810,225" fillcolor="magenta" _scale="100"];
+SendLiveAudio [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="-1125,345" fillcolor="blue"];
+SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia - Smoothed Loudness|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="-570,825" fillcolor="tangerine" _setPosition="0.000000" _duration="0.100000"];
+
+Comment [type="vuo.comment" label="\"### Use the number of bins to calculate the total parametric grid points, and thus the number of spokes.\"" pos="-810,360" width="696" height="160" fillcolor="orange"];
+Comment2 [type="vuo.comment" label="\"### Rotate and scale the object depending on loudness.\"" pos="615,585" width="1110" height="408" fillcolor="violet"];
+Comment3 [type="vuo.comment" label="\"### Cycle the spoke color.\"" pos="645,330" width="1035" height="158" fillcolor="cyan"];
+Comment4 [type="vuo.comment" label="\"### Smooth the loudness for a better visual presenation.\"" pos="-1125,720" width="930" height="274" fillcolor="tangerine"];
+Comment5 [type="vuo.comment" label="\"### Create a parametric grid with line segments that trace parts of a sphere, and set the base dimensions of that sphere.\"" pos="-195,-135" width="930" height="284" fillcolor="orange"];
+Comment6 [type="vuo.comment" label="\"### Calculate the spoke length.\"" pos="765,30" width="855" height="239" fillcolor="magenta"];
+Comment7 [type="vuo.comment" label="\"### Use the first list as the inner position of line segments,\<br\>and use the second list as the outer position of line segments.\"" pos="1560,-180" width="474" height="176" fillcolor="green"];
+
+Add:sum -> MakeHSLColor:hue;
+AddLists2:summedList -> InterleaveLists2:list2;
+AllowChanges2:changedValue -> ConvertIntegerToRealNumber2:integer;
+AllowFirstEvent:firstEvent -> PlayAudioFile:play;
+Calculate:result -> Round2:real;
+Calculate:result -> Round:real;
+CalculateAmplitudeForFrequencies:amplitudes -> CountItemsInList2:list;
+CalculateAmplitudeForFrequencies:amplitudes -> ScaleList5:list;
+CalculateLoudness2:loudness -> HoldValue3:value;
+ChangeSpeed2:changedTime -> MakeList:2;
+ChangeSpeed:changedTime -> Curve3:time;
+ConvertIntegerToRealNumber2:real -> MakeList7:1;
+ConvertRealListTo3DPointList3:point3d -> MultiplyLists8:list2;
+ConvertRealTo3DPoint4:point3d -> Make3DTransform:scale;
+ConvertRealTo3DPoint5:point3d -> ScaleList3:scale;
+ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
+CountItemsInList2:itemCount -> AllowChanges2:value;
+Curve3:value -> ConvertRealTo3DPoint:x;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed2:time;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+FireOnDisplayRefresh:requestedFrame -> HoldList:update;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia2:time;
+FirePeriodically:fired -> HoldValue3:update;
+HoldList:heldValue -> MixAudioChannels:samples;
+HoldValue3:heldValue -> SmoothWithInertia2:setTarget;
+InterleaveLists2:interleavedList -> MakeLineObject:positions;
+Make3DTransform:transform -> MakeLineObject:transform;
+MakeDictionary2:dictionary -> Calculate:values;
+MakeHSLColor:color -> MakeLitColorShader:color;
+MakeLineObject:object -> MakeList5:1;
+MakeList5:list -> RenderSceneToWindow2:objects;
+MakeList7:list -> MakeDictionary2:values;
+MakeList8:list -> MakeDictionary2:keys;
+MakeList:list -> Add:values;
+MakeLitColorShader:shader -> MakeLineObject:material;
+MakeParametricGridPoints:points -> ScaleList2:list;
+MixAudioChannels2:mixedSamples -> CalculateLoudness2:samples;
+MixAudioChannels:mixedSamples -> CalculateAmplitudeForFrequencies:samples;
+MultiplyLists8:productList -> AddLists2:list2;
+PlayAudioFile:decodedChannels -> HoldList:value;
+PlayAudioFile:decodedChannels -> MixAudioChannels2:samples;
+PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
+Round2:rounded -> MakeParametricGridPoints:columns;
+Round:rounded -> MakeParametricGridPoints:rows;
+Scale3:scaledValue -> ConvertRealTo3DPoint4:x;
+Scale:scaledValue -> ChangeSpeed:speed;
+ScaleList2:scaledList -> InterleaveLists2:list1;
+ScaleList2:scaledList -> MultiplyLists8:list1;
+ScaleList2:scaledList -> ScaleList3:list;
+ScaleList3:scaledList -> AddLists2:list1;
+ScaleList5:scaledList -> ConvertRealListTo3DPointList3:x;
+SmoothWithInertia2:position -> ConvertRealTo3DPoint5:x;
+SmoothWithInertia2:position -> MakeList:1;
+SmoothWithInertia2:position -> Scale3:value;
+SmoothWithInertia2:position -> Scale:value;
+}

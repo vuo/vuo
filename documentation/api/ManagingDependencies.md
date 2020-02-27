@@ -22,7 +22,7 @@ When developing a node class, you usually don't need to list port types as depen
 
 To specify that a module depends on a library, list it in the module's @ref VuoModuleMetadata in the "dependencies" array. 
 
-For example, a node class that depends on a static library called `libassimp.a`, a dynamic library called `libicuuc.dylib`, a framework called `AppKit.framework`, and a Vuo library module called `VuoUrl.bc` would have this metadata: 
+For example, a node class that depends on a static library called `liboai.a`, a dynamic library called `libicuuc.dylib`, a framework called `AppKit.framework`, and a Vuo library module called `VuoUrl.bc` would have this metadata:
 
 @code{.cc}
 VuoModuleMetadata({
@@ -30,12 +30,12 @@ VuoModuleMetadata({
 					 "description" : "...",
 					 "keywords" : [ ... ],
 					 "version" : ... ,
-					 "dependencies" : [ "assimp.a", "icuuc.dylib", "AppKit.framework", "VuoUrl" ],
+					 "dependencies" : [ "oai.a", "icuuc.dylib", "AppKit.framework", "VuoUrl" ],
 					 "node" : { ... }
 				 });
 @endcode
 
-Notice that the static and dynamic library names leave off the "lib" prefix; `libassimp.a` becomes `assimp.a`, and `libicuuc.dylib` becomes `icuuc.dylib`. The Vuo library module name leaves off the file extension; `VuoUrl.bc` becomes `VuoUrl`. The framework keeps its file extension.
+Notice that the static and dynamic library names leave off the "lib" prefix; `liboai.a` becomes `oai.a`, and `libicuuc.dylib` becomes `icuuc.dylib`. The Vuo library module name leaves off the file extension; `VuoUrl.bc` becomes `VuoUrl`. The framework keeps its file extension.
 
 
 

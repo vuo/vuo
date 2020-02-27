@@ -2,9 +2,11 @@
  * @file
  * Used to generate example images for node descriptions.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
@@ -12,30 +14,34 @@ digraph G
 AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="615,30" _loudness="0.29999999999999999"];
 ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="1170,270"];
 ConvertImageToLayer3 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="915,375"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="165,45" fillcolor="lime" _requestedChannels_eventThrottling="enqueue"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="420,375" _started_eventThrottling="enqueue"];
-MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,180" _wave="\"sine\"" _frequency="375" _setPhase="0"];
-MakeAudioWave2 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,90" _wave="\"sine\"" _frequency="93.75" _setPhase="0"];
-MakeAudioWave3 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,270" _wave="\"sine\"" _frequency="1500" _setPhase="0"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<anchor>anchor\l|<layer>layer\r" pos="645,255" _color="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _height="2.0"];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1107,206" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1074,176" fillcolor="green"];
+MakeAudioWave4 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,45" _wave="\"sine\"" _frequency="93.75" _setPhase="0"];
+MakeAudioWave5 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,150" _wave="\"sine\"" _frequency="375" _setPhase="0.0"];
+MakeAudioWave6 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,255" _wave="\"sine\"" _frequency="1500" _setPhase="0.0"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="645,255" _color="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1107,206" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1073,176" fillcolor="blue"];
 MakeList5 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="561,41"];
 MakeList6 [type="vuo.list.make.3.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="582,191"];
-MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="958,281"];
-MakeWaveformImage2 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="675,375" fillcolor="violet" _fillColor="{\"r\":0.66068512201309204,\"g\":1,\"b\":1,\"a\":0.39919126033782959}" _lineColor="{\"r\":0.36191347241401672,\"g\":1,\"b\":1,\"a\":1}" _height="256" _syncAmplitude="0"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="959,281"];
+MakeWaveformImage2 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<syncCenter>syncCenter\l|<attenuateEnds>attenuateEnds\l|<image>image\r" pos="675,375" fillcolor="orange" _fillColor="\{\"r\":0.66068512201309204,\"g\":1,\"b\":1,\"a\":0.39919126033782959\}" _lineColor="\{\"r\":0.36191347241401672,\"g\":1,\"b\":1,\"a\":1\}" _height="256" _syncAmplitude="0" _syncCenter="0.0" _attenuateEnds="false"];
 RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1020,270" _width="512" _height="256" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1140,165" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1140,165" fillcolor="blue" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 RingModulateAudio [type="vuo.audio.ringModulate" version="1.0.0" label="Ring Modulate Audio|<refresh>refresh\l|<channels>channels\l|<modulatedSamples>modulatedSamples\r" pos="615,180"];
-SaveImage [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="960,480" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="810,15" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
+SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="960,480" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="810,15" fillcolor="blue"];
 
-AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
+AdjustLoudness:adjustedSamples -> SendLiveAudio2:sendChannels;
 ConvertImageToLayer3:layer -> MakeList7:2;
 ConvertImageToLayer:layer -> MakeList2:1;
+FireAtAudioRate:requestedChannels -> MakeAudioWave4:calculateSamples;
+FireAtAudioRate:requestedChannels -> MakeAudioWave5:calculateSamples;
+FireAtAudioRate:requestedChannels -> MakeAudioWave6:calculateSamples;
 FireOnStart:started -> MakeColorLayer:refresh;
-MakeAudioWave2:samples -> MakeList6:1;
-MakeAudioWave3:samples -> MakeList6:3;
-MakeAudioWave:samples -> MakeList6:2;
+MakeAudioWave4:samples -> MakeList6:1;
+MakeAudioWave5:samples -> MakeList6:2;
+MakeAudioWave6:samples -> MakeList6:3;
 MakeColorLayer:layer -> MakeList7:1;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList5:list -> AdjustLoudness:samples;
@@ -47,7 +53,4 @@ MakeWaveformImage2:image -> ConvertImageToLayer:image;
 RenderLayersToImage:image -> SaveImage:saveImage;
 RingModulateAudio:modulatedSamples -> MakeList5:1;
 RingModulateAudio:modulatedSamples -> MakeWaveformImage2:samples;
-SendLiveAudio:requestedChannels -> MakeAudioWave2:refresh;
-SendLiveAudio:requestedChannels -> MakeAudioWave3:refresh;
-SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
 }

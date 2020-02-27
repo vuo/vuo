@@ -1,26 +1,23 @@
 /**
  * @file
- * Blends two images into a single image. You can experiment with the `Blend Image` node's input ports to change how the images are blended. 
+ * Blends two images into a single image. You can experiment with the [Blend Images](vuo-node://vuo.image.blend) node's input ports to change how the images are blended.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Images by Pexels on [Pixabay](https://pixabay.com/en/beach-surfing-wave-ocean-outdoors-1836366/) and Marat Gilyadzinov on [Unsplash](https://unsplash.com/photos/MYadhrkenNg).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="0,165" fillcolor="yellow"];
-BlendImage [type="vuo.image.blend" version="1.2.1" label="Blend Image|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="360,210" fillcolor="violet" _blendMode="\"normal\"" _foregroundOpacity="0.500000"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="165,210" _url="\"Sunset.jpg\""];
-GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="165,285" _url="\"Seagulls.jpg\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<height>height\r|<time>time\r|<width>width\r" _height_type="VuoInteger" _time_type="VuoReal" _width_type="VuoInteger"];
+BlendImage [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="240,90" fillcolor="orange" _blendMode="\"normal\"" _replaceOpacity="true"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<progress>progress\r|<startImage>startImage\r|<endImage>endImage\r" _time_type="VuoReal" _progress_type="VuoReal" _progress_suggestedMin="0" _progress_suggestedMax="1" _progress_suggestedStep="0.1" _startImage_type="VuoImage" _endImage_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-AllowFirstEvent:firstEvent -> GetImage3:refresh;
-AllowFirstEvent:firstEvent -> GetImage:refresh;
-GetImage3:image -> BlendImage:foreground;
-GetImage:image -> BlendImage:background;
-PublishedInputs:time -> BlendImage:refresh;
-PublishedInputs:time -> AllowFirstEvent:event;
 BlendImage:blended -> PublishedOutputs:outputImage;
+PublishedInputs:endImage -> BlendImage:foreground;
+PublishedInputs:progress -> BlendImage:foregroundOpacity;
+PublishedInputs:startImage -> BlendImage:background;
 }

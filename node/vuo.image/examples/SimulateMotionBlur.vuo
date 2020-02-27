@@ -2,27 +2,28 @@
  * @file
  * Plays a movie, and applies a radial blur filter to it.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="810,-60" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}" _width="2.0" _columns="2" _height="2" _rows="1"];
-BlurImageRadially [type="vuo.image.blur.radial" version="1.0.0" label="Blur Image Radially|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<center>center\l|<radius>radius\l|<dispersion>dispersion\l|<direction>direction\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="465,120" fillcolor="violet" _shape="\"box\"" _center="{\"x\":0.0,\"y\":0.0}" _radius="200" _dispersion="\"linear\"" _direction="\"out\"" _expandBounds="false" _quality="0.10000000000000001"];
-ConvertFrameToImage10 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="435,-60"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="945,-60" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2.0" _columns="2" _height="2" _rows="1"];
+BlurImageRadially [type="vuo.image.blur.radial" version="1.0.0" label="Blur Image Radially|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<center>center\l|<radius>radius\l|<dispersion>dispersion\l|<direction>direction\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="495,120" fillcolor="orange" _shape="\"box\"" _center="\{\"x\":0.0,\"y\":0.0\}" _radius="200" _dispersion="\"linear\"" _direction="\"out\"" _expandBounds="false" _quality="0.10000000000000001"];
+ConvertFrameToImage10 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="465,-60"];
 ConvertFrameToImage9 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="750,105"];
 ConvertImageToLayer2 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="420,330"];
 ConvertImageToLayer3 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="555,195"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList11 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="734,-49"];
-MakeList17 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1009,-49" fillcolor="green"];
-MakeList19 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1039,-19" fillcolor="green"];
-MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="68,146" _1="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _2="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="150,135" _center="{\"x\":0,\"y\":-0.80000001192092896}" _radius="1" _noiseAmount="0.2" _width="640" _height="480"];
-PlayMovie [type="vuo.video.play" version="2.0.2" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="180,-60" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1080,-60" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,-60" fillcolor="lime" _started_eventThrottling="enqueue"];
+LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="915,120" _width="2" _height="0.75"];
+MakeList11 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="877,-49"];
+MakeList17 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1238,101" fillcolor="blue"];
+MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="49,146" _1="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _2="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="120,135" _center="\{\"x\":0,\"y\":-0.80000001192092896\}" _radius="1" _noiseAmount="0.2" _width="640" _height="480"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="120,-60" _setTime="\"\"" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1290,90" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList17:1;
 BlurImageRadially:blurredImage -> ConvertImageToLayer2:image;
@@ -30,11 +31,12 @@ ConvertFrameToImage10:image -> ConvertImageToLayer3:image;
 ConvertFrameToImage9:image -> BlurImageRadially:image;
 ConvertImageToLayer2:layer -> MakeList11:2;
 ConvertImageToLayer3:layer -> MakeList11:1;
-FireOnStart:started -> MakeRadialGradientImage:refresh;
+FireOnStart:started -> LockWindowAspectRatio:width;
+FireOnStart:started -> MakeList6:1;
 FireOnStart:started -> PlayMovie:play;
+LockWindowAspectRatio:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
 MakeList11:list -> ArrangeLayersInGrid:layers;
 MakeList17:list -> RenderLayersToWindow:layers;
-MakeList19:list -> RenderLayersToWindow:setWindowProperties;
 MakeList6:list -> MakeRadialGradientImage:colors;
 MakeRadialGradientImage:image -> BlurImageRadially:mask;
 PlayMovie:decodedVideo -> ConvertFrameToImage10:frame;

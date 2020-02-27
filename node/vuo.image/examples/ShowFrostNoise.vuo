@@ -1,56 +1,66 @@
 /**
  * @file
- * Demonstrates the noise parameters in the `Frost Image` node.
+ * Demonstrates the noise parameters in the [Frost Image](vuo-node://vuo.image.frost) node.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Image by Nicman on [Pixabay](https://pixabay.com/en/hummingbird-bird-trochilidae-flying-2139279/).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-210,30" fillcolor="lime"];
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="285,300"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="285,420"];
-CycleThroughList2 [type="vuo.list.cycle.VuoReal" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="180,315" _wrapMode="\"wrap\""];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="30,15" _url="\"Sunset.jpg\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,135" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FrostImage2 [type="vuo.image.frost" version="1.0.0" label="Frost Image|<refresh>refresh\l|<image>image\l|<color>color\l|<brightness>brightness\l|<noiseTime>noiseTime\l|<noiseAmount>noiseAmount\l|<noiseScale>noiseScale\l|<chromaticAberration>chromaticAberration\l|<iterations>iterations\l|<frostedImage>frostedImage\r" pos="390,240" fillcolor="violet" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _brightness="1" _iterations="1"];
-MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="147,146" _2="0.10000000000000001"];
-MakeList4 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="116,326" _1="0.01" _2="0.10000000000000001" _3="0.5"];
-MakeList7 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="837,311" fillcolor="green"];
-MakeList8 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="803,296" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="600,225" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _opacity="1.0"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="600,375" _text="\"Move the mouse right to increase the noise amount.\\nMove the mouse up to increase the chromatic aberration.\\nClick to change the noise scale.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.20000000298023224,\"y\":0.5}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="180,135"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-180,270" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-165,195" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="870,285" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-ResizeImage [type="vuo.image.resize" version="1.1.1" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="180,30" _sizingMode="\"fit\"" _width="1024" _height="768"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="180,195" _start="-1" _end="1." _scaledStart="0." _scaledEnd="1"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="180,435" _start="-0.75" _end="0.75" _scaledStart="0." _scaledEnd="2"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoReal" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="150,330" _wrapMode="\"wrap\""];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="30,15" _url="\"Hummingbird.jpg\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-270,120" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FrostImage2 [type="vuo.image.frost" version="1.1.0" label="Frost Image|<refresh>refresh\l|<image>image\l|<color>color\l|<brightness>brightness\l|<noiseCenter>noiseCenter\l|<noiseTime>noiseTime\l|<noiseAmount>noiseAmount\l|<noiseScale>noiseScale\l|<chromaticAberration>chromaticAberration\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<iterations>iterations\l|<frostedImage>frostedImage\r" pos="435,240" fillcolor="orange" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _brightness="1" _noiseCenter="\{\"x\":0,\"y\":0\}" _levels="1" _roughness="0.5" _spacing="2.0" _iterations="1"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="147,131" _2="0.10000000000000001"];
+MakeList4 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="88,386" _1="0.01" _2="0.10000000000000001" _3="0.5"];
+MakeList8 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="944,326" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="675,240" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="450,630" _text="\"Move the mouse right to increase the noise amount.\\nMove the mouse up to increase the chromatic aberration.\\nClick to change the noise scale.\\n\\nPress \\\"i\\\" to show\\/hide this information.\"" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="180,120"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-285,540" fillcolor="lime" _key="\"I\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-270,330" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-270,195" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="990,315" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="180,15" _sizingMode="\"fit\"" _width="1024" _height="768"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="180,195" _start="-1" _end="1." _scaledStart="0." _scaledEnd="1" _limitToRange="false"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="195,450" _start="-0.75" _end="0.75" _scaledStart="0." _scaledEnd="2" _limitToRange="false"];
+SelectInput [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="690,555"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="-30,555"];
 
+AllowFirstEvent:firstEvent -> CycleThroughList2:goForward;
+AllowFirstEvent:firstEvent -> FetchImage:url;
+AllowFirstEvent:firstEvent -> MakeTextLayer:text;
 Convert2DPointToReal2:y -> Scale2:value;
 Convert2DPointToReal:x -> Scale:value;
 CycleThroughList2:item -> FrostImage2:noiseScale;
 FetchImage:image -> ResizeImage:image;
-FireOnStart:started -> CycleThroughList2:goForward;
-FireOnStart:started -> FetchImage:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> MakeList2:1;
 FrostImage2:frostedImage -> MakeScaledLayer:image;
 MakeList2:list -> Multiply:values;
 MakeList4:list -> CycleThroughList2:list;
-MakeList7:list -> RenderLayersToWindow:setWindowProperties;
 MakeList8:list -> RenderLayersToWindow:layers;
 MakeScaledLayer:layer -> MakeList8:1;
-MakeTextLayer:layer -> MakeList8:2;
+MakeTextLayer:layer -> SelectInput:falseOption;
 Multiply:product -> FrostImage2:noiseTime;
+ReceiveKeyboardButtons:released -> Toggle:toggle;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
-RenderLayersToWindow:requestedFrame -> MakeList2:1 [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
 ResizeImage:resizedImage -> FrostImage2:image;
 Scale2:scaledValue -> FrostImage2:chromaticAberration;
 Scale:scaledValue -> FrostImage2:noiseAmount;
+SelectInput:out -> MakeList8:3;
+Toggle:value -> SelectInput:which;
 }

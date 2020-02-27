@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorDisplacement implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorDisplacement.hh"
@@ -14,7 +14,7 @@ extern "C"
 	#include "VuoDisplacement.h"
 }
 
-#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+#include "VuoInputEditorCurveRenderer.hh"
 
 /**
  * Constructs a VuoInputEditorDisplacement object.
@@ -27,7 +27,7 @@ VuoInputEditor * VuoInputEditorDisplacementFactory::newInputEditor()
 /**
  * Renders an icon representing the specified displacement type.
  */
-static QIcon *renderMenuIconWithDisplacement(VuoDisplacement displacement)
+static QIcon *renderMenuIconWithDisplacement(VuoDisplacement displacement, bool isDark)
 {
 	return VuoInputEditorIcon::renderIcon(^(QPainter &p){
 											  if (displacement == VuoDisplacement_Transverse)
@@ -41,14 +41,17 @@ static QIcon *renderMenuIconWithDisplacement(VuoDisplacement displacement)
 													  else
 														  path.lineTo(0.5+x, y);
 												  }
-												  p.strokePath(path, QPen(Qt::black, 1.));
+												  p.strokePath(path, QPen(QColor(isDark ? "#ffffff" : "#000000"), 1.));
 											  }
 											  else if (displacement == VuoDisplacement_Longitudinal)
+											  {
+												  int c = isDark ? 255 : 0;
 												  for (VuoReal x = 0; x <= 15; ++x)
 												  {
-													  p.setPen(QPen(QColor(0,0,0,sin(2.*M_PI*x/7.4)*112+128), 1.));
+													  p.setPen(QPen(QColor(c,c,c,sin(2.*M_PI*x/7.4)*112+128), 1.));
 													  p.drawLine(QPointF(0.5+x, 7.5-3), QPointF(0.5+x, 7.5+4));
 												  }
+											  }
 										  });
 }
 
@@ -63,7 +66,7 @@ VuoInputEditorMenuItem * VuoInputEditorDisplacement::setUpMenuTree()
 	{
 		json_object *optionAsJson = VuoDisplacement_getJson( (VuoDisplacement)i );
 		char *optionSummary = VuoDisplacement_getSummary( (VuoDisplacement)i );
-		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDisplacement((VuoDisplacement)i));
+		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDisplacement((VuoDisplacement)i, isInterfaceDark()));
 		free(optionSummary);
 		optionsTree->addItem(optionItem);
 	}

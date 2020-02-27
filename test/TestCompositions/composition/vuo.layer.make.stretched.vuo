@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+GetLayerBounds [type="vuo.layer.bounds" version="1.0.0" label="Get Layer Bounds|<refresh>refresh\l|<layer>layer\l|<center>center\r|<width>width\r|<height>height\r" pos="645,120"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="210,135" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _upperLeftColor_manuallyFirable];
+MakeImageLayer2 [type="vuo.layer.make.stretched" version="1.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<transform>transform\l|<opacity>opacity\l|<layer>layer\r" pos="465,120" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _transform="\"identity\"" _opacity="1"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<imageWidth>imageWidth\r|<imageHeight>imageHeight\r" _imageWidth_type="VuoInteger" _imageWidth_suggestedMin="1" _imageWidth_suggestedStep="32" _imageWidth="640" _imageHeight_type="VuoInteger" _imageHeight_suggestedMin="1" _imageHeight_suggestedStep="32" _imageHeight="480"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l" _layerWidth_type="VuoReal" _layerHeight_type="VuoReal"];
+
+GetLayerBounds:height -> PublishedOutputs:layerHeight;
+GetLayerBounds:width -> PublishedOutputs:layerWidth;
+MakeCheckerboardImage:image -> MakeImageLayer2:image;
+MakeImageLayer2:layer -> GetLayerBounds:layer;
+PublishedInputs:imageHeight -> MakeCheckerboardImage:height;
+PublishedInputs:imageWidth -> MakeCheckerboardImage:width;
+}

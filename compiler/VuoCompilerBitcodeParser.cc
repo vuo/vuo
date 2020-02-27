@@ -2,9 +2,9 @@
  * @file
  * VuoCompilerBitcodeParser implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerBitcodeParser.hh"
@@ -80,7 +80,7 @@ vector<string> VuoCompilerBitcodeParser::getStringsFromGlobalArray(string name)
 
 			if(ce->getOpcode() == Instruction::GetElementPtr)
 			{
-				// `ConstantExpr` operands: http://llvm.org/docs/LangRef.html#constantexprs
+				// `ConstantExpr` operands: https://llvm.org/docs/LangRef.html#constantexprs
 				Value *gv2 = ce->getOperand(0);
 
 				if(gv2->getValueID() == Value::GlobalVariableVal)
@@ -108,7 +108,7 @@ string VuoCompilerBitcodeParser::resolveGlobalToConst(string name)
 	if(ce->getOpcode() != Instruction::GetElementPtr)
 		return "";
 
-	// `ConstantExpr` operands: http://llvm.org/docs/LangRef.html#constantexprs
+	// `ConstantExpr` operands: https://llvm.org/docs/LangRef.html#constantexprs
 	Value *gv2 = ce->getOperand(0);
 
 	if(gv2->getValueID() != Value::GlobalVariableVal)
@@ -209,13 +209,13 @@ vector<pair<Argument *, string> > VuoCompilerBitcodeParser::getAnnotatedArgument
 		Value *annotatedValue;
 		if (precedingBitCastInst)
 		{
-			// `bitcast` operands: http://llvm.org/docs/LangRef.html#bitcast-to-instruction
+			// `bitcast` operands: https://llvm.org/docs/LangRef.html#bitcast-to-instruction
 			annotatedValue = precedingBitCastInst->getOperand(0);
 			precedingBitCastInst = NULL;
 		}
 		else
 		{
-			// `llvm.var.annotation` operands: http://llvm.org/docs/LangRef.html#llvm-var-annotation-intrinsic
+			// `llvm.var.annotation` operands: https://llvm.org/docs/LangRef.html#llvm-var-annotation-intrinsic
 			annotatedValue = inst->getOperand(0);
 		}
 
@@ -234,7 +234,21 @@ vector<pair<Argument *, string> > VuoCompilerBitcodeParser::getAnnotatedArgument
 			}
 		}
 		if(!argument)
+		{
+			// Workaround for vuo.image.make.checkerboard2 center (https://b33p.net/kosada/node/15936)
+			for (Function::arg_iterator i = function->arg_begin(); i != function->arg_end(); ++i)
+			{
+				Argument *currArgument = i;
+				if (currArgument->getName().empty())
+				{
+					argument = currArgument;
+					argument->setName(annotationNamePrefix + ".workaround");
+					break;
+				}
+			}
+
 			continue;
+		}
 
 		Value *annotation = inst->getOperand(1);
 		if(annotation->getValueID() != Value::ConstantExprVal)
@@ -243,7 +257,7 @@ vector<pair<Argument *, string> > VuoCompilerBitcodeParser::getAnnotatedArgument
 		if(ce->getOpcode() != Instruction::GetElementPtr)
 			continue;
 
-		// `ConstantExpr` operands: http://llvm.org/docs/LangRef.html#constant-expressions
+		// `ConstantExpr` operands: https://llvm.org/docs/LangRef.html#constant-expressions
 		Value *gv = ce->getOperand(0);
 
 		if(gv->getValueID() != Value::GlobalVariableVal)

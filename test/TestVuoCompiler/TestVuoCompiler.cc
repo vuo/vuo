@@ -2,13 +2,12 @@
  * @file
  * TestVuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerCodeGenUtilities.hh"
 
 /**
  * Uses the LLVM JIT to execute the specified function in the specified module.
@@ -51,7 +50,7 @@ bool TestVuoCompiler::executeFunction(Module *mod, string functionName, vector<G
 void TestVuoCompiler::initCompiler()
 {
 	compiler = new VuoCompiler();
-	compiler->addModuleSearchPath("../TestVuoCompiler/node-TestVuoCompiler");
+	compiler->addModuleSearchPath(BINARY_DIR "/test/TestVuoCompiler");
 }
 
 /**

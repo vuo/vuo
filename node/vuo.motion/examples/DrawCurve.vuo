@@ -2,32 +2,33 @@
  * @file
  * Moves a layer along a curved path, leaving a trail where the layer has been.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1230,180" _feedbackOpacity="0.8" _feedbackBlendMode="\"normal\"" _pixelAligned="false" _imageInForeground="true" _width="0" _height="0" _colorDepth="\"8bpc\""];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,165" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\""];
-Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,315" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
+BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1200,225" _feedbackOpacity="0.8" _feedbackBlendMode="\"normal\"" _pixelAligned="false" _imageInForeground="true" _width="0" _height="0" _colorDepth="\"8bpc\""];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="210,255" _increment="0.02" _decrement="1" _setCount="0.0"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="375,255" fillcolor="orange" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="375,420" fillcolor="orange" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="0,255" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="525,255"];
-MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="921,236"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="750,225" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rotation="0.0" _width="0.029999999999999999" _height="0.029999999999999999" _sharpness="1.0"];
-RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="990,225" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedMax="4096" _width_suggestedStep="256" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedMax="4096" _height_suggestedStep="256"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="898,236"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="735,225" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.029999999999999999" _height="0.029999999999999999" _sharpness="1.0" _opacity="1.0"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1425,225" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToImage2 [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="960,225" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
 
+BlendImageWithFeedback:feedbackImage -> RenderImageToWindow:image;
+Count:count -> Curve2:time;
+Count:count -> Curve3:time;
 Curve2:value -> Make2DPoint:x;
 Curve3:value -> Make2DPoint:y;
+FireOnDisplayRefresh:requestedFrame -> Count:increment [event=true];
 Make2DPoint:point -> MakeOvalLayer:center;
 MakeList11:list -> RenderLayersToImage2:layers;
 MakeOvalLayer:layer -> MakeList11:1;
 RenderLayersToImage2:image -> BlendImageWithFeedback:image;
-PublishedInputs:time -> Curve3:time;
-PublishedInputs:time -> Curve2:time;
-PublishedInputs:width -> RenderLayersToImage2:width;
-PublishedInputs:height -> RenderLayersToImage2:height;
-BlendImageWithFeedback:feedbackImage -> PublishedOutputs:outputImage;
 }

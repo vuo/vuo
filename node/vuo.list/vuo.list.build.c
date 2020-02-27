@@ -2,9 +2,9 @@
  * @file
  * vuo.list.build node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -51,12 +51,12 @@ void nodeInstanceTriggerStart
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoInteger, {"default":10, "suggestedMin":1}) fire,
+		VuoInputData(VuoInteger, {"name":"Start Building", "default":10, "suggestedMin":1}) fire,
 		VuoInputEvent({"data":"fire", "eventBlocking":"none"}) fireEvent,
 		VuoInputData(VuoGenericType1) builtItem,
 		VuoInputEvent({"data":"builtItem", "eventBlocking":"none"}) builtItemEvent,
-		VuoOutputTrigger(builtList, VuoList_VuoGenericType1),
-		VuoOutputTrigger(buildItem, VuoInteger),
+		VuoOutputTrigger(builtList, VuoList_VuoGenericType1, {"name":"Finished Building"}),
+		VuoOutputTrigger(buildItem, VuoInteger, {"name":"Index"}),
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {

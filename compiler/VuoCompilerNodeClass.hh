@@ -2,16 +2,15 @@
  * @file
  * VuoCompilerNodeClass interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoCompilerModule.hh"
-#include "VuoNodeClass.hh"
 
 class VuoCompiler;
 class VuoCompilerInputEventPortClass;
@@ -30,7 +29,7 @@ class VuoType;
 /**
  * The compiler detail class for @c VuoNodeClass.
  */
-class VuoCompilerNodeClass : public VuoBaseDetail<VuoNodeClass>, public VuoCompilerModule  // Order matters: VuoCompilerModule after VuoBaseDetail - http://stackoverflow.com/a/2254306/238387
+class VuoCompilerNodeClass : public VuoBaseDetail<VuoNodeClass>, public VuoCompilerModule  // Order matters: VuoCompilerModule after VuoBaseDetail - https://stackoverflow.com/a/2254306/238387
 {
 private:
 	Function *eventFunction;
@@ -43,6 +42,9 @@ private:
 	vector<VuoCompilerTriggerDescription *> triggerDescriptions;
 	map<string, vector<string> > compatibleSpecializedForGenericTypeName;
 	set<VuoCompilerInputEventPortClass *> portsWithExplicitEventBlockingNone;
+	string sourcePath;
+	string sourceCode;
+	set< pair<string, string> > containedNodes;
 
 	static bool isNodeClass(Module *module, string moduleKey);
 	void parse(void);
@@ -66,6 +68,9 @@ private:
 	VuoType * parseTypeParameter(string annotation);
 	struct json_object * parseDetailsParameter(string annotation);
 	VuoPortClass * getExistingPortClass(VuoCompilerNodeArgumentClass *argumentClass, bool isInput);
+
+	bool _isSubcomposition;
+	void updateSubcompositionStatus();
 
 	friend class TestVuoCompilerType;
 	friend class TestVuoCompilerNodeClass;
@@ -95,14 +100,25 @@ public:
 	virtual Function * getCallbackStartFunction(void);
 	virtual Function * getCallbackUpdateFunction(void);
 	virtual Function * getCallbackStopFunction(void);
-	virtual Function * getCompositionContextInitFunction(void);
-	virtual Function * getCompositionContextFiniFunction(void);
+	virtual Function * getCompositionAddNodeMetadataFunction(void);
+	virtual Function * getCompositionPerformDataOnlyTransmissionsFunction(void);
+	virtual Function * getCompositionSetPublishedInputPortValueFunction(void);
 	virtual Function * getTriggerWorkerFunction(string portIdentifier);
 	virtual vector<VuoCompilerTriggerDescription *> getTriggerDescriptions(void);
 	virtual VuoCompilerInstanceDataClass * getInstanceDataClass(void);
 	virtual string getDoxygenDocumentation(void);
 	virtual string getDefaultSpecializedTypeName(string genericTypeName);
 	virtual vector<string> getAutomaticKeywords(void);
+	bool isLikelyImageFilter(void);
+	bool isLikelyImageGenerator(void);
+	bool isLikelyImageTransition(void);
+	int getImagePortCount(bool isInput);
 	virtual bool isStateful(void);
 	bool isSubcomposition(void);
+	bool isIsf(void);
+	void setSourcePath(const string &sourcePath);
+	string getSourcePath(void);
+	void setSourceCode(const string &sourceCode);
+	string getSourceCode(void);
+	set< pair<string, string> > getContainedNodes(void);
 };

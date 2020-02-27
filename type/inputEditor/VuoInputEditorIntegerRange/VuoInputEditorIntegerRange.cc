@@ -2,15 +2,14 @@
  * @file
  * VuoInputEditorIntegerRange implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 #include "VuoInputEditorIntegerRange.hh"
-#include <stdio.h>
 
 ///< Tests if an integer value is within bounds of -INT_MAX and INT_MAX.  VuoInteger spinbox only accepts int32, not int64, so if a value is INT_MAX it's "infinity".
-#define IS_FINITE(value) (abs(value) != INT_MAX)
+#define IS_FINITE(value) (::abs(value) != INT_MAX)
 
 /**
  * Constructs a VuoInputEditorIntegerRange object.
@@ -111,14 +110,14 @@ void VuoInputEditorIntegerRange::setUpDialog(QDialog &dialog, json_object *origi
 		checkbox_minimum = new QCheckBox("Minimum");
 		checkbox_minimum->setChecked( IS_FINITE(currentValue.minimum) );
 		checkbox_minimum->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		connect(checkbox_minimum, SIGNAL(stateChanged(int)), this, SLOT(setMinBound(int)));
+		connect(checkbox_minimum, &QCheckBox::stateChanged, this, &VuoInputEditorIntegerRange::setMinBound);
 
 		layout->addWidget(checkbox_minimum, 0, 0 );
 
 		spinbox_minimum = new VuoSpinBox(&dialog);
 		setupSpinBox(spinbox_minimum, suggestedMin.minimum, MIN(suggestedMax.minimum, currentValue.maximum), suggestedStep.minimum, currentValue.minimum);
 		spinbox_minimum->installEventFilter(this);
-		connect(spinbox_minimum, SIGNAL(valueChanged(QString)), this, SLOT(setMinimum(QString)));
+		connect(spinbox_minimum, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorIntegerRange::setMinimum);
 
 		spinbox_minimum->setEnabled( checkbox_minimum->isChecked() );
 
@@ -130,14 +129,14 @@ void VuoInputEditorIntegerRange::setUpDialog(QDialog &dialog, json_object *origi
 		checkbox_maximum = new QCheckBox("Maximum");
 		checkbox_maximum->setChecked( IS_FINITE(currentValue.maximum) );
 		checkbox_maximum->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		connect(checkbox_maximum, SIGNAL(stateChanged(int)), this, SLOT(setMaxBound(int)));
+		connect(checkbox_maximum, &QCheckBox::stateChanged, this, &VuoInputEditorIntegerRange::setMaxBound);
 
 		layout->addWidget(checkbox_maximum, 1, 0 );
 
 		spinbox_maximum = new VuoSpinBox(&dialog);
 		setupSpinBox(spinbox_maximum, MAX(suggestedMin.maximum, currentValue.minimum), suggestedMax.maximum, suggestedStep.maximum, currentValue.maximum);
 		spinbox_maximum->installEventFilter(this);
-		connect(spinbox_maximum, SIGNAL(valueChanged(QString)), this, SLOT(setMaximum(QString)));
+		connect(spinbox_maximum, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorIntegerRange::setMaximum);
 
 		spinbox_maximum->setEnabled( checkbox_maximum->isChecked() );
 

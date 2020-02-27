@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorRange implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorRange.hh"
@@ -32,7 +32,7 @@ QLabel* makeLabel(const char* text)
  */
 VuoDoubleSpinBox* VuoInputEditorRange::initSpinBox(QDialog& dialog, double initialValue, double min, double max, double step)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 11);
 	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 	spin->setDecimals(decimalPrecision);
 	spin->setButtonMinimum(min);
@@ -117,7 +117,7 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 //		spinbox_min->setMaximum(current.maximum);
 		spinbox_min->setMaximum(VuoRange_NoMaximum);
 		spinbox_min->setSpecialValueText("-∞");
-		connect(spinbox_min, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+		connect(spinbox_min, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorRange::onSpinboxUpdate);
 	}
 
 	spinbox_max = initSpinBox(dialog, current.maximum, suggestedMin.maximum, suggestedMax.maximum, suggestedStep.maximum);
@@ -136,7 +136,7 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 //			spinbox_max->setMaximum(VuoRange_NoMaximum);
 //		}
 
-		connect(spinbox_max, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+		connect(spinbox_max, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorRange::onSpinboxUpdate);
 	}
 
 	if(hasMinMax)
@@ -147,8 +147,8 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 		slider_min = initSlider(slider_min, current.minimum, suggestedMin.minimum, suggestedMax.minimum, suggestedStep.minimum);
 		slider_max = initSlider(slider_max, current.maximum, suggestedMin.maximum, suggestedMax.maximum, suggestedStep.maximum);
 
-		connect(slider_min, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-		connect(slider_max, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider_min, &QSlider::valueChanged, this, &VuoInputEditorRange::onSliderUpdate);
+		connect(slider_max, &QSlider::valueChanged, this, &VuoInputEditorRange::onSliderUpdate);
 	}
 
 	// layout dialog
@@ -171,7 +171,7 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 		toggle_hasMin = new QCheckBox("Minimum");
 		toggle_hasMin->setChecked( !VuoReal_areEqual(current.minimum, VuoRange_NoMinimum) );
 		toggle_hasMin->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		connect(toggle_hasMin, SIGNAL(stateChanged(int)), this, SLOT(setHasMinBound(int)));
+		connect(toggle_hasMin, &QCheckBox::stateChanged, this, &VuoInputEditorRange::setHasMinBound);
 		layout->addWidget(toggle_hasMin, row, 0);
 		setHasMinBound(toggle_hasMin->isChecked() ? Qt::Checked : Qt::Unchecked);
 	}
@@ -197,7 +197,7 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 		toggle_hasMax = new QCheckBox("Maximum");
 		toggle_hasMax->setChecked( !VuoReal_areEqual(current.maximum, VuoRange_NoMaximum) );
 		toggle_hasMax->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-		connect(toggle_hasMax, SIGNAL(stateChanged(int)), this, SLOT(setHasMaxBound(int)));
+		connect(toggle_hasMax, &QCheckBox::stateChanged, this, &VuoInputEditorRange::setHasMaxBound);
 		layout->addWidget(toggle_hasMax, row, 0);
 		setHasMaxBound(toggle_hasMax->isChecked() ? Qt::Checked : Qt::Unchecked);
 	}
@@ -313,9 +313,9 @@ void VuoInputEditorRange::onSliderUpdate(int sliderValue)
 	VuoDoubleSpinBox* spinbox = isMin ? spinbox_min : spinbox_max;
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	disconnect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorRange::onSpinboxUpdate);
 	spinbox->setValue( isMin ? current.minimum : current.maximum );
-	connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorRange::onSpinboxUpdate);
 
 	spinbox->setFocus();
 	spinbox->selectAll();
@@ -349,9 +349,9 @@ void VuoInputEditorRange::onSpinboxUpdate(double value)
 			isMin ? suggestedMax.minimum : suggestedMax.maximum,
 			value);
 
-		disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		disconnect(slider, &QSlider::valueChanged, this, &VuoInputEditorRange::onSliderUpdate);
 		slider->setValue( sliderValue );
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider, &QSlider::valueChanged, this, &VuoInputEditorRange::onSliderUpdate);
 	}
 
 	emit valueChanged( getAcceptedValue() );

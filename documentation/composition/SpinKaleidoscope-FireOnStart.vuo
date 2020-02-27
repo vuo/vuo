@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-135,-285" _url="\"Vista.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-315,-300" _started_eventThrottling="enqueue"];
+MakeKaleidoscopeImage [type="vuo.image.kaleidoscope" version="1.0.1" label="Make Kaleidoscope Image|<refresh>refresh\l|<image>image\l|<sides>sides\l|<angle>angle\l|<bladeCenter>bladeCenter\l|<imageCenter>imageCenter\l|<reflectOddSides>reflectOddSides\l|<reflectedImage>reflectedImage\r" pos="45,-285" _sides="16.000000" _bladeCenter="{\"x\":0.000000,\"y\":0.000000}" _imageCenter="{\"x\":-1.000000,\"y\":0.000000}" _reflectOddSides="true"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-168,-214" _2="15.000000"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-135,-225"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+FetchImage:image -> MakeKaleidoscopeImage:image;
+FireOnStart:started -> FetchImage:url;
+MakeKaleidoscopeImage:reflectedImage -> PublishedOutputs:outputImage;
+MakeList:list -> Multiply:values;
+Multiply:product -> MakeKaleidoscopeImage:angle;
+PublishedInputs:time -> MakeList:1;
+}

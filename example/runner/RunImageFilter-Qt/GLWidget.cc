@@ -2,9 +2,9 @@
  * @file
  * GLWidget implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "GLWidget.hh"
@@ -12,9 +12,8 @@
 #include <QtCore/QtCore>
 #include <QtGui/QtGui>
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #import <OpenGL/gl.h>
-//#import <OpenGL/gl3.h>
-/// @todo After we drop 10.6 support, switch back to gl3 and remove the below 4 lines.  See also r15430 for shader changes.
 #include <OpenGL/glext.h>
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
@@ -61,11 +60,16 @@ static const GLfloat quadPositions[] = { -1, -1, 1, -1, -1, 1, 1, 1 };
 static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 
+const int intervalMilliseconds = (int)(1000./60.);
+
 GLWidget::GLWidget(QWidget* parent)
-	: QGLWidget(parent)
+	: QOpenGLWidget(parent)
 {
 	runner = NULL;
 	inputImagePort = NULL;
+	timePort = NULL;
+	isFirstEvent = true;
+	elapsedMilliseconds = 0;
 }
 
 void GLWidget::initializeGL()
@@ -87,14 +91,10 @@ void GLWidget::initializeGL()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STATIC_DRAW);
 
 	// Load an image from disk into a GL Texture
-	QPixmap image(QCoreApplication::applicationDirPath() + "/../Resources/OttoOperatesTheRoller.jpg");
-	GLenum internalformat = GL_RGBA;
-	inputTexture = bindTexture(image, GL_TEXTURE_2D, internalformat);
+	QImage image(QCoreApplication::applicationDirPath() + "/../OttoOperatesTheRoller.jpg");
+	QOpenGLTexture *texture = new QOpenGLTexture(image.mirrored());
 	// Update the texture parameters to match VuoImage_make()'s requirements
-	glBindTexture(GL_TEXTURE_2D, inputTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	texture->setWrapMode(QOpenGLTexture::ClampToBorder);
 
 	// Prepare a shader for displaying the GL Texture onscreen
 	vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
@@ -109,20 +109,25 @@ void GLWidget::initializeGL()
 	textureUniform = glGetUniformLocation(program, "texture");
 
 	// Compile, link, and run the composition
-	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile((QCoreApplication::applicationDirPath() + "/../Resources/RippleImage.vuo").toUtf8().constData());
+	VuoCompilerIssues issues;
+	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile((QCoreApplication::applicationDirPath() + "/../RippleImage.vuo").toUtf8().constData(), &issues);
 	runner->start();
 
 	// Pass the GL Texture to the Vuo Composition
-	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
-	VuoImage t = VuoImage_make(inputTexture, internalformat, image.width(), image.height());
+	inputImagePort = runner->getPublishedInputPortWithName("image");
+	VuoImage t = VuoImage_make(texture->textureId(), GL_RGBA, image.width(), image.height());
 	VuoRetain(t);
 	json_object *o = VuoImage_getJson(t);
-	runner->setPublishedInputPortValue(inputImagePort, o);
+	map<VuoRunner::Port *, json_object *> m;
+	m[inputImagePort] = o;
+	runner->setPublishedInputPortValues(m);
 	json_object_put(o);
 
+	timePort = runner->getPublishedInputPortWithName("time");
+
 	QTimer *timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
-	timer->start((int)(1000./60.));  // approximately 60 fps
+	connect(timer, &QTimer::timeout, this, static_cast<void (QWidget::*)()>(&QWidget::update));
+	timer->start(intervalMilliseconds);  // approximately 60 fps
 }
 
 void GLWidget::resizeGL(int w, int h)
@@ -135,9 +140,26 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::paintGL()
 {
+	// Pass the current time to the Vuo Composition
+	elapsedMilliseconds += intervalMilliseconds;
+	json_object *timeJson = VuoReal_getJson(elapsedMilliseconds/1000.);
+	map<VuoRunner::Port *, json_object *> m;
+	m[timePort] = timeJson;
+	runner->setPublishedInputPortValues(m);
+	json_object_put(timeJson);
+
+	// Only fire an event through published input ports whose values have changed
+	set<VuoRunner::Port *> changedPorts;
+	changedPorts.insert(timePort);
+	if (isFirstEvent)
+	{
+		changedPorts.insert(inputImagePort);
+		isFirstEvent = false;
+	}
+
 	// Execute the Vuo Composition
-	runner->firePublishedInputPortEvent(inputImagePort);
-	runner->waitForAnyPublishedOutputPortEvent();
+	runner->firePublishedInputPortEvent(changedPorts);
+	runner->waitForFiredPublishedInputPortEvent();
 
 	// Retrieve the output GL Texture from the Vuo Composition
 	VuoRunner::Port *outputImagePort = runner->getPublishedOutputPortWithName("outputImage");
@@ -177,6 +199,6 @@ void GLWidget::keyPressEvent(QKeyEvent* e)
 			break;
 
 		default:
-			QGLWidget::keyPressEvent( e );
+			QOpenGLWidget::keyPressEvent(e);
 	}
 }

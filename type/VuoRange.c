@@ -2,13 +2,12 @@
  * @file
  * VuoRange implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoRange.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -38,17 +37,11 @@ VuoModuleMetadata({
  */
 VuoRange VuoRange_makeFromJson(json_object * js)
 {
-	VuoRange range = VuoRange_make(VuoRange_NoMinimum, VuoRange_NoMaximum);
-
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "minimum", &o))
-		range.minimum = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "maximum", &o))
-		range.maximum = VuoReal_makeFromJson(o);
-
-	return range;
+	return (VuoRange){
+		VuoJson_getObjectValue(VuoReal, js, "minimum", VuoRange_NoMinimum),
+		VuoJson_getObjectValue(VuoReal, js, "maximum", VuoRange_NoMaximum),
+		""
+	};
 }
 
 /**
@@ -89,4 +82,27 @@ char * VuoRange_getSummary(const VuoRange value)
 		return VuoText_format("-∞ to %g", value.maximum);
 	else
 		return VuoText_format("-∞ to ∞");
+}
+
+/**
+ * Returns true if the two ranges are equal (within a small tolerance).
+ *
+ * @version200New
+ */
+bool VuoRange_areEqual(const VuoRange a, const VuoRange b)
+{
+	return VuoReal_areEqual(a.minimum, b.minimum)
+		&& VuoReal_areEqual(a.maximum, b.maximum);
+}
+
+/**
+ * Returns true if a < b.
+ *
+ * @version200New
+ */
+bool VuoRange_isLessThan(const VuoRange a, const VuoRange b)
+{
+	VuoType_returnInequality(VuoReal, a.minimum, b.maximum);
+	VuoType_returnInequality(VuoReal, a.minimum, b.maximum);
+	return false;
 }

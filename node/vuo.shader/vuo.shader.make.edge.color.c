@@ -2,9 +2,9 @@
  * @file
  * vuo.shader.make.edge.color node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -20,15 +20,18 @@ VuoModuleMetadata({
 				  });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslProjection)
+	\n#include "VuoGlslProjection.glsl"
 
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
-	attribute vec4 position;
-	attribute vec4 normal;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec4 vertexColor;
+	uniform bool hasVertexColors;
 
 	// Outputs to fragment shader
 	varying vec3 projectedNormal;
+	varying vec4 fragmentVertexColor;
 
 	mat3 mat4to3(mat4 m)
 	{
@@ -40,35 +43,42 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
+		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * vec4(position, 1.));
 
-		projectedNormal = mat4to3(modelviewMatrix) * normal.xyz;
+		projectedNormal = mat4to3(modelviewMatrix) * normal;
+		fragmentVertexColor = hasVertexColors ? vertexColor : vec4(1.);
 	}
 );
 
 static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslProjection)
+	\n#include "VuoGlslProjection.glsl"
 
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
-	attribute vec4 position;
-	attribute vec4 normal;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec2 textureCoordinate;
+	attribute vec4 vertexColor;
+	uniform bool hasVertexColors;
 
 	// Outputs to geometry shader
-	varying vec4 positionForGeometry;
-	varying vec4 textureCoordinateForGeometry;
+	varying vec3 geometryPosition;
+	varying vec3 geometryNormal;
+	varying vec2 geometryTextureCoordinate;
+	varying vec4 geometryVertexColor;
 
 	void main()
 	{
-		positionForGeometry = modelviewMatrix * position;
-		textureCoordinateForGeometry = textureCoordinate;
-		gl_Position = VuoGlsl_projectPosition(positionForGeometry);
+		geometryPosition = (modelviewMatrix * vec4(position, 1.)).xyz;
+		geometryNormal = (modelviewMatrix * vec4(normal, 0.)).xyz;
+		geometryTextureCoordinate = textureCoordinate;
+		geometryVertexColor = hasVertexColors ? vertexColor : vec4(1.);
+		gl_Position = VuoGlsl_projectPosition(geometryPosition);
 	}
 );
 
-static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
-static const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
+static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, \n#include "trianglePoint.glsl");
+static const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, \n#include "triangleLine.glsl");
 
 static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs provided by VuoSceneRenderer
@@ -82,6 +92,7 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	// Inputs from vertex shader
 	varying vec3 projectedNormal;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -90,8 +101,8 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		d = smoothstep(sharpness, 1.0000001 - sharpness, width + d);
 		gl_FragColor = mix(
 					vec4(0.),
-					vec4(color.rgb, 1.),
-					d * color.a + (1. - d) * interiorOpacity);
+					vec4(color.rgb * fragmentVertexColor.rgb, 1.),
+					d * color.a * fragmentVertexColor.a + (1. - d) * interiorOpacity);
 	}
 );
 
@@ -106,9 +117,9 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	uniform float interiorOpacity;
 
 	// Inputs from geometry shader
-	varying vec4 vertexPosition;
-	varying mat3 vertexPlaneToWorld;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec3 fragmentPosition;
+	varying vec2 fragmentTextureCoordinate;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -117,8 +128,7 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 		// https://b33p.net/kosada/node/11256
 		gl_FragColor = color;
 
-		vertexPosition;
-		vertexPlaneToWorld;
+		fragmentPosition;
 
 		float x = fragmentTextureCoordinate.x;
 		float y = fragmentTextureCoordinate.y;
@@ -134,8 +144,8 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 		float d = min(1., sqrt(pow(dx,2.) + pow(dy,2.)));
 		gl_FragColor = mix(
 					vec4(0.),
-					vec4(color.rgb, 1.),
-					d * color.a + (1. - d) * interiorOpacity);
+					vec4(color.rgb * fragmentVertexColor.rgb, 1.),
+					d * color.a * fragmentVertexColor.a + (1. - d) * interiorOpacity);
 	}
 );
 

@@ -2,9 +2,9 @@
  * @file
  * VuoAvPlayerObject implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 /// https://b33p.net/kosada/node/9140
@@ -20,6 +20,8 @@
 #include "VuoLoopType.h"
 #import <AVFoundation/AVFoundation.h>
 
+@class VuoAvTrackOutput;
+
 /**
 * Internal video player implementation.  Use VuoVideoPlayer to work with video.
 */
@@ -34,7 +36,7 @@
 	/// asset reader
 	AVAssetReader* assetReader;
 	/// video reader output
-	AVAssetReaderTrackOutput* assetReaderVideoTrackOutput;
+	VuoAvTrackOutput *assetReaderVideoTrackOutput;
 	/// audio reader output
 	AVAssetReaderTrackOutput* assetReaderAudioTrackOutput;
 
@@ -70,6 +72,8 @@
 	unsigned int audioChannelCount;
 	/// True if there is an audio stream that cannot be played by AvFoundation.  False otherwise.
 	bool containsUnplayableAudio;
+
+	bool hasAlpha;  ///< True if the video frames have an alpha channel.
 
 	/// GL_TEXTURE_RECTANGLEs from the movie
 	CVOpenGLTextureCacheRef textureCache;

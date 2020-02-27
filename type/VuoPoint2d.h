@@ -2,9 +2,9 @@
  * @file
  * VuoPoint2d C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -12,6 +12,10 @@
 #include "VuoReal.h"
 #include <math.h>
 #include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -24,16 +28,16 @@
 /**
  * A floating-point 2-dimensional Cartesian spatial location.
  */
-typedef struct
-{
-	float x,y;
-} VuoPoint2d;
+typedef float __attribute__((ext_vector_type(2))) VuoPoint2d;
 
 VuoPoint2d VuoPoint2d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint2d_getJson(const VuoPoint2d value);
 char * VuoPoint2d_getSummary(const VuoPoint2d value);
 
+#define VuoPoint2d_SUPPORTS_COMPARISON
 bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2);
+bool VuoPoint2d_isLessThan(const VuoPoint2d a, const VuoPoint2d b);
+
 VuoPoint2d VuoPoint2d_random(const VuoPoint2d minimum, const VuoPoint2d maximum);
 VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d minimum, const VuoPoint2d maximum);
 
@@ -48,50 +52,33 @@ void VuoPoint2d_release(VuoPoint2d value);
 /// @}
 
 /**
- * A rectangular area.
- */
-typedef struct
-{
-	VuoPoint2d center;
-	VuoPoint2d size;
-} VuoRectangle;
-
-/**
  * Returns a point with the specified coordinates.
+ *
+ * @version200New
  */
 static inline VuoPoint2d VuoPoint2d_make(float x, float y) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_make(float x, float y)
 {
-	VuoPoint2d p = {x,y};
-	return p;
+	return (VuoPoint2d){x, y};
 }
 
 /**
- * Returns a rectangle with the specified coordinates.
+ * Returns a point using the first 2 elements in the specified array.
+ *
+ * @version200New
  */
-static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float width, float height) __attribute__((const));
-static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float width, float height)
+static inline VuoPoint2d VuoPoint2d_makeFromArray(float *f)
 {
-	VuoRectangle r = {{centerX,centerY},{width,height}};
-	return r;
+    return (VuoPoint2d){ f[0], f[1] };
 }
 
 /**
- * Returns true if the rectangles have the same position and size.
+ * Sets the first 2 elements in the specified array to the specified point.
  */
-static inline bool VuoRectangle_areEqual(const VuoRectangle a, const VuoRectangle b)
+static inline void VuoPoint2d_setArray(float *f, VuoPoint2d p)
 {
-	return VuoPoint2d_areEqual(a.center, b.center) && VuoPoint2d_areEqual(a.size, b.size);
-}
-
-/**
- * Returns a rectangle with the specified coordinates.
- */
-static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height) __attribute__((const));
-static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height)
-{
-	VuoRectangle r = {{leftX+width/2.f,topY+height/2.f},{width,height}};
-	return r;
+	f[0] = p.x;
+	f[1] = p.y;
 }
 
 /**
@@ -100,12 +87,7 @@ static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, flo
 static inline VuoPoint2d VuoPoint2d_add(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_add(VuoPoint2d a, VuoPoint2d b)
 {
-	VuoPoint2d p =
-	{
-		a.x + b.x,
-		a.y + b.y
-	};
-	return p;
+	return a + b;
 }
 
 /**
@@ -114,12 +96,7 @@ static inline VuoPoint2d VuoPoint2d_add(VuoPoint2d a, VuoPoint2d b)
 static inline VuoPoint2d VuoPoint2d_subtract(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_subtract(VuoPoint2d a, VuoPoint2d b)
 {
-	VuoPoint2d p =
-	{
-		a.x - b.x,
-		a.y - b.y
-	};
-	return p;
+	return a - b;
 }
 
 
@@ -138,12 +115,7 @@ static inline float VuoPoint2d_squaredMagnitude(VuoPoint2d a)
 static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, VuoPoint2d b)
 {
-	VuoPoint2d p =
-	{
-		a.x / b.x,
-		a.y / b.y
-	};
-	return p;
+	return a / b;
 }
 
 /**
@@ -174,13 +146,7 @@ static inline float VuoPoint2d_magnitude(VuoPoint2d a)
 static inline VuoPoint2d VuoPoint2d_normalize(VuoPoint2d a) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_normalize(VuoPoint2d a)
 {
-	float length = VuoPoint2d_magnitude(a);
-	VuoPoint2d p =
-	{
-		a.x/length,
-		a.y/length
-	};
-	return p;
+	return a / sqrtf(a.x * a.x + a.y * a.y);
 }
 
 /**
@@ -189,12 +155,7 @@ static inline VuoPoint2d VuoPoint2d_normalize(VuoPoint2d a)
 static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, float b) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, float b)
 {
-	VuoPoint2d p =
-	{
-		a.x * b,
-		a.y * b
-	};
-	return p;
+	return a * b;
 }
 
 /**
@@ -221,7 +182,7 @@ static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b)
 static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t)
 {
-	return VuoPoint2d_add( VuoPoint2d_multiply(a, (1-t)), VuoPoint2d_multiply(b, t) );
+	return a * (1 - t) + b * t;
 }
 
 /**
@@ -230,21 +191,18 @@ static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t)
 static inline VuoPoint2d VuoPoint2d_scale(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_scale(VuoPoint2d a, VuoPoint2d b)
 {
-	return (VuoPoint2d) { a.x*b.x, a.y*b.y };
+	return a * b;
 }
-
-VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectangle rectangleB);
-VuoRectangle VuoPoint2d_rectangleUnion(VuoRectangle rectangleA, VuoRectangle rectangleB);
 
 /**
  * Calculates a position along the path of an oscillating spring.
  */
 static inline VuoPoint2d VuoPoint2d_spring(VuoReal timeSinceDrop, VuoPoint2d dropPosition, VuoPoint2d restingPosition, VuoReal period, VuoReal damping)
 {
-	VuoPoint2d p;
-	p.x = VuoReal_spring(timeSinceDrop, dropPosition.x, restingPosition.x, period, damping);
-	p.y = VuoReal_spring(timeSinceDrop, dropPosition.y, restingPosition.y, period, damping);
-	return p;
+	return (VuoPoint2d){
+		(float)VuoReal_spring(timeSinceDrop, dropPosition.x, restingPosition.x, period, damping),
+		(float)VuoReal_spring(timeSinceDrop, dropPosition.y, restingPosition.y, period, damping)
+	};
 }
 
 /**
@@ -301,3 +259,7 @@ static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoi
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

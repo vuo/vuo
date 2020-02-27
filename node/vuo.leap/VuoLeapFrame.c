@@ -2,17 +2,13 @@
  * @file
  * VuoLeapFrame implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
-
-#include <stdio.h>
-#include <string.h>
 
 #include "type.h"
 #include "VuoLeapFrame.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -45,15 +41,11 @@ VuoModuleMetadata({
  */
 VuoLeapFrame VuoLeapFrame_makeFromJson(json_object * js)
 {
-	VuoLeapFrame frame = {-1, NULL, NULL};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "id", &o))
-		frame.id = VuoInteger_makeFromJson(o);
-
-	/// @todo unserialize other values
-
-	return frame;
+	return (VuoLeapFrame){
+		VuoJson_getObjectValue(VuoInteger,               js, "id",         -1),
+		VuoJson_getObjectValue(VuoList_VuoLeapHand,      js, "hands",      NULL),
+		VuoJson_getObjectValue(VuoList_VuoLeapPointable, js, "pointables", NULL)
+	};
 }
 
 /**
@@ -63,12 +55,9 @@ VuoLeapFrame VuoLeapFrame_makeFromJson(json_object * js)
 json_object * VuoLeapFrame_getJson(const VuoLeapFrame value)
 {
 	json_object *js = json_object_new_object();
-
-	json_object *idObject = VuoInteger_getJson(value.id);
-	json_object_object_add(js, "id", idObject);
-
-	/// @todo serialize other values
-
+	json_object_object_add(js, "id",         VuoInteger_getJson(value.id));
+	json_object_object_add(js, "hands",      VuoList_VuoLeapHand_getJson(value.hands));
+	json_object_object_add(js, "pointables", VuoList_VuoLeapPointable_getJson(value.pointables));
 	return js;
 }
 

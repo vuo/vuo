@@ -5,9 +5,9 @@
  * See http://www.mikeash.com/pyblog/friday-qa-2010-07-02-background-timers.html and
  * http://www.fieryrobot.com/blog/2010/07/10/a-watchdog-timer-in-gcd/
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -34,6 +34,7 @@ struct nodeInstanceData
 {
 	dispatch_source_t timer;
 	dispatch_semaphore_t timerCanceled;
+	bool triggersEnabled;
 };
 
 static void cancelRepeatingTimer(struct nodeInstanceData *ctx)
@@ -55,7 +56,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const VuoReal second
 		return;
 
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
+	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, q);
 
 	uint64_t nanoseconds = (seconds > 0.001 ? (seconds * NSEC_PER_SEC) : (NSEC_PER_SEC / 1000));
 	dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, nanoseconds), nanoseconds, 0);
@@ -75,6 +76,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoRegister(ctx, free);
 	ctx->timer = NULL;
 	ctx->timerCanceled = dispatch_semaphore_create(0);
+	ctx->triggersEnabled = false;
 	return ctx;
 }
 
@@ -85,6 +87,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(fired,void)
 )
 {
+	(*ctx)->triggersEnabled = true;
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -105,6 +108,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(fired,void,{"eventThrottling":"drop"})
 )
 {
+	if (!(*ctx)->triggersEnabled)
+		return;
+
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -114,6 +120,7 @@ void nodeInstanceTriggerStop
 )
 {
 	cancelRepeatingTimer(*ctx);
+	(*ctx)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

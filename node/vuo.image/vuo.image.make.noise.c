@@ -2,9 +2,9 @@
  * @file
  * vuo.image.make.noise node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -41,13 +41,13 @@ static const char *fragmentShaderSource = VUO_STRINGIFY(
 	uniform float spacing;
 	uniform float aspectRatio;
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
-	include(GPUNoiseLib)
-	include(noise3D)
+	\n#include "GPUNoiseLib.glsl"
+	\n#include "noise3D.glsl"
 
 	// Preprocessor statements below are prefixed by `\n` so that the C preprocessor ignores them,
-	// preserving them for use by the GLSL preprocessor.  (http://stackoverflow.com/a/17542260)
+	// preserving them for use by the GLSL preprocessor.  (https://stackoverflow.com/a/17542260)
 	// And they're suffixed by `\n` since stringification removes linebreaks,
 	// which preprocessor statements require.
 
@@ -91,7 +91,7 @@ static const char *fragmentShaderSource = VUO_STRINGIFY(
 
 	void main()
 	{
-		vec2 p = fragmentTextureCoordinate.xy;
+		vec2 p = fragmentTextureCoordinate;
 
 	\n#if TILE == 1\n
 		// https://web.archive.org/web/20150607183420/http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html#tile

@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.square node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					"title" : "Make 3D Square",
 					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle", "grid", "shape" ],
-					"version" : "1.0.1",
+					"version" : "1.1.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -28,8 +28,22 @@ VuoModuleMetadata({
 					}
 				 });
 
-void nodeEvent
+struct nodeInstanceData
+{
+	VuoInteger rows;
+	VuoInteger columns;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoTransform) transform,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 		VuoInputData(VuoInteger, {"default":2, "suggestedMin":2, "suggestedMax":256}) rows,
@@ -37,6 +51,16 @@ void nodeEvent
 		VuoOutputData(VuoSceneObject) object
 )
 {
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (rows == (*context)->rows
+	 && columns == (*context)->columns)
+	{
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, transform);
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
+		return;
+	}
+
 	float w = 1, h = 1;	// mesh width / height
 	float half_w = w/2, half_h = h/2;
 
@@ -44,10 +68,11 @@ void nodeEvent
 	int columns2 = MIN(512, MAX(2, columns));
 
 	unsigned int vertexCount = rows2 * columns2;
+	unsigned int elementCount = (columns2-1) * (rows2-1) * 6;
 
-	VuoPoint4d* vertices = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* normals = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* textures = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
+	float *positions, *normals, *textureCoordinates;
+	unsigned int *elements;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, &normals, &textureCoordinates, NULL, elementCount, &elements);
 
 	unsigned int i = 0;
 	for(int y = 0; y < rows2; y++)
@@ -56,14 +81,18 @@ void nodeEvent
 
 		for(int x = 0; x < columns2; x++)
 		{
-			vertices[i] = VuoPoint4d_make( ((x/(float)(columns2-1)) * w) -  half_w, yp, 0, 1);
-			normals[i] = VuoPoint4d_make( 0, 0, 1, 1);
-			textures[i++] = VuoPoint4d_make( x/(float)(columns2-1), y/(float)(rows2-1), 0, 1);
+			positions[i * 3    ] = ((x / (float)(columns2 - 1)) * w) -  half_w;
+			positions[i * 3 + 1] = yp;
+			positions[i * 3 + 2] = 0;
+			normals[i * 3    ] = 0;
+			normals[i * 3 + 1] = 0;
+			normals[i * 3 + 2] = 1;
+			textureCoordinates[i * 2    ] = x / (float)(columns2 - 1);
+			textureCoordinates[i * 2 + 1] = y / (float)(rows2 - 1);
+			++i;
 		}
 	}
 
-	unsigned int elementCount = (columns2-1) * (rows2-1) * 6;
-	unsigned int* elements = (unsigned int*)malloc(sizeof(unsigned int) * elementCount);
 	unsigned int n = 0;
 
 	for(int y = 0; y < (rows2-1); y++)
@@ -85,14 +114,13 @@ void nodeEvent
 		}
 	}
 
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													vertices, normals, NULL, NULL, textures,
-													elementCount, elements, VuoMesh_IndividualTriangles);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(vertexCount,
+		positions, normals, textureCoordinates, NULL,
+		elementCount, elements, VuoMesh_IndividualTriangles);
 
-	VuoMeshUtility_calculateTangents(&submesh);
+	*object = VuoSceneObject_makeMesh(mesh, VuoShader_make_VuoGenericType1(material), transform);
+	VuoSceneObject_setName(*object, VuoText_make("Square"));
 
-	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
-
-	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
-	object->name = VuoText_make("Square");
+	(*context)->rows = rows;
+	(*context)->columns = columns;
 }

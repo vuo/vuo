@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="345,165" _increment="1.0" _decrement="1.0" _setCount="0.0"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="150,165" _seconds="1.0" _fired_eventThrottling="drop"];
+HoldValue2 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="510,75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Refresh>Refresh\r" _Refresh_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<HeldValue>HeldValue\l" _HeldValue_type="VuoReal"];
+
+Count:count -> HoldValue2:newValue;
+FirePeriodically:fired -> Count:increment;
+HoldValue2:heldValue -> PublishedOutputs:HeldValue;
+PublishedInputs:Refresh -> HoldValue2:refresh;
+}

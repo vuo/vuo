@@ -2,9 +2,9 @@
  * @file
  * VuoVideo interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 #pragma once
 
@@ -88,13 +88,13 @@ double VuoVideo_getDuration(VuoVideo player);
 /**
  * Seek the decoder to the second.
  */
-bool VuoVideo_seekToSecond(VuoVideo player, VuoReal second);
+bool VuoVideo_seekToSecond(VuoVideo player, VuoReal second) VuoWarnUnusedResult;
 
 /**
  * Get the video frame at timestamp `second`.  Images contained by VuoVideoFrame have
  * their retain count set at 1 coming from this function.
  */
-bool VuoVideo_getFrameAtSecond(VuoVideo player, VuoReal second, VuoVideoFrame* videoFrame);
+bool VuoVideo_getFrameAtSecond(VuoVideo player, VuoReal second, VuoVideoFrame* videoFrame) VuoWarnUnusedResult;
 
 /**
  * Get the number of audio channels this video contains.
@@ -116,7 +116,7 @@ bool VuoVideo_isPlaying(VuoVideo player);
  * If calling VuoVideo_seekToSecond() and *not* making use of VuoVideo_getFrameAtSecond() you must release the image associated with this
  * this frame after a seek operation.  Note that if VuoVideo_getCurrentVideoFrame() returns false no video frame was procured.
  */
-bool VuoVideo_getCurrentVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
+bool VuoVideo_getCurrentVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame) VuoWarnUnusedResult;
 
 /**
  * Steps the video one frame, returning the newly decoded image.  Will be forwards or backwards depending on playback rate.  The image
@@ -125,7 +125,7 @@ bool VuoVideo_getCurrentVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
  *
  * If video is currently playing, this will always returns false.
  */
-bool VuoVideo_nextVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
+bool VuoVideo_nextVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame) VuoWarnUnusedResult;
 
 /**
  * Get the next decoded audio frame.  Returns false if no audio is available, or the playhead is at the end of track.  If true,
@@ -134,7 +134,7 @@ bool VuoVideo_nextVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
  *
  * If video is currently playing, this will always returns false.
  */
-bool VuoVideo_nextAudioFrame(VuoVideo player, VuoAudioFrame* audioFrame);
+bool VuoVideo_nextAudioFrame(VuoVideo player, VuoAudioFrame* audioFrame) VuoWarnUnusedResult;
 
 /**
  * Ensure that frameTime is a valid timestamp, wrapping or clamping the value depending on loop type.

@@ -2,14 +2,11 @@
  * @file
  * VuoGridType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoGridType.h"
 #include "VuoList_VuoGridType.h"
@@ -93,4 +90,22 @@ char * VuoGridType_getSummary(const VuoGridType value)
 	}
 
 	return strdup(valueAsString);
+}
+
+/**
+ * Returns true if `a == b`.
+ * @version200New
+ */
+bool VuoGridType_areEqual(VuoGridType a, VuoGridType b)
+{
+	return a == b;
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoGridType_isLessThan(VuoGridType a, VuoGridType b)
+{
+	return a < b;
 }

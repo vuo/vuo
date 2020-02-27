@@ -2,28 +2,27 @@
  * @file
  * Shows a visual indication of when you press and release an arrow key.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="375,148" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="970,216" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1000,231" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="789,206" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons: left|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="23,464" fillcolor="yellow" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveKeyboardButtons3 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons: down|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="12,254" fillcolor="yellow" _key="\"DownArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveKeyboardButtons4 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons: up|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="29,147" fillcolor="yellow" _key="\"UpArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveKeyboardButtons5 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons: right|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="15,358" fillcolor="yellow" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1041,205" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectLatest2 [type="vuo.select.latest.8.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="389,276" fillcolor="violet" _option1="\"↑\"" _option2="\"↓\"" _option3="\"→\"" _option4="\"←\""];
-SelectLatest5 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="553,205" fillcolor="violet" _option1="\"Press an arrow key.\""];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="225,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="983,221" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,210" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveKeyboardButtons2 [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons: left|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-60,495" fillcolor="lime" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveKeyboardButtons3 [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons: down|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-75,285" fillcolor="lime" _key="\"DownArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveKeyboardButtons4 [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons: up|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-60,180" fillcolor="lime" _key="\"UpArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveKeyboardButtons5 [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons: right|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-75,390" fillcolor="lime" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1035,210" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest2 [type="vuo.select.latest.8.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="390,270" fillcolor="orange" _option1="\"↑\"" _option2="\"↓\"" _option3="\"→\"" _option4="\"←\""];
+SelectLatest5 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="555,210" fillcolor="orange" _option1="\"Press an arrow key, hold then release.\""];
 
 FireOnStart3:started -> SelectLatest5:option1;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeTextLayer:layer -> MakeList2:1;
 ReceiveKeyboardButtons2:pressed -> SelectLatest2:option4;
 ReceiveKeyboardButtons2:released -> SelectLatest2:option8;
@@ -33,10 +32,10 @@ ReceiveKeyboardButtons4:pressed -> SelectLatest2:option1;
 ReceiveKeyboardButtons4:released -> SelectLatest2:option8;
 ReceiveKeyboardButtons5:pressed -> SelectLatest2:option3;
 ReceiveKeyboardButtons5:released -> SelectLatest2:option8;
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons2:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons3:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons4:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons5:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons2:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons3:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons4:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons5:window [style=invis];
 SelectLatest2:latest -> SelectLatest5:option2;
 SelectLatest5:latest -> MakeTextLayer:text;
 }

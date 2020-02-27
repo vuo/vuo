@@ -1,4 +1,4 @@
-This node set includes nodes for sending and receiving data through an RS232 serial device, and for discovering available RS232 serial devices.
+Nodes for sending and receiving data through an RS232 serial device and for discovering available RS232 serial devices.
 
 [RS232 Serial](https://en.wikipedia.org/wiki/Serial_port) is a protocol for communicating between physical devices.  These days, RS232 serial communication typically happens through a USB cable.
 
@@ -20,13 +20,13 @@ When receiving data from a serial device, the data may arrive as a series of sma
 
 If you're not sure whether Vuo is detecting your serial device:
 
-   - Add a `Receive Serial Data` node to your composition. Double-click on its `Device` input port to bring up a menu of all connected serial devices. See if your device is in the list.
+   - Add a [Receive Serial Data](vuo-node://vuo.serial.receive) node to your composition. Double-click on its `Device` input port to bring up a menu of all connected serial devices. See if your device is in the list.
    - Check the Console application for any messages about serial devices.
 
 If Vuo isn't detecting your device:
 
    - Make sure your composition is referring to the correct device. (Sometimes two devices of the same model can have different names and URLs.)
-   - Make sure you've installed any necessary drivers for the device. (On macOS 10.8 and earlier, you may need to install [FTDI's VCP driver](http://www.ftdichip.com/Drivers/VCP.htm).)
+   - Make sure you've installed any necessary drivers for the device.
    - Make sure the device is securely plugged in.
    - Try plugging the device into a different port on your computer.
 

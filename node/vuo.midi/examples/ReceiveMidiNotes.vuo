@@ -1,43 +1,45 @@
 /**
  * @file
+ * @brief Receive MIDI Notes
  * Receives MIDI notes and pitch bend messages from MIDI Channel 1 of the default MIDI device and plays them aloud. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="600,270"];
 ConvertIntegerToRealNumber3 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="300,285"];
-ConvertNoteNumberToFrequency [type="vuo.midi.note.frequency" version="2.0.0" label="Convert Note to Frequency|<refresh>refresh\l|<noteNumber>noteNumber\l|<pitchBend>pitchBend\l|<pitchBendRange>pitchBendRange\l|<frequency>frequency\r" pos="135,285" fillcolor="violet" _pitchBendRange="12"];
+ConvertNoteNumberToFrequency [type="vuo.midi.note.frequency" version="2.0.0" label="Convert Note to Frequency|<refresh>refresh\l|<noteNumber>noteNumber\l|<pitchBend>pitchBend\l|<pitchBendRange>pitchBendRange\l|<frequency>frequency\r" pos="135,285" fillcolor="orange" _pitchBendRange="12"];
 Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="225,135" _b="127.000000"];
-FilterMonophonicNote [type="vuo.midi.track.note.mono" version="1.0.0" label="Track Single Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumberMin>noteNumberMin\l|<noteNumberMax>noteNumberMax\l|<notePriority>notePriority\l|<reset>reset\l|<noteNumber>noteNumber\r|<velocity>velocity\r" pos="-120,120" fillcolor="violet" _channel="1" _noteNumberMin="0" _noteNumberMax="127" _notePriority="\"last\""];
-FilterPitchBend [type="vuo.midi.filter.pitchBend" version="1.0.0" label="Filter Pitch Bend|<refresh>refresh\l|<pitchBend>pitchBend\l|<channel>channel\l|<value>value\r" pos="-90,300" fillcolor="violet" _channel="1"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="255,60" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FilterMonophonicNote [type="vuo.midi.track.note.mono" version="1.0.0" label="Track Single Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumberMin>noteNumberMin\l|<noteNumberMax>noteNumberMax\l|<notePriority>notePriority\l|<reset>reset\l|<noteNumber>noteNumber\r|<velocity>velocity\r" pos="-120,120" fillcolor="orange" _channel="1" _noteNumberMin="0" _noteNumberMax="127" _notePriority="\"last\""];
+FilterPitchBend [type="vuo.midi.filter.pitchBend" version="1.0.0" label="Filter Pitch Bend|<refresh>refresh\l|<pitchBend>pitchBend\l|<channel>channel\l|<value>value\r" pos="-90,300" fillcolor="orange" _channel="1"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="180,-45" fillcolor="lime" _requestedChannels_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="255,60" fillcolor="lime" _started_eventThrottling="enqueue"];
 MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="390,270" _wave="\"sine\"" _setPhase="0.0"];
-MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="567,281"];
-ReceiveMIDIEvents [type="vuo.midi.receive" version="2.1.1" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r|<receivedPitchBend>receivedPitchBend\r" pos="-330,120" fillcolor="violet" _device="{\"id\":-1,\"name\":\"IAC Driver IAC\"}" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue" _receivedPitchBend_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="548,281"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="2.1.1" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r|<receivedPitchBend>receivedPitchBend\r" pos="-330,120" fillcolor="orange" _device="null" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue" _receivedPitchBend_eventThrottling="enqueue"];
 SelectLatest6 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="405,120"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="765,255" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="810,255" fillcolor="blue"];
 SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="570,90" _setPosition="0.000000" _duration="0.050000"];
 
-AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
+AdjustLoudness:adjustedSamples -> SendLiveAudio2:sendChannels;
 ConvertIntegerToRealNumber3:real -> Divide:a;
 ConvertNoteNumberToFrequency:frequency -> MakeAudioWave2:frequency;
 Divide:quotient -> SelectLatest6:option2;
 FilterMonophonicNote:noteNumber -> ConvertNoteNumberToFrequency:noteNumber;
 FilterMonophonicNote:velocity -> ConvertIntegerToRealNumber3:integer;
 FilterPitchBend:value -> ConvertNoteNumberToFrequency:pitchBend;
+FireAtAudioRate:requestedChannels -> MakeAudioWave2:calculateSamples;
+FireAtAudioRate:requestedChannels -> SmoothWithInertia2:time;
 FireOnStart:started -> SelectLatest6:option1;
 MakeAudioWave2:samples -> MakeList3:1;
 MakeList3:list -> AdjustLoudness:samples;
 ReceiveMIDIEvents:receivedNote -> FilterMonophonicNote:note;
 ReceiveMIDIEvents:receivedPitchBend -> FilterPitchBend:pitchBend;
 SelectLatest6:latest -> SmoothWithInertia2:setTarget;
-SendLiveAudio:requestedChannels -> MakeAudioWave2:calculateSamples;
-SendLiveAudio:requestedChannels -> SmoothWithInertia2:time;
 SmoothWithInertia2:position -> AdjustLoudness:loudness;
 }

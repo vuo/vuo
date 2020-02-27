@@ -2,35 +2,63 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-GetImageWidth [type="vuo.image.get.width" version="1.0.0" label="Get Image Width|<refresh>refresh\l|<image>image\l|<width>width\r" pos="540,330"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="315,75" _color="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _height="2.0"];
-MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="478,176"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,330" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="315,225" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="-105,255" _expression="\{\"expressions\":[\"pointSize*windowWidth\\/imageWidth\"],\"inputVariables\":[\"imageWidth\",\"pointSize\",\"windowWidth\"],\"outputVariables\":[\"result\"]\}"];
+Calculate2 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="135,540" _expression="\{\"expressions\":[\"wrapWidth*defaultWindowWidth\\/2\"],\"inputVariables\":[\"defaultWindowWidth\",\"wrapWidth\"],\"outputVariables\":[\"result\"]\}"];
+GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="540,345"];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="1020,180" _b="0.31"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="315,75" _color="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0"];
+MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-90,585"];
+MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-345,300"];
+MakeFont [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<horizontalAlignment>horizontalAlignment\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="105,240" _fontName="\"HelveticaNeue-Thin\"" _underlined="false" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _horizontalAlignment="\"left\"" _characterSpacing="1." _lineSpacing="1."];
+MakeFont2 [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<horizontalAlignment>horizontalAlignment\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="105,390" _fontName="\"HelveticaNeue-Thin\"" _underlined="false" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _horizontalAlignment="\"left\"" _characterSpacing="1." _lineSpacing="1."];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="18,566" _1="1024"];
+MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-90,585" _1="\"defaultWindowWidth\"" _2="\"wrapWidth\""];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="479,176"];
+MakeList4 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-191,281" _1="300" _3="1024"];
+MakeList5 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-345,300" _1="\"imageWidth\"" _2="\"pointSize\"" _3="\"windowWidth\""];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="315,375"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="315,225" _center="\{\"x\":0.0,\"y\":0.0\}" _opacity="1.0"];
 MeasureSharpness3 [type="vuo.image.measureSharpness" version="1.0.0" label="Measure Sharpness|<refresh>refresh\l|<image>image\l|<contrastType>contrastType\l|<maximumSharpness>maximumSharpness\r|<averageSharpness>averageSharpness\r|<minimumSharpness>minimumSharpness\r" pos="765,165" _contrastType="\"rec709\""];
-RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="540,165" _width="300" _height="50" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
-SnapValue5 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="1035,180" _spacing="0.03" _center="0"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<Text>Text\r|<Anchor>Anchor\r" _Text_type="VuoText" _Text="\"Hello World!\"" _Anchor_type="VuoAnchor" _Anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Sharpness>Sharpness\l|<PixelsWide>PixelsWide\l" _Sharpness_type="VuoReal" _PixelsWide_type="VuoInteger"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="540,165" _width="300" _height="50" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="405,525"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Text>Text\r|<Anchor>Anchor\r|<Size>Size\r|<WrapWidth>WrapWidth\r" _Text_type="VuoText" _Text="\"Hello World!\"" _Anchor_type="VuoAnchor" _Anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _Size_type="VuoReal" _Size_suggestedMin="0.0001" _Size_suggestedMax="512." _Size="24" _WrapWidth_type="VuoReal" _WrapWidth_suggestedMin="0" _WrapWidth_suggestedMax="2" _WrapWidth_suggestedStep="0.1" _WrapWidth="Infinity"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<SharpEnough>SharpEnough\l|<PixelsWide>PixelsWide\l|<PixelsHigh>PixelsHigh\l" _SharpEnough_type="VuoBoolean" _PixelsWide_type="VuoInteger" _PixelsHigh_type="VuoInteger"];
 
-GetImageWidth:width -> PublishedOutputs:PixelsWide;
+Calculate2:result -> Round:real;
+Calculate:result -> MakeFont:pointSize;
+GetImageSize:height -> PublishedOutputs:PixelsHigh;
+GetImageSize:width -> PublishedOutputs:PixelsWide;
+IsGreaterThan:greaterThan -> PublishedOutputs:SharpEnough;
 MakeColorLayer:layer -> MakeList3:1;
+MakeDictionary2:dictionary -> Calculate:values;
+MakeDictionary:dictionary -> Calculate2:values;
+MakeFont2:font -> MakeTextImage:font;
+MakeFont:font -> MakeTextLayer:font;
+MakeList2:list -> MakeDictionary:keys;
 MakeList3:list -> RenderLayersToImage:layers;
-MakeTextImage:image -> GetImageWidth:image;
+MakeList4:list -> MakeDictionary2:values;
+MakeList5:list -> MakeDictionary2:keys;
+MakeList:list -> MakeDictionary:values;
+MakeTextImage:image -> GetImageSize:image;
 MakeTextLayer:layer -> MakeList3:2;
-MeasureSharpness3:averageSharpness -> SnapValue5:value;
+MeasureSharpness3:averageSharpness -> IsGreaterThan:a;
 PublishedInputs:Anchor -> MakeTextLayer:anchor;
+PublishedInputs:Size -> MakeFont2:pointSize;
+PublishedInputs:Size -> MakeList4:2;
 PublishedInputs:Text -> MakeColorLayer:refresh;
 PublishedInputs:Text -> MakeTextImage:text;
 PublishedInputs:Text -> MakeTextLayer:text;
+PublishedInputs:WrapWidth -> MakeList:2;
+PublishedInputs:WrapWidth -> MakeTextLayer:wrapWidth;
 RenderLayersToImage:image -> MeasureSharpness3:image;
-SnapValue5:snappedValue -> PublishedOutputs:Sharpness;
+Round:rounded -> MakeTextImage:wrapWidth;
 }

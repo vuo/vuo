@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="75,-75" _expression="\{\"expressions\":[\"atan2(y, x)\"],\"inputVariables\":[\"x\",\"y\"],\"outputVariables\":[\"result\"]\}"];
+Calculate2 [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="75,-180" _expression="\{\"expressions\":[\"sqrt(x^2 + y^2)\"],\"inputVariables\":[\"x\",\"y\"],\"outputVariables\":[\"result\"]\}"];
+MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-135,105"];
+MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-135,15"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-135,105" _1="\"x\"" _2="\"y\""];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="42,-49"];
+MakeList3 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-135,15" _1="\"x\"" _2="\"y\""];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="42,-154"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<x>x\r|<y>y\r" _x_type="VuoReal" _y_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<r>r\l|<theta>theta\l" _r_type="VuoReal" _theta_type="VuoReal"];
+
+Calculate2:result -> PublishedOutputs:r;
+Calculate:result -> PublishedOutputs:theta;
+MakeDictionary2:dictionary -> Calculate2:values;
+MakeDictionary:dictionary -> Calculate:values;
+MakeList2:list -> MakeDictionary:values;
+MakeList3:list -> MakeDictionary2:keys;
+MakeList4:list -> MakeDictionary2:values;
+MakeList:list -> MakeDictionary:keys;
+PublishedInputs:x -> MakeList2:1;
+PublishedInputs:x -> MakeList4:1;
+PublishedInputs:y -> MakeList2:2;
+PublishedInputs:y -> MakeList4:2;
+}

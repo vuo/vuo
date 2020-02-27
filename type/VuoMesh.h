@@ -2,16 +2,18 @@
  * @file
  * VuoMesh C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
+#include "VuoColor.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
+#include "VuoList_VuoColor.h"
 #include "VuoList_VuoPoint2d.h"
 #include "VuoList_VuoPoint3d.h"
 
@@ -36,94 +38,89 @@ typedef enum {
 } VuoMesh_ElementAssemblyMethod;
 
 /**
- * One set of vertices, with associated normals and other per-vertex data, within a mesh.
+ * Which triangles to render.
  */
-typedef struct
-{
-	unsigned int vertexCount; ///< Number of vertices in @c positions, @c normals, @c tangents, @c bitangents, and @c textureCoordinates.
-	/// @todo Change to `VuoDictionary_VuoPoint4D vertexAttributes;` once dictionaries exist: a string-keyed list of equal-size arrays of points (vertex attributes).  Typically contains at least 'positions', 'normals', and 'textureCoordinates'.
-	VuoPoint4d * positions; ///< XYZW vertex positions
-	VuoPoint4d * normals; ///< Vertex normals.  May be @c NULL.
-	VuoPoint4d * tangents; ///< Vertex tangents.  May be @c NULL.
-	VuoPoint4d * bitangents; ///< Vertex bitangents.  May be @c NULL.
-	VuoPoint4d * textureCoordinates; ///< STRQ texture coordinates.  May be @c NULL.
-
-	unsigned int elementCount; ///< Number of elements in @c elements.
-	/**
-	 * An array of size elementCount of integer elements (triangle indices) which are indexes into @c positions.
-	 * (Requires conversion to i16 for OpenGL ES unless GL_OES_element_index_uint.)
-	 */
-	unsigned int * elements;
-
-	/// The way in which the @c elements array should be interpreted during rasterization.
-	VuoMesh_ElementAssemblyMethod elementAssemblyMethod;
-
-	/**
-	 * For lines, the width (in scene units).
-	 * For points, the width and height (in scene units).
-	 */
-	VuoReal primitiveSize;
-
-	/// GL_BACK (default), GL_NONE, or GL_FRONT
-	unsigned int faceCullingMode;
-
-	/**
-	 * References to mesh data uploaded to the GPU.
-	 */
-	struct
-	{
-		unsigned int combinedBuffer;
-		unsigned int combinedBufferSize;
-		unsigned int combinedBufferStride;	// Number of bytes per buffer entry.  If 0, the stride is calculated automatically based on sizeof(VuoPoint4d) multiplied by 1 (position) + the number of non-NULL offsets below.
-
-		void *normalOffset;
-		void *tangentOffset;
-		void *bitangentOffset;
-		void *textureCoordinateOffset;
-
-		unsigned int elementBuffer;
-		unsigned int elementBufferSize;
-	} glUpload;
-} VuoSubmesh;
+typedef enum {
+	VuoMesh_CullNone,        ///< Render all triangles.
+	VuoMesh_CullBackfaces,   ///< Cull backward-facing triangles.
+	VuoMesh_CullFrontfaces,  ///< Cull forward-facing triangles.
+} VuoMesh_FaceCulling;
 
 /**
- * A 3D mesh that contains one or more submeshes (allowing each submesh to have a different element assembly method).
+ * A 3D mesh, consisting of CPU and/or GPU data
+ * describing a list of elements (positions, normals, texture coordinates, colors)
+ * which represent points or are assembled into lines or triangles.
+ *
+ * @version200Changed{VuoSceneObject is now an opaque, heap-allocated type.
+ * Please use the get/set methods instead of directly accessing the structure.}
  */
-typedef struct _VuoMesh
-{
-	unsigned int submeshCount;  ///< Number of items in @c submeshes.
-	VuoSubmesh *submeshes;  ///< The submeshes that together define the shape of the mesh.  All VuoSubmeshes are assumed to have the same primitive type (points, lines, triangles), but the assembly can vary (e.g., a single mesh can contain submeshes with VuoMesh_IndividualLines and VuoMesh_LineStrip).
-} *VuoMesh;
+typedef const struct { void *l; } * VuoMesh;
 
-VuoSubmesh VuoSubmesh_make(unsigned int vertexCount, unsigned int elementCount);
-VuoSubmesh VuoSubmesh_makeFromBuffers(unsigned int vertexCount,
-									  VuoPoint4d *positions, VuoPoint4d *normals, VuoPoint4d *tangents, VuoPoint4d *bitangents, VuoPoint4d *textureCoordinates,
-									  unsigned int elementCount, unsigned int *elements, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
-VuoSubmesh VuoSubmesh_makeGl(unsigned int vertexCount, unsigned int combinedBuffer, unsigned int combinedBufferSize, unsigned int combinedBufferStride, void *normalOffset, void *tangentOffset, void *bitangentOffset, void *textureCoordinateOffset, unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
-unsigned long VuoSubmesh_getGlMode(VuoSubmesh submesh);
-unsigned long VuoSubmesh_getSplitPrimitiveCount(VuoSubmesh submesh);
-unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh);
-unsigned long VuoSubmesh_getCompleteElementCount(const VuoSubmesh submesh);
-unsigned long VuoSubmesh_getStride(const VuoSubmesh submesh);
-
-VuoMesh VuoMesh_make(unsigned int itemCount);
-void VuoMesh_upload(VuoMesh mesh);
-VuoMesh VuoMesh_makeFromSingleSubmesh(VuoSubmesh submesh);
+// Constructors
 VuoMesh VuoMesh_makeQuad(void);
 VuoMesh VuoMesh_makeQuadWithoutNormals(void);
 VuoMesh VuoMesh_makeEquilateralTriangle(void);
 VuoMesh VuoMesh_makeCube(void);
-VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
-VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
+VuoMesh VuoMesh_makePlane(VuoInteger columns, VuoInteger rows);
+VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoList_VuoColor colors, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
+VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoList_VuoColor colors, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
+
+void VuoMesh_allocateCPUBuffers(unsigned int vertexCount,
+	float **positions, float **normals, float **textureCoordinates, float **colors,
+	unsigned int elementCount, unsigned int **elements);
+
+VuoMesh VuoMesh_makeFromCPUBuffers(unsigned int vertexCount,
+    float *positions, float *normals, float *textureCoordinates, float *colors,
+    unsigned int elementCount, unsigned int *elements, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
+VuoMesh VuoMesh_makeFromGPUBuffers(unsigned int vertexCount,
+    unsigned int combinedBuffer, unsigned int combinedBufferSize,
+    void *normalOffset, void *textureCoordinateOffset, void *colorOffset,
+    unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
 
 VuoMesh VuoMesh_copy(const VuoMesh mesh);
+VuoMesh VuoMesh_copyShallow(const VuoMesh mesh);
+
+// Mutators
+void VuoMesh_removeTextureCoordinates(VuoMesh mesh);
+
+// Getters
+void VuoMesh_getCPUBuffers(const VuoMesh mesh, unsigned int *vertexCount,
+	float **positions, float **normals, float **textureCoordinates, float **colors,
+	unsigned int *elementCount, unsigned int **elements);
+void VuoMesh_getGPUBuffers(const VuoMesh mesh, unsigned int *vertexCount,
+	unsigned int *combinedBuffer,
+	void **normalOffset, void **textureCoordinateOffset, void **colorOffset,
+	unsigned int *elementCount, unsigned int *elementBuffer);
+
+VuoMesh_ElementAssemblyMethod VuoMesh_getElementAssemblyMethod(const VuoMesh mesh);
+VuoMesh_FaceCulling VuoMesh_getFaceCulling(const VuoMesh mesh);
+unsigned int VuoMesh_getFaceCullingGL(const VuoMesh mesh);
+VuoReal VuoMesh_getPrimitiveSize(const VuoMesh mesh);
+
+unsigned long VuoMesh_getGlMode(const VuoMesh mesh);
+unsigned long VuoMesh_getSplitPrimitiveCount(const VuoMesh mesh);
+unsigned long VuoMesh_getSplitVertexCount(const VuoMesh mesh);
+unsigned long VuoMesh_getCompleteElementCount(const VuoMesh mesh);
+unsigned int VuoMesh_getElementBufferSize(const VuoMesh mesh);
+
+// Setters
+void VuoMesh_setCPUBuffers(VuoMesh mesh, unsigned int vertexCount,
+    float *positions, float *normals, float *textureCoordinates, float *colors,
+    unsigned int elementCount, unsigned int *elements);
+void VuoMesh_setFaceCulling(VuoMesh mesh, VuoMesh_FaceCulling faceCulling);
+void VuoMesh_setPrimitiveSize(VuoMesh mesh, VuoReal primitiveSize);
+
 const char *VuoMesh_cStringForElementAssemblyMethod(VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
 VuoBox VuoMesh_bounds(const VuoMesh mesh, float matrix[16]);
 bool VuoMesh_isPopulated(const VuoMesh mesh);
 
 VuoMesh VuoMesh_makeFromJson(struct json_object * js);
 struct json_object * VuoMesh_getJson(const VuoMesh value);
+
+/// This type has a _getInterprocessJson() function.
+#define VuoMesh_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoMesh_getInterprocessJson(const VuoMesh value);
+
 char * VuoMesh_getSummary(const VuoMesh value);
 
 /**

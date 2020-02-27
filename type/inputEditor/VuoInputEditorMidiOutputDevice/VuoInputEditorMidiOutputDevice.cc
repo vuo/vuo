@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorMidiOutputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorMidiOutputDevice.hh"
@@ -23,10 +23,12 @@ extern "C"
  */
 static void __attribute__((constructor)) VuoInputEditorMidiOutputDevice_init()
 {
-	MIDIClientRef client;
-	OSStatus result = MIDIClientCreate( CFStringCreateWithCString( NULL, "blah", kCFStringEncodingASCII ), NULL, NULL, &client);
-	if (result != noErr)
-		VUserLog("Warning: Apple CoreMIDI initialization failed: %s", VuoOsStatus_getText(result));
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		MIDIClientRef client;
+		OSStatus result = MIDIClientCreate( CFStringCreateWithCString( NULL, "blah", kCFStringEncodingASCII ), NULL, NULL, &client);
+		if (result != noErr)
+			VUserLog("Warning: Apple CoreMIDI initialization failed: %s", VuoOsStatus_getText(result));
+	});
 }
 
 /**

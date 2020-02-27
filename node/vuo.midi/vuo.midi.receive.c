@@ -2,9 +2,9 @@
  * @file
  * vuo.midi.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -18,8 +18,7 @@ VuoModuleMetadata({
 						 "VuoMidi"
 					 ],
 					 "node": {
-						 "isInterface" : true,
-						 "exampleCompositions" : [ "ReceiveMidiNotes.vuo" ]
+						 "exampleCompositions" : [ "ReceiveMidiNotes.vuo", "ShowPianoRoll.vuo" ]
 					 }
 				 });
 
@@ -31,6 +30,7 @@ struct nodeInstanceData
 	void (*receivedNote)(VuoMidiNote);
 	void (*receivedController)(VuoMidiController);
 	void (*receivedPitchBend)(VuoMidiPitchBend);
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoMidiInputDevice newDevice)
@@ -79,13 +79,14 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedNote, VuoMidiNote),
 		VuoOutputTrigger(receivedController, VuoMidiController),
 		VuoOutputTrigger(receivedPitchBend, VuoMidiPitchBend)
-//		VuoOutputTrigger(receivedAftertouch, VuoMidiAftertouch),
-//		VuoOutputTrigger(receivedCommand, VuoMidiCommand),
-//		VuoOutputTrigger(receivedClock, VuoMidiClock),
-//		VuoOutputTrigger(receivedTimecode, VuoMidiTimecode),
-//		VuoOutputTrigger(receivedSysEx, VuoMidiSysEx)
+//      VuoOutputTrigger(receivedAftertouch, VuoMidiAftertouch),
+//      VuoOutputTrigger(receivedCommand, VuoMidiCommand),
+//      VuoOutputTrigger(receivedClock, VuoMidiClock),
+//      VuoOutputTrigger(receivedTimecode, VuoMidiTimecode),
+//      VuoOutputTrigger(receivedSysEx, VuoMidiSysEx)
 )
 {
+	(*context)->triggersEnabled = true;
 	(*context)->receivedNote = receivedNote;
 	(*context)->receivedController = receivedController;
 	(*context)->receivedPitchBend = receivedPitchBend;
@@ -121,6 +122,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedPitchBend, VuoMidiPitchBend)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (! VuoMidiInputDevice_areEqual(device, (*context)->device))
 	{
 		VuoMidiIn_disableTriggers((*context)->midiManager);
@@ -138,6 +142,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoMidiIn_disableTriggers((*context)->midiManager);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

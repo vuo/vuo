@@ -2,9 +2,9 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
@@ -17,7 +17,7 @@ MakeImageFromChannels [type="vuo.audio.image.channels" version="1.1.0" label="Ma
 MakeList2 [type="vuo.list.make.2.VuoImage" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="683,236"];
 MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="89,101"];
 SaveImage [type="vuo.image.save" version="1.0.0" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="495,75" _overwriteUrl="true" _format="\"png\""];
-ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,30" _value="\"SaveImageFetchImage-luminance.png\""];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,30" _value="\"SaveImageFetchImage-luminance.PNG\""];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<CalculateSamples>CalculateSamples\r" _CalculateSamples_type="event"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<equal>equal\l" _equal_type="VuoBoolean"];
 

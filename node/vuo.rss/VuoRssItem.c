@@ -2,17 +2,13 @@
  * @file
  * VuoRssItem implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoRssItem.h"
-#include "VuoText.h"
 #include "VuoTime.h"
 
 /// @{
@@ -49,34 +45,16 @@ VuoModuleMetadata({
  */
 VuoRssItem VuoRssItem_makeFromJson(json_object * js)
 {
-	VuoRssItem value = {NULL, NULL, NULL, NULL, NAN, NULL, NULL, NULL};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "title", &o))
-		value.title = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "author", &o))
-		value.author = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "description", &o))
-		value.description = VuoText_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "url", &o))
-		value.url = VuoUrl_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "dateTime", &o))
-		value.dateTime = VuoTime_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "imageUrl", &o))
-		value.imageUrl = VuoUrl_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "image", &o))
-		value.image = VuoImage_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "categories", &o))
-		value.categories = VuoList_VuoText_makeFromJson(o);
-
-	return value;
+	return (VuoRssItem){
+		VuoJson_getObjectValue(VuoText,         js, "title",       NULL),
+		VuoJson_getObjectValue(VuoText,         js, "author",      NULL),
+		VuoJson_getObjectValue(VuoText,         js, "description", NULL),
+		VuoJson_getObjectValue(VuoText,         js, "url",         NULL),
+		VuoJson_getObjectValue(VuoTime,         js, "dateTime",    NAN),
+		VuoJson_getObjectValue(VuoText,         js, "imageUrl",    NULL),
+		VuoJson_getObjectValue(VuoImage,        js, "image",       NULL),
+		VuoJson_getObjectValue(VuoList_VuoText, js, "categories",  NULL)
+	};
 }
 
 /**

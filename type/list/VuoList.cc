@@ -2,9 +2,9 @@
  * @file
  * VuoList implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #error "This module is a template; do not build it."
@@ -22,7 +22,7 @@ extern "C" {
 #include <vector>
 #include <algorithm>
 
-//@{
+/// @{
 /**
  * Ignore calls to VuoRetain and VuoRelease if the element type is not reference-counted.
  */
@@ -36,7 +36,7 @@ extern "C" {
 #define RETAIN(element) ELEMENT_TYPE_retain(element)
 #define RELEASE(element) ELEMENT_TYPE_release(element)
 #endif
-//@}
+/// @}
 
 extern "C" {
 /// @{
@@ -46,7 +46,8 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"VuoInteger"
+						"VuoInteger",
+						"ELEMENT_TYPE"
 					 ]
 				 });
 #endif
@@ -92,17 +93,34 @@ json_object * LIST_TYPE_getJson(const LIST_TYPE value)
 	return listObject;
 }
 
+#ifdef ELEMENT_TYPE_REQUIRES_INTERPROCESS_JSON
+struct json_object * LIST_TYPE_getInterprocessJson(const LIST_TYPE value)
+{
+	json_object *listObject = json_object_new_array();
+
+	unsigned long itemCount = VuoListGetCount_ELEMENT_TYPE(value);
+	for (unsigned long i = 1; i <= itemCount; ++i)
+	{
+		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
+		json_object *itemObject = ELEMENT_TYPE_getInterprocessJson(item);
+		json_object_array_add(listObject, itemObject);
+	}
+
+	return listObject;
+}
+#endif
+
 char * LIST_TYPE_getSummary(const LIST_TYPE value)
 {
 	if (!value)
-		return strdup("(empty list)");
+		return strdup("Empty list");
 
 	const int maxItems = 20;
 	const int maxCharacters = 400;
 
 	unsigned long itemCount = VuoListGetCount_ELEMENT_TYPE(value);
 	if (itemCount == 0)
-		return strdup("(empty list)");
+		return strdup("Empty list");
 
 	unsigned long characterCount = 0;
 
@@ -139,8 +157,14 @@ LIST_TYPE VuoListCreate_ELEMENT_TYPE(void)
 
 LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const ELEMENT_TYPE value)
 {
-	std::vector<ELEMENT_TYPE> * l = new std::vector<ELEMENT_TYPE>(count);
+	std::vector<ELEMENT_TYPE> * l = new std::vector<ELEMENT_TYPE>(count, value);
 	VuoRegister(l, VuoListDestroy_ELEMENT_TYPE);
+
+#if IS_ELEMENT_REFERENCE_COUNTED != 0
+	for (unsigned long i = 0; i < count; ++i)
+		RETAIN(value);
+#endif
+
 	return reinterpret_cast<LIST_TYPE>(l);
 }
 
@@ -199,6 +223,18 @@ ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list)
 	return &((*l)[0]);
 }
 
+void VuoListForeach_ELEMENT_TYPE(const LIST_TYPE list, bool (^function)(const ELEMENT_TYPE value))
+{
+	auto l = reinterpret_cast<const std::vector<ELEMENT_TYPE> *>(list);
+
+	if (!l || l->size() == 0)
+		return;
+
+	for (auto item : *l)
+		if (!function(item))
+			break;
+}
+
 void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index, bool expandListIfNeeded)
 {
 	if (!list)
@@ -225,7 +261,9 @@ void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value
 		if (index > l->size())
 			clampedIndex = l->size() - 1;
 
+#if IS_ELEMENT_REFERENCE_COUNTED != 0
 		ELEMENT_TYPE oldValue = (*l)[clampedIndex];
+#endif
 		(*l)[clampedIndex] = value;
 		RETAIN(value);
 		RELEASE(oldValue);
@@ -319,6 +357,9 @@ void VuoListSort_ELEMENT_TYPE(LIST_TYPE list)
 
 bool LIST_TYPE_areEqual(const LIST_TYPE _a, const LIST_TYPE _b)
 {
+	if (_a == _b)
+		return true;
+
 	if (!_a || !_b)
 		return _a == _b;
 
@@ -416,6 +457,41 @@ LIST_TYPE VuoListSubset_ELEMENT_TYPE(LIST_TYPE list, const signed long startInde
 
 	return reinterpret_cast<LIST_TYPE>(newList);
 }
+
+#ifdef ELEMENT_TYPE_SUPPORTS_COMPARISON
+LIST_TYPE VuoListRemoveDuplicates_ELEMENT_TYPE(LIST_TYPE list)
+{
+	if (!list)
+		return NULL;
+
+	auto *l = (std::vector<ELEMENT_TYPE> *)list;
+
+	size_t size = l->size();
+	if (size == 0)
+		return NULL;
+
+	auto *newList = new std::vector<ELEMENT_TYPE>;
+	VuoRegister(newList, VuoListDestroy_ELEMENT_TYPE);
+
+	for (auto i = l->begin(); i != l->end(); ++i)
+	{
+		bool found = false;
+		for (auto j = newList->begin(); j != newList->end(); ++j)
+			if (ELEMENT_TYPE_areEqual(*i, *j))
+			{
+				found = true;
+				break;
+			}
+		if (!found)
+			newList->push_back(*i);
+	}
+
+	for (auto i = newList->begin(); i != newList->end(); ++i)
+		RETAIN(*i);
+
+	return reinterpret_cast<LIST_TYPE>(newList);
+}
+#endif
 
 void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list)
 {

@@ -2,9 +2,9 @@
  * @file
  * vuo.layer.combine node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,12 +19,19 @@ VuoModuleMetadata({
 					 }
 				 });
 
-void nodeEvent
+uint64_t nodeInstanceInit(void)
+{
+	return VuoSceneObject_getNextId();
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(uint64_t) id,
 		VuoInputData(VuoTransform2d) transform,
 		VuoInputData(VuoList_VuoLayer) layers,
 		VuoOutputData(VuoLayer) layer
 )
 {
 	*layer = VuoLayer_makeGroup(layers, transform);
+	VuoLayer_setId(*layer, *id);
 }

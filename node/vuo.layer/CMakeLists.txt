@@ -1,0 +1,77 @@
+VuoCompileTypes(
+	VuoEdgeBlend.c
+	VuoLayer.c
+	VuoProjectionType.c
+)
+target_include_directories(vuo.layer.types
+	PRIVATE
+	../vuo.image
+	../vuo.scene
+)
+target_link_libraries(vuo.layer.types
+	PUBLIC
+		${PROJECT_BINARY_DIR}/library/VuoImageBlur.o
+		${PROJECT_BINARY_DIR}/library/VuoImageText.o
+		${PROJECT_BINARY_DIR}/library/VuoImageMapColors.o
+		${PROJECT_BINARY_DIR}/library/VuoSceneText.o
+)
+
+VuoCompileNodes(
+	vuo.layer.align.window.c
+	vuo.layer.align.window2.c
+	vuo.layer.arrange.column.c
+	vuo.layer.arrange.grid.c
+	vuo.layer.arrange.row.c
+	vuo.layer.blendMode.c
+	vuo.layer.bounds.c
+	vuo.layer.bounds.rendered.c
+	vuo.layer.bounds.rendered2.c
+	vuo.layer.combine.c
+	vuo.layer.combine.center.c
+	vuo.layer.combine.group.c
+	vuo.layer.copy.cc
+	vuo.layer.copy.trs.cc
+	vuo.layer.drag.c
+	vuo.layer.drag2.c
+	vuo.layer.get.edgeBlend.c
+	vuo.layer.get.c
+	vuo.layer.get.child.c
+	vuo.layer.make.c
+	vuo.layer.make.color.c
+	vuo.layer.make.edgeBlend.c
+	vuo.layer.make.gradient.linear.c
+	vuo.layer.make.gradient.linear2.c
+	vuo.layer.make.gradient.radial.c
+	vuo.layer.make.gradient.radial2.c
+	vuo.layer.make.oval.c
+	vuo.layer.make.oval2.c
+	vuo.layer.make.quad.c
+	vuo.layer.make.realSize.c
+	vuo.layer.make.realSize2.c
+	vuo.layer.make.realSize.shadow.c
+	vuo.layer.make.rect.c
+	vuo.layer.make.roundedRectangle.c
+	vuo.layer.make.scaled.c
+	vuo.layer.make.shadow.c
+	vuo.layer.make.stretched.c
+	vuo.layer.make.stretched2.c
+	vuo.layer.make.text.c
+	vuo.layer.make.text2.c
+	vuo.layer.populated.c
+	vuo.layer.render.image.c
+	vuo.layer.render.image2.c
+	vuo.layer.render.window.c
+	vuo.layer.render.window2.c
+	vuo.layer.tile.cc
+	vuo.layer.transform.c
+	vuo.layer.within2.c
+	vuo.layer.within.c
+)
+target_include_directories(vuo.layer.nodes
+	PRIVATE
+	../vuo.image
+	../vuo.mouse
+	../vuo.scene
+)
+
+VuoNodeSet()

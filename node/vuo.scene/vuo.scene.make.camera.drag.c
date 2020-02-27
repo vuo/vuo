@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.camera.perspective node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,6 +19,7 @@ VuoModuleMetadata({
 					 "version" : "1.0.1",
 					 "dependencies" : [ "VuoMouse" ],
 					 "node": {
+						 "isDeprecated": true,
 						 "exampleCompositions" : [ "DisplayCube.vuo", "DisplayScene.vuo" ]
 					 }
 				 });
@@ -26,13 +27,13 @@ VuoModuleMetadata({
 #define DEG2RAD 0.0174532925f								///< Convert degrees to radians.
 #define RAD2DEG 57.295779513f								///< Convert radians to degrees.
 
-const VuoPoint3d VuoPoint3d_zero 	= (VuoPoint3d) {0,0,0};	///< Shorthand for VuoPoint3d_make(0, 0, 0)
-const VuoPoint3d VuoPoint3d_one 	= (VuoPoint3d) {1,1,1};	///< Shorthand for VuoPoint3d_make(1, 1, 1)
-const VuoPoint3d VuoPoint3d_right 	= (VuoPoint3d) {1,0,0};	///< Shorthand for VuoPoint3d_make(1, 0, 0)
-const VuoPoint3d VuoPoint3d_up  	= (VuoPoint3d) {0,1,0};	///< Shorthand for VuoPoint3d_make(0, 1, 0)
-const VuoPoint3d VuoPoint3d_forward	= (VuoPoint3d) {0,0,1};	///< Shorthand for VuoPoint3d_make(0, 0, 1)
+static const VuoPoint3d VuoPoint3d_zero    = (VuoPoint3d) {0,0,0};	///< Shorthand for VuoPoint3d_make(0, 0, 0)
+static const VuoPoint3d VuoPoint3d_one     = (VuoPoint3d) {1,1,1};	///< Shorthand for VuoPoint3d_make(1, 1, 1)
+static const VuoPoint3d VuoPoint3d_right   = (VuoPoint3d) {1,0,0};	///< Shorthand for VuoPoint3d_make(1, 0, 0)
+static const VuoPoint3d VuoPoint3d_up      = (VuoPoint3d) {0,1,0};	///< Shorthand for VuoPoint3d_make(0, 1, 0)
+static const VuoPoint3d VuoPoint3d_forward = (VuoPoint3d) {0,0,1};	///< Shorthand for VuoPoint3d_make(0, 0, 1)
 
-const float ScrollModifier = 0.8;							///< When scrolling, apply this modifier to the movement distance.
+static const float ScrollModifier = 0.8;  ///< When scrolling, apply this modifier to the movement distance.
 
 struct nodeInstanceData
 {
@@ -70,12 +71,14 @@ struct nodeInstanceData
 
 	// Camera trasnform has been updated trigger.
 	void (*updatedCamera)(VuoSceneObject camera);
+
+	bool triggersEnabled;
 };
 
 /**
  *	Update nodeInstanceData's cached window height (in VuoCoordinates) and size (in pixels).
  */
-void updateWindowDimensions(struct nodeInstanceData* instance)
+static void updateWindowDimensions(struct nodeInstanceData* instance)
 {
 	float width = 2.;
 
@@ -101,8 +104,8 @@ struct nodeInstanceData * nodeInstanceInit(
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoModifierKey) modifierKey,
 		VuoInputData(VuoReal) fieldOfView,
-		VuoInputData(VuoReal, {"default":0.1}) distanceMin,	// Near clip.
-		VuoInputData(VuoReal, {"default":10.0}) distanceMax	// Far clip.
+		VuoInputData(VuoReal) distanceMin,
+		VuoInputData(VuoReal) distanceMax
 	)
 {
 
@@ -119,6 +122,7 @@ struct nodeInstanceData * nodeInstanceInit(
 	instance->target = VuoPoint3d_zero;
 
 	instance->camera = VuoSceneObject_makePerspectiveCamera(name, transform, fieldOfView, distanceMin, distanceMax);
+	VuoRetain(instance->camera);
 
 	instance->leftMouseDraggedListener = VuoMouse_make();
 	instance->middleMouseDraggedListener = VuoMouse_make();
@@ -142,15 +146,13 @@ struct nodeInstanceData * nodeInstanceInit(
 /**
  *	Sets the camera transform back to default values and fires an event.
  */
-void resetCamera(struct nodeInstanceData* instance)
+static void resetCamera(struct nodeInstanceData* instance)
 {
-	instance->camera.transform = VuoTransform_makeEuler(VuoPoint3d_make(0., 0., 1.),
-														VuoPoint3d_zero,
-														VuoPoint3d_one);
+	VuoSceneObject_setTransform(instance->camera, VuoTransform_makeEuler(VuoPoint3d_make(0., 0., 1.), VuoPoint3d_zero, VuoPoint3d_one));
 	instance->distance = 1.;
 	instance->target = VuoPoint3d_zero;
 
-	instance->updatedCamera(instance->camera);
+	instance->updatedCamera(VuoSceneObject_copy(instance->camera));
 }
 
 /**
@@ -171,7 +173,7 @@ static VuoPoint2d convertScreenToVuoPoint(struct nodeInstanceData *instance, Vuo
 /**
  *	Rotates a direction by rotation.
  */
-VuoPoint3d transformDirection(VuoPoint3d rotation, VuoPoint3d direction)
+static VuoPoint3d transformDirection(VuoPoint3d rotation, VuoPoint3d direction)
 {
 	// Make a new transform with only the rotational component.
 	VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_zero, rotation, VuoPoint3d_one);
@@ -185,7 +187,7 @@ VuoPoint3d transformDirection(VuoPoint3d rotation, VuoPoint3d direction)
 /**
  *	Given a target, a rotation (euler in rads), and distance, return the camera's position.
  */
-VuoPoint3d calculateCameraPosition(VuoPoint3d target, VuoPoint3d rotation, float distance)
+static VuoPoint3d calculateCameraPosition(VuoPoint3d target, VuoPoint3d rotation, float distance)
 {
 	VuoPoint3d dir = transformDirection(rotation, VuoPoint3d_forward);
 
@@ -195,14 +197,14 @@ VuoPoint3d calculateCameraPosition(VuoPoint3d target, VuoPoint3d rotation, float
 /**
  *	Rotate the camera around target.
  */
-void onLeftMouseDragged(struct nodeInstanceData *instance, VuoPoint2d point)
+static void onLeftMouseDragged(struct nodeInstanceData *instance, VuoPoint2d point)
 {
 	VuoPoint2d vuoPoint = instance->window ? point : convertScreenToVuoPoint(instance, point);
 
 	VuoPoint2d delta = VuoPoint2d_subtract(vuoPoint, instance->mousePosition);
 	instance->mousePosition = vuoPoint;
 
-	VuoPoint3d rotation = instance->camera.transform.rotationSource.euler;
+	VuoPoint3d rotation = VuoSceneObject_getTransform(instance->camera).rotationSource.euler;
 
 	// Delta of 2 would be 360 deg rotation
 
@@ -214,17 +216,15 @@ void onLeftMouseDragged(struct nodeInstanceData *instance, VuoPoint2d point)
 
 	VuoPoint3d translation = calculateCameraPosition( instance->target, rotation, instance->distance);
 
-	instance->camera.transform = VuoTransform_makeEuler(	translation,
-															rotation,
-															VuoPoint3d_one );
+	VuoSceneObject_setTransform(instance->camera, VuoTransform_makeEuler(translation, rotation, VuoPoint3d_one));
 
-	instance->updatedCamera(instance->camera);
+	instance->updatedCamera(VuoSceneObject_copy(instance->camera));
 }
 
 /**
  *	Pan the camera target up or down in model space.
  */
-void onMiddleMouseDragged(struct nodeInstanceData* instance, VuoPoint2d point)
+static void onMiddleMouseDragged(struct nodeInstanceData* instance, VuoPoint2d point)
 {
 	VuoPoint2d vuoPoint = instance->window ? point : convertScreenToVuoPoint(instance, point);
 
@@ -232,7 +232,7 @@ void onMiddleMouseDragged(struct nodeInstanceData* instance, VuoPoint2d point)
 
 	instance->mousePosition = vuoPoint;
 
-	VuoPoint3d rotation = instance->camera.transform.rotationSource.euler;
+	VuoPoint3d rotation = VuoSceneObject_getTransform(instance->camera).rotationSource.euler;
 
 	VuoPoint3d up = transformDirection(rotation, VuoPoint3d_up);		// some 3d apps lock y panning to the world axis, maybe make that an option?
 	VuoPoint3d right = transformDirection(rotation, VuoPoint3d_right);
@@ -242,38 +242,36 @@ void onMiddleMouseDragged(struct nodeInstanceData* instance, VuoPoint2d point)
 
 	instance->target = VuoPoint3d_add(instance->target, VuoPoint3d_add(up, right));
 
-	instance->camera.transform.translation = calculateCameraPosition(instance->target, rotation, instance->distance);
+	VuoSceneObject_setTranslation(instance->camera, calculateCameraPosition(instance->target, rotation, instance->distance));
 
-	instance->updatedCamera(instance->camera);
+	instance->updatedCamera(VuoSceneObject_copy(instance->camera));
 }
 
 /**
  *	Roll the camera while still looking at target.
  */
-void onRightMouseDragged(struct nodeInstanceData *instance, VuoPoint2d point)
+static void onRightMouseDragged(struct nodeInstanceData *instance, VuoPoint2d point)
 {
 	VuoPoint2d vuoPoint = instance->window ? point : convertScreenToVuoPoint(instance, point);
 
 	VuoPoint2d delta = VuoPoint2d_subtract(vuoPoint, instance->mousePosition);
 	instance->mousePosition = vuoPoint;
 
-	VuoPoint3d rotation = instance->camera.transform.rotationSource.euler;
+	VuoPoint3d rotation = VuoSceneObject_getTransform(instance->camera).rotationSource.euler;
 
 	rotation.z += (delta.y * (360/instance->windowHeight)) * DEG2RAD;
 
 	VuoPoint3d translation = calculateCameraPosition(instance->target, rotation, instance->distance);
 
-	instance->camera.transform = VuoTransform_makeEuler(	translation,
-															rotation,
-															VuoPoint3d_one );
+	VuoSceneObject_setTransform(instance->camera, VuoTransform_makeEuler(translation, rotation, VuoPoint3d_one));
 
-	instance->updatedCamera(instance->camera);
+	instance->updatedCamera(VuoSceneObject_copy(instance->camera));
 }
 
 /**
  *	Reset the starting point for calculating drag delta
  */
-void onMousePressed(struct nodeInstanceData *instance, VuoPoint2d point)
+static void onMousePressed(struct nodeInstanceData *instance, VuoPoint2d point)
 {
 	VuoPoint2d vuoPoint = instance->window ? point : convertScreenToVuoPoint(instance, point);
 
@@ -283,28 +281,30 @@ void onMousePressed(struct nodeInstanceData *instance, VuoPoint2d point)
 /**
  *	Zoom in or out.
  */
-void onMouseScrolled(struct nodeInstanceData *instance, VuoPoint2d delta)
+static void onMouseScrolled(struct nodeInstanceData *instance, VuoPoint2d delta)
 {
 	instance->distance -= delta.y * (instance->distance/(instance->cameraRange)) * ScrollModifier;
 
 	// Clamp camera distance to near and far clip values
-	if(instance->distance < instance->camera.cameraDistanceMin)
-		instance->distance = instance->camera.cameraDistanceMin;
+	float cameraDistanceMin = VuoSceneObject_getCameraDistanceMin(instance->camera);
+	if (instance->distance < cameraDistanceMin)
+		instance->distance = cameraDistanceMin;
 
-	if(instance->distance > instance->camera.cameraDistanceMax)
-		instance->distance = instance->camera.cameraDistanceMax;
+	float cameraDistanceMax = VuoSceneObject_getCameraDistanceMax(instance->camera);
+	if (instance->distance > cameraDistanceMax)
+		instance->distance = cameraDistanceMax;
 
-	instance->camera.transform.translation = calculateCameraPosition(	instance->target,
-																		instance->camera.transform.rotationSource.euler,
-																		instance->distance);
+	VuoSceneObject_setTranslation(instance->camera, calculateCameraPosition(instance->target,
+		VuoSceneObject_getTransform(instance->camera).rotationSource.euler,
+		instance->distance));
 
-	instance->updatedCamera(instance->camera);
+	instance->updatedCamera(VuoSceneObject_copy(instance->camera));
 }
 
 /**
  *	Begin listening with modifier key and window.
  */
-void startMouseListeners(struct nodeInstanceData* instance, VuoModifierKey modifier)
+static void startMouseListeners(struct nodeInstanceData* instance, VuoModifierKey modifier)
 {
 	// Only fire drag events within the window content area, so dragging the titlebar doesn't cause the scene to rotate.
 	// (Especially bad when you drag the window to the top of the screen, and the menu bar stops the window from moving up further, yet you can still rotate the scene.)
@@ -334,6 +334,7 @@ void startMouseListeners(struct nodeInstanceData* instance, VuoModifierKey modif
 
 	VuoMouse_startListeningForPressesWithCallback( instance->mousePressedListener,
 											^(VuoPoint2d point) {onMousePressed(instance, point); },
+											NULL,
 											VuoMouseButton_Any,
 											instance->window,
 											modifier
@@ -346,7 +347,7 @@ void startMouseListeners(struct nodeInstanceData* instance, VuoModifierKey modif
 											);
 }
 
-void stopMouseListeners(struct nodeInstanceData* instance)
+static void stopMouseListeners(struct nodeInstanceData* instance)
 {
 	VuoMouse_stopListening(instance->leftMouseDraggedListener);
 	VuoMouse_stopListening(instance->middleMouseDraggedListener);
@@ -363,12 +364,15 @@ void nodeInstanceEvent
 		VuoInputData(VuoWindowReference) window,
 		VuoInputEvent({"data":"window"}) windowEvent,
 		VuoInputData(VuoReal, {"name":"Field of View", "default":90.0, "suggestedMin":0.01, "suggestedMax":179.9, "suggestedStep":1.0}) fieldOfView,
-		VuoInputData(VuoReal, {"default":0.1}) distanceMin,		// Near clip.
-		VuoInputData(VuoReal, {"default":10.0}) distanceMax,	// Far clip.
+		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0.01, "suggestedMax":20., "suggestedStep":0.1}) distanceMin,
+		VuoInputData(VuoReal, {"default":10.0, "suggestedMin":0.01, "suggestedMax":20., "suggestedStep":0.1}) distanceMax,
 		VuoInputEvent({"eventBlocking":"none"}) reset,
 		VuoOutputTrigger(updatedCamera, VuoSceneObject, {"eventThrottling":"drop"})
 )
 {
+	if (!(*instance)->triggersEnabled)
+		return;
+
 	(*instance)->window = window;
 
 	updateWindowDimensions(*instance);
@@ -379,15 +383,15 @@ void nodeInstanceEvent
 	if(reset)
 		resetCamera(*instance);
 
-	VuoSceneObject* camera = &(*instance)->camera;
+	VuoSceneObject camera = (*instance)->camera;
 
-	camera->cameraFieldOfView = fieldOfView;
-	camera->cameraDistanceMin = distanceMin;
-	camera->cameraDistanceMax = distanceMax;
+	VuoSceneObject_setCameraFieldOfView(camera, fieldOfView);
+	VuoSceneObject_setCameraDistanceMin(camera, distanceMin);
+	VuoSceneObject_setCameraDistanceMax(camera, distanceMax);
 
 	(*instance)->cameraRange = distanceMax-distanceMin;
 
-	updatedCamera(*camera);
+	updatedCamera(VuoSceneObject_copy(camera));
 }
 
 void nodeInstanceTriggerStart(
@@ -397,22 +401,25 @@ void nodeInstanceTriggerStart(
 		VuoOutputTrigger(updatedCamera, VuoSceneObject)
 	)
 {
+	(*instance)->triggersEnabled = true;
 	(*instance)->window = window;
 	(*instance)->updatedCamera = updatedCamera;
 
 	startMouseListeners(*instance, modifierKey);
 
 	// Fire one on start just so the Camera starts rendering
-	updatedCamera((*instance)->camera);
+	updatedCamera(VuoSceneObject_copy((*instance)->camera));
 }
 
 void nodeInstanceTriggerStop(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 		stopMouseListeners(*instance);
+	(*instance)->triggersEnabled = false;
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->camera);
 	VuoRelease((*instance)->leftMouseDraggedListener);
 	VuoRelease((*instance)->middleMouseDraggedListener);
 	VuoRelease((*instance)->rightMouseDraggedListener);

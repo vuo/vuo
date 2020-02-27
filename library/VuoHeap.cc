@@ -2,9 +2,9 @@
  * @file
  * VuoHeap implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoHeap.h"
@@ -20,8 +20,6 @@ using namespace std;
 #include "VuoLog.h"
 #include "VuoRuntime.h"
 
-//#define VUOHEAP_TRACE		// NOCOMMIT
-//#define VUOHEAP_TRACEALL	// NOCOMMIT
 static set<const void *> *VuoHeap_trace;	///< Heap pointers to trace.
 
 /**
@@ -113,9 +111,47 @@ static inline void VuoHeap_unlock(void)
 }
 
 /**
- * If `pointer` refers to allocated memory, copies its first 16 printable characters into `summary`, followed by char 0.
+ * Returns true if `pointer` looks like a valid pointer.
+ *
+ * @version200New
  */
-static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
+static inline bool VuoHeap_isPointerValid(const void *pointer)
+{
+	// On macOS, memory allocated by `malloc` is 16-byte aligned,
+	// so any non-16-byte-aligned pointers are suspicious.
+	// https://opensource.apple.com/source/Libc/Libc-825.26/gen/malloc.3.auto.html says
+	// "The allocated memory is aligned such that it can be used for any data type,
+	// including AltiVec- and SSE-related types."
+	// And https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-alignment-support says
+	// "When using the Intel® Streaming SIMD Extensions (Intel® SSE) intrinsics,
+	// you should align data to 16 bytes in memory operations."
+	if ((unsigned long)pointer & 0xf)
+		return false;
+
+	// On macOS, `malloc` shouldn't give us any pointers below 4 GB.
+	// https://opensource.apple.com/source/ld64/ld64-242/doc/man/man1/ld.1.auto.html says
+	// "By default the linker creates an unreadable segment starting at address zero named __PAGEZERO.
+	// On 64-bit architectures, the default size is 4GB."
+	if ((unsigned long)pointer < 0x100000000)
+		return false;
+
+	// x86_64 is currently limited to 48 bits (256 TB) of virtual address space.
+	// http://support.amd.com/TechDocs/24593.pdf, page 131, says
+	// "Bits 63:48 are a sign extension of bit 47".
+	// This will no longer be the case if/when chips with 5-level paging are produced.
+	if ((unsigned long)pointer > 0xffffffffffff)
+		return false;
+
+	return true;
+}
+
+/**
+ * Returns true if `pointer` points to a memory page that's been allocated
+ * (and therefore might be a valid pointer to 1 or more bytes of data).
+ *
+ * @version200New
+ */
+bool VuoHeap_isPointerReadable(const void *pointer)
 {
 	// Round down to the beginning of `pointer`'s heap page.
 	// Assume getpagesize() returns a power-of-two; subtracting 1 turns it into a bitmask.
@@ -123,33 +159,46 @@ static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
 	long heapPageMask = ~((long)pageSize-1);
 	long heapPage = (long)pointer & heapPageMask;
 
-	// Try to obtain information about this page and the one following it
-	// (in case the 16 bytes starting at `pointer` cross a page boundary).
-	char pageStatus[2];
-	if (mincore((void *)heapPage, pageSize*2, pageStatus) == 0)
-	{
-		// Check whether the page(s) are valid.
-		if (pageStatus[0] > 0 &&
-			(((long)pointer - heapPage + 15 < pageSize) || pageStatus[1] > 0))
-		{
-			// Page(s) are valid, so output the pointer's first 16 printable characters.
-			char *pointerAsChar = (char *)pointer;
-			for (int i = 0; i < 16; ++i)
-				if (isprint(pointerAsChar[i]))
-					summary[i] = pointerAsChar[i];
-				else
-					summary[i] = '_';
-			summary[16] = 0;
-		}
-		else
-			strcpy(summary, "(not allocated)");
-	}
+	// Try to load the page into core.
+	mlock((void *)heapPage, pageSize);
+	munlock((void *)heapPage, pageSize);
+
+	// Check whether the page was successfully loaded into core.
+	char pageStatus[1];
+	if (mincore((void *)heapPage, pageSize, pageStatus) == 0)
+		return pageStatus[0] & MINCORE_INCORE;
+
 	else
-		strcpy(summary, "(unknown)");
+		return false;
 }
 
 /**
- * Copies the first 16 printable characters of `pointer` into `summary`, followed by char 0.
+ * If `pointer` refers to allocated memory, copies its first 16 printable characters into `summary`, followed by char 0.
+ */
+static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
+{
+	if (VuoHeap_isPointerReadable(pointer)
+	 && VuoHeap_isPointerReadable((char *)pointer + 15))
+	{
+		// Page(s) are valid, so output the pointer's first 16 printable characters.
+		char *pointerAsChar = (char *)pointer;
+		for (int i = 0; i < 16; ++i)
+			if (isprint(pointerAsChar[i]))
+				summary[i] = pointerAsChar[i];
+			else
+				summary[i] = '_';
+		summary[16] = 0;
+	}
+	else
+		strlcpy(summary, "(not allocated)", 17);
+}
+
+/**
+ * Returns a description of the specified @a heapPointer:
+ * the file, line, and function where VuoRegister() was called,
+ * and the variable name.
+ *
+ * The caller is responsible for freeing the returned string.
  */
 static char *VuoHeap_makeDescription(VuoHeapEntry e)
 {
@@ -173,10 +222,14 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 	referenceCountsSemaphore = (unsigned int *)malloc(sizeof(unsigned int));
 	*referenceCountsSemaphore = 0;
 
+#ifdef VUOHEAP_TRACE
+	VUserLog("table=%p", referenceCounts);
+#endif
+
 #if 0
 	// Periodically dump the referenceCounts table, to help find leaks.
 	const double dumpInterval = 5.0; // seconds
-	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
 	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*dumpInterval, NSEC_PER_SEC*dumpInterval);
 	dispatch_source_set_event_handler(timer, ^{
 										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
@@ -209,7 +262,8 @@ void VuoHeap_report(void)
 	if (! referenceCounts->empty())
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRelease was not called enough times for:" << endl;
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRelease was not called enough times for:" << endl;
 		for (map<const void *, VuoHeapEntry>::iterator i = referenceCounts->begin(); i != referenceCounts->end(); ++i)
 		{
 			const void *heapPointer = i->first;
@@ -246,6 +300,17 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (! heapPointer)
 		return -1;
 
+	if (!VuoHeap_isPointerValid(heapPointer))
+	{
+		ostringstream errorMessage;
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRegister was called for bogus pointer " << heapPointer
+					 << " " << description;
+		free(description);
+		sendErrorWrapper(errorMessage.str().c_str());
+	}
+
 	bool isAlreadyReferenceCounted;
 	int updatedCount;
 
@@ -261,7 +326,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
-			fprintf(stderr, "VuoRegister(%p)  %s\n", heapPointer, pointerName);
+			fprintf(stderr, "table=%p  VuoRegister(%p)  %s\n", referenceCounts, heapPointer, pointerName);
 			VuoLog_backtrace();
 		}
 #endif
@@ -283,7 +348,9 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	{
 		ostringstream errorMessage;
 		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
-		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " << description;
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRegister was called more than once for " << heapPointer
+					 << " " << description;
 		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
@@ -300,6 +367,17 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	if (! heapPointer)
 		return -1;
 
+	if (!VuoHeap_isPointerValid(heapPointer))
+	{
+		ostringstream errorMessage;
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRegisterSingleton was called for bogus pointer " << heapPointer
+					 << " " << description;
+		free(description);
+		sendErrorWrapper(errorMessage.str().c_str());
+	}
+
 	bool isAlreadyReferenceCounted;
 
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
@@ -314,7 +392,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
-			fprintf(stderr, "VuoRegisterSingleton(%p)  %s\n", heapPointer, pointerName);
+			fprintf(stderr, "table=%p  VuoRegisterSingleton(%p)  %s\n", referenceCounts, heapPointer, pointerName);
 			VuoLog_backtrace();
 		}
 #endif
@@ -334,7 +412,9 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	{
 		ostringstream errorMessage;
 		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
-		errorMessage << "VuoRegisterSingleton was called more than once for " << heapPointer << " " << description;
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRegisterSingleton was called more than once for " << heapPointer
+					 << " " << description;
 		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
@@ -367,6 +447,17 @@ int VuoRetain(const void *heapPointer)
 	if (! heapPointer)
 		return -1;
 
+	if (!VuoHeap_isPointerValid(heapPointer))
+	{
+		char pointerSummary[17];
+		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
+		ostringstream errorMessage;
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRetain was called for bogus pointer " << heapPointer
+					 << " \"" << pointerSummary << "\"";
+		sendErrorWrapper(errorMessage.str().c_str());
+	}
+
 	int updatedCount = -1;
 	bool foundSingleton = false;
 	VuoHeapEntry entry;
@@ -384,7 +475,7 @@ int VuoRetain(const void *heapPointer)
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
-			fprintf(stderr, "VuoRetain(%p)  %s\n", heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
+			fprintf(stderr, "table=%p  VuoRetain(%p)  %s\n", referenceCounts, heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
 			VuoLog_backtrace();
 		}
 #endif
@@ -403,7 +494,9 @@ int VuoRetain(const void *heapPointer)
 		char pointerSummary[17];
 		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
 		ostringstream errorMessage;
-		errorMessage << "VuoRetain was called for unregistered pointer " << heapPointer << " \"" << pointerSummary << "\"";
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRetain was called for unregistered pointer " << heapPointer
+					 << " \"" << pointerSummary << "\"";
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -436,6 +529,17 @@ int VuoRelease(const void *heapPointer)
 	if (! heapPointer)
 		return -1;
 
+	if (!VuoHeap_isPointerValid(heapPointer))
+	{
+		char pointerSummary[17];
+		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
+		ostringstream errorMessage;
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRelease was called for bogus pointer " << heapPointer
+					 << " \"" << pointerSummary << "\"";
+		sendErrorWrapper(errorMessage.str().c_str());
+	}
+
 	int updatedCount = -1;
 	bool foundSingleton = false;
 	bool isRegisteredWithoutRetain = false;
@@ -454,7 +558,7 @@ int VuoRelease(const void *heapPointer)
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
-			fprintf(stderr, "VuoRelease(%p)  %s\n", heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
+			fprintf(stderr, "table=%p  VuoRelease(%p)  %s\n", referenceCounts, heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
 			VuoLog_backtrace();
 		}
 #endif
@@ -487,11 +591,19 @@ int VuoRelease(const void *heapPointer)
 #ifdef VUOHEAP_TRACE
 #ifdef VUOHEAP_TRACEALL
 		if (VuoHeap_isComposition())
+		{
 #else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
-#endif
 		{
-			fprintf(stderr, "VuoDeallocate(%p)\n", heapPointer);
+			VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
+			VuoHeap_lock();
+			VUOLOG_PROFILE_END(referenceCountsSemaphore);
+			{
+				VuoHeap_trace->erase(heapPointer);
+			}
+			VuoHeap_unlock();
+#endif
+			fprintf(stderr, "table=%p  VuoDeallocate(%p)\n", referenceCounts, heapPointer);
 //			VuoLog_backtrace();
 		}
 #endif
@@ -503,7 +615,8 @@ int VuoRelease(const void *heapPointer)
 		char pointerSummary[17];
 		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
 		ostringstream errorMessage;
-		errorMessage << "VuoRelease was called for "
+		errorMessage << "On reference table " << referenceCounts
+					 << ", VuoRelease was called for "
 					 << (isRegisteredWithoutRetain ? "unretained" : "unregistered")
 					 << " pointer " << heapPointer
 					 << " \"" << pointerSummary << "\"";
@@ -532,7 +645,7 @@ const char * VuoHeap_getDescription(const void *heapPointer)
 /**
  * Pass a pointer to this function to log all its subsequent retains and releases.
  *
- * This only has any effect when preprocessor macro `VUOHEAP_TRACE` is defined in `VuoHeap.cc`.
+ * This only has an effect when CMake option `VUO_HEAP_TRACE` is enabled.
  */
 void VuoHeap_addTrace(const void *heapPointer)
 {

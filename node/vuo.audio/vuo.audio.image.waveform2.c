@@ -2,9 +2,9 @@
  * @file
  * vuo.audio.image.waveform node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -57,7 +57,9 @@ void nodeInstanceEvent
 		VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":0.25}}) fillColor,
 		VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":1}}) lineColor,
 		VuoInputData(VuoInteger, {"default":256, "suggestedMin":3, "suggestedMax":1024}) height,
-		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":0.9, "suggestedStep":0.1}) syncAmplitude,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":-0.9, "suggestedMax":0.9, "suggestedStep":0.1}) syncAmplitude,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":-1.0, "suggestedMax":1.0, "suggestedStep":0.1}) syncCenter,
+		VuoInputData(VuoBoolean, {"default":false}) attenuateEnds,
 		VuoOutputData(VuoImage) image
 )
 {
@@ -70,23 +72,30 @@ void nodeInstanceEvent
 	unsigned char *pixels = (unsigned char *)calloc(1, pixelsWide*pixelsHigh*4);
 
 	VuoInteger sampleIndex;
-	if (VuoReal_areEqual(syncAmplitude, 0))
-		// If triggering is disabled, just show the current samples.
-		sampleIndex = (*instance)->priorSamples.sampleCount;
-	else
+
+	// Start back at the trigger crossing.
 	{
-		// Otherwise start back at the trigger crossing.
-		for (sampleIndex = 1; sampleIndex < (*instance)->priorSamples.sampleCount; ++sampleIndex)
-			if ((*instance)->priorSamples.samples[sampleIndex - 1] <  syncAmplitude
-			 && (*instance)->priorSamples.samples[sampleIndex    ] >= syncAmplitude)
+		VuoInteger centerOffset = (VuoReal_clamp(syncCenter, -1, 1)/2. + .5) * VuoAudioSamples_bufferSize;
+
+		for (sampleIndex = 1 + centerOffset; sampleIndex < VuoAudioSamples_bufferSize + centerOffset; ++sampleIndex)
+			if (vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex - 1) <  syncAmplitude
+			 && vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex    ) >= syncAmplitude)
 				break;
+
+		sampleIndex -= centerOffset;
 	}
 
 	for (VuoInteger column = 0; column < pixelsWide; ++column, ++sampleIndex)
 	{
-		VuoReal previousSample = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex - 1);
-		VuoReal currentSample  = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex    );
-		VuoReal nextSample	   = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex + 1);
+		double position = (double)column / pixelsWide;
+		const double attenuationPower = 2.;
+		double attenuation = attenuateEnds
+			? 1. - pow(1. - (1. - cos(position * 2 * M_PI)) / 2., attenuationPower)
+			: 1.;
+
+		VuoReal previousSample = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex - 1) * attenuation;
+		VuoReal currentSample  = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex    ) * attenuation;
+		VuoReal nextSample     = vuo_audio_image_waveform_getSample(&(*instance)->priorSamples, &samples, sampleIndex + 1) * attenuation;
 
 		VuoReal minSample = MIN(MIN(previousSample,currentSample),nextSample);
 		VuoReal maxSample = MAX(MAX(previousSample,currentSample),nextSample);

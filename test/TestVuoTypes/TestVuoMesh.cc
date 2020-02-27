@@ -2,9 +2,9 @@
  * @file
  * TestVuoMesh implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -32,15 +32,15 @@ private slots:
 
 		QTest::newRow("empty string")	<< (VuoMesh)NULL
 //										<< false
-										<< "(empty mesh)";
+										<< "Empty mesh";
 
 		QTest::newRow("quad")			<< VuoMesh_makeQuadWithoutNormals()
 //										<< false
-										<< "Mesh containing: <ul><li>4 vertices, 2 triangles<br>with first position (-0.5, -0.5, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>✓ texture coordinates</li></ul>";
+										<< "<div>4 vertices, 2 triangles</div><div>with first position (-0.5, -0.5, 0)</div><div>✓ positions</div><div>◻ normals</div><div>✓ texture coordinates</div><div>◻ vertex colors</div>";
 
 		QTest::newRow("tri")			<< VuoMesh_makeEquilateralTriangle()
 //										<< true
-										<< "Mesh containing: <ul><li>3 vertices in a strip of 1 triangle<br>with first position (-2.52368e-08, 0.57735, 0, 1)<br>✓ positions<br>✓ normals<br>✓ tangents<br>✓ bitangents<br>✓ texture coordinates</li></ul>";
+										<< "<div>3 vertices in a strip of 1 triangle</div><div>with first position (-2.52368e-08, 0.57735, 0)</div><div>✓ positions</div><div>✓ normals</div><div>✓ texture coordinates</div><div>◻ vertex colors</div>";
 	}
 	void testSerializationAndSummary()
 	{

@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorWithEnumMenu implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorWithEnumMenu.hh"
@@ -30,23 +30,23 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree(json_object *
 
 	QString allowedValuesFunctionName = this->type + "_getAllowedValues";
 	typedef void *(*allowedValuesFunctionType)(void);
-	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.toUtf8().constData());
+	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_DEFAULT, allowedValuesFunctionName.toUtf8().constData());
 
 	QString summaryFunctionName = this->type + "_getSummary";
-	typedef char *(*summaryFunctionType)(unsigned long);
-	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.toUtf8().constData());
+	typedef char *(*summaryFunctionType)(int64_t);
+	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_DEFAULT, summaryFunctionName.toUtf8().constData());
 
 	QString jsonFunctionName = this->type + "_getJson";
-	typedef json_object *(*jsonFunctionType)(unsigned long);
-	jsonFunctionType jsonFunction = (jsonFunctionType)dlsym(RTLD_SELF, jsonFunctionName.toUtf8().constData());
+	typedef json_object *(*jsonFunctionType)(int64_t);
+	jsonFunctionType jsonFunction = (jsonFunctionType)dlsym(RTLD_DEFAULT, jsonFunctionName.toUtf8().constData());
 
 	QString listCountFunctionName = "VuoListGetCount_" + this->type;
 	typedef unsigned long (*listCountFunctionType)(void *);
-	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.toUtf8().constData());
+	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_DEFAULT, listCountFunctionName.toUtf8().constData());
 
 	QString listValueFunctionName = "VuoListGetValue_" + this->type;
-	typedef unsigned long (*listValueFunctionType)(void *, unsigned long);
-	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.toUtf8().constData());
+	typedef int64_t (*listValueFunctionType)(void *, unsigned long);
+	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_DEFAULT, listValueFunctionName.toUtf8().constData());
 
 	if (allowedValuesFunction && summaryFunction && jsonFunction && listCountFunction && listValueFunction)
 	{
@@ -54,7 +54,7 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree(json_object *
 		unsigned long count = listCountFunction(allowedValues);
 		for (unsigned long i=1; i<=count; ++i)
 		{
-			unsigned long value = listValueFunction(allowedValues, i);
+			int64_t value = listValueFunction(allowedValues, i);
 			json_object *valueJson = jsonFunction(value);
 			if (!shouldIncludeValue(valueJson))
 				continue;

@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorMovieFormat SOURCE VuoInputEditorMovieFormat.cc)

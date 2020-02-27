@@ -5,9 +5,9 @@
  * See http://www.mikeash.com/pyblog/friday-qa-2010-07-02-background-timers.html and
  * http://www.fieryrobot.com/blog/2010/07/10/a-watchdog-timer-in-gcd/
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -40,6 +40,8 @@ struct nodeInstanceData
 	dispatch_semaphore_t timerCanceled;
 
 	void (*fired)(VuoReal);
+
+	bool triggersEnabled;
 };
 
 static void cancelRepeatingTimer(struct nodeInstanceData *ctx)
@@ -87,7 +89,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const VuoReal second
 			ctx->elapsed += ((double)sinceLastFired) / NSEC_PER_SEC - seconds;
 		}
 
-		ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), ctx->timerQueue);
+		ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, ctx->timerQueue);
 		dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, initialInterval), fullInterval, 0);
 
 		dispatch_source_set_event_handler(ctx->timer, ^{
@@ -121,6 +123,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	ctx->fired = NULL;
 
+	ctx->triggersEnabled = false;
+
 	return ctx;
 }
 
@@ -131,6 +135,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(fired, VuoReal)
 )
 {
+	(*ctx)->triggersEnabled = true;
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -148,9 +153,12 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) ctx,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedStep":0.1}) seconds,
-		VuoOutputTrigger(fired, VuoReal, {"eventThrottling":"drop"})
+		VuoOutputTrigger(fired, VuoReal, {"name":"Fired at Time", "eventThrottling":"drop"})
 )
 {
+	if (!(*ctx)->triggersEnabled)
+		return;
+
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -162,6 +170,7 @@ void nodeInstanceTriggerStop
 	dispatch_sync((*ctx)->timerQueue, ^{
 		(*ctx)->fired = NULL;
 	});
+	(*ctx)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

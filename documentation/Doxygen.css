@@ -817,6 +817,21 @@ table.fieldtable {
         border-bottom: 1px solid #A8B8D9;
 }
 
+table.markdownTable {
+  border-collapse: collapse;
+}
+table.markdownTable th,
+table.markdownTable td {
+  text-align: left;
+  padding: .25em .5em;
+}
+table.markdownTable td {
+  border-top: 1px solid #ccc;
+}
+table.markdownTable th:not(:first-child),
+table.markdownTable td:not(:first-child) {
+  border-left: 1px solid #ccc;
+}
 
 .tabsearch {
 	top: 0px;

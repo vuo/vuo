@@ -2,22 +2,27 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="315,60" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
 MakeHSLColor2 [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="315,300" _hue="0.000000" _lightness="0.500000" _opacity="1.000000"];
-RippleImage [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="315,165" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000"];
-RippleImage2 [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="315,420" _amplitude="0.100000" _phase="0.000000"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<hue>hue\r|<saturation>saturation\r|<image>image\r|<Wavelength>Wavelength\r" _hue_type="VuoReal" _hue="0.300000" _hue_suggestedMin="0.200000" _hue_suggestedMax="1.100000" _hue_suggestedStep="0.100000" _saturation_type="VuoReal" _saturation="0.500000" _image_type="VuoImage" _Wavelength_type="VuoReal" _Wavelength="0.050000"];
+RecordAndPlayValues [type="vuo.data.record.VuoGenericType1" version="1.1.0" label="Record and Play Values|<refresh>refresh\l|<recordValue>recordValue\l|<time>time\l|<url>url\l|<overwriteUrl>overwriteUrl\l|<mode>mode\l|<finalize>finalize\l|<value>value\r|<finishedPlayback>finishedPlayback\r" pos="315,570" _time="0.0" _url="\"~\\/Desktop\\/recording.json\"" _overwriteUrl="false"];
+RippleImage [type="vuo.image.ripple" version="2.2.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<displacement>displacement\l|<rippledImage>rippledImage\r" pos="315,165" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000" _displacement="\"longitudinal\""];
+RippleImage2 [type="vuo.image.ripple" version="2.2.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<displacement>displacement\l|<rippledImage>rippledImage\r" pos="315,420" _amplitude="0.100000" _phase="0.000000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<hue>hue\r|<saturation>saturation\r|<image>image\r|<Wavelength>Wavelength\r|<hardEnum>hardEnum\r|<easyEnum>easyEnum\r" _hue_type="VuoReal" _hue_suggestedMin="0.200000" _hue_suggestedMax="1.100000" _hue_suggestedStep="0.100000" _hue="0.300000" _saturation_type="VuoReal" _saturation_suggestedMin="0" _saturation_suggestedMax="1" _saturation_suggestedStep="0.1" _saturation="0.500000" _image_type="VuoImage" _Wavelength_type="VuoReal" _Wavelength_suggestedMin="0.000001" _Wavelength_suggestedMax="0.05" _Wavelength="0.050000" _hardEnum_type="VuoDisplacement" _hardEnum="\"longitudinal\"" _easyEnum_type="VuoInteger" _easyEnum="0"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<color>color\l" _color_type="VuoColor"];
 
 MakeHSLColor:color -> PublishedOutputs:color;
 PublishedInputs:Wavelength -> RippleImage2:wavelength;
+PublishedInputs:easyEnum -> RecordAndPlayValues:mode;
+PublishedInputs:hardEnum -> RippleImage2:displacement;
 PublishedInputs:hue -> MakeHSLColor:hue;
 PublishedInputs:hue -> RippleImage:angle;
 PublishedInputs:saturation -> MakeHSLColor2:saturation;

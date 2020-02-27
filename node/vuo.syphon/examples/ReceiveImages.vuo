@@ -1,18 +1,17 @@
 /**
  * @file
- * Acts as a Syphon client, receiving images from one of the available Syphon servers. Try running this composition at the same time as [SendImages.vuo](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/). 
+ * Acts as a Syphon client, receiving images from one of the available Syphon servers. Try running this composition at the same time as [Send Images](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="670,275"];
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.1" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="455,249" fillcolor="violet" _receivedImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="711,249" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.2" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="450,255" fillcolor="orange" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="705,255" _updatedWindow_eventThrottling="enqueue"];
 
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
 ReceiveImageFromSyphon:receivedImage -> RenderImageToWindow:image;
 }

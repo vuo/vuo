@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="405,210"];
+Count3 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="405,60" _decrement="1" _setCount="0"];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="210,255"];
+MakeList4 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="356,221"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Increment>Increment\r|<Append>Append\r" _Increment_type="VuoInteger" _Increment="1" _Append_type="VuoText"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Count>Count\l|<CompositeText>CompositeText\l" _Count_type="VuoInteger" _CompositeText_type="VuoText"];
+
+AppendTexts:compositeText -> HoldValue2:newValue;
+AppendTexts:compositeText -> PublishedOutputs:CompositeText;
+Count3:count -> PublishedOutputs:Count;
+HoldValue2:heldValue -> MakeList4:1;
+MakeList4:list -> AppendTexts:texts;
+PublishedInputs:Append -> HoldValue2:refresh;
+PublishedInputs:Append -> MakeList4:2;
+PublishedInputs:Increment -> Count3:increment;
+}

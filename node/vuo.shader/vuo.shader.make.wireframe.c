@@ -2,9 +2,9 @@
  * @file
  * vuo.shader.make.wireframe node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -26,34 +26,47 @@ VuoModuleMetadata({
 				 });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslProjection)
+	\n#include "VuoGlslProjection.glsl"
 
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
-	attribute vec4 position;
+	attribute vec3 position;
+	attribute vec4 vertexColor;
+	uniform bool hasVertexColors;
+
+	// Outputs to geometry shader
+	varying vec4 geometryVertexColor;
 
 	void main()
 	{
-		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
+		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * vec4(position, 1.));
+		geometryVertexColor = hasVertexColors ? vertexColor : vec4(1.);
 	}
 );
 
 static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	// Inputs from vertex shader
+	varying in vec4 geometryVertexColor[3];
+
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
+	varying out vec4 fragmentVertexColor;
 
 	void main()
 	{
 		gl_Position = gl_PositionIn[0];
 		geometryDistanceFromEdge = vec3(1,0,0);
+		fragmentVertexColor = geometryVertexColor[0];
 		EmitVertex();
 
 		gl_Position = gl_PositionIn[1];
 		geometryDistanceFromEdge = vec3(0,1,0);
+		fragmentVertexColor = geometryVertexColor[1];
 		EmitVertex();
 
 		gl_Position = gl_PositionIn[2];
 		geometryDistanceFromEdge = vec3(0,0,1);
+		fragmentVertexColor = geometryVertexColor[2];
 		EmitVertex();
 
 		EndPrimitive();
@@ -65,8 +78,12 @@ static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float aspectRatio;
 	uniform float primitiveHalfSize;
 
+	// Inputs from vertex shader
+	varying vec4 geometryVertexColor[1];
+
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
+	varying out vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -74,6 +91,7 @@ static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 		gl_Position               = gl_PositionIn[0]       + vec4(-pointSize.x,  pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(1,0,0);
+		fragmentVertexColor       = geometryVertexColor[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + vec4(-pointSize.x, -pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(0,1,0);
@@ -104,8 +122,12 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec3 cameraPosition;
 	uniform bool useFisheyeProjection;
 
+	// Inputs from vertex shader
+	varying vec4 geometryVertexColor[2];
+
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
+	varying out vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -123,23 +145,29 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 		gl_Position               = gl_PositionIn[1]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(1,0,0);
+		fragmentVertexColor       = geometryVertexColor[1];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,1,0);
+		fragmentVertexColor       = geometryVertexColor[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,0,1);
+		fragmentVertexColor       = geometryVertexColor[0];
 		EmitVertex();
 		EndPrimitive();
 
 		gl_Position               = gl_PositionIn[0]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(1,0,0);
+		fragmentVertexColor       = geometryVertexColor[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[1]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,1,0);
+		fragmentVertexColor       = geometryVertexColor[1];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[1]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,0,1);
+		fragmentVertexColor       = geometryVertexColor[1];
 		EmitVertex();
 		EndPrimitive();
 	}
@@ -155,6 +183,7 @@ static const char *fragmentShaderSource = VUO_STRINGIFY(
 
 	// Inputs from geometry shader
 	varying vec3 geometryDistanceFromEdge;
+	varying vec4 fragmentVertexColor;
 
 	void main()
 	{
@@ -204,7 +233,7 @@ static const char *fragmentShaderSource = VUO_STRINGIFY(
 		\n#endif\n
 
 		// Branch to avoid antialiasing junk when either width or standoffWidth is entirely hidden.
-		vec4 color = gl_FrontFacing ? frontLineColor : backLineColor;
+		vec4 color = (gl_FrontFacing ? frontLineColor : backLineColor) * fragmentVertexColor;
 		if (standoffWidth > 0.)
 		{
 			if (width > 0.)

@@ -2,16 +2,16 @@
  * @file
  * vuo.select.out node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					 "title" : "Select Output (8)",
-					 "keywords" : [ "switch", "demultiplexer", "if", "else", "case", "route", "condition", "control flow",
+					 "keywords" : [ "switch", "demultiplexer", "if then else statement", "case", "route", "condition", "control flow",
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door", "wall" ],
 					 "version" : "2.0.0",
 					 "node": {

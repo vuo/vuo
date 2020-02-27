@@ -4,4 +4,4 @@ Only lets a MIDI controller pass through if its channel and controller number ma
    - `Channel` — Which channel to accept.
    - `Controller Number` — Which controller number to accept.
 
-See also the `Filter and Smooth Controller` node, for a convenient way to scale and smooth MIDI controller values.
+See also the [Filter and Smooth Controller](vuo-node://vuo.midi.smooth.controller) node, for a convenient way to scale and smooth MIDI controller values.

@@ -2,9 +2,9 @@
  * @file
  * vuo.math.fit node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -31,6 +31,9 @@ struct nodeInstanceData
 	VuoGenericType1 domainMin;
 	VuoGenericType1 domainMax;
 };
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 
 static void vuo_math_fit_updateDomain_VuoReal(VuoReal *domainMin, VuoReal *domainMax, VuoReal value, VuoReal tracking)
 {
@@ -73,8 +76,18 @@ static void vuo_math_fit_updateDomain_float(float *domainMin, float *domainMax, 
 
 static void vuo_math_fit_updateDomain_VuoPoint2d(VuoPoint2d *domainMin, VuoPoint2d *domainMax, VuoPoint2d value, VuoReal tracking)
 {
-	vuo_math_fit_updateDomain_float(&domainMin->x, &domainMax->x, value.x, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->y, &domainMax->y, value.y, tracking);
+	float minX = domainMin->x;
+	float minY = domainMin->y;
+	float maxX = domainMax->x;
+	float maxY = domainMax->y;
+
+	vuo_math_fit_updateDomain_float(&minX, &maxX, value.x, tracking);
+	vuo_math_fit_updateDomain_float(&minY, &maxY, value.y, tracking);
+
+	domainMin->x = minX;
+	domainMin->y = minY;
+	domainMax->x = maxX;
+	domainMax->y = maxY;
 }
 static VuoPoint2d vuo_math_fit_VuoPoint2d(VuoPoint2d domainMin, VuoPoint2d domainMax, VuoPoint2d rangeMin, VuoPoint2d rangeMax, VuoPoint2d value)
 {
@@ -86,9 +99,23 @@ static VuoPoint2d vuo_math_fit_VuoPoint2d(VuoPoint2d domainMin, VuoPoint2d domai
 
 static void vuo_math_fit_updateDomain_VuoPoint3d(VuoPoint3d *domainMin, VuoPoint3d *domainMax, VuoPoint3d value, VuoReal tracking)
 {
-	vuo_math_fit_updateDomain_float(&domainMin->x, &domainMax->x, value.x, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->y, &domainMax->y, value.y, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->z, &domainMax->z, value.z, tracking);
+	float minX = domainMin->x;
+	float minY = domainMin->y;
+	float minZ = domainMin->z;
+	float maxX = domainMax->x;
+	float maxY = domainMax->y;
+	float maxZ = domainMax->z;
+
+	vuo_math_fit_updateDomain_float(&minX, &maxX, value.x, tracking);
+	vuo_math_fit_updateDomain_float(&minY, &maxY, value.y, tracking);
+	vuo_math_fit_updateDomain_float(&minZ, &maxZ, value.z, tracking);
+
+	domainMin->x = minX;
+	domainMin->y = minY;
+	domainMin->z = minZ;
+	domainMax->x = maxX;
+	domainMax->y = maxY;
+	domainMax->z = maxZ;
 }
 static VuoPoint3d vuo_math_fit_VuoPoint3d(VuoPoint3d domainMin, VuoPoint3d domainMax, VuoPoint3d rangeMin, VuoPoint3d rangeMax, VuoPoint3d value)
 {
@@ -101,10 +128,28 @@ static VuoPoint3d vuo_math_fit_VuoPoint3d(VuoPoint3d domainMin, VuoPoint3d domai
 
 static void vuo_math_fit_updateDomain_VuoPoint4d(VuoPoint4d *domainMin, VuoPoint4d *domainMax, VuoPoint4d value, VuoReal tracking)
 {
-	vuo_math_fit_updateDomain_float(&domainMin->x, &domainMax->x, value.x, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->y, &domainMax->y, value.y, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->z, &domainMax->z, value.z, tracking);
-	vuo_math_fit_updateDomain_float(&domainMin->w, &domainMax->w, value.w, tracking);
+	float minX = domainMin->x;
+	float minY = domainMin->y;
+	float minZ = domainMin->z;
+	float minW = domainMin->w;
+	float maxX = domainMax->x;
+	float maxY = domainMax->y;
+	float maxZ = domainMax->z;
+	float maxW = domainMax->w;
+
+	vuo_math_fit_updateDomain_float(&minX, &maxX, value.x, tracking);
+	vuo_math_fit_updateDomain_float(&minY, &maxY, value.y, tracking);
+	vuo_math_fit_updateDomain_float(&minZ, &maxZ, value.z, tracking);
+	vuo_math_fit_updateDomain_float(&minW, &maxW, value.w, tracking);
+
+	domainMin->x = minX;
+	domainMin->y = minY;
+	domainMin->z = minZ;
+	domainMin->w = minW;
+	domainMax->x = maxX;
+	domainMax->y = maxY;
+	domainMax->z = maxZ;
+	domainMax->w = maxW;
 }
 static VuoPoint4d vuo_math_fit_VuoPoint4d(VuoPoint4d domainMin, VuoPoint4d domainMax, VuoPoint4d rangeMin, VuoPoint4d rangeMax, VuoPoint4d value)
 {
@@ -115,6 +160,8 @@ static VuoPoint4d vuo_math_fit_VuoPoint4d(VuoPoint4d domainMin, VuoPoint4d domai
 				vuo_math_fit_VuoReal(domainMin.w, domainMax.w, rangeMin.w, rangeMax.w, value.w)
 				);
 }
+
+#pragma clang diagnostic pop
 
 struct nodeInstanceData *nodeInstanceInit(void)
 {
@@ -148,8 +195,4 @@ void nodeInstanceEvent
 	*fittedValue = vuo_math_fit_VuoGenericType1((*state)->domainMin, (*state)->domainMax, fittedMin, fittedMax, value);
 	*min = (*state)->domainMin;
 	*max = (*state)->domainMax;
-}
-
-void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) state)
-{
 }

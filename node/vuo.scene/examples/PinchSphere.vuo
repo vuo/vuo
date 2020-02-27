@@ -2,28 +2,31 @@
  * @file
  * Deforms a sphere by pulling it toward and pushing it away from a point. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="345,330" _startPosition="-0.400000" _endPosition="0.300000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,150" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="739,176" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="709,146" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="345,135" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.80000001192092896,0.80000001192092896,0.80000001192092896]}" _rows="64" _columns="64"];
-PinchObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,135" fillcolor="violet" _center="{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000}"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="780,135" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="165,195" _color="{\"r\":0.957931,\"g\":0.436332,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-420,150"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="330,315" _startPosition="-0.400000" _endPosition="0.300000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-510,315" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-240,150" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="704,146" fillcolor="blue"];
+MakeLitImageShader [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="0,150" _opacity="1.0" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="315,135" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.80000001192092896,0.80000001192092896,0.80000001192092896]\}" _rows="64" _columns="64"];
+PinchObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,135" fillcolor="orange" _center="\{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000\}"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="750,135" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage:upperLeftColor;
 Curve2:value -> PinchObject2:amount;
-FireOnStart2:started -> ShadeWithColor2:refresh;
-MakeList3:list -> RenderSceneToWindow:setWindowProperties;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
+MakeCheckerboardImage:image -> MakeLitImageShader:image;
 MakeList5:list -> RenderSceneToWindow:objects;
+MakeLitImageShader:shader -> MakeSphere2:material;
 MakeSphere2:object -> PinchObject2:object;
 PinchObject2:pinchedObject -> MakeList5:1;
-RenderSceneToWindow:requestedFrame -> Curve2:time;
-ShadeWithColor2:shader -> MakeSphere2:material;
 }

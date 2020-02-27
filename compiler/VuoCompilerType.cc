@@ -2,20 +2,16 @@
  * @file
  * VuoCompilerType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#include <json-c/json.h>
-#pragma clang diagnostic pop
 #include <sstream>
-
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerType.hh"
+#include "VuoType.hh"
 
 
 /**
@@ -34,6 +30,8 @@ VuoCompilerType::VuoCompilerType(string typeName, Module *module)
 	getStringFunction = NULL;
 	getInterprocessStringFunction = NULL;
 	getSummaryFunction = NULL;
+	areEqualFunction = NULL;
+	isLessThanFunction = NULL;
 	retainFunction = NULL;
 	releaseFunction = NULL;
 	llvmType = NULL;
@@ -74,13 +72,15 @@ void VuoCompilerType::parse(void)
 	getJsonFunction = parser->getFunction(typeName + "_getJson");
 	getInterprocessJsonFunction = parser->getFunction(typeName + "_getInterprocessJson");
 	getSummaryFunction = parser->getFunction(typeName + "_getSummary");
+	areEqualFunction = parser->getFunction(typeName + "_areEqual");
+	isLessThanFunction = parser->getFunction(typeName + "_isLessThan");
 
 	if (! makeFromJsonFunction)
 		VUserLog("Error: Couldn't find %s_makeFromJson() function.", typeName.c_str());
 	if (! getJsonFunction)
 		VUserLog("Error: Couldn't find %s_getJson() function.", typeName.c_str());
 	if (! getSummaryFunction)
-		VUserLog("Error: Couldn't find %s_getSummaryFunction() function.", typeName.c_str());
+		VUserLog("Error: Couldn't find %s_getSummary() function.", typeName.c_str());
 
 	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(getJsonFunction, module, typeName);
 
@@ -142,7 +142,7 @@ void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
 		if (isReturnInParam)
-			function->addAttribute(1, makeFromJsonFunction->getAttributes().getParamAttributes(1));
+			function->setAttributes(makeFromJsonFunction->getAttributes().getParamAttributes(1));
 	}
 
 	if (function->isDeclaration())
@@ -218,8 +218,9 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
+		AttributeSet paramAttributeSet = chosenJsonFromValueFunction->getAttributes().getParamAttributes(1);
 		for (int i = 0; i < getJsonFunctionType->getNumParams(); ++i)
-			function->addAttribute(i+1, chosenJsonFromValueFunction->getAttributes().getParamAttributes(1));
+			function->addAttributes(i+1, VuoCompilerCodeGenUtilities::copyAttributesToIndex(paramAttributeSet, i+1));
 	}
 
 	if (function->isDeclaration())
@@ -296,7 +297,7 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 			functionParams.push_back(secondParamType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-		function->addAttribute(1, getFunctionParameterAttributes());
+		function->setAttributes(getFunctionParameterAttributes());
 	}
 
 	if (function->isDeclaration())
@@ -455,7 +456,7 @@ Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
  *
  * This is needed, for example, for struct parameters with the "byval" attribute.
  */
-Attributes VuoCompilerType::getFunctionParameterAttributes(void)
+AttributeSet VuoCompilerType::getFunctionParameterAttributes(void)
 {
 	return getJsonFunction->getAttributes().getParamAttributes(1);
 }
@@ -477,4 +478,12 @@ bool VuoCompilerType::isListType(VuoCompilerType *type)
 bool VuoCompilerType::hasInterprocessStringFunction(void)
 {
 	return getInterprocessStringFunction != NULL;
+}
+
+/**
+ * Returns true if the type's `areEqual` and `isLessThan` functions are defined.
+ */
+bool VuoCompilerType::supportsComparison(void)
+{
+	return areEqualFunction != NULL && isLessThanFunction != NULL;
 }

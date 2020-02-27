@@ -2,14 +2,11 @@
  * @file
  * VuoNotePriority implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoNotePriority.h"
 #include "VuoList_VuoNotePriority.h"
@@ -22,7 +19,7 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-					  "c"
+						  "VuoList_VuoNotePriority"
 					  ]
 				  });
 #endif

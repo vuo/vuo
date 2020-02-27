@@ -2,9 +2,9 @@
  * @file
  * VuoWindow interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #ifdef __cplusplus
@@ -13,6 +13,7 @@ extern "C"
 #endif
 
 #include "node.h"
+#include "VuoRenderedLayers.h"
 
 #include <stdint.h>
 
@@ -49,6 +50,11 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 void VuoWindowOpenGl_enableTriggers
 (
 		VuoWindowOpenGl w,
+		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
+);
+void VuoWindowOpenGl_enableTriggers_deprecated
+(
+		VuoWindowOpenGl w,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
 		VuoOutputTrigger(requestedFrame, VuoReal)
 );
@@ -57,7 +63,7 @@ void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
 void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties);
 void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, unsigned int pixelsHigh);
 void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w);
-void VuoWindowOpenGl_close(VuoWindowOpenGl w);
+void VuoWindowOpenGl_close(VuoWindowOpenGl w, void (^closedHandler)(void));
 
 #ifdef __cplusplus
 }

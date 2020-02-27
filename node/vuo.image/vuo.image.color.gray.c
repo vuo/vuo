@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.grey node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -23,8 +23,8 @@ VuoModuleMetadata({
 						  "minimum", "maximum", "average", "component", "decomposition",
 						  "ITU-R Recommendation BT.601 1982 NTSC CRT CCIR",
 						  "ITU-R Recommendation BT.709 1990 HDTV",
-						  "HSL", "desaturate",
-						  "filter"
+						  "HSL", "desaturate", "adjust",
+						  "filter",
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
@@ -33,17 +33,17 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(VuoGlslBrightness)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslBrightness.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float amount;
 	uniform int brightnessType;
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		color.rgb /= color.a > 0. ? color.a : 1.;
 
 		color.rgb = mix(color.rgb, vec3(VuoGlsl_brightness(color, brightnessType)), amount);

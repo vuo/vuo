@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorWithMenu implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorWithMenu.hh"
@@ -18,13 +18,13 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	this->details = details;
 	VuoInputEditorMenuItem *menuTree = setUpMenuTree(details);
 
-	QMenu *menu = new QMenu();
+	QMenu *menu = new QMenu(reinterpret_cast<QWidget *>(parent()));
 	menu->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
 	menu->setFont(getDefaultFont());
 	QActionGroup *menuActionGroup;
 	menuActionGroup = new QActionGroup(menu);
 
-	connect(menuActionGroup, SIGNAL(triggered(QAction *)), this, SLOT(acceptAction(QAction *)));
+	connect(menuActionGroup, &QActionGroup::triggered, this, &VuoInputEditorWithMenu::acceptAction);
 
 	VuoInputEditorMenuItem::buildMenu(menu, menuActionGroup, menuTree);
 	menuActionGroup->setExclusive(true);
@@ -37,7 +37,12 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	{
 		json_object *actionValue = (json_object *)action->data().value<void *>();
 		string actionValueAsString = json_object_to_json_string_ext(actionValue, JSON_C_TO_STRING_PLAIN);
-		bool isOriginalValue = (actionValueAsString == originalValueAsString);
+
+		bool isOriginalValue = (actionValueAsString == originalValueAsString)
+			// Support upgrading a VuoBoolean port to a named enum.
+			|| (originalValueAsString == "false" && actionValueAsString == "0")
+			|| (originalValueAsString == "true" && actionValueAsString == "1");
+
 		action->setChecked(isOriginalValue);
 		if (isOriginalValue)
 			checkIndex = index;
@@ -96,4 +101,15 @@ bool VuoInputEditorWithMenu::shouldIncludeValue(json_object *value)
 	}
 
 	return includeThisValue;
+}
+
+/**
+ * Returns true if the user interface is in dark mode.
+ */
+bool VuoInputEditorWithMenu::isInterfaceDark()
+{
+	json_object *o;
+	if (json_object_object_get_ex(details, "isDark", &o))
+		return json_object_get_boolean(o);
+	return false;
 }

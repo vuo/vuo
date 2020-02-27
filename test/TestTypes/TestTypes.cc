@@ -2,9 +2,9 @@
  * @file
  * TestTypes implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -20,18 +20,17 @@ class TestTypes : public TestCompositionExecution
 private:
 	VuoCompiler *compiler;
 
-private slots:
-
-	void initTestCase()
+public:
+	TestTypes()
 	{
 		compiler = initCompiler();
 	}
-
-	void cleanupTestCase()
+	~TestTypes()
 	{
 		delete compiler;
 	}
 
+private slots:
 	/**
 	 * Tests that each node class lists all necessary dependencies. If not, a composition that contains just that
 	 * node class will fail to build.
@@ -51,10 +50,11 @@ private slots:
 		printf("%s\n", QTest::currentDataTag()); fflush(stdout);
 
 		string type = QTest::currentDataTag();
-		string portIdentifier = "ShareValue__value";
+		string portIdentifier = VuoStringUtilities::buildPortIdentifier("ShareValue", "value");
 
+		VuoCompilerIssues issues;
 		VuoRunner *runner = VuoCompiler::newCurrentProcessRunnerFromCompositionString(
-			"digraph G { ShareValue [type=\"vuo.data.share." + type + "\"]; }", ".");
+			"digraph G { ShareValue [type=\"vuo.data.share." + type + "\"]; }", ".", &issues);
 		runner->start();
 
 
@@ -73,11 +73,11 @@ private slots:
 		{
 //			VLog("%s",json_object_to_json_string(jsonTypes[i]));
 			// Tests `VuoType_makeFromJson()`.
-			runner->setInputPortValue(portIdentifier, jsonTypes[i]);
+			runner->setInputPortValue("", portIdentifier, jsonTypes[i]);
 			// Tests `VuoType_getJson()`.
-			runner->getInputPortValue(portIdentifier);
+			runner->getInputPortValue("", portIdentifier);
 			// Tests `VuoType_getSummary()`.
-			runner->getInputPortSummary(portIdentifier);
+			runner->getInputPortSummary("", portIdentifier);
 		}
 
 

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.render.window node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -28,7 +28,7 @@ VuoModuleMetadata({
 						 "VuoWindow"
 					 ],
 					 "node": {
-						 "isInterface" : true,
+						 "isDeprecated": true,
 						 "exampleCompositions" : [ "SimulateFilmProjector.vuo" ]
 					 }
 				 });
@@ -44,7 +44,7 @@ struct nodeInstanceData
 	VuoSceneObject rootSceneObject;
 };
 
-void vuo_image_render_window_init(void *ctx, float backingScaleFactor)
+static void vuo_image_render_window_init(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
@@ -53,19 +53,17 @@ void vuo_image_render_window_init(void *ctx, float backingScaleFactor)
 
 	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
 	VuoMesh mesh = VuoMesh_makeQuadWithoutNormals();
-	context->rootSceneObject = VuoSceneObject_make(
+	context->rootSceneObject = VuoSceneObject_makeMesh(
 				mesh,
 				VuoShader_makeUnlitImageShader(NULL, 1),
-				VuoTransform_makeIdentity(),
-				VuoListCreate_VuoSceneObject()
-			);
-	context->rootSceneObject.transform.scale.x = 2;
+				VuoTransform_makeIdentity());
+	VuoSceneObject_scale(context->rootSceneObject, (VuoPoint3d){2,1,1});
 	VuoSceneObject_retain(context->rootSceneObject);
 
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
 }
 
-void vuo_image_render_window_updateBacking(void *ctx, float backingScaleFactor)
+static void vuo_image_render_window_updateBacking(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
@@ -77,7 +75,7 @@ void vuo_image_render_window_updateBacking(void *ctx, float backingScaleFactor)
 	dispatch_semaphore_signal(context->scenegraphSemaphore);
 }
 
-void vuo_image_render_window_resize(void *ctx, unsigned int width, unsigned int height)
+static void vuo_image_render_window_resize(void *ctx, unsigned int width, unsigned int height)
 {
 	struct nodeInstanceData *context = ctx;
 	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
@@ -85,7 +83,7 @@ void vuo_image_render_window_resize(void *ctx, unsigned int width, unsigned int 
 	dispatch_semaphore_signal(context->scenegraphSemaphore);
 }
 
-VuoIoSurface vuo_image_render_window_draw(void *ctx)
+static VuoIoSurface vuo_image_render_window_draw(void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
@@ -121,10 +119,10 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
+		VuoOutputTrigger(requestedFrame, VuoReal, {"name":"Refreshed at Time", "eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow, requestedFrame);
+	VuoWindowOpenGl_enableTriggers_deprecated((*context)->window, showedWindow, requestedFrame);
 }
 
 void nodeInstanceEvent
@@ -153,11 +151,15 @@ void nodeInstanceEvent
 
 	dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	{
-		VuoShader_setUniform_VuoImage((*context)->rootSceneObject.shader, "texture", image);
+		VuoShader_setUniform_VuoImage(VuoSceneObject_getShader((*context)->rootSceneObject), "texture", image);
 
 		if (image && image->pixelsWide && image->pixelsHigh)
 		{
-			(*context)->rootSceneObject.transform.scale.y = 2. * (float)image->pixelsHigh/(float)image->pixelsWide;
+			VuoSceneObject_setScale((*context)->rootSceneObject, (VuoPoint3d){
+				2,
+				2. * (float)image->pixelsHigh/(float)image->pixelsWide,
+				1,
+			});
 			if (!(*context)->aspectRatioOverridden)
 				VuoWindowOpenGl_setAspectRatio((*context)->window, image->pixelsWide, image->pixelsHigh);
 		}
@@ -183,9 +185,18 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoWindowOpenGl_close((*context)->window);
-	VuoRelease((*context)->window);
-	VuoRelease((*context)->sceneRenderer);
-	VuoSceneObject_release((*context)->rootSceneObject);
-	dispatch_release((*context)->scenegraphSemaphore);
+	struct nodeInstanceData *c = *context;
+
+	// Ensure the context isn't deallocated until the window has finished closing
+	// (which might be a while if macOS is doing its exit-fullscreen animation).
+	VuoRetain(c);
+
+	VuoWindowOpenGl_close(c->window, ^{
+		VuoRelease(c->sceneRenderer);
+		VuoSceneObject_release(c->rootSceneObject);
+		dispatch_release(c->scenegraphSemaphore);
+		VuoRelease(c);
+	});
+
+	VuoRelease(c->window);
 }

@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Renders a text layer with a shadow.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="8280,3780" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeImageLayerWithShadow [type="vuo.layer.make.shadow" version="2.1.0" label="Make Image Layer with Shadow|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<shadowColor>shadowColor\l|<shadowBlur>shadowBlur\l|<shadowAngle>shadowAngle\l|<shadowDistance>shadowDistance\l|<layer>layer\r" pos="8685,3960" fillcolor="magenta" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1" _opacity="1.0" _shadowColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0.60000002384185791\}" _shadowBlur="30" _shadowAngle="-45" _shadowDistance="0.02"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="8976,3956" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="8745,3780" _color="\{\"r\":0.80000001192092896,\"g\":1,\"b\":0.40000000596046448,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.75" _height="0.75" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="8475,3975" _text="\"Text\\nShadow.\"" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":288,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="9030,3945" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+FireOnStart:started -> MakeRectangleLayer:color;
+FireOnStart:started -> MakeTextImage:text;
+MakeImageLayerWithShadow:layer -> MakeList:2;
+MakeList:list -> RenderLayersToWindow2:layers;
+MakeRectangleLayer:layer -> MakeList:1;
+MakeTextImage:image -> MakeImageLayerWithShadow:image;
+}

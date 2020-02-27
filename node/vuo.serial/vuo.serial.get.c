@@ -2,9 +2,9 @@
  * @file
  * vuo.serial.get node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Serial Device Values",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "VuoUrl"
 					  ],
@@ -33,15 +33,13 @@ void nodeEvent
 	if (VuoSerialDevice_realize(device, &realizedDevice))
 	{
 		VuoSerialDevice_retain(realizedDevice);
-		*name = realizedDevice.name;
+		*name = VuoText_make(realizedDevice.name);
 		*url = VuoUrl_normalize(realizedDevice.path, VuoUrlNormalize_default);
-		VuoRetain(*name);
-		VuoRetain(*url);
 		VuoSerialDevice_release(realizedDevice);
 	}
 	else
 	{
-		*name = VuoText_make("");
-		*url = VuoText_make("");
+		*name = device.name;
+		*url = VuoUrl_normalize(device.path, VuoUrlNormalize_default);
 	}
 }

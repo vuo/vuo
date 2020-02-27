@@ -2,9 +2,9 @@
  * @file
  * VuoMidiInputDevice C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -34,7 +34,10 @@ typedef struct
 VuoMidiInputDevice VuoMidiInputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoMidiInputDevice_getJson(const VuoMidiInputDevice value);
 char * VuoMidiInputDevice_getSummary(const VuoMidiInputDevice value);
+
+#define VuoMidiInputDevice_SUPPORTS_COMPARISON
 bool VuoMidiInputDevice_areEqual(const VuoMidiInputDevice value1, const VuoMidiInputDevice value2);
+bool VuoMidiInputDevice_isLessThan(const VuoMidiInputDevice a, const VuoMidiInputDevice b);
 
 /**
  * Automatically generated function.
@@ -52,7 +55,7 @@ void VuoMidiInputDevice_release(VuoMidiInputDevice value);
 static inline VuoMidiInputDevice VuoMidiInputDevice_make(VuoInteger id, VuoText name) __attribute__((const));
 static inline VuoMidiInputDevice VuoMidiInputDevice_make(VuoInteger id, VuoText name)
 {
-	VuoMidiInputDevice md = {id,name};
+	VuoMidiInputDevice md = { id, name, "" };
 	return md;
 }
 

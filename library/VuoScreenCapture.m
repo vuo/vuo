@@ -2,9 +2,9 @@
  * @file
  * VuoScreenCapture implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "module.h"
@@ -78,7 +78,7 @@ static void VuoScreenCapture_freeCallback(VuoImage imageToFree)
 				CVPixelBufferGetHeight(pixelBuffer),
 				VuoScreenCapture_freeCallback, NULL);
 	VuoRetain(rectImage);
-	VuoImage image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture));
+	VuoImage image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture), 0, 0, false);
 	_sci->capturedImageTrigger(image);
 	CVOpenGLTextureRelease(texture);
 	VuoRelease(rectImage);

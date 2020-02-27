@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Increments a count each time the user clicks a mouse button, and periodically displays the updated count in a window.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="240,270" fillcolor="orange" _increment="1.0" _decrement="1.0" _setCount="0.0"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="180,195" fillcolor="lime" _seconds="5" _fired_eventThrottling="drop"];
+HoldValue3 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="390,255" fillcolor="orange"];
+MakeList3 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="554,476" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="630,255" _font="\{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.1.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<forcePressed>forcePressed\r|<pressureChanged>pressureChanged\r|<released>released\r" pos="0,270" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _forcePressed_eventThrottling="enqueue" _pressureChanged_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="600,465" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue2 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="660,495"];
+
+Count:count -> HoldValue3:value;
+FirePeriodically:fired -> HoldValue3:update;
+HoldValue3:heldValue -> SummarizeValue2:value;
+MakeList3:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList3:1;
+ReceiveMouseButtons:pressed -> Count:increment [event=true];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+SummarizeValue2:summary -> MakeTextLayer:text;
+}

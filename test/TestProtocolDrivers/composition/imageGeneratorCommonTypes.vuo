@@ -1,0 +1,62 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+ShareEvent [type="vuo.event.share" version="1.0.0" label="Share Event|<refresh>refresh\l|<event>event\l|<sameEvent>sameEvent\r" pos="210,810"];
+ShareValue [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,-30"];
+ShareValue10 [type="vuo.data.share.VuoLayer" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,570"];
+ShareValue11 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,630"];
+ShareValue12 [type="vuo.data.share.VuoSceneObject" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,690"];
+ShareValue13 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,750"];
+ShareValue14 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,90"];
+ShareValue15 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,30"];
+ShareValue3 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,150"];
+ShareValue4 [type="vuo.data.share.VuoPoint3d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,210"];
+ShareValue5 [type="vuo.data.share.VuoPoint4d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,270"];
+ShareValue6 [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,330"];
+ShareValue7 [type="vuo.data.share.VuoColor" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,390"];
+ShareValue8 [type="vuo.data.share.VuoImage" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,450"];
+ShareValue9 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,510"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r|<point2dIn>point2dIn\r|<point3dIn>point3dIn\r|<point4dIn>point4dIn\r|<booleanIn>booleanIn\r|<colorIn>colorIn\r|<imageIn>imageIn\r|<integerIn>integerIn\r|<layerIn>layerIn\r|<realIn>realIn\r|<sceneObjectIn>sceneObjectIn\r|<textIn>textIn\r|<eventIn>eventIn\r" _time_type="VuoReal" _width_type="VuoInteger" _height_type="VuoInteger" _point2dIn_type="VuoPoint2d" _point3dIn_type="VuoPoint3d" _point4dIn_type="VuoPoint4d" _booleanIn_type="VuoBoolean" _colorIn_type="VuoColor" _imageIn_type="VuoImage" _integerIn_type="VuoInteger" _layerIn_type="VuoLayer" _realIn_type="VuoReal" _sceneObjectIn_type="VuoSceneObject" _textIn_type="VuoText" _eventIn_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l|<protocolTime>protocolTime\l|<protocolWidth>protocolWidth\l|<protocolHeight>protocolHeight\l|<point2d>point2d\l|<point3d>point3d\l|<point4d>point4d\l|<boolean>boolean\l|<color>color\l|<imageOut>imageOut\l|<integer>integer\l|<layer>layer\l|<real>real\l|<sceneObject>sceneObject\l|<text>text\l|<event>event\l" _outputImage_type="VuoImage" _protocolTime_type="VuoReal" _protocolWidth_type="VuoInteger" _protocolHeight_type="VuoInteger" _point2d_type="VuoPoint2d" _point3d_type="VuoPoint3d" _point4d_type="VuoPoint4d" _boolean_type="VuoBoolean" _color_type="VuoColor" _imageOut_type="VuoImage" _integer_type="VuoInteger" _layer_type="VuoLayer" _real_type="VuoReal" _sceneObject_type="VuoSceneObject" _text_type="VuoText" _event_type="event"];
+
+PublishedInputs:booleanIn -> ShareValue6:value;
+PublishedInputs:colorIn -> ShareValue7:value;
+PublishedInputs:eventIn -> ShareEvent:event;
+PublishedInputs:height -> ShareValue14:value;
+PublishedInputs:imageIn -> ShareValue8:value;
+PublishedInputs:integerIn -> ShareValue9:value;
+PublishedInputs:layerIn -> ShareValue10:value;
+PublishedInputs:point2dIn -> ShareValue3:value;
+PublishedInputs:point3dIn -> ShareValue4:value;
+PublishedInputs:point4dIn -> ShareValue5:value;
+PublishedInputs:realIn -> ShareValue11:value;
+PublishedInputs:sceneObjectIn -> ShareValue12:value;
+PublishedInputs:textIn -> ShareValue13:value;
+PublishedInputs:time -> ShareValue:value;
+PublishedInputs:width -> ShareValue15:value;
+ShareEvent:sameEvent -> PublishedOutputs:event;
+ShareValue10:sameValue -> PublishedOutputs:layer;
+ShareValue11:sameValue -> PublishedOutputs:real;
+ShareValue12:sameValue -> PublishedOutputs:sceneObject;
+ShareValue13:sameValue -> PublishedOutputs:text;
+ShareValue14:sameValue -> PublishedOutputs:protocolHeight;
+ShareValue15:sameValue -> PublishedOutputs:protocolWidth;
+ShareValue3:sameValue -> PublishedOutputs:point2d;
+ShareValue4:sameValue -> PublishedOutputs:point3d;
+ShareValue5:sameValue -> PublishedOutputs:point4d;
+ShareValue6:sameValue -> PublishedOutputs:boolean;
+ShareValue7:sameValue -> PublishedOutputs:color;
+ShareValue8:sameValue -> PublishedOutputs:imageOut;
+ShareValue9:sameValue -> PublishedOutputs:integer;
+ShareValue:sameValue -> PublishedOutputs:protocolTime;
+}

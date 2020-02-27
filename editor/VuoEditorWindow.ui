@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VuoEditorWindow</class>
+ <widget class="QMainWindow" name="VuoEditorWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>644</width>
+    <height>240</height>
+   </size>
+  </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextUnderIcon</enum>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="_2">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="VuoEditorGraphicsView" name="graphicsView">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="renderHints">
+       <set>QPainter::Antialiasing|QPainter::HighQualityAntialiasing|QPainter::TextAntialiasing</set>
+      </property>
+      <property name="dragMode">
+       <enum>QGraphicsView::RubberBandDrag</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="exportMovie"/>
+     <addaction name="exportApp"/>
+     <addaction name="exportMacScreenSaver"/>
+     <addaction name="exportMacFFGL"/>
+     <addaction name="exportFxPlug"/>
+    </widget>
+    <addaction name="newComposition"/>
+    <addaction name="separator"/>
+    <addaction name="openComposition"/>
+    <addaction name="separator"/>
+    <addaction name="saveComposition"/>
+    <addaction name="saveCompositionAs"/>
+    <addaction name="installSubcomposition"/>
+    <addaction name="menuExport"/>
+    <addaction name="separator"/>
+    <addaction name="closeComposition"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <widget class="QMenu" name="menuNode_Library">
+     <property name="title">
+      <string>Node Library</string>
+     </property>
+     <addaction name="showNodeLibrary"/>
+     <addaction name="toggleNodeLibraryDocking"/>
+     <addaction name="separator"/>
+     <addaction name="actionShowNodeNames"/>
+     <addaction name="actionShowNodeClassNames"/>
+    </widget>
+    <addaction name="menuNode_Library"/>
+    <addaction name="separator"/>
+    <addaction name="showPublishedPorts"/>
+    <addaction name="showHiddenCables"/>
+    <addaction name="separator"/>
+    <addaction name="zoom11"/>
+    <addaction name="zoomIn"/>
+    <addaction name="zoomOut"/>
+    <addaction name="zoomToFit"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="welcome"/>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <widget class="QMenu" name="menuFind">
+     <property name="title">
+      <string>Find</string>
+     </property>
+     <addaction name="find"/>
+     <addaction name="findNext"/>
+     <addaction name="findPrevious"/>
+    </widget>
+    <addaction name="separator"/>
+    <addaction name="cutCompositionComponents"/>
+    <addaction name="copyCompositionComponents"/>
+    <addaction name="paste"/>
+    <addaction name="duplicateCompositionComponents"/>
+    <addaction name="deleteCompositionComponents"/>
+    <addaction name="insertComment"/>
+    <addaction name="insertSubcomposition"/>
+    <addaction name="separator"/>
+    <addaction name="renameNodes"/>
+    <addaction name="changeNodePlaceholder"/>
+    <addaction name="refactor"/>
+    <addaction name="separator"/>
+    <addaction name="menuFind"/>
+    <addaction name="separator"/>
+    <addaction name="selectAll"/>
+    <addaction name="selectAllComments"/>
+    <addaction name="selectNone"/>
+    <addaction name="separator"/>
+    <addaction name="compositionInformation"/>
+   </widget>
+   <widget class="QMenu" name="menuRun">
+    <property name="title">
+     <string>Run</string>
+    </property>
+    <addaction name="runComposition"/>
+    <addaction name="stopComposition"/>
+    <addaction name="restartComposition"/>
+    <addaction name="refireEvent"/>
+    <addaction name="separator"/>
+    <addaction name="showEvents"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="openUserModulesFolder"/>
+    <addaction name="openSystemModulesFolder"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuRun"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuWindow"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <action name="zoomIn">
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="zoomOut">
+   <property name="text">
+    <string>Zoom Out</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="zoom11">
+   <property name="text">
+    <string>Actual Size</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="saveComposition">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="saveCompositionAs">
+   <property name="text">
+    <string>Save As…</string>
+   </property>
+  </action>
+  <action name="openComposition">
+   <property name="text">
+    <string>Open…</string>
+   </property>
+  </action>
+  <action name="newComposition">
+   <property name="text">
+    <string>New Composition</string>
+   </property>
+  </action>
+  <action name="closeComposition">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="showNodeLibrary">
+   <property name="text">
+    <string>Show Node Library</string>
+   </property>
+  </action>
+  <action name="deleteCompositionComponents">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="selectAll">
+   <property name="text">
+    <string>Select All</string>
+   </property>
+  </action>
+  <action name="selectAllNodes">
+   <property name="text">
+    <string>Select All Nodes</string>
+   </property>
+  </action>
+  <action name="selectAllCables">
+   <property name="text">
+    <string>Select All Cables</string>
+   </property>
+  </action>
+  <action name="selectNone">
+   <property name="text">
+    <string>Select None</string>
+   </property>
+  </action>
+  <action name="copyCompositionComponents">
+   <property name="text">
+    <string>Copy Selected Components</string>
+   </property>
+  </action>
+  <action name="cutCompositionComponents">
+   <property name="text">
+    <string>Cut Selected Components</string>
+   </property>
+  </action>
+  <action name="paste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+  </action>
+  <action name="runComposition">
+   <property name="text">
+    <string>Run</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+R</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="stopComposition">
+   <property name="text">
+    <string>Stop</string>
+   </property>
+   <property name="toolTip">
+    <string>Stop</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+.</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="undo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="redo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionShowNodeNames">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Display by name</string>
+   </property>
+   <property name="autoRepeat">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionShowNodeClassNames">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Display by class</string>
+   </property>
+  </action>
+  <action name="showPublishedPorts">
+   <property name="text">
+    <string>Show Published Ports</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+4</string>
+   </property>
+  </action>
+  <action name="openUserModulesFolder">
+   <property name="text">
+    <string>Open User Library in Finder</string>
+   </property>
+  </action>
+  <action name="openSystemModulesFolder">
+   <property name="text">
+    <string>Open System Library in Finder</string>
+   </property>
+  </action>
+  <action name="showEvents">
+   <property name="text">
+    <string>Show Events</string>
+   </property>
+  </action>
+  <action name="exportApp">
+   <property name="text">
+    <string>Mac App…</string>
+   </property>
+  </action>
+  <action name="exportMovie">
+   <property name="text">
+    <string>Movie…</string>
+   </property>
+  </action>
+  <action name="compositionInformation">
+   <property name="text">
+    <string>Composition Information…</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+I</string>
+   </property>
+  </action>
+  <action name="zoomToFit">
+   <property name="text">
+    <string>Zoom to Fit</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+9</string>
+   </property>
+  </action>
+  <action name="renameNodes">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Rename…</string>
+   </property>
+  </action>
+  <action name="duplicateCompositionComponents">
+   <property name="text">
+    <string>Duplicate</string>
+   </property>
+  </action>
+  <action name="showHiddenCables">
+   <property name="text">
+    <string>Show Hidden Cables</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+Shift+H</string>
+   </property>
+  </action>
+  <action name="welcome">
+   <property name="text">
+    <string>Welcome to Vuo</string>
+   </property>
+  </action>
+  <action name="refireEvent">
+   <property name="text">
+    <string>Re-fire Event</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+T</string>
+   </property>
+  </action>
+  <action name="installSubcomposition">
+   <property name="text">
+    <string>Move to Node Library</string>
+   </property>
+  </action>
+  <action name="restartComposition">
+   <property name="text">
+    <string>Restart</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+Shift+R</string>
+   </property>
+  </action>
+  <action name="toggleNodeLibraryDocking">
+   <property name="text">
+    <string>Detach from Editor Window</string>
+   </property>
+  </action>
+  <action name="find">
+   <property name="text">
+    <string>Find…</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+F</string>
+   </property>
+  </action>
+  <action name="findPrevious">
+   <property name="text">
+    <string>Find Previous</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+Shift+G</string>
+   </property>
+  </action>
+  <action name="findNext">
+   <property name="text">
+    <string>Find Next</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+G</string>
+   </property>
+  </action>
+  <action name="insertSubcomposition">
+   <property name="text">
+    <string>Insert Subcomposition</string>
+   </property>
+  </action>
+  <action name="insertComment">
+   <property name="text">
+    <string>Insert Comment</string>
+   </property>
+  </action>
+  <action name="selectAllComments">
+   <property name="text">
+    <string>Select All Comments</string>
+   </property>
+  </action>
+  <action name="exportFxPlug">
+   <property name="text">
+    <string>FxPlug</string>
+   </property>
+  </action>
+  <action name="exportMacScreenSaver">
+   <property name="text">
+    <string>Mac Screen Saver</string>
+   </property>
+  </action>
+  <action name="exportMacFFGL">
+   <property name="text">
+    <string>Mac FFGL Plugin</string>
+   </property>
+  </action>
+  <action name="refactor">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Package as Subcomposition</string>
+   </property>
+  </action>
+  <action name="changeNodePlaceholder">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Change To</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>VuoEditorGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>VuoEditorGraphicsView.hh</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>closeComposition</sender>
+   <signal>triggered()</signal>
+   <receiver>VuoEditorWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

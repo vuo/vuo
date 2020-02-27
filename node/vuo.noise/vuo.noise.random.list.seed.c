@@ -2,9 +2,9 @@
  * @file
  * vuo.noise.random.list.seed node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Random List with Seed",
 					  "keywords" : [ "uncorrelated", "arbitrary", "aleatoric", "chance", "pseudorandom",
-							"prng", "rng", "arc4random", "uniform", "distribution", "white" ],
+							"number", "generate", "prng", "rng", "arc4random", "uniform", "distribution", "white" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -56,8 +56,4 @@ void nodeInstanceEvent
 	*list = VuoListCreate_VuoGenericType1();
 	for (VuoInteger i = 0; i < count; ++i)
 		VuoListAppendValue_VuoGenericType1(*list, VuoGenericType1_randomWithState(*state, minimum, maximum));
-}
-
-void nodeInstanceFini(VuoInstanceData(unsigned short *) state)
-{
 }

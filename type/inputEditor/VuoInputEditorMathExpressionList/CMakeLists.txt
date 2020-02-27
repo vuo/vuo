@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorMathExpressionList SOURCE VuoInputEditorMathExpressionList.cc)

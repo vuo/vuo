@@ -2,32 +2,26 @@
  * @file
  * VuoImageRenderer implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoImageRenderer.h"
-#include "VuoGlContext.h"
-#include "VuoGlPool.h"
 
-#include <stdlib.h>
 
 #include <IOSurface/IOSurface.h>
-#include <CoreServices/CoreServices.h>
 
-#include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
-/// @{
+/// @{ Stub.
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 /// @}
 
+#include "module.h"
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoImageRenderer",
@@ -51,7 +45,7 @@ struct VuoImageRendererInternal
 	GLuint outputFramebuffer;
 
 	GLuint vertexArray;
-	GLuint triDataBuffer;
+	GLuint quadDataBuffer;
 };
 /**
  * Internal state data for a VuoImageRenderer instance.
@@ -59,18 +53,20 @@ struct VuoImageRendererInternal
 static VuoImageRendererInternal VuoImageRendererGlobal;
 
 /**
- * Positions and texture coordinates for a full-screen triangle.
+ * Positions and texture coordinates for a quad.
  */
-static const GLfloat triData[] = {
+static const GLfloat quadData[] = {
 	// Positions
 	-1, -1, 0, 1,
-	 3, -1, 0, 1,
-	-1,  3, 0, 1,
+	 1, -1, 0, 1,
+	-1,  1, 0, 1,
+	 1,  1, 0, 1,
 
 	// Texture Coordinates
 	0, 0, 0, 0,
-	2, 0, 0, 0,
-	0, 2, 0, 0,
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	1, 1, 0, 0
 };
 /**
  * An identity matrix.
@@ -95,10 +91,10 @@ static void VuoImageRenderer_init(void)
 			glGenVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
 			glBindVertexArray(VuoImageRendererGlobal.vertexArray);
 			{
-				VuoImageRendererGlobal.triDataBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, sizeof(triData));
-				VuoGlPool_retain(VuoImageRendererGlobal.triDataBuffer);
-				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.triDataBuffer);
-				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(triData), triData);
+				VuoImageRendererGlobal.quadDataBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, sizeof(quadData));
+				VuoGlPool_retain(VuoImageRendererGlobal.quadDataBuffer);
+				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.quadDataBuffer);
+				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quadData), quadData);
 			}
 			glBindVertexArray(0);
 
@@ -137,11 +133,18 @@ VuoImage VuoImageRenderer_render(VuoShader shader, unsigned int pixelsWide, unsi
 	if (pixelsWide < 1 || pixelsHigh < 1)
 		return NULL;
 
-	GLuint outputTexture = VuoImageRenderer_draw_internal(shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0);
+	GLuint internalFormat;
+	GLuint outputTexture = VuoImageRenderer_draw_internal(shader, pixelsWide, pixelsHigh, imageColorDepth, false, false, 0, &internalFormat);
 	if (!outputTexture)
 		return NULL;
 
-	return VuoImage_make(outputTexture, VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth), pixelsWide, pixelsHigh);
+	VuoImage outputImage = VuoImage_make(outputTexture, internalFormat, pixelsWide, pixelsHigh);
+
+	VuoImage firstInputImage = VuoShader_getFirstImage(shader);
+	if (firstInputImage)
+		outputImage->scaleFactor = firstInputImage->scaleFactor;
+
+	return outputImage;
 }
 
 /**
@@ -149,7 +152,7 @@ VuoImage VuoImageRenderer_render(VuoShader shader, unsigned int pixelsWide, unsi
  *
  * If @c outputToGlTextureRectangle is true, the caller is responsible for deleting the texture (it should not be thrown into the GL texture pool).
  */
-unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture)
+unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture, GLuint *outputInternalFormat)
 {
 	VuoImageRenderer_init();
 
@@ -159,34 +162,20 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 		glViewport(0, 0, pixelsWide, pixelsHigh);
 
 		// Create a new GL Texture Object.
+		GLenum textureFormat = VuoShader_isOpaque(shader) ? GL_BGR : GL_BGRA;
 		GLuint textureTarget = (outputToIOSurface || outputToGlTextureRectangle) ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
-		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
+		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(textureFormat, imageColorDepth);
+		if (outputInternalFormat)
+			*outputInternalFormat = textureTargetInternalFormat;
 
 		VuoIoSurface ioSurface = NULL;
 		if (outputToIOSurface)
+			/// @todo only generate an IOSurface with an alpha channel if the alpha channel is really needed (take textureFormat into account)
 			ioSurface = VuoIoSurfacePool_use(cgl_ctx, pixelsWide, pixelsHigh, &outputTexture);
 		else if (outputToSpecificTexture)
 			outputTexture = outputToSpecificTexture;
 		else
-		{
-			if (outputToGlTextureRectangle)
-			{
-				glGenTextures(1, &outputTexture);
-				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, outputTexture);
-//				VLog("glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, %s, %d, %d, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);", VuoGl_stringForConstant(textureTargetInternalFormat), pixelsWide, pixelsHigh);
-				glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, textureTargetInternalFormat, pixelsWide, pixelsHigh, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
-
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
-			}
-			else
-				outputTexture = VuoGlTexturePool_use(cgl_ctx, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_BGRA);
-		}
+			outputTexture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_Allocate, outputToGlTextureRectangle ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D, textureTargetInternalFormat, pixelsWide, pixelsHigh, textureFormat, NULL);
 
 		if (!outputTexture)
 			return;
@@ -202,24 +191,19 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 		{
 			GLint positionAttribute;
 			GLint textureCoordinateAttribute;
-			bool ret = VuoShader_getAttributeLocations(shader, VuoMesh_IndividualTriangles, cgl_ctx, &positionAttribute, NULL, NULL, NULL, &textureCoordinateAttribute);
+			bool ret = VuoShader_getAttributeLocations(shader, VuoMesh_IndividualTriangles, cgl_ctx, &positionAttribute, NULL, &textureCoordinateAttribute, NULL);
 			if (!ret)
 			{
-				VUserLog("Error: Failed to get attribute locations.");
+				VDebugLog("Error: Failed to get attribute locations.");
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				if (outputToIOSurface)
-					VuoIoSurfacePool_disuse(ioSurface);
+					VuoIoSurfacePool_disuse(ioSurface, false);  // It was never used, so no need to quarantine it.
 				else if (outputToSpecificTexture)
 				{}
 				else
 				{
-					if (outputToGlTextureRectangle)
-						glDeleteTextures(1, &outputTexture);
-					else
-					{
-						VuoGlTexture_retain(outputTexture, NULL, NULL);
-						VuoGlTexture_release(textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture, outputToGlTextureRectangle ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D);
-					}
+					VuoGlTexture_retain(outputTexture, NULL, NULL);
+					VuoGlTexture_release(VuoGlTexturePool_Allocate, outputToGlTextureRectangle ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D, textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture);
 				}
 				outputTexture = 0;
 				surfID = 0;
@@ -258,7 +242,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 				if (viewportSizeUniform != -1)
 					glUniform2f(viewportSizeUniform, (float)pixelsWide, (float)pixelsHigh);
 
-				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.triDataBuffer);
+				glBindBuffer(GL_ARRAY_BUFFER, VuoImageRendererGlobal.quadDataBuffer);
 
 				glEnableVertexAttribArray(positionAttribute);
 				glVertexAttribPointer(positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)0);
@@ -266,47 +250,24 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 				if (textureCoordinateAttribute != -1)
 				{
 					glEnableVertexAttribArray(textureCoordinateAttribute);
-					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*12));
+					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*16));
 				}
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 	GLuint timeElapsedQuery;
-	double timeStart = 0;
-	SInt32 macMinorVersion;
-	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-	if (macMinorVersion < 9)
-	{
-		// Prior to OS X v10.9, glGetQueryObjectuiv() isn't likely to work.
-		// (On NVIDIA GeForce 9400M on OS X v10.8, it hangs for 6 seconds then returns bogus data.)
-		// https://www.mail-archive.com/mac-opengl@lists.apple.com/msg00003.html
-		// https://b33p.net/kosada/node/10677
-		glFinish();
-		timeStart = VuoLogGetTime();
-	}
-	else
-	{
-		glGenQueries(1, &timeElapsedQuery);
-		glBeginQuery(GL_TIME_ELAPSED_EXT, timeElapsedQuery);
-	}
+	glGenQueries(1, &timeElapsedQuery);
+	glBeginQuery(GL_TIME_ELAPSED_EXT, timeElapsedQuery);
 #endif
 
-				glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 	double seconds;
-	if (macMinorVersion < 9)
-	{
-		glFinish();
-		seconds = VuoLogGetTime() - timeStart;
-	}
-	else
-	{
-		glEndQuery(GL_TIME_ELAPSED_EXT);
-		GLuint nanoseconds;
-		glGetQueryObjectuiv(timeElapsedQuery, GL_QUERY_RESULT, &nanoseconds);
-		seconds = ((double)nanoseconds) / NSEC_PER_SEC;
-		glDeleteQueries(1, &timeElapsedQuery);
-	}
+	glEndQuery(GL_TIME_ELAPSED_EXT);
+	GLuint nanoseconds;
+	glGetQueryObjectuiv(timeElapsedQuery, GL_QUERY_RESULT, &nanoseconds);
+	seconds = ((double)nanoseconds) / NSEC_PER_SEC;
+	glDeleteQueries(1, &timeElapsedQuery);
 
 	double objectPercent = seconds / (1./60.) * 100.;
 	VLog("%6.2f %% of 60 Hz frame	%s", objectPercent, shader->name);
@@ -329,7 +290,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 		if (outputToIOSurface)
 		{
 			surfID = VuoIoSurfacePool_getId(ioSurface);
-			VuoIoSurfacePool_disuse(ioSurface);
+			VuoIoSurfacePool_disuse(ioSurface, true);  // We may be sending it to another process, so we need to quarantine it.
 		}
 
 		glFlushRenderAPPLE();
@@ -351,7 +312,7 @@ static void VuoImageRenderer_fini(void)
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		VuoGlPool_release(cgl_ctx, VuoGlPool_ArrayBuffer, sizeof(triData), VuoImageRendererGlobal.triDataBuffer);
+		VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(quadData), VuoImageRendererGlobal.quadDataBuffer);
 
 		glDeleteVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
 		glDeleteFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);

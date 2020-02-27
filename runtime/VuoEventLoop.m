@@ -2,9 +2,9 @@
  * @file
  * VuoEventLoop implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoEventLoop.h"
@@ -17,6 +17,36 @@
 #import <AppKit/AppKit.h>
 
 #include <dlfcn.h>
+
+/**
+ * Is the current thread the main thread?
+ */
+static bool VuoEventLoop_isMainThread(void)
+{
+	static void **mainThread;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		mainThread = (void **)dlsym(RTLD_SELF, "VuoApp_mainThread");
+		if (!mainThread)
+			mainThread = (void **)dlsym(RTLD_DEFAULT, "VuoApp_mainThread");
+
+		if (!mainThread)
+		{
+			VUserLog("Error: Couldn't find VuoApp_mainThread.");
+			VuoLog_backtrace();
+			exit(1);
+		}
+
+		if (!*mainThread)
+		{
+			VUserLog("Error: VuoApp_mainThread isn't set.");
+			VuoLog_backtrace();
+			exit(1);
+		}
+	});
+
+	return *mainThread == (void *)pthread_self();
+}
 
 /**
  * Handles one or more blocks or application events (e.g., keypresses, mouse moves, window state changes).
@@ -37,6 +67,13 @@
  */
 void VuoEventLoop_processEvent(VuoEventLoopMode mode)
 {
+	if (!VuoEventLoop_isMainThread())
+	{
+		VUserLog("Error: VuoEventLoop_processEvent must be called from the main thread.");
+		VuoLog_backtrace();
+		exit(1);
+	}
+
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
 	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
@@ -46,7 +83,7 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode)
 	if (nsAppGlobal && *nsAppGlobal)
 	{
 		// http://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
-		// http://stackoverflow.com/questions/6732400/cocoa-integrate-nsapplication-into-an-existing-c-mainloop
+		// https://stackoverflow.com/questions/6732400/cocoa-integrate-nsapplication-into-an-existing-c-mainloop
 
 		// When the composition is ready to stop, it posts a killswitch NSEvent,
 		// to ensure that this function returns immediately.
@@ -72,6 +109,8 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode)
 
 /**
  * Interrupts @ref VuoEventLoop_processEvent while it is waiting.
+ *
+ * @threadAny
  */
 void VuoEventLoop_break(void)
 {
@@ -81,34 +120,52 @@ void VuoEventLoop_break(void)
 	if (nsAppGlobal && *nsAppGlobal)
 	{
 		// Send an event, to ensure VuoEventLoop_processEvent()'s call to `nextEventMatchingMask:…` returns immediately.
-		NSEvent *killswitch = [NSEvent otherEventWithType:NSApplicationDefined
-							   location:NSMakePoint(0,0)
-						  modifierFlags:0
-							  timestamp:0
-						   windowNumber:0
-								context:nil
-								subtype:0
-								  data1:0
-								  data2:0];
-		[*nsAppGlobal postEvent:killswitch atStart:NO];
+		// -[NSApplication postEvent:atStart:] must be called from the main thread.
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSEvent *killswitch = [NSEvent otherEventWithType:NSApplicationDefined
+								   location:NSMakePoint(0,0)
+							  modifierFlags:0
+								  timestamp:0
+							   windowNumber:0
+									context:nil
+									subtype:0
+									  data1:0
+									  data2:0];
+			[*nsAppGlobal postEvent:killswitch atStart:NO];
+		});
 	}
 	else
+		// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW26
+		// says this can be called from any thread.
 		CFRunLoopStop(CFRunLoopGetMain());
 }
 
 /**
  * Interrupts @ref VuoEventLoop_processEvent if it's currently blocking, so that it can process NSEvents next time it's invoked.
+ *
+ * @threadAny
  */
 void VuoEventLoop_switchToAppMode(void)
 {
+	// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW26
+	// says this can be called from any thread.
 	CFRunLoopStop(CFRunLoopGetMain());
 }
 
 /**
  * Returns false if the app is currently waiting on user input in a modal dialog or a window sheet.
+ *
+ * @threadMain
  */
 bool VuoEventLoop_mayBeTerminated(void)
 {
+	if (!VuoEventLoop_isMainThread())
+	{
+		VUserLog("Error: VuoEventLoop_mayBeTerminated must be called from the main thread.");
+		VuoLog_backtrace();
+		exit(1);
+	}
+
 	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
 	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
 	if (!nsAppGlobal || !*nsAppGlobal)
@@ -125,98 +182,70 @@ bool VuoEventLoop_mayBeTerminated(void)
 }
 
 /**
- * Returns `DISPATCH_TIMER_STRICT` if it's supported on the current OS version;
- * otherwise returns 0.
- */
-unsigned long VuoEventLoop_getDispatchStrictMask(void)
-{
-	static unsigned long mask = 0;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-		if (macMinorVersion >= 9)
-			mask = 0x1; // DISPATCH_TIMER_STRICT
-	});
-	return mask;
-}
-
-/**
- * Returns the Dispatch attribute for `QOS_CLASS_USER_INTERACTIVE`
- * if it's supported on the current OS version;
- * otherwise returns 0.
+ * Returns the Dispatch attribute for `QOS_CLASS_USER_INTERACTIVE`.
  *
  * Apple's documentation says:
  * "The use of this QOS class should be limited to […] view drawing, animation, etc."
+ *
+ * @threadAny
  */
 dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void)
 {
 	static dispatch_queue_attr_t attr = 0;
 	static dispatch_once_t once = 0;
 	dispatch_once(&once, ^{
-		SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-		if (macMinorVersion >= 10)
-		{
-			typedef dispatch_queue_attr_t (QueueAttrType)(dispatch_queue_attr_t attr, unsigned int qos, int relativePriority);
-			QueueAttrType *queueAttr = (QueueAttrType *)dlsym(RTLD_DEFAULT, "dispatch_queue_attr_make_with_qos_class");
-			if (!queueAttr)
-			{
-				VUserLog("Warning: Couldn't find dispatch_queue_attr_make_with_qos_class().");
-				return;
-			}
-
-			attr = queueAttr(DISPATCH_QUEUE_SERIAL, 0x21 /*QOS_CLASS_USER_INTERACTIVE*/, 0);
-		}
+		attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, 0);
 	});
 	return attr;
 }
 
 /**
- * Called when the process receives a SIGINT (control-C) or SIGTERM (kill).
- */
-void VuoEventLoop_signalHandler(int signum)
-{
-	typedef void (*vuoStopCompositionType)(struct VuoCompositionState *);
-	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
-	if (!vuoStopComposition)
-		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
-	vuoStopComposition(NULL);
-}
-
-/**
  * Installs SIGINT and SIGTERM handlers, to cleanly shut down the composition.
+ *
+ * @threadMain
  */
 void VuoEventLoop_installSignalHandlers(void)
 {
-	struct sigaction action = {{VuoEventLoop_signalHandler}, 0, 0};
-	if (sigaction(SIGINT,  &action, NULL))
-		VUserLog("Warning: Couldn't install SIGINT handler: %s", strerror(errno));
-	if (sigaction(SIGTERM, &action, NULL))
-		VUserLog("Warning: Couldn't install SIGTERM handler: %s", strerror(errno));
+	typedef void (*vuoStopCompositionType)(struct VuoCompositionState *);
+	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType)dlsym(RTLD_SELF, "vuoStopComposition");
+	if (!vuoStopComposition)
+		vuoStopComposition = (vuoStopCompositionType)dlsym(RTLD_DEFAULT, "vuoStopComposition");
+	if (!vuoStopComposition)
+	{
+		VUserLog("Warning: Couldn't find vuoStopComposition symbol; not installing clean-shutdown signal handlers.");
+		return;
+	}
+
+	// Disable default signal handlers so libdispatch can catch them.
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+
+	// Use libdispatch to handle signals instead of `signal`/`sigaction`
+	// since `vuoStopComposition()` uses non-signal-safe functions such as `malloc`.
+	void (^stop)(void) = ^{
+		vuoStopComposition(NULL);
+	};
+	dispatch_source_t sigintSource  = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGINT,  0, dispatch_get_main_queue());
+	dispatch_source_t sigquitSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGQUIT, 0, dispatch_get_main_queue());
+	dispatch_source_t sigtermSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGTERM, 0, dispatch_get_main_queue());
+	dispatch_source_set_event_handler(sigintSource,  stop);
+	dispatch_source_set_event_handler(sigquitSource, stop);
+	dispatch_source_set_event_handler(sigtermSource, stop);
+	dispatch_resume(sigintSource);
+	dispatch_resume(sigquitSource);
+	dispatch_resume(sigtermSource);
 }
 
 /**
- * Disable "App Nap" since even if our timers are set to strict (@ref VuoEventLoop_getDispatchStrictMask),
+ * Disable "App Nap" since even if our timers are set to `DISPATCH_TIMER_STRICT`,
  * the OS still prevents the process from running smoothly while taking a nap.
  * https://b33p.net/kosada/node/12685
+ *
+ * @threadMain
  */
 void VuoEventLoop_disableAppNap(void)
 {
-	SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-	if (macMinorVersion < 9)
-		return;
-
 	id activityToken = [[NSProcessInfo processInfo] performSelector:@selector(beginActivityWithOptions:reason:)
 		withObject: (id)((0x00FFFFFFULL | (1ULL << 20)) & ~(1ULL << 14)) // NSActivityUserInitiated & ~NSActivitySuddenTerminationDisabled
 		withObject: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];

@@ -1,9 +1,13 @@
 #!/usr/bin/env php
 <?php
 
+if ($argc < 5)
+	die("usage: build-and-analyze <source root dir> <build root dir> <clang path> <compiler arguments>\n");
+
 array_shift($argv);
+$sourceDir = array_shift($argv);
+$buildDir = array_shift($argv);
 $clang = array_shift($argv);
-$root = array_shift($argv);
 $clangArgs = '';
 foreach ($argv as $arg)
 	if (strpos($arg, '"') !== FALSE
@@ -16,11 +20,19 @@ foreach ($argv as $arg)
 
 $runAnalyzers = true;
 $skipRegexes = array(
-	'@-x c.*-header@', // Don't need to analyze precompiled headers.
+	'@-x (objective-)?c(\+\+)?-header@', // Don't need to analyze precompiled headers.
+	'@csgjs\.c@', // Not our code.
 	'@miniz\.c@', // Not our code.
-	'@-o VuoCompositionLoader @', // Just linking.
+	'@VuoBeatDetektor\.cc@',  // Not our code.
+	'@VuoIoReturn\.c@',  // Nothing interesting.
+	'@VuoOsStatus\.c@',  // Nothing interesting.
+	'@VuoPnpId\.c@',  // Nothing interesting.
+	'@VuoUrlParser\.c@', // Not our code.
+	'@VuoUsbVendor\.c@',  // Nothing interesting.
+	'@shared_mutex.cpp@', // Not our code.
+	'@-o (VuoCompositionLoader|vuo-compile|vuo-render|vuo-link|vuo-export|vuo-debug|libVuoInputEditor.*\.dylib|Vuo(Runner)?.framework/Versions/.*?/Vuo(Runner)?|Vuo.app/Contents/MacOS/Vuo) @', // Just linking.
 	'@-o Vuo.+\.o Vuo.+\.bc@', // Don't bother checking .bc -> .o conversions.
-	'@moc_.+\.cpp@',
+	'@mocs?_.+\.cpp@',
 	'@qrc_.+\.cpp@',
 );
 foreach ($skipRegexes as $regex)
@@ -30,8 +42,15 @@ foreach ($skipRegexes as $regex)
 		break;
 	}
 
+
 if ($runAnalyzers)
 {
+	$buildInfo = file_get_contents("$buildDir/conanbuildinfo.txt");
+	$tag = '[includedirs]';
+	$tagPos = strpos($buildInfo, $tag);
+	$tagLen = strlen($tag);
+	$includeDirs = '-I' . implode(' -I', explode("\n", trim(substr($buildInfo, $tagPos + $tagLen, strpos($buildInfo, '[libdirs]') - $tagPos - $tagLen))));
+
 /*
 	if (preg_match('/[A-Za-z]+\.c\b/', $clangArgs))
 	{
@@ -43,7 +62,7 @@ if ($runAnalyzers)
 			$clangArgs
 		";
 
-		squashPrecompiledHeaders($splintCommand, $root);
+		squashPrecompiledHeaders($splintCommand, $sourceDir);
 
 		system($splintCommand, $ret);
 		if ($ret)
@@ -53,56 +72,116 @@ exit(0);
 */
 
 
-	$filenameRegex = '/\b[A-Za-z-]+\.(c|cc|m|mm)\b/';
+	$stdcppRegex = '@(-I|-isystem )/Users/[^/]*/\.conan/data/llvm/[^/]*/vuo/stable/package/[^/]*/include/c\+\+/v1@';
+	$clangArgsMinusSTDCPP = preg_replace($stdcppRegex, '', $clangArgs);
+	$includeDirsMinusSTDCPP = preg_replace($stdcppRegex, '', $includeDirs);
+
+
+	$filenameRegex = '/ ([A-Za-z0-9.\/+_-]+\.(c|cc|cpp|m|mm))\b/';
 	if (preg_match($filenameRegex, $clangArgs, $matches))
 	{
-		$filename = $matches[0];
-		$clangArgsMinusFilename = preg_replace($filenameRegex, '', $clangArgs);
+		$filename = $matches[1];
+		print "$filename:\n";
+		$clangArgsMinusFilename = preg_replace($filenameRegex, '', $clangArgsMinusSTDCPP);
 		$clangArgsMinusFilename = preg_replace('/-emit-llvm/', '$0.o', $clangArgsMinusFilename);
 
 		echo "\toclint:\n";
 		$oclintCommand = "oclint \
+			-disable-rule AvoidPrivateStaticMembers \
+			-disable-rule BitwiseOperatorInConditional \
+			-disable-rule CollapsibleIfStatements \
+			-disable-rule ConstantConditionalOperator \
+			-disable-rule DeepNestedBlock \
+			-disable-rule EmptyCatchStatement \
+			-disable-rule EmptyElseBlock \
+			-disable-rule EmptyIfStatement \
+			-disable-rule GotoStatement \
+			-disable-rule HighCyclomaticComplexity \
+			-disable-rule HighNPathComplexity \
+			-disable-rule HighNcssMethod \
+			-disable-rule InvertedLogic \
+			-disable-rule LongLine \
+			-disable-rule LongMethod \
 			-disable-rule LongVariableName \
+			-disable-rule ParameterReassignment \
+			-disable-rule PreferEarlyExit \
+			-disable-rule RedundantIfStatement \
 			-disable-rule ShortVariableName \
+			-disable-rule TooManyFields \
+			-disable-rule TooManyParameters \
+			-disable-rule UnnecessaryElseStatement \
+			-disable-rule UnusedMethodParameter \
+			-disable-rule UselessParentheses \
 			$filename \
 			-- \
 			$clangArgsMinusFilename \
+			$includeDirsMinusSTDCPP \
 			2>&1 \
-			| egrep -v \"^$\" \
-			| egrep -v \"llvm\.framework\" \
-			| egrep -v \"^oclint: error: violations exceed threshold$\" \
-			| egrep -v \"^P1=.+ P2=.+ P3=\" \
-			| egrep -v \"^OCLint Report$\" \
-			| egrep -v \"^Compiler Warnings:\" \
-			| egrep -v \"^Summary: \" \
-			| egrep -v \"^\[OCLint .+\]$\" \
-			| egrep -v '^/Applications/Xcode\.app/' \
-			| egrep -v '^/usr/local/' \
+			| egrep -v -e \"^$\" \
+					   -e \"unused local variable.*VuoDeferScopeVar\" \
+					   -e \"unused local variable.*lock\" \
+					   -e \"^oclint: error: violations exceed threshold$\" \
+					   -e \"^P1=.+ P2=.+ P3=\" \
+					   -e \"^/Users/.+/.conan/data/\" \
+					   -e \"^OCLint Report$\" \
+					   -e \"^Compiler Warnings:\" \
+					   -e \"^Compiler Errors:\" \
+					   -e \"^Summary: \" \
+					   -e \"^\[OCLint .+\]$\" \
+					   -e 'VuoCompiler.cc.*DEAD_STORE' \
+					   -e 'VuoSceneRenderer.cc:.*: constant if expression' \
+					   -e 'variable .__dso_handle. has internal linkage but is not defined' \
+					   -e '^/Applications/Xcode\.app/' \
+					   -e '^/usr/local/' \
+					   -e '/llvm.framework/' \
 			|| true
 		";
 
-		squashPrecompiledHeaders($oclintCommand, $root);
+		squashPrecompiledHeaders($oclintCommand, $sourceDir);
 
-		system($oclintCommand, $ret);
+		exec($oclintCommand, $output, $ret);
 		if ($ret)
 			echo 'Failed command: ' . $oclintCommand;
+
+		foreach ($output as $line)
+			print preg_replace('@.*/([^/]*:\d+:\d+:) (.*)@', '$1 warning: $2', $line) . "\n";
 	}
+	else
+		die("error: couldn't find the filename in the clang args: $clangArgs\n");
 
 
 	echo "\tclang analyzer:\n";
-	$clangAnalyzerCommand = "$clang \
+	$clangAnalyzerCommand = "gtimeout 10m \
+		$clang \
 		--analyze \
+		-Xanalyzer -analyzer-output=html \
 		-Xanalyzer -analyzer-eagerly-assume \
 		-Xanalyzer -analyzer-opt-analyze-nested-blocks \
 		-Xanalyzer -analyzer-checker=alpha,core,deadcode,llvm,osx,security,unix \
 		$clangArgs \
+		-o $filename.d \
 		2>&1 \
-		| egrep -v \"^clang: warning: .+ 'linker' input unused$\" \
-		| egrep -v \"^clang: warning: argument unused during compilation:\" \
-		| egrep -v \"^/Applications/Xcode\.app/.+: warning: \" \
-		| egrep -v \"^/usr/local/Cellar/.+: warning: \" \
-		| egrep -v \"^Leap/.+: warning: \" \
-		| egrep -v \"^\d+ warnings? generated.$\" \
+		| grep -E -v \
+			-e \"^$\" \
+			-e \"^clang: warning: .+ 'linker' input unused$\" \
+			-e \"^clang: warning: argument unused during compilation:\" \
+			-e \"^/Applications/Xcode\.app/.+: warning: \" \
+			-e \"^/usr/local/Cellar/.+: warning: \" \
+			-e \"/.conan/data/.+: (warning|note): \" \
+			-e \"^Leap/.+: warning: \" \
+			-e \"^\d+ warnings? generated.$\" \
+			-e \"^Assertion failed:\" \
+			-e \"^Stack dump:\" \
+			-e \"^\d+\.\t\" \
+			-e \"\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\" \
+			-e \"PLEASE ATTACH THE FOLLOWING FILES TO THE BUG REPORT:\" \
+			-e \"Preprocessed source.s. and associated run script.s. are located at:\" \
+			-e \"Target:\" \
+			-e \"Thread model: posix\" \
+			-e \"clang version\" \
+			-e \"clang: error: clang frontend command failed due to signal\" \
+			-e \"clang: error: unable to execute command: (Abort trap|Segmentation fault)\" \
+			-e \"clang: note: diagnostic msg:\" \
 		|| true
 	";
 
@@ -112,34 +191,70 @@ exit(0);
 
 
 	echo "\tinfer:\n";
-	$inferCommand = "infer \
+	$inferCommand = "gtimeout 10m \
+		/usr/local/bin/infer \
 		--no-progress-bar \
 		--cxx \
 		--headers \
-		--infer-blacklist-path-regex '/usr/local/Cellar/.+' \
-		--infer-blacklist-path-regex '.+/llvm\.framework/.+' \
-		--infer-blacklist-path-regex '.+/infer-osx-v.+/.+' \
-		--results-dir $root/infer \
-		-- $clang $clangArgs \
-		-I/usr/local/Cellar/graphviz/2.28.0/include \
-		-I/usr/local/Cellar/json-c/0.12/include \
-		-I/usr/local/Cellar/zeromq/2.2.0/include \
-		-I/usr/local/Cellar/openssl/1.0.1g/include \
-		-I/usr/local/Cellar/discount/2.1.6/include \
-		-I/usr/local/Cellar/json-c/0.12/include \
-		-I$root/library \
-		| egrep -v \"^Capturing in make/cc mode\" \
-		| egrep -v \"^Starting analysis\" \
-		| egrep -v \"^$\" \
-		| egrep -v \"^legend:\" \
-		| egrep -v \" analyzing a (file|procedure)$\" \
-		| egrep -v \"^Found \d+ source files in\" \
-		| egrep -v \"^  No issues found  $\" \
-		|| true
-	";
-	// @todo replace with dependency paths from build system
+		--keep-going \
+		--pulse \
+		--call-graph-schedule \
+		--report-blacklist-path-regex '/Users/.+/\.conan/data/.+' \
+		--report-blacklist-path-regex '/usr/local/Cellar/.+' \
+		--report-blacklist-path-regex '/Applications/Xcode\.app/.+' \
+		--report-blacklist-path-regex '.+/llvm\.framework/.+' \
+		--report-blacklist-path-regex '.+/infer-osx-v.+/.+' \
+		--results-dir $buildDir/infer \
+		-- $clang $clangArgsMinusSTDCPP \
+		$includeDirsMinusSTDCPP \
+		-I$sourceDir/library \
+		2>&1 \
+		| grep -E -v \
+			-e \"^Capturing in make/cc mode\" \
+			-e \"^Starting analysis\" \
+			-e \"^Building call graph\" \
+			-e \"^Built call graph in\" \
+			-e \"^Finished call graph scheduling\" \
+			-e \"^Analysis finished in\" \
+			-e \"^ *[A-Z_]+: \d+$\" \
+			-e \"^$\" \
+			-e \"^legend:\" \
+			-e \" analyzing a (file|procedure)$\" \
+			-e \"^Found \d+ source files?\" \
+			-e \"^  No issues found  $\" \
+			-e \"ERROR translating statement\" \
+			-e \"Aborting translation of method\" \
+			-e \"^Found \d+ issue\" \
+			-e \"Summary of the reports\" \
+			-e \"^Uncaught Internal Error\" \
+			-e \"^Error backtrace\" \
+			-e \"^Called from file \" \
+			-e \"^Raised at file \" \
+			-e \"^Raised by primitive operation at file \" \
+			-e \"infer.tmp.*: No such file or directory\" \
+			-e \"dirname .*/infer/specs\" \
+			-e \"VuoLog.cc:.*error: variable .__dso_handle. is used but not defined in this translation unit\" \
+			-e \"Known incorrect assumption in the frontend\"";
 
-	squashPrecompiledHeaders($inferCommand, $root);
+	// https://github.com/facebook/infer/issues/8
+	$inferCommand .= " | pcregrep -Mv 'DEAD_STORE(.|\\n)*?VuoDeferScopeVar(.|\\n)*?>.*?(VuoDefer|VuoLocal).*?(\\n\\s+\\d+\\..*){2}'";
+
+	// https://github.com/facebook/infer/issues/1031
+	$inferCommand .= " | pcregrep -Mv 'CXX_REFERENCE_CAPTURED_IN_OBJC_BLOCK(.|\\n)*?>.*?dispatch_sync.*?(\\n\\s+\\d+\\..*){2}'";
+	$inferCommand .= " | pcregrep -Mv 'CXX_REFERENCE_CAPTURED_IN_OBJC_BLOCK(.|\\n)*?>.*?getNextLine.*?(\\n\\s+\\d+\\..*){2}'";
+
+	// macOS overcommits, so we don't care about malloc returning NULL.
+	$inferCommand .= " | pcregrep -Mv 'NULL_DEREFERENCE(.|\\n)*?(malloc|calloc|strdup)(.|\\n)*?>.*?(\\n\\s+\\d+\\..*){2}'";
+
+	// False positive: it's not possible for std::vector to be NULL.
+	$inferCommand .= " | pcregrep -Mv 'NULL_DEREFERENCE(.|\\n)*?.*pointer.*__begin_.*last assigned on line.*could be null.*(\\n\\s+\\d+\\..*){5}'";
+
+	// Ignore failures within Infer.
+	$inferCommand .= " | pcregrep -Mv 'Stack dump:(.|\\n)*'";
+
+	$inferCommand .= " ||true";
+
+	squashPrecompiledHeaders($inferCommand, $sourceDir);
 
 	system($inferCommand, $ret);
 	if ($ret)
@@ -147,8 +262,13 @@ exit(0);
 }
 
 
+if ($runAnalyzers)
 echo "\tclang:\n";
-$clangCommand = "$clang $clangArgs";
+$clangCommand = "set -o pipefail ; $clang $clangArgs \
+	2>&1 \
+	| grep -E -v \
+		-e \"clang: warning: .*: 'linker' input unused\" \
+	|| true";
 system($clangCommand, $ret);
 if ($ret)
 {
@@ -157,8 +277,8 @@ if ($ret)
 }
 
 
-function squashPrecompiledHeaders(&$command, $root)
+function squashPrecompiledHeaders(&$command, $sourceDir)
 {
 	// Disable the precompiled header, since infer's version of clang doesn't support precompiled headers from Vuo's version of clang.
-	$command = preg_replace('@-Xclang -include-pch -Xclang \'?(.+/)?pch/.+/(c|c\+\+|objective-c|objective-c\+\+)\.pch\'?@', "-include $root/vuo.pch", $command);
+	$command = preg_replace('@-include-pch .*/pch/VuoPCH.*\.pch@', "-include $sourceDir/vuo.pch", $command);
 }

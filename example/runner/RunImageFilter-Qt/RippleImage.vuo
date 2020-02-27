@@ -2,20 +2,20 @@
  * @file
  * This graph modifies an image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="440,204" _increment="0.01" _decrement="1" _setCount="0.000000"];
-RippleImage [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="601,119" _angle="135" _amplitude="0.1" _wavelength="0.05"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<inputImage>inputImage\r" _inputImage_type="VuoImage"];
+RippleImage [type="vuo.image.ripple" version="2.2.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<displacement>displacement\l|<rippledImage>rippledImage\r" pos="600,120" _angle="135" _amplitude="0.1" _wavelength="0.05" _displacement="\"longitudinal\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<image>image\r" _time_type="VuoReal" _time_suggestedMin="0" _time_suggestedMax="1" _image_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-Count:count -> RippleImage:phase;
-PublishedInputs:inputImage -> RippleImage:image;
-PublishedInputs:inputImage -> Count:increment [event=true];
+PublishedInputs:image -> RippleImage:image;
+PublishedInputs:time -> RippleImage:phase;
 RippleImage:rippledImage -> PublishedOutputs:outputImage;
 }

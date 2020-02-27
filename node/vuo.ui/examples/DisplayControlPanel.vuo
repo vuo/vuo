@@ -1,0 +1,112 @@
+/**
+ * @file
+ * Demonstrates customizing the appearance of UI widgets. The control panel doesn't actually control anything.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ActiveHovered2 [type="vuo.data.share.VuoColor" version="1.0.0" label="Active Pressed|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-615,570" _value="\{\"r\":1,\"g\":0.44135195016860962,\"b\":0.72176700830459595,\"a\":1\}"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-825,75" _reset_manuallyFirable];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="825,90" _horizontalAlignment="\"left\"" _anchor="\"center-center\"" _position="\{\"x\":0,\"y\":0\}" _spacing="0.10000000000000001"];
+CombineWidgetThemes [type="vuo.ui.theme.combine" version="1.0.0" label="Combine Widget Themes|<refresh>refresh\l|<elements>elements\l|<theme>theme\r" pos="210,165" fillcolor="orange"];
+MakeActionButton2 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="525,-30" fillcolor="orange" _label="\"Do Something\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeActionButtonTheme [type="vuo.ui.make.theme.button.rounded" version="1.0.0" label="Make Action Button Theme|<refresh>refresh\l|<minimumWidth>minimumWidth\l|<minimumHeight>minimumHeight\l|<labelFont>labelFont\l|<labelAnchor>labelAnchor\l|<labelPadding>labelPadding\l|<labelColor>labelColor\l|<labelColorHovered>labelColorHovered\l|<labelColorPressed>labelColorPressed\l|<backgroundColor>backgroundColor\l|<backgroundColorHovered>backgroundColorHovered\l|<backgroundColorPressed>backgroundColorPressed\l|<borderColor>borderColor\l|<borderColorHovered>borderColorHovered\l|<borderColorPressed>borderColorPressed\l|<borderThickness>borderThickness\l|<cornerRoundness>cornerRoundness\l|<theme>theme\r" pos="-165,-135" fillcolor="orange" _minimumWidth="0.25" _minimumHeight="0.08" _labelFont="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _labelAnchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _labelPadding="\{\"x\":0.03,\"y\":0\}" _cornerRoundness="0.5"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1034,101" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="757,101"];
+MakeList3 [type="vuo.list.make.3.VuoUiTheme" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="177,176" fillcolor="orange"];
+MakeSlider [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="525,255" fillcolor="orange" _label="\"Upper Range\"" _setValue="0" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0.0,\"y\":0.0\}" _trackLength="1" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+MakeSlider3 [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="525,450" fillcolor="orange" _label="\"Lower Range\"" _setValue="0" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0.0,\"y\":0.0\}" _trackLength="1" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+MakeSliderTheme [type="vuo.ui.make.theme.slider.rounded" version="1.0.0" label="Make Slider Theme|<refresh>refresh\l|<labelFont>labelFont\l|<labelColor>labelColor\l|<labelColorHovered>labelColorHovered\l|<handleWidth>handleWidth\l|<handleHeight>handleHeight\l|<handleBorderThickness>handleBorderThickness\l|<handleCornerRoundness>handleCornerRoundness\l|<handleColor>handleColor\l|<handleColorHovered>handleColorHovered\l|<handleColorPressed>handleColorPressed\l|<handleBorderColor>handleBorderColor\l|<handleBorderColorHovered>handleBorderColorHovered\l|<handleBorderColorPressed>handleBorderColorPressed\l|<trackDepth>trackDepth\l|<trackBorderThickness>trackBorderThickness\l|<trackCornerRoundness>trackCornerRoundness\l|<activeTrackColor>activeTrackColor\l|<activeTrackColorHovered>activeTrackColorHovered\l|<activeTrackBorderColor>activeTrackBorderColor\l|<activeTrackBorderColorHovered>activeTrackBorderColorHovered\l|<inactiveTrackColor>inactiveTrackColor\l|<inactiveTrackColorHovered>inactiveTrackColorHovered\l|<inactiveTrackBorderColor>inactiveTrackBorderColor\l|<inactiveTrackBorderColorHovered>inactiveTrackBorderColorHovered\l|<marginBetweenTrackAndLabel>marginBetweenTrackAndLabel\l|<theme>theme\r" pos="-180,645" fillcolor="orange" _labelFont="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _handleWidth="0.029999999999999999" _handleHeight="0.050000000000000003" _handleBorderThickness="0" _handleCornerRoundness="0.5" _trackDepth="0.015" _trackCornerRoundness="1.0" _marginBetweenTrackAndLabel="0.01"];
+MakeToggleButton [type="vuo.ui.make.toggle" version="1.0.0" label="Make Toggle Button|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r|<turnedOn>turnedOn\r|<turnedOff>turnedOff\r" pos="525,105" fillcolor="orange" _label="\"Enable\"" _setValue="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue" _turnedOn_eventThrottling="enqueue" _turnedOff_eventThrottling="enqueue"];
+MakeToggleButtonTheme [type="vuo.ui.make.theme.toggle.rounded" version="1.0.0" label="Make Toggle Button Theme|<refresh>refresh\l|<labelFont>labelFont\l|<labelColor>labelColor\l|<labelColorHovered>labelColorHovered\l|<labelColorPressed>labelColorPressed\l|<labelColorToggled>labelColorToggled\l|<labelColorToggledAndHovered>labelColorToggledAndHovered\l|<checkmarkColor>checkmarkColor\l|<checkmarkColorHovered>checkmarkColorHovered\l|<checkmarkColorPressed>checkmarkColorPressed\l|<checkmarkBorderColor>checkmarkBorderColor\l|<checkmarkBorderColorHovered>checkmarkBorderColorHovered\l|<checkmarkBorderColorPressed>checkmarkBorderColorPressed\l|<checkboxBackgroundColor>checkboxBackgroundColor\l|<checkboxBackgroundColorHovered>checkboxBackgroundColorHovered\l|<checkboxBackgroundColorPressed>checkboxBackgroundColorPressed\l|<checkboxBackgroundColorToggled>checkboxBackgroundColorToggled\l|<checkboxBackgroundColorToggledAndHovered>checkboxBackgroundColorToggledAndHovered\l|<checkboxBorderColor>checkboxBorderColor\l|<checkboxBorderColorHovered>checkboxBorderColorHovered\l|<checkboxBorderColorPressed>checkboxBorderColorPressed\l|<checkboxBorderColorToggled>checkboxBorderColorToggled\l|<checkboxBorderColorToggledAndHovered>checkboxBorderColorToggledAndHovered\l|<checkboxBorderThickness>checkboxBorderThickness\l|<checkboxCornerRoundness>checkboxCornerRoundness\l|<marginBetweenCheckboxAndLabel>marginBetweenCheckboxAndLabel\l|<theme>theme\r" pos="-180,180" fillcolor="orange" _labelFont="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _checkmarkColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0\}" _checkmarkColorHovered="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0\}" _checkmarkColorPressed="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0\}" _checkmarkBorderColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}" _checkmarkBorderColorHovered="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}" _checkmarkBorderColorPressed="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}" _checkboxCornerRoundness="0.5" _marginBetweenCheckboxAndLabel="0.025"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1080,90" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue [type="vuo.data.share.VuoColor" version="1.0.0" label="Inactive|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-600,225" _value="\{\"r\":0.50196081399917603,\"g\":0,\"b\":0.25098040699958801,\"a\":1\}"];
+ShareValue10 [type="vuo.data.share.VuoColor" version="1.0.0" label="Active Hovered|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-615,510" _value="\{\"r\":1,\"g\":0.24687571823596954,\"b\":0.62491798400878906,\"a\":1\}"];
+ShareValue2 [type="vuo.data.share.VuoColor" version="1.0.0" label="Label|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-600,75" _value="\{\"r\":1,\"g\":1,\"b\":0.77207601070404053,\"a\":1\}"];
+ShareValue5 [type="vuo.data.share.VuoColor" version="1.0.0" label="Inactive Hovered|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-630,285" _value="\{\"r\":0.65299457311630249,\"g\":0.16617074608802795,\"b\":0.40959793329238892,\"a\":1\}"];
+ShareValue6 [type="vuo.data.share.VuoColor" version="1.0.0" label="Inactive Pressed|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-630,345" _value="\{\"r\":0.91212332248687744,\"g\":0.12172121554613113,\"b\":0.51691460609436035,\"a\":1\}"];
+ShareValue7 [type="vuo.data.share.VuoColor" version="1.0.0" label="Border|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-600,720" _value="\{\"r\":1,\"g\":0,\"b\":0.50196081399917603,\"a\":1\}"];
+ShareValue8 [type="vuo.data.share.VuoReal" version="1.0.0" label="Border Thickness|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-630,780" _value="0.002"];
+ShareValue9 [type="vuo.data.share.VuoColor" version="1.0.0" label="Active|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-600,450" _value="\{\"r\":1,\"g\":0,\"b\":0.50196081399917603,\"a\":1\}"];
+
+Comment [type="vuo.comment" label="\"Tip: You can package this part into a subcomposition and reuse it.\"" pos="-645,-180" width="1062" height="1227"];
+
+ActiveHovered2:sameValue -> MakeSliderTheme:handleColorPressed;
+AllowFirstEvent:firstEvent -> ActiveHovered2:value;
+AllowFirstEvent:firstEvent -> ShareValue10:value;
+AllowFirstEvent:firstEvent -> ShareValue2:value;
+AllowFirstEvent:firstEvent -> ShareValue5:value;
+AllowFirstEvent:firstEvent -> ShareValue6:value;
+AllowFirstEvent:firstEvent -> ShareValue7:value;
+AllowFirstEvent:firstEvent -> ShareValue8:value;
+AllowFirstEvent:firstEvent -> ShareValue9:value;
+AllowFirstEvent:firstEvent -> ShareValue:value;
+ArrangeLayersInColumn:arrangedLayer -> MakeList:1;
+CombineWidgetThemes:theme -> MakeActionButton2:theme;
+CombineWidgetThemes:theme -> MakeSlider3:theme;
+CombineWidgetThemes:theme -> MakeSlider:theme;
+CombineWidgetThemes:theme -> MakeToggleButton:theme;
+MakeActionButton2:updatedLayer -> MakeList2:1;
+MakeActionButtonTheme:theme -> MakeList3:1;
+MakeList2:list -> ArrangeLayersInColumn:layers;
+MakeList3:list -> CombineWidgetThemes:elements;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeSlider3:updatedLayer -> MakeList2:4;
+MakeSlider:updatedLayer -> MakeList2:3;
+MakeSliderTheme:theme -> MakeList3:3;
+MakeToggleButton:updatedLayer -> MakeList2:2;
+MakeToggleButtonTheme:theme -> MakeList3:2;
+RenderLayersToWindow:updatedWindow -> AllowFirstEvent:event [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton2:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeSlider3:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeSlider:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeToggleButton:window [style=invis];
+ShareValue10:sameValue -> MakeSliderTheme:activeTrackColorHovered;
+ShareValue10:sameValue -> MakeSliderTheme:handleColorHovered;
+ShareValue10:sameValue -> MakeToggleButtonTheme:checkboxBackgroundColorToggledAndHovered;
+ShareValue2:sameValue -> MakeActionButtonTheme:labelColor;
+ShareValue2:sameValue -> MakeActionButtonTheme:labelColorHovered;
+ShareValue2:sameValue -> MakeActionButtonTheme:labelColorPressed;
+ShareValue2:sameValue -> MakeSliderTheme:labelColor;
+ShareValue2:sameValue -> MakeSliderTheme:labelColorHovered;
+ShareValue2:sameValue -> MakeToggleButtonTheme:labelColor;
+ShareValue2:sameValue -> MakeToggleButtonTheme:labelColorHovered;
+ShareValue2:sameValue -> MakeToggleButtonTheme:labelColorPressed;
+ShareValue2:sameValue -> MakeToggleButtonTheme:labelColorToggled;
+ShareValue2:sameValue -> MakeToggleButtonTheme:labelColorToggledAndHovered;
+ShareValue5:sameValue -> MakeActionButtonTheme:backgroundColorHovered;
+ShareValue5:sameValue -> MakeSliderTheme:inactiveTrackColorHovered;
+ShareValue5:sameValue -> MakeToggleButtonTheme:checkboxBackgroundColorHovered;
+ShareValue6:sameValue -> MakeActionButtonTheme:backgroundColorPressed;
+ShareValue6:sameValue -> MakeToggleButtonTheme:checkboxBackgroundColorPressed;
+ShareValue7:sameValue -> MakeActionButtonTheme:borderColor;
+ShareValue7:sameValue -> MakeActionButtonTheme:borderColorHovered;
+ShareValue7:sameValue -> MakeActionButtonTheme:borderColorPressed;
+ShareValue7:sameValue -> MakeSliderTheme:activeTrackBorderColor;
+ShareValue7:sameValue -> MakeSliderTheme:activeTrackBorderColorHovered;
+ShareValue7:sameValue -> MakeSliderTheme:handleBorderColor;
+ShareValue7:sameValue -> MakeSliderTheme:handleBorderColorHovered;
+ShareValue7:sameValue -> MakeSliderTheme:handleBorderColorPressed;
+ShareValue7:sameValue -> MakeSliderTheme:inactiveTrackBorderColor;
+ShareValue7:sameValue -> MakeSliderTheme:inactiveTrackBorderColorHovered;
+ShareValue7:sameValue -> MakeToggleButtonTheme:checkboxBorderColor;
+ShareValue7:sameValue -> MakeToggleButtonTheme:checkboxBorderColorHovered;
+ShareValue7:sameValue -> MakeToggleButtonTheme:checkboxBorderColorPressed;
+ShareValue7:sameValue -> MakeToggleButtonTheme:checkboxBorderColorToggled;
+ShareValue7:sameValue -> MakeToggleButtonTheme:checkboxBorderColorToggledAndHovered;
+ShareValue8:sameValue -> MakeActionButtonTheme:borderThickness;
+ShareValue8:sameValue -> MakeSliderTheme:trackBorderThickness;
+ShareValue8:sameValue -> MakeToggleButtonTheme:checkboxBorderThickness;
+ShareValue9:sameValue -> MakeSliderTheme:activeTrackColor;
+ShareValue9:sameValue -> MakeSliderTheme:handleColor;
+ShareValue9:sameValue -> MakeToggleButtonTheme:checkboxBackgroundColorToggled;
+ShareValue:sameValue -> MakeActionButtonTheme:backgroundColor;
+ShareValue:sameValue -> MakeSliderTheme:inactiveTrackColor;
+ShareValue:sameValue -> MakeToggleButtonTheme:checkboxBackgroundColor;
+}

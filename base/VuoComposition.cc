@@ -2,17 +2,17 @@
  * @file
  * VuoComposition implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoComposition.hh"
 #include "VuoCable.hh"
-#include "VuoNode.hh"
-#include "VuoPort.hh"
-#include "VuoPortClass.hh"
+#include "VuoCompositionMetadata.hh"
+#include "VuoProtocol.hh"
 #include "VuoPublishedPort.hh"
+#include "VuoStringUtilities.hh"
 
 /**
  * Creates an empty composition.
@@ -20,24 +20,38 @@
 VuoComposition::VuoComposition(void)
 	: VuoBase<VuoCompilerComposition,VuoRendererComposition>("VuoComposition")
 {
-	this->name = "VuoComposition";
-	this->directory = "";
+	metadata = new VuoCompositionMetadata();
+	ownsMetadata = true;
+	directory = "";
+}
+
+VuoComposition::~VuoComposition(void)
+{
+	if (ownsMetadata)
+		delete metadata;
 }
 
 /**
- * Sets the composition's display name.
+ * Assigns @a metadata to this composition.
+ *
+ * If @a takeOwnership is true, this composition becomes responsible for destroying @a metadata.
+ * Otherwise, the caller is responsible.
  */
-void VuoComposition::setName(string name)
+void VuoComposition::setMetadata(VuoCompositionMetadata *metadata, bool takeOwnership)
 {
-	this->name = name;
+	if (ownsMetadata)
+		delete this->metadata;
+
+	this->metadata = metadata;
+	ownsMetadata = takeOwnership;
 }
 
 /**
- * Returns the composition's display name.
+ * Returns the metadata associated with this composition.
  */
-string VuoComposition::getName(void)
+VuoCompositionMetadata * VuoComposition::getMetadata(void)
 {
-	return name;
+	return metadata;
 }
 
 /**
@@ -54,38 +68,6 @@ void VuoComposition::setDirectory(string directory)
 string VuoComposition::getDirectory(void)
 {
 	return directory;
-}
-
-/**
- * Sets the composition's description (documentation).
- */
-void VuoComposition::setDescription(string description)
-{
-	this->description = description;
-}
-
-/**
- * Returns the composition's description (documentation).
- */
-string VuoComposition::getDescription(void)
-{
-	return description;
-}
-
-/**
- * Sets the composition's copyright.
- */
-void VuoComposition::setCopyright(string copyright)
-{
-	this->copyright = copyright;
-}
-
-/**
- * Returns the composition's copyright.
- */
-string VuoComposition::getCopyright(void)
-{
-	return copyright;
 }
 
 /**
@@ -114,7 +96,6 @@ set<VuoNode *> VuoComposition::getNodes(void)
 	return nodes;
 }
 
-
 /**
  * Adds a cable to the composition.
  *
@@ -142,6 +123,30 @@ void VuoComposition::removeCable(VuoCable *cable)
 set<VuoCable *> VuoComposition::getCables(void)
 {
 	return cables;
+}
+
+/**
+ * Adds a comment to the composition.
+ */
+void VuoComposition::addComment(VuoComment *comment)
+{
+	comments.insert(comment);
+}
+
+/**
+ * Removes a comment from the composition.
+ */
+void VuoComposition::removeComment(VuoComment *comment)
+{
+	comments.erase(comment);
+}
+
+/**
+ * Returns the comments in this composition.
+ */
+set<VuoComment *> VuoComposition::getComments(void)
+{
+	return comments;
 }
 
 /**
@@ -237,130 +242,40 @@ int VuoComposition::getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput
 }
 
 /**
- * Replaces @a oldNode with @a newNode in the composition, transferring all cable and published port
- * connections from @a oldNode to @a newNode.
+ * Returns an ordered list of the composition's published input or output ports,
+ * with published ports belonging to the provided protocol listed first, followed by
+ * published ports that are not part of the protocol.
  */
-void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
+vector<VuoPublishedPort *> VuoComposition::getProtocolAwarePublishedPortOrder(VuoProtocol *protocol, bool publishedInputs)
 {
-	removeNode(oldNode);
-	addNode(newNode);
+	vector<VuoPublishedPort *> publishedPorts = (publishedInputs? publishedInputPorts : publishedOutputPorts);
+	vector<VuoPublishedPort *> sortedPublishedPorts;
 
-	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	// First list published ports that are part of the target protocol.
+	if (protocol)
 	{
-		VuoCable *cable = *i;
-		if (cable->getFromNode() == oldNode)
+		vector<pair<string, string> > protocolPorts = (publishedInputs?
+															  protocol->getInputPortNamesAndTypes() :
+															  protocol->getOutputPortNamesAndTypes());
+
+		for (vector<pair<string, string> >::const_iterator i = protocolPorts.begin(); i != protocolPorts.end(); ++i)
 		{
-			VuoPort *oldPort = cable->getFromPort();
-			VuoPort *newPort = newNode->getOutputPortWithName( oldPort->getClass()->getName() );
-			cable->setFrom(newNode, newPort);
-		}
-		if (cable->getToNode() == oldNode)
-		{
-			VuoPort *oldPort = cable->getToPort();
-			VuoPort *newPort = newNode->getInputPortWithName( oldPort->getClass()->getName() );
-			cable->setTo(newNode, newPort);
+			string protocolPortName = i->first;
+			VuoPublishedPort *compliantPublishedPort = (publishedInputs?
+															getPublishedInputPortWithName(protocolPortName) :
+															getPublishedOutputPortWithName(protocolPortName));
+			if (compliantPublishedPort)
+				sortedPublishedPorts.push_back(compliantPublishedPort);
 		}
 	}
-}
 
-/**
- * Parses the composition's Doxygen header to retrieve its name, description, and copyright.
- *
- * If a Doxygen line starts `@brief `, the @c name is the remainder of that line.
- *
- * If a Doxygen line starts `@copyright `, the @c copyright is the remainder of that paragraph.
- *
- * The remaining Doxygen lines are the @c description.
- */
-void VuoComposition::parseHeader(const string &compositionAsString, string &name, string &description, string &copyright)
-{
-	__block int charNum = 0;
-	string (^getNextLine)(void) = ^{
-			string line;
-			while (true)
-			{
-				char c = compositionAsString[charNum++];
-				if (c == '\n')
-					break;
-				if (c == 0)
-					return (string)"";
-				line += c;
-			}
-			return line;
-		};
-
-	__block bool firstLine = true;
-	bool (^getNextDoxygenLine)(string &line) = ^(string &line){
-			while ((line = getNextLine()) != "")
-			{
-				if (firstLine)
-				{
-					firstLine = false;
-					if (line != "/**")
-						return false;
-					else
-						continue;
-				}
-
-				if (line == "*/")
-					return false;
-
-				if (line.substr(0, 1) == "*")
-				{
-					if (line.length() > 1)
-						line = line.substr(2);
-					else
-						line = "";
-					return true;
-				}
-				if (line.substr(0, 2) == " *")
-				{
-					if (line.length() > 2)
-						line = line.substr(3);
-					else
-						line = "";
-					return true;
-				}
-				return false;
-			}
-			return false;
-		};
-
-	string line;
-	bool firstDescriptionLine = true;
-	bool inCopyright = false;
-	while (getNextDoxygenLine(line))
+	// Next list published ports that are not part of the target protocol.
+	for (vector<VuoPublishedPort *>::const_iterator port = publishedPorts.begin(); port != publishedPorts.end(); ++port)
 	{
-		if (line == "@file")
-			continue;
-
-		if (line.substr(0, 7) == "@brief ")
-		{
-			name = line.substr(7);
-			continue;
-		}
-		if (line.substr(0, 11) == "@copyright ")
-		{
-			inCopyright = true;
-			copyright = line.substr(11);
-			continue;
-		}
-
-		if (line == "")
-		{
-			inCopyright = false;
-			continue;
-		}
-
-		if (inCopyright)
-		{
-			copyright += " " + line;
-			continue;
-		}
-
-		if (!firstDescriptionLine)
-			description += " ";
-		description += line;
-		firstDescriptionLine = false;
+		if (std::find(sortedPublishedPorts.begin(), sortedPublishedPorts.end(), *port) == sortedPublishedPorts.end())
+			sortedPublishedPorts.push_back(*port);
 	}
+
+	return sortedPublishedPorts;
 }
+

@@ -2,17 +2,18 @@
  * @file
  * VuoOsc interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#include "node.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "node.h"
 #include "VuoOscMessage.h"
 #include "VuoOscInputDevice.h"
 #include "VuoOscOutputDevice.h"
@@ -25,6 +26,9 @@ void VuoOsc_disuse(void);
 
 VuoList_VuoOscInputDevice  VuoOsc_getInputDeviceList(void);
 VuoList_VuoOscOutputDevice VuoOsc_getOutputDeviceList(void);
+
+bool VuoOscInputDevice_realize (const VuoOscInputDevice  device, VuoOscInputDevice  *realizedDevice);
+bool VuoOscOutputDevice_realize(const VuoOscOutputDevice device, VuoOscOutputDevice *realizedDevice);
 
 void VuoOsc_addDevicesChangedTriggers
 (

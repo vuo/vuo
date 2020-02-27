@@ -2,29 +2,28 @@
  * @file
  * VuoNumberFormat implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoNumberFormat.h"
 #include "VuoList_VuoNumberFormat.h"
+#include <CoreFoundation/CoreFoundation.h>
 
 /// @{
 #ifdef VUO_COMPILER
-VuoModuleMetadata({
-					  "title" : "Number Format",
-					  "description" : "How to convert a number into text.",
-					  "keywords" : [ ],
-					  "version" : "1.0.0",
-					  "dependencies" : [
-					  "VuoList_VuoNumberFormat"
-					  ]
-				  });
+VuoModuleMetadata({	"title" : "Number Format",
+					"description" : "How to convert a number into text.",
+					"keywords" : [ ],
+					"version" : "1.0.0",
+					"dependencies" : [
+						"VuoText",
+					"VuoList_VuoNumberFormat",
+					"CoreFoundation.framework"
+					]
+				});
 #endif
 /// @}
 
@@ -64,6 +63,61 @@ json_object *VuoNumberFormat_getJson(const VuoNumberFormat value)
 		valueAsString = "currency";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a new VuoText string from the formatted number value.
+ * @version200New
+ */
+VuoText VuoNumberFormat_format(VuoReal value,
+	VuoNumberFormat format,
+	VuoInteger minimumIntegerDigits,
+	VuoInteger minimumDecimalPlaces,
+	VuoInteger decimalPlaces,
+	bool showThousandSeparator)
+{
+	VuoText text = NULL;
+
+	CFNumberFormatterStyle style = kCFNumberFormatterDecimalStyle;
+
+	if (format == VuoNumberFormat_Percentage)
+		style = kCFNumberFormatterPercentStyle;
+	else if (format == VuoNumberFormat_Currency)
+		style = kCFNumberFormatterCurrencyStyle;
+
+	CFLocaleRef currentLocale = CFLocaleCopyCurrent();
+	CFNumberFormatterRef numberFormatter = CFNumberFormatterCreate(NULL, currentLocale, style);
+
+	{
+		CFNumberRef cfn = CFNumberCreate(NULL, kCFNumberIntType, &minimumIntegerDigits);
+		CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterMinIntegerDigits, cfn);
+		CFRelease(cfn);
+	}
+
+	{
+		CFNumberRef cfn = CFNumberCreate(NULL, kCFNumberIntType, &minimumDecimalPlaces);
+		CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterMinFractionDigits, cfn);
+		CFRelease(cfn);
+	}
+
+	{
+		CFNumberRef maxFractionDigits = CFNumberCreate(NULL, kCFNumberIntType, &decimalPlaces);
+		CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterMaxFractionDigits, maxFractionDigits);
+		CFRelease(maxFractionDigits);
+	}
+
+	CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterUseGroupingSeparator, showThousandSeparator ? kCFBooleanTrue : kCFBooleanFalse);
+
+	{
+		CFStringRef formattedNumberString = CFNumberFormatterCreateStringWithValue(NULL, numberFormatter, kCFNumberDoubleType, &value);
+		text = VuoText_makeFromCFString(formattedNumberString);
+		CFRelease(formattedNumberString);
+	}
+
+	CFRelease(numberFormatter);
+	CFRelease(currentLocale);
+
+	return text;
 }
 
 /**

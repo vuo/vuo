@@ -2,32 +2,25 @@
  * @file
  * VuoHid implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoHid.h"
-#include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 #include "VuoIoReturn.h"
-#include "VuoHidControl.h"
-#include "VuoList_VuoHidControl.h"
 #include "VuoEventLoop.h"
 #include "VuoUsbVendor.h"
 #include "VuoApp.h"
 
-#include <dispatch/dispatch.h>
-#include <vector>
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/usb/USB.h>
 
 extern "C"
 {
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -415,6 +408,7 @@ void VuoHid_use(void)
 				VUserLog("Error: Couldn't open IOHIDManager: %s", text);
 				free(text);
 				CFRelease(VuoHid_manager);
+				VuoHid_manager = NULL;
 				return;
 			}
 		}
@@ -442,14 +436,15 @@ void VuoHid_use(void)
  */
 void VuoHid_disuse(void)
 {
-	if (VuoHid_useCount <= 0)
+	if (VuoHid_useCount == 0)
 	{
 		VUserLog("Error: Unbalanced VuoHid_use() / _disuse() calls.");
 		return;
 	}
 
 	if (__sync_sub_and_fetch(&VuoHid_useCount, 1) == 0)
-		CFRelease(VuoHid_manager);
+		if (VuoHid_manager)
+			CFRelease(VuoHid_manager);
 }
 
 /**

@@ -1,32 +1,29 @@
-﻿/**
+/**
  * @file
  * VuoRendererNode interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoRendererItem.hh"
-#include "VuoRendererPortList.hh"
-#include "VuoRendererSignaler.hh"
+#include "VuoRendererColors.hh"
 
 #include "VuoBaseDetail.hh"
-#include "VuoNode.hh"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 	#include <json-c/json.h>
 #pragma clang diagnostic pop
 
-class VuoCompilerNode;
-class VuoCompilerNodeClass;
-class VuoRendererColors;
 class VuoRendererInputDrawer;
 class VuoRendererPort;
+class VuoRendererSignaler;
 class VuoRendererTypecastPort;
+class VuoNode;
 class VuoNodeClass;
 class VuoCable;
 
@@ -58,16 +55,11 @@ public:
 	qreal getInputDrawerOffset(unsigned int portIndex) const;
 	void updateNodeFrameRect(void);
 
-	static QPair<QPainterPath, QPainterPath> getNodeFrames(QRectF nodeInnerFrameRect,
-														   QPainterPath portsPath,
-														   QPainterPath portsInsetPath,
-														   QPainterPath statefulIndicatorOutline);
-	static QPainterPath getStatefulIndicatorOutline(QRectF nodeInnerFrameRect, bool isStateful);
-	static QPainterPath getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface, bool isSubcomposition);
+	static QPair<QPainterPath, QPainterPath> getNodeFrames(QRectF nodeInnerFrameRect);
 	static QPainterPath getSubcompositionIndicatorPath(QRectF nodeInnerFrameRect, bool isSubcomposition);
-	static QPair<QPainterPath, QPainterPath> getPortPaths(VuoRendererPortList *inputPorts, VuoRendererPortList *outputPorts);
 
 	void setMissingImplementation(bool missingImplementation);
+	bool isMissingImplementation(void);
 
 	void setProxyNode(VuoRendererNode * proxyNode);
 	VuoRendererNode * getProxyNode(void) const;
@@ -76,6 +68,8 @@ public:
 	bool nameDisplayEnabledForPort(const VuoRendererPort *port);
 	bool nameDisplayEnabledForInputPorts();
 	bool nameDisplayEnabledForOutputPorts();
+	VuoRendererColors::HighlightType getEligibilityHighlight(void);
+	void setEligibilityHighlight(VuoRendererColors::HighlightType eligibility);
 
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	void updateGeometry(void);
@@ -84,16 +78,13 @@ public:
 	set<VuoCable *> getConnectedCables(bool includePublishedCables);
 	set<VuoCable *> getConnectedInputCables(bool includePublishedCables);
 	set<VuoCable *> getConnectedOutputCables(bool includePublishedCables);
-	VuoRendererPortList * getInputPorts(void);
-	VuoRendererPortList * getOutputPorts(void);
+	vector<VuoRendererPort *> &getInputPorts(void);
+	vector<VuoRendererPort *> &getOutputPorts(void);
 	vector<pair<QString, json_object *> > getConstantPortValues();
 	void replaceInputPort(VuoRendererPort * oldPort, VuoRendererPort * newPort);
 	void addInputPort(VuoRendererPort * newPort);
 	bool hasGenericPort(void);
 	void setTitle(string title);
-
-	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, VuoNode *node);
-	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass, string smallTextColor);
 
 	void resetTimeLastExecuted();
 	void setExecutionEnded();
@@ -121,27 +112,23 @@ protected:
 	virtual void layoutPorts(void);
 
 	VuoRendererSignaler *signaler; ///< The object that sends signals on behalf of this renderer node.
-	VuoRendererPortList *inputPorts; ///<  The list of input renderer ports belonging to this renderer node.
-	VuoRendererPortList *outputPorts; ///< The list of output renderer ports belonging to this renderer node.
+	vector<VuoRendererPort *> inputPorts; ///<  The list of input renderer ports belonging to this renderer node.
+	vector<VuoRendererPort *> outputPorts; ///< The list of output renderer ports belonging to this renderer node.
 	qint64 timeLastExecutionEnded; ///< The time at which this node's running counterpart last completed an execution.
 	bool alwaysDisplayPortNames; ///< Indicates whether this node's ports, even unambiguous ones, should always have their names displayed.
+	VuoRendererColors::HighlightType _eligibilityHighlight; ///< Indicates whether this node contains ports eligible for the current cable drag.
 
 private:
 	VuoRendererNode *proxyNode; ///< The optional node that handles the rendering for this node.
 
 	// Drawing configuration
 	static const qreal outerBorderWidth;
-	static const qreal subcompositionBulge;
+	static const qreal nodeTitleHorizontalMargin;
 	static const qreal nodeClassHeight;
-	static const qreal antennaIconWidth;
 	static const qreal iconRightOffset;
-	static const qreal intraIconMargin;
 
 	QRectF frameRect;
 	QPair<QPainterPath, QPainterPath> nodeFrames; // (nodeOuterFrame, nodeInnerFrame)
-	QPair<QPainterPath, QPainterPath> portPaths; // (ports, portsInset)
-	QPainterPath statefulIndicatorOutline;
-	QPainterPath antennaPath;
 	QPainterPath subcompositionIndicatorPath;
 
 	QRectF nodeTitleBoundingRect;
@@ -149,7 +136,6 @@ private:
 	// Node attributes affecting drawing
 	enum Type nodeType;
 	QString nodeClass;
-	bool nodeIsStateful;
 	bool nodeIsSubcomposition;
 	bool nodeIsMissing;
 	VuoRendererPort *refreshPort;

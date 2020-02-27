@@ -2,9 +2,9 @@
  * @file
  * vuo.math.keep.average node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,9 +12,10 @@
 VuoModuleMetadata({
 					  "title" : "Keep Average",
 					  "keywords" : [ "mix", "combine", "mean", "midpoint", "middle",
+						  "Kalman filter",
 						  "store", "retain", "hold", "sample", "preserve"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -45,6 +46,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) state,
 		VuoInputData(VuoGenericType1) value,
+		VuoInputEvent({"data":"value", "hasPortAction":true}) valueEvent,
 		VuoInputEvent({"eventBlocking":"none"}) reset,
 		VuoOutputData(VuoGenericType1) average
 )
@@ -59,9 +61,4 @@ void nodeInstanceEvent
 		++(*state)->valueCount;
 		*average = (*state)->average = ((*state)->average * ((*state)->valueCount - 1.) + value) / (*state)->valueCount;
 	}
-}
-
-
-void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) state)
-{
 }

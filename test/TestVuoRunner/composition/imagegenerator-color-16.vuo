@@ -1,0 +1,78 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="165,60" _separator="\"\\n\""];
+MakeList15 [type="vuo.list.make.19.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<15>15\l|<16>16\l|<17>17\l|<18>18\l|<19>19\l|<list>list\r" pos="110,71"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,90" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,165"];
+SummarizeValue10 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,300"];
+SummarizeValue11 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,315"];
+SummarizeValue12 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,330"];
+SummarizeValue13 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,360"];
+SummarizeValue14 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,345"];
+SummarizeValue15 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,375"];
+SummarizeValue16 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,390"];
+SummarizeValue17 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,405"];
+SummarizeValue18 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,420"];
+SummarizeValue19 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,435"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,180"];
+SummarizeValue3 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,195"];
+SummarizeValue4 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,210"];
+SummarizeValue5 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,225"];
+SummarizeValue6 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,240"];
+SummarizeValue7 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,255"];
+SummarizeValue8 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,270"];
+SummarizeValue9 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,285"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r|<color0>color0\r|<color1>color1\r|<color2>color2\r|<color3>color3\r|<color4>color4\r|<color5>color5\r|<color6>color6\r|<color7>color7\r|<color8>color8\r|<color9>color9\r|<color10>color10\r|<color11>color11\r|<color12>color12\r|<color13>color13\r|<color14>color14\r|<color15>color15\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal" _color0_type="VuoColor" _color1_type="VuoColor" _color2_type="VuoColor" _color3_type="VuoColor" _color4_type="VuoColor" _color5_type="VuoColor" _color6_type="VuoColor" _color7_type="VuoColor" _color8_type="VuoColor" _color9_type="VuoColor" _color10_type="VuoColor" _color11_type="VuoColor" _color12_type="VuoColor" _color13_type="VuoColor" _color14_type="VuoColor" _color15_type="VuoColor"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+AppendTexts:compositeText -> MakeTextImage:text;
+MakeList15:list -> AppendTexts:texts;
+MakeTextImage:image -> PublishedOutputs:outputImage;
+PublishedInputs:color0 -> SummarizeValue4:value;
+PublishedInputs:color1 -> SummarizeValue5:value;
+PublishedInputs:color10 -> SummarizeValue13:value;
+PublishedInputs:color11 -> SummarizeValue15:value;
+PublishedInputs:color12 -> SummarizeValue16:value;
+PublishedInputs:color13 -> SummarizeValue17:value;
+PublishedInputs:color14 -> SummarizeValue18:value;
+PublishedInputs:color15 -> SummarizeValue19:value;
+PublishedInputs:color2 -> SummarizeValue6:value;
+PublishedInputs:color3 -> SummarizeValue7:value;
+PublishedInputs:color4 -> SummarizeValue8:value;
+PublishedInputs:color5 -> SummarizeValue9:value;
+PublishedInputs:color6 -> SummarizeValue10:value;
+PublishedInputs:color7 -> SummarizeValue11:value;
+PublishedInputs:color8 -> SummarizeValue12:value;
+PublishedInputs:color9 -> SummarizeValue14:value;
+PublishedInputs:height -> SummarizeValue2:value;
+PublishedInputs:time -> SummarizeValue3:value;
+PublishedInputs:width -> SummarizeValue:value;
+SummarizeValue10:summary -> MakeList15:10;
+SummarizeValue11:summary -> MakeList15:11;
+SummarizeValue12:summary -> MakeList15:12;
+SummarizeValue13:summary -> MakeList15:14;
+SummarizeValue14:summary -> MakeList15:13;
+SummarizeValue15:summary -> MakeList15:15;
+SummarizeValue16:summary -> MakeList15:16;
+SummarizeValue17:summary -> MakeList15:17;
+SummarizeValue18:summary -> MakeList15:18;
+SummarizeValue19:summary -> MakeList15:19;
+SummarizeValue2:summary -> MakeList15:2;
+SummarizeValue3:summary -> MakeList15:3;
+SummarizeValue4:summary -> MakeList15:4;
+SummarizeValue5:summary -> MakeList15:5;
+SummarizeValue6:summary -> MakeList15:6;
+SummarizeValue7:summary -> MakeList15:7;
+SummarizeValue8:summary -> MakeList15:8;
+SummarizeValue9:summary -> MakeList15:9;
+SummarizeValue:summary -> MakeList15:1;
+}

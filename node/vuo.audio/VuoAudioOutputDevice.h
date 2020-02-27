@@ -2,9 +2,9 @@
  * @file
  * VuoAudioOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -29,13 +29,16 @@ typedef struct
 	VuoText modelUid;	///< If `id` is negative, use the first device whose modelUid contains `modelUid`.
 	VuoText name;		///< If `id` is negative and `modelUid` is empty, use the first device whose name matches `name`.  This is a localized display name, so its value will differ depending on the currently-selected system language.
 
-	VuoInteger channelCount;	///< The number of output channels on this device.
+	VuoInteger channelCount;  ///< The number of output channels on this device.  <= 0 if unknown.
 } VuoAudioOutputDevice;
 
 VuoAudioOutputDevice VuoAudioOutputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value);
 char * VuoAudioOutputDevice_getSummary(const VuoAudioOutputDevice value);
+
+#define VuoAudioOutputDevice_SUPPORTS_COMPARISON
 bool VuoAudioOutputDevice_areEqual(VuoAudioOutputDevice value1, VuoAudioOutputDevice value2);
+bool VuoAudioOutputDevice_isLessThan(const VuoAudioOutputDevice a, const VuoAudioOutputDevice b);
 
 /**
  * Automatically generated function.

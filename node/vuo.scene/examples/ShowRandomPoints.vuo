@@ -2,48 +2,47 @@
  * @file
  * Shows a set of rotating points, demonstrating different random distributions.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="510,105" _separator="\"\\n\""];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="165,-60"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="735,60" _separator="\"\\n\""];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="375,-135" _speed="50"];
 ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="795,-75"];
-CycleThroughList2 [type="vuo.list.cycle.VuoDistribution3d" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="330,-15" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="135,-45" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="630,-120" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.60000002384185791,\"y\":0.60000002384185791,\"z\":0.60000002384185791}"];
-MakeList10 [type="vuo.list.make.4.VuoDistribution3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="260,-4" _1="\"cube-volume\"" _2="\"cube-surface\"" _3="\"sphere-volume\"" _4="\"sphere-surface\""];
-MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1114,86" fillcolor="green"];
-MakeList3 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="389,-94" fillcolor="green" _2="50"];
-MakeList4 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="459,116" _1="\"Click to change the point distribution:\""];
-MakeList6 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1084,56" fillcolor="green"];
-MakeRandomPointsObject [type="vuo.scene.make.random.points.VuoGenericType1" version="1.0.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="840,-45" fillcolor="magenta" _count="4096" _pointSize="0.0050000000000000001" _seed="1"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="645,135" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":64,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="810,165" _center="{\"x\":0,\"y\":-0.60000002384185791,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="1" _opacity="1"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="435,-105" fillcolor="green"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="75,90" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1155,45" fillcolor="green" _cameraName="\"\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SummarizeValue [type="vuo.data.summarize.VuoDistribution3d" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="390,315"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoDistribution3d" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="330,-15" _wrapMode="\"wrap\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-30,-135" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="645,-150" _translation="\{\"x\":0,\"y\":0.10000000149011612,\"z\":0\}" _scale="\{\"x\":0.60000002384185791,\"y\":0.60000002384185791,\"z\":0.60000002384185791\}"];
+MakeList10 [type="vuo.list.make.4.VuoDistribution3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="268,41" _1="\"cube-volume\"" _2="\"cube-surface\"" _3="\"sphere-volume\"" _4="\"sphere-surface\""];
+MakeList4 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="694,71" _1="\"Click to change the point distribution:\""];
+MakeList6 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1439,56" fillcolor="blue"];
+MakeRandomPointsObject [type="vuo.scene.make.random.points.VuoGenericType1" version="1.1.0" label="Make Random Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<distribution>distribution\l|<count>count\l|<pointSize>pointSize\l|<seed>seed\l|<object>object\r" pos="975,-150" fillcolor="orange" _count="4096" _pointSize="0.0050000000000000001" _seed="1"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="960,60" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1\}" _wrapWidth="0"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="1185,60" _center="\{\"x\":0,\"y\":-0.5,\"z\":0\}" _rotation="\{\"x\":0,\"y\":0,\"z\":0\}" _width="1" _opacity="1"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-30,-15" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1485,45" fillcolor="blue" _cameraName="\"\"" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoDistribution3d" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="390,315"];
 
+AllowFirstEvent:firstEvent -> CycleThroughList2:goForward;
 AppendTexts:compositeText -> MakeTextImage:text;
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint:y;
 ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
 CycleThroughList2:item -> MakeRandomPointsObject:distribution;
 CycleThroughList2:item -> SummarizeValue:value;
-FireOnStart:started -> CycleThroughList2:goForward;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
 Make3DTransform:transform -> MakeRandomPointsObject:transform;
 MakeList10:list -> CycleThroughList2:list;
-MakeList2:list -> RenderSceneToWindow:setWindowProperties;
-MakeList3:list -> Multiply:values;
 MakeList4:list -> AppendTexts:texts;
 MakeList6:list -> RenderSceneToWindow:objects;
 MakeRandomPointsObject:object -> MakeList6:1;
 MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
 MakeUnlit3DObjectFromImage:object -> MakeList6:2;
-Multiply:product -> ConvertRealTo3DPoint:y;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
-RenderSceneToWindow:requestedFrame -> MakeList3:1 [style=invis];
-RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderSceneToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 SummarizeValue:summary -> MakeList4:2;
 }

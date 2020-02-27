@@ -1,4 +1,4 @@
-These nodes are for working with lists of items. 
+Nodes for creating, rearranging, and selecting items from lists.
 
 Lists keep their items in a specific order. For example, in this list of texts... 
 

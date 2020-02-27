@@ -2,14 +2,14 @@
  * @file
  * Expected outputs for the vuo.time.measureTime node. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration" : [
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 1.0,
 			"timeEvent" : true,
@@ -19,7 +19,7 @@
 		}
 	},
 	{
-		"firingPort" : "start",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 2.0,
 			"timeEvent" : true,
@@ -32,7 +32,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 3.0,
 			"timeEvent" : true,
@@ -45,7 +45,7 @@
 		}
 	},
 	{
-		"firingPort" : "pause",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 4.0,
 			"timeEvent" : true,
@@ -55,7 +55,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 5.0,
 			"timeEvent" : true,
@@ -65,7 +65,7 @@
 		}
 	},
 	{
-		"firingPort" : "start",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 6.0,
 			"timeEvent" : true,
@@ -78,7 +78,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 7.0,
 			"timeEvent" : true,
@@ -91,7 +91,7 @@
 		}
 	},
 	{
-		"firingPort" : "reset",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 8.0,
 			"timeEvent" : true,
@@ -104,7 +104,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 9.0,
 			"timeEvent" : true,
@@ -114,7 +114,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 11.0,
 			"timeEvent" : true,
@@ -124,7 +124,7 @@
 		}
 	},
 	{
-		"firingPort" : "reset",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 12.0,
 			"timeEvent" : true,
@@ -137,7 +137,7 @@
 		}
 	},
 	{
-		"firingPort" : "start",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 13.0,
 			"timeEvent" : true,
@@ -150,7 +150,7 @@
 		}
 	},
 	{
-		"firingPort" : "time",
+		"firingPort" : "*",
 		"inputPortValues" : {
 			"time" : 14.0,
 			"timeEvent" : true,

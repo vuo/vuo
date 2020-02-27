@@ -1,8 +1,6 @@
 Converts the data contained in the tree to a chosen data type.
 
-The default data type is Text. To choose a different data type, right-click on the output port and select Revert to Generic Data Type, then right-click on it again and select a data type.
-
-If the chosen data type is Text, Integer, Real, or Boolean, this node interprets the tree's content as that data type. For example:
+If the output port's data type is Text, Integer, Real, or Boolean, this node interprets the tree's content as that data type. For example:
 
 <table>
    <tr><th>Data type</th><th>Tree</th><th>Output</th></tr>
@@ -10,7 +8,7 @@ If the chosen data type is Text, Integer, Real, or Boolean, this node interprets
    <tr><td>Boolean</td><td>Tree with content <code>true</code></td><td><i>true</i></td></tr>
 </table>
 
-If the chosen data type is 2D Point, 3D Point, 4D Point, or Color, this node interprets the tree's content or children as the components of that data type. For example:
+If the output port's data type is 2D Point, 3D Point, 4D Point, or Color, this node interprets the tree's content or children as the components of that data type. For example:
 
 <table>
    <tr><th>Data type</th><th>Tree</th><th>Output</th></tr>

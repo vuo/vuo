@@ -2,38 +2,41 @@
  * @file
  * Steps through a movie one frame at a time. Press the right arrow key to step forward or the left arrow key to step backward.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="795,330" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
+CombineLayers [type="vuo.layer.combine.center" version="1.1.0" label="Combine Layers|<refresh>refresh\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<scale>scale\l|<layers>layers\l|<layer>layer\r" pos="885,375" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.40000000596046448\}" _rotation="0" _scale="\{\"x\":1,\"y\":1\}"];
 ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="885,195"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="330,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1032,206" fillcolor="green"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1052,236" fillcolor="green"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.1.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="825,60" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="585,345" _text="\"Use the left and right arrow keys to step through the movie.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":0.909543,\"g\":1.000000,\"b\":0.013456,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.100000}"];
-ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="255,150" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="255,270" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1080,195" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-StepMovieFrame [type="vuo.video.step" version="1.0.0" label="Step Movie Frame|<refresh>refresh\l|<url>url\l|<next>next\l|<previous>previous\l|<loop>loop\l|<setTime>setTime\l|<videoFrame>videoFrame\r" pos="585,75" fillcolor="violet" _url="\"chess.mov\"" _loop="\"none\"" _setTime="1.1000000000000001"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="255,570" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="852,446"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1109,281" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="555,330" _color="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0.50000762939453125\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.80000000000000004" _height="0.20000000000000001" _sharpness="1.0" _roundness="0.5" _opacity="1.0"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="885,165" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="570,525" _text="\"Use the left\\/ right arrow keys \\nto step through the movie.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="255,150" fillcolor="lime" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveKeyboardButtons2 [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="255,270" fillcolor="lime" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1155,270" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+StepMovieFrame [type="vuo.video.step" version="1.0.0" label="Step Movie Frame|<refresh>refresh\l|<next>next\l|<previous>previous\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<videoFrame>videoFrame\r" pos="600,165" fillcolor="orange" _setTime="1.1000000000000001" _url="\"chess.mov\"" _loop="\"none\""];
 
-AlignLayerToWindow:alignedLayer -> MakeList2:2;
+CombineLayers:layer -> MakeList2:2;
 ConvertFrameToImage2:image -> MakeScaledLayer2:image;
-FireOnStart2:started -> MakeTextLayer:refresh;
+FireOnStart2:started -> MakeRectangleLayer:center;
+FireOnStart2:started -> MakeTextLayer:center;
 FireOnStart2:started -> StepMovieFrame:setTime;
 FireOnStart2:started -> StepMovieFrame:url;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> CombineLayers:layers;
+MakeRectangleLayer:layer -> MakeList:1;
 MakeScaledLayer2:layer -> MakeList2:1;
-MakeTextLayer:layer -> AlignLayerToWindow:layer;
+MakeTextLayer:layer -> MakeList:2;
 ReceiveKeyboardButtons2:pressed -> StepMovieFrame:previous;
 ReceiveKeyboardButtons:pressed -> StepMovieFrame:next;
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons2:window [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons2:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveKeyboardButtons:window [style=invis];
 StepMovieFrame:videoFrame -> ConvertFrameToImage2:frame;
 }

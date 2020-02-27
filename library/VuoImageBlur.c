@@ -2,9 +2,9 @@
  * @file
  * VuoImageBlur implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -133,7 +133,7 @@ static VuoImage VuoImageBlur_calculateWeights(VuoBlurShape shape, double radius)
 		pixelFloats[pixelsWide - 1] = lastPixel;
 	}
 
-	return VuoImage_makeFromBuffer(pixelFloats, GL_LUMINANCE, pixelsWide, 1, VuoImageColorDepth_16, ^(void *buffer){ free(pixelFloats); });
+	return VuoImage_makeFromBuffer(pixelFloats, GL_LUMINANCE, pixelsWide, 1, VuoImageColorDepth_32, ^(void *buffer){ free(pixelFloats); });
 }
 
 /**
@@ -145,11 +145,11 @@ VuoImageBlur VuoImageBlur_make(void)
 	VuoRegister(bi, VuoImageBlur_free);
 
 	static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-		include(VuoGlslAlpha)
-		include(VuoGlslRandom)
-		include(hsl)
+		\n#include "VuoGlslAlpha.glsl"
+		\n#include "VuoGlslRandom.glsl"
+		\n#include "VuoGlslHsl.glsl"
 
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 
 		uniform sampler2D texture;
 		uniform sampler2D gaussianWeights;
@@ -186,7 +186,7 @@ VuoImageBlur VuoImageBlur_make(void)
 
 		void main(void)
 		{
-			vec2 uv = fragmentTextureCoordinate.xy;
+			vec2 uv = fragmentTextureCoordinate;
 
 			// Inset the source image relative to the output image to account for the optional bleed.
 			uv.x = (uv.x - inset/width)  *  width/(width -inset*2.);
@@ -204,7 +204,7 @@ VuoImageBlur VuoImageBlur_make(void)
 				// VuoGlsl_sample() returns premultiplied colors,
 				// so we can take into account both the mask's luminance and alpha
 				// by just looking at its (premultiplied) luminance.
-				scale = rgbToHsl(maskColor.rgb).z;
+				scale = VuoGlsl_rgbToHsl(maskColor.rgb).z;
 				dir *= scale;
 			}
 
@@ -289,11 +289,11 @@ VuoImageBlur VuoImageBlur_make(void)
 	VuoRetain(bi->shader);
 
 	static const char *discFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-		include(VuoGlslAlpha)
-		include(VuoGlslRandom)
-		include(hsl)
+		\n#include "VuoGlslAlpha.glsl"
+		\n#include "VuoGlslRandom.glsl"
+		\n#include "VuoGlslHsl.glsl"
 
-		varying vec4 fragmentTextureCoordinate;
+		varying vec2 fragmentTextureCoordinate;
 
 		uniform sampler2D texture;
 		uniform sampler2D gaussianWeights;
@@ -320,7 +320,7 @@ VuoImageBlur VuoImageBlur_make(void)
 
 		void main(void)
 		{
-			vec2 uv = fragmentTextureCoordinate.xy;
+			vec2 uv = fragmentTextureCoordinate;
 			float delta = fwidth(uv.x) * width/2.;
 
 			// Inset the source image relative to the output image to account for the optional bleed.
@@ -335,7 +335,7 @@ VuoImageBlur VuoImageBlur_make(void)
 				// VuoGlsl_sample() returns premultiplied colors,
 				// so we can take into account both the mask's luminance and alpha
 				// by just looking at its (premultiplied) luminance.
-				float maskAmount = rgbToHsl(maskColor.rgb).z;
+				float maskAmount = VuoGlsl_rgbToHsl(maskColor.rgb).z;
 
 				maskedRadius *= maskAmount;
 			}
@@ -379,6 +379,9 @@ VuoImageBlur VuoImageBlur_make(void)
 /**
  * Returns a blurred copy of @a image.  (Or, if radius is zero, returns @a image.)
  *
+ * `radius` is in points, and respects the image's `scaleFactor`
+ * (this function multiplies the two values).
+ *
  * If @a expandBounds is true, the output image will be expanded to encompass the full bleed of the blur.
  * Otherwise, the output image will have the same dimensions as the soure image.
  */
@@ -389,6 +392,8 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoImage mask, Vuo
 
 	if (radius < 0.0001)
 		return image;
+
+	radius *= image->scaleFactor;
 
 	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
 
@@ -409,7 +414,7 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoImage mask, Vuo
 		VuoShader_setUniform_VuoImage  (bi->discShader, "mask",                mask);
 		VuoShader_setUniform_VuoBoolean(bi->discShader, "hasMask",             mask ? true : false);
 		VuoShader_setUniform_VuoReal   (bi->discShader, "radius",              radius);
-		VuoShader_setUniform_VuoReal   (bi->discShader, "quality",             VuoReal_clamp(quality, 0, 1));
+		VuoShader_setUniform_VuoReal   (bi->discShader, "quality",             VuoReal_clamp(quality, 0.01, 1));
 
 		VuoImage blurredImage = VuoImageRenderer_render(bi->discShader, w, h, VuoImage_getColorDepth(image));
 		VuoImage_setWrapMode(blurredImage, VuoImage_getWrapMode(image));
@@ -465,6 +470,9 @@ VuoImage VuoImage_blur(VuoImage image, VuoReal radius)
 
 /**
  * Returns a linearly-blurred copy of @a image.  (Or, if radius is zero, returns @a image.)
+ *
+ * `radius` is in points, and respects the image's `scaleFactor`
+ * (this function multiplies the two values).
  */
 VuoImage VuoImageBlur_blurDirectionally(VuoImageBlur blur, VuoImage image, VuoImage mask, VuoBlurShape shape, VuoReal radius, VuoReal quality, VuoReal angle, VuoBoolean symmetric, VuoBoolean expandBounds)
 {
@@ -473,6 +481,8 @@ VuoImage VuoImageBlur_blurDirectionally(VuoImageBlur blur, VuoImage image, VuoIm
 
 	if (radius < 0.0001)
 		return image;
+
+	radius *= image->scaleFactor;
 
 	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
 
@@ -510,6 +520,9 @@ VuoImage VuoImageBlur_blurDirectionally(VuoImageBlur blur, VuoImage image, VuoIm
 
 /**
  * Returns a radially-blurred copy of @a image.  (Or, if radius is zero, returns @a image.)
+ *
+ * `radius` is in points, and respects the image's `scaleFactor`
+ * (this function multiplies the two values).
  */
 VuoImage VuoImageBlur_blurRadially(VuoImageBlur blur, VuoImage image, VuoImage mask, VuoBlurShape shape, VuoPoint2d center, VuoReal radius, VuoReal quality, VuoDispersion dispersion, VuoCurveEasing symmetry, VuoBoolean expandBounds)
 {
@@ -518,6 +531,8 @@ VuoImage VuoImageBlur_blurRadially(VuoImageBlur blur, VuoImage image, VuoImage m
 
 	if (radius < 0.0001)
 		return image;
+
+	radius *= image->scaleFactor;
 
 	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
 

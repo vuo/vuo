@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorRealRegulation SOURCE VuoInputEditorRealRegulation.cc)

@@ -2,16 +2,13 @@
  * @file
  * VuoCompilerGenericType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerGenericType.hh"
-#include "VuoCompiler.hh"
-#include "VuoCompilerNodeClass.hh"
 #include "VuoGenericType.hh"
-#include "VuoStringUtilities.hh"
 
 
 /// A type to replace generic types with if they haven't been specialized.
@@ -21,25 +18,30 @@ const string VuoCompilerGenericType::defaultBackingTypeName = "VuoInteger";
 /**
  * Creates a VuoCompilerGenericType and makes it the compiler detail object for @a baseType.
  */
-VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, VuoCompiler *compiler)
-{
-	return newGenericType(baseType, compiler->getTypes());
-}
-
-/**
- * Creates a VuoCompilerGenericType and makes it the compiler detail object for @a baseType.
- */
-VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, map<string, VuoCompilerType *> types)
+VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, VuoCompilerType * (^getType)(string moduleKey))
 {
 	VuoGenericType::Compatibility compatibility;
 	vector<string> compatibleTypeNames = baseType->getCompatibleSpecializedTypes(compatibility);
 	string backingTypeName = VuoCompilerGenericType::chooseBackingTypeName(baseType->getModuleKey(), compatibleTypeNames);
 
-	map<string, VuoCompilerType *>::iterator backingTypeIter = types.find(backingTypeName);
-	if (backingTypeIter == types.end())
+	VuoCompilerType *backingType = getType(backingTypeName);
+	if (! backingType)
 		return NULL;
 
-	return new VuoCompilerGenericType(baseType, backingTypeIter->second);
+	return new VuoCompilerGenericType(baseType, backingType);
+}
+
+/**
+ * Creates a VuoCompilerGenericType and makes it the compiler detail object for @a baseType.
+ */
+VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, const map<string, VuoCompilerType *> &types)
+{
+	VuoCompilerType * (^getType)(string) = ^VuoCompilerType * (string moduleKey) {
+		map<string, VuoCompilerType *>::const_iterator typeIter = types.find(moduleKey);
+		return (typeIter != types.end() ? typeIter->second : NULL);
+	};
+
+	return newGenericType(baseType, getType);
 }
 
 /**

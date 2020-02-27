@@ -2,9 +2,9 @@
  * @file
  * VuoDictionary_VuoText_VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -21,6 +21,10 @@
 #include "VuoText.h"
 #include "VuoList_VuoReal.h"
 #include "VuoList_VuoText.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * A mapping from keys to values.
@@ -52,6 +56,10 @@ char * VuoDictionary_VuoText_VuoReal_getString(const VuoDictionary_VuoText_VuoRe
 void VuoDictionary_VuoText_VuoReal_retain(VuoDictionary_VuoText_VuoReal value);
 void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value);
 /// @}
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * @}

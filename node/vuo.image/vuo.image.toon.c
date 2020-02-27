@@ -2,9 +2,9 @@
  * @file
  * vuo.image.toon node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						 "comic", "illustration", "hand-drawn", "sketch", "airbrush", "line art", "stroke", "contour",
 						 "filter"
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }
@@ -25,8 +25,8 @@ VuoModuleMetadata({
 
 // Code from "Graphics Shaders: Theory and Practice" by M. Bailey and S. Cunningham
 static const char * vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	attribute vec4 position;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec2 textureCoordinate;
 
 	varying vec2 fragmentTextureCoordinate;
 
@@ -46,8 +46,8 @@ static const char * vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		gl_Position = position;
-		fragmentTextureCoordinate = textureCoordinate.xy;
+		gl_Position = vec4(position, 1.);
+		fragmentTextureCoordinate = textureCoordinate;
 
 		vec2 widthStep = vec2(texelWidth, 0.0);
 		vec2 heightStep = vec2(0.0, texelHeight);
@@ -68,7 +68,7 @@ static const char * vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 );
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
 	varying vec2 fragmentTextureCoordinate;
 	varying vec2 leftTextureCoordinate;
@@ -162,8 +162,8 @@ void nodeInstanceEvent
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture", blurredImage);
 	VuoShader_setUniform_VuoColor  ((*instance)->shader, "edgeColor", edgeColor);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "texelWidth", edgeWidth/w);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "texelHeight", edgeWidth/h);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "texelWidth", image->scaleFactor * edgeWidth / w);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "texelHeight", image->scaleFactor * edgeWidth / h);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "threshold", edgeThreshold);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "quantizationLevels", imageColors);
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "showImage", showImage);

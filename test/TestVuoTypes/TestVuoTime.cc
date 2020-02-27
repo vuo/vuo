@@ -2,9 +2,9 @@
  * @file
  * TestVuoTime implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -74,7 +74,7 @@ private slots:
 
 		// This test is currently assumed to run in the EST time zone; all outputs are in EST.
 		//                                                                                    YYYY    DoY    MM    DD    week                          HH    MM    SS.SS
-		QTest::newRow("NaN")                                     <<     nan(NULL) << false << 1969 << 365 << 12 << 31 <<  1 << VuoWeekday_Wednesday << 19 << 00 << 00.00 << "(unknown)";
+		QTest::newRow("NaN")                                     <<     nan(NULL) << false << 1969 << 365 << 12 << 31 <<  1 << VuoWeekday_Wednesday << 19 << 00 << 00.00 << "Unknown";
 		QTest::newRow("Transatlantic telegraph")                 <<-4493041200.00 << true  << 1858 << 228 <<  8 << 16 << 33 << VuoWeekday_Monday    << 00 << 00 << 00.00 << "1858-08-16 00:00:00.00";
 		QTest::newRow("Phone call")                              <<-3938698800.00 << true  << 1876 <<  70 <<  3 << 10 << 10 << VuoWeekday_Friday    << 00 << 00 << 00.00 << "1876-03-10 00:00:00.00";
 		QTest::newRow("Unix epoch")                              << -978307200.00 << true  << 1969 << 365 << 12 << 31 <<  1 << VuoWeekday_Wednesday << 19 << 00 << 00.00 << "1969-12-31 19:00:00.00";
@@ -174,7 +174,7 @@ private slots:
 		QFETCH(VuoTime,    time);
 		QFETCH(int,        expectedWeek);
 		VuoInteger actualWeek;
-		VuoTime_getComponents(time, NULL, NULL, NULL, NULL, &actualWeek, NULL, NULL, NULL, NULL);
+		QVERIFY(VuoTime_getComponents(time, NULL, NULL, NULL, NULL, &actualWeek, NULL, NULL, NULL, NULL));
 		QCOMPARE(actualWeek,  expectedWeek);
 	}
 

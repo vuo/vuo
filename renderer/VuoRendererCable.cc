@@ -2,35 +2,24 @@
  * @file
  * VuoRendererCable implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererCable.hh"
-#include "VuoRendererColors.hh"
 #include "VuoRendererFonts.hh"
-#include "VuoRendererNode.hh"
-#include "VuoRendererReadOnlyDictionary.hh"
-#include "VuoRendererKeyListForReadOnlyDictionary.hh"
-#include "VuoRendererValueListForReadOnlyDictionary.hh"
-#include "VuoRendererPort.hh"
 #include "VuoRendererPublishedPort.hh"
-#include "VuoRendererTypecastPort.hh"
-#include "VuoPort.hh"
-#include "VuoPortClass.hh"
-#include "VuoCompilerPortClass.hh"
+#include "VuoCable.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoNodeClass.hh"
 
 
-/// The width of a data-event cable.  (Event-only cables are half this width.)
-const qreal VuoRendererCable::cableWidth = VuoRendererFonts::thickPenWidth / 5.;
-/// The width of the highlight on a data-event cable.
-const qreal VuoRendererCable::cableHighlightWidth = VuoRendererCable::cableWidth / 3.;
-/// How far from the center of the data-event cable the highlight should be rendered.
-const qreal VuoRendererCable::cableHighlightOffset = VuoRendererCable::cableHighlightWidth * 5./8.;
+/// The width of a data-event cable.  (Event-only cable width is determined by @ref VuoRendererCable::getCableSpecs.)
+const qreal VuoRendererCable::cableWidth = 5;  // VuoRendererFonts::thickPenWidth / 4.;
+
 /// Radius from the endpoints of the cable in which yanking is permitted.
-const qreal VuoRendererCable::cableYankRadius = VuoRendererFonts::thickPenWidth;
+const qreal VuoRendererCable::cableYankRadius = 20;  // VuoRendererFonts::thickPenWidth;
 
 /**
  * Creates a renderer detail for the specified @c baseCable.
@@ -39,6 +28,10 @@ VuoRendererCable::VuoRendererCable(VuoCable *baseCable)
 	: VuoBaseDetail<VuoCable>("VuoRendererCable", baseCable)
 {
 	getBase()->setRenderer(this);
+
+	portConstantsChangedSinceLastCachedOutline = true;
+
+	setZValue(cableZValue);
 
 	VuoNode *fromNode = getBase()->getFromNode();
 	VuoRendererNode *fromRN = ((fromNode && fromNode->hasRenderer())? fromNode->getRenderer() : NULL);
@@ -57,6 +50,7 @@ VuoRendererCable::VuoRendererCable(VuoCable *baseCable)
 	previouslyAlwaysEventOnly = false;
 	floatingEndpointAboveEventPort = false;
 	isHovered = false;
+	_eligibilityHighlight = VuoRendererColors::noHighlight;
 
 	this->setAcceptHoverEvents(true);
 	this->setFlags(QGraphicsItem::ItemIsSelectable);
@@ -73,6 +67,9 @@ QRectF VuoRendererCable::boundingRect(void) const
 
 	QPainterPath cablePath = getCablePath();
 	QRectF r = cablePath.boundingRect();
+
+	if (r.isNull())
+		return r;
 
 	// Include thick width of cable.
 	r.adjust(-cableWidth/2., -cableWidth/2., cableWidth/2., cableWidth/2.);
@@ -119,7 +116,7 @@ QPointF VuoRendererCable::getStartPoint(void) const
 		}
 
 		else if (fromNode && fromNode->hasRenderer())
-			return fromNode->getRenderer()->pos() + fromPort->getRenderer()->pos();
+			return fromNode->getRenderer()->pos() + fromPort->getRenderer()->pos() + QPointF(0, -.35);
 	}
 
 	return floatingEndpointLoc;
@@ -130,8 +127,9 @@ QPointF VuoRendererCable::getStartPoint(void) const
  */
 QPointF VuoRendererCable::getEndPoint(void) const
 {
-	VuoNode *toNode = getBase()->getToNode();
-	VuoPort *toPort = getBase()->getToPort();
+	VuoCable *cable = getBase();
+	VuoNode *toNode = cable->getToNode();
+	VuoPort *toPort = cable->getToPort();
 
 	if (toNode && toPort && toPort->hasRenderer())
 	{
@@ -144,11 +142,12 @@ QPointF VuoRendererCable::getEndPoint(void) const
 
 		else if (toNode->hasRenderer())
 		{
-			VuoRendererNode * toNodeProxy = getBase()->getToNode()->getRenderer()->getProxyNode();
+			VuoRendererNode *rn = toNode->getRenderer();
+			VuoRendererNode *toNodeProxy = rn->getProxyNode();
 			if (toNodeProxy)
-				return toNodeProxy->pos() + getBase()->getToPort()->getRenderer()->pos();
+				return toNodeProxy->pos() + toPort->getRenderer()->pos() + QPointF(0, -.35);
 			else
-				return getBase()->getToNode()->getRenderer()->pos() + getBase()->getToPort()->getRenderer()->pos();
+				return rn->pos() + toPort->getRenderer()->pos() + QPointF(0, -.35);
 		}
 	}
 
@@ -167,29 +166,210 @@ QPainterPath VuoRendererCable::getCablePath(void) const
 }
 
 /**
- * Returns a cable's path, given its start and end points.
+ * Adds to `cablePath` a line with circular arcs on the ends.
+ * Tries to escape touching the node when possible.
+ * To this end, takes into account the vertical boundaries of the "From" node,
+ * "From" port, "To" node, and "To" port, in scene coordinates.
  */
-QPainterPath VuoRendererCable::getCablePathForEndpoints(QPointF from, QPointF to)
+void VuoRendererCable::arclineTo(QPainterPath &cablePath, QPointF to, float radius, float fromCableStandoff) const
+{
+	QPointF from = cablePath.currentPosition();
+	float direction = from.y() < to.y() ? 1 : -1;
+
+	QRectF fromRect(from - QPointF(radius, -radius*2*direction), from + QPointF(radius, 0));
+
+	if (to.x() >= from.x() + radius*2)
+	{
+		// Cable is going left-to-right.
+		// Draw an arc at the cable's start and end.
+
+		// Cable start:
+		float stopAngle = -atan2(to.y() - from.y(), to.x() - from.x()) * 180/M_PI;
+		cablePath.arcTo(fromRect, -90, -stopAngle*direction);
+
+		// Cable end:
+		QRectF toRect(to - QPointF(radius, radius*2*direction), to + QPointF(radius, 0));
+		cablePath.arcTo(toRect, -90 + stopAngle*direction, -stopAngle*direction);
+	}
+	else
+	{
+		// Cable is going right-to-left.
+		// At the cable's start and end, draw an arc, then draw a line to escape the node height, then draw another arc.
+
+		// Cable start:
+		cablePath.arcTo(fromRect, -90, 90);
+
+		float fromNodeEscape = 0;
+		{
+			VuoNode *fromNode = getBase()->getFromNode();
+			VuoPort *fromPort = getBase()->getFromPort();
+			if (fromNode && fromNode->hasRenderer()
+			 && fromPort && fromPort->hasRenderer())
+			{
+				VuoRendererNode *rn = fromNode->getRenderer();
+				if (rn->getProxyNode())
+					rn = rn->getProxyNode();
+
+				QRectF nodeRect = rn->sceneBoundingRect();
+				QRectF portRect = fromPort->getRenderer()->sceneBoundingRect();
+				if (from.y() < to.y())
+					// Cable is going downward, so escape the part of the node below the `from` port.
+					fromNodeEscape = nodeRect.bottom() - portRect.bottom();
+				else
+					// Cable is going upward.
+					fromNodeEscape = portRect.top() - nodeRect.top();
+			}
+
+			fromNodeEscape += fromCableStandoff;
+		}
+
+		float toNodeEscape = 0;
+		VuoNode *toNode = getBase()->getToNode();
+		{
+			VuoPort *toPort = getBase()->getToPort();
+			if (toNode && toNode->hasRenderer()
+			 && toPort && toPort->hasRenderer())
+			{
+				VuoRendererNode *rn = toNode->getRenderer();
+				if (rn->getProxyNode())
+					rn = rn->getProxyNode();
+
+				QRectF nodeRect = rn->sceneBoundingRect();
+				QRectF portRect = toPort->getRenderer()->sceneBoundingRect();
+				if (from.y() < to.y())
+					// Cable is going downward, so escape the part of the node above the `to` port.
+					toNodeEscape = portRect.top() - nodeRect.top();
+				else
+					// Cable is going upward.
+					toNodeEscape = nodeRect.bottom() - portRect.bottom();
+			}
+		}
+
+		// When a cable connects 2 nodes that are 1 grid spacing apart,
+		// make the horizontal section of the cable exactly horizontal.
+		fromNodeEscape += direction>0 ? 4.85 : 3.15;
+		if (toNode && toNode->getNodeClass()->isDrawerNodeClass())
+			toNodeEscape   += direction>0 ? 8 : -1.75;
+		else
+			toNodeEscape   += direction>0 ? 4.15 : 4.85;
+
+		// If the ports are so close that the escapement would look loopy, forget it.
+		if (fromNodeEscape + toNodeEscape + radius*3 >= fabs(from.y() - to.y()))
+			fromNodeEscape = toNodeEscape = 0;
+
+		QPointF fromEscaped = cablePath.currentPosition() + QPointF(0, fromNodeEscape*direction);
+		QPointF toEscaped = to - QPointF(radius, (radius + toNodeEscape)*direction);
+
+		QRectF fromEscapedRect(fromEscaped - QPointF(radius*2, radius*direction),
+							   fromEscaped + QPointF(0, radius*direction));
+
+		float stopAngle = atan2(fromEscaped.x() - toEscaped.x(), fromEscaped.y() - toEscaped.y()) * 180/M_PI;
+		if (to.y() > from.y())
+			stopAngle = 180-stopAngle;
+
+		cablePath.arcTo(fromEscapedRect, 0, -stopAngle);
+
+
+		// Cable end:
+		QRectF toEscapedRect(toEscaped - QPointF(0, radius*direction), toEscaped + QPointF(radius*2, radius*direction));
+		cablePath.arcTo(toEscapedRect, 180 - stopAngle, stopAngle);
+
+		QRectF toRect(to-QPointF(radius, radius*2*direction), to + QPointF(radius, 0));
+		cablePath.arcTo(toRect, 180, 90);
+	}
+}
+
+/**
+ * Returns a cable's path, given its start and end points.
+ * Also takes into account:
+ * - Other cables originating from this cable's "From" node, including their wireless status;
+ * - Constant input flags attached to this cable's "To" node.
+ */
+QPainterPath VuoRendererCable::getCablePathForEndpoints(QPointF from, QPointF to) const
 {
 	QPainterPath cablePath(from);
 
-	// Cables going left to right are straight lines.
-	// Cables going right to left have biased control points and are thus rendered curved.
-	// Curve opposite direction of cable, to try to avoid overdrawing the connected nodes.
-	QPointF bias = QPointF(
-				fmin(240.,fmax(4.,from.x()-to.x()+16.)),
-				fmin(240.,100.*fmax(0.,from.x()-to.x())/fmax(4.,fabs(from.y()-to.y()))) * (to.y()>from.y() ? 1. : -1.)
-				);
-	// Limit bias for very short cables.
-	bias *= fmin(1., (to-from).manhattanLength() / (VuoRendererFonts::thickPenWidth*16.));
+	// The `from` node's other output ports (besides the port it's connected to)
+	// may have cables, so escape them to avoid overlapping.
+	float fromStandoff = 0; // Total standoff
+	float fromCableStandoff = 0; // Standoff due to routed cables (excluding hidden cables)
+	VuoNode *fromNode = getBase()->getFromNode();
+	VuoPort *fromPort = getBase()->getFromPort();
+	if (fromNode && fromPort)
+	{
+		vector<VuoPort *> outputs = (from.y() < to.y())
+				? fromNode->getOutputPortsAfterPort(fromPort)
+				: fromNode->getOutputPortsBeforePort(fromPort);
+		for (vector<VuoPort *>::iterator i = outputs.begin(); i != outputs.end(); ++i)
+		{
+			vector<VuoCable *> cables = (*i)->getConnectedCables();
+			if ((*i)->hasRenderer() && !cables.empty())
+			{
+				bool hasOnlyWireless = true;
+				for (vector<VuoCable *>::iterator cable = cables.begin(); cable != cables.end(); ++cable)
+					if ((*cable)->hasRenderer())
+					{
+						VuoRendererCable *cableR = (*cable)->getRenderer();
+						if (!cableR->getEffectivelyWireless())
+						{
+							hasOnlyWireless = false;
+							break;
+						}
+					}
 
-	cablePath.cubicTo(
-		// Slight upward bias on output
-		from + bias,
-		// Slight downward bias on input
-		to   - bias,
-		to
-	);
+				if (hasOnlyWireless)
+					// We only need to escape the wireless antenna once (we don't need to escape every port's antenna).
+					fromStandoff = fmax(fromStandoff, VuoRendererPort::portSpacing);
+				else
+				{
+					fromStandoff += VuoRendererPort::portSpacing;
+					fromCableStandoff += VuoRendererPort::portSpacing;
+				}
+			}
+		}
+	}
+	fromStandoff += VuoRendererPort::portSpacing / 2.;
+
+	// The `to` node's other input ports (besides the port it's connected to)
+	// may have constant flags, so escape them.
+	float toStandoff = 0;
+	VuoNode *toNode = getBase()->getToNode();
+	VuoPort *toPort = getBase()->getToPort();
+	if (toNode && toPort)
+	{
+		vector<VuoPort *> inputs = (from.y() < to.y())
+				? toNode->getInputPortsBeforePort(toPort)
+				: toNode->getInputPortsAfterPort(toPort);
+		for (vector<VuoPort *>::iterator i = inputs.begin(); i != inputs.end(); ++i)
+			if ((*i)->hasRenderer() && (*i)->getRenderer()->isConstant())
+			{
+				float constantFlagWidth = (*i)->getRenderer()->getPortConstantTextRect().width();
+				toStandoff = fmax(toStandoff, constantFlagWidth);
+			}
+	}
+
+	// Move the cable attachment point to the left of the port constant.
+	if (!effectivelyCarriesData() && toPort)
+		toStandoff = fmax(toStandoff, toPort->getRenderer()->getPortConstantTextRect().width());
+
+	toStandoff += VuoRendererPort::portSpacing / 2.;
+
+	QPointF fromWithStandoff(from.x() + fromStandoff, from.y());
+	QPointF   toWithStandoff(  to.x() -   toStandoff,   to.y());
+
+	float length = (from - to).manhattanLength();
+	if (length < fromStandoff + toStandoff + VuoRendererPort::portSpacing * 3)
+	{
+		// Cable is very short; just draw a single line.
+	}
+	else
+	{
+		cablePath.lineTo(fromWithStandoff);
+		arclineTo(cablePath, toWithStandoff, VuoRendererPort::portSpacing / 2., fromCableStandoff);
+	}
+
+	cablePath.lineTo(to);
+
 	return cablePath;
 }
 
@@ -243,16 +423,16 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 																						VuoRendererColors::noSelection));
 
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastEventPropagated : VuoRendererItem::notTrackingActivity);
-	VuoRendererColors *colors = new VuoRendererColors(tintColor,
+	VuoRendererColors colors(tintColor,
 													  selectionType,
 													  (selectionType != VuoRendererColors::noSelection? false : hoverHighlightingEnabled),
-													  VuoRendererColors::noHighlight,
+													  _eligibilityHighlight,
 													  timeOfLastActivity
 													  );
 
-	VuoRendererColors *yankZoneColors = new VuoRendererColors(tintColor,
-															  VuoRendererColors::noSelection,
-															  false,
+	VuoRendererColors yankZoneColors(tintColor,
+															  selectionType,
+															  true,
 															  VuoRendererColors::standardHighlight,
 															  timeOfLastActivity);
 
@@ -265,28 +445,23 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 	if (outline.isEmpty())
 		return;
 
+	// Fill the cable.
+	painter->fillPath(outline, QBrush(colors.cableMain()));
+
 	// Highlight the yank zone when hovering.
 	if (hoverHighlightingEnabled)
 	{
-		bool toPortSupportsYanking = getBase()->getToPort()->getRenderer()->supportsDisconnectionByDragging();
+		bool toPortSupportsYanking = getBase()->getToPort() &&
+									 getBase()->getToPort()->getRenderer()->supportsDisconnectionByDragging();
 
-		QPainterPath yankZone, invertedYankZone;
-		getYankZonePaths(startPoint, endPoint, renderAsIfCableCarriesData, toPortSupportsYanking, yankZone, invertedYankZone);
+		QPainterPath yankZone;
+		getYankZonePath(startPoint, endPoint, renderAsIfCableCarriesData, toPortSupportsYanking, yankZone);
 
 		painter->setClipPath(yankZone);
-		painter->fillPath(outline, QBrush(yankZoneColors->cableUpper()));
+		painter->fillPath(outline, QBrush(yankZoneColors.cableMain()));
 
-		// When drawing the main cable below, don't overdraw the yank zone.
-		painter->setClipPath(invertedYankZone);
-	}
-
-	// Fill the cable.
-	painter->fillPath(outline, QBrush(colors->cableMain()));
-
-	if (hoverHighlightingEnabled)
 		painter->setClipping(false);
-
-	delete colors;
+	}
 }
 
 /**
@@ -298,11 +473,12 @@ QPainterPath VuoRendererCable::getOutline(QPointF startPoint,
 										  QPointF endPoint,
 										  bool cableCarriesData)
 {
-	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForOutlines) ||
-		(cableCarriesData != this->cachedCarriesDataValueForOutlines))
+	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForOutlines)
+	 || (cableCarriesData != this->cachedCarriesDataValueForOutlines)
+	 || portConstantsChangedSinceLastCachedOutline)
 	{
-		qreal cableWidth, cableHighlightWidth, cableHighlightOffset;
-		getCableSpecs(cableCarriesData, cableWidth, cableHighlightWidth, cableHighlightOffset);
+		qreal cableWidth;
+		getCableSpecs(cableCarriesData, cableWidth);
 
 		QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
 
@@ -314,23 +490,23 @@ QPainterPath VuoRendererCable::getOutline(QPointF startPoint,
 		this->cachedEndpointsForOutlines = qMakePair(startPoint, endPoint);
 		this->cachedCarriesDataValueForOutlines = cableCarriesData;
 		this->cachedOutline = mainOutline;
+		this->portConstantsChangedSinceLastCachedOutline = false;
 	}
 
 	return this->cachedOutline;
 }
 
 /**
- * Determines the cable's @c yankZonePath and @c invertedYankZonePath, given the
+ * Determines the cable's @c yankZonePath, given the
  * provided @c startPoint, @c endPoint, @c toPortSupportsYanking,
  * and @c cableCarriesData attribute values.
- * Retrieves cached versions of the yank zone paths, if available.
+ * Retrieves cached version of the yank zone path, if available.
  */
-void VuoRendererCable::getYankZonePaths(QPointF startPoint,
+void VuoRendererCable::getYankZonePath(QPointF startPoint,
 										QPointF endPoint,
 										bool cableCarriesData,
 										bool toPortSupportsYanking,
-										QPainterPath &yankZone,
-										QPainterPath &invertedYankZone
+										QPainterPath &yankZone
 										)
 {
 	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForYankZone) ||
@@ -342,44 +518,24 @@ void VuoRendererCable::getYankZonePaths(QPointF startPoint,
 		if (getBase()->getToPort() && toPortSupportsYanking)
 			yankZone.addEllipse(endPoint, VuoRendererCable::cableYankRadius, VuoRendererCable::cableYankRadius);
 
-		// Calculate the inverted yank zone.
-		QPainterPath invertedYankZone;
-
-		qreal cableWidth, cableHighlightWidth, cableHighlightOffset;
-		getCableSpecs(cableCarriesData, cableWidth, cableHighlightWidth, cableHighlightOffset);
-
-		QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
-		invertedYankZone.addRect(cablePath.controlPointRect().adjusted(-cableWidth, -cableWidth ,cableWidth, cableWidth));
-
 		this->cachedEndpointsForYankZone = qMakePair(startPoint, endPoint);
 		this->cachedCarriesDataValueForYankZone = cableCarriesData;
 		this->cachedToPortSupportsYankingValueForYankZone = toPortSupportsYanking;
-		this->cachedYankZonePaths = qMakePair(yankZone, invertedYankZone);
+		this->cachedYankZonePath = yankZone;
 	}
 
-	yankZone = this->cachedYankZonePaths.first;
-	invertedYankZone = this->cachedYankZonePaths.second;
+	yankZone = this->cachedYankZonePath;
 }
 
 /**
- * Calculates the @c cableWidth, @c cableHighlightWidth, and @c cableHighlightOffset,
- * for a cable, dependent on whether that cable carries data.
+ * Calculates the `cableWidth` for a cable, dependent on whether that cable carries data.
  */
-void VuoRendererCable::getCableSpecs(bool cableCarriesData,
-										   qreal &cableWidth,
-										   qreal &cableHighlightWidth,
-										   qreal &cableHighlightOffset)
+void VuoRendererCable::getCableSpecs(bool cableCarriesData, qreal &cableWidth)
 {
-	const qreal dataCableToEventCableWidthRatio = 2.5;
+	const qreal dataCableToEventCableWidthRatio = 4;
 
 	cableWidth = (cableCarriesData? VuoRendererCable::cableWidth :
 									 VuoRendererCable::cableWidth/dataCableToEventCableWidthRatio);
-
-	cableHighlightWidth = (cableCarriesData? VuoRendererCable::cableHighlightWidth :
-											  VuoRendererCable::cableHighlightWidth/dataCableToEventCableWidthRatio);
-
-	cableHighlightOffset = (cableCarriesData? VuoRendererCable::cableHighlightOffset :
-											   VuoRendererCable::cableHighlightOffset/dataCableToEventCableWidthRatio);
 }
 
 /**
@@ -387,12 +543,15 @@ void VuoRendererCable::getCableSpecs(bool cableCarriesData,
  */
 bool VuoRendererCable::paintingDisabled() const
 {
+	VuoCable *cable = getBase();
+	VuoNode *fromNode = cable->getFromNode();
+
 	// If the cable is an outgoing cable from a collapsed typecast, disable painting.
-	if (getBase()->getFromNode() && getBase()->getFromNode()->hasRenderer() && getBase()->getFromNode()->getRenderer()->getProxyNode())
+	if (fromNode && fromNode->hasRenderer() && fromNode->getRenderer()->getProxyNode())
 		return true;
 
 	// If the cable is an outgoing cable from an input port attachment, disable painting.
-	if (getBase()->getFromNode() && getBase()->getFromNode()->hasRenderer() && dynamic_cast<VuoRendererInputAttachment *>(getBase()->getFromNode()->getRenderer()))
+	if (fromNode && fromNode->hasRenderer() && dynamic_cast<VuoRendererInputAttachment *>(fromNode->getRenderer()))
 		return true;
 
 	// If the cable is a published cable and published port sidebars are not currently displayed, disable painting.
@@ -401,7 +560,7 @@ bool VuoRendererCable::paintingDisabled() const
 
 	// If the cable is an internal wireless cable, disable painting unless the composition is currently
 	// in show-hidden-cables mode.
-	if (getBase()->getCompiler()->getHidden() && !getRenderHiddenCables())
+	if (cable->getCompiler()->getHidden() && !getRenderHiddenCables())
 		return true;
 
 	return false;
@@ -413,11 +572,13 @@ bool VuoRendererCable::paintingDisabled() const
  */
 bool VuoRendererCable::isPublishedInputCableWithoutVisiblePublishedPort() const
 {
+	VuoPort *fromPort = getBase()->getFromPort();
+
 	// If the cable is connected to a published input port withn the published input sidebar,
 	// but the sidebar is not currently displayed, disable painting.
-	if (getBase()->getFromPort())
+	if (fromPort)
 	{
-		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(getBase()->getFromPort()->getRenderer());
+		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(fromPort->getRenderer());
 
 		if (publishedPort)
 		{
@@ -436,11 +597,13 @@ bool VuoRendererCable::isPublishedInputCableWithoutVisiblePublishedPort() const
  */
 bool VuoRendererCable::isPublishedOutputCableWithoutVisiblePublishedPort() const
 {
+	VuoPort *toPort = getBase()->getToPort();
+
 	// If the cable is connected to a published output port within the published output sidebar,
 	// but the sidebar is not currently displayed, disable painting.
-	if (getBase()->getToPort())
+	if (toPort)
 	{
-		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(getBase()->getToPort()->getRenderer());
+		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(toPort->getRenderer());
 
 		if (publishedPort)
 		{
@@ -508,6 +671,15 @@ void VuoRendererCable::setCacheModeForCableAndConnectedPorts(QGraphicsItem::Cach
 
 	if (toPort)
 		toPort->setCacheMode(mode);
+}
+
+/**
+ * Call this when the constants on this cable's node's other ports have changed,
+ * so the cable path gets updated to escape them.
+ */
+void VuoRendererCable::setPortConstantsChanged()
+{
+	portConstantsChangedSinceLastCachedOutline = true;
 }
 
 /**
@@ -617,6 +789,14 @@ void VuoRendererCable::setFloatingEndpointLoc(QPointF loc)
 void VuoRendererCable::setFloatingEndpointAboveEventPort(bool aboveEventPort)
 {
 	floatingEndpointAboveEventPort = aboveEventPort;
+}
+
+/**
+ * Returns true if this cable's floating endpoint is currently hovered over an event-only port.
+ */
+bool VuoRendererCable::isFloatingEndpointAboveEventPort(void)
+{
+	return floatingEndpointAboveEventPort;
 }
 
 /**
@@ -731,6 +911,14 @@ void VuoRendererCable::setHovered(bool hovered)
 }
 
 /**
+ * Sets whether this cable is currently being dragged.
+ */
+void VuoRendererCable::setEligibilityHighlight(VuoRendererColors::HighlightType eligibility)
+{
+	_eligibilityHighlight = eligibility;
+}
+
+/**
  * Schedules a redraw of this cable.
  */
 void VuoRendererCable::updateGeometry(void)
@@ -749,32 +937,10 @@ void VuoRendererCable::resetTimeLastEventPropagated()
 
 /**
  * Returns a boolean indicating whether this cable should be rendered as if it carries data.
- *
- * Note that the returned value may conflict with that returned by VuoCompilerCable::carriesData()
- * for cables connected to published ports.  This is because the vuoPsuedoPorts associated
- * with, e.g., published input ports are always technically event-only trigger ports even if the
- * published ports themselves have data.  This method treats the vuoPseudoPort as if it
- * has the same data type as its associated VuoPublishedPort, whereas VuoCompilerCable::carriesData()
- * uses the vuoPseudoPort's technical data type.
  */
 bool VuoRendererCable::effectivelyCarriesData(void) const
 {
-	if (getBase()->getCompiler()->getAlwaysEventOnly())
-		return false;
-
-	VuoRendererPort *fromPort = (getBase()->getFromPort()? getBase()->getFromPort()->getRenderer() : NULL);
-	VuoRendererPort *toPort = (getBase()->getToPort()? getBase()->getToPort()->getRenderer() : NULL);
-
-	VuoType *fromPortDataType = (fromPort? fromPort->getDataType() : NULL);
-	VuoType *toPortDataType  = (toPort? toPort->getDataType() : NULL);
-
-	bool cableCarriesData = false;
-	if (fromPort && !toPort)
-		cableCarriesData = fromPortDataType;
-	else if (toPort && !fromPort)
-		cableCarriesData = toPortDataType;
-	else if (fromPort && toPort)
-		cableCarriesData = (fromPortDataType && toPortDataType);
-
-	return cableCarriesData;
+	return (getBase()->hasCompiler() ?
+				getBase()->getCompiler()->carriesData() :
+				false);
 }

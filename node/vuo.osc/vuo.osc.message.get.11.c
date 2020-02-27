@@ -2,16 +2,16 @@
  * @file
  * vuo.osc.message.get.11 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 #include "VuoOscMessage.h"
 
 VuoModuleMetadata({
-					 "title" : "Get Message Values",
+					 "title" : "Get Message Values (11)",
 					 "keywords" : [ "address", "data" ],
 					 "version" : "1.0.0",
 					 "genericTypes": {
@@ -69,17 +69,17 @@ void nodeEvent
 (
 		VuoInputData(VuoOscMessage) message,
 		VuoOutputData(VuoText) address,
-		VuoOutputData(VuoGenericType11) data1,
-		VuoOutputData(VuoGenericType12) data2,
-		VuoOutputData(VuoGenericType13) data3,
-		VuoOutputData(VuoGenericType14) data4,
-		VuoOutputData(VuoGenericType15) data5,
-		VuoOutputData(VuoGenericType16) data6,
-		VuoOutputData(VuoGenericType17) data7,
-		VuoOutputData(VuoGenericType18) data8,
-		VuoOutputData(VuoGenericType19) data9,
-		VuoOutputData(VuoGenericType20) data10,
-		VuoOutputData(VuoGenericType21) data11
+		VuoOutputData(VuoGenericType11, {"name":"Value 1"}) data1,
+		VuoOutputData(VuoGenericType12, {"name":"Value 2"}) data2,
+		VuoOutputData(VuoGenericType13, {"name":"Value 3"}) data3,
+		VuoOutputData(VuoGenericType14, {"name":"Value 4"}) data4,
+		VuoOutputData(VuoGenericType15, {"name":"Value 5"}) data5,
+		VuoOutputData(VuoGenericType16, {"name":"Value 6"}) data6,
+		VuoOutputData(VuoGenericType17, {"name":"Value 7"}) data7,
+		VuoOutputData(VuoGenericType18, {"name":"Value 8"}) data8,
+		VuoOutputData(VuoGenericType19, {"name":"Value 9"}) data9,
+		VuoOutputData(VuoGenericType20, {"name":"Value 10"}) data10,
+		VuoOutputData(VuoGenericType21, {"name":"Value 11"}) data11
 )
 {
 	if (!message || !message->dataCount)

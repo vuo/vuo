@@ -2,9 +2,9 @@
  * @file
  * vuo.image.sharpen node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						  "filter",
 						  "unsharp mask", "USM", "high-pass filter", "edge", "detail", "enhance",
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "VuoImageBlur",
 						  "VuoImageRenderer",
@@ -28,9 +28,9 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D image;
 	uniform sampler2D blurredImage;
 	uniform float amount;
@@ -38,8 +38,8 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 imageColor        = VuoGlsl_sample(image,        fragmentTextureCoordinate.xy);
-		vec4 blurredImageColor = VuoGlsl_sample(blurredImage, fragmentTextureCoordinate.xy);
+		vec4 imageColor        = VuoGlsl_sample(image,        fragmentTextureCoordinate);
+		vec4 blurredImageColor = VuoGlsl_sample(blurredImage, fragmentTextureCoordinate);
 
 		vec4 difference = vec4(imageColor.rgb - blurredImageColor.rgb, 0.);
 		float dist = length(difference);
@@ -88,7 +88,9 @@ void nodeInstanceEvent
 		return;
 	}
 
-	VuoImage blurredImage = VuoImageBlur_blur((*instance)->blur, image, NULL, VuoBlurShape_Gaussian, radius, 1, false);
+	float scaledRadius = radius * image->scaleFactor;
+
+	VuoImage blurredImage = VuoImageBlur_blur((*instance)->blur, image, NULL, VuoBlurShape_Gaussian, scaledRadius, 1, false);
 	VuoLocal(blurredImage);
 
 	VuoShader_setUniform_VuoImage((*instance)->shader, "image",        image);

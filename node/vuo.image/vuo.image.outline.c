@@ -2,9 +2,9 @@
  * @file
  * vuo.image.convolve node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,12 +19,12 @@ VuoModuleMetadata({
 						  "Laplacian of Gaussian", "LoG", "Marr",
 						  "emboss", "relief",
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "VuoImageConvolve"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "OutlineSeagulls.vuo" ]
+						  "exampleCompositions" : [ "OutlineImage.vuo" ]
 					  }
 				 });
 
@@ -44,14 +44,16 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage, {"name":"Outlined Image"}) convolvedImage
 )
 {
-	VuoReal clampedRadius = VuoReal_makeNonzero(radius);
+	if (!image)
+	{
+		*convolvedImage = NULL;
+		return;
+	}
+
+	VuoReal clampedRadius = VuoReal_makeNonzero(radius * image->scaleFactor);
 	unsigned int width = VuoImageConvolve_laplacianOfGaussianWidth(clampedRadius);
 	VuoImage convolutionMatrix = VuoImageConvolve_generateMatrix(VuoImageConvolve_laplacianOfGaussian, width, true, clampedRadius);
 	VuoLocal(convolutionMatrix);
 
 	*convolvedImage = VuoImageConvolve_convolve(*convolve, image, convolutionMatrix, channels, intensity, range);
-}
-
-void nodeInstanceFini(VuoInstanceData(VuoImageConvolve *) convolve)
-{
 }

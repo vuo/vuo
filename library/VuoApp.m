@@ -2,9 +2,9 @@
  * @file
  * VuoApp implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "module.h"
@@ -29,6 +29,13 @@
 #include "VuoCompositionState.h"
 #include "VuoEventLoop.h"
 #import "VuoAppDelegate.h"
+#import "VuoAppSplashWindow.h"
+
+/**
+ * The duration of the window fade in/out animation.
+ * @version200New
+ */
+const double VuoApp_windowFadeSeconds = 0.45;
 
 /**
  * Is the current thread the main thread?
@@ -45,12 +52,14 @@ bool VuoApp_isMainThread(void)
 		if (!VuoApp_mainThread)
 		{
 			VUserLog("Error: Couldn't find VuoApp_mainThread.");
+			VuoLog_backtrace();
 			exit(1);
 		}
 
 		if (!*VuoApp_mainThread)
 		{
 			VUserLog("Error: VuoApp_mainThread isn't set.");
+			VuoLog_backtrace();
 			exit(1);
 		}
 	});
@@ -69,6 +78,9 @@ bool VuoApp_isMainThread(void)
  */
 void VuoApp_executeOnMainThread(void (^block)(void))
 {
+	if (!block)
+		return;
+
 	if (VuoApp_isMainThread())
 		block();
 	else
@@ -108,9 +120,11 @@ char *VuoApp_getName(void)
 	if (!dylibPath)
 		dylibPath = (char **)dlsym(RTLD_DEFAULT, "VuoApp_dylibPath");
 	if (dylibPath)
-		if (strncmp(*dylibPath, "/tmp/", 5) == 0)
+	{
+		char *filename = strrchr(*dylibPath, '/');
+		if (filename)
 		{
-			char *name = strdup(*dylibPath + 5);
+			char *name = strdup(filename + 1); // Trim leading slash.
 			name[strlen(name) - strlen("-XXXXXX.dylib")] = 0;
 
 			if (strcmp(name, "VuoComposition") == 0)
@@ -121,6 +135,7 @@ char *VuoApp_getName(void)
 
 			return name;
 		}
+	}
 
 	pid_t runnerPid = VuoGetRunnerPid();
 	if (runnerPid > 0)
@@ -146,39 +161,15 @@ char *VuoApp_getName(void)
 }
 
 /**
- * Returns the path of the folder containing `Vuo.framework`.
- *
- * See also @ref VuoFileUtilities::getVuoFrameworkPath.
- */
-const char *VuoApp_getVuoFrameworkPath(void)
-{
-	static char frameworkPath[PATH_MAX+1] = "";
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		for(unsigned int i=0; i<_dyld_image_count(); ++i)
-		{
-			const char *dylibPath = _dyld_get_image_name(i);
-			char *pos;
-			if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
-			{
-				strncpy(frameworkPath, dylibPath, pos-dylibPath);
-				break;
-			}
-		}
-	});
-	return frameworkPath;
-}
-
-/**
  * Helper for @ref VuoApp_init.
  *
  * @threadMain
  */
-static void VuoApp_initNSApplication(void)
+static void VuoApp_initNSApplication(bool requiresDockIcon)
 {
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-	// http://stackoverflow.com/a/11010614/238387
+	// https://stackoverflow.com/a/11010614/238387
 	NSApplication *app = [NSApplication sharedApplication];
 
 	if (![app delegate])
@@ -189,13 +180,15 @@ static void VuoApp_initNSApplication(void)
 	// to be overridden if/when any windows get focus.
 	VuoApp_setMenuItems(NULL);
 
-	// Show the app in the dock (since non-NIB apps are hidden by default).
-	[app setActivationPolicy:NSApplicationActivationPolicyRegular];
+	[app setActivationPolicy:requiresDockIcon ? NSApplicationActivationPolicyRegular : NSApplicationActivationPolicyAccessory];
 
 	// Stop bouncing in the dock.
 	[app finishLaunching];
 
 	VuoEventLoop_switchToAppMode();
+
+	if (VuoShouldShowSplashWindow())
+		VuoApp_showSplashWindow();
 
 	[pool drain];
 }
@@ -213,17 +206,30 @@ void VuoApp_fini(void);
  * so you only need to call this if you need an NSApplication without using VuoWindow
  * (like, for example, @ref VuoAudioFile does).
  *
+ * If `requiresDockIcon` is true, the app will show up in the dock.
+ * If `requiresDockIcon` is false, the app won't necessarily show up in the dock
+ * (if `VuoApp_init` was previously called with `requiresDockIcon=true`, the icon will remain).
+ *
  * @threadAny
+ *
+ * @version200Changed{Added `requiresDockIcon` parameter.}
  */
-void VuoApp_init(void)
+void VuoApp_init(bool requiresDockIcon)
 {
 	if (NSApp)
+	{
+		VuoApp_executeOnMainThread(^{
+			if (requiresDockIcon
+			 && NSApplication.sharedApplication.activationPolicy != NSApplicationActivationPolicyRegular)
+				[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+		});
 		return;
+	}
 
 	static dispatch_once_t once = 0;
 	dispatch_once(&once, ^{
 		VuoApp_executeOnMainThread(^{
-			VuoApp_initNSApplication();
+			VuoApp_initNSApplication(requiresDockIcon);
 		});
 		VuoAddCompositionFiniCallback(VuoApp_fini);
 	});
@@ -236,16 +242,25 @@ void VuoApp_init(void)
  */
 static void VuoApp_finiWindows(uint64_t compositionUid)
 {
-	// Stop any window recordings currently in progress.
-	// This prompts the user for the save destination,
-	// so make sure these complete before shutting the composition down.
 	SEL stopRecording = @selector(stopRecording);
 	SEL compositionUidSel = @selector(compositionUid);
 	for (NSWindow *window in [NSApp windows])
+		// Stop any window recordings currently in progress.
+		// This prompts the user for the save destination,
+		// so make sure these complete before shutting the composition down.
 		if ([window respondsToSelector:stopRecording]
 		 && [window respondsToSelector:compositionUidSel]
 		 && (uint64_t)[window performSelector:compositionUidSel] == compositionUid)
 			[window performSelector:stopRecording];
+
+	if ([NSApp windows].count)
+	{
+		// Animate removing the app from the dock while the window is fading out (instead of waiting until after).
+		[NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
+
+		double fudge = .1; // Wait a little longer, to ensure the animation's completionHandler gets called.
+		[NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:VuoApp_windowFadeSeconds + fudge]];
+	}
 
 	// Avoid leaving menubar remnants behind.
 	// https://b33p.net/kosada/node/13384

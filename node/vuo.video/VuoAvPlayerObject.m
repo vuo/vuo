@@ -2,12 +2,13 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "VuoAvPlayerObject.h"
+#include "VuoCompositionState.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -22,6 +23,7 @@
 #include "VuoWindow.h"
 #include "VuoOsStatus.h"
 #include "VuoApp.h"
+#include "HapInAVFoundation.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -58,8 +60,13 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
  * (to enable running on OS X 10.8 and 10.9).
  */
 @protocol VuoAvTrackHapFrame
-/// @{
-- (CMSampleBufferRef)allocCMSampleBufferFromRGBData;
+/// @{ Stub.
+@property (readonly) OSType codecSubType;
+@property (readonly) int dxtPlaneCount;
+@property (readonly) void** dxtDatas;
+@property (readonly) OSType* dxtPixelFormats;
+@property (readonly) NSSize dxtImgSize;
+@property (readonly) CMTime presentationTime;
 /// @}
 @end
 
@@ -68,11 +75,9 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
  * (to enable running on OS X 10.8 and 10.9).
  */
 @protocol VuoAvTrackHapOutput
-/// @{
+/// @{ Stub.
 - (id)initWithHapAssetTrack:(AVAssetTrack *)track;
-- (void)setOutputAsRGB:(BOOL)rgb;
-- (void)setDestRGBPixelFormat:(OSType)pf;
-- (NSObject<VuoAvTrackHapFrame> *)allocFrameForTime:(CMTime)time;
+- (NSObject<VuoAvTrackHapFrame> *) allocFrameForHapSampleBuffer:(CMSampleBufferRef)n;
 /// @}
 @end
 
@@ -109,12 +114,18 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 		if (isHap)
 		{
 			NSBundle *f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/Vuo.framework/Versions/%s/Frameworks/HapInAVFoundation.framework",
-				VuoApp_getVuoFrameworkPath(),
-				VUO_VERSION_STRING]];
+																			  VuoGetFrameworkPath(),
+																			  VUO_FRAMEWORK_VERSION_STRING]];
 			if (!f)
 			{
-				VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
-				return nil;
+				f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/VuoRunner.framework/Versions/%s/Frameworks/HapInAVFoundation.framework",
+																		VuoGetRunnerFrameworkPath(),
+																		VUO_FRAMEWORK_VERSION_STRING]];
+				if (!f)
+				{
+					VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
+					return nil;
+				}
 			}
 
 			if (![f isLoaded])
@@ -123,21 +134,6 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 				bool status = [f loadAndReturnError:&error];
 				if (!status)
 				{
-					if ([[error domain] isEqualToString:NSCocoaErrorDomain]
-					 && [error code] == NSExecutableLinkError)
-					{
-						SInt32 macMinorVersion;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-						Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-#pragma clang diagnostic pop
-						if (macMinorVersion <= 9)
-						{
-							VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, which is only available on OS X 10.10 and later.");
-							return nil;
-						}
-					}
-
 					NSError *underlyingError = [[error userInfo] objectForKey:NSUnderlyingErrorKey];
 					if (underlyingError)
 						error = underlyingError;
@@ -147,30 +143,22 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 			}
 
 			hapOutput = [[NSClassFromString(@"AVPlayerItemHapDXTOutput") alloc] initWithHapAssetTrack:track];
-			[hapOutput setOutputAsRGB:YES];
-			[hapOutput setDestRGBPixelFormat:kCVPixelFormatType_32BGRA];
 		}
 	}
 	return self;
 }
 
-- (CMSampleBufferRef)copyNextSampleBuffer
+- (NSObject<VuoAvTrackHapFrame> *)newHapFrame
 {
-	CMSampleBufferRef buffer = [super copyNextSampleBuffer];
-
-	if (!hapOutput || !buffer)
-		return buffer;
-
-	VuoDefer(^{ CFRelease(buffer); });
-
-	CMTime time = CMSampleBufferGetPresentationTimeStamp(buffer);
-	if (CMTIME_IS_INVALID(time))
+	if (!hapOutput)
 		return nil;
 
-	NSObject<VuoAvTrackHapFrame> *hapFrame = [hapOutput allocFrameForTime:time];
-	CMSampleBufferRef decodedBuffer = [hapFrame allocCMSampleBufferFromRGBData];
-	[hapFrame release];
-	return decodedBuffer;
+	CMSampleBufferRef buffer = [super copyNextSampleBuffer];
+	if (!buffer)
+		return nil;
+	VuoDefer(^{ CFRelease(buffer); });
+
+	return [hapOutput allocFrameForHapSampleBuffer:buffer];
 }
 
 - (void)dealloc
@@ -191,7 +179,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 {
 	// It seems we need an NSApplication instance to exist prior to using AVFoundation; otherwise, the app beachballs.
 	// https://b33p.net/kosada/node/11006
-	VuoApp_init();
+	VuoApp_init(false);
 
 	self = [super init];
 
@@ -285,6 +273,9 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	[asset retain];
 
 	// Movies using the Hap codec are not "playable" yet we can still play them.
+	// Also, https://developer.apple.com/videos/play/wwdc2017/511?time=293 says `isPlayable`
+	// means that the current hardware is capable of playing back the current media in realtime,
+	// but we can ignore that since we want to try to play regardless.
 	bool isPlayable = true; //[asset isPlayable];
 
 	// "Currently, only Apple can 'make' protected content and applications that can play it."
@@ -299,10 +290,57 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 		return false;
 	}
 
+
+	{
+		AVAssetTrack *videoTrack = [asset tracksWithMediaType:AVMediaTypeVideo][0];
+		CMFormatDescriptionRef desc = (CMFormatDescriptionRef)videoTrack.formatDescriptions[0];
+		CMVideoCodecType codec = CMFormatDescriptionGetMediaSubType(desc);
+		if (codec == 'ap4h'  // AVVideoCodecTypeAppleProRes4444
+		 || codec == 'Hap5'  // Hap Alpha
+		 || codec == 'HapM'  // Hap Q Alpha
+		 || codec == 'HapA') // Hap Alpha-only
+			hasAlpha = true;
+		if (codec == 'hvc1') // HEVC movies may have an alpha attachment.
+		{
+			CFBooleanRef containsAlphaChannel = CMFormatDescriptionGetExtension(desc, CFSTR("ContainsAlphaChannel"));  // kCMFormatDescriptionExtension_ContainsAlphaChannel (macOS 10.15+)
+			if (containsAlphaChannel == kCFBooleanTrue)
+				hasAlpha = true;
+		}
+
+		if (VuoIsDebugEnabled())
+		{
+			char *codecZ = VuoOsStatus_getText(codec);
+			int bitsPerComponent = ((NSNumber *)CMFormatDescriptionGetExtension(desc, CFSTR("BitsPerComponent"))).intValue;
+			int depth            = ((NSNumber *)CMFormatDescriptionGetExtension(desc, CFSTR("Depth"))).intValue;
+
+			Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding);
+
+			VuoText codecName = VuoText_makeFromCFString(CMFormatDescriptionGetExtension(desc, CFSTR("FormatName")));
+			VuoRetain(codecName);
+			VuoText alphaMode = VuoText_makeFromCFString(CMFormatDescriptionGetExtension(desc, CFSTR("AlphaChannelMode")));
+			VuoRetain(alphaMode);
+//			char *extensionsZ = VuoLog_copyCFDescription(CMFormatDescriptionGetExtensions(desc));
+			VUserLog("codec=\"%s\" (%s)  bpc=%d  depth=%d  hasAlpha=%d %s",
+					 codecName,
+					 codecZ,
+					 bitsPerComponent,
+					 depth,
+					 hasAlpha,
+					 (hasAlpha && alphaMode) ? alphaMode : "");
+			VuoRelease(codecName);
+			VuoRelease(alphaMode);
+			free(codecZ);
+		}
+	}
+
+
 	NSArray* assetKeys = @[@"playable", @"hasProtectedContent", @"tracks"];
 
+	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
 	[asset loadValuesAsynchronouslyForKeys: assetKeys completionHandler:^(void)
 	{
+		vuoAddCompositionStateToThreadLocalStorage(compositionState);
+
 		// First test whether the values of each of the keys we need have been successfully loaded.
 		NSError *error = nil;
 		bool failedLoading = false;
@@ -346,6 +384,8 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 			if( self != nil && readyToPlayCallback != NULL && avDecoderCppObject != NULL )
 				readyToPlayCallback( avDecoderCppObject, isReady );
 		// });
+
+		vuoRemoveCompositionStateFromThreadLocalStorage();
 	}];
 
 	return true;
@@ -549,6 +589,12 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 	[self clearFrameQueue];
 
+	if (playbackRate < 0 && VuoReal_areEqual(second, CMTimeGetSeconds(asset.duration)))
+	{
+		float preroll = (1./nominalFrameRate * REVERSE_PLAYBACK_FRAME_ADVANCE);
+		second -= preroll;
+	}
+
 	CMTime cmsec = CMTimeMakeWithSeconds(second, NSEC_PER_SEC);
 
 	[self setAssetReaderTimeRange: CMTimeRangeMake(cmsec, range < 0 ? [asset duration] : CMTimeMakeWithSeconds(range, NSEC_PER_SEC))];
@@ -603,6 +649,9 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 			if(![self copyNextVideoSampleBuffer] )
 				return false;
 		}
+
+		if ([videoQueue count] < 1)
+			return false;
 	}
 
 	int index = playbackRate < 0 ? [videoQueue count] - 1 : 0;
@@ -700,47 +749,229 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 {
 	if( [assetReader status] == AVAssetReaderStatusReading )
 	{
-		CMSampleBufferRef sampleBuffer = [assetReaderVideoTrackOutput copyNextSampleBuffer];
-
-		if (!sampleBuffer)
-			return false;
-
-		float timestamp = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer));
-		float duration  = CMTimeGetSeconds(CMSampleBufferGetDuration(sampleBuffer));
-		if (isnan(duration))
-			duration = 1./nominalFrameRate;
-
-		CVPixelBufferRef buffer = (CVPixelBufferRef) CMSampleBufferGetImageBuffer(sampleBuffer);
-
-		__block CVOpenGLTextureRef texture;
-		__block CVReturn ret;
-		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-			ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, buffer, NULL, &texture);
-		});
-		if (ret != kCVReturnSuccess)
+		__block VuoImage image = NULL;
+		float timestamp;
+		float duration;
+		NSObject<VuoAvTrackHapFrame> *hapFrame = [assetReaderVideoTrackOutput newHapFrame];
+		if (hapFrame)
 		{
-			VUserLog("Error: %d", ret);
+			// For Hap frames, get the DXT buffer in CPU memory, and upload it to the GPU.
+
+			timestamp = CMTimeGetSeconds(hapFrame.presentationTime);
+			duration = 1./nominalFrameRate;
+			int dxtPlaneCount = hapFrame.dxtPlaneCount;
+			OSType *dxtPixelFormats = hapFrame.dxtPixelFormats;
+			void **dxtBaseAddresses = hapFrame.dxtDatas;
+
+			if (dxtPlaneCount > 2)
+			{
+				VUserLog("Error: This image has %d planes, which isn't part of the Hap spec.", dxtPlaneCount);
+				return false;
+			}
+
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+				VuoImage dxtImage[dxtPlaneCount];
+				for (int i = 0; i < dxtPlaneCount; ++i)
+				{
+					GLuint internalFormat;
+					unsigned int bitsPerPixel;
+					switch (dxtPixelFormats[i])
+					{
+						case kHapCVPixelFormat_RGB_DXT1:
+							internalFormat = HapTextureFormat_RGB_DXT1;
+							bitsPerPixel = 4;
+							break;
+
+						case kHapCVPixelFormat_RGBA_DXT5:
+						case kHapCVPixelFormat_YCoCg_DXT5:
+							internalFormat = HapTextureFormat_RGBA_DXT5;
+							bitsPerPixel = 8;
+							break;
+
+						case kHapCVPixelFormat_CoCgXY:
+							if (i == 0)
+							{
+								internalFormat = HapTextureFormat_RGBA_DXT5;
+								bitsPerPixel = 8;
+							}
+							else
+							{
+								internalFormat = HapTextureFormat_A_RGTC1;
+								bitsPerPixel = 4;
+							}
+							break;
+
+						case kHapCVPixelFormat_YCoCg_DXT5_A_RGTC1:
+							if (i == 0)
+							{
+								internalFormat = HapTextureFormat_RGBA_DXT5;
+								bitsPerPixel = 8;
+							}
+							else
+							{
+								internalFormat = HapTextureFormat_A_RGTC1;
+								bitsPerPixel = 4;
+							}
+							break;
+
+						case kHapCVPixelFormat_A_RGTC1:
+							internalFormat = HapTextureFormat_A_RGTC1;
+							bitsPerPixel = 4;
+							break;
+
+						default:
+							VUserLog("Error: Unknown Hap dxtPixelFormat %s.", VuoOsStatus_getText(dxtPixelFormats[i]));
+							return;
+					}
+
+					GLuint texture = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_NoAllocation, GL_TEXTURE_2D, internalFormat, hapFrame.dxtImgSize.width, hapFrame.dxtImgSize.height, GL_RGBA, NULL);
+					glBindTexture(GL_TEXTURE_2D, texture);
+
+					size_t bytesPerRow = (hapFrame.dxtImgSize.width * bitsPerPixel) / 8;
+					GLsizei dataLength = (int)(bytesPerRow * hapFrame.dxtImgSize.height);
+
+					glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE);
+
+					glCompressedTexImage2D(GL_TEXTURE_2D, 0, internalFormat, hapFrame.dxtImgSize.width, hapFrame.dxtImgSize.height, 0, dataLength, dxtBaseAddresses[i]);
+
+					glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_FALSE);
+					glBindTexture(GL_TEXTURE_2D, 0);
+
+					dxtImage[i] = VuoImage_make(texture, internalFormat, hapFrame.dxtImgSize.width, hapFrame.dxtImgSize.height);
+				}
+
+				if (hapFrame.codecSubType == kHapCodecSubType
+				 || hapFrame.codecSubType == kHapAlphaCodecSubType)
+					image = VuoImage_makeCopy(dxtImage[0], true, 0, 0, false);
+				else if (hapFrame.codecSubType == kHapYCoCgCodecSubType)
+				{
+					// Based on https://github.com/Vidvox/hap-in-avfoundation/blob/master/HapInAVF%20Test%20App/ScaledCoCgYToRGBA.frag
+					static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
+						uniform sampler2D cocgsy_src;
+						const vec4 offsets = vec4(-0.50196078431373, -0.50196078431373, 0.0, 0.0);
+						varying vec2 fragmentTextureCoordinate;
+						void main()
+						{
+							vec4 CoCgSY = texture2D(cocgsy_src, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y));
+
+							CoCgSY += offsets;
+
+							float scale = ( CoCgSY.z * ( 255.0 / 8.0 ) ) + 1.0;
+
+							float Co = CoCgSY.x / scale;
+							float Cg = CoCgSY.y / scale;
+							float Y = CoCgSY.w;
+
+							gl_FragColor = vec4(Y + Co - Cg, Y + Cg, Y - Co - Cg, 1.0);
+						}
+					);
+
+					VuoShader shader = VuoShader_make("YCoCg to RGB Shader");
+					VuoRetain(shader);
+					VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+					VuoShader_setUniform_VuoImage(shader, "cocgsy_src", dxtImage[0]);
+					image = VuoImageRenderer_render(shader, dxtImage[0]->pixelsWide, dxtImage[0]->pixelsHigh, VuoImageColorDepth_8);
+					VuoRelease(shader);
+				}
+				else if (hapFrame.codecSubType == kHapYCoCgACodecSubType)
+				{
+					// Based on https://github.com/Vidvox/hap-in-avfoundation/blob/master/HapInAVF%20Test%20App/ScaledCoCgYPlusAToRGBA.frag
+					static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
+						uniform sampler2D cocgsy_src;
+						uniform sampler2D alpha_src;
+						const vec4 offsets = vec4(-0.50196078431373, -0.50196078431373, 0.0, 0.0);
+						varying vec2 fragmentTextureCoordinate;
+						void main()
+						{
+							vec2 tc = vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y);
+							vec4 CoCgSY = texture2D(cocgsy_src, tc);
+							float alpha = texture2D(alpha_src, tc).r;
+
+							CoCgSY += offsets;
+
+							float scale = ( CoCgSY.z * ( 255.0 / 8.0 ) ) + 1.0;
+
+							float Co = CoCgSY.x / scale;
+							float Cg = CoCgSY.y / scale;
+							float Y = CoCgSY.w;
+
+							gl_FragColor = vec4(Y + Co - Cg, Y + Cg, Y - Co - Cg, alpha);
+						}
+					);
+
+					VuoShader shader = VuoShader_make("YCoCg+A to RGBA Shader");
+					VuoRetain(shader);
+					VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+					VuoShader_setUniform_VuoImage(shader, "cocgsy_src", dxtImage[0]);
+					VuoShader_setUniform_VuoImage(shader, "alpha_src", dxtImage[1]);
+					image = VuoImageRenderer_render(shader, dxtImage[0]->pixelsWide, dxtImage[0]->pixelsHigh, VuoImageColorDepth_8);
+					VuoRelease(shader);
+				}
+				else
+				{
+					VUserLog("Error: Unknown codecSubType '%s'.", VuoOsStatus_getText(hapFrame.codecSubType));
+					return;
+				}
+			});
+
+			[hapFrame release];
+
+			if (!image)
+				return false;
+		}
+		else
+		{
+			// For non-Hap frames, AV Foundation can directly give us an OpenGL texture.
+
+			CMSampleBufferRef sampleBuffer = [assetReaderVideoTrackOutput copyNextSampleBuffer];
+
+			if (!sampleBuffer)
+				return false;
+
+			timestamp = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer));
+			duration  = CMTimeGetSeconds(CMSampleBufferGetDuration(sampleBuffer));
+			if (isnan(duration))
+				duration = 1./nominalFrameRate;
+
+			CVPixelBufferRef buffer = (CVPixelBufferRef) CMSampleBufferGetImageBuffer(sampleBuffer);
+			if (!buffer)
+			{
+				CMSampleBufferInvalidate(sampleBuffer);
+				CFRelease(sampleBuffer);
+				return false;
+			}
+
+			__block CVOpenGLTextureRef texture;
+			__block CVReturn ret;
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+				ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, buffer, NULL, &texture);
+			});
+			if (ret != kCVReturnSuccess)
+			{
+				char *error = VuoOsStatus_getText(ret);
+				VUserLog("Error: Couldn't convert CVImageBuffer to texture: %s", error);
+				free(error);
+				CMSampleBufferInvalidate(sampleBuffer);
+				CFRelease(sampleBuffer);
+				return false;
+			}
+			VuoImage rectImage = VuoImage_makeClientOwnedGlTextureRectangle(
+						CVOpenGLTextureGetName(texture),
+						hasAlpha ? GL_RGBA : GL_RGB,
+						CVPixelBufferGetWidth(buffer),
+						CVPixelBufferGetHeight(buffer),
+						VuoAvPlayerObject_freeCallback, NULL);
+			VuoRetain(rectImage);
+			image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture), 0, 0, false);
+			CVOpenGLTextureRelease(texture);
+			VuoRelease(rectImage);
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+				CVOpenGLTextureCacheFlush(textureCache, 0);
+			});
+
 			CMSampleBufferInvalidate(sampleBuffer);
 			CFRelease(sampleBuffer);
-			return false;
 		}
-		VuoImage rectImage = VuoImage_makeClientOwnedGlTextureRectangle(
-					CVOpenGLTextureGetName(texture),
-					GL_RGB,
-					CVPixelBufferGetWidth(buffer),
-					CVPixelBufferGetHeight(buffer),
-					VuoAvPlayerObject_freeCallback, NULL);
-		VuoRetain(rectImage);
-		VuoImage image = VuoImage_makeCopy(rectImage, CVOpenGLTextureIsFlipped(texture));
-		CVOpenGLTextureRelease(texture);
-		VuoRelease(rectImage);
-		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-			CVOpenGLTextureCacheFlush(textureCache, 0);
-		});
-
-		CMSampleBufferInvalidate(sampleBuffer);
-		CFRelease(sampleBuffer);
-		sampleBuffer = nil;
 
 		VuoVideoFrame* frame = (VuoVideoFrame*) malloc(sizeof(VuoVideoFrame));
 		*frame = VuoVideoFrame_make(image, timestamp, duration);

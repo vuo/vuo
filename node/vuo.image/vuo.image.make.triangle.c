@@ -2,9 +2,9 @@
  * @file
  * vuo.image.make.triangle node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -22,7 +22,7 @@ VuoModuleMetadata({
 
 static const char * triangleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform vec4 color;
 	uniform vec2 a;	// must be wound clockwise
 	uniform vec2 b;
@@ -35,7 +35,7 @@ static const char * triangleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 pos = fragmentTextureCoordinate.xy;
+		vec2 pos = fragmentTextureCoordinate;
 		gl_FragColor = !isLeft(a, b, pos) && !isLeft(b, c, pos) && !isLeft(c, a, pos) ? color : vec4(0,0,0,0);
 	}
 );

@@ -2,9 +2,9 @@
  * @file
  * VuoGraphicsWindowDelegate implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "module.h"
@@ -79,6 +79,12 @@ VuoModuleMetadata({
 	if (!_window.programmaticallyResizingWindow)
 	{
 		_window.userResizedWindow = YES;
+		if (_window.updatedWindow)
+		{
+			VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+			VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(_window));
+			_window.updatedWindow(rl);
+		}
 		if (_window.showedWindow)
 			_window.showedWindow(VuoWindowReference_make(_window));
 	}
@@ -138,6 +144,12 @@ VuoModuleMetadata({
  */
 - (void)windowDidMove:(NSNotification *)notification
 {
+	if (_window.updatedWindow)
+	{
+		VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+		VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(_window));
+		_window.updatedWindow(rl);
+	}
 	if (_window.showedWindow && !_window.programmaticallyResizingWindow)
 		_window.showedWindow(VuoWindowReference_make(_window));
 }

@@ -2,18 +2,13 @@
  * @file
  * VuoTransform2d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include "type.h"
-#include "VuoTransform2d.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -25,7 +20,8 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"VuoPoint2d",
 						"VuoReal",
-						"VuoText"
+						"VuoText",
+						"VuoTransform",
 					 ]
 				 });
 #endif
@@ -130,6 +126,22 @@ char * VuoTransform2d_getSummary(const VuoTransform2d value)
 		return strdup("identity transform (no change)");
 
 	VuoReal rotationInDegrees = value.rotation * 180./M_PI;
-	return VuoText_format("translation (%g, %g)<br>rotation %g°<br>scale (%g, %g)",
+	return VuoText_format("<div>translation (%g, %g)</div><div>rotation %g°</div><div>scale (%g, %g)</div>",
 						  value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
+}
+
+/**
+ * Applies `transform` to `point`, using input Z coordinate 0 and discarding the transformed Z coordinate.
+ */
+VuoPoint2d VuoTransform2d_transform_VuoPoint2d(VuoTransform2d transform, VuoPoint2d point)
+{
+    return VuoTransform_transform_VuoPoint2d(VuoTransform_makeFrom2d(transform), point);
+}
+
+/**
+ * Applies `transform` to `point`.
+ */
+VuoPoint3d VuoTransform2d_transform_VuoPoint3d(VuoTransform2d transform, VuoPoint3d point)
+{
+    return VuoTransform_transform_VuoPoint3d(VuoTransform_makeFrom2d(transform), point);
 }

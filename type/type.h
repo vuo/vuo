@@ -2,13 +2,18 @@
  * @file
  * Prototypes for type implementations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
+
+#pragma once
 
 #include "module.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Headers commonly used by type implementations
 
@@ -94,7 +99,8 @@ struct json_object * MyType_getInterprocessJson(const MyType value);
  * The type may have other values not returned by this function (for example, if the values were allowed
  * in older versions of the type, but are not allowed now).
  *
- * This function is required for enum types, and should only be defined for enum types.
+ * This function is required for enum types,
+ * and should only be defined for types whose `sizeof() = 4` (`enum`, `int64_t`, `void *`, `char *`, etc).
  */
 VuoList_MyType MyType_getAllowedValues(void);
 
@@ -177,4 +183,8 @@ void MyType_release(const MyType value);
  * @}
  */
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

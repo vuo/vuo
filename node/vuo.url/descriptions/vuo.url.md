@@ -1,10 +1,12 @@
+Nodes for breaking down a URL into its components.
+
 ## Working with URL input ports
 
 Many of Vuo's `Fetch` nodes take a URL as input.  These nodes can either load a file from the local system, or download a file from an Internet server.
 
 To download a file from the Internet, copy the file's URL from your browser. Example:
 
-   - `http://vuo.org/sites/all/themes/vuo_theme/logo.png`
+   - `https://vuo.org/sites/all/themes/vuo_theme/logo.png`
 
 To load a file on the computer running the composition, create a URL from the file's path. Examples: 
 
@@ -15,7 +17,7 @@ To load a file on the computer running the composition, create a URL from the fi
 
 ### Relative paths
 
-If the file's location doesn't start with `file://` or `/`, then it's treated as a relative path. This is the option you'd typically want when sharing the composition with others. If running the composition on a different computer than it was created on, the file needs to exist in the same location relative to the composition (`.vuo`) file. If running an application exported from the composition, the file needs to exist in the `Contents/Resources` folder inside the application package; see the [Vuo Manual](http://vuo.org/manual.pdf) for details. 
+If the file's location doesn't start with `file://` or `/`, then it's treated as a relative path. This is the option you'd typically want when sharing the composition with others. If running the composition on a different computer than it was created on, the file needs to exist in the same location relative to the composition (`.vuo`) file. If running an application exported from the composition, the file needs to exist in the `Contents/Resources` folder inside the application package; see the [Vuo Manual](https://vuo.org/manual.pdf) for details.
 
 If the composition hasn't been saved yet, paths are interpreted relative to the Desktop.
 
@@ -29,7 +31,7 @@ If you drag a file from Finder onto a URL port while holding <kbd>Option</kbd>, 
 
 ### Data URIs
 
-You can embed images and other data directly into a Vuo composition (without requiring any external files or web servers) by using the `data:` URI scheme.  For example, if you paste this into the `Fetch Image` node's URL port:
+You can embed images and other data directly into a Vuo composition (without requiring any external files or web servers) by using the `data:` URI scheme.  For example, if you paste this into the [Fetch Image](vuo-node://vuo.image.fetch) node's URL port:
 
    - `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==`
 

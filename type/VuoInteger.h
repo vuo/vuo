@@ -2,12 +2,16 @@
  * @file
  * vuo.integer C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -105,22 +109,8 @@ static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInt
 
 /// This type has _areEqual() and _isLessThan() functions.
 #define VuoInteger_SUPPORTS_COMPARISON
-
-/**
- * Returns true if the two values are equal.
- */
-static inline bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2)
-{
-	return value1 == value2;
-}
-
-/**
- * Returns true if a < b.
- */
-static inline bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b)
-{
-	return a < b;
-}
+bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2);
+bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b);
 
 #ifndef MIN
 /**
@@ -166,3 +156,7 @@ void VuoInteger_release(VuoInteger value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

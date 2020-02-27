@@ -2,9 +2,9 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
@@ -43,11 +43,11 @@ GetRGBColorValues [type="vuo.color.get.rgb" version="2.0.0" label="Get RGB Color
 GetRSSItemValues [type="vuo.rss.get" version="1.0.0" label="Get RSS Item Values|<refresh>refresh\l|<item>item\l|<title>title\r|<author>author\r|<description>description\r|<url>url\r|<image>image\r" pos="403,1637"];
 GetRenderedLayerBounds [type="vuo.layer.bounds.rendered" version="1.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="677,675"];
 ListFiles [type="vuo.file.list" version="1.0.0" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="231,184" _folder="\"\"" _includeSubfolders="false" _fileType="\"image\""];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1151,679" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1151,679" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
 MakeFont [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="218,484" _fontName="\"HelveticaNeue-Light\"" _pointSize="28.000000" _underlined="false" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _characterSpacing="1.000000" _lineSpacing="1.000000"];
 MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="878,190" _hue="0.000000" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
 MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="1084,194" _red="1.000000" _green="0.000000" _blue="0.000000" _opacity="1.000000"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="940,677" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="940,677" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
 MakeSquareMesh [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="802,1014"];
 MakeTriangleMesh [type="vuo.mesh.make.triangle" version="2.0.0" label="Make Triangle Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="1023,1017"];
 MakeVideoInput [type="vuo.video.make.input" version="1.0.0" label="Make Video Input|<refresh>refresh\l|<name>name\l|<device>device\r" pos="182,1458" _name="\"\""];

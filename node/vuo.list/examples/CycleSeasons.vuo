@@ -1,32 +1,31 @@
 /**
  * @file
- * With each click of the mouse, shows each item in a list.
+ * With each click of the mouse, shows the next item in a list.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="447,214" fillcolor="violet" _wrapMode="\"wrap\""];
-CycleThroughList6 [type="vuo.list.cycle.VuoColor" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="447,54" fillcolor="violet" _wrapMode="\"wrap\""];
-FireOnStart5 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="597,-165" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="697,37" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="984,63" fillcolor="green"];
-MakeList10 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="954,48" fillcolor="green"];
-MakeList4 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="377,225" fillcolor="violet" _1="\"Spring\"" _2="\"Summer\"" _3="\"Fall\"" _4="\"Winter\""];
-MakeList9 [type="vuo.list.make.4.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="377,65" fillcolor="violet" _1="{\"r\":0.501961,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _2="{\"r\":1.000000,\"g\":1.000000,\"b\":0.400000,\"a\":1.000000}" _3="{\"r\":1.000000,\"g\":0.800000,\"b\":0.400000,\"a\":1.000000}" _4="{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000}"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="703,214" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="757,-127" _text="\"Click to change the season.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="114,247" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1025,37" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoText" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="480,240" fillcolor="orange" _wrapMode="\"wrap\""];
+CycleThroughList6 [type="vuo.list.cycle2.VuoColor" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="480,45" fillcolor="orange" _wrapMode="\"wrap\""];
+FireOnStart5 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="420,-120" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="720,45" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList10 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="959,41" fillcolor="blue"];
+MakeList4 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="418,296" fillcolor="orange" _1="\"Spring\"" _2="\"Summer\"" _3="\"Fall\"" _4="\"Winter\""];
+MakeList9 [type="vuo.list.make.4.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="418,101" fillcolor="orange" _1="\{\"r\":0.80000001192092896,\"g\":1,\"b\":0.40000000596046448,\"a\":1\}" _2="\{\"r\":1,\"g\":1,\"b\":0.40000000596046448,\"a\":1\}" _3="\{\"r\":1,\"g\":0.80000001192092896,\"b\":0.40000000596046448,\"a\":1\}" _4="\{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000\}"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="750,240" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":72,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="750,-120" _text="\"Click to change the season.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="195,120" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1005,30" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 CycleThroughList2:item -> MakeTextLayer:text;
 CycleThroughList6:item -> MakeColorLayer:color;
-FireOnStart5:started -> MakeTextLayer2:refresh;
+FireOnStart5:started -> MakeTextLayer2:text;
 MakeColorLayer:layer -> MakeList10:2;
-MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList10:list -> RenderLayersToWindow2:layers;
 MakeList4:list -> CycleThroughList2:list;
 MakeList9:list -> CycleThroughList6:list;
@@ -34,5 +33,5 @@ MakeTextLayer2:layer -> MakeList10:1;
 MakeTextLayer:layer -> MakeList10:3;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
 ReceiveMouseButtons:pressed -> CycleThroughList6:goForward;
-RenderLayersToWindow2:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow2:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 }

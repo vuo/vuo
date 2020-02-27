@@ -2,47 +2,42 @@
  * @file
  * Switches a window between a fixed aspect ratio and an unconstrained aspect ratio.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="375,0" fillcolor="violet" _width="16.000000" _height="9.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,120" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="825,165" _color="{\"r\":0.208133,\"g\":0.425864,\"b\":0.423392,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _height="1.000000"];
-MakeList4 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1290,116" fillcolor="green"];
-MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1256,101" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="990,330" _center="{\"x\":0.000000,\"y\":0.400000}" _rotation="0.000000" _width="0.800000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="990,480" _center="{\"x\":0.000000,\"y\":-0.400000}" _rotation="0.000000" _width="0.900000" _opacity="1.000000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="780,345" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage3 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="780,495" _text="\"Right-click to change the aspect ratio.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="30,285" fillcolor="yellow" _button="\"right\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1320,90" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-ResetWindowAspectRatio [type="vuo.window.aspectRatio.reset" version="1.0.1" label="Reset Window Aspect Ratio|<refresh>refresh\l|<property>property\r" pos="390,-60" fillcolor="violet"];
-SelectInput2 [type="vuo.select.in.boolean.VuoWindowProperty" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="705,0"];
-SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="570,300" _falseOption="\"Now the window can be resized to any\\naspect ratio (unless it's fullscreen).\"" _trueOption="\"Now the window stays at an aspect ratio\\nof 16:9 (unless it's fullscreen).\""];
-Switch2 [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<value>value\r" pos="270,300"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,120" fillcolor="lime" _started_eventThrottling="enqueue"];
+LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="375,30" fillcolor="orange" _width="4." _height="3."];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="780,135" _color="\{\"r\":0.208133,\"g\":0.425864,\"b\":0.423392,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="1.000000" _height="1.000000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1238,161" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1050,330" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1065,525" _text="\"Right click to change the aspect ratio.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="30,315" fillcolor="lime" _button="\"right\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1290,150" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput2 [type="vuo.select.in.boolean.VuoWindowDescription" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="810,15"];
+SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="810,330" _falseOption="\"Now the window can be resized to any\\naspect ratio (unless it's fullscreen).\"" _trueOption="\"Now the window stays at an aspect ratio\\nof 16:9 (unless it's fullscreen).\""];
+Switch2 [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<value>value\r" pos="285,330"];
+UnlockWindowAspectRatio [type="vuo.window.aspectRatio.reset2" version="2.0.0" label="Unlock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<changedWindowDescription>changedWindowDescription\r" pos="375,-45" fillcolor="orange"];
 
-ChangeWindowAspectRatio:property -> SelectInput2:trueOption;
-FireOnStart:started -> ChangeWindowAspectRatio:refresh;
-FireOnStart:started -> MakeColorLayer:refresh;
-FireOnStart:started -> MakeTextImage3:refresh;
-FireOnStart:started -> ResetWindowAspectRatio:refresh;
-FireOnStart:started -> Switch2:refresh;
+FireOnStart:started -> LockWindowAspectRatio:windowDescription;
+FireOnStart:started -> MakeColorLayer:color;
+FireOnStart:started -> MakeTextLayer2:text;
+FireOnStart:started -> Switch2:toggle;
+FireOnStart:started -> UnlockWindowAspectRatio:windowDescription;
+LockWindowAspectRatio:changedWindowDescription -> SelectInput2:trueOption;
 MakeColorLayer:layer -> MakeList7:1;
-MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList7:list -> RenderLayersToWindow:layers;
-MakeScaledLayer3:layer -> MakeList7:3;
-MakeScaledLayer:layer -> MakeList7:2;
-MakeTextImage3:image -> MakeScaledLayer3:image;
-MakeTextImage:image -> MakeScaledLayer:image;
+MakeTextLayer2:layer -> MakeList7:3;
+MakeTextLayer:layer -> MakeList7:2;
 ReceiveMouseButtons:released -> Switch2:toggle;
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
-ResetWindowAspectRatio:property -> SelectInput2:falseOption;
-SelectInput2:out -> MakeList4:1;
-SelectInput4:out -> MakeTextImage:text;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+SelectInput2:out -> RenderLayersToWindow:setWindowDescription;
+SelectInput4:out -> MakeTextLayer:text;
 Switch2:value -> SelectInput2:which;
 Switch2:value -> SelectInput4:which;
+UnlockWindowAspectRatio:changedWindowDescription -> SelectInput2:falseOption;
 }

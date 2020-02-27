@@ -2,9 +2,9 @@
  * @file
  * vuo.video.save node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -26,10 +26,7 @@ VuoModuleMetadata({
 						"VuoImageResize"
 					],
 					"node": {
-					"isInterface" : true,
-					"exampleCompositions" : [
-						"RecordMovie.vuo"
-					],
+						"exampleCompositions" : [ "RecordMovie.vuo" ],
 					}
 				 });
 
@@ -133,14 +130,15 @@ void nodeInstanceTriggerStart(
 
 void nodeInstanceEvent(
 	VuoInstanceData(struct nodeInstanceData*) instance,
-	VuoInputData(VuoText, {"default":"~/Desktop/MyMovie.mov", "name":"URL"}) url,
+	VuoInputData(VuoText, {"default":"~/Desktop/MyMovie.mov", "name":"URL", "isSave":true}) url,
 	VuoInputData(VuoImage) saveImage,
 	VuoInputEvent({"eventBlocking":"none", "data":"saveImage"}) saveImageEvent,
 	VuoInputData(VuoList_VuoAudioSamples) saveAudio,
 	VuoInputEvent({"eventBlocking":"none", "data":"saveAudio"}) saveAudioEvent,
 	VuoInputEvent({"eventBlocking":"none"}) finalize,
 	VuoInputData(VuoBoolean, {"default":false, "name":"Overwrite URL"}) overwriteUrl,
-	VuoInputData(VuoMovieFormat, {"default":{"imageEncoding":"H264", "imageQuality":1, "audioEncoding":"LinearPCM", "audioQuality":1}}) format
+	VuoInputData(VuoMovieFormat, {"default":{"imageEncoding":"H264", "imageQuality":1, "audioEncoding":"LinearPCM", "audioQuality":1}}) format,
+	VuoOutputTrigger(finalized, void)
 	)
 {
 	// grab timestamp at earliest possible instance
@@ -180,13 +178,14 @@ void nodeInstanceEvent(
 				while ((*instance)->channelCount == -1 && VuoLogGetTime() - waitForAudioStart < APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA)
 					usleep(USEC_PER_SEC/100);
 
-				VuoAvWriter_initializeMovie((*instance)->avWriter,
+				if (!VuoAvWriter_initializeMovie((*instance)->avWriter,
 											(*instance)->imageWidth,
 											(*instance)->imageHeight,
 											(*instance)->channelCount,
 											url,
 											overwriteUrl,
-											format);
+											format))
+					VUserLog("Error: Couldn't initialize movie writer.");
 
 				bool initSuccess = VuoAvWriter_isInitialized((*instance)->avWriter);
 				setWriterState(*instance, initSuccess ? VuoAvWriterState_Ready : VuoAvWriterState_Failed);
@@ -215,14 +214,14 @@ void nodeInstanceEvent(
 														 (*instance)->imageWidth,
 														 (*instance)->imageHeight);
 				VuoRetain( resized );
-				VuoAvWriter_appendImage((*instance)->avWriter, resized, received - (*instance)->firstEvent);
+				VuoAvWriter_appendImage((*instance)->avWriter, resized, received - (*instance)->firstEvent, false);
 				VuoRelease( resized );
 			}
 			else
 			{
 				// safe to call appendImage all day long - it will only write if the file has been initialized and is currently
 				// recording.
-				VuoAvWriter_appendImage((*instance)->avWriter, saveImage, received - (*instance)->firstEvent);
+				VuoAvWriter_appendImage((*instance)->avWriter, saveImage, received - (*instance)->firstEvent, false);
 			}
 			VuoRelease(saveImage);
 		});
@@ -240,7 +239,7 @@ void nodeInstanceEvent(
 		{
 			VuoRetain(saveAudio);
 			dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
-				VuoAvWriter_appendAudio((*instance)->avWriter, saveAudio, received - (*instance)->firstEvent);
+				VuoAvWriter_appendAudio((*instance)->avWriter, saveAudio, received - (*instance)->firstEvent, false);
 				VuoRelease(saveAudio);
 			});
 		}
@@ -251,6 +250,7 @@ void nodeInstanceEvent(
 		(*instance)->stopping = true;
 		dispatch_group_wait((*instance)->avWriterQueueGroup, DISPATCH_TIME_FOREVER);
 		VuoAvWriter_finalize((*instance)->avWriter);
+		finalized();
 		reset(*instance);
 
 		if ((*instance)->writerState == VuoAvWriterState_Ready)

@@ -2,9 +2,9 @@
  * @file
  * vuo-compile implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <getopt.h>
@@ -12,28 +12,50 @@
 	#include <Vuo/Vuo.h>
 #else
 	#include "VuoCompiler.hh"
+	#include "VuoCompilerException.hh"
+	#include "VuoCompilerIssue.hh"
+	#include "VuoException.hh"
 	#include "VuoFileUtilities.hh"
+	#include "VuoModuleCompiler.hh"
 #endif
 
 #include <iostream>
-#include <stdexcept>
+
+class VuoCompileCLIDelegate : public VuoCompilerDelegate
+{
+	VuoCompilerIssues *_issues;
+public:
+	VuoCompileCLIDelegate(VuoCompilerIssues *issues)
+	{
+		_issues = issues;
+	}
+
+	void loadedModules(const map<string, VuoCompilerModule *> &modulesAdded,
+					   const map<string, pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified,
+					   const map<string, VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues)
+	{
+		_issues->append(issues);
+
+		loadedModulesCompleted();
+	}
+};
 
 void printHelp(char *argv0)
 {
 	printf("Compiles a Vuo composition file into LLVM bitcode,\n"
-		   "or compiles C/C++/Objective-C/Objective-C++ source code into a Vuo node.\n"
+		   "or compiles C/C++/Objective-C/Objective-C++/GLSL/ISF source code into a Vuo node.\n"
 		   "\n"
 		   "Usage:\n"
 		   "  %s [options] composition.vuo      Compiles composition.vuo into LLVM bitcode (suitable for use with vuo-link).\n"
 		   "  %s [options] node.class.name.c    Compiles a node class into a Vuo node (suitable for placing in '~/Library/Application Support/Vuo/Modules').\n"
 		   "\n"
 		   "Options:\n"
-		   "  --help                       Display this information.\n"
-		   "  --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
-		   "  --list-node-classes[=dot]    Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
-		   "  --output <file>              Place the compiled code into <file>.\n"
-//		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.8.0').\n"
-		   "  --verbose                    Output diagnostic information.\n",
+		   "     --help                       Display this information.\n"
+		   " -I, --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
+		   "     --list-node-classes[=dot]    Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
+		   " -o, --output <file>              Place the compiled code into <file>.\n"
+//		   "     --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.10.0').\n"
+		   " -v, --verbose                    Output diagnostic information.\n",
 		   argv0, argv0);
 }
 
@@ -41,6 +63,8 @@ int main (int argc, char * const argv[])
 {
 	bool hasInputFile = false;
 	string inputPath;
+	VuoCompilerIssues *issues = new VuoCompilerIssues();
+	int ret = 0;
 
 	try
 	{
@@ -52,8 +76,6 @@ int main (int argc, char * const argv[])
 		bool doPrintHelp = false;
 		bool isVerbose = false;
 		string optimization = "off";
-		VuoCompiler compiler;
-		bool showLicenseWarning = true;
 
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
@@ -63,12 +85,16 @@ int main (int argc, char * const argv[])
 			{"header-search-path", required_argument, NULL, 0},
 			{"verbose", no_argument, NULL, 0},
 			{"optimization", required_argument, NULL, 0},
-			{"omit-license-warning", no_argument, NULL, 0},
+			{"generate-builtin-module-caches", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+		int ret;
+		while ((ret = getopt_long(argc, argv, "o:I:v", options, &optionIndex)) != -1)
 		{
+			if (ret == '?')
+				continue;
+
 			switch(optionIndex)
 			{
 				case 0:  // --help
@@ -90,18 +116,38 @@ int main (int argc, char * const argv[])
 					break;
 				case 5:  // --verbose
 					isVerbose = true;
-					compiler.setVerbose(true);
 					break;
 				case 6:  // --optimization
 					optimization = optarg;
 					break;
-				case 7:  // --omit-license-warning
-					showLicenseWarning = false;
-					break;
+				case 7:  // --generate-builtin-module-caches
+					VuoCompiler::generateBuiltInModuleCaches(optarg);
+					return 0;
+
+				case -1:  // Short option
+					switch (ret)
+					{
+						case 'o':
+							outputPath = optarg;
+							break;
+						case 'I':
+							headerSearchPaths.push_back(optarg);
+							break;
+						case 'v':
+							isVerbose = true;
+							break;
+					}
 			}
+
+			optionIndex = -1;
 		}
 
 		hasInputFile = (optind < argc) && ! doPrintHelp && ! doListNodeClasses;
+
+		VuoCompileCLIDelegate delegate(issues);  // Declared in this order so destructors are called in reverse order.
+		VuoCompiler compiler;                    // https://b33p.net/kosada/node/15271
+		compiler.setVerbose(isVerbose);
+		compiler.setDelegate(&delegate);
 
 #ifdef USING_VUO_FRAMEWORK
 		compiler.addHeaderSearchPath(VuoFileUtilities::getVuoFrameworkPath() + "/Headers");
@@ -110,7 +156,9 @@ int main (int argc, char * const argv[])
 		for (vector<char *>::iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)
 			compiler.addHeaderSearchPath(*i);
 
-		compiler.loadStoredLicense(showLicenseWarning);
+#if VUO_PRO
+		compiler.load_Pro(true);
+#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);
@@ -119,7 +167,7 @@ int main (int argc, char * const argv[])
 			if (listNodeClassesOption == "" || listNodeClassesOption == "dot")
 				compiler.listNodeClasses(listNodeClassesOption);
 			else
-				throw std::runtime_error("unrecognized option '" + listNodeClassesOption + "' for --list-node-classes");
+				throw VuoException("unrecognized option '" + listNodeClassesOption + "' for --list-node-classes");
 		}
 		else if (isVerbose && ! hasInputFile)
 		{
@@ -128,11 +176,13 @@ int main (int argc, char * const argv[])
 		else
 		{
 			if (! hasInputFile)
-				throw std::runtime_error("no input file");
+				throw VuoException("no input file");
 			inputPath = argv[optind];
 
 			if (optimization == "on")
 				compiler.setLoadAllModules(false);
+
+			compiler.setShouldPotentiallyShowSplashWindow(true);
 
 			if (inputPath == "-")
 			{
@@ -145,7 +195,7 @@ int main (int argc, char * const argv[])
 				std::string inputString(it, end);
 
 				// Assume it's a .vuo composition (not .c/.cc/.m/.mm).
-				compiler.compileCompositionString(inputString, outputPath);
+				compiler.compileCompositionString(inputString, outputPath, true, issues);
 			}
 			else
 			{
@@ -160,17 +210,25 @@ int main (int argc, char * const argv[])
 //					compiler.setTarget(target);
 
 				if (inputExtension == "vuo")
-					compiler.compileComposition(inputPath, outputPath, true);
-				else if (inputExtension == "c" || inputExtension == "cc" || inputExtension == "m" || inputExtension == "mm")
+				{
+					compiler.setCompositionPath(inputPath);
+					compiler.compileComposition(inputPath, outputPath, true, issues);
+				}
+				else if (VuoFileUtilities::isCSourceExtension(inputExtension) || inputExtension == "fs")
 					compiler.compileModule(inputPath, outputPath);
 				else
-					throw std::runtime_error("input file must have a file extension of .vuo, .c, .cc, .m, or .mm");
+					throw VuoException("input file must have a file extension of .vuo, .c, .cc, .m, .mm, or .fs");
 			}
 		}
-
-		return 0;
 	}
-	catch (std::exception &e)
+	catch (VuoCompilerException &e)
+	{
+		if (issues != e.getIssues())
+			issues->append(e.getIssues());
+
+		ret = 1;
+	}
+	catch (VuoException &e)
 	{
 		fprintf(stderr, "%s: error: %s\n", hasInputFile ? (inputPath == "-" ? "stdin" : inputPath.c_str()) : argv[0], e.what());
 		if (!hasInputFile)
@@ -178,6 +236,17 @@ int main (int argc, char * const argv[])
 			fprintf(stderr, "\n");
 			printHelp(argv[0]);
 		}
-		return 1;
+		fprintf(stderr, "\n");
+
+		ret = 1;
 	}
+
+	vector<VuoCompilerIssue> issueList = issues->getList();
+	for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i)
+		fprintf(stderr, "%s: %s: %s\n\n", hasInputFile ? (inputPath == "-" ? "stdin" : inputPath.c_str()) : argv[0],
+				(*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning", (*i).getShortDescription(false).c_str());
+
+	delete issues;
+
+	return ret;
 }

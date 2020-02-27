@@ -2,9 +2,9 @@
  * @file
  * VuoTree implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <algorithm>
@@ -15,9 +15,10 @@
 #include <vector>
 using namespace std;
 
+#include "type.h"
+
 extern "C"
 {
-#include "type.h"
 #include "VuoTree.h"
 #include "VuoList_VuoTree.h"
 
@@ -197,7 +198,8 @@ static VuoTree VuoTree_parseXml(const char *xmlString, bool includeWhitespace)
 	// If the XML file is an Apple Property List, decode it.
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 	if (doc->intSubset && doc->intSubset->SystemID
-		&& strcmp((const char *)doc->intSubset->SystemID, "http://www.apple.com/DTDs/PropertyList-1.0.dtd") == 0)
+		&& (strcmp((const char *)doc->intSubset->SystemID, "http://www.apple.com/DTDs/PropertyList-1.0.dtd") == 0
+		 || strcmp((const char *)doc->intSubset->SystemID, "https://www.apple.com/DTDs/PropertyList-1.0.dtd") == 0))
 	{
 		xmlNodePtr transformedRoot = VuoTree_boilDownPropertyList(root->children);
 		if (!transformedRoot)
@@ -429,7 +431,9 @@ static VuoTree VuoTree_parseJson(const char *jsonString)
 		else
 		{
 			const char *content = json_object_get_string(currentJson);
-			xmlNodeSetContent(parentNode, (const xmlChar *)content);
+			xmlChar *encoded = xmlEncodeSpecialChars(doc, (const xmlChar *)content);
+			xmlNodeSetContent(parentNode, encoded);
+			free(encoded);
 		}
 	}
 
@@ -820,7 +824,7 @@ char * VuoTree_getSummary(const VuoTree value)
 	if (! VuoText_isEmpty(name))
 	{
 		char *nameSummary = VuoText_getSummary(name);
-		summary << "name: " << nameSummary << "<br>";
+		summary << "<div>name: " << nameSummary << "</div>";
 		free(nameSummary);
 	}
 
@@ -852,7 +856,7 @@ char * VuoTree_getSummary(const VuoTree value)
 	if (! VuoText_isEmpty(content))
 	{
 		char *contentSummary = VuoText_getSummary(content);
-		summary << "content: " << contentSummary << "<br>";
+		summary << "<div>content: " << contentSummary << "</div>";
 		free(contentSummary);
 	}
 
@@ -881,7 +885,7 @@ char * VuoTree_getSummary(const VuoTree value)
 
 	string summaryStr = summary.str();
 	if (summaryStr.empty())
-		summaryStr = "(empty tree)";
+		summaryStr = "Empty tree";
 
 	return strdup(summaryStr.c_str());
 }

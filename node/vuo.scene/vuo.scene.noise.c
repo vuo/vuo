@@ -2,16 +2,18 @@
  * @file
  * vuo.scene.noise node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 #include "VuoSceneObjectRenderer.h"
+#include "VuoGradientNoiseCommon.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 
 #include "VuoDispersion.h"
@@ -25,20 +27,21 @@ VuoModuleMetadata({
 						 "exampleCompositions" : [ "AddNoiseToClay.vuo" ]
 					 },
 					 "dependencies" : [
+						 "VuoGradientNoiseCommon",
 						 "VuoSceneObjectRenderer"
 					 ]
 				 });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
-	include(noise4D)
+	\n#include "deform.glsl"
+	\n#include "noise4D.glsl"
 
 	// Inputs
 	uniform vec3 amount;
 	uniform float scale;
 	uniform float time;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		return position + amount * snoise4D3D(vec4(position.x*scale, position.y*scale, position.z*scale, time));
 	}
@@ -77,15 +80,28 @@ void nodeInstanceEvent
 		VuoOutputData(VuoSceneObject) noisedObject
 )
 {
-	double nonzeroScale = VuoReal_makeNonzero(scale);
+	double inverseScale = 1 / VuoReal_makeNonzero(scale);
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "time",   time);
 	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "amount", amount);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "scale",  1/nonzeroScale);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "scale",  inverseScale);
+
+	VuoSceneObjectRenderer_CPUGeometryOperator cpuGeometryOperator = VuoSceneObjectRenderer_makeDeformer(^(VuoPoint3d position, VuoPoint3d normal, VuoPoint2d textureCoordinate) {
+		VuoPoint3d noise = VuoGradientNoise_simplex_VuoPoint4d_VuoPoint3d((VuoPoint4d){
+			position.x * inverseScale,
+			position.y * inverseScale,
+			position.z * inverseScale,
+			time});
+		return (VuoPoint3d){ position.x + amount.x * noise.x,
+							 position.y + amount.y * noise.y,
+							 position.z + amount.z * noise.z };
+	});
 
 	// Render.
-	*noisedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*noisedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object, cpuGeometryOperator);
+
+	Block_release(cpuGeometryOperator);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

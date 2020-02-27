@@ -2,9 +2,9 @@
  * @file
  * VuoScreen C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -20,6 +20,11 @@
 #include "VuoInteger.h"
 #include "VuoPoint2d.h"
 #include "VuoText.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /**
  * How the screen should be selected from those available on the running system.
@@ -57,7 +62,10 @@ typedef struct
 VuoScreen VuoScreen_makeFromJson(struct json_object * js);
 struct json_object * VuoScreen_getJson(const VuoScreen value);
 char *VuoScreen_getSummary(const VuoScreen value);
+
+#define VuoScreen_SUPPORTS_COMPARISON
 bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2);
+bool VuoScreen_isLessThan(const VuoScreen a, const VuoScreen b);
 
 bool VuoScreen_realize(VuoScreen screen, VuoScreen *realizedScreen);
 
@@ -123,7 +131,10 @@ static inline VuoScreenType VuoScreen_typeFromCString(const char *typeString)
 	return VuoScreenType_Active;
 }
 
+#ifdef __cplusplus
+}
+#endif
+
 /**
  * @}
  */
-

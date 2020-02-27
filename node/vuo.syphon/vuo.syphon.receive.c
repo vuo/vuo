@@ -2,9 +2,9 @@
  * @file
  * vuo.syphon.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,11 +12,10 @@
 #include <string.h>
 
 VuoModuleMetadata({
-					  "title" : "Receive Image via Syphon",
-					  "keywords" : [ "application", "client", "frame", "get", "interprocess", "IOSurface", "output", "share", "video" ],
+					  "title" : "Receive Syphon Video",
+					  "keywords" : [ "application", "client", "frame", "get", "interprocess", "IOSurface", "output", "share" ],
 					  "version" : "1.0.2",
 					  "node": {
-						  "isInterface" : true,
 						  "exampleCompositions" : [ "ReceiveImages.vuo", "ReceiveImagesPreferablyFromVuo.vuo", "ReceiveImagesOnlyFromVuo.vuo" ]
 					  },
 					  "dependencies" : [
@@ -29,6 +28,7 @@ struct nodeInstanceData
 {
 	VuoSyphonClient *syphonClient;
 	VuoSyphonServerDescription serverDescription;
+	bool triggersEnabled;
 };
 
 static void updateServer(struct nodeInstanceData *context, VuoSyphonServerDescription newServerDescription, VuoOutputTrigger(receivedImage, VuoImage))
@@ -59,6 +59,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedImage, VuoImage)
 )
 {
+	(*context)->triggersEnabled = true;
 	updateServer(*context, serverDescription, receivedImage);
 }
 
@@ -79,6 +80,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedImage, VuoImage, {"eventThrottling":"drop"})
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (! VuoSyphonServerDescription_areEqual(serverDescription, (*context)->serverDescription))
 		updateServer(*context, serverDescription, receivedImage);
 }
@@ -89,6 +93,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoSyphonClient_disconnectFromServer((*context)->syphonClient);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

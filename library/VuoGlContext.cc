@@ -2,13 +2,14 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <vector>
 #include <algorithm>
+#include <bitset>
 #include <map>
 using namespace std;
 
@@ -22,10 +23,20 @@ using namespace std;
 #include <CoreGraphics/CoreGraphics.h>
 
 #include <dispatch/dispatch.h>
+#include <dlfcn.h>
 #include <mach-o/dyld.h>
+#include <objc/objc-runtime.h>
+#include <pthread.h>
 
+
+static CGLContextObj VuoGlContext_create(CGLContextObj rootContext);
+dispatch_semaphore_t VuoGlContext_poolSemaphore;  ///< Serializes access to @c VuoGlContext_root, @c VuoGlContext_allSharedContexts and @c VuoGlContext_avaialbleSharedContexts.
+static CGLContextObj VuoGlContext_root = NULL;  ///< This process's global root context.
+vector<CGLContextObj> VuoGlContext_allSharedContexts;  ///< All contexts created by @ref VuoGlContext_create (including those currently being used).
+vector<CGLContextObj> VuoGlContext_avaialbleSharedContexts;  ///< All unused contexts created by @ref VuoGlContext_create.
 
 static dispatch_once_t VuoGlContextPoolCreated = 0;	///< Make sure this process only has a single GL Context Pool.
+static pthread_key_t VuoGlContextPerformKey; ///< Tracks whether perform is already in the current thread's callstack.
 
 /**
  * Logs info about all available renderers.
@@ -70,11 +81,15 @@ static void VuoGlContext_renderers(void)
 		GLint displayMask;
 		if (CGLDescribeRenderer(ri, i, kCGLRPDisplayMask, &displayMask) == kCGLNoError)
 		{
-			VUserLog("    Display mask       : 0x%x%s", displayMask, displayMask==0xff ? " (any)" : "");
-			if (displayMask != 0xff)
+			VUserLog("    Display mask       : %s (0x%x)%s",
+				std::bitset<32>(displayMask).to_string().c_str(),
+				displayMask, (displayMask & 0xff) == 0xff ? " (any)" : "");
+			if ((displayMask & 0xff) != 0xff)
 				for (unsigned long i = 0; i < screenCount; ++i)
 					if (displayMask & screens[i].displayMask)
-						VUserLog("                         %s", screens[i].name);
+						VUserLog("                         %s %s",
+							std::bitset<32>(screens[i].displayMask).to_string().c_str(),
+							screens[i].name);
 		}
 
 		GLint glVersion = 0;
@@ -87,7 +102,7 @@ static void VuoGlContext_renderers(void)
 			CGLContextObj cgl_ctx;
 			CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
 			if (error != kCGLNoError)
-				VUserLog("    Error: %s\n", CGLErrorString(error));
+				VUserLog("    Error: %s", CGLErrorString(error));
 			else
 			{
 				GLint maxTextureSize;
@@ -105,7 +120,7 @@ static void VuoGlContext_renderers(void)
 			CGLContextObj cgl_ctx;
 			CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
 			if (error != kCGLNoError)
-				VUserLog("    Error: %s\n", CGLErrorString(error));
+				VUserLog("    Error: %s", CGLErrorString(error));
 			else
 			{
 				GLint maxTextureSize;
@@ -126,7 +141,8 @@ static void VuoGlContext_renderers(void)
 
 	const char *gldriver = "GLDriver";
 	size_t gldriverLen = strlen(gldriver);
-	for(unsigned int i = 0; i < _dyld_image_count(); ++i)
+	uint32_t imageCount = _dyld_image_count();
+	for (uint32_t i = 0; i < imageCount; ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
 		size_t len = strlen(dylibPath);
@@ -139,6 +155,58 @@ static void VuoGlContext_renderers(void)
 			VUserLog("Driver: %s", z);
 			free(z);
 		}
+	}
+
+	typedef void *(*mtlCopyAllDevicesType)(void);
+	mtlCopyAllDevicesType mtlCopyAllDevices = (mtlCopyAllDevicesType)dlsym(RTLD_DEFAULT, "MTLCopyAllDevices");
+	if (mtlCopyAllDevices)
+	{
+		CFArrayRef mtlDevices = (CFArrayRef)mtlCopyAllDevices();
+		int mtlDeviceCount = CFArrayGetCount(mtlDevices);
+		if (mtlDeviceCount)
+			VUserLog("Metal devices:");
+		for (int i = 0; i < mtlDeviceCount; ++i)
+		{
+			id dev = (id)CFArrayGetValueAtIndex(mtlDevices, i);
+			VUserLog("    %s:", (char *)objc_msgSend(objc_msgSend(dev, sel_getUid("name")), sel_getUid("UTF8String")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("registryID")))
+			VUserLog("        ID                                  : %p", objc_msgSend(dev, sel_getUid("registryID")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("recommendedMaxWorkingSetSize")))
+			VUserLog("        Recommended max working-set size    : %lld MiB", (int64_t)objc_msgSend(dev, sel_getUid("recommendedMaxWorkingSetSize"))/1048576);
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxBufferLength")))
+			VUserLog("        Max buffer length                   : %lld MiB", (int64_t)objc_msgSend(dev, sel_getUid("maxBufferLength"))/1048576);
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxThreadgroupMemoryLength")))
+			VUserLog("        Threadgroup memory                  : %lld B", (int64_t)objc_msgSend(dev, sel_getUid("maxThreadgroupMemoryLength")));
+			VUserLog("        Low-power                           : %s", objc_msgSend(dev, sel_getUid("isLowPower")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("isRemovable")))
+			VUserLog("        Removable                           : %s", objc_msgSend(dev, sel_getUid("isRemovable")) ? "yes" : "no");
+			VUserLog("        Headless                            : %s", objc_msgSend(dev, sel_getUid("isHeadless")) ? "yes" : "no");
+
+			if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10005))
+			VUserLog("        Feature set                         : GPU Family 2 v1");
+			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10004))
+			VUserLog("        Feature set                         : GPU Family 1 v4");
+			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10003))
+			VUserLog("        Feature set                         : GPU Family 1 v3");
+			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10001))
+			VUserLog("        Feature set                         : GPU Family 1 v2");
+			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10000))
+			VUserLog("        Feature set                         : GPU Family 1 v1");
+			else
+			VUserLog("        Feature set                         : (unknown)");
+
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("readWriteTextureSupport")))
+			VUserLog("        Read-write texture support tier     : %lld", (int64_t)objc_msgSend(dev, sel_getUid("readWriteTextureSupport")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("argumentBuffersSupport")))
+			VUserLog("        Argument buffer support tier        : %lld", (int64_t)objc_msgSend(dev, sel_getUid("argumentBuffersSupport")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxArgumentBufferSamplerCount")))
+			VUserLog("        Max argument buffers                : %lld", (int64_t)objc_msgSend(dev, sel_getUid("maxArgumentBufferSamplerCount")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("areProgrammableSamplePositionsSupported")))
+			VUserLog("        Programmable sample position support: %s", objc_msgSend(dev, sel_getUid("areProgrammableSamplePositionsSupported")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("areRasterOrderGroupsSupported")))
+			VUserLog("        Raster order group support          : %s", objc_msgSend(dev, sel_getUid("areRasterOrderGroupsSupported")) ? "yes" : "no");
+		}
+		CFRelease(mtlDevices);
 	}
 }
 
@@ -160,21 +228,21 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 			VUserLog("Display reconfigured: %s", screens[i].name);
 }
 
-/**
- * A process-wide set of mutually-shared OpenGL contexts.
- */
-class VuoGlContextPool
-{
-public:
 	/**
 	 * Returns the process-wide pool singleton instance.
 	 */
-	static VuoGlContextPool *getPool()
+	static void VuoGlContext_init()
 	{
 		dispatch_once(&VuoGlContextPoolCreated, ^{
-						   singletonInstance = new VuoGlContextPool();
+						   VuoGlContext_poolSemaphore = dispatch_semaphore_create(1);
+
+						   if (!VuoGlContext_root)
+							   VuoGlContext_root = VuoGlContext_create(NULL);
+
+						   int ret = pthread_key_create(&VuoGlContextPerformKey, NULL);
+						   if (ret)
+							   VUserLog("Couldn't create the key for storing the GL Context state: %s", strerror(errno));
 					   });
-		return singletonInstance;
 	}
 
 	/**
@@ -183,34 +251,36 @@ public:
 	 *
 	 * @threadAny
 	 */
-	CGLContextObj use(void)
+	VuoGlContext VuoGlContext_use(void)
 	{
+		VuoGlContext_init();
+
 		CGLContextObj context;
 
-		dispatch_semaphore_wait(poolSemaphore, DISPATCH_TIME_FOREVER);
+		dispatch_semaphore_wait(VuoGlContext_poolSemaphore, DISPATCH_TIME_FOREVER);
 		{
 //			VL();
 //			VuoLog_backtrace();
 
-			if (avaialbleSharedContexts.size())
+			if (VuoGlContext_avaialbleSharedContexts.size())
 			{
-				context = avaialbleSharedContexts.back();
-				avaialbleSharedContexts.pop_back();
+				context = VuoGlContext_avaialbleSharedContexts.back();
+				VuoGlContext_avaialbleSharedContexts.pop_back();
 //				VLog("Found existing context %p.", context);
 			}
 			else
 			{
-				context = createContext(rootContext);
+				context = VuoGlContext_create(VuoGlContext_root);
 				if (!context)
 				{
 					VUserLog("Error: Couldn't create a context.");
 					return NULL;
 				}
-				allSharedContexts.push_back(context);
+				VuoGlContext_allSharedContexts.push_back(context);
 //				VLog("Created context %p.", context);
 			}
 		}
-		dispatch_semaphore_signal(poolSemaphore);
+		dispatch_semaphore_signal(VuoGlContext_poolSemaphore);
 
 		return context;
 	}
@@ -220,255 +290,10 @@ public:
 	 *
 	 * @threadAny
 	 */
-	void disuse(CGLContextObj context)
+	void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int linenumber, const char *func)
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 //		VLog("%p", context);
-
-		dispatch_semaphore_wait(poolSemaphore, DISPATCH_TIME_FOREVER);
-		{
-			if (std::find(allSharedContexts.begin(), allSharedContexts.end(), context) != allSharedContexts.end())
-				avaialbleSharedContexts.push_back(context);
-			else
-				VUserLog("Error: Disued context %p, which isn't in the global share pool.  I'm not going to muddy the waters.", context);
-		}
-		dispatch_semaphore_signal(poolSemaphore);
-	}
-
-	/**
-	 * Logs a warning if the specified OpenGL `cap`ability doesn't have `value`.
-	 */
-	#define VuoGlContext_checkGL(cap, value) \
-		do { \
-			if (glIsEnabled(cap) != value) \
-				VUserLog("Warning: Caller incorrectly left %s %s", #cap, value ? "disabled" : "enabled"); \
-		} while (0)
-
-	/**
-	 * Logs a warning if the specified OpenGL `key` doesn't have `value`.
-	 */
-	#define VuoGlContext_checkGLInt(key, value) \
-		do { \
-			GLint actualValue; \
-			glGetIntegerv(key, &actualValue); \
-			if (actualValue != value) \
-				VUserLog("Warning: Caller incorrectly left %s set to something other than %s", #key, #value); \
-		} while (0)
-
-	/**
-	 * Executes code using the global OpenGL context.
-	 *
-	 * @threadAny
-	 */
-	void perform(void (^function)(CGLContextObj cgl_ctx))
-	{
-		CGLLockContext(rootContext);
-
-		function(rootContext);
-
-		// Ensure that `function` restored the standard OpenGL state.
-		if (VuoIsDebugEnabled())
-		{
-			CGLContextObj cgl_ctx = rootContext;
-
-			VuoGlContext_checkGLInt(GL_DEPTH_WRITEMASK,      true);
-			VuoGlContext_checkGL   (GL_DEPTH_TEST,           false);
-
-			VuoGlContext_checkGL   (GL_CULL_FACE,            true);
-			VuoGlContext_checkGLInt(GL_CULL_FACE_MODE,       GL_BACK);
-
-			VuoGlContext_checkGL   (GL_BLEND,                true);
-
-			VuoGlContext_checkGLInt(GL_BLEND_SRC_RGB,        GL_ONE);
-			VuoGlContext_checkGLInt(GL_BLEND_DST_RGB,        GL_ONE_MINUS_SRC_ALPHA);
-			VuoGlContext_checkGLInt(GL_BLEND_SRC_ALPHA,      GL_ONE);
-			VuoGlContext_checkGLInt(GL_BLEND_DST_ALPHA,      GL_ONE_MINUS_SRC_ALPHA);
-
-			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_RGB,   GL_FUNC_ADD);
-			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_ALPHA, GL_FUNC_ADD);
-
-			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_COVERAGE, false);
-			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_ONE,      false);
-
-			/// @todo check other changes Vuo makes
-		}
-
-		CGLUnlockContext(rootContext);
-	}
-
-private:
-	static VuoGlContextPool *singletonInstance;
-
-	friend void VuoGlContext_setGlobalRootContext(void *rootContext);
-
-	VuoGlContextPool()
-	{
-		poolSemaphore = dispatch_semaphore_create(1);
-
-		if (!rootContext)
-			rootContext = createContext(NULL);
-
-//		VLog("rootContext=%p", rootContext);
-	}
-	/// @todo provide a way to shut down entire system and release the contexts.
-
-	static CGLContextObj createContext(CGLContextObj rootContext)
-	{
-		static dispatch_once_t info = 0;
-		dispatch_once(&info, ^{
-			if (VuoIsDebugEnabled())
-			{
-				VuoGlContext_renderers();
-
-				CGDisplayRegisterReconfigurationCallback(VuoGlContext_reconfig, NULL);
-			}
-		});
-
-		CGLPixelFormatObj pf;
-		bool shouldDestroyPixelFormat = false;
-		if (rootContext)
-			pf = CGLGetPixelFormat(rootContext);
-		else
-		{
-			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false, -1);
-			shouldDestroyPixelFormat = true;
-		}
-
-		CGLContextObj context;
-		{
-			CGLError error = CGLCreateContext(pf, rootContext, &context);
-			if (shouldDestroyPixelFormat)
-				CGLDestroyPixelFormat(pf);
-			if (error != kCGLNoError)
-			{
-				VUserLog("Error: %s\n", CGLErrorString(error));
-				return NULL;
-			}
-		}
-
-		if (VuoIsDebugEnabled())
-		{
-			GLint rendererID;
-			CGLGetParameter(context, kCGLCPCurrentRendererID, &rendererID);
-			VUserLog("Created OpenGL context %p on %s", context, VuoCglRenderer_getText(rendererID));
-		}
-
-		// https://developer.apple.com/library/content/technotes/tn2085/_index.html
-		// But it doesn't seem to actually improve performance any on the various workloads I tried.
-//		CGLEnable(context, kCGLCEMPEngine);
-
-		// Set the context's default state to commonly-used values,
-		// to hopefully minimize subsequent state changes.
-		{
-			CGLContextObj cgl_ctx = context;
-			glDepthMask(true);
-			glDisable(GL_DEPTH_TEST);
-			glEnable(GL_CULL_FACE);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			glBlendEquation(GL_FUNC_ADD);
-		}
-
-		return context;
-	}
-
-	dispatch_semaphore_t poolSemaphore; ///< Serializes access to @c rootContext, @c allSharedContexts and @c avaialbleSharedContexts.
-	static CGLContextObj rootContext;
-	vector<CGLContextObj> allSharedContexts;
-	vector<CGLContextObj> avaialbleSharedContexts;
-};
-VuoGlContextPool *VuoGlContextPool::singletonInstance = NULL;
-CGLContextObj VuoGlContextPool::rootContext = NULL;
-
-/**
- * Specifies a platform-specific context to be used as the base for all of Vuo's shared GL contexts.
- *
- * On Mac, this should be a `CGLContext`.  The `CGLContext` must be unlocked when calling this function,
- * but after that you may lock it at any time (Vuo doesn't require it to be locked or unlocked).
- *
- * Must be called before any Vuo composition is loaded, and before any other @c VuoGlContext_* methods.
- *
- * @threadAny
- */
-void VuoGlContext_setGlobalRootContext(void *rootContext)
-{
-	if (VuoGlContextPool::singletonInstance)
-	{
-		VUserLog("Error: Called after VuoGlContextPool was initialized.  Ignoring the new rootContext.");
-		return;
-	}
-
-	VuoGlContextPool::rootContext = VuoGlContextPool::createContext((CGLContextObj)rootContext);
-}
-
-/**
- * Finds an unused GL context in the process-wide shared context pool (or creates one if none is available),
- * marks it used, and returns it.
- *
- * @threadAny
- */
-VuoGlContext VuoGlContext_use(void)
-{
-	VuoGlContextPool *p = VuoGlContextPool::getPool();
-	return (VuoGlContext)p->use();
-}
-
-/**
- * Executes code using the global OpenGL context.
- *
- * \eg{
- * VuoGlContext_perform(^(CGLContextObj cgl_ctx){
- *     glClear(…);
- *     …
- * });
- * }
- */
-void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx))
-{
-	VuoGlContextPool *p = VuoGlContextPool::getPool();
-	p->perform(function);
-}
-
-
-/**
- * Check whether the specified attachment point @c pname is still bound.
- * (This is defined as a macro in order to stringify the argument.)
- */
-#define VuoGlCheckBinding(pname)																						\
-{																														\
-	GLint value;																										\
-	glGetIntegerv(pname, &value);																						\
-	if (value)																											\
-	{																																		\
-		VuoLog(file, linenumber, func, #pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
-		VuoLog_backtrace();																													\
-	}																																		\
-}
-
-/**
- * Check whether the specified attachment point @c pname is still bound.
- * (This is defined as a macro in order to stringify the argument.)
- */
-#define VuoGlCheckTextureBinding(pname, unit)																								\
-{																																			\
-	GLint value;																															\
-	glGetIntegerv(pname, &value);																											\
-	if (value)																																\
-	{																																		\
-		VuoLog(file, linenumber, func, #pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
-		VuoLog_backtrace();																													\
-	}																																		\
-}
-
-/**
- * Helper for @ref VuoGlContext_disuse.
- */
-void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int linenumber, const char *func)
-{
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-
-// Prior to https://b33p.net/kosada/node/6536.  Pretty sure there are no longer needed (FBOs should take care of their own glFlushRendererAPPLE() calls; visible contexts should take care of their own CGLFlushDrawable() calls).
-//	glFlush();
-//	CGLFlushDrawable(cgl_ctx);
 
 #if 0
 	VGL();
@@ -514,9 +339,249 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
 	VuoGlCheckBinding(GL_VERTEX_ARRAY_BINDING_APPLE);
 #endif
 
-	VuoGlContextPool *p = VuoGlContextPool::getPool();
-	// Acquire semaphore and add the context to the pool.
-	p->disuse(cgl_ctx);
+		dispatch_semaphore_wait(VuoGlContext_poolSemaphore, DISPATCH_TIME_FOREVER);
+		{
+			if (std::find(VuoGlContext_allSharedContexts.begin(), VuoGlContext_allSharedContexts.end(), cgl_ctx) != VuoGlContext_allSharedContexts.end())
+				VuoGlContext_avaialbleSharedContexts.push_back(cgl_ctx);
+			else
+				VUserLog("Error: Disued context %p, which isn't in the global share pool.  I'm not going to muddy the waters.", cgl_ctx);
+		}
+		dispatch_semaphore_signal(VuoGlContext_poolSemaphore);
+	}
+
+	/**
+	 * Logs a warning if the specified OpenGL `cap`ability doesn't have `value`.
+	 */
+	#define VuoGlContext_checkGL(cap, value) \
+		do { \
+			if (glIsEnabled(cap) != value) \
+			{ \
+				VUserLog("Warning: Caller incorrectly left %s %s", #cap, value ? "disabled" : "enabled"); \
+				VuoLog_backtrace(); \
+			} \
+		} while (0)
+
+	/**
+	 * Logs a warning if the specified OpenGL `key` doesn't have `value`.
+	 */
+	#define VuoGlContext_checkGLInt(key, value) \
+		do { \
+			GLint actualValue; \
+			glGetIntegerv(key, &actualValue); \
+			if (actualValue != value) \
+			{ \
+				VUserLog("Warning: Caller incorrectly left %s set to something other than %s", #key, #value); \
+				VuoLog_backtrace(); \
+			} \
+		} while (0)
+
+
+
+	/**
+	 * Executes code using the global OpenGL context.
+	 *
+	 * \eg{
+	 * VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+	 *     glClear(…);
+	 *     …
+	 * });
+	 * }
+	 *
+	 * @threadAny
+	 */
+	void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx))
+	{
+		if (!function)
+			return;
+
+		VuoGlContext_init();
+
+		bool alreadyLockedOnThisThread = (bool)pthread_getspecific(VuoGlContextPerformKey);
+
+		if (!alreadyLockedOnThisThread)
+		{
+			pthread_setspecific(VuoGlContextPerformKey, (void *)true);
+			CGLLockContext(VuoGlContext_root);
+		}
+
+		function(VuoGlContext_root);
+
+		// Ensure that `function` restored the standard OpenGL state.
+		if (!alreadyLockedOnThisThread && VuoIsDebugEnabled())
+		{
+			CGLContextObj cgl_ctx = VuoGlContext_root;
+
+			VGL();
+
+			VuoGlContext_checkGLInt(GL_DEPTH_WRITEMASK,      true);
+			VuoGlContext_checkGL   (GL_DEPTH_TEST,           false);
+
+			VuoGlContext_checkGL   (GL_CULL_FACE,            true);
+			VuoGlContext_checkGLInt(GL_CULL_FACE_MODE,       GL_BACK);
+
+			VuoGlContext_checkGL   (GL_BLEND,                true);
+
+			VuoGlContext_checkGLInt(GL_BLEND_SRC_RGB,        GL_ONE);
+			VuoGlContext_checkGLInt(GL_BLEND_DST_RGB,        GL_ONE_MINUS_SRC_ALPHA);
+			VuoGlContext_checkGLInt(GL_BLEND_SRC_ALPHA,      GL_ONE);
+			VuoGlContext_checkGLInt(GL_BLEND_DST_ALPHA,      GL_ONE_MINUS_SRC_ALPHA);
+
+			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_RGB,   GL_FUNC_ADD);
+			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_ALPHA, GL_FUNC_ADD);
+
+			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_COVERAGE, false);
+			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_ONE,      false);
+
+			/// @todo check other changes Vuo makes
+		}
+
+		if (!alreadyLockedOnThisThread)
+		{
+			CGLUnlockContext(VuoGlContext_root);
+			pthread_setspecific(VuoGlContextPerformKey, (void *)false);
+		}
+	}
+
+	/**
+	 * Creates a new OpenGL context, optionally shared with `rootContext`.
+	 */
+	static CGLContextObj VuoGlContext_create(CGLContextObj rootContext)
+	{
+		static dispatch_once_t info = 0;
+		dispatch_once(&info, ^{
+			if (VuoIsDebugEnabled())
+			{
+				VuoGlContext_renderers();
+
+				CGDisplayRegisterReconfigurationCallback(VuoGlContext_reconfig, NULL);
+			}
+		});
+
+		CGLPixelFormatObj pf;
+		bool shouldDestroyPixelFormat = false;
+		if (rootContext)
+			pf = CGLGetPixelFormat(rootContext);
+		else
+		{
+			Boolean overridden = false;
+			GLint displayMask = (int)CFPreferencesGetAppIntegerValue(CFSTR("displayMask"), CFSTR("org.vuo.Editor"), &overridden);
+			if (!overridden)
+			{
+				// Maybe the preference is a hex string…
+				auto displayMaskString = (CFStringRef)CFPreferencesCopyAppValue(CFSTR("displayMask"), CFSTR("org.vuo.Editor"));
+				if (displayMaskString)
+				{
+					VuoText t = VuoText_makeFromCFString(displayMaskString);
+					CFRelease(displayMaskString);
+					VuoLocal(t);
+					overridden = sscanf(t, "0x%x", &displayMask) == 1;
+				}
+				if (!overridden)
+					// Still no preference, so let macOS automatically choose what it thinks is the best GPU.
+					displayMask = -1;
+			}
+
+			VDebugLog("displayMask = %s (0x%x)%s",
+				std::bitset<32>(displayMask).to_string().c_str(),
+				displayMask, (displayMask & 0xff) == 0xff ? " (any)" : "");
+
+			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false, displayMask);
+			shouldDestroyPixelFormat = true;
+		}
+
+		CGLContextObj context;
+		{
+			CGLError error = CGLCreateContext(pf, rootContext, &context);
+			if (shouldDestroyPixelFormat)
+				CGLDestroyPixelFormat(pf);
+			if (error != kCGLNoError)
+			{
+				VUserLog("Error: %s", CGLErrorString(error));
+				return NULL;
+			}
+		}
+
+		if (VuoIsDebugEnabled())
+		{
+			GLint rendererID;
+			CGLGetParameter(context, kCGLCPCurrentRendererID, &rendererID);
+			VUserLog("Created OpenGL context %p%s on %s",
+					 context,
+					 rootContext ? VuoText_format(" (shared with %p)", rootContext) : " (not shared)",
+					 VuoCglRenderer_getText(rendererID));
+		}
+
+		// https://developer.apple.com/library/content/technotes/tn2085/_index.html
+		// But it doesn't seem to actually improve performance any on the various workloads I tried.
+//		CGLEnable(context, kCGLCEMPEngine);
+
+		// Set the context's default state to commonly-used values,
+		// to hopefully minimize subsequent state changes.
+		{
+			CGLContextObj cgl_ctx = context;
+			glDepthMask(true);
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendEquation(GL_FUNC_ADD);
+			glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+			glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, -.5);
+		}
+
+		return context;
+	}
+
+/**
+ * Specifies a platform-specific context to be used as the base for all of Vuo's shared GL contexts.
+ *
+ * On Mac, this should be a `CGLContext`.  The `CGLContext` must be unlocked when calling this function,
+ * but after that you may lock it at any time (Vuo doesn't require it to be locked or unlocked).
+ *
+ * Must be called before any Vuo composition is loaded, and before any other @c VuoGlContext_* methods.
+ *
+ * @threadAny
+ */
+void VuoGlContext_setGlobalRootContext(void *rootContext)
+{
+	if (VuoGlContextPoolCreated)
+	{
+		VUserLog("Error: Called after VuoGlContextPool was initialized.  Ignoring the new rootContext.");
+		return;
+	}
+
+	VDebugLog("Setting global root context to %p", rootContext);
+	VuoGlContext_root = VuoGlContext_create((CGLContextObj)rootContext);
+}
+
+/**
+ * Check whether the specified attachment point @c pname is still bound.
+ * (This is defined as a macro in order to stringify the argument.)
+ */
+#define VuoGlCheckBinding(pname)																						\
+{																														\
+	GLint value;																										\
+	glGetIntegerv(pname, &value);																						\
+	if (value)																											\
+	{																																		\
+		VuoLog(file, linenumber, func, #pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
+		VuoLog_backtrace();																													\
+	}																																		\
+}
+
+/**
+ * Check whether the specified attachment point @c pname is still bound.
+ * (This is defined as a macro in order to stringify the argument.)
+ */
+#define VuoGlCheckTextureBinding(pname, unit)																								\
+{																																			\
+	GLint value;																															\
+	glGetIntegerv(pname, &value);																											\
+	if (value)																																\
+	{																																		\
+		VuoLog(file, linenumber, func, #pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
+		VuoLog_backtrace();																													\
+	}																																		\
 }
 
 /**
@@ -559,7 +624,7 @@ int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context)
  * @param openGL32Core If true, the returned context will be OpenGL 3.2 Core Profile.  If false, OpenGL 2.1.
  * @param displayMask If -1, the context will not be restricted by display.
  *                    If nonzero, the context will be restricted to the specified displays (`CGDisplayIDToOpenGLDisplayMask()`).
- *                    If 0xff, the context will use the Apple Software Renderer.
+ *                    If the low byte is 0xff, the context will use the Apple Software Renderer.
  * @return -1 if the displayMask is invalid.
  *         NULL if another error occurred.
  */
@@ -597,7 +662,7 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Cor
 						  CGLDestroyPixelFormat(pf);
 						  if (error != kCGLNoError)
 						  {
-							  VUserLog("Error: %s\n", CGLErrorString(error));
+							  VUserLog("Error: %s", CGLErrorString(error));
 							  return;
 						  }
 					  }
@@ -654,13 +719,13 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Cor
 	}
 
 	// software renderer
-	if (displayMask == 0xff)
+	if ((displayMask & 0xff) == 0xff && displayMask != -1)
 	{
 		pfa[pfaIndex++] = kCGLPFARendererID;
 		pfa[pfaIndex++] = (CGLPixelFormatAttribute) kCGLRendererGenericFloatID;
 	}
 
-	pfa[pfaIndex++] = (CGLPixelFormatAttribute) 0;
+	pfa[pfaIndex] = (CGLPixelFormatAttribute) 0;
 
 	CGLPixelFormatObj pf;
 	GLint npix;
@@ -675,6 +740,25 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Cor
 
 	return (void *)pf;
 }
+
+/**
+ * Returns true if the specified `context` is OpenGL 3.2+ Core Profile.
+ * @version200New
+ */
+bool VuoGlContext_isOpenGL32Core(VuoGlContext context)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)context;
+
+	// GL_VERSION is something like:
+	//    - Core Profile:          `4.1 NVIDIA-10.17.5 355.10.05.45f01`
+	//    - Core Profile:          `4.1 ATI-2.4.10`
+	//    - Compatibility Profile: `2.1 NVIDIA-10.17.5 355.10.05.45f01`
+	//    - Compatibility Profile: `2.1 ATI-2.4.10`
+	const unsigned char *contextVersion = glGetString(GL_VERSION);
+	return contextVersion[0] == '3'
+		|| contextVersion[0] == '4';
+}
+
 
 void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber, const char *func);
 

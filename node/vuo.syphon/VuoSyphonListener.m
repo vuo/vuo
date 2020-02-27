@@ -2,9 +2,9 @@
  * @file
  * VuoSyphonInternal implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "VuoSyphon.h"
@@ -80,7 +80,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 
 		callback = NULL;
 		serverNotifier = NULL;
-		desiredServer = VuoSyphonServerDescription_make(VuoText_make(""), VuoText_make(""), VuoText_make(""));
+		desiredServer = VuoSyphonServerDescription_make(VuoText_make("*"), VuoText_make("*"), VuoText_make("*"), true);
 		VuoSyphonServerDescription_retain(desiredServer);
 		refreshQueue = dispatch_queue_create("vuo.syphon.VuoSyphonListener", 0);
 	}
@@ -142,7 +142,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 		{
 			VuoText currentName = VuoText_make([[currentDict objectForKey:SyphonServerDescriptionUUIDKey] UTF8String]);
 			VuoText currentAppName = VuoText_make([[currentDict objectForKey:SyphonServerDescriptionUUIDKey] UTF8String]);
-			VuoSyphonServerDescription current = VuoSyphonServerDescription_make(VuoText_make(""), currentName, currentAppName);
+			VuoSyphonServerDescription current = VuoSyphonServerDescription_make(VuoText_make("*"), currentName, currentAppName, true);
 			VuoList_VuoSyphonServerDescription currentAsList = VuoListCreate_VuoSyphonServerDescription();
 			VuoListAppendValue_VuoSyphonServerDescription(currentAsList, current);
 			VuoList_VuoSyphonServerDescription currentMatchingDesired = VuoSyphon_filterServerDescriptions(currentAsList, desiredServer);
@@ -152,7 +152,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 		bool isCurrentStillAvailable;
 		{
 			VuoText currentUUID = VuoText_make([[currentDict objectForKey:SyphonServerDescriptionUUIDKey] UTF8String]);
-			VuoSyphonServerDescription current = VuoSyphonServerDescription_make(currentUUID, VuoText_make(""), VuoText_make(""));
+			VuoSyphonServerDescription current = VuoSyphonServerDescription_make(currentUUID, VuoText_make("*"), VuoText_make("*"), true);
 			VuoList_VuoSyphonServerDescription availableMatchingCurrent = VuoSyphon_filterServerDescriptions(serverDescriptions, current);
 			isCurrentStillAvailable = (VuoListGetCount_VuoSyphonServerDescription(availableMatchingCurrent) > 0);
 		}
@@ -231,7 +231,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 
 									  VuoImage image = VuoImage_makeClientOwnedGlTextureRectangle(frame.textureName, GL_RGBA, frame.textureSize.width, frame.textureSize.height, VuoSyphonListener_freeSyphonImageCallback, frame);
 									  VuoRetain(image);
-									  callback(VuoImage_makeCopy(image, false));
+									  callback(VuoImage_makeCopy(image, false, 0, 0, false));
 									  VuoRelease(image);
 
 									  });

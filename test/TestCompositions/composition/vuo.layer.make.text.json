@@ -2,34 +2,61 @@
  * @file
  * Expected outputs for the vuo.layer.make.text node.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration": [
 	// Properly-aligned text has an Average Sharpness of about 0.33 – 0.39;
 	// misaligned text is about 0.27 – 0.30.
 
-	// Text with odd width
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.39, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.39, "PixelsWide":123 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello World!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.39, "PixelsWide":123 }},
+	// Text with odd width, even height
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":121, "PixelsHigh":32 }},
 
-	// Text with even width
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "Sharpness":0.33, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
-	{"firingPort":"Text", "inputPortValues":{ "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "Sharpness":0.36, "PixelsWide":136 }},
+	// Text with even width, even height
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":24, "Text":"Hello wworld!", "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":133, "PixelsHigh":32 }},
+
+	// Text with odd width, odd height
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello World!",  "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":111, "PixelsHigh":29 }},
+
+	// Text with even width, odd height
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"center","verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"top"   } }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"center","verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"center"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"left",  "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"center","verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":22, "Text":"Hello orld!",   "Anchor":{"horizontalAlignment":"right", "verticalAlignment":"bottom"} }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 91, "PixelsHigh":29 }},
+
+	// Ensure trailing whitespace in wrapped text doesn't exceed the specified WrapWidth.
+	{"firingPort":"*", "inputPortValues":{ "Size":72, "Text":"Hello                                        world!", "WrapWidth": Infinity }, "outputPortValues":{ "SharpEnough":true, "PixelsWide":1124, "PixelsHigh": 90 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":72, "Text":"Hello                                        world!", "WrapWidth": 2        }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 175, "PixelsHigh":177 }},
+	{"firingPort":"*", "inputPortValues":{ "Size":72, "Text":"Hello                                        world!", "WrapWidth": 1        }, "outputPortValues":{ "SharpEnough":true, "PixelsWide": 175, "PixelsHigh":177 }},
 ]}

@@ -1,6 +1,6 @@
 Only lets a MIDI controller pass through if its channel and controller number match.
 
-This node is similar to `Filter Controller`, but it also scales MIDI CC value (0 to 127) to the real number range you specify, and smoothes the value over time.
+This node is similar to [Filter Controller](vuo-node://vuo.midi.filter.controller), but it also scales the MIDI CC value (0 to 127) to the real number range you specify, and smooths the value over time.
 
    - `Time` — The time at which to calculate the smoothed value.
    - `Controller` — An event into this port is blocked unless the port's value matches the specified channel and controller number.

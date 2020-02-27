@@ -2,39 +2,38 @@
  * @file
  * Displays a row of spheres with different colors for the left third, middle third, and right third of the row.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="210,180" _scaleToFit="true" _center="[{\"x\":0,\"y\":0,\"z\":0}]" _width="2.000000" _height="2.000000" _rows="1" _depth="2.000000" _slices="1"];
-CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-240,-45" _increment="2" _decrement="1" _setCount="3" _minimum="3" _maximum="20" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,30" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-480,-45" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
-MakeList13 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="12,56" _2="3"];
-MakeList28 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="462,176" fillcolor="green"];
-MakeList30 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="482,221" fillcolor="green"];
-MakeList33 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-33,191" fillcolor="violet"];
-MakeSphere3 [type="vuo.scene.make.sphere.VuoColor" version="1.0.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,165" _material="{\"r\":0.339773,\"g\":0.287297,\"b\":0.674296,\"a\":1.000000}" _rows="16" _columns="16"];
-MakeSphere4 [type="vuo.scene.make.sphere.VuoColor" version="1.0.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,375" _material="{\"r\":0.349264,\"g\":0.598276,\"b\":0.226184,\"a\":1.000000}" _rows="16" _columns="16"];
-MakeSphere5 [type="vuo.scene.make.sphere.VuoColor" version="1.0.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,270" _material="{\"r\":0.701961,\"g\":0.309804,\"b\":0.329412,\"a\":1.000000}" _rows="16" _columns="16"];
-Multiply3 [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="45,45"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.3.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="510,165" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SpreadListItems6 [type="vuo.list.spread.VuoSceneObject" version="1.0.0" label="Copy List Items|<refresh>refresh\l|<list>list\l|<copies>copies\l|<outputList>outputList\r" pos="0,180" fillcolor="violet"];
+Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="240,165" _scaleToFit="true" _center="[\{\"x\":0,\"y\":0,\"z\":0\}]" _width="1.8" _height="2.000000" _rows="1" _depth="2.000000" _slices="1"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-240,-45" _increment="2" _decrement="1" _setCount="3" _minimum="3" _maximum="10" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-465,180" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-480,-45" fillcolor="lime" _seconds="1.000000" _fired_eventThrottling="drop"];
+MakeList13 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-18,-34" _2="3"];
+MakeList28 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="488,176" fillcolor="blue"];
+MakeList33 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-52,176" fillcolor="orange"];
+MakeSphere3 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,165" _material="\{\"r\":0.80000001192092896,\"g\":0.40000000596046448,\"b\":1,\"a\":1\}" _rows="16" _columns="16"];
+MakeSphere4 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,375" _material="\{\"r\":0.40000000596046448,\"g\":0.80000001192092896,\"b\":1,\"a\":1\}" _rows="16" _columns="16"];
+MakeSphere5 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-225,270" _material="\{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1\}" _rows="16" _columns="16"];
+Multiply3 [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="15,-45"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="540,165" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SpreadListItems6 [type="vuo.list.spread.VuoSceneObject" version="1.0.1" label="Copy List Items|<refresh>refresh\l|<list>list\l|<copies>copies\l|<outputList>outputList\r" pos="0,165" fillcolor="orange"];
 
 Arrange3DObjectsInGrid:griddedObject -> MakeList28:1;
 CountWithinRange:count -> MakeList13:1;
 CountWithinRange:count -> SpreadListItems6:copies;
-FireOnStart:started -> CountWithinRange:refresh;
-FireOnStart:started -> MakeSphere3:refresh;
-FireOnStart:started -> MakeSphere4:refresh;
-FireOnStart:started -> MakeSphere5:refresh;
+FireOnStart:started -> CountWithinRange:setCount;
+FireOnStart:started -> MakeSphere3:material;
+FireOnStart:started -> MakeSphere4:material;
+FireOnStart:started -> MakeSphere5:material;
 FirePeriodically:fired -> CountWithinRange:increment [event=true];
 MakeList13:list -> Multiply3:values;
 MakeList28:list -> RenderSceneToWindow:objects;
-MakeList30:list -> RenderSceneToWindow:setWindowProperties;
 MakeList33:list -> SpreadListItems6:list;
 MakeSphere3:object -> MakeList33:1;
 MakeSphere4:object -> MakeList33:3;

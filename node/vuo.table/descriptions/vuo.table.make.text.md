@@ -1,6 +1,6 @@
 Turns CSV- or TSV-formatted text into a table.
 
-You can use this node to import data from a spreadsheet. In your spreadsheet application, export the data in [CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) or [TSV (Tab-Separated Values)](https://en.wikipedia.org/wiki/Tab-separated_values) format. Use the `Fetch Data` node to get the content of the exported file and this node to convert it to a table.
+You can use this node to import data from a spreadsheet. In your spreadsheet application, export the data in [CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) or [TSV (Tab-Separated Values)](https://en.wikipedia.org/wiki/Tab-separated_values) format. Use the [Fetch Data](vuo-node://vuo.data.fetch) node to get the content of the exported file and this node to convert it to a table.
 
 Each line of the input text (except empty lines) becomes a row of the table. Within a line, each comma or tab marks the end of a column.
 

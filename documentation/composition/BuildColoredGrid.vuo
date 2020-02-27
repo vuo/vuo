@@ -2,30 +2,30 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="431,205" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.000000" _columns="2" _height="1.000000" _rows="2"];
-BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.0" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="203,208" fillcolor="violet" _fire="4" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
-CycleThroughList2 [type="vuo.list.cycle.VuoColor" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="200,428" fillcolor="violet" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="68,125" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="412,417" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
-MakeList10 [type="vuo.list.make.4.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="130,439" fillcolor="violet" _1="{\"r\":1.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _3="{\"r\":1.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _4="{\"r\":0.400000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}"];
-MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="651,233" fillcolor="green"];
-MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="621,218" fillcolor="green"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="692,207" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="480,210" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="1.000000" _columns="2" _height="1.000000" _rows="2"];
+BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="210,210" fillcolor="orange" _fire="4" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+CycleThroughList [type="vuo.list.cycle2.VuoColor" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="135,420" fillcolor="orange" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="60,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeColorLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="360,420" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.500000" _height="0.500000" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList [type="vuo.list.make.4.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="73,476" fillcolor="orange" _1="\{\"r\":1,\"g\":1,\"b\":0,\"a\":1\}" _2="\{\"r\":0,\"g\":1,\"b\":0,\"a\":1\}" _3="\{\"r\":1,\"g\":0,\"b\":1,\"a\":1\}" _4="\{\"r\":0.40000000596046448,\"g\":1,\"b\":1,\"a\":1\}"];
+MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="659,221" fillcolor="blue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="705,210" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList9:1;
-BuildList2:buildItem -> CycleThroughList2:goForward;
+BuildList2:buildItem -> CycleThroughList:goForward;
 BuildList2:builtList -> ArrangeLayersInGrid:layers;
-CycleThroughList2:item -> MakeColorLayer2:color;
+CycleThroughList:item -> MakeColorLayer2:color;
 FireOnStart:started -> BuildList2:fire;
 MakeColorLayer2:layer -> BuildList2:builtItem;
-MakeList10:list -> CycleThroughList2:list;
-MakeList8:list -> RenderLayersToWindow:setWindowProperties;
 MakeList9:list -> RenderLayersToWindow:layers;
+MakeList:list -> CycleThroughList:list;
 }

@@ -2,18 +2,13 @@
  * @file
  * VuoRuntimeMain implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <unistd.h>
-#include <dispatch/dispatch.h>
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
-#include <objc/runtime.h>
-#include <objc/message.h>
 #include <pthread.h>
 
 #include "VuoRuntime.h"
@@ -42,8 +37,6 @@ static void __attribute__((constructor)) VuoRuntimeMain_init(void)
 int main(int argc, char **argv)
 {
 	vuoInit(argc, argv);
-	VuoEventLoop_installSignalHandlers();
-	VuoEventLoop_disableAppNap();
 
 	while (! vuoIsCurrentCompositionStopped())
 		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);

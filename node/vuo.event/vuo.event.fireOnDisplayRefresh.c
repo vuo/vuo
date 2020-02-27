@@ -2,9 +2,9 @@
  * @file
  * vuo.event.fireOnDisplayRefresh node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,13 +12,12 @@
 
 VuoModuleMetadata({
 					 "title" : "Fire on Display Refresh",
-					 "keywords" : [ "frame", "draw", "scenegraph", "graphics", "display", "view" ],
+					 "keywords" : [ "frame", "draw", "scenegraph", "graphics", "display", "view", "periodically" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh"
 					 ],
 					 "node": {
-						 "isInterface" : true,
 						 "exampleCompositions" : [ ]
 					 }
 				 });
@@ -32,7 +31,7 @@ VuoDisplayRefresh nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(VuoDisplayRefresh) context,
-		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
+		VuoOutputTrigger(requestedFrame, VuoReal, {"name":"Refreshed at Time", "eventThrottling":"drop"})
 )
 {
 	VuoDisplayRefresh_enableTriggers(*context, requestedFrame, NULL);

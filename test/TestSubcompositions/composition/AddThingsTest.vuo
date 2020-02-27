@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AddThings [type="vuo.test.addThings" version="" label="Add Things|<refresh>refresh\l|<Increment>Increment\l|<Append>Append\l|<Count>Count\r|<CompositeText>CompositeText\r" pos="270,135"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="600,135" _separator="\" \""];
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="120,45"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="465,-30" _value="\"1.0\"" _format="\"decimal\"" _minimumIntegerDigits="0" _minimumDecimalPlaces="1" _decimalPlaces="1" _showThousandSeparator="true"];
+FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="420,255" _format="\"csv\""];
+MakeList [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="549,146"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="30,135"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="375,255"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="570,240"];
+SummarizeValue4 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="120,225"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<In>In\r" _In_type="VuoInteger" _In="5"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out>Out\l" _Out_type="VuoText"];
+
+AddThings:CompositeText -> MakeList:2;
+AddThings:Count -> SummarizeValue2:value;
+AppendTexts:compositeText -> PublishedOutputs:Out;
+FormatNumber:text -> MakeList:4;
+FormatTable:text -> MakeList:3;
+MakeList:list -> AppendTexts:texts;
+PublishedInputs:In -> ShareValue2:value;
+ShareValue2:sameValue -> AddThings:Increment;
+ShareValue2:sameValue -> ConvertIntegerToRealNumber:integer;
+ShareValue2:sameValue -> SummarizeValue4:value;
+ShareValue2:sameValue -> SummarizeValue:value;
+SummarizeValue2:summary -> MakeList:1;
+SummarizeValue:summary -> AddThings:Append;
+}

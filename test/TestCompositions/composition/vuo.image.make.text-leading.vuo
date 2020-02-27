@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+GetHSLColorValues [type="vuo.color.get.hsl" version="2.0.0" label="Get HSL Color Values|<refresh>refresh\l|<color>color\l|<hue>hue\r|<saturation>saturation\r|<lightness>lightness\r|<opacity>opacity\r" pos="660,150"];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="855,195" _b="0.5"];
+MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="240,150" _text="\" \  \  \  \  \  \  \ #\"" _font="\{\"fontName\":\"Avenir-Light\",\"pointSize\":24\}" _wrapWidth="0" _text_manuallyFirable];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="450,150" _center="\{\"x\":1,\"y\":0\}" _width="0.5" _sampleType="\"lightest-color\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Success>Success\l" _Success_type="VuoBoolean"];
+
+GetHSLColorValues:opacity -> IsGreaterThan:a;
+IsGreaterThan:greaterThan -> PublishedOutputs:Success;
+MakeTextImage:image -> SampleColorFromImage:image;
+PublishedInputs:Event -> MakeTextImage:text;
+SampleColorFromImage:color -> GetHSLColorValues:color;
+}

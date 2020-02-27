@@ -2,9 +2,9 @@
  * @file
  * vuo.ui.drag.file node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,7 +19,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true,
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "ShowDraggedImages.vuo" ]
 					  }
 				  });
@@ -31,6 +31,7 @@ struct nodeInstanceData
 	void (*dragMovedTo)(VuoDragEvent e);
 	void (*dragCompleted)(VuoDragEvent e);
 	void (*dragExited)(VuoDragEvent e);
+	bool triggersEnabled;
 };
 
 struct nodeInstanceData *nodeInstanceInit()
@@ -50,6 +51,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(dragExited, VuoDragEvent)
 )
 {
+	(*context)->triggersEnabled = true;
 	(*context)->wr = window;
 	(*context)->dragEntered = dragEntered;
 	(*context)->dragMovedTo = dragMovedTo;
@@ -68,6 +70,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(dragExited, VuoDragEvent)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (window != (*context)->wr)
 	{
 		VuoWindowReference_removeDragCallbacks((*context)->wr, (*context)->dragEntered, (*context)->dragMovedTo, (*context)->dragCompleted, (*context)->dragExited);
@@ -87,6 +92,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoWindowReference_removeDragCallbacks((*context)->wr, (*context)->dragEntered, (*context)->dragMovedTo, (*context)->dragCompleted, (*context)->dragExited);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

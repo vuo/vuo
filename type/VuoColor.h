@@ -2,9 +2,9 @@
  * @file
  * VuoColor C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -13,7 +13,11 @@
 #include "VuoReal.h"
 #include "VuoText.h"
 
-/// @{
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// @{ List type.
 typedef const struct VuoList_VuoColor_struct { void *l; } * VuoList_VuoColor;
 #define VuoList_VuoColor_TYPE_DEFINED
 /// @}
@@ -99,6 +103,19 @@ VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha);
 VuoColor VuoColor_average(VuoList_VuoColor colors);
 
 /**
+ * Returns true if the color is fully opaque.
+ * @version200New
+ */
+static inline bool VuoColor_isOpaque(VuoColor color)
+{
+	return color.a >= 1.;
+}
+
+bool VuoColor_areAllOpaque(VuoList_VuoColor colors);
+
+VuoReal VuoColor_brightness(VuoColor color, int32_t /*VuoThresholdType*/ type);
+
+/**
  * Returns a linearly-interpolated value between `a` and `b` using time `t` (between 0 and 1).
  */
 static inline VuoColor VuoColor_lerp(VuoColor a, VuoColor b, float t) __attribute__((const));
@@ -131,3 +148,7 @@ void VuoColor_release(VuoColor value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,4 +1,4 @@
-These nodes are for working with information that has a hierarchical (tree) structure.
+Nodes for working with information that has a hierarchical (tree) structure.
 
 One example of a tree structure is the biological classification of animals. Animals are grouped by their common features and ancestry, like this:
 
@@ -12,7 +12,7 @@ One example of a tree structure is the biological classification of animals. Ani
          - *P. paniscus* — bonobo
          - *P. troglodytes* — chimpanzee
 
-In computing, information with a tree structure is often expressed in [XML](http://www.w3schools.com/xml/xml_whatis.asp) or [JSON](http://www.json.org/). Both of these formats are supported by the `vuo.tree` nodes.
+In computing, information with a tree structure is often expressed in [XML](https://www.w3schools.com/xml/xml_whatis.asp) or [JSON](http://www.json.org/). Both of these formats are supported by the `vuo.tree` nodes.
 
 The biological classification above could be represented in XML in various ways, including this:
 
@@ -81,7 +81,7 @@ Equivalently, the biological classification could be represented in JSON like th
        }
     }
 
-If you were to feed the XML-formatted text above into the `Make Tree from XML` node or the JSON-formatted text above into the `Make Tree from JSON` node, the node would output data of type Tree that is structured like this:
+If you were to feed the XML-formatted text above into the [Make Tree from XML](vuo-node://vuo.tree.make.xml) node or the JSON-formatted text above into the [Make Tree from JSON](vuo-node://vuo.tree.make.json) node, the node would output data of type Tree that is structured like this:
 
    - Tree named "family" with children:
       - Tree named "name" with content "Hominidae"
@@ -107,7 +107,7 @@ If you were to feed the XML-formatted text above into the `Make Tree from XML` n
             - Tree named "name" with content "P. troglodytes"
             - Tree named "common-name with content "chimpanzee"
 
-The `Make Tree from XML` and `Make Tree from JSON` nodes extract the essential tree structure from the text, making it possible for you to use the same set of Tree nodes regardless of whether the input text was formatted as JSON or XML. You can convert a Tree back to text of either format, using the `Format Tree as XML` and `Format Tree as JSON` nodes.
+The [Make Tree from XML](vuo-node://vuo.tree.make.xml) and [Make Tree from JSON](vuo-node://vuo.tree.make.json) nodes extract the essential tree structure from the text, making it possible for you to use the same set of Tree nodes regardless of whether the input text was formatted as JSON or XML. You can convert a Tree back to text of either format, using the [Format Tree as XML](vuo-node://vuo.tree.format.xml) and [Format Tree as JSON](vuo-node://vuo.tree.format.json) nodes.
 
 Data of type Tree can have:
 

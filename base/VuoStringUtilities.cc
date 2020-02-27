@@ -2,20 +2,18 @@
  * @file
  * VuoStringUtilities implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
 #include <CoreFoundation/CoreFoundation.h>
 #include "VuoStringUtilities.hh"
 
-#if defined(__x86_64__) || defined(DOXYGEN)
 extern "C" {
 #include "mkdio.h"
 }
-#endif
 
 /**
  * Returns true if @c wholeString begins with @c beginning.
@@ -112,6 +110,15 @@ vector<string> VuoStringUtilities::split(const string &wholeString, char delimit
  */
 string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
 {
+	string delimiterStr(1, delimiter);
+	return join(partialStrings, delimiterStr);
+}
+
+/**
+ * Combines @a partialStrings, separated by @a delimiter, into one string.
+ */
+string VuoStringUtilities::join(vector<string> partialStrings, string delimiter)
+{
 	string wholeString;
 	for (vector<string>::iterator i = partialStrings.begin(); i != partialStrings.end(); )
 	{
@@ -120,6 +127,61 @@ string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
 			wholeString += delimiter;
 	}
 	return wholeString;
+}
+
+/**
+ * Combines @a partialStrings, separated by @a delimiter, into one string.
+ */
+string VuoStringUtilities::join(set<string> partialStrings, string delimiter)
+{
+	string wholeString;
+	for (set<string>::iterator i = partialStrings.begin(); i != partialStrings.end(); )
+	{
+		wholeString += *i;
+		if (++i != partialStrings.end())
+			wholeString += delimiter;
+	}
+	return wholeString;
+}
+
+/**
+ * Returns a new string with the whitespace removed from the beginning and end.
+ *
+ * This function trims ASCII spaces, tabs, and linebreaks, but not other Unicode whitespace characters.
+ *
+ * @see VuoText_trim
+ */
+string VuoStringUtilities::trim(string originalString)
+{
+	string whitespace = " \t\v\n\r\f";
+
+	string::size_type begin = originalString.find_first_not_of(whitespace);
+	if (begin == std::string::npos)
+		return "";
+
+	string::size_type end = originalString.find_last_not_of(whitespace);
+
+	return originalString.substr(begin, end - begin + 1);
+}
+
+/**
+ * Returns a string that starts with @a parentCompositionIdentifier and ends with @a nodeIdentifier.
+ * The glue between them is a non-identifier character so that the string can be unambiguously split later.
+ *
+ * This needs to be kept in sync with @ref VuoCompilerNode::generateSubcompositionIdentifierValue().
+ */
+string VuoStringUtilities::buildCompositionIdentifier(const string &parentCompositionIdentifier, const string &nodeIdentifier)
+{
+	return parentCompositionIdentifier + "/" + nodeIdentifier;
+}
+
+/**
+ * Returns a string that starts with @a nodeIdentifier and ends with @a portName.
+ * The glue between them is a non-identifier character so that the string can be unambiguously split later.
+ */
+string VuoStringUtilities::buildPortIdentifier(const string &nodeIdentifier, const string &portName)
+{
+	return nodeIdentifier + ":" + portName;
 }
 
 /**
@@ -134,6 +196,7 @@ string VuoStringUtilities::prefixSymbolName(string symbolName, string moduleKey)
 /**
  * Transforms a string into a valid identifier:
  *  - Replaces whitespace and '.'s with '_'s
+ *  - Replaces '/'s and ':'s with '__'s
  *  - Strips out characters not in [A-Za-z0-9_]
  */
 string VuoStringUtilities::transcodeToIdentifier(string str)
@@ -143,12 +206,20 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
 
 	CFStringNormalize(strCF, kCFStringNormalizationFormD);  // decomposes combining characters, so accents/diacritics are separated from their letters
 
-	CFStringRef empty = CFStringCreateWithCString(NULL, "", kCFStringEncodingUTF8);
-	CFStringRef underscore = CFStringCreateWithCString(NULL, "_", kCFStringEncodingUTF8);
-
 	CFIndex strLength = CFStringGetLength(strCF);
 	UniChar *strBuf = (UniChar *)malloc(strLength * sizeof(UniChar));
+	if (!strBuf)
+	{
+		CFRelease(strCF);
+		return string();
+	}
 	CFStringGetCharacters(strCF, CFRangeMake(0, strLength), strBuf);
+
+	CFStringRef empty = CFStringCreateWithCString(NULL, "", kCFStringEncodingUTF8);
+	CFStringRef underscore = CFStringCreateWithCString(NULL, "_", kCFStringEncodingUTF8);
+	CFStringRef doubleUnderscore = CFStringCreateWithCString(NULL, "__", kCFStringEncodingUTF8);
+	if (!empty || !underscore || !doubleUnderscore)
+		return string();
 
 	for (CFIndex i = strLength-1; i >= 0; --i)
 	{
@@ -159,6 +230,8 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
 			replacement = empty;
 		else if (c == '.' || isspace(c))
 			replacement = underscore;
+		else if (c == '/' || c == ':')
+			replacement = doubleUnderscore;
 		else if (! isValidCharInIdentifier(c))
 			replacement = empty;
 
@@ -166,7 +239,7 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
 			CFStringReplace(strCF, CFRangeMake(i, 1), replacement);
 	}
 
-	// http://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
+	// https://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
 
 	const char *useUTF8StringPtr = NULL;
 	char *freeUTF8StringPtr = NULL;
@@ -187,6 +260,7 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
 	CFRelease(strCF);
 	CFRelease(empty);
 	CFRelease(underscore);
+	CFRelease(doubleUnderscore);
 	free(strBuf);
 
 	return ret;
@@ -198,8 +272,7 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
  */
 bool VuoStringUtilities::isValidCharInIdentifier(char ch)
 {
-	bool valid = (isalnum(ch) || ch=='_');
-	return valid;
+	return isalnum(ch) || ch == '_';
 }
 
 /**
@@ -222,6 +295,8 @@ string VuoStringUtilities::transcodeToGraphvizIdentifier(const string &originalS
 		escapedString.replace(i, 1, "\\>");
 	for (string::size_type i = 0; (i = escapedString.find("|", i)) != std::string::npos; i += 2)
 		escapedString.replace(i, 1, "\\|");
+	for (string::size_type i = 0; (i = escapedString.find("  ", i)) != std::string::npos; i += 3)
+		escapedString.replace(i, 2, " \\ ");
 	return escapedString;
 }
 
@@ -252,7 +327,46 @@ string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvi
 	return unescapedString;
 }
 
-#if defined(__x86_64__) || defined(DOXYGEN)
+/**
+ * Returns @a preferredIdentifier if it's available (not already in @a usedIdentifiers), otherwise
+ * creates an identifier that is available by adding a suffix to @a identifierPrefix (if provided)
+ * or @a preferredIdentifier. The returned identifier is added to @a usedIdentifiers.
+ */
+string VuoStringUtilities::formUniqueIdentifier(set<string> &takenIdentifiers,
+												const string &preferredIdentifier, const string &identifierPrefix)
+{
+	auto isIdentifierAvailable = [&takenIdentifiers] (const string &identifier)
+	{
+		return takenIdentifiers.find(identifier) == takenIdentifiers.end();
+	};
+
+	string uniqueIdentifier = formUniqueIdentifier(isIdentifierAvailable, preferredIdentifier, identifierPrefix);
+	takenIdentifiers.insert(uniqueIdentifier);
+	return uniqueIdentifier;
+}
+
+/**
+ * Returns @a preferredIdentifier if it's available (according to @a isIdentifierAvailable), otherwise
+ * creates an identifier that is available by adding a suffix to @a identifierPrefix (if provided)
+ * or @a preferredIdentifier.
+ */
+string VuoStringUtilities::formUniqueIdentifier(std::function<bool(const string &)> isIdentifierAvailable,
+												const string &preferredIdentifier, const string &identifierPrefix)
+{
+	string unique = preferredIdentifier;
+	string prefix = (! identifierPrefix.empty() ? identifierPrefix : preferredIdentifier);
+	int suffix = 2;
+
+	while (! isIdentifierAvailable(unique))
+	{
+		ostringstream oss;
+		oss << prefix << suffix++;
+		unique = oss.str();
+	}
+
+	return unique;
+}
+
 /**
  * Converts @c markdownString (a Markdown document) to HTML.
  *
@@ -265,6 +379,7 @@ string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString
 	char *html;
 	mkd_document(doc, &html);
 	string htmlString(html);
+	mkd_cleanup(doc);
 
 	// Remove the final linebreak from code blocks,
 	// since Qt (unlike typical browser rendering engines) considers that whitespace significant.
@@ -287,16 +402,94 @@ string VuoStringUtilities::generateHtmlFromMarkdownLine(const string &markdownSt
 	char *html;
 	mkd_line((char *)markdownString.c_str(), length, &html, MKD_NOPANTS);
 	string htmlString(html);
+	free(html);
 	return htmlString;
 }
-#endif
+
+/**
+ * Collapses a string into camel case by removing non-alphanumeric characters and adjusting capitalization.
+ *
+ * Also removes non-alpha leading characters.
+ *
+ * @param originalString The input.
+ * @param forceFirstLetterToUpper If true, make the string UpperCamelCase. Otherwise, leave the first letter as-is.
+ * @param forceFirstLetterToLower If true, make the string lowerCamelCase. Otherwise, leave the first letter as-is.
+ * @param forceInterveningLettersToLower If true, make letters within words lowercase. Otherwise, leave them as-is.
+ * @param allowSeparatorDots If true, intermediate dots (`.`) are preserved.
+ *                           Leading, consecutive intermediate, and trailing dots are omitted.
+ *                           Letters following dots are not forced to uppercase.
+ */
+string VuoStringUtilities::convertToCamelCase(const string &originalString,
+											  bool forceFirstLetterToUpper, bool forceFirstLetterToLower, bool forceInterveningLettersToLower,
+											  bool allowSeparatorDots)
+{
+	string camelCaseString;
+	bool first = true;
+	bool uppercaseNext = forceFirstLetterToUpper;
+	bool lowercaseNext = forceFirstLetterToLower;
+	bool previousWasDot = false;
+	for (string::const_iterator i = originalString.begin(); i != originalString.end(); ++i)
+	{
+		if (first && !isalpha(*i))
+			continue;
+		first = false;
+
+		bool isDot = *i == '.';
+		if (allowSeparatorDots && isDot)
+		{
+			if (previousWasDot)
+				continue;
+			uppercaseNext = false;
+		}
+		else if (!isalnum(*i))
+		{
+			uppercaseNext = true;
+			continue;
+		}
+
+		if (uppercaseNext)
+			camelCaseString += toupper(*i);
+		else if (lowercaseNext)
+			camelCaseString += tolower(*i);
+		else
+			camelCaseString += *i;
+
+		uppercaseNext = false;
+		lowercaseNext = forceInterveningLettersToLower;
+		previousWasDot = isDot;
+	}
+
+	// Trim trailing dots.
+	if (allowSeparatorDots)
+		while (endsWith(camelCaseString, "."))
+			camelCaseString = substrBefore(camelCaseString, ".");
+
+	return camelCaseString;
+}
 
 /**
  * Inserts spaces at CamelCase transitions within the input `camelCaseString`,
  * capitalizes the first letter of the string, and returns the result.
+ *
+ * Also renders standalone variable names (e.g., "x") and some common abbreviations (e.g., "rgb") in all-caps.
  */
 string VuoStringUtilities::expandCamelCase(string camelCaseString)
 {
+	// Only apply these transformations if the whole string matches,
+	// since they may appear as substrings in contexts where they shouldn't be all-caps.
+	if (camelCaseString == "x")
+		return "X";
+	else if (camelCaseString == "y")
+		return "Y";
+	else if (camelCaseString == "z")
+		return "Z";
+	else if (camelCaseString == "w")
+		return "W";
+	else if (camelCaseString == "xy")
+		return "XY";
+	else if (camelCaseString == "osc")
+		return "OSC";
+
 	string out;
 	out += toupper(camelCaseString[0]);
 
@@ -307,6 +500,40 @@ string VuoStringUtilities::expandCamelCase(string camelCaseString)
 		if (isupper(c) || (isdigit(c) && !isdigit(camelCaseString[i-1])))
 			out += " ";
 		out += c;
+	}
+
+	string allCaps[]{
+		"2d",
+		"3d",
+		"4d",
+		"Xyzw",
+		"Xyz",
+		"Rgbaw",
+		"Rgba",
+		"Rgbw",
+		"Rgb",
+		"Wwcw",
+		"Cmy",
+		"Hsl",
+		"Hdmi",
+		"Sdi",
+		"Ntsc",
+//		"Pal",  // Appears in Leap Motion "Palm Velocity".
+		"Url",
+		"Midi",
+		"Rss",
+		"Csv",
+		"Tsv",
+		"Ascii",
+		"Json",
+		"Xml",
+		"Dmx",
+	};
+	for (auto lower : allCaps)
+	{
+		string upper = lower;
+		std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+		VuoStringUtilities::replaceAll(out, lower, upper);
 	}
 
 	return out;

@@ -2,22 +2,16 @@
  * @file
  * VuoRendererColors implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererColors.hh"
 
-#include "VuoReal.h"
 
-const qreal VuoRendererColors::minNodeFrameAndFillAlpha = 0.35;
-const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
-const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = .85;
-const qreal VuoRendererColors::defaultCableMainAlpha = 0.35;
-const qreal VuoRendererColors::defaultCableUpperAlpha = 0.9;
-const qreal VuoRendererColors::defaultConstantAlphaLightMode = 3./8.;
-const qreal VuoRendererColors::defaultConstantAlphaDarkMode = .6;
+const qreal VuoRendererColors::minAlpha = 0.35;
+
 const int VuoRendererColors::subtleHighlightingLighteningFactor = 140; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
@@ -25,7 +19,7 @@ bool VuoRendererColors::_isDark = false;
 
 /**
  * Creates a new color scheme provider, optionally tinted with @c tintColor.
- * If @c selectionType is anything other than @c VuoRendererColors::noSelection or @c VuoRendererColors::sidebarSelection,
+ * If @c selectionType is anything other than @c VuoRendererColors::noSelection,
  * the colors are also tinted slightly blue and have their opacity increased to indicate selection.
  * If @c isHovered is true, the colors are also slightly tinted dark blue to indicate potential for selection.
  * If @c highlightType is anything other than @c VuoRendererColors::noHighlight, the colors are also tinted with light blue
@@ -33,18 +27,18 @@ bool VuoRendererColors::_isDark = false;
  * If @c timeOfLastActivity is anything other than VuoRendererItem::notTrackingActivity, the alpha level
  * is modified to reflect the amount of time that has passed since the @c timeOfLastActivity (e.g., a node execution or event firing), in ms since epoch.
  */
-VuoRendererColors::VuoRendererColors(VuoNode::TintColor tintColor, VuoRendererColors::SelectionType selectionType, bool isHovered, VuoRendererColors::HighlightType highlightType, qint64 timeOfLastActivity)
+VuoRendererColors::VuoRendererColors(VuoNode::TintColor tintColor, VuoRendererColors::SelectionType selectionType, bool isHovered, VuoRendererColors::HighlightType highlightType, qint64 timeOfLastActivity, bool isMissingImplementation)
 {
 	this->tintColor = tintColor;
 	this->selectionType = selectionType;
 	this->isHovered = isHovered;
 	this->highlightType = highlightType;
+	this->isMissingImplementation = isMissingImplementation;
 
 	// Turn composition components opaque as they execute or fire events, then fade them back to their minimum transparency.
 	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-	const qreal defaultFadePercentage = (maxNodeFrameAndFillAlpha-defaultNodeFrameAndFillAlpha)/(maxNodeFrameAndFillAlpha-minNodeFrameAndFillAlpha);
 
-	this->currentFadePercentage =	((timeOfLastActivity == VuoRendererItem::notTrackingActivity)? defaultFadePercentage :
+	this->currentFadePercentage =   ((timeOfLastActivity == VuoRendererItem::notTrackingActivity)? 0 :
 									((timeOfLastActivity == VuoRendererItem::activityInProgress)? 0 :
 									fmin(1, (timeNow - timeOfLastActivity)/(1.0*activityFadeDuration))));
 }
@@ -85,7 +79,7 @@ bool VuoRendererColors::isDark(void)
  */
 QColor VuoRendererColors::canvasFill(void)
 {
-	return _isDark ? QColor("#303030") : QColor::fromHslF(0, 0, 1, 1);
+	return QColor::fromHslF(0, 0, _isDark ? .19 : 1, 1);
 }
 
 /**
@@ -94,11 +88,7 @@ QColor VuoRendererColors::canvasFill(void)
  */
 QColor VuoRendererColors::nodeFill(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
-	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, _isDark ? .7 : .8, adjustedAlpha), 1., lighteningFactor));
-
-	return nodeFillColor;
+	return applyHighlighting(baseColor());
 }
 
 /**
@@ -106,29 +96,7 @@ QColor VuoRendererColors::nodeFill(void)
  */
 QColor VuoRendererColors::portFill(void)
 {
-	// If there are to be no modifications for selection, highlight, or hovering,
-	// use the same fill color as is used for the main section of the node.
-	bool useNodeFill = ((selectionType == VuoRendererColors::noSelection) &&
-						(highlightType == VuoRendererColors::noHighlight) &&
-						!isHovered);
-
-	if (useNodeFill)
-		return nodeFill();
-
-	// Otherwise, use the lighter constant flag fill color.
-	else
-	{
-		// If there are to be no modifications for (the combination of) selection and highlighting,
-		// and the interface is currenty in dark-mode, use the dark-interface-mode opacity level.
-		bool useDarkFill = (_isDark && ((selectionType == VuoRendererColors::noSelection) ||
-							(highlightType == VuoRendererColors::noHighlight)));
-
-		qreal adjustedAlpha = getCurrentAlphaForDefault(useDarkFill? defaultConstantAlphaDarkMode : defaultConstantAlphaLightMode);
-		int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
-		QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
-
-		return nodeFillColor;
-	}
+	return nodeFill();
 }
 
 /**
@@ -136,7 +104,7 @@ QColor VuoRendererColors::portFill(void)
  */
 QColor VuoRendererColors::publishedPortFill(void)
 {
-	return (_isDark || (selectionType != VuoRendererColors::sidebarSelection)? nodeFill() : cableMain());
+	return nodeFill();
 }
 
 /**
@@ -144,9 +112,10 @@ QColor VuoRendererColors::publishedPortFill(void)
  */
 QColor VuoRendererColors::publishedPortTitle(void)
 {
-	const qreal defaultPortTitleAlpha = 1.;
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
-	return tint(QColor::fromHslF(0, 0, _isDark ? .75 : .25, adjustedAlpha));
+	if (highlightType == ineligibleHighlight)
+		return Qt::transparent;
+
+	return _isDark ? nodeClass() : portTitle();
 }
 
 /**
@@ -154,26 +123,18 @@ QColor VuoRendererColors::publishedPortTitle(void)
  */
 QColor VuoRendererColors::publishedProtocolPortTitle(void)
 {
-	if (isDark())
-	{
-		const qreal defaultPortTitleAlpha = 1.;
-		qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
-		return tint(QColor::fromHslF(0, 0, .25, adjustedAlpha));
-	}
-	else
-		return publishedPortTitle();
+	return portTitle();
 }
 
 /**
- * Returns the color for the node's outline and the background of its title bar.
- * Also used for collapsed typecast port borders.
+ * Returns the color for the node's title bar background.
  */
 QColor VuoRendererColors::nodeFrame(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	QColor nodeFrameColor(tint(QColor::fromHslF(0, 0, _isDark ? .44 : .57, adjustedAlpha)));
-
-	return nodeFrameColor;
+	if (isMissingImplementation)
+		return nodeFill();
+	else
+		return applyHighlighting(baseColor().darker(_isDark ? 160 : 130));
 }
 
 /**
@@ -181,8 +142,10 @@ QColor VuoRendererColors::nodeFrame(void)
  */
 QColor VuoRendererColors::nodeTitle(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(1);
-	return tint(QColor::fromHslF(0, 0, 1, min(1., adjustedAlpha + (_isDark ? 0 : .1))));
+	QColor c = applyHighlighting(QColor::fromHslF(0, 0, 1, 1), .2);
+	if (isMissingImplementation)
+		c.setAlphaF(_isDark ? .5 : 1);
+	return c;
 }
 
 /**
@@ -190,8 +153,10 @@ QColor VuoRendererColors::nodeTitle(void)
  */
 QColor VuoRendererColors::nodeClass(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(.6);
-	return tint(QColor::fromHslF(0, 0, 1, adjustedAlpha));
+	QColor c = applyHighlighting(QColor::fromHslF(0, 0, 1, .6));
+	if (isMissingImplementation)
+		c.setAlphaF(_isDark ? .5 : 1);
+	return c;
 }
 
 /**
@@ -199,16 +164,7 @@ QColor VuoRendererColors::nodeClass(void)
  */
 QColor VuoRendererColors::constantFill(void)
 {
-	// If there are to be no modifications for (the combination of) selection and highlighting,
-	// and the interface is currenty in dark-mode, use the dark-interface-mode opacity level.
-	bool useDarkFill = (_isDark && ((selectionType == VuoRendererColors::noSelection) ||
-						(highlightType == VuoRendererColors::noHighlight)));
-
-	qreal adjustedAlpha = getCurrentAlphaForDefault(useDarkFill? defaultConstantAlphaDarkMode : defaultConstantAlphaLightMode);
-	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
-	QColor color = tint(QColor::fromHslF(0, 0, _isDark ? .35 : .75, adjustedAlpha), 1., lighteningFactor);
-
-	return color;
+	return portFill();
 }
 
 /**
@@ -216,9 +172,7 @@ QColor VuoRendererColors::constantFill(void)
  */
 QColor VuoRendererColors::constantText(void)
 {
-	const qreal defaultPortTitleAlpha = 1.;
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
-	return tint(QColor::fromHslF(0, 0, _isDark ? .75 : .25, adjustedAlpha));
+	return portTitle();
 }
 
 /**
@@ -226,11 +180,10 @@ QColor VuoRendererColors::constantText(void)
  */
 QColor VuoRendererColors::animatedPortFill(void)
 {
-	qreal minAlpha = 0;
-	qreal maxAlpha = getMaxAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
-
-	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
+	qreal adjustedAlpha = (1. - currentFadePercentage) * getCurrentAlpha();
+	QColor c = portFill();
+	c.setAlphaF(c.alphaF() * adjustedAlpha);
+	return c;
 }
 
 /**
@@ -238,14 +191,7 @@ QColor VuoRendererColors::animatedPortFill(void)
  */
 QColor VuoRendererColors::portTitlebarFill(void)
 {
-	// If any type of highlighting is to be applied, use the same color scheme
-	// as is used for ports in the main body of the node.
-	// Disabling for now. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
-	//if (highlightType != VuoRendererColors::noHighlight)
-	//	return portFill();
-
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	return tint(QColor::fromHslF(0, 0, _isDark ? .44 : .57, adjustedAlpha));
+	return nodeFrame();
 }
 
 /**
@@ -253,10 +199,7 @@ QColor VuoRendererColors::portTitlebarFill(void)
  */
 QColor VuoRendererColors::eventBlockingBarrier(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	QColor nodeFrameColor(tint(QColor::fromHslF(0, 0, _isDark ? .35 : .5, adjustedAlpha)));
-
-	return nodeFrameColor;
+	return nodeFrame();
 }
 
 /**
@@ -264,11 +207,10 @@ QColor VuoRendererColors::eventBlockingBarrier(void)
  */
 QColor VuoRendererColors::animatedeventBlockingBarrier(void)
 {
-	qreal minAlpha = 0;
-	qreal maxAlpha = getMaxAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
-
-	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
+	qreal adjustedAlpha = (1. - currentFadePercentage) * getCurrentAlpha();
+	QColor c = nodeFrame();
+	c.setAlphaF(c.alphaF() * adjustedAlpha);
+	return c;
 }
 
 /**
@@ -276,7 +218,7 @@ QColor VuoRendererColors::animatedeventBlockingBarrier(void)
  */
 QColor VuoRendererColors::actionIndicator(void)
 {
-	return eventBlockingBarrier();
+	return nodeFrame();
 }
 
 /**
@@ -284,19 +226,20 @@ QColor VuoRendererColors::actionIndicator(void)
  */
 QColor VuoRendererColors::portTitle(void)
 {
-	const qreal defaultPortTitleAlpha = 1.;
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
+	if (highlightType == ineligibleHighlight)
+		return Qt::transparent;
 
-	return tint(QColor::fromHslF(0, 0, _isDark ? .1 : .25, adjustedAlpha));
+	return applyHighlighting(QColor::fromHslF(0, 0, .2,
+											  highlightType == standardHighlight ? 1. : .8),
+							 0);
 }
 
 /**
- * Returns the color for the highlight on the upper side of left-to-right cables (and lower side of right-to-left cables).
+ * Returns the color for the triangle on event-only ports.
  */
-QColor VuoRendererColors::cableUpper(void)
+QColor VuoRendererColors::portIcon()
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableUpperAlpha);
-	return tint(QColor::fromHslF(0, 0, .9, adjustedAlpha), 2.);
+	return actionIndicator();
 }
 
 /**
@@ -304,8 +247,7 @@ QColor VuoRendererColors::cableUpper(void)
  */
 QColor VuoRendererColors::cableMain(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableMainAlpha);
-	return tint(QColor::fromHslF(0, 0, _isDark ? .6 : .25, adjustedAlpha), 2.);
+	return nodeFill();
 }
 
 /**
@@ -314,6 +256,73 @@ QColor VuoRendererColors::cableMain(void)
 QColor VuoRendererColors::errorMark(void)
 {
 	return QColor::fromRgb(220, 50, 47, 160);
+}
+
+/**
+ * Returns the color for the outline of a comment.
+ */
+QColor VuoRendererColors::commentFrame(void)
+{
+	QColor darkColor = QColor(0.5*(nodeFrame().red()+nodeFill().red()),
+							  0.5*(nodeFrame().green()+nodeFill().green()),
+							  0.5*(nodeFrame().blue()+nodeFill().blue()),
+							  0.5*(nodeFrame().alpha()+nodeFill().alpha())
+							  );
+
+	QColor frameColor = (_isDark? darkColor : nodeFill());
+	frameColor.setAlpha(_isDark? 0.5*frameColor.alpha() : 0.82*frameColor.alpha());
+
+	return frameColor;
+}
+
+/**
+ * Returns the color for the background of a comment.
+ */
+QColor VuoRendererColors::commentFill(void)
+{
+	QColor c = nodeFill();
+	if (_isDark)
+	{
+		float darkenFactor = .8;
+		QColor b = canvasFill();
+		c.setRedF  (c.redF()   * (1-darkenFactor) + b.redF()   * darkenFactor);
+		c.setGreenF(c.greenF() * (1-darkenFactor) + b.greenF() * darkenFactor);
+		c.setBlueF (c.blueF()  * (1-darkenFactor) + b.blueF()  * darkenFactor);
+	}
+	else
+	{
+		int lightenFactor = 113;
+		if (tintColor == VuoNode::TintYellow)
+			lightenFactor = 140;
+		else if (tintColor == VuoNode::TintCyan
+			  || tintColor == VuoNode::TintGreen
+			  || tintColor == VuoNode::TintLime)
+			lightenFactor = 125;
+		c = c.lighter(lightenFactor);
+	}
+
+	int h,s,v,a;
+	c.getHsv(&h, &s, &v, &a);
+	return (QColor::fromHsv(h, (_isDark? s*4/3 : s/3), v, a)); // Desaturate.
+}
+
+/**
+ * Returns the color for the text of a comment.
+ */
+QColor VuoRendererColors::commentText(void)
+{
+	QColor c = applyHighlighting(QColor::fromHslF(0, 0, 1, .8));
+	return (_isDark? c : portTitle());
+}
+
+/**
+ * Returns the color for the background of user-selected widgets.
+ * (This is for standard GUI widgets.  For canvas nodes/cables,
+ * use @ref VuoRendererColors::SelectionType instead.)
+ */
+QColor VuoRendererColors::selection()
+{
+	return _isDark ? "#1d6ae5" : "#74acec";
 }
 
 /**
@@ -336,93 +345,54 @@ QColor VuoRendererColors::lerpColor(QColor v0, QColor v1, float t)
 				);
 }
 
-/**
- * Tints the specified color by @c tintColor.
- * @c amount is used to tint cables more strongly, since their small size makes the tint less apparent.
- * If @c amount is greater than 1 (the default), a lighter color is also used for highlighting.
- * @c lighteningFactor is used to lighten the color of highlighted components by the specified factor. This
- * should be supplied, e.g., when in VuoRendererColors::subtleHighlight mode, for components that
- * respect the subtle highlighting suggestion.
- */
-QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
+QColor VuoRendererColors::baseColor(bool useTintColor)
 {
-	qreal h,s,l,a;
-	color.getHslF(&h,&s,&l,&a);
+	if (!useTintColor
+		   || tintColor == VuoNode::TintNone     )  return QColor::fromHslF(  0./360., 0, getNodeFillLightness(), 1);
+	else  if (tintColor == VuoNode::TintYellow   )  return QColor::fromHslF( 57./360., 1, .49, 1);
+	else  if (tintColor == VuoNode::TintTangerine)  return QColor::fromHslF( 41./360., 1, .67, 1);
+	else  if (tintColor == VuoNode::TintOrange   )  return QColor::fromHslF( 19./360., 1, .73, 1);
+	else  if (tintColor == VuoNode::TintMagenta  )  return QColor::fromHslF(323./360., 1, .78, 1);
+	else  if (tintColor == VuoNode::TintViolet   )  return QColor::fromHslF(275./360., 1, .81, 1);
+	else  if (tintColor == VuoNode::TintBlue     )  return QColor::fromHslF(213./360., 1, .77, 1);
+	else  if (tintColor == VuoNode::TintCyan     )  return QColor::fromHslF(165./360., 1, .68, 1);
+	else  if (tintColor == VuoNode::TintGreen    )  return QColor::fromHslF( 99./360., 1, .70, 1);
+	else/*if (tintColor == VuoNode::TintLime     )*/return QColor::fromHslF( 70./360., 1, .48, 1);
+}
 
-	qreal hs = 0;
-	qreal saturationAmount = 1;
-	if (tintColor == VuoNode::TintYellow)
+QColor VuoRendererColors::applyHighlighting(QColor baseColor, qreal selectionIntensity)
+{
+	qreal alpha = baseColor.alphaF() * getCurrentAlpha();
+	int highlight = 0;
+
+	if (isHovered)
+		++highlight;
+
+	if (selectionType != VuoRendererColors::noSelection)
+		baseColor = lerpColor(baseColor, selection(), selectionIntensity);
+
+	if (highlightType == VuoRendererColors::standardHighlight)
+		++highlight;
+	else if (highlightType == VuoRendererColors::subtleHighlight)
 	{
-		hs = 50./360.;
-		saturationAmount = 1.4;
+		if (isHovered)
+		{
+			alpha *= .8;
+			++highlight;
+		}
+		else
+			alpha *= .6;
 	}
-	else if (tintColor == VuoNode::TintTangerine)
-	{
-		hs = 35./360.;
-		saturationAmount = 1.3;
-	}
-	else if (tintColor == VuoNode::TintOrange)
-	{
-		hs = 20./360.;
-		saturationAmount = 1.2;
-	}
-	else if (tintColor == VuoNode::TintMagenta)
-		hs = 315./360.;
-	else if (tintColor == VuoNode::TintViolet)
-		hs = 255./360.;
-	else if (tintColor == VuoNode::TintBlue)
-		hs = 220./360.;
-	else if (tintColor == VuoNode::TintCyan)
-		hs = 175./360.;
-	else if (tintColor == VuoNode::TintGreen)
-		hs = 100./360.;
-	else if (tintColor == VuoNode::TintLime)
-	{
-		hs = 70./360.;
-		saturationAmount = 1.3;
-	}
+	else if (highlightType == VuoRendererColors::ineligibleHighlight)
+		alpha *= _isDark ? .1 : .2;
 
 	if (tintColor != VuoNode::TintNone)
-	{
-		// Factor in the source hue only if source saturation is nonzero
-		if (s > .1)
-			h = h + (hs - h) * 3./4.;
-		else
-			h = hs;
+		highlight *= 2;
 
-		s = s + (1. - s) * 3./8. * amount * saturationAmount;
-	}
+	baseColor = baseColor.lighter(100. + (_isDark ? 10. : -6.) * highlight);
 
-	color = QColor::fromHslF(h, VuoReal_clamp(s,0,1), l, a);
-
-	bool isHighlighted = (highlightType != VuoRendererColors::noHighlight);
-	if (isHighlighted)
-	{
-		QColor highlight      = QColor::fromHslF(235./360., _isDark ? .75 : 1, _isDark ? .6 : .7, 1.); // Light Blue
-		QColor extraHighlight = QColor::fromHslF(235./360., _isDark ? .75 : 1, _isDark ? .7 : .8, 1.); // Lighter Blue
-
-		color = lerpColor(color, (amount<=1? highlight:extraHighlight), 7./8. * amount);
-		color = _isDark ? color.darker(lighteningFactor) : color.lighter(lighteningFactor);
-	}
-
-	bool isSelected = (selectionType != VuoRendererColors::noSelection && selectionType != VuoRendererColors::sidebarSelection);
-	bool isDirectlySelected = (selectionType == VuoRendererColors::directSelection);
-	if (isSelected || isHovered)
-	{
-		QColor selection = QColor::fromHslF(235./360., 1., _isDark ? .7 : .3, 1.); // Dark Blue
-		color = lerpColor(color, selection, (isDirectlySelected * 1./8. + isHovered * 3./8.) * amount);
-
-		if (isSelected)
-		{
-			qreal selectionOpacityFactor = 1.7;
-			if (selectionType == VuoRendererColors::indirectSelection)
-				selectionOpacityFactor = 1 + (selectionOpacityFactor - 1) * 0.75;
-
-			color.setAlphaF(fmin(selectionOpacityFactor*color.alphaF(), 1.));
-		}
-	}
-
-	return color;
+	baseColor.setAlphaF(alpha);
+	return baseColor;
 }
 
 /**
@@ -432,11 +402,7 @@ QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
  */
 qint64 VuoRendererColors::getVirtualNodeExecutionOrigin(void)
 {
-	const qreal defaultFadePercentage = (maxNodeFrameAndFillAlpha-defaultNodeFrameAndFillAlpha)/(maxNodeFrameAndFillAlpha-minNodeFrameAndFillAlpha);
-	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-	qint64 virtualNodeExecutionOrigin = timeNow - defaultFadePercentage*activityFadeDuration;
-
-	return virtualNodeExecutionOrigin;
+	return QDateTime::currentMSecsSinceEpoch();
 }
 
 /**
@@ -446,14 +412,7 @@ qint64 VuoRendererColors::getVirtualNodeExecutionOrigin(void)
  */
 qint64 VuoRendererColors::getVirtualFiredEventOrigin(void)
 {
-	qreal minPortFillAlpha = getMinAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	qreal maxPortFillAlpha = getMaxAlphaForDefault(defaultNodeFrameAndFillAlpha);
-
-	const qreal defaultFadePercentage = (maxPortFillAlpha-defaultNodeFrameAndFillAlpha)/(maxPortFillAlpha-minPortFillAlpha);
-	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-	qint64 virtualFiredEventOrigin = timeNow - defaultFadePercentage*activityFadeDuration;
-
-	return virtualFiredEventOrigin;
+	return QDateTime::currentMSecsSinceEpoch();
 }
 
 /**
@@ -475,14 +434,7 @@ qint64 VuoRendererColors::getVirtualFiredEventOriginForAnimationFadePercentage(q
  */
 qint64 VuoRendererColors::getVirtualPropagatedEventOrigin(void)
 {
-	qreal minCableMainAlpha = getMinAlphaForDefault(defaultCableMainAlpha);
-	qreal maxCableMainAlpha = getMaxAlphaForDefault(defaultCableMainAlpha);
-
-	const qreal defaultFadePercentage = (maxCableMainAlpha-defaultCableMainAlpha)/(maxCableMainAlpha-minCableMainAlpha);
-	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-	qint64 virtualFiredEventOrigin = timeNow - defaultFadePercentage*activityFadeDuration;
-
-	return virtualFiredEventOrigin;
+	return QDateTime::currentMSecsSinceEpoch();
 }
 
 /**
@@ -490,41 +442,25 @@ qint64 VuoRendererColors::getVirtualPropagatedEventOrigin(void)
  * alpha range for the provided @c defaultAlpha level; based on that range and the
  * @c currentFadePercentage, returns the appropriate current alpha level.
  */
-qreal VuoRendererColors::getCurrentAlphaForDefault(qreal defaultAlpha)
+qreal VuoRendererColors::getCurrentAlpha(void)
 {
-	qreal minAlpha = getMinAlphaForDefault(defaultAlpha);
-	qreal maxAlpha = getMaxAlphaForDefault(defaultAlpha);
-	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
-
-	return adjustedAlpha;
+	return 1 - currentFadePercentage * (1 - minAlpha);
 }
 
 /**
- * Makes use of the primary {min,default}NodeFrameAndFillAlpha values to calculate a proportional
- * minimum alpha value for the provided default alpha level.
+ * Returns the default HSL lightness for the node background, depending on whether light or dark mode is active.
  */
-qreal VuoRendererColors::getMinAlphaForDefault(qreal defaultAlpha)
+qreal VuoRendererColors::getNodeFillLightness(void)
 {
-	qreal primaryAlphaMinToDefaultRatio = minNodeFrameAndFillAlpha/defaultNodeFrameAndFillAlpha;
-	return primaryAlphaMinToDefaultRatio*defaultAlpha;
-}
-
-/**
- * Makes use of the primary {default,max}NodeFrameAndFillAlpha values to calculate a proportional
- * maximum alpha value for the provided default alpha level.
- */
-qreal VuoRendererColors::getMaxAlphaForDefault(qreal defaultAlpha)
-{
-	qreal primaryAlphaMaxToDefaultRatio = maxNodeFrameAndFillAlpha/defaultNodeFrameAndFillAlpha;
-	return fmin(1.0, primaryAlphaMaxToDefaultRatio*defaultAlpha);
+	return _isDark ? .62 : .83;
 }
 
 /**
  * Returns the tint to be used for the heading of an active protocol, given the
  * index of the protocol within the sidebar.
  */
-VuoNode::TintColor VuoRendererColors::getActiveProtocolTint(int protocolIndex)
+VuoNode::TintColor VuoRendererColors::getActiveProtocolTint(int protocolIndex, bool isInput)
 {
 	// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
-	return VuoNode::TintGreen;
+	return isInput ? VuoNode::TintBlue : VuoNode::TintLime;
 }

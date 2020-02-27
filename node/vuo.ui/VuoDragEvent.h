@@ -2,9 +2,9 @@
  * @file
  * VuoDragEvent C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -21,6 +21,11 @@
 #include "VuoUrl.h"
 #include "VuoList_VuoUrl.h"
 #include "VuoWindowReference.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /**
  * Information about an in-progress or completed file drag
@@ -63,6 +68,10 @@ char *VuoDragEvent_getString(const VuoDragEvent value);
 void VuoDragEvent_retain(VuoDragEvent value);
 void VuoDragEvent_release(VuoDragEvent value);
 ///@}
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * @}

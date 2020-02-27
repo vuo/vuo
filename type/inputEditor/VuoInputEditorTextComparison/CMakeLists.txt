@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorTextComparison SOURCE VuoInputEditorTextComparison.cc)

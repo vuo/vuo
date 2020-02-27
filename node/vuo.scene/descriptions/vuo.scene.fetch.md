@@ -2,7 +2,7 @@ Loads or downloads a 3D scene (3D model) from a URL.
 
 If you drag a 3D scene file from your computer onto the composition, an instance of this node will be created with the `URL` port set up.
 
-This node interprets the scene's vertices as Vuo Coordinates. Optionally, this node can center and fit the scene to make sure it shows up within the area rendered by the `Render Scene to Window` or `Render Scene to Image` node (with the default camera). The centering and fitting are based on the bounding box around the scene — the smallest box that can enclose it. The bounding box is always aligned with the X-axis, Y-axis, and Z-axis (not rotated). If the scene is both centered and fit, then the centering is done first.
+This node interprets the scene's vertices as Vuo Coordinates. Optionally, this node can center and fit the scene to make sure it shows up within the area rendered by the [Render Scene to Window](vuo-node://vuo.scene.render.window2) or [Render Scene to Image](vuo-node://vuo.scene.render.image2) node (with the default camera). The centering and fitting are based on the bounding box around the scene — the smallest box that can enclose it. The bounding box is always aligned with the X-axis, Y-axis, and Z-axis (not rotated). If the scene is both centered and fit, then the centering is done first.
 
    - `URL` — The file or link to the 3D model.  See [vuo.url](vuo-nodeset://vuo.url) for info on how Vuo handles URLs.
    - `Center` — If true, the scene is translated so that its bounding box is centered at the point (0,0,0). If false, the scene keeps its original center.

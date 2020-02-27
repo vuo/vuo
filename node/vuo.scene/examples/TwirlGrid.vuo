@@ -2,37 +2,31 @@
  * @file
  * Deforms a plane by twirling it.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="671,383" _startPosition="-360.000000" _endPosition="360.000000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="37,182" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="466,232"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="160,472" _upperLeftColor="{\"r\":1.000000,\"g\":0.889998,\"b\":0.191379,\"a\":1.000000}" _upperRightColor="{\"r\":1.000000,\"g\":0.451484,\"b\":0.056931,\"a\":1.000000}" _squareSize="0.100000" _center="{\"x\":0,\"y\":0}" _width="1024" _height="1024"];
-MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1028,241" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1058,271" fillcolor="green"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1058,271" fillcolor="green"];
-MakeParametricMesh [type="vuo.mesh.make.parametric" version="3.0.0" label="Make Parametric Grid Mesh|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<mesh>mesh\r" pos="211,231" _time="0.000000" _xExpression="\"U\"" _yExpression="\"V\"" _zExpression="\"0\"" _rows="32" _columns="32" _uClosed="false" _uMin="-0.500000" _uMax="0.500000" _vClosed="false" _vMin="-0.500000" _vMax="0.500000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1099,230" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="400,472" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.950000"];
-ShowBackOfObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="648,232" fillcolor="violet" _keepFront="true"];
-TwirlObject2 [type="vuo.scene.twirl" version="1.0.0" label="Twirl 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<twirledObject>twirledObject\r" pos="853,231" fillcolor="violet"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="300,240" fillcolor="lime" _reset_manuallyFirable];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="960,390" _startPosition="-360.000000" _endPosition="360.000000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="75,390" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DSquare [type="vuo.scene.make.square.VuoImage" version="1.1.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="720,225" _transform="\"identity\"" _rows="48" _columns="48"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="480,240" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0.20000000298023224,\"g\":0.20000000298023224,\"b\":0.20000000298023224,\"a\":1\}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0,\"y\":0\}" _width="1024" _height="1024"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1289,236" fillcolor="blue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1335,225" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShowBackOfObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="900,225" fillcolor="orange" _keepFront="true"];
+TwirlObject2 [type="vuo.scene.twirl" version="1.0.1" label="Twirl 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<twirledObject>twirledObject\r" pos="1125,225" fillcolor="orange"];
 
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage:upperLeftColor;
 Curve2:value -> TwirlObject2:amount;
-FireOnStart:started -> MakeCheckerboardImage:refresh;
-FireOnStart:started -> MakeParametricMesh:refresh;
-Make3DObject2:object -> ShowBackOfObject:object;
-MakeCheckerboardImage:image -> ShadeWithImage:image;
-MakeList0:list -> RenderSceneToWindow:setWindowProperties;
-MakeList5:list -> RenderSceneToWindow:setWindowProperties;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
+Make3DSquare:object -> ShowBackOfObject:object;
+MakeCheckerboardImage:image -> Make3DSquare:material;
 MakeList:list -> RenderSceneToWindow:objects;
-MakeParametricMesh:mesh -> Make3DObject2:mesh;
-RenderSceneToWindow:requestedFrame -> Curve2:time;
-ShadeWithImage:shader -> Make3DObject2:shader;
 ShowBackOfObject:backObject -> TwirlObject2:object;
 TwirlObject2:twirledObject -> MakeList:1;
 }

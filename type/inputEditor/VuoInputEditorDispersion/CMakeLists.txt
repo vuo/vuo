@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorDispersion SOURCE VuoInputEditorDispersion.cc)

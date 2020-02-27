@@ -2,45 +2,47 @@
  * @file
  * Displays a 3D representation of the centermost hand detected by your Leap Motion device.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Place your hand about 15 cm/6 in directly above the Leap Motion device.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CombineTransforms [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="-405,-15"];
-Copy3DObjectWithTransforms [type="vuo.scene.copy" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<copies>copies\r" pos="-165,195"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,90" fillcolor="yellow" _started_eventThrottling="enqueue"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-465,120"];
+CombineTransforms [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="-300,-30"];
+Copy3DObjectWithTransforms [type="vuo.scene.copy" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<copies>copies\r" pos="-90,195"];
 GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="210,405"];
-GetFrameValues2 [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-1125,-45" fillcolor="violet"];
-GetHandValues2 [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="-735,45" fillcolor="violet"];
-GetPointableValues6 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="-555,405" fillcolor="violet"];
-MakeCube2 [type="vuo.scene.make.cube.1.VuoColor" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="-210,-15" _material="{\"r\":0.16470588743686676,\"g\":0.29803922772407532,\"b\":1,\"a\":1}"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="124,221" fillcolor="green"];
-MakeList13 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-451,-4" _1="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,0.10000000149011612,1]}"];
-MakeList15 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="94,191" fillcolor="green"];
-MakeSphere3 [type="vuo.scene.make.sphere.VuoColor" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-330,135" _material="{\"r\":0.16554513573646545,\"g\":0.29842069745063782,\"b\":1,\"a\":1}" _rows="8" _columns="8"];
+GetFrameValues2 [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-1125,-45" fillcolor="orange"];
+GetHandValues2 [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="-645,-30" fillcolor="orange"];
+GetPointableValues6 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="-555,405" fillcolor="orange"];
+MakeCube2 [type="vuo.scene.make.cube.1.VuoColor" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="-75,-30" _material="\{\"r\":0.16470588743686676,\"g\":0.29803922772407532,\"b\":1,\"a\":1\}"];
+MakeList13 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-333,-19" _1="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.75,0.10000000149011612,1]\}"];
+MakeList15 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="89,191" fillcolor="blue"];
+MakeSphere3 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-285,120" _transform="\"identity\"" _material="\{\"r\":0.16554513573646545,\"g\":0.29842069745063782,\"b\":1,\"a\":1\}" _rows="16" _columns="16"];
 ProcessList3 [type="vuo.list.process.VuoLeapPointable.VuoTransform" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="-555,210" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-1320,-45" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="165,180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SortHandsByDistance [type="vuo.leap.hand.sort.distance" version="1.0.0" label="Sort Hands by Distance|<refresh>refresh\l|<Hands>Hands\l|<target>target\l|<sortedHands>sortedHands\r" pos="-945,0" fillcolor="violet" _target="{\"x\":0,\"y\":0,\"z\":0}"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-1320,-45" fillcolor="orange" _receivedFrame_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="135,180" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SortHandsByDistance [type="vuo.leap.hand.sort.distance" version="1.0.1" label="Sort Hands by Distance|<refresh>refresh\l|<Hands>Hands\l|<target>target\l|<sortedHands>sortedHands\r" pos="-930,-30" fillcolor="orange" _target="\{\"x\":0,\"y\":0,\"z\":0\}"];
 
+AllowFirstEvent:firstEvent -> MakeSphere3:transform;
 CombineTransforms:composite -> MakeCube2:transform;
 Copy3DObjectWithTransforms:copies -> MakeList15:2;
-FireOnStart2:started -> MakeSphere3:refresh;
 GetFirstItemInList:firstItem -> GetHandValues2:hand;
 GetFrameValues2:hands -> SortHandsByDistance:Hands;
 GetHandValues2:fingers -> ProcessList3:fire;
 GetHandValues2:transform -> MakeList13:2;
 GetPointableValues6:transform -> ProcessList3:processedItem;
 MakeCube2:cube -> MakeList15:1;
-MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
 MakeList13:list -> CombineTransforms:transforms;
 MakeList15:list -> RenderSceneToWindow2:objects;
 MakeSphere3:object -> Copy3DObjectWithTransforms:object;
 ProcessList3:processItem -> GetPointableValues6:pointable;
 ProcessList3:processedList -> Copy3DObjectWithTransforms:transforms;
+ReceiveLeapFrame:receivedFrame -> AllowFirstEvent:event;
 ReceiveLeapFrame:receivedFrame -> GetFrameValues2:frame;
 SortHandsByDistance:sortedHands -> GetFirstItemInList:list;
 }

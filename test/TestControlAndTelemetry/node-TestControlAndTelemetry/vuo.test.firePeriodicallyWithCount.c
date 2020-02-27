@@ -2,9 +2,9 @@
  * @file
  * vuo.test.firePeriodicallyWithCount node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -17,9 +17,6 @@ VuoModuleMetadata({
 					 "title" : "Fire Periodically with Count",
 					 "description" : "Fires an event every 'seconds' seconds. Along with the event is the count of events fired so far.",
 					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 
@@ -28,6 +25,7 @@ struct nodeInstanceData
 	dispatch_source_t timer;
 	dispatch_semaphore_t timerCanceled;
 	VuoInteger eventCount;
+	bool triggersEnabled;
 };
 
 static void cancelRepeatingTimer(struct nodeInstanceData *ctx)
@@ -44,7 +42,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const VuoReal second
 		cancelRepeatingTimer(ctx);
 
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
+	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, q);
 
 	uint64_t nanoseconds = seconds * NSEC_PER_SEC;
 	dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, nanoseconds), nanoseconds, 0);
@@ -65,6 +63,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	ctx->timer = NULL;
 	ctx->timerCanceled = dispatch_semaphore_create(0);
 	ctx->eventCount = 0;
+	ctx->triggersEnabled = false;
 	return ctx;
 }
 
@@ -75,6 +74,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(fired,VuoInteger)
 )
 {
+	(*ctx)->triggersEnabled = true;
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -85,6 +85,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(fired,VuoInteger)
 )
 {
+	if (!(*ctx)->triggersEnabled)
+		return;
+
 	setRepeatingTimer(*ctx, seconds, fired);
 }
 
@@ -94,6 +97,7 @@ void nodeInstanceTriggerStop
 )
 {
 	cancelRepeatingTimer(*ctx);
+	(*ctx)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

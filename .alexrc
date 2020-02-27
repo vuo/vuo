@@ -1,0 +1,21 @@
+{
+  "how-to": "alex --quiet --why .",
+
+  "profanitySureness": 2,
+  "allow": [
+    "clearly",
+    "dad-mom",
+    "easy",
+    "gimp",
+    "host-hostess",
+    "hostesses-hosts",
+    "just",
+    "nonwhite",
+    "obvious",
+    "of-course",
+    "looser",
+    "simple",
+    "special",
+    "yank"
+  ]
+}

@@ -2,7 +2,7 @@ Analyzes audio to determine its tempo, and outputs a clock and beat events in sy
 
 It may take a few seconds to analyze the audio before the tempo, beat, and clock are determined.
 
-   - `Time` — The time at which to analyze the audio.  Connect a `Requested Frame` output to this port.
+   - `Time` — The time at which to analyze the audio.  Connect a `Refreshed at Time` output to this port.
    - `Tempo Range` — The range of tempos that you expect the audio's tempo to fall within.
    - `Samples` — The audio samples to analyze.
    - `Nudge` — When this port receives an event, it shifts the timing of the output `Beat` port by a sixteenth note.  Use this if the output isn't quite in sync with the audio.

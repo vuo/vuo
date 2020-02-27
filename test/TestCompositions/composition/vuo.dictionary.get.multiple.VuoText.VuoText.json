@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Expected outputs for the vuo.dictionary.get.multiple.VuoText.VuoText node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":{
+	"no dictionary": {"firingPort":"dictionary", "inputPortValues":{ "dictionary":null, "keys":[] }, "outputPortValues":{ "values":[] }},
+	"no keys": {"firingPort":"dictionary", "inputPortValues":{ "dictionary":{"keys":["foo"], "values":["bar"]}, "keys":[] }, "outputPortValues":{ "values":[] }},
+	"key exists": {"firingPort":"dictionary", "inputPortValues":{ "dictionary":{"keys":["foo"], "values":["bar"]}, "keys":["foo"] }, "outputPortValues":{ "values":["bar"] }},
+	"key doesn't exist": {"firingPort":"dictionary", "inputPortValues":{ "dictionary":{"keys":["foo"], "values":["bar"]}, "keys":["blah"] }, "outputPortValues":{ "values":[""] }},
+	"null key": {"firingPort":"dictionary", "inputPortValues":{ "dictionary":{"keys":["foo"], "values":["bar"]}, "keys":[null] }, "outputPortValues":{ "values":[""] }},
+}}

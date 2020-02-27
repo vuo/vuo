@@ -2,14 +2,11 @@
  * @file
  * VuoOscMessage implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoOscMessage.h"
 
@@ -105,10 +102,11 @@ VuoOscMessage VuoOscMessage_makeFromJson(json_object * js)
 		dataCount = json_object_array_length(o);
 		for (unsigned int i = 0; i < dataCount; ++i)
 		{
+			json_object *di = json_object_array_get_idx(o, i);
 			json_object *v;
-			if (json_object_object_get_ex(js, "type", &v))
+			if (json_object_object_get_ex(di, "type", &v))
 				dataTypes[i] = VuoOscType_makeFromJson(v);
-			if (json_object_object_get_ex(js, "data", &v))
+			if (json_object_object_get_ex(di, "data", &v))
 				data[i] = json_object_get(v);
 		}
 	}
@@ -135,9 +133,10 @@ json_object * VuoOscMessage_getJson(const VuoOscMessage value)
 		struct json_object *data = json_object_new_array();
 		for (unsigned int i = 0; i < value->dataCount; ++i)
 		{
-			struct json_object *dataObject = json_object_new_object();
-			json_object_object_add(js, "type", VuoOscType_getJson(value->dataTypes[i]));
-			json_object_object_add(js, "data", value->data[i]);
+			struct json_object *v = json_object_new_object();
+			json_object_object_add(v, "type", VuoOscType_getJson(value->dataTypes[i]));
+			json_object_object_add(v, "data", json_object_get(value->data[i]));
+			json_object_array_add(data, v);
 		}
 		json_object_object_add(js, "data", data);
 	}
@@ -152,7 +151,7 @@ json_object * VuoOscMessage_getJson(const VuoOscMessage value)
 char * VuoOscMessage_getSummary(const VuoOscMessage value)
 {
 	if (!value)
-		return strdup("(no message)");
+		return strdup("No message");
 
 	int dataCount = value->dataCount;
 	char *data[dataCount];
@@ -195,14 +194,15 @@ char * VuoOscMessage_getSummary(const VuoOscMessage value)
 		dataSize += strlen(data[i]);
 	if (dataCount > 1)
 		dataSize += (dataCount - 1) * strlen(", ");
+	dataSize += 1;  // Null terminator
 
-	char *compositeData = (char *)malloc(dataSize+1);
+	char *compositeData = (char *)malloc(dataSize);
 	compositeData[0] = 0;
 	for (int i = 0; i < dataCount; ++i)
 	{
 		if (i>0)
-			strcat(compositeData, ", ");
-		strcat(compositeData, data[i]);
+			strlcat(compositeData, ", ", dataSize);
+		strlcat(compositeData, data[i], dataSize);
 	}
 
 	char *valueAsString = VuoText_format("%s<br>[ %s ]", value->address, compositeData);

@@ -2,15 +2,22 @@
  * @file
  * Vuo prefix header.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+// Can't use "#pragma once" here since Clang emits warning "#pragma once in main file".
+#ifndef VUO_PCH
+#define VUO_PCH
+
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <getopt.h>
+
+#include "VuoConfig.h"
 
 #ifdef __cplusplus
 
@@ -22,14 +29,16 @@
 
 using namespace std;
 
-#ifdef LLVM
+#ifdef VUO_PCH_LLVM
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wswitch-enum"
+#pragma clang diagnostic ignored "-Wunreachable-code"
 
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
@@ -48,11 +57,11 @@ using namespace std;
 #include <llvm/Support/Host.h>
 #include <llvm/Support/Program.h>
 #include <llvm/Bitcode/Archive.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Constants.h>
-#include <llvm/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/LinkAllPasses.h>
 #include <llvm/Linker.h>
 #include <llvm/PassManager.h>
@@ -65,49 +74,54 @@ using namespace std;
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/system_error.h>
-#include <llvm/Support/IRReader.h>
+#include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/PathV1.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/ValueSymbolTable.h>
+#include <llvm/IR/ValueSymbolTable.h>
 using namespace llvm;
 
 #pragma clang diagnostic pop
 #endif
 
 
+#ifdef VUO_PCH_QT
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wunreachable-code"
+#pragma clang diagnostic ignored "-Winvalid-constexpr"
 
-#ifdef QT_CORE_LIB
 #include <QtCore/QtCore>
-#endif
 
-#ifdef QT_GUI_LIB
+// So we can call QPixmapCache::totalUsed().
+#define Q_TEST_QPIXMAPCACHE
+
 #include <QtGui/QtGui>
 #include <QtWidgets/QtWidgets>
 #include <QtPrintSupport/QtPrintSupport>
 #include <QtMacExtras/QtMacExtras>
-#endif
 
-#ifdef QT_NETWORK_LIB
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
+
+#include <QtQuick/QtQuick>
+
+#pragma clang diagnostic pop
 #endif
 
-#ifdef QT_TESTLIB_LIB
+#if defined(VUO_PCH_QT) || defined(VUO_PCH_QTEST)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
 #include <QtTest/QtTest>
-#endif
-
 #pragma clang diagnostic pop
 
 #endif
 
-#ifdef ZMQ
-#include <zmq.h>
+
 #endif
 
+#include <zmq/zmq.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -123,3 +137,9 @@ using namespace llvm;
 #define VUO_QSTRINGIFY(...) QString(#__VA_ARGS__)
 
 #include "VuoLog.h"
+
+#ifdef VUO_PCH_FRAMEWORK
+#include <Vuo/Vuo.h>
+#endif
+
+#endif

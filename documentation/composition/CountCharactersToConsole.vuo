@@ -2,17 +2,19 @@
  * @file
  * Demo graph.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
-digraph G 
+digraph G
 {
-ConvertIntegertoText [type="vuo.type.integer.text" version="100" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="15,3"];
-CountCharacters1 [type="vuo.text.countCharacters" version="100" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="3,19" _text="\"café\""];
-DisplayConsoleWindow [type="vuo.console.window" version="100" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="261,19"];
+CountCharacters1 [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="0,15" _text="\"café\""];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="255,15" fillcolor="blue" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="345,120"];
 
-ConvertIntegertoText:text -> DisplayConsoleWindow:writeLine;
-CountCharacters1:characterCount -> ConvertIntegertoText:integer;
+CountCharacters1:characterCount -> SummarizeValue:value;
+SummarizeValue:summary -> DisplayConsoleWindow:writeLine;
 }

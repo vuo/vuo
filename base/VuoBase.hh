@@ -2,15 +2,18 @@
  * @file
  * VuoBase interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 /**
  * This class is intended to be inherited by a base class that can have compiler and/or renderer detail classes.
+ *
+ * It's similar to the Entity Component System (ECS) design pattern —
+ * VuoBase is the Entity; VuoBaseDetail is the common parent class for the compiler and renderer Components.
  *
  * @tparam CompilerClass The base class's compiler detail class.
  * @tparam RendererClass The base class's renderer detail class.

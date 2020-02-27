@@ -2,9 +2,9 @@
  * @file
  * VuoColor implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <math.h>
@@ -12,9 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
-#include "VuoColor.h"
-#include "VuoList_VuoColor.h"
-#include "VuoText.h"
+
+#include "VuoThresholdType.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -44,12 +43,15 @@ VuoModuleMetadata({
  *     "a" : 1
  *   }
  * }
+ *
+ * @version200Changed{The alpha channel now defaults to 1 (previously it defaulted to 0).}
  */
 VuoColor VuoColor_makeFromJson(json_object * js)
 {
-	VuoColor color = {0,0,0,0};
+	VuoColor color = {0,0,0,1};
 
-	if (json_object_get_type(js) == json_type_string)
+	json_type t = json_object_get_type(js);
+	if (t == json_type_string)
 	{
 		const char *s = json_object_get_string(js);
 		if (s[0] == '#')
@@ -105,6 +107,20 @@ VuoColor VuoColor_makeFromJson(json_object * js)
 			sscanf(s, "%20g, %20g, %20g, %20g", &color.r, &color.g, &color.b, &color.a);
 		}
 		return color;
+	}
+	else if (t == json_type_array)
+	{
+		int len = json_object_array_length(js);
+		if (len >= 1)
+			color.r = json_object_get_double(json_object_array_get_idx(js, 0));
+		if (len >= 2)
+			color.g = json_object_get_double(json_object_array_get_idx(js, 1));
+		if (len >= 3)
+			color.b = json_object_get_double(json_object_array_get_idx(js, 2));
+		if (len >= 4)
+			color.a = json_object_get_double(json_object_array_get_idx(js, 3));
+		else
+			color.a = 1;
 	}
 
 	json_object *o = NULL;
@@ -374,6 +390,63 @@ VuoColor VuoColor_average(VuoList_VuoColor colors)
 	result.b /= result.a;
 	result.a /= colorCount;
 	return result;
+}
+
+/**
+ * Returns true if all colors are fully opaque.
+ *
+ * If the list is empty, returns false.
+ *
+ * @version200New
+ */
+bool VuoColor_areAllOpaque(VuoList_VuoColor colors)
+{
+	size_t itemCount = VuoListGetCount_VuoColor(colors);
+	if (itemCount == 0)
+		return false;
+
+	VuoColor *itemData = VuoListGetData_VuoColor(colors);
+	for (size_t i = 0; i < itemCount; ++i)
+		if (!VuoColor_isOpaque(itemData[i]))
+			return false;
+
+	return true;
+}
+
+/**
+ * Returns a measure of the brightness of `color`.
+ *
+ * @see VuoGlsl_brightness
+ *
+ * @version200New
+ */
+VuoReal VuoColor_brightness(VuoColor color, int32_t type)
+{
+	VuoColor c = VuoColor_premultiply(color);
+	if (type == VuoThresholdType_Rec601)
+		return c.r * .299 + c.g * .587 + c.b * .114;
+	else if (type == VuoThresholdType_Rec709)
+		return pow(
+			  pow(c.r, 2.2) * .2126
+			+ pow(c.g, 2.2) * .7152
+			+ pow(c.b, 2.2) * .0722,
+			1./2.2);
+	else if (type == VuoThresholdType_Desaturate)
+		return (MAX(c.r, MAX(c.g, c.b)) + MIN(c.r, MIN(c.g, c.b))) / 2.;
+	else if (type == VuoThresholdType_RGBAverage)
+		return (c.r + c.g + c.b) / 3.;
+	else if (type == VuoThresholdType_RGBMaximum)
+		return MAX(c.r, MAX(c.g, c.b));
+	else if (type == VuoThresholdType_RGBMinimum)
+		return MIN(c.r, MIN(c.g, c.b));
+	else if (type == VuoThresholdType_Red)
+		return c.r;
+	else if (type == VuoThresholdType_Green)
+		return c.g;
+	else if (type == VuoThresholdType_Blue)
+		return c.b;
+	else // if (type == VuoThresholdType_Alpha)
+		return c.a;
 }
 
 /**

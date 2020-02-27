@@ -2,16 +2,14 @@
  * @file
  * VuoCompilerPublishedPortClass implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include "VuoCompilerPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerPublishedPortClass.hh"
 #include "VuoPublishedPort.hh"
-#include <stdexcept>
 
 /**
  * Creates a published port type.
@@ -81,4 +79,22 @@ void VuoCompilerPublishedPortClass::setDetail(string key, string value)
 void VuoCompilerPublishedPortClass::unsetDetail(string key)
 {
 	json_object_object_del(details, key.c_str());
+}
+
+/**
+ * Updates the details for this published port with the new values in @a modifiedDetails.
+ *
+ * If a detail's value is null in @a modifiedDetails, it will be unset.
+ *
+ * If a detail's key is not in @a modifiedDetails, it will remain unchanged.
+ */
+void VuoCompilerPublishedPortClass::updateDetails(json_object *modifiedDetails)
+{
+	json_object_object_foreach(modifiedDetails, key, val)
+	{
+		if (val)
+			json_object_object_add(details, key, val);
+		else
+			json_object_object_del(details, key);
+	}
 }

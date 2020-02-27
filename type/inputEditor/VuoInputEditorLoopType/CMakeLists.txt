@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorLoopType SOURCE VuoInputEditorLoopType.cc)

@@ -2,18 +2,15 @@
  * @file
  * VuoPort interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoBase.hh"
 #include "VuoPortClass.hh"
-
-#include <set>
-using namespace std;
 
 class VuoCompilerNodeArgument;
 class VuoRendererPort;
@@ -40,10 +37,15 @@ public:
 	VuoPortClass::EventThrottling getEventThrottling(void);
 	void setEventThrottling(VuoPortClass::EventThrottling eventThrottling);
 
+	void setRawInitialValue(const string &rawInitialValue);
+	string getRawInitialValue(void);
+
 	void print(void);
 
 private:
 	VuoPortClass *portClass; ///< The port class this port is an instance of.
 	vector<VuoCable *> connectedCables;
 	VuoPortClass::EventThrottling eventThrottling; ///< The port's default event-throttling behavior. Only applies to trigger ports.
+
+	string rawInitialValue;
 };

@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="🙏🏽|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="285,150" _text="\"🙏🏽\""];
+}

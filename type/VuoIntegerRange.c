@@ -2,13 +2,12 @@
  * @file
  * VuoIntegerRange implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoIntegerRange.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -38,17 +37,11 @@ VuoModuleMetadata({
  */
 VuoIntegerRange VuoIntegerRange_makeFromJson(json_object * js)
 {
-	VuoIntegerRange range = VuoIntegerRange_make(VuoIntegerRange_NoMinimum, VuoIntegerRange_NoMaximum);
-
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "minimum", &o))
-		range.minimum = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "maximum", &o))
-		range.maximum = VuoInteger_makeFromJson(o);
-
-	return range;
+	return (VuoIntegerRange){
+		VuoJson_getObjectValue(VuoInteger, js, "minimum", VuoIntegerRange_NoMinimum),
+		VuoJson_getObjectValue(VuoInteger, js, "maximum", VuoIntegerRange_NoMaximum),
+		""
+	};
 }
 
 /**

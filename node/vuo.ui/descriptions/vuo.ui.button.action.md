@@ -1,6 +1,6 @@
 Creates a layer that contains text and/or an icon, and fires an event when it's clicked.
 
-   - `Rendered Layers` — The group of rendered layers containing the layer. Connect this to the `Render Layers to Window` node's `Rendered Layers` output port.
+   - `Rendered Layers` — The group of rendered layers containing the layer. Connect this to the [Render Layers to Window](vuo-node://vuo.layer.render.window) node's `Rendered Layers` output port.
    - `Label` — The text to show on the button.
    - `Font` — The font to use for the button's text.
    - `Color` — The background color of the button.

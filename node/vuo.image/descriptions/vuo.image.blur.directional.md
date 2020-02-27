@@ -8,7 +8,7 @@ This node applies a linear gaussian blur to the passed image.  The radius determ
       - The **Gaussian** distribution ("bell curve") is smoothest, but its long asymptotic tail makes it expensive to compute.
       - The **linear** distribution is almost as smooth, and is faster to compute.
       - The **box** distribution (constant) weights all pixels equally, resulting in relatively sharp edges, and is thus good for simulating motion blur.
-   - `Radius` — The maximum pixel radius to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
+   - `Radius` — The maximum radius, in points, to affect when applying the blur.  Larger values mean more blurry, while a value of '0' will result in a non-blurred output image.
    - `Angle` — The counterclockwise rotation of the streak, in degrees.  When `Angle` is 0, the streak is horizontal.
    - `Symmetric` — If true, the image is blurred in both directions along the line.  If false, the image is only blurred in one direction.
    - `Expand Bounds` — If false, the image size will remain the same.  If true, the image will expand to encapsulate the blurred pixels around the border.

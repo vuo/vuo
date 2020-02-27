@@ -2,12 +2,11 @@
  * @file
  * VuoTelemetry implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,6 +60,17 @@ void vuoInitMessageWithBool(zmq_msg_t *message, bool value)
 }
 
 /**
+ * Returns true if there are more messages to receive on the socket currently.
+ */
+bool VuoTelemetry_hasMoreToReceive(void *socket)
+{
+	int64_t more;
+	size_t moreSize = sizeof more;
+	zmq_getsockopt(socket, ZMQ_RCVMORE, &more, &moreSize);
+	return more;
+}
+
+/**
  * Receives the next message on the socket and copies it into a newly allocated string.
  */
 char * vuoReceiveAndCopyString(void *socket, char **error)
@@ -76,7 +86,7 @@ char * vuoReceiveAndCopyString(void *socket, char **error)
 			errorMessage = strdup("The connection between the composition and runner timed out when trying to receive a message");
 		else
 		{
-			char *eStr = strerror(e);
+			const char *eStr = zmq_strerror(e);
 			const char *format = "The connection between the composition and runner failed when trying to receive a message (%s)";
 			int size = snprintf(NULL, 0, format, eStr);
 			errorMessage = malloc(size+1);
@@ -116,7 +126,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 			errorMessage = strdup("The connection between the composition and runner failed because the context was terminated when trying to receive a message");
 		else
 		{
-			char *eStr = strerror(e);
+			const char *eStr = zmq_strerror(e);
 			const char *format = "The connection between the composition and runner failed when trying to receive a message (%s)";
 			int size = snprintf(NULL, 0, format, eStr);
 			errorMessage = malloc(size+1);
@@ -230,7 +240,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 		}
 		else
 		{
-			char *eStr = strerror(e);
+			const char *eStr = zmq_strerror(e);
 			const char *format = "The connection between the composition and runner failed when trying to send a message of type %i on '%s' (%s)";
 			int size = snprintf(NULL, 0, format, type, name, eStr);
 			errorMessage = malloc(size+1);
@@ -252,7 +262,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
  * are issued when migrating a socket from one thread to another."
  *
  * http://api.zeromq.org/2-2:zmq
- * http://stackoverflow.com/questions/5841896/0mq-how-to-use-zeromq-in-a-threadsafe-manner
+ * https://stackoverflow.com/questions/5841896/0mq-how-to-use-zeromq-in-a-threadsafe-manner
  * https://b33p.net/kosada/node/4226
  */
 void vuoMemoryBarrier(void)

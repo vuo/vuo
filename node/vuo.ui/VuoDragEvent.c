@@ -2,14 +2,11 @@
  * @file
  * VuoDragEvent implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoDragEvent.h"
 
@@ -41,16 +38,10 @@ VuoModuleMetadata({
  */
 VuoDragEvent VuoDragEvent_makeFromJson(json_object * js)
 {
-	VuoDragEvent value = {{0,0}, NULL};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "position", &o))
-		value.position = VuoPoint2d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "urls", &o))
-		value.urls = VuoList_VuoUrl_makeFromJson(o);
-
-	return value;
+	return (VuoDragEvent){
+		VuoJson_getObjectValue(VuoPoint2d,     js, "position", (VuoPoint2d){0,0}),
+		VuoJson_getObjectValue(VuoList_VuoUrl, js, "urls",     NULL),
+		""};
 }
 
 /**
@@ -84,7 +75,7 @@ char *VuoDragEvent_getSummary(const VuoDragEvent value)
  */
 VuoDragEvent VuoDragEvent_make(const VuoPoint2d position, const VuoList_VuoUrl urls)
 {
-	return (VuoDragEvent){position, urls};
+	return (VuoDragEvent){position, urls, ""};
 }
 
 /**
@@ -109,14 +100,7 @@ bool VuoDragEvent_areEqual(const VuoDragEvent value1, const VuoDragEvent value2)
  */
 bool VuoDragEvent_isLessThan(const VuoDragEvent a, const VuoDragEvent b)
 {
-	if (a.position.x < b.position.x) return true;
-	if (a.position.x > b.position.x) return false;
-
-	if (a.position.y < b.position.y) return true;
-	if (a.position.y > b.position.y) return false;
-
-	if (VuoList_VuoUrl_isLessThan(a.urls, b.urls)) return true;
-//	if (VuoList_VuoUrl_isLessThan(b.urls, a.urls)) return false;
-
+	VuoType_returnInequality(VuoPoint2d,     a.position, b.position);
+	VuoType_returnInequality(VuoList_VuoUrl, a.urls,     b.urls);
 	return false;
 }

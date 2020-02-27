@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Demonstrates repurposing a slider as a progress indicator.
+ *
+ * @createdInVuoVersion 1.3.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-105,360" fillcolor="lime"];
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="120,285" _endPosition="1." _duration="10" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-165,285" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="300,330" _format="\"percentage\"" _minimumIntegerDigits="0" _minimumDecimalPlaces="0" _decimalPlaces="0" _showThousandSeparator="true"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="756,251" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="540,75" _color="\{\"r\":0.25000381469726562,\"g\":0.25000381469726562,\"b\":0.25000381469726562,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeSlider [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="540,255" fillcolor="orange" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0,\"y\":0\}" _trackLength="1" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+MakeSliderTheme [type="vuo.ui.make.theme.slider.rounded" version="1.0.0" label="Make Slider Theme|<refresh>refresh\l|<labelFont>labelFont\l|<labelColor>labelColor\l|<labelColorHovered>labelColorHovered\l|<handleWidth>handleWidth\l|<handleHeight>handleHeight\l|<handleBorderThickness>handleBorderThickness\l|<handleCornerRoundness>handleCornerRoundness\l|<handleColor>handleColor\l|<handleColorHovered>handleColorHovered\l|<handleColorPressed>handleColorPressed\l|<handleBorderColor>handleBorderColor\l|<handleBorderColorHovered>handleBorderColorHovered\l|<handleBorderColorPressed>handleBorderColorPressed\l|<trackDepth>trackDepth\l|<trackBorderThickness>trackBorderThickness\l|<trackCornerRoundness>trackCornerRoundness\l|<activeTrackColor>activeTrackColor\l|<activeTrackColorHovered>activeTrackColorHovered\l|<activeTrackBorderColor>activeTrackBorderColor\l|<activeTrackBorderColorHovered>activeTrackBorderColorHovered\l|<inactiveTrackColor>inactiveTrackColor\l|<inactiveTrackColorHovered>inactiveTrackColorHovered\l|<inactiveTrackBorderColor>inactiveTrackBorderColor\l|<inactiveTrackBorderColorHovered>inactiveTrackBorderColorHovered\l|<marginBetweenTrackAndLabel>marginBetweenTrackAndLabel\l|<theme>theme\r" pos="240,465" fillcolor="orange" _labelFont="\{\"fontName\":\"Avenir-Light\",\"pointSize\":24\}" _labelColor="\{\"r\":0.7,\"g\":0.7,\"b\":0.7,\"a\":0.7\}" _labelColorHovered="\{\"r\":0.7,\"g\":0.7,\"b\":0.7,\"a\":0.8\}" _handleWidth="0" _handleHeight="0" _handleBorderThickness="0" _handleCornerRoundness="0" _handleColor="\{\"r\":0.40000000596046448,\"g\":0.50000762939453125,\"b\":0.60000002384185791,\"a\":0\}" _handleColorHovered="\{\"r\":0.40000000596046448,\"g\":0.51999694108963013,\"b\":0.63999390602111816,\"a\":0\}" _handleColorPressed="\{\"r\":0.40000000596046448,\"g\":0.60000002384185791,\"b\":0.80000001192092896,\"a\":0\}" _handleBorderColor="\{\"r\":0.20000000298023224,\"g\":0.30000764131546021,\"b\":0.40000000596046448,\"a\":0\}" _handleBorderColorHovered="\{\"r\":0.20000000298023224,\"g\":0.31999695301055908,\"b\":0.43999388813972473,\"a\":0\}" _handleBorderColorPressed="\{\"r\":0.20000000298023224,\"g\":0.40000000596046448,\"b\":0.60000002384185791,\"a\":0\}" _trackDepth="0.029999999999999999" _trackBorderThickness="0.015" _trackCornerRoundness="1.0" _activeTrackColor="\{\"r\":0.40,\"g\":0.50,\"b\":0.60,\"a\":1.0\}" _activeTrackColorHovered="\{\"r\":0.40,\"g\":0.52,\"b\":0.64,\"a\":1.0\}" _activeTrackBorderColor="\{\"r\":0.20,\"g\":0.30,\"b\":0.40,\"a\":1.0\}" _activeTrackBorderColorHovered="\{\"r\":0.20,\"g\":0.32,\"b\":0.44,\"a\":1.0\}" _inactiveTrackColor="\{\"r\":0.40,\"g\":0.40,\"b\":0.40,\"a\":1.0\}" _inactiveTrackColorHovered="\{\"r\":0.40,\"g\":0.42,\"b\":0.44,\"a\":1.0\}" _inactiveTrackBorderColor="\{\"r\":0.20,\"g\":0.20,\"b\":0.20,\"a\":0.9\}" _inactiveTrackBorderColorHovered="\{\"r\":0.20,\"g\":0.22,\"b\":0.24,\"a\":1.0\}" _marginBetweenTrackAndLabel="0.01"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="810,240" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+AllowFirstEvent:firstEvent -> MakeRectangleLayer:color;
+AllowFirstEvent:firstEvent -> MakeSliderTheme:labelFont;
+Curve:value -> FormatNumber:value;
+Curve:value -> MakeSlider:setValue;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve:time;
+FormatNumber:text -> MakeSlider:label;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeRectangleLayer:layer -> MakeList:1;
+MakeSlider:updatedLayer -> MakeList:2;
+MakeSliderTheme:theme -> MakeSlider:theme;
+RenderLayersToWindow:updatedWindow -> MakeSlider:window [style=invis];
+}

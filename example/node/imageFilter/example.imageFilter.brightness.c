@@ -2,9 +2,9 @@
  * @file
  * example.imageFilter.brightness node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -32,11 +32,11 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float red;
 	uniform float green;
 	uniform float blue;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	void main()
 	{
-		vec4 frag = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 frag = texture2D(texture, fragmentTextureCoordinate);
 		gl_FragColor = vec4(frag.r*red, frag.g*green, frag.b*blue, frag.a);
 	}
 );

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.pixellate node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -26,7 +26,7 @@ VuoModuleMetadata({
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec2 pixelSize;
@@ -38,13 +38,13 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 pos = fragmentTextureCoordinate.xy;
+		vec2 pos = fragmentTextureCoordinate;
 
 		vec2 centerOffset = mod(center - pixelSize/2, pixelSize);
 		vec2 distanceFromCorner = mod(pos - centerOffset, pixelSize);
 		pos = pos - distanceFromCorner + pixelSize/2;
 
-		vec2 filterWidth = fwidth(fragmentTextureCoordinate.xy);
+		vec2 filterWidth = fwidth(fragmentTextureCoordinate);
 
 		vec4 pixelColor = texture2D(texture, pos);
 		const float gamma = .6;

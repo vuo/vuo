@@ -7,4 +7,4 @@ Creates a tree from components.
 
 For example, a tree with name `product`, content `Handcrafted pet rock`, an attribute named `sku` with value `rock`, and no children would be equivalent to XML `<product sku="rock">Handcrafted pet rock</product>`.
 
-`Children` can be left empty, or it can consist of trees output by other instances of this node or by other nodes, such as `Make Tree from JSON` or `Find Subtrees using XPath`.
+`Children` can be left empty, or it can consist of trees output by other instances of this node or by other nodes, such as [Make Tree from JSON](vuo-node://vuo.tree.make.json) or [Find Subtrees using XPath](vuo-node://vuo.tree.find.xpath).

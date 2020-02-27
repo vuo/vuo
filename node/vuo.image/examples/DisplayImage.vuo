@@ -1,20 +1,21 @@
 /**
  * @file
- * Displays an image loaded from a file on your computer. 
+ * Displays an image loaded from a file on your computer.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Image by Ashim D’Silva on [Unsplash](https://unsplash.com/photos/WeYamle9fDM).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="105,150"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="270,195" fillcolor="violet" _url="\"Sunset.jpg\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<height>height\r|<width>width\r" _time_type="VuoReal" _height_type="VuoInteger" _width_type="VuoInteger"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="240,180" fillcolor="orange" _url="\"Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,180" fillcolor="lime" _started_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="390,180" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
 
-AllowFirstEvent:firstEvent -> GetImage:refresh;
-PublishedInputs:time -> AllowFirstEvent:event;
-GetImage:image -> PublishedOutputs:outputImage;
+FetchImage:image -> RenderImageToWindow:image;
+FireOnStart:started -> FetchImage:url;
 }

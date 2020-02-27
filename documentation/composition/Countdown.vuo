@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="75,165" _increment="1" _decrement="1" _setCount="100"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-135,180" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="494,86" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="330,75" fillcolor="orange" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":144,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="540,75" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="420,180"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<TextPosition>TextPosition\r" _TextPosition_type="VuoPoint2d" _TextPosition_suggestedMin="\{\"x\":-1,\"y\":-1\}" _TextPosition_suggestedMax="\{\"x\":1,\"y\":1\}" _TextPosition_suggestedStep="\{\"x\":0.1,\"y\":0.1\}" _TextPosition="\{\"x\":0.0,\"y\":0.0\}"];
+
+Count:count -> SummarizeValue:value;
+FirePeriodically:fired -> Count:decrement [event=true];
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList:1;
+PublishedInputs:TextPosition -> MakeTextLayer:center;
+SummarizeValue:summary -> MakeTextLayer:text;
+}

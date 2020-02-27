@@ -1,4 +1,4 @@
-Creates a font description, to be used by a text rendering node (such as `Make Text Image`).
+Creates a font description, to be used by a text rendering node (such as [Make Text Image](vuo-node://vuo.image.make.text)).
 
    - `Font Name` — The font's PostScript name.  For example, `Palatino-BoldItalic`.  To get the PostScript name for a font, open the Font Book application, select the font, then select Preview > Show Font Info.
    - `Point Size` — The size of the text, in <a href="https://en.wikipedia.org/wiki/Point_(typography)">typographic points</a>.

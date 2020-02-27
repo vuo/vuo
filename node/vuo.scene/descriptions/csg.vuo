@@ -2,9 +2,9 @@
  * @file
  * This composition generates the description image for the vuo.scene.intersect, subtract, and union nodes.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 digraph G
@@ -23,9 +23,9 @@ MakeList22 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make Li
 MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1062,251"];
 MakeTargetedOrthographicCamera [type="vuo.scene.make.camera.orthographic.target" version="1.0.0" label="Make Targeted Orthographic Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="405,390" _name="\"camera\"" _position="{\"x\":0.30000001192092896,\"y\":0.30000001192092896,\"z\":1}" _target="{\"x\":0,\"y\":0,\"z\":0}" _upDirection="{\"x\":0.,\"y\":1.,\"z\":0.}" _width="2.0" _distanceMin="-10.0" _distanceMax="10.0"];
 RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1095,225" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,225" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
-RenderSceneToImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,435" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
-RenderSceneToImage3 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,570" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+RenderSceneToImage [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,225" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+RenderSceneToImage2 [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,435" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+RenderSceneToImage3 [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,570" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
 SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,315" _url="\"vuo.scene.subtract.png\"" _overwriteUrl="true" _format="\"PNG\""];
 SaveImage2 [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,420" _url="\"vuo.scene.intersect.png\"" _overwriteUrl="true" _format="\"PNG\""];
 SaveImage3 [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,555" _url="\"vuo.scene.union.png\"" _overwriteUrl="true" _format="\"PNG\""];

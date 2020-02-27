@@ -2,18 +2,19 @@
  * @file
  * VuoTable implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
 #include <vector>
 using namespace std;
 
+#include "type.h"
+
 extern "C"
 {
-#include "type.h"
 #include "VuoTable.h"
 #include "VuoTime.h"
 
@@ -336,11 +337,9 @@ VuoText VuoTable_serialize(VuoTable table, VuoTableFormat format)
 		}
 	}
 
-	if (dstPtr)
-	{
+	if (dstPtr > dst)
 		--dstPtr;
-		*dstPtr = 0;
-	}
+	*dstPtr = 0;
 
 	VuoText text = VuoText_make(dst);
 	free(dst);
@@ -359,7 +358,7 @@ static VuoInteger getIndexForHeader(VuoTable table, VuoText header, bool isColum
 
 	vector< vector<VuoText> > *data = (vector< vector<VuoText> > *)table.data;
 
-	VuoTextComparison containsCaseInsensitive = { VuoTextComparison_Contains, false };
+	VuoTextComparison containsCaseInsensitive = { VuoTextComparison_Contains, false, "" };
 
 	if (isColumnHeader)
 	{
@@ -889,6 +888,50 @@ VuoTable VuoTable_removeColumn(VuoTable table, VuoListPosition position)
 	return newTable;
 }
 
+/**
+ * Returns the first row whose cell at column `columnIndex` matches `valueToFind`.
+ *
+ * @version200New
+ */
+VuoList_VuoText VuoTable_findFirstMatchingRow_VuoInteger(VuoTable table, VuoInteger columnIndex, VuoText valueToFind, VuoTextComparison valueComparison, bool includeHeader)
+{
+	if (table.rowCount == 0)
+		return nullptr;
+
+	auto rows = static_cast<vector<vector<VuoText>>*>(table.data);
+
+	columnIndex = getClampedIndex(table, columnIndex, true);
+
+	auto foundRow = find_if(rows->begin(), rows->end(), [columnIndex, valueComparison, valueToFind](vector<VuoText> row) {
+		return VuoText_compare(row[columnIndex - 1], valueComparison, valueToFind);
+	});
+
+	if (foundRow == rows->end())
+		return nullptr;
+
+	size_t startIndex = (includeHeader ? 0 : 1);
+	size_t count = foundRow->size() - startIndex;
+
+	VuoList_VuoText outputRow = VuoListCreateWithCount_VuoText(count, NULL);
+	for (size_t i = startIndex; i < table.columnCount; ++i)
+		VuoListSetValue_VuoText(outputRow, (*foundRow)[i], i + 1 - startIndex, false);
+
+	return outputRow;
+}
+
+/**
+ * Returns the first row whose cell at column `columnHeader` matches `valueToFind`.
+ *
+ * @version200New
+ */
+VuoList_VuoText VuoTable_findFirstMatchingRow_VuoText(VuoTable table, VuoText columnHeader, VuoText valueToFind, VuoTextComparison valueComparison, bool includeHeader)
+{
+	VuoInteger columnIndex = getIndexForHeader(table, columnHeader, true);
+	if (columnIndex == 0)
+		return nullptr;
+
+	return VuoTable_findFirstMatchingRow_VuoInteger(table, columnIndex, valueToFind, valueComparison, includeHeader);
+}
 
 /**
  * Replaces the auto-generated function in order to retain the items within vectors.

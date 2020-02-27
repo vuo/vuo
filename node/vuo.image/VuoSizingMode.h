@@ -2,14 +2,14 @@
  * @file
  * VuoSizingMode C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoSizingMode_struct { void *l; } * VuoList_VuoSizingMode;
 #define VuoList_VuoSizingMode_TYPE_DEFINED
 /// @}
@@ -28,7 +28,8 @@ typedef const struct VuoList_VuoSizingMode_struct { void *l; } * VuoList_VuoSizi
 typedef enum {
 	VuoSizingMode_Stretch,
 	VuoSizingMode_Fit,
-	VuoSizingMode_Fill
+	VuoSizingMode_Fill,
+	VuoSizingMode_Proportional,
 } VuoSizingMode;
 
 VuoSizingMode VuoSizingMode_makeFromJson(struct json_object * js);

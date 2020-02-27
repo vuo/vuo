@@ -2,9 +2,9 @@
  * @file
  * TestVuoMathExpression implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -178,8 +178,8 @@ private slots:
 		VuoList_VuoText outputVariables = VuoList_VuoText_makeFromString(serializedOutputVariables.toUtf8().data());
 		VuoList_VuoReal outputValues = VuoList_VuoReal_makeFromString(serializedOutputValues.toUtf8().data());
 
-		VuoDictionary_VuoText_VuoReal inputVariablesAndValues = { inputVariables, inputValues };
-		VuoDictionary_VuoText_VuoReal outputVariablesAndValues = { outputVariables, outputValues };
+		VuoDictionary_VuoText_VuoReal inputVariablesAndValues = { inputVariables, inputValues, 0 };
+		VuoDictionary_VuoText_VuoReal outputVariablesAndValues = { outputVariables, outputValues, 0 };
 
 		VuoMathExpressionError error = NULL;
 		VuoMathExpressionParser parser = VuoMathExpressionParser_makeFromMultipleExpressions(expressions, &error);

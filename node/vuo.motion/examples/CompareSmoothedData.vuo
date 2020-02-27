@@ -2,21 +2,22 @@
  * @file
  * Compares the different ways of smoothing a jittery series of numbers. 
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2385,180" _scaleToFit="false" _center="{\"x\":0.000000,\"y\":-0.050000}" _width="2.000000" _columns="1" _height="1.250000" _rows="4"];
-ArrangeLayersInGrid3 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2385,-240" _scaleToFit="false" _center="{\"x\":0.000000,\"y\":-0.100000}" _width="2.000000" _columns="1" _height="1.250000" _rows="4"];
-Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="1140,-135" _expression="{\"expressions\":[\"0.9 - numPoints*0.02\"],\"inputVariables\":[\"numPoints\"],\"outputVariables\":[\"result\"]}"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2385,180" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.050000\}" _width="2.000000" _columns="1" _height="1.250000" _rows="4"];
+ArrangeLayersInGrid3 [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="2385,-240" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":-0.100000\}" _width="2.000000" _columns="1" _height="1.250000" _rows="4"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="1140,-135" _expression="\{\"expressions\":[\"0.9 - numPoints*0.02\"],\"inputVariables\":[\"numPoints\"],\"outputVariables\":[\"result\"]\}"];
 ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="1155,-75"];
-CopyLayer [type="vuo.layer.copy.trs" version="2.0.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,180"];
-CopyLayer2 [type="vuo.layer.copy.trs" version="2.0.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,480"];
-CopyLayer3 [type="vuo.layer.copy.trs" version="2.0.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,735"];
-CopyLayer4 [type="vuo.layer.copy.trs" version="2.0.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,1005"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,180"];
+CopyLayer2 [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,480"];
+CopyLayer3 [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,735"];
+CopyLayer4 [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="2085,1005"];
 CountWithinRange2 [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="780,-105" _increment="1" _decrement="1" _setCount="0" _minimum="0" _maximum="90" _wrapMode="\"saturate\""];
 Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="1245,150" _b="2.000000"];
 Divide5 [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="1245,450" _b="2.000000"];
@@ -30,45 +31,44 @@ Enqueue5 [type="vuo.list.enqueue.VuoPoint2d" version="1.0.0" label="Enqueue|<ref
 Enqueue7 [type="vuo.list.enqueue.VuoReal" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="1440,435" _maxItemCount="90"];
 Enqueue8 [type="vuo.list.enqueue.VuoPoint2d" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="1440,525" _maxItemCount="90"];
 Enqueue9 [type="vuo.list.enqueue.VuoReal" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="1440,690" _maxItemCount="90"];
-FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1590,-255" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically3 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="405,165" fillcolor="yellow" _seconds="0.100000" _fired_eventThrottling="enqueue"];
-HoldValue4 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1095,450"];
-HoldValue5 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1095,705"];
-HoldValue6 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1095,975"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="570,720" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1590,-255" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically3 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="345,165" fillcolor="lime" _seconds="0.100000" _fired_eventThrottling="enqueue"];
+HoldValue4 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1095,450"];
+HoldValue5 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1095,705"];
+HoldValue6 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1095,975"];
 Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1230,240" _x="0.005000"];
 Make2DPoint4 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1230,540" _x="0.005000"];
 Make2DPoint8 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1230,795" _x="0.005000"];
 Make2DPoint9 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1230,1065" _x="0.005000"];
-MakeColorLayer3 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1875,105" _name="\"\"" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1" _height="1"];
-MakeColorLayer4 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1875,405" _name="\"\"" _color="{\"r\":0.963119,\"g\":0.608881,\"b\":0.910384,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1" _height="1"];
-MakeColorLayer5 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1875,660" _name="\"\"" _color="{\"r\":0.666178,\"g\":0.380896,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1" _height="1"];
-MakeColorLayer6 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1875,930" _name="\"\"" _color="{\"r\":0.400519,\"g\":0.625711,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="1" _height="1"];
+MakeColorLayer3 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1875,105" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="1" _height="1" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer4 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1875,405" _color="\{\"r\":0.963119,\"g\":0.608881,\"b\":0.910384,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="1" _height="1" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer5 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1875,660" _color="\{\"r\":0.666178,\"g\":0.380896,\"b\":1.000000,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="1" _height="1" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeColorLayer6 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1875,930" _color="\{\"r\":0.400519,\"g\":0.625711,\"b\":1.000000,\"a\":1.000000\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="1" _height="1" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="930,-90"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="2644,206" fillcolor="green"];
-MakeList10 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1054,-109"];
+MakeList10 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1067,-109"];
 MakeList11 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="930,-90" _1="\"numPoints\""];
-MakeList17 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="2298,191"];
-MakeList19 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2039,521" _1="0"];
-MakeList2 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2039,221" _1="0"];
-MakeList28 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2039,776" _1="0"];
-MakeList30 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2039,1046" _1="0"];
-MakeList37 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="2303,-229"];
-MakeList41 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2614,191" fillcolor="green"];
+MakeList17 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="2308,191"];
+MakeList19 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2033,521" _1="0"];
+MakeList2 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2033,221" _1="0"];
+MakeList28 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2033,776" _1="0"];
+MakeList30 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="2033,1046" _1="0"];
+MakeList37 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="2314,-229"];
+MakeList41 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2639,191" fillcolor="blue"];
 MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="1335,-135" _endPosition="0.900000" _curve="\"linear\"" _easing="\"in\""];
 MakeRandomValue [type="vuo.noise.random.VuoReal" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="630,195" _minimum="0.010000" _maximum="0.200000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="2100,-360" _text="\"Unsmoothed\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="2100,-270" _text="\"Smooth with Duration\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeTextLayer3 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="2100,-180" _text="\"Smooth with Rate\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeTextLayer4 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="2100,-90" _text="\"Smooth with Inertia\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="2100,-540" _text="\"Unsmoothed\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="2100,-375" _text="\"Smooth with Duration\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="2100,-210" _text="\"Smooth with Rate\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="2100,-45" _text="\"Smooth with Inertia\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
 MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1695,195"];
 MergeXYLists2 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1695,495"];
 MergeXYLists3 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1695,750"];
 MergeXYLists4 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1695,1020"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="2685,180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="585,465" fillcolor="green"];
-SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,465" fillcolor="violet" _setPosition="0.000000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"in+out\""];
-SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,990" fillcolor="violet" _setPosition="0.000000" _duration="0.500000"];
-SmoothWithRate2 [type="vuo.motion.smooth.rate.VuoReal" version="1.1.0" label="Smooth with Rate|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<rate>rate\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,720" fillcolor="violet" _setPosition="0.000000" _rate="0.250000" _curve="\"quadratic\"" _easing="\"in+out\""];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2685,180" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,465" fillcolor="orange" _setPosition="0.000000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"in+out\""];
+SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,990" fillcolor="orange" _setPosition="0.000000" _duration="0.500000"];
+SmoothWithRate2 [type="vuo.motion.smooth.rate.VuoReal" version="1.1.0" label="Smooth with Rate|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<rate>rate\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="870,720" fillcolor="orange" _setPosition="0.000000" _rate="0.250000" _curve="\"quadratic\"" _easing="\"in+out\""];
 
 ArrangeLayersInGrid3:griddedLayer -> MakeList41:2;
 ArrangeLayersInGrid:griddedLayer -> MakeList41:1;
@@ -92,19 +92,22 @@ Enqueue5:list -> CopyLayer:scales;
 Enqueue7:list -> MergeXYLists2:y;
 Enqueue8:list -> CopyLayer2:scales;
 Enqueue9:list -> MergeXYLists3:y;
-FireOnStart3:started -> MakeColorLayer3:refresh;
-FireOnStart3:started -> MakeColorLayer4:refresh;
-FireOnStart3:started -> MakeColorLayer5:refresh;
-FireOnStart3:started -> MakeColorLayer6:refresh;
-FireOnStart3:started -> MakeTextLayer2:refresh;
-FireOnStart3:started -> MakeTextLayer3:refresh;
-FireOnStart3:started -> MakeTextLayer4:refresh;
-FireOnStart3:started -> MakeTextLayer:refresh;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithDuration2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithRate2:time;
+FireOnStart3:started -> MakeColorLayer3:color;
+FireOnStart3:started -> MakeColorLayer4:color;
+FireOnStart3:started -> MakeColorLayer5:color;
+FireOnStart3:started -> MakeColorLayer6:color;
+FireOnStart3:started -> MakeTextLayer2:center;
+FireOnStart3:started -> MakeTextLayer3:center;
+FireOnStart3:started -> MakeTextLayer4:center;
+FireOnStart3:started -> MakeTextLayer:center;
 FirePeriodically3:fired -> CountWithinRange2:increment [event=true];
-FirePeriodically3:fired -> HoldValue4:refresh [event=true];
-FirePeriodically3:fired -> HoldValue5:refresh [event=true];
-FirePeriodically3:fired -> HoldValue6:refresh [event=true];
-FirePeriodically3:fired -> MakeRandomValue:refresh [event=true];
+FirePeriodically3:fired -> HoldValue4:update;
+FirePeriodically3:fired -> HoldValue5:update;
+FirePeriodically3:fired -> HoldValue6:update;
+FirePeriodically3:fired -> MakeRandomValue:minimum [event=true];
 HoldValue4:heldValue -> Divide5:a;
 HoldValue4:heldValue -> Make2DPoint4:y;
 HoldValue5:heldValue -> Divide6:a;
@@ -120,7 +123,6 @@ MakeColorLayer4:layer -> CopyLayer2:layer;
 MakeColorLayer5:layer -> CopyLayer3:layer;
 MakeColorLayer6:layer -> CopyLayer4:layer;
 MakeDictionary2:dictionary -> Calculate:values;
-MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList10:list -> MakeDictionary2:values;
 MakeList11:list -> MakeDictionary2:keys;
 MakeList17:list -> ArrangeLayersInGrid:layers;
@@ -147,11 +149,7 @@ MergeXYLists2:points -> CopyLayer2:translations;
 MergeXYLists3:points -> CopyLayer3:translations;
 MergeXYLists4:points -> CopyLayer4:translations;
 MergeXYLists:points -> CopyLayer:translations;
-RenderLayersToWindow2:requestedFrame -> ShareValue2:value [style=invis];
-ShareValue2:sameValue -> SmoothWithDuration2:time;
-ShareValue2:sameValue -> SmoothWithInertia2:time;
-ShareValue2:sameValue -> SmoothWithRate2:time;
-SmoothWithDuration2:position -> HoldValue4:newValue;
-SmoothWithInertia2:position -> HoldValue6:newValue;
-SmoothWithRate2:position -> HoldValue5:newValue;
+SmoothWithDuration2:position -> HoldValue4:value;
+SmoothWithInertia2:position -> HoldValue6:value;
+SmoothWithRate2:position -> HoldValue5:value;
 }

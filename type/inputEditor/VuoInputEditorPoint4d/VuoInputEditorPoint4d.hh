@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorPoint4d interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -79,7 +79,7 @@ private:
 	map<coord, QSlider*> sliderForCoord; ///< For use when both the suggestedMinX and suggestedMaxX port annotation values are provided by the node class designer.
 	map<coord, VuoDoubleSpinBox*> spinboxForCoord; ///< For use when both the suggestedMinX and suggestedMaxX port annotation values are provided by the node class designer.
 
-	bool getCoordFromQObject(QObject* sender, VuoInputEditorPoint4d::coord* whichCoord); ///< Determine what coord a GUI field belongs to.
+	bool getCoordFromQObject(QObject* sender, VuoInputEditorPoint4d::coord* whichCoord) VuoWarnUnusedResult;  ///< Determine what coord a GUI field belongs to.
 	void setCoord(coord c, double value); ///< Set the coordinate value on current.
 
 	VuoDoubleSpinBox* initSpinBox(coord whichCoord, QDialog& dialog, double initialValue);

@@ -2,9 +2,9 @@
  * @file
  * VuoGlContext interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -38,6 +38,8 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
 #define VuoGlContext_disuse(glContext) VuoGlContext_disuseF(glContext, __FILE__, __LINE__, __func__)
 
 void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core, GLint displayMask);
+
+bool VuoGlContext_isOpenGL32Core(VuoGlContext context);
 
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber, const char *func);
 

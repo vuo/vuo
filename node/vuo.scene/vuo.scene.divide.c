@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.divide node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,11 +12,12 @@
 #include "VuoSceneObjectRenderer.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
 					 "title" : "Divide 3D Object",
-					 "keywords" : [ "break", "separate", "face", "edge", "side", "filter" ],
+					 "keywords" : [ "break", "separate", "split", "slice", "face", "edge", "side", "filter" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoSceneObjectRenderer"
@@ -27,12 +28,12 @@ VuoModuleMetadata({
 				 });
 
 static const char *pointLineVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
+	\n#include "deform.glsl"
 
 	// Inputs
 	uniform float dist;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		// Simplified, origin-based version for point and line meshes, since they don't have normals.
 		float l = length(position);
@@ -42,26 +43,23 @@ static const char *pointLineVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 static const char *triangleVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
-	attribute vec4 position;
-	attribute vec4 normal;
-	attribute vec4 tangent;
-	attribute vec4 bitangent;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec2 textureCoordinate;
+	attribute vec4 vertexColor;
 
 	// Outputs
-	varying vec4 geometryPosition;
-	varying vec4 geometryNormal;
-	varying vec4 geometryTangent;
-	varying vec4 geometryBitangent;
-	varying vec4 geometryTextureCoordinate;
+	varying vec3 geometryPosition;
+	varying vec3 geometryNormal;
+	varying vec2 geometryTextureCoordinate;
+	varying vec4 geometryVertexColor;
 
 	void main()
 	{
 		geometryPosition = position;
 		geometryNormal = normal;
-		geometryTangent = tangent;
-		geometryBitangent = bitangent;
 		geometryTextureCoordinate = textureCoordinate;
+		geometryVertexColor = vertexColor;
 
 		// Older systems (e.g., NVIDIA GeForce 9400M on Mac OS 10.6)
 		// fall back to the software renderer if gl_Position is not initialized.
@@ -71,35 +69,32 @@ static const char *triangleVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 static const char *triangleGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
-	varying in vec4 geometryPosition[3];
-	varying in vec4 geometryNormal[3];
-	varying in vec4 geometryTangent[3];
-	varying in vec4 geometryBitangent[3];
-	varying in vec4 geometryTextureCoordinate[3];
+	varying in vec3 geometryPosition[3];
+	varying in vec3 geometryNormal[3];
+	varying in vec2 geometryTextureCoordinate[3];
+	varying in vec4 geometryVertexColor[3];
 	uniform float dist;
 
 	// Outputs
-	varying out vec4 outPosition;
-	varying out vec4 outNormal;
-	varying out vec4 outTangent;
-	varying out vec4 outBitangent;
-	varying out vec4 outTextureCoordinate;
+	varying out vec3 outPosition;
+	varying out vec3 outNormal;
+	varying out vec2 outTextureCoordinate;
+	varying out vec4 outVertexColor;
 
 	void main()
 	{
 		// Calculate two vectors in the plane of the input triangle.
-		vec3 ab = geometryPosition[1].xyz - geometryPosition[0].xyz;
-		vec3 ac = geometryPosition[2].xyz - geometryPosition[0].xyz;
-		vec4 normal    = vec4(normalize(cross(ab, ac)),1);
+		vec3 ab = geometryPosition[1] - geometryPosition[0];
+		vec3 ac = geometryPosition[2] - geometryPosition[0];
+		vec3 normal = normalize(cross(ab, ac));
 
-		// Emit the vertices with the calculated normal.
+		// Emit the vertices with the recalculated position.
 		for (int i = 0; i < gl_VerticesIn; ++i)
 		{
-			outPosition = geometryPosition[i] + vec4(normal.xyz*dist,0);
+			outPosition = geometryPosition[i] + normal.xyz * dist;
 			outNormal = geometryNormal[i];
-			outTangent = geometryTangent[i];
-			outBitangent = geometryBitangent[i];
 			outTextureCoordinate = geometryTextureCoordinate[i];
+			outVertexColor = geometryVertexColor[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -141,7 +136,38 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal((*instance)->shader, "dist", distance);
 
 	// Render.
-	*dividedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*dividedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object,
+		^(float *modelMatrix, float *modelMatrixInverse, int *vertexCount, float *positions, float *normals, float *textureCoordinates, float *colors) {
+			if (*vertexCount < 3)
+			{
+				// Simplified, origin-based version for point and line meshes, since they don't have normals.
+				for (int i = 0; i < *vertexCount; ++i)
+				{
+					VuoPoint3d position = VuoPoint3d_makeFromArray(&positions[i * 3]);
+					float l = VuoPoint3d_magnitude(position);
+					positions[i * 3    ] += distance * l * l * (position.x > 0 ? 1 : -1);
+					positions[i * 3 + 1] += distance * l * l * (position.y > 0 ? 1 : -1);
+					positions[i * 3 + 2] += distance * l * l * (position.z > 0 ? 1 : -1);
+				}
+			}
+			else
+			{
+				// Calculate two vectors in the plane of the input triangle.
+				VuoPoint3d position0 = VuoPoint3d_makeFromArray(&positions[0 * 3]);
+				VuoPoint3d position1 = VuoPoint3d_makeFromArray(&positions[1 * 3]);
+				VuoPoint3d position2 = VuoPoint3d_makeFromArray(&positions[2 * 3]);
+				VuoPoint3d ab = position1 - position0;
+				VuoPoint3d ac = position2 - position0;
+				VuoPoint3d normal = VuoPoint3d_normalize(VuoPoint3d_crossProduct(ab, ac));
+
+				for (int i = 0; i < 3; ++i)
+				{
+					positions[i * 3    ] += normal.x * distance;
+					positions[i * 3 + 1] += normal.y * distance;
+					positions[i * 3 + 2] += normal.z * distance;
+				}
+			}
+		});
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

@@ -2,9 +2,9 @@
  * @file
  * VuoOscDevices implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoOsc.h"
@@ -17,7 +17,6 @@
 
 extern "C"
 {
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -269,13 +268,14 @@ void VuoOsc_use(void)
 {
 	if (__sync_add_and_fetch(&VuoOsc_useCount, 1) == 1)
 	{
+		VuoOsc_deviceQueue = dispatch_queue_create("org.vuo.osc.device", NULL);
+		dispatch_sync(VuoOsc_deviceQueue, ^{
+
 		VuoOsc_inputDevices = VuoListCreate_VuoOscInputDevice();
 		VuoRetain(VuoOsc_inputDevices);
 
 		VuoOsc_outputDevices = VuoListCreate_VuoOscOutputDevice();
 		VuoRetain(VuoOsc_outputDevices);
-
-		VuoOsc_deviceQueue = dispatch_queue_create("org.vuo.osc.device", NULL);
 
 		CFNetServiceClientContext context;
 		context.version = 0;
@@ -297,6 +297,7 @@ void VuoOsc_use(void)
 		if (!CFNetServiceBrowserSearchForServices(VuoOsc_browser, CFSTR(""), CFSTR("_osc._udp"), &error))
 			VUserLog("Error: Failed to activate browser (%ld:%d).", error.domain, error.error);
 
+		});
 	}
 }
 
@@ -375,4 +376,132 @@ void VuoOsc_removeDevicesChangedTriggers
 
 	if (outputDevices)
 		VuoOsc_outputDeviceCallbacks.removeTrigger(outputDevices);
+}
+
+/// Helper for VuoOscInputDevice_realize.
+#define setRealizedDevice(newDevice) \
+	realizedDevice->name = VuoText_make(newDevice.name); \
+	realizedDevice->ipAddress = VuoText_make(newDevice.ipAddress); \
+	realizedDevice->port = newDevice.port;
+
+/**
+ * If any of `device`'s properties are unknown:
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If all of `device`'s properties are already known, sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * Call `VuoOsc_use()` before calling this.
+ *
+ * @threadAny
+ */
+bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *realizedDevice)
+{
+	// Already have all properties; nothing to do.
+	if (!VuoText_isEmpty(device.name) && !VuoText_isEmpty(device.ipAddress) && device.port)
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device: %s", json_object_to_json_string(VuoOscInputDevice_getJson(device)));
+	VuoList_VuoOscInputDevice devices = VuoOsc_getInputDeviceList();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// If a port was specified, it must match.
+	if (device.port)
+		VuoListForeach_VuoOscInputDevice(devices, ^(const VuoOscInputDevice item){
+			if (device.port == item.port)
+			{
+				VDebugLog("Matched by port:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// If no port was specified, match by name.
+	else
+		VuoListForeach_VuoOscInputDevice(devices, ^(const VuoOscInputDevice item){
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
+}
+
+/**
+ * If any of `device`'s properties are unknown:
+ *
+ *    - If a matching device is present, sets `realizedDevice` to that device, and returns true.
+ *    - If no matching device is present, returns false, leaving `realizedDevice` unset.
+ *
+ * If all of `device`'s properties are already known, sets `realizedDevice` to a copy of `device`, and returns true.
+ * (Doesn't bother checking whether the device is currently present.)
+ *
+ * Call `VuoOsc_use()` before calling this.
+ *
+ * @threadAny
+ */
+bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *realizedDevice)
+{
+	// Already have all properties; nothing to do.
+	if (!VuoText_isEmpty(device.name) && !VuoText_isEmpty(device.ipAddress) && device.port)
+	{
+		setRealizedDevice(device);
+		return true;
+	}
+
+	// Otherwise, try to find a matching device.
+
+	VDebugLog("Requested device: %s", json_object_to_json_string(VuoOscOutputDevice_getJson(device)));
+	VuoList_VuoOscOutputDevice devices = VuoOsc_getOutputDeviceList();
+	VuoLocal(devices);
+	__block bool found = false;
+
+	// If a port was specified, it must match.
+	if (device.port)
+		VuoListForeach_VuoOscOutputDevice(devices, ^(const VuoOscOutputDevice item){
+			if (device.port == item.port)
+			{
+				VDebugLog("Matched by port:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	// If no port was specified, match by name.
+	else
+		VuoListForeach_VuoOscOutputDevice(devices, ^(const VuoOscOutputDevice item){
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			{
+				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
+				setRealizedDevice(item);
+				found = true;
+				return false;
+			}
+			return true;
+		});
+
+	if (!found)
+		VDebugLog("No matching device found.");
+
+	return found;
 }

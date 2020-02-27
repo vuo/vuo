@@ -1,0 +1,30 @@
+VuoCompileGenericNodes(
+	vuo.event.allowChanges.c
+	vuo.event.allowChanges2.c
+	vuo.event.allowFirstValue.c
+	vuo.event.changed.c
+	vuo.event.changed2.c
+	vuo.event.decreased.c
+	vuo.event.decreased2.c
+	vuo.event.emptyList.c
+	vuo.event.increased.c
+	vuo.event.increased2.c
+	vuo.event.spinOffValue.c
+)
+
+VuoCompileNodes(
+	vuo.event.allowFirst.c
+	vuo.event.areAllHit.2.c
+	vuo.event.becameFalse.c
+	vuo.event.becameFalse2.c
+	vuo.event.becameTrue.c
+	vuo.event.fireOnDisplayRefresh.c
+	vuo.event.fireOnReload.c
+	vuo.event.fireOnStart.c
+	vuo.event.share.c
+	vuo.event.spinOffEvent.c
+	vuo.event.spinOffEvent2.c
+	vuo.event.spinOffEvents.c
+)
+
+VuoNodeSet()

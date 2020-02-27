@@ -8,4 +8,4 @@ If there's an error in the XML, this node outputs an empty tree. Check Console.a
 
 The XML root element's name, attributes, and content become the tree's name, attributes, and content. The root element's child elements become the tree's children.
 
-This node is a shortcut for `Fetch Data -> Convert Data to Text -> Make Tree from XML`.
+This node is a shortcut for [Fetch Data](vuo-node://vuo.data.fetch) -> [Convert Data to Text](vuo-node://vuo.type.data.text) -> [Make Tree from XML](vuo-node://vuo.tree.make.xml).

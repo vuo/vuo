@@ -4,22 +4,22 @@ In a node, each data-and-event port has a @term{port type}, which is its type of
 
 One reason you might want to create your own port type is to allow a node set to pass some structured data between nodes. For example, the @vuoNodeClass{vuo.image} node set uses a port type called @ref VuoImage to pass image data between nodes. You can connect a cable from a @ref VuoImage output port to a @ref VuoImage input port. 
 
-Another reason you might want to create your own port type is to create an input port that provides a menu of options. For example, in the Vuo Editor, when you double-click on the constant flag for the @vuoNode{Make Wave} node's @vuoPort{wave} input port, it pops up a menu that lets you select the type of wave (sine, triangle, or sawtooth). The first step toward creating that menu was to define a port type called VuoWave and use it in the @vuoNode{Make Wave} node class, as described in this documentation. The other step was to create an input editor for the VuoWave type, as described in @ref DevelopingInputEditors. 
+Another reason you might want to create your own port type is to create an input port that provides a menu of options. For example, in the Vuo editor, when you double-click on the constant flag for the @vuoNode{Make Wave} node's @vuoPort{wave} input port, it pops up a menu that lets you select the type of wave (sine, triangle, or sawtooth). The first step toward creating that menu was to define a port type called VuoWave and use it in the @vuoNode{Make Wave} node class, as described in this documentation. The other step was to create an input editor for the VuoWave type, as described in @ref DevelopingInputEditors.
 
 
 
 ## Quick start
 
-The easiest way to start developing a port type is with the example Qt project for a port type, which is provided with the Vuo SDK. 
+The easiest way to start developing a port type is with the example project for a port type, which is provided with the Vuo SDK.
 
-   1. Install [Qt and Qt Creator](http://qt-project.org/downloads). 
-   2. Make a copy of the example Qt project for a port type (`example/node/customType`). 
+   1. Install [Qt and Qt Creator](https://www.qt.io/offline-installers).
+   2. Make a copy of the example project for a port type (`example/node/customType`).
    3. Open the project in Qt Creator. 
-   4. In `example.customType.pro`, change `ExampleLanguage.c` and `ExampleLanguage.h` to your port type file names. 
+   4. In `CMakeLists.txt`, change `ExampleLanguage.c` and `ExampleLanguage.h` to your port type file names.
    5. In the example project folder, rename `ExampleLanguage.c` and `ExampleLanguage.h` to your port type file names. 
    6. In `example.customType.greet.c`, replace all occurrences of `ExampleLanguage` with your port type name. 
-   7. Build your Qt project (Build > Build All). 
-   8. Start the Vuo Editor (or restart it if it's already running). 
+   7. Build your project (Build > Build All).
+   8. Start the Vuo editor (or restart it if it's already running).
 
 The next step is to modify the port type's source code so that it actually implements the data type you want. To learn how, read on. 
 
@@ -37,7 +37,7 @@ To implement a port type, you need to:
 
 ### The file name
 
-When you implement a port type, the first thing you have to decide is the type name. Every port type has two names: a type name (like @ref VuoInteger and a title (like "Integer"). The type name is how node classes refer to your port type. The title is what Vuo Editor users see when they hover over a port to see its information. When you create a port type, the file name is the type name. For example, the port type with name @ref VuoInteger is implemented in files called `VuoInteger.c` and `VuoInteger.h`. 
+When you implement a port type, the first thing you have to decide is the type name. Every port type has two names: a type name (like @ref VuoInteger and a title (like "Integer"). The type name is how node classes refer to your port type. The title is what Vuo editor users see when they hover over a port to see its information. When you create a port type, the file name is the type name. For example, the port type with name @ref VuoInteger is implemented in files called `VuoInteger.c` and `VuoInteger.h`.
 
 
 ### The metadata
@@ -53,7 +53,7 @@ VuoModuleMetadata({
 				 });
 @endcode
 
-The @ref VuoModuleMetadata macro takes a [JSON-formatted](http://www.json.org/) argument. The argument includes the title for the port type, a version number to help users upgrade and manage their port types, a description, and an array of keywords. The description and keywords are not currently used. 
+The @ref VuoModuleMetadata macro takes a [JSON-formatted](https://www.json.org/) argument. The argument includes the title for the port type, a version number to help users upgrade and manage their port types, a description, and an array of keywords. The description and keywords are not currently used.
 
 For more information, see the documentation for @ref VuoModuleMetadata. 
 
@@ -95,9 +95,9 @@ When you implement a port type, you have to implement certain functions to conve
 
 Unlike in a node class, in a port type each function name needs to be prefixed with the type name and an underscore. For example, the VuoInteger type has functions VuoInteger_makeFromJson(), VuoInteger_getJson(), and VuoInteger_getSummary(). In this documentation, we'll use "MyType" in place of the port type name. 
 
-Every type needs to implement the MyType_makeFromJson() function and the MyType_getJson() function. These functions are responsible for converting a value of @c MyType to and from a [JSON-C](https://github.com/json-c/json-c) object. For each input port of type @c MyType in a composition, the MyType_makeFromJson() function is called when the composition starts in order to initialize the port's value. While the composition is running, MyType_makeFromJson() is also called each time the composition receives a message to change the input port's value — for example, when a Vuo Editor user edits an input port value. For each input or output port of type @c MyType, the MyType_getJson() function is called each time the composition receives a message to retrieve the port's value. 
+Every type needs to implement the MyType_makeFromJson() function and the MyType_getJson() function. These functions are responsible for converting a value of @c MyType to and from a [JSON-C](https://github.com/json-c/json-c) object. For each input port of type @c MyType in a composition, the MyType_makeFromJson() function is called when the composition starts in order to initialize the port's value. While the composition is running, MyType_makeFromJson() is also called each time the composition receives a message to change the input port's value — for example, when a Vuo editor user edits an input port value. For each input or output port of type @c MyType, the MyType_getJson() function is called each time the composition receives a message to retrieve the port's value.
 
-Every type also needs to implement the MyType_getSummary() function, which returns a brief textual description of the port's value. This function is called each time the port's node receives an event. The summary appears in the Vuo Editor when the user hovers over a port to see its value while the composition is running. Be sure to keep the summary brief so that it can be efficiently sent many times per second to the Vuo Editor or another process. 
+Every type also needs to implement the MyType_getSummary() function, which returns a brief textual description of the port's value. This function is called each time the port's node receives an event. The summary appears in the Vuo editor when the user hovers over a port to see its value while the composition is running. Be sure to keep the summary brief so that it can be efficiently sent many times per second to the Vuo editor or another process. 
 
 You can define additional functions for working with your port type. For example, many built-in port types define a @c MyType_make() function as a constructor that node classes and other port types can use to construct a value of @c MyType. Be sure to prefix your functions with the port type name to avoid naming conflicts with other port types. 
 
@@ -113,25 +113,25 @@ Also see the source code for Vuo's built-in port types, which can serve as examp
 
 Before you can install your port type, you need to use the Vuo Compiler to compile it to a `.bc` file. 
 
-If you're using the example Qt project for creating a port type, then you can just build the Qt project (Build > Build All). 
+If you're using the example project for creating a port type, then you can just build the project (Build > Build All).
 
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](http://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example Qt project. 
+Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
 
 
 ## Packaging a port type
 
 The next step before installing your port type is to package it into a node set (@ref PackagingNodeSets). The node set should contain both the compiled (`.bc`) file and the header (`.h`) file for your port type. (Vuo needs the header file so it can specialize generic node classes like @vuoNode{Hold Value} and @vuoNode{Select Latest} with your port type.) 
 
-If you're using the example Qt project for creating a port type, then when you build the project, the compiled port type is automatically packaged into a node set.
+If you're using the example project for creating a port type, then when you build the project, the compiled port type is automatically packaged into a node set.
 
 Otherwise, you need to zip the port type files into a node set, following the instructions in @ref PackagingNodeSets. 
 
 
 ## Installing a port type
 
-The final step is to place your node set in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](http://vuo.org/manual.pdf). 
+The final step is to place your node set in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
 
-If you're using the example Qt project for creating a port type, then when you build the project, the node set is automatically placed in `~/Library/Application Support/Vuo/Modules/`. 
+If you're using the example project for creating a port type, then when you build the project, the node set is automatically placed in `~/Library/Application Support/Vuo/Modules/`.
 
 Otherwise, you need to manually move the compiled port type (`.bc`) file to one of these folders. 
 
@@ -156,7 +156,7 @@ Built-in Vuo port types follow a set of naming conventions. If you develop port 
 
 ## Using port types in interprocess communication
 
-The JSON representation of a port value may either be used within a single process or be sent between separate processes. For example, the Vuo Editor sends and receives JSON representations of port values to and from a composition running in a separate process. Other applications that use Vuo's API may run a composition — and transmit JSON representations of port values — either to a separate process or within the current process (see @ref DevelopingApplications). For some port types, whether they're sent within-process or between-processes makes a difference in how they should be converted to and from JSON. 
+The JSON representation of a port value may either be used within a single process or be sent between separate processes. For example, the Vuo editor sends and receives JSON representations of port values to and from a composition running in a separate process. Other applications that use Vuo's API may run a composition — and transmit JSON representations of port values — either to a separate process or within the current process (see @ref DevelopingApplications). For some port types, whether they're sent within-process or between-processes makes a difference in how they should be converted to and from JSON. 
 
 For example, the VuoImage port type uses a shortcut to convert to and from JSON more efficiently within-process: its JSON format contains references to data stored in memory. However, this won't work when serializing a VuoImage in one process and unserializing it in another. The VuoImage port type needs another serialization method to fall back on when being sent between-processes. 
 

@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Test graph
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="619,180"];
+ConvertIntegertoText2 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="528,328" _integer="0"];
+ConvertTexttoInteger [type="vuo.type.text.integer" version="1.0.0" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="303,152"];
+ConvertTexttoInteger2 [type="vuo.type.text.integer" version="1.0.0" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="358,511" _text="\"\""];
+ConvertTexttoInteger3 [type="vuo.type.text.integer" version="1.0.0" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="362,608" _text="\"\""];
+ConvertTexttoInteger5 [type="vuo.type.text.integer" version="1.0.0" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="517,701"];
+Divide [type="vuo.math.divide.VuoInteger" version="1.0.0" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="778,512"];
+Divide3 [type="vuo.math.divide.VuoInteger" version="1.0.0" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="825,674" _b="1"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="133,267" _started_eventThrottling="enqueue"];
+Hold2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="135,134" _initialValue="\"\"" _newValue="\"\""];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="246,702" _initialValue="\"\"" _newValue="\"\""];
+SelectLatest [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="938,249"];
+
+ConvertIntegertoText2:text -> SelectLatest:option2;
+ConvertIntegertoText:text -> SelectLatest:option1;
+ConvertTexttoInteger2:integer -> Divide:a;
+ConvertTexttoInteger2:integer -> Divide:b;
+ConvertTexttoInteger5:integer -> Divide3:a;
+ConvertTexttoInteger:integer -> ConvertIntegertoText:integer;
+FireonStart:started -> ConvertIntegertoText2:integer;
+FireonStart:started -> SelectLatest:option1;
+Hold2:heldValue -> ConvertTexttoInteger:text;
+HoldValue2:heldValue -> ConvertTexttoInteger5:refresh;
+HoldValue2:heldValue -> ConvertTexttoInteger5:text;
+}

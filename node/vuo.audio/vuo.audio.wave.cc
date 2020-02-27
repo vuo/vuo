@@ -2,13 +2,13 @@
  * @file
  * vuo.audio.wave node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-extern "C" {
 #include "node.h"
+extern "C" {
 #include "VuoWave.h"
 #include "VuoAudioSamples.h"
 #include "math.h"
@@ -27,8 +27,13 @@ VuoModuleMetadata({
 				 });
 }
 
-#include "Gamma/Oscillator.h"
-#include "Gamma/Sync.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wignored-qualifiers"
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#pragma clang diagnostic ignored "-Wunused-function"
+#include <Gamma/Oscillator.h>
+#include <Gamma/Sync.h>
+#pragma clang diagnostic pop
 
 struct nodeInstanceData {
 	gam::Sync *sync;

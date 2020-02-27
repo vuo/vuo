@@ -2,9 +2,9 @@
  * @file
  * vuo.layer.render.image node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,12 +19,17 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Layers to Image",
-					 "keywords" : [ "draw", "opengl", "scenegraph", "graphics" ],
+					 "keywords" : [
+						 "draw", "graphics",
+						 "2D",
+						 "convert"
+					 ],
 					 "version" : "1.2.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
+						 "isDeprecated": true,
 						 "exampleCompositions" : [ "DrawRainbowTrail.vuo" ]
 					 }
 				 });
@@ -58,13 +63,13 @@ void nodeInstanceEvent
 		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
-	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity()).sceneObject;
+	VuoSceneObject rootSceneObject = (VuoSceneObject)VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity());
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
-	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, multisampling, NULL);
+	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, multisampling, NULL, false);
 
-	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height, 1);
+	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height, 1, NULL);
 }
 
 void nodeInstanceFini

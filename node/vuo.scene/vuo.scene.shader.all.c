@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.shader.all node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -30,21 +30,21 @@ void nodeEvent
 	if (!s)
 		s = VuoShader_makeDefaultShader();
 
-	if (!object.childObjects)
+	if (!VuoSceneObject_getChildObjects(object))
 	{
 		*shadedObject = object;
-		shadedObject->shader = s;
+		VuoSceneObject_setShader(*shadedObject, s);
 		return;
 	}
 
 	VuoSceneObject copy = VuoSceneObject_copy(object);
 
-	VuoSceneObject_apply(&copy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-							if (!currentObject->shader)
-								return;
+	VuoSceneObject_apply(copy, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+		if (!VuoSceneObject_getShader(currentObject))
+			return;
 
-							currentObject->shader = s;
-						 });
+		VuoSceneObject_setShader(currentObject, s);
+	});
 
 	*shadedObject = copy;
 }

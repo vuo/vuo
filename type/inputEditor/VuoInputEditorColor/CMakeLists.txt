@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorColor SOURCE VuoInputEditorColor.cc)

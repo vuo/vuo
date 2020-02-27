@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Drawing Units="in" PPU="128" Major="1" Subdivisions="8" Zoom="0.1" ViewPositionX="398.859958775838" ViewPositionY="445.668704414368" ActiveLayer="0" PrintSize="8.5,11">
+  <Layer Name="Layer 2" Visible="True" Locked="False">
+    <Oval X="-1.625" Y="-1.625" Width="3.25" Height="3.25" Filled="False" StrokeColor="#7F7F7F" StrokeSize="96" />
+    <Line X1="1.125" Y1="1.375" X2="2.75" Y2="3" StrokeColor="#7F7F7F" StrokeSize="96" />
+  </Layer>
+</Drawing>

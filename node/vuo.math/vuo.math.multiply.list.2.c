@@ -2,16 +2,16 @@
  * @file
  * vuo.math.multiply.list.2 node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					  "title" : "Multiply Lists",
-					  "keywords" : [ "scale", "product", "times", "*", "arithmetic", "calculate" ],
+					  "keywords" : [ "scale", "product", "times", "*", "•", "×", "x", "arithmetic", "calculate" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -22,6 +22,9 @@ VuoModuleMetadata({
 						  "exampleCompositions" : [ ]
 					  }
 				  });
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 
 static VuoInteger VuoInteger_make1(void)
 {
@@ -43,6 +46,8 @@ static VuoPoint4d VuoPoint4d_make1(void)
 {
 	return (VuoPoint4d){1,1,1,1};
 }
+
+#pragma clang diagnostic pop
 
 void nodeEvent
 (

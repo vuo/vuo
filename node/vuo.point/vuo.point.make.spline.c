@@ -2,9 +2,9 @@
  * @file
  * vuo.point.make.spline node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -48,6 +48,9 @@ static double tcb(double p0, double p1, double p2, double p3, double t, double t
 		 + h4*dd;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 static VuoReal spline_VuoReal(VuoReal *inputPointData, long point, long inputPointCount, double t, double tension, double continuity, double bias)
 {
 	return tcb(inputPointData[MAX(0,point-1)], inputPointData[point], inputPointData[point+1], inputPointData[MIN(inputPointCount-1,point+2)], t, tension, continuity, bias);
@@ -69,6 +72,8 @@ static VuoPoint3d spline_VuoPoint3d(VuoPoint3d *inputPointData, long point, long
 		tcb(inputPointData[MAX(0,point-1)].z, inputPointData[point].z, inputPointData[point+1].z, inputPointData[MIN(inputPointCount-1,point+2)].z, t, tension, continuity, bias)
 	};
 }
+
+#pragma clang diagnostic pop
 
 void nodeEvent
 (

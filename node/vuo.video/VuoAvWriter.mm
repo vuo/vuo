@@ -2,9 +2,9 @@
  * @file
  * VuoAvWriter implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "module.h"
@@ -103,24 +103,24 @@ bool VuoAvWriter_isInitialized(VuoAvWriter writer)
  * Can return false in the event that a movie file already exists at url, or initialization failed for any reason.
  * After the initial call, this method always returns true.
  */
-void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image, VuoReal timestamp)
+void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image, VuoReal timestamp, bool blockIfNotReady)
 {
 	VuoAvWriterObject* av = (VuoAvWriterObject*)writer;
 
 	if(image == nil || av == nil || ![av isRecording])
 		return;
 
-	[av appendImage:image presentationTime:timestamp];
+	[av appendImage:image presentationTime:timestamp blockIfNotReady:blockIfNotReady];
 }
 
-void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples, VuoReal timestamp)
+void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples, VuoReal timestamp, bool blockIfNotReady)
 {
 	VuoAvWriterObject* av = (VuoAvWriterObject*)writer;
 
 	if(samples == nil || av == nil || ![av isRecording])
 		return;
 
-	[av appendAudio:samples presentationTime:timestamp];
+	[av appendAudio:samples presentationTime:timestamp blockIfNotReady:blockIfNotReady];
 }
 
 void VuoAvWriter_finalize(VuoAvWriter writer)

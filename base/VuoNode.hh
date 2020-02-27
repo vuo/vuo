@@ -2,9 +2,9 @@
  * @file
  * VuoNode interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -27,7 +27,7 @@ class VuoNode : public VuoBase<VuoCompilerNode,VuoRendererNode>
 public:
 	/**
 	 * Possible colors with which the user can tint a node.
-	 * (Red is reserved for error reporting; Blue is reserved for selection/hovering/highlighting.)
+	 * (Red is reserved for error reporting.)
 	 */
 	enum TintColor
 	{
@@ -43,6 +43,9 @@ public:
 		TintLime,
 	};
 
+	static string getGraphvizNameForTint(enum TintColor tintColor);
+	static TintColor getTintWithGraphvizName(string name);
+
 	VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, vector<VuoPort *>inputPorts, vector<VuoPort *> outputPorts, double x=0, double y=0, bool collapsed=false, VuoNode::TintColor tintColor=TintNone);
 
 	VuoNodeClass * getNodeClass(void);
@@ -51,7 +54,12 @@ public:
 	VuoPort * getOutputPortWithName(string portName);
 
 	vector<VuoPort *> getInputPorts(void);
+	vector<VuoPort *> getInputPortsBeforePort(VuoPort *port);
+	vector<VuoPort *> getInputPortsAfterPort(VuoPort *port);
+
 	vector<VuoPort *> getOutputPorts(void);
+	vector<VuoPort *> getOutputPortsBeforePort(VuoPort *port);
+	vector<VuoPort *> getOutputPortsAfterPort(VuoPort *port);
 
 	VuoPort * getRefreshPort(void);
 
@@ -72,6 +80,9 @@ public:
 	string getTintColorGraphvizName(void);
 	void setTintColor(enum TintColor tintColor);
 
+	bool isForbidden(void);
+	void setForbidden(bool forbidden);
+
 	void setRawGraphvizDeclaration(string declaration);
 	string getRawGraphvizDeclaration(void);
 	string getRawGraphvizIdentifier(void);
@@ -87,5 +98,6 @@ private:
 	int x,y;
 	bool collapsed;
 	enum TintColor tintColor;
+	bool forbidden;
 	string rawGraphvizDeclaration;
 };

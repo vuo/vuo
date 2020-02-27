@@ -2,16 +2,16 @@
  * @file
  * vuo.serial.make.url node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 #include "VuoSerialDevice.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Serial Device from URL",
+					  "title" : "Specify Serial Device by URL",
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [

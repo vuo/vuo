@@ -1,0 +1,62 @@
+/**
+ * @file
+ * Demonstrates how the [Improve Downscaling Quality](vuo-node://vuo.image.mipmap) node reduces aliasing in scaled-down images and layers.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-30,210" _reset_manuallyFirable];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1095,75" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1" _columns="2" _height="1.5" _rows="2"];
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="255,255" _startPosition="32" _endPosition="128" _duration="2" _curve="\"linear\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="255,420" _startPosition="0.050000000000000003" _endPosition="0.25" _duration="2" _curve="\"linear\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-225,255" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+ImproveDownscalingQuality [type="vuo.image.mipmap" version="1.0.0" label="Improve Downscaling Quality|<refresh>refresh\l|<image>image\l|<outputImage>outputImage\r" pos="405,300" fillcolor="orange"];
+MakeCheckerboardImage2 [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="180,75" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.02" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1024" _height="3072"];
+MakeImageLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="855,75" _center="\{\"x\":0.0,\"y\":0.0\}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeImageLayer2 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="855,180" _center="\{\"x\":0.0,\"y\":0.0\}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeImageLayer3 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="675,285" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _opacity="1.0"];
+MakeImageLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="675,420" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _opacity="1"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1326,86" fillcolor="blue"];
+MakeList3 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1027,86"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1140,345" _text="\"Default quality\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.60000002384185791,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1140,495" _text="\"Improved quality\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.60000002384185791,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1380,75" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="675,75" _sizingMode="\"fit\"" _height="384"];
+ResizeImage2 [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="675,180" _sizingMode="\"fit\"" _height="384"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="750,210"];
+Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="750,315"];
+
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage2:upperLeftColor;
+AllowFirstEvent:firstEvent -> MakeTextLayer2:text [style=invis];
+AllowFirstEvent:firstEvent -> MakeTextLayer:text [style=invis];
+ArrangeLayersInGrid:griddedLayer -> MakeList:1;
+Curve2:value -> MakeImageLayer3:width;
+Curve2:value -> MakeImageLayer4:width;
+Curve:value -> Round2:real;
+Curve:value -> Round:real;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
+FireOnDisplayRefresh:requestedFrame -> Curve:time;
+ImproveDownscalingQuality:outputImage -> MakeImageLayer4:image;
+ImproveDownscalingQuality:outputImage -> ResizeImage2:image;
+MakeCheckerboardImage2:image -> ImproveDownscalingQuality:image;
+MakeCheckerboardImage2:image -> MakeImageLayer3:image;
+MakeCheckerboardImage2:image -> ResizeImage:image;
+MakeImageLayer2:layer -> MakeList3:2;
+MakeImageLayer3:layer -> MakeList3:3;
+MakeImageLayer4:layer -> MakeList3:4;
+MakeImageLayer:layer -> MakeList3:1;
+MakeList3:list -> ArrangeLayersInGrid:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextLayer2:layer -> MakeList:3;
+MakeTextLayer:layer -> MakeList:2;
+ResizeImage2:resizedImage -> MakeImageLayer2:image;
+ResizeImage:resizedImage -> MakeImageLayer:image;
+Round2:rounded -> ResizeImage2:width;
+Round:rounded -> ResizeImage:width;
+}

@@ -2,9 +2,9 @@
  * @file
  * vuo.audio.file.info node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,12 +21,11 @@ VuoModuleMetadata({
 						  "aac", "m4a", "ac3",
 						  "3gp", "amr"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoAudioFile"
 					  ],
 					  "node" : {
-						  "isInterface" : true,
 						  "exampleCompositions" : [ ]
 					  }
 				 });
@@ -40,5 +39,11 @@ void nodeEvent
 //		VuoOutputData(VuoDictionary_VuoText) metadata
 )
 {
-	VuoAudioFile_getInfo(url, duration, channelCount, sampleRate);
+	if (!VuoAudioFile_getInfo(url, duration, channelCount, sampleRate))
+	{
+		VUserLog("Error: Couldn't read '%s'.", url);
+		*duration = 0;
+		*channelCount = 0;
+		*sampleRate = 0;
+	}
 }

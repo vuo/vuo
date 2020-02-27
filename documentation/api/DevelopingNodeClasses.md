@@ -13,16 +13,16 @@ Vuo currently provides an API for the C programming language. (Node classes can 
 
 ## Quick start
 
-The easiest way to start developing a node class is with one of the example Qt projects for a node class, which are provided with the Vuo SDK. 
+The easiest way to start developing a node class is with one of the example projects for a node class, which are provided with the Vuo SDK.
 
-   1. Install [Qt and Qt Creator](http://qt-project.org/downloads). 
-   2. Make a copy of the example Qt project for a stateless node class (`example/node/stateless`). 
+   1. Install [Qt and Qt Creator](https://www.qt.io/offline-installers).
+   2. Make a copy of the example project for a stateless node class (`example/node/stateless`).
    3. Open the project in Qt Creator. 
-   4. In `example.stateless.pro`, change `example.stateless.vuoize.c` to your node class file name. 
+   4. In `CMakeLists.txt`, change `example.stateless.vuoize.c` to your node class file name.
    5. In the example project folder, rename `example.stateless.vuoize.c` to your node class file name. 
    6. In `example.stateless.vuoize.c`, in the @ref VuoModuleMetadata call, change "Vuoize Text" to the title that you want to appear on the node. 
-   7. Build your Qt project (Build > Build All). 
-   8. Start the Vuo Editor (or restart it if it's already running). 
+   7. Build your project (Build > Build All).
+   8. Start the Vuo editor (or restart it if it's already running).
 
 Your node class should now be listed in your Node Library. You can now add it to a composition and see it perform the task defined 
 in its nodeEvent() function. 
@@ -43,7 +43,7 @@ To implement a node class, you need to:
 
 ### The file name
 
-When you implement a node class, the first thing you have to decide is the class name. Every node class has two names: a class name (like @vuoNodeClass{vuo.math.add}) and a title (like @vuoNode{Add}). In the Vuo Editor, you can see the difference between titles and class names by switching between the "Titles" view and the "Class names" view of the Node Library. After a node has been added to a composition, its title can be changed, but its class name always stays the same. When you create a node class, the file name is the node class name. For example, the node class with name @vuoNodeClass{vuo.math.add} is implemented in a file called `vuo.math.add.c`. 
+When you implement a node class, the first thing you have to decide is the class name. Every node class has two names: a class name (like @vuoNodeClass{vuo.math.add}) and a title (like @vuoNode{Add}). In the Vuo editor, you can see the difference between titles and class names by switching between the "Titles" view and the "Class names" view of the Node Library. After a node has been added to a composition, its title can be changed, but its class name always stays the same. When you create a node class, the file name is the node class name. For example, the node class with name @vuoNodeClass{vuo.math.add} is implemented in a file called `vuo.math.add.c`.
 
 
 ### The metadata
@@ -55,18 +55,13 @@ VuoModuleMetadata({
 					 "title" : "Add",
 					 "description" : "Adds the terms and outputs their sum.",
 					 "keywords" : [ "sum", "+" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 @endcode
 
-The @ref VuoModuleMetadata macro takes a [JSON-formatted](http://www.json.org/) argument. The argument includes the default title for nodes of this node class, a description to help users understand how to use the node class, an array of keywords used when searching the Node Library, and a version number to help users upgrade and manage their node classes. 
+The @ref VuoModuleMetadata macro takes a [JSON-formatted](https://www.json.org/) argument. The argument includes the default title for nodes of this node class, a description to help users understand how to use the node class, an array of keywords used when searching the Node Library, and a version number to help users upgrade and manage their node classes.
 
 Node classes are not the only files in Vuo that can define module metadata. You'll see this in @ref DevelopingTypes and @ref DevelopingLibraryModules. The title, description, keywords, and version can be defined in other types of files as well. 
-
-But some module metadata are specific to node classes. The module metadata above include whether the node class is an interface, which affects how the node is rendered in a composition. 
 
 For more information, see the documentation for @ref VuoModuleMetadata. 
 
@@ -166,7 +161,7 @@ Besides the instance data, another difference between this example and the state
 The body of @ref nodeInstanceEvent defines what happens when the node receives an event. In this case, it increments the count if the event came in through the @vuoPort{increment} port, then outputs the count. 
 
 
-#### @anchor DevelopingNodeClassesImmutable Nodes should treat port data as immutable
+#### Nodes should treat port data as immutable {#DevelopingNodeClassesImmutable}
 
 The Vuo Compiler assumes that data passed between nodes is immutable.
 
@@ -241,21 +236,21 @@ Also see the source code for Vuo's built-in node classes, which can serve as exa
 
 Before you can install your node class, you need to use the Vuo Compiler to compile it to a `.vuonode` file. 
 
-If you're using the example Qt project for creating a node class, then you can just build the Qt project (Build > Build All). 
+If you're using the example project for creating a node class, then you can just build the project (Build > Build All).
 
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](http://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example Qt project. 
+Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
 
 
 
 ## Installing a node class
 
-The final step is to place your compiled node class in the correct folder, so that it will show up in the Vuo Editor's Node Library and be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](http://vuo.org/manual.pdf). 
+The final step is to place your compiled node class in the correct folder, so that it will show up in the Vuo editor's Node Library and be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
 
-If you're using the example Qt project for creating a node class, then when you build the project, the compiled node class is automatically placed  in `~/Library/Application Support/Vuo/Modules/`. 
+If you're using the example project for creating a node class, then when you build the project, the compiled node class is automatically placed  in `~/Library/Application Support/Vuo/Modules/`.
 
 Otherwise, you need to manually move the compiled node class (`.vuonode`) file to one of these folders. 
 
-After that, the next time you start the Vuo Editor, the node class should show up in the Vuo Editor's Node Library. You can also see a list of all installed node classes by running `vuo-compile --list-node-classes`. 
+After that, the next time you start the Vuo editor, the node class should show up in the Vuo editor's Node Library. You can also see a list of all installed node classes by running `vuo-compile --list-node-classes`.
 
 
 
@@ -263,9 +258,9 @@ After that, the next time you start the Vuo Editor, the node class should show u
 
 If you're having trouble compiling or installing a node class, try running `vuo-compile --verbose`. This lists the paths that Vuo is using to compile a node class and find installed node classes. 
 
-If your node class is not showing up in the Vuo Editor's Node Library: 
+If your node class is not showing up in the Vuo editor's Node Library:
 
-   - Try restarting the Vuo Editor.  
+   - Try restarting the Vuo editor.
    - Try changing the Node Library to "Class names" view and searching for your node class file name. 
    - Make sure the compiled node class (`.vuonode`) file is in `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. 
    - Make sure there are no warnings when you compile the node class. 
@@ -280,7 +275,7 @@ Built-in Vuo nodes follow a set of naming conventions. If you develop node class
 
    - A node class's title should: 
       - Consist of a verb phrase (@vuoNode{Subtract}, not @vuoNode{Difference}). 
-      - Use [title case (Chicago Manual of Style)](http://blog.winepresspublishing.com/2012/06/grammar-tip-how-capitalize-titles/) (@vuoNode{Count within Range}). 
+      - Use [title case (Chicago Manual of Style)](https://web.archive.org/web/20130311235940/http://blog.winepresspublishing.com/2012/06/grammar-tip-how-capitalize-titles/) (@vuoNode{Count within Range}).
    - A node class's class name should: 
       - Consist of several parts separated by dots: 
          - The first part is the creator ("vuo" in @vuoNodeClass{vuo.math.count}, "mycompany" in @vuoNodeClass{mycompany.image.frobnicate}). 
@@ -298,12 +293,15 @@ Built-in Vuo nodes follow a set of naming conventions. If you develop node class
 
 In addition to these general rules, there are some special kinds of node classes that all have similar names: 
 
-   - A "Receive" node is an interface node that inputs data from a device or data source into the composition. 
+   - A "Receive" node inputs data from a device or data source into the composition.
       - If it's the only "Receive" node in its node set, its node class name should have the form @vuoNodeClass{[creator].[node set].receive} (example: @vuoNodeClass{vuo.audio.receive}). 
       - Its title should begin with "Receive" (example: @vuoNodeClass{Receive Live Audio}). 
-   - A "Send" node is an interface node that outputs data from the composition to a device, file, or network. 
+   - A "Send" node outputs data from the composition to a device, file, or network.
       - If it's the only "Send" node in its node set, its node class name should have the form @vuoNodeClass{[creator].[node set].send} (example: @vuoNodeClass{vuo.audio.send}). 
       - Its title should begin with "Send" (example: @vuoNodeClass{Send Live Audio}). 
+   - A "Specify" node describes a device so that a "Receive" or "Send" node can select a device matching that description.
+      - Its node class name should have the form @vuoNodeClass{[creator].[node set].specify.[optional details]} (example: @vuoNodeClass{vuo.serial.specify.name}, @vuoNodeClass{vuo.audio.specify.input.model}). (Node classes created before we established this convention use the term "make" instead of "specify", but "specify" is now preferred.)
+      - Its title should have the form @vuoNodeClass{Specify [thing made] [optional details]} (example: @vuoNodeClass{Specify Serial Device by Name}, @vuoNodeClass{Specify Audio Input by Model}).
    - A "Make" node puts together pieces (the inputs) to create a structured data value (the output). 
       - Its node class name should have the form @vuoNodeClass{[creator].[node set].make.[optional details]} (example: @vuoNodeClass{vuo.color.make.rgb}). 
       - Its title should have the form @vuoNodeClass{Make [optional details] [thing made]} (example: @vuoNodeClass{Make RGB Color}). 
@@ -320,4 +318,4 @@ In addition to these general rules, there are some special kinds of node classes
 
 ## Type-converter nodes
 
-In the Vuo Editor, when the user attempts to connect a cable between ports of different types (for example, @ref VuoInteger to @ref VuoReal), the connection is bridged by a type-converter node (for example, @vuoNode{Convert Integer to Real}) if one is available. This type-converter node is rendered in a special collapsed form and is attached to the input port to which it's connected. Currently, only certain built-in nodes may be used as type converters. Support is planned to allow any node with a single data-and-event input port and a single data-and-event output port of a different type to be used as a type converter. The Vuo Renderer decides when a node should be rendered as a collapsed, attached type converter, based on its connections to other nodes. 
+In the Vuo editor, when the user attempts to connect a cable between ports of different types (for example, @ref VuoInteger to @ref VuoReal), the connection is bridged by a type-converter node (for example, @vuoNode{Convert Integer to Real}) if one is available. This type-converter node is rendered in a special collapsed form and is attached to the input port to which it's connected. Currently, only certain built-in nodes may be used as type converters. Support is planned to allow any node with a single data-and-event input port and a single data-and-event output port of a different type to be used as a type converter. The Vuo Renderer decides when a node should be rendered as a collapsed, attached type converter, based on its connections to other nodes.

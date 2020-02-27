@@ -2,9 +2,9 @@
  * @file
  * VuoUrl C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -22,6 +22,7 @@ extern "C"
 {
 #endif
 
+#include "VuoHeap.h"
 #include "VuoInteger.h"
 #include "VuoText.h"
 
@@ -35,8 +36,8 @@ typedef VuoText VuoUrl;
 VuoUrl VuoUrl_makeFromJson(struct json_object *js);
 struct json_object *VuoUrl_getJson(const VuoUrl value);
 char * VuoUrl_getSummary(const VuoUrl value);
-bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment);
-bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension);
+bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment) VuoWarnUnusedResult;
+bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension) VuoWarnUnusedResult;
 
 #define VuoUrl_SUPPORTS_COMPARISON
 bool VuoUrl_areEqual(const VuoText a, const VuoText b);
@@ -58,7 +59,7 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url);
 VuoText VuoUrl_escapePosixPath(const VuoText posixPath);
 VuoText VuoUrl_escapeUTF8(const VuoText url);
 bool VuoUrl_isBundle(const VuoUrl url);
-VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength);
+VuoUrl VuoUrl_appendFileExtension(const char *filename, struct json_object *validExtensions);
 VuoText VuoUrl_decodeRFC3986(const VuoUrl url);
 
 /// @{

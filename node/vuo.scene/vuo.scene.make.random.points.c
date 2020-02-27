@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.random.points node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					"keywords" : [
 						"stars", "starfield", "shape"
 					],
-					"version" : "1.0.0",
+					"version" : "1.1.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -27,8 +27,23 @@ VuoModuleMetadata({
 					}
 				 });
 
-void nodeEvent
+struct nodeInstanceData
+{
+	VuoDistribution3d distribution;
+	VuoInteger count;
+	VuoInteger seed;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoTransform) transform,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 		VuoInputData(VuoDistribution3d, {"default":"cube-volume"}) distribution,
@@ -38,24 +53,35 @@ void nodeEvent
 		VuoOutputData(VuoSceneObject) object
 )
 {
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (distribution == (*context)->distribution
+	 && count == (*context)->count
+	 && seed == (*context)->seed)
+	{
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, transform);
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
+		VuoMesh m = VuoMesh_copyShallow(VuoSceneObject_getMesh(*object));
+		VuoMesh_setPrimitiveSize(m, pointSize);
+		VuoSceneObject_setMesh(*object, m);
+		return;
+	}
+
 	unsigned int vertexCount = MAX(1, count);
 
-	VuoPoint4d *vertices   = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d *normals    = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d *tangents   = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d *bitangents = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d *textures   = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
+	float *positions, *normals, *textureCoordinates;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, &normals, &textureCoordinates, NULL, 0, NULL);
 
 	unsigned short randomState[3];
 	VuoInteger_setRandomState(randomState, seed);
 
 	if (distribution == VuoDistribution3d_CubeVolume)
 		for (unsigned int i = 0; i < vertexCount; ++i)
-			vertices[i] = (VuoPoint4d){
-					VuoReal_randomWithState(randomState, -.5, .5),
-					VuoReal_randomWithState(randomState, -.5, .5),
-					VuoReal_randomWithState(randomState, -.5, .5),
-					1};
+		{
+			positions[i * 3    ] = VuoReal_randomWithState(randomState, -.5, .5);
+			positions[i * 3 + 1] = VuoReal_randomWithState(randomState, -.5, .5);
+			positions[i * 3 + 2] = VuoReal_randomWithState(randomState, -.5, .5);
+		}
 	else if (distribution == VuoDistribution3d_CubeSurface)
 		for (unsigned int i = 0; i < vertexCount; ++i)
 		{
@@ -65,14 +91,25 @@ void nodeEvent
 			VuoPoint2d n = VuoPoint2d_randomWithState(randomState,
 													  (VuoPoint2d){-.5,-.5},
 													  (VuoPoint2d){ .5, .5});
-			VuoPoint3d p = {0,0,0};
 			VuoInteger sign = (f&1) ? 1 : -1;
 			if (f&2)
-				vertices[i] = (VuoPoint4d){n.x, n.y, .5 * sign, 1};
+			{
+				positions[i * 3    ] = n.x;
+				positions[i * 3 + 1] = n.y;
+				positions[i * 3 + 2] = .5 * sign;
+			}
 			else if (f&4)
-				vertices[i] = (VuoPoint4d){n.x, .5 * sign, n.y, 1};
+			{
+				positions[i * 3    ] = n.x;
+				positions[i * 3 + 1] = .5 * sign;
+				positions[i * 3 + 2] = n.y;
+			}
 			else
-				vertices[i] = (VuoPoint4d){.5 * sign, n.x, n.y, 1};
+			{
+				positions[i * 3    ] = .5 * sign;
+				positions[i * 3 + 1] = n.x;
+				positions[i * 3 + 2] = n.y;
+			}
 		}
 	else if (distribution == VuoDistribution3d_SphereVolume)
 		for (unsigned int i = 0; i < vertexCount; ++i)
@@ -87,7 +124,9 @@ void nodeEvent
 				// …and check whether it's inside the sphere.
 			} while (p.x*p.x + p.y*p.y + p.z*p.z > 1);
 
-			vertices[i] = (VuoPoint4d){p.x/2, p.y/2, p.z/2, 1};
+			positions[i * 3    ] = p.x / 2;
+			positions[i * 3 + 1] = p.y / 2;
+			positions[i * 3 + 2] = p.z / 2;
 		}
 	else if (distribution == VuoDistribution3d_SphereSurface)
 		for (unsigned int i = 0; i < vertexCount; ++i)
@@ -100,28 +139,30 @@ void nodeEvent
 			float phi = p.y;
 			float theta = asin(z);
 			float ct = cos(theta);
-			vertices[i] = (VuoPoint4d){ct*cos(phi)/2., ct*sin(phi)/2., z/2., 1};
+			positions[i * 3    ] = ct * cos(phi) / 2.;
+			positions[i * 3 + 1] = ct * sin(phi) / 2.;
+			positions[i * 3 + 2] = z / 2.;
 		}
 
 	for (unsigned int i = 0; i < vertexCount; ++i)
 	{
-		normals[i]    = (VuoPoint4d){0, 0, 1, 1};
-		tangents[i]   = (VuoPoint4d){1, 0, 0, 1};
-		bitangents[i] = (VuoPoint4d){0, 1, 0, 1};
-		textures[i]   = (VuoPoint4d){
-				VuoReal_randomWithState(randomState, 0, 1),
-				VuoReal_randomWithState(randomState, 0, 1),
-				0, 1};
+		normals[i * 3    ] = 0;
+		normals[i * 3 + 1] = 0;
+		normals[i * 3 + 2] = 1;
+		textureCoordinates[i * 2    ] = VuoReal_randomWithState(randomState, 0, 1);
+		textureCoordinates[i * 2 + 1] = VuoReal_randomWithState(randomState, 0, 1);
 	}
 
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													vertices, normals, tangents, bitangents, textures,
-													0, NULL, VuoMesh_Points);
-	submesh.faceCullingMode = GL_NONE;
-	submesh.primitiveSize = pointSize;
-
-	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(vertexCount,
+		positions, normals, textureCoordinates, NULL,
+		0, NULL, VuoMesh_Points);
+	VuoMesh_setFaceCulling(mesh, VuoMesh_CullNone);
+	VuoMesh_setPrimitiveSize(mesh, pointSize);
 
 	VuoShader shader = VuoShader_make_VuoGenericType1(material);
-	*object = VuoSceneObject_make(mesh, shader, transform, NULL);
+	*object = VuoSceneObject_makeMesh(mesh, shader, transform);
+
+	(*context)->distribution = distribution;
+	(*context)->count = count;
+	(*context)->seed = seed;
 }

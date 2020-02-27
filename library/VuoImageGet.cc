@@ -2,9 +2,9 @@
  * @file
  * VuoImageGet implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoImageGet.h"
@@ -19,11 +19,10 @@
 
 #include <OpenGL/CGLMacro.h>
 
+#include "module.h"
 
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoImageGet",
@@ -144,7 +143,19 @@ VuoImage VuoImage_get(const char *imageURL)
 		const FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
 		const unsigned int bpp = FreeImage_GetBPP(dib);
 		const FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(dib);
-		VDebugLog("ImageFormat=%d  ImageType=%d  BPP=%d  ImageColorType=%d", fif, type, bpp, colorType);
+		const FIICCPROFILE *colorProfile = FreeImage_GetICCProfile(dib);
+		FITAG *exifColorSpace = NULL;
+		FreeImage_GetMetadata(FIMD_EXIF_EXIF, dib, "ColorSpace", &exifColorSpace);
+		VDebugLog("ImageFormat=%d  ImageType=%d  BPP=%d  colorType=%s  Profile=%s(%d)  EXIF_ColorSpace=%s", fif, type, bpp,
+				  colorType == FIC_MINISWHITE ? "minIsWhite" :
+					  (colorType == FIC_MINISBLACK ? "minIsBlack" :
+					  (colorType == FIC_RGB ? "RGB" :
+					  (colorType == FIC_PALETTE ? "indexed" :
+					  (colorType == FIC_RGBALPHA ? "RGBA" :
+					  (colorType == FIC_CMYK ? "CMYK" : "unknown"))))),
+				  colorProfile->flags & FIICC_COLOR_IS_CMYK ? "CMYK" : "RGB",
+				  colorProfile->size,
+				  FreeImage_TagToString(FIMD_EXIF_EXIF, exifColorSpace));
 
 		if (type == FIT_FLOAT
 		 || type == FIT_DOUBLE
@@ -154,7 +165,7 @@ VuoImage VuoImage_get(const char *imageURL)
 		 || type == FIT_INT32)
 		{
 			// If it is > 8bpc greyscale, convert to float.
-			colorDepth = VuoImageColorDepth_16;
+			colorDepth = VuoImageColorDepth_32;
 			format = GL_LUMINANCE;
 
 			FIBITMAP *dibFloat = FreeImage_ConvertToFloat(dib);
@@ -165,7 +176,7 @@ VuoImage VuoImage_get(const char *imageURL)
 			  || type == FIT_RGBF)
 		{
 			// If it is > 8bpc WITHOUT an alpha channel, convert to float.
-			colorDepth = VuoImageColorDepth_16;
+			colorDepth = VuoImageColorDepth_32;
 			format = GL_RGB;
 
 			FIBITMAP *dibFloat = FreeImage_ConvertToRGBF(dib);
@@ -176,7 +187,7 @@ VuoImage VuoImage_get(const char *imageURL)
 			  || type == FIT_RGBAF)
 		{
 			// If it is > 8bpc WITH an alpha channel, convert to float.
-			colorDepth = VuoImageColorDepth_16;
+			colorDepth = VuoImageColorDepth_32;
 			format = GL_RGBA;
 
 			FIBITMAP *dibFloat = FreeImage_ConvertToRGBAF(dib);
@@ -235,6 +246,12 @@ VuoImage VuoImage_get(const char *imageURL)
 				if (!FreeImage_PreMultiplyWithAlpha(dib))
 					VUserLog("Warning: Premultiplication failed.");
 			}
+			else
+			{
+				VUserLog("Error: '%s': Unknown colorType %d.", imageURL, colorType);
+				FreeImage_Unload(dib);
+				return NULL;
+			}
 		}
 
 		pixels = FreeImage_GetBits(dib);
@@ -246,7 +263,13 @@ VuoImage VuoImage_get(const char *imageURL)
 		}
 	}
 
-	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, format, pixelsWide, pixelsHigh, colorDepth, ^(void *buffer){
+	// FreeImage's documentation says "Every scanline is DWORD-aligned."
+	// …so round the row stride up to the nearest 4 bytes.
+	// See @ref TestVuoImage::testFetchOddStride.
+	int bytesPerRow = pixelsWide * VuoGlTexture_getBytesPerPixelForInternalFormat(VuoImageColorDepth_getGlInternalFormat(format, colorDepth));
+	bytesPerRow = (bytesPerRow + 3) & ~0x3;
+
+	VuoImage vuoImage = VuoImage_makeFromBufferWithStride(pixels, format, pixelsWide, pixelsHigh, bytesPerRow, colorDepth, ^(void *buffer){
 		FreeImage_Unload(dib);
 		free(data);
 	});

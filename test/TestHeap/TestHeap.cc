@@ -2,9 +2,9 @@
  * @file
  * TestHeap interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
@@ -74,6 +74,39 @@ private slots:
 
 			VuoRelease(p);
 		}
+	}
+
+	void testIsPointerReadable_data()
+	{
+		QTest::addColumn<void *>("pointer");
+		QTest::addColumn<bool>("expectedReadable");
+
+		QTest::newRow("NULL")                << (void *)0x0            << false;
+
+		QTest::newRow("const string")        << (void *)"const string" << true;
+
+		void *p = malloc(1);
+		QTest::newRow("malloc 1B")           << p << true;
+
+		p = malloc(1024);
+		QTest::newRow("malloc 1KB")          << p << true;
+
+		p = malloc(1024*1024);
+		QTest::newRow("malloc 1MB")          << p << true;
+
+		p = malloc(1024*1024*1024);
+		QTest::newRow("malloc 1GB")          << p << true;
+
+		QTest::newRow("Magic Music Visuals") << (void *)0x3f80000000fe1e70 << false;
+
+		QTest::newRow("64bit max")           << (void *)0xffffffffffffffff << false;
+	}
+	void testIsPointerReadable()
+	{
+		QFETCH(void *, pointer);
+		QFETCH(bool, expectedReadable);
+
+		QCOMPARE(VuoHeap_isPointerReadable(pointer), expectedReadable);
 	}
 };
 

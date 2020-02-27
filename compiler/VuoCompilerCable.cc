@@ -2,22 +2,18 @@
  * @file
  * VuoCompilerCable implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
 
+#include "VuoCable.hh"
 #include "VuoCompilerCable.hh"
-#include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerDataClass.hh"
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerNode.hh"
-#include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerPortClass.hh"
-#include "VuoCompilerTriggerPort.hh"
-#include "VuoCompilerType.hh"
 #include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 #include "VuoPort.hh"
@@ -25,12 +21,13 @@
 /**
  * Creates a cable from @c fromNode's @c fromPort to @c toNode's @c toPort.
  */
-VuoCompilerCable::VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort * fromPort, VuoCompilerNode * toNode, VuoCompilerPort * toPort)
+VuoCompilerCable::VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort * fromPort, VuoCompilerNode * toNode, VuoCompilerPort * toPort, bool addCableToPorts)
 	: VuoBaseDetail<VuoCable>("VuoCompilerCable",
 								new VuoCable(	fromNode? fromNode->getBase() : NULL,
 												fromPort? fromPort->getBase() : NULL,
 												toNode? toNode->getBase() : NULL,
-												toPort? toPort->getBase() : NULL))
+												toPort? toPort->getBase() : NULL,
+												addCableToPorts))
 {
 	getBase()->setCompiler(this);
 	isAlwaysEventOnly = false;
@@ -77,8 +74,8 @@ bool VuoCompilerCable::getHidden()
 bool VuoCompilerCable::portHasData(VuoPort *port)
 {
 	return (port &&
-			port->getClass()->hasCompiler() &&
-			static_cast<VuoCompilerPortClass *>(port->getClass()->getCompiler())->getDataVuoType());
+			(port->getClass()->getPortType() == VuoPortClass::dataAndEventPort ||
+			 (port->getClass()->hasCompiler() && static_cast<VuoCompilerPortClass *>(port->getClass()->getCompiler())->getDataVuoType())));
 }
 
 /**
@@ -94,16 +91,20 @@ string VuoCompilerCable::getGraphvizDeclaration(void)
 	VuoNode *toNode = getBase()->getToNode();
 	VuoPort *toPort = getBase()->getToPort();
 
-	if (fromNode && (fromNode->hasCompiler() || getBase()->isPublishedInputCable())
-			&& toNode && (toNode->hasCompiler() || getBase()->isPublishedOutputCable())
+	if ((fromNode || getBase()->isPublishedInputCable())
+			&& (toNode || getBase()->isPublishedOutputCable())
 			&& fromPort && toPort)
 	{
-		string fromNodeIdentifier = (fromNode && fromNode->hasCompiler() ?
-										 fromNode->getCompiler()->getGraphvizIdentifier() :
-										 VuoNodeClass::publishedInputNodeIdentifier);
-		string toNodeIdentifier = (toNode && toNode->hasCompiler() ?
-									   toNode->getCompiler()->getGraphvizIdentifier() :
-									   VuoNodeClass::publishedOutputNodeIdentifier);
+		string fromNodeIdentifier = (getBase()->isPublishedInputCable() ?
+										 VuoNodeClass::publishedInputNodeIdentifier :
+										 (fromNode->hasCompiler() ?
+											  fromNode->getCompiler()->getGraphvizIdentifier() :
+											  fromNode->getRawGraphvizIdentifier()));
+		string toNodeIdentifier = (getBase()->isPublishedOutputCable() ?
+									   VuoNodeClass::publishedOutputNodeIdentifier :
+									   (toNode->hasCompiler() ?
+											toNode->getCompiler()->getGraphvizIdentifier() :
+											toNode->getRawGraphvizIdentifier()));
 
 		declaration << fromNodeIdentifier << ":" << fromPort->getClass()->getName() << " -> "
 					<< toNodeIdentifier << ":" << toPort->getClass()->getName();

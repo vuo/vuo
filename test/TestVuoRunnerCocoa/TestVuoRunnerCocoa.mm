@@ -2,11 +2,12 @@
  * @file
  * TestVuoRunnerCocoa implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
+#undef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #include <OpenGL/CGLMacro.h>
 
@@ -20,6 +21,8 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunreachable-code"
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Winvalid-constexpr"
 #include <QtTest/QtTest>
 #pragma clang diagnostic pop
 
@@ -219,7 +222,7 @@ private slots:
 		QTest::newRow("ImageFilter.vuo")
 				<< "ImageFilter"
 				<< "An empty composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2018 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
+				<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -229,7 +232,7 @@ private slots:
 		QTest::newRow("ImageFilter512.vuo")
 				<< "ImageFilter512"
 				<< "A large composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2018 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
+				<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -250,12 +253,12 @@ private slots:
 			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
-			outputPortValues["blendedColor"] = "0,0,0,0";
+			outputPortValues["blendedColor"] = "0,0,0,1";
 
 			QTest::newRow("ImageFilterWithExtraPorts.vuo")
 					<< "ImageFilter with unconnected extra ports"
 					<< "An ImageFilter with unconnected non-protocol ports."
-					<< "Copyright © 2012–2018 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
+					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					// Disconnected published ports should have a title, type, default, and menuItems, but no other details.
@@ -278,12 +281,12 @@ private slots:
 			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
-			outputPortValues["blendedColor"] = "0,0,0,0";
+			outputPortValues["blendedColor"] = "0,0,0,1";
 
 			QTest::newRow("ImageFilterWithExtraPortsConnected.vuo")
 					<< "ImageFilter with connected extra ports"
 					<< "An ImageFilter with connected non-protocol ports."
-					<< "Copyright © 2012–2018 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
+					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					<< (QList<PortAndDetails>() << PortAndDetails("curveEasing", curveEasingDetails))
@@ -296,8 +299,8 @@ private slots:
 			positionDetails["title"] = "position";
 			positionDetails["type"] = "VuoPoint3d";
 			positionDetails["default"] = "0,0,1";
-			positionDetails["suggestedMin"] = "0,0,0";
-			positionDetails["suggestedMax"] = "360,360,360";
+			positionDetails["suggestedMin"] = "-2,-2,-2";
+			positionDetails["suggestedMax"] = "2,2,2";
 			positionDetails["suggestedStep"] = "0.1,0.1,0.1";
 
 			QMap<QString, QString> fieldOfViewDetails;
@@ -305,20 +308,30 @@ private slots:
 			fieldOfViewDetails["type"] = "VuoReal";
 			fieldOfViewDetails["default"] = "0.01";
 			fieldOfViewDetails["suggestedMin"] = "0.01";
-			fieldOfViewDetails["suggestedMax"] = "179.9";
-			fieldOfViewDetails["suggestedStep"] = "1";
+			fieldOfViewDetails["suggestedMax"] = "20";
+			fieldOfViewDetails["suggestedStep"] = "0.1";
+
+			QMap<QString, QString> paletteDetails;
+			paletteDetails["title"] = "Palette";
+			paletteDetails["type"] = "VuoInteger";
+			paletteDetails["default"] = "1";
+			paletteDetails["menuItems"] = "Cyan, Magenta, Gray (Dark),Cyan, Magenta, White (Light),Green, Red, Brown (Dark),Green, Red, Yellow (Light),Cyan, Red, Gray (Dark),Cyan, Red, White (Light),";
 
 			MapOfStrings inputPortValues;
 			inputPortValues["fieldOfView"] = "0.01";
 			inputPortValues["position"] = "{\"x\":0,\"y\":0,\"z\":1}";
+			inputPortValues["Palette"] = "1";
 
 			QTest::newRow("ImageFilterWithDetailCoalescing.vuo")
 					<< "ImageFilter with Detail Coalescing"
 					<< "An ImageFilter with published input ports connected to multiple internal ports each with differing details."
-					<< "Copyright © 2012–2018 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
-					<< (QList<QString>() << "position" << "fieldOfView")
+					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< (QList<QString>() << "position" << "fieldOfView" << "Palette")
 					<< QList<QString>()
-					<< (QList<PortAndDetails>() << PortAndDetails("position", positionDetails) << PortAndDetails("fieldOfView", fieldOfViewDetails))
+					<< (QList<PortAndDetails>()
+						<< PortAndDetails("position", positionDetails)
+						<< PortAndDetails("fieldOfView", fieldOfViewDetails)
+						<< PortAndDetails("Palette", paletteDetails))
 					<< inputPortValues
 					<< MapOfStrings();
 		}
@@ -352,7 +365,22 @@ private slots:
 			QCOMPARE(qListQStringWithNSArray([vif outputPorts]), expectedOutputPorts);
 
 			foreach (PortAndDetails pd, expectedPortDetails)
-				QCOMPARE(qMapQStringWithNSDictionary([vif detailsForPort:nsStringWithQString(pd.first)]), pd.second);
+			{
+				auto actual = qMapQStringWithNSDictionary([vif detailsForPort:nsStringWithQString(pd.first)]);
+				auto expected = pd.second;
+				if (actual != expected)
+				{
+					QString s;
+					QTextStream ts(&s);
+					ts << "Details don't match for port '" << pd.first << "'.\nExpected:\n";
+					for (auto i : expected.toStdMap())
+						ts << "\t" << i.first << ": " << i.second << "\n";
+					ts << "Actual:\n";
+					for (auto i : actual.toStdMap())
+						ts << "\t" << i.first << ": " << i.second << "\n";
+					QFAIL(s.toUtf8().data());
+				}
+			}
 
 			id propertyList = [vif propertyListFromInputValues];
 			QCOMPARE(qMapQStringWithNSDictionary(propertyList), expectedInputPortValues);
@@ -369,7 +397,7 @@ private slots:
 				QCOMPARE(QString([[[vif valueForOutputPort:[NSString stringWithUTF8String:i.key().toUtf8().data()]] stringValue] UTF8String]), i.value());
 			}
 
-			bool successfullySetValue = [vif setValue:[NSNumber numberWithFloat:42] forInputPort:@"time"];
+			bool successfullySetValue = [vif setInputValues:@{@"time":@42}];
 			QVERIFY(successfullySetValue);
 
 			[vif release];
@@ -398,7 +426,7 @@ private slots:
 		QFETCH(void *, data);
 		id inputData = (id)data;
 
-		bool valueSetSuccessfully = [sharedPassthruImageFilter setValue:inputData forInputPort:[NSString stringWithUTF8String:QTest::currentDataTag()]];
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{[NSString stringWithUTF8String:QTest::currentDataTag()] : inputData}];
 		QVERIFY(valueSetSuccessfully);
 
 		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
@@ -454,7 +482,7 @@ private slots:
 	{
 		NSBitmapImageRep *bir = [[reddishImage representations] objectAtIndex:0];
 
-		bool valueSetSuccessfully = [sharedPassthruImageFilter setValue:bir forInputPort:@"image2"];
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{@"image2":bir}];
 		QVERIFY(valueSetSuccessfully);
 
 		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
@@ -471,7 +499,7 @@ private slots:
 		CGImageSourceRef cgImageSource = CGImageSourceCreateWithData((CFDataRef)[reddishImage TIFFRepresentation], NULL);
 		CGImageRef inputCGImage =  CGImageSourceCreateImageAtIndex(cgImageSource, 0, NULL);
 
-		bool valueSetSuccessfully = [sharedPassthruImageFilter setValue:(id)inputCGImage forInputPort:@"image2"];
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{@"image2":(id)inputCGImage}];
 		QVERIFY(valueSetSuccessfully);
 
 		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
@@ -561,7 +589,7 @@ private slots:
 			QVERIFY(ret == kCVReturnSuccess);
 		}
 
-		bool valueSetSuccessfully = [sharedPassthruImageFilter setValue:(id)inputCVOGLT forInputPort:@"image2"];
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{@"image2":(id)inputCVOGLT}];
 		QVERIFY(valueSetSuccessfully);
 
 		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
@@ -729,10 +757,13 @@ private slots:
 		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 
 		// Confirm that Radar #23547737 still hasn't been fixed.
-		QVERIFY(!pixels);
+		// But as of macOS 10.14.4, calling glGetTexImage on an IOSurface
+		// now fills the buffer with garbage (instead of leaving the buffer unmodified),
+		// and still doesn't return an error, so we no longer have a way to detect this situation.
+		// QVERIFY(!pixels);
 
 		// Workaround for Radar #23547737:
-		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false, 0, 0, false);
 		QVERIFY(outputVuoImage2);
 		VuoRetain(outputVuoImage2);
 		VuoRelease(outputVuoImage);
@@ -780,10 +811,13 @@ private slots:
 		pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 
 		// Confirm that Radar #23547737 still hasn't been fixed.
-		QVERIFY(!pixels);
+		// But as of macOS 10.14.4, calling glGetTexImage on an IOSurface
+		// now fills the buffer with garbage (instead of leaving the buffer unmodified),
+		// and still doesn't return an error, so we no longer have a way to detect this situation.
+		// QVERIFY(!pixels);
 
 		// Workaround for Radar #23547737:
-		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false, 0, 0, false);
 		QVERIFY(outputVuoImage2);
 		VuoRetain(outputVuoImage2);
 		VuoRelease(outputVuoImage);
@@ -805,7 +839,7 @@ private slots:
 	void testImageGeneratorNSImage(void)
 	{
 		// Choose a color
-		[sharedImageGenerator setValue:blueishColor forInputPort:@"color"];
+		[sharedImageGenerator setInputValues:@{@"color":blueishColor}];
 
 		// Request an image.
 		NSImage *outputNSImage = [sharedImageGenerator generateNSImageWithSuggestedPixelsWide:10 pixelsHigh:10 atTime:0];
@@ -829,7 +863,7 @@ private slots:
 	void testImageGeneratorGLTexture2D(void)
 	{
 		// Choose a color
-		[sharedImageGenerator setValue:blueishColor forInputPort:@"color"];
+		[sharedImageGenerator setInputValues:@{@"color":blueishColor}];
 
 		// Request an image.
 		NSUInteger outputPixelsWide, outputPixelsHigh;
@@ -861,7 +895,7 @@ private slots:
 	void testImageGeneratorGLTextureRectangle(void)
 	{
 		// Choose a color
-		[sharedImageGenerator setValue:blueishColor forInputPort:@"color"];
+		[sharedImageGenerator setInputValues:@{@"color":blueishColor}];
 
 		// Request an image.
 		NSUInteger outputPixelsWide, outputPixelsHigh;
@@ -893,7 +927,7 @@ private slots:
 	void testImageGeneratorGLTextureRectangleProvider(void)
 	{
 		// Choose a color
-		[sharedImageGenerator setValue:blueishColor forInputPort:@"color"];
+		[sharedImageGenerator setInputValues:@{@"color":blueishColor}];
 
 		// Create an output texture.
 		GLuint outputGLTexture;
@@ -927,10 +961,13 @@ private slots:
 		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 
 		// Confirm that Radar #23547737 still hasn't been fixed.
-		QVERIFY(!pixels);
+		// But as of macOS 10.14.4, calling glGetTexImage on an IOSurface
+		// now fills the buffer with garbage (instead of leaving the buffer unmodified),
+		// and still doesn't return an error, so we no longer have a way to detect this situation.
+		// QVERIFY(!pixels);
 
 		// Workaround for Radar #23547737:
-		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false, 0, 0, false);
 		QVERIFY(outputVuoImage2);
 		VuoRetain(outputVuoImage2);
 		VuoRelease(outputVuoImage);
@@ -955,7 +992,7 @@ private slots:
 
 
 		// Choose a color
-		[sharedImageGenerator setValue:greenishColor forInputPort:@"color"];
+		[sharedImageGenerator setInputValues:@{@"color":greenishColor}];
 
 		// Request an image.
 		actualOutputGLTexture = [sharedImageGenerator generateGLTextureWithProvider:provider suggestedPixelsWide:10 pixelsHigh:10 atTime:0 outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh ioSurface:&outputIOSurface];
@@ -974,10 +1011,13 @@ private slots:
 		pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 
 		// Confirm that Radar #23547737 still hasn't been fixed.
-		QVERIFY(!pixels);
+		// But as of macOS 10.14.4, calling glGetTexImage on an IOSurface
+		// now fills the buffer with garbage (instead of leaving the buffer unmodified),
+		// and still doesn't return an error, so we no longer have a way to detect this situation.
+		// QVERIFY(!pixels);
 
 		// Workaround for Radar #23547737:
-		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false, 0, 0, false);
 		QVERIFY(outputVuoImage2);
 		VuoRetain(outputVuoImage2);
 		VuoRelease(outputVuoImage);

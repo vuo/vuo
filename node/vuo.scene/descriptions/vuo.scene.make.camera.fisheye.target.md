@@ -8,4 +8,4 @@ Because of the wide field of view, straight lines in the scene are rendered as c
    - `Position` — The position of the camera, in Vuo Coordinates. 
    - `Target` — The point toward which the camera should face, in Vuo Coordinates.
    - `Up Direction` — The direction the top of the camera should face.
-   - `Field of View` — The camera's [angle of view](http://en.wikipedia.org/wiki/Angle_of_view), in degrees.  When the rendering viewport is square and the Field of View is 180°, this will render a circular image circumscribing the viewport.  As you decrease the Field of View, the image starts to cover more of the rendering viewport.
+   - `Field of View` — The camera's [angle of view](https://en.wikipedia.org/wiki/Angle_of_view), in degrees.  When the rendering viewport is square and the Field of View is 180°, this will render a circular image circumscribing the viewport.  As you decrease the Field of View, the image starts to cover more of the rendering viewport.

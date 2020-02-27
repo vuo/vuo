@@ -3,8 +3,12 @@
 set -e
 
 VUO_RUN_DIR=$(dirname $0)
+VUO_COMPILE=vuo-compile
 if [ -x 'framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='framework'
+elif [ -x '../build/bin/vuo-compile' ]; then
+	VUO_FRAMEWORK_PATH='../build/bin'
+	VUO_COMPILE=vuo-compile-for-framework
 elif [ -x '../framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='../framework'
 elif [ -x '../../framework/vuo-compile' ]; then
@@ -18,7 +22,42 @@ else
 	exit
 fi
 
-for filename do
+REPEAT=1
+declare -a COMPOSITIONS
+for argument do
+	case "$argument" in
+		--stop-after=*)
+			STOP_AFTER="${argument#*=}"
+		;;
+
+		--repeat=*)
+			REPEAT="${argument#*=}"
+		;;
+
+		--lldb)
+			LLDB=lldb
+		;;
+
+		*)
+			COMPOSITIONS+=("$argument")
+		;;
+	esac
+done
+if [ -n "$STOP_AFTER" -a -n "$LLDB" ]; then
+	echo "error: Can't use both --stop-after and --lldb at the same time."
+	exit 1
+fi
+
+for i in $(seq 1 $REPEAT); do
+	if [ $REPEAT -gt 1 ]; then
+		echo "$i"
+	fi
+
+for filename in "${COMPOSITIONS[@]}"; do
+	if [ ${#COMPOSITIONS[@]} -gt 1 ]; then
+		echo "$filename"
+	fi
+
 	COMPOSITION_WITHOUT_EXTENSION="${filename/.vuo/}"
 	COMPOSITION_BASENAME="$(basename "$COMPOSITION_WITHOUT_EXTENSION")"
 
@@ -28,7 +67,7 @@ for filename do
 	fi
 
 	COMPOSITION_COMPILED="/tmp/$COMPOSITION_BASENAME.bc"
-	$VUO_FRAMEWORK_PATH/vuo-compile "$COMPOSITION_WITHOUT_EXTENSION.vuo" --output="$COMPOSITION_COMPILED"
+	$VUO_FRAMEWORK_PATH/$VUO_COMPILE "$COMPOSITION_WITHOUT_EXTENSION.vuo" --output="$COMPOSITION_COMPILED"
 	if [ ! -f "$COMPOSITION_COMPILED" ]; then
 		echo "Error: $COMPOSITION_WITHOUT_EXTENSION.vuo: Compilation failed"
 		exit 1
@@ -44,7 +83,17 @@ for filename do
 	fi
 
 	pushd . > /dev/null
-	cd "$(dirname "$1")"
-	"$COMPOSITION_LINKED"
+	cd "$(dirname "$filename")"
+	if [ -z "$STOP_AFTER" ]; then
+		$LLDB "$COMPOSITION_LINKED"
+	else
+		"$COMPOSITION_LINKED" &
+		sleep "$STOP_AFTER"
+		# echo "    Stopping…"
+		pkill "$COMPOSITION_BASENAME"
+		wait
+		# echo "    Stopped."
+	fi
 	popd > /dev/null
+done
 done

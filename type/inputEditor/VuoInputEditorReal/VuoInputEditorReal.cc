@@ -2,16 +2,14 @@
  * @file
  * VuoInputEditorReal implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorReal.hh"
 
 extern "C" {
-#include <math.h>
-#include <float.h>
 }
 
 /**
@@ -37,7 +35,7 @@ QLabel* makeLabel(const char* text)
  */
 VuoDoubleSpinBox* VuoInputEditorReal::initSpinBox(QDialog& dialog, double initialValue)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 11);
 	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 	spin->setDecimals(decimalPrecision);
 	spin->setFixedWidth(100);
@@ -127,12 +125,12 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 	}
 
 	spinbox = initSpinBox(dialog, current);
-	connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorReal::onSpinboxUpdate);
 
 	if(hasMinMax)
 	{
 		slider = initSlider(dialog, current);
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider, &QSlider::valueChanged, this, &VuoInputEditorReal::onSliderUpdate);
 	}
 
 	// layout dialog
@@ -149,7 +147,7 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 	if(hasAutoValue)
 	{
 		checkbox = new QCheckBox("Auto");
-		connect(checkbox, SIGNAL(stateChanged(int)), this, SLOT(setIsAuto(int)));
+		connect(checkbox, &QCheckBox::stateChanged, this, &VuoInputEditorReal::setIsAuto);
 		bool currentIsAuto = VuoReal_areEqual(current, automatic);
 		checkbox->setChecked(currentIsAuto);
 		if (currentIsAuto)
@@ -224,9 +222,9 @@ void VuoInputEditorReal::onSliderUpdate(int sliderValue)
 												sliderValue);
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	disconnect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorReal::onSpinboxUpdate);
 	spinbox->setValue( current );
-	connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorReal::onSpinboxUpdate);
 
 	spinbox->setFocus();
 	spinbox->selectAll();
@@ -250,9 +248,9 @@ void VuoInputEditorReal::onSpinboxUpdate(double spinboxValue)
 			suggestedMax,
 			current);
 
-		disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		disconnect(slider, &QSlider::valueChanged, this, &VuoInputEditorReal::onSliderUpdate);
 		slider->setValue( sliderValue );
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider, &QSlider::valueChanged, this, &VuoInputEditorReal::onSliderUpdate);
 	}
 
 	emit valueChanged( getAcceptedValue() );

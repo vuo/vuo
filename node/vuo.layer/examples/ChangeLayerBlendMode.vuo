@@ -2,55 +2,51 @@
  * @file
  * Cycles through the different available GL Blend modes, and applies them each to the foreground layer.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1380,450" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
-ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="1170,255" fillcolor="violet"];
-CountWithinRange [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="435,225" _increment="1.000000" _decrement="1" _setCount="1.000000" _minimum="0.000000" _maximum="6.000000" _wrapMode="\"wrap\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="390,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="270,195" fillcolor="yellow" _seconds="4.000000" _fired_eventThrottling="drop"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="720,-75" _url="\"Sunset.jpg\""];
-GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="705,105" _url="\"Seagulls.jpg\""];
-GetItemFromList2 [type="vuo.list.get.VuoBlendMode" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="720,330"];
-MakeList25 [type="vuo.list.make.6.VuoBlendMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="585,341" _1="\"normal\"" _2="\"linear-dodge\"" _3="\"lighter-components\"" _4="\"subtract\"" _5="\"multiply\"" _6="\"darker-components\""];
-MakeList3 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1418,206" fillcolor="green"];
-MakeList32 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1452,221" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,255" _center="{\"x\":0.000000,\"y\":-0.200000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,120" _center="{\"x\":0.000000,\"y\":-0.200000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer3 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,-195" _center="{\"x\":-0.300000,\"y\":0.400000}" _rotation="0.000000" _width="0.400000" _opacity="1.000000"];
-MakeScaledLayer4 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,-60" _center="{\"x\":0.300000,\"y\":0.400000}" _rotation="0.000000" _width="0.400000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1185,465" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.100000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1485,195" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="1185,240" fillcolor="orange"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="360,180" _increment="1.000000" _decrement="1" _setCount="1.000000" _minimum="0.000000" _maximum="6.000000" _wrapMode="\"wrap\""];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="630,-75" _url="\"Canyon.jpg\""];
+FetchImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="630,30" _url="\"Macro.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="195,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="165,180" fillcolor="lime" _seconds="4.000000" _fired_eventThrottling="drop"];
+GetItemFromList2 [type="vuo.list.get.VuoBlendMode" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="720,330"];
+MakeList25 [type="vuo.list.make.6.VuoBlendMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="588,341" _1="\"normal\"" _2="\"linear-dodge\"" _3="\"lighter-components\"" _4="\"subtract\"" _5="\"multiply\"" _6="\"darker-components\""];
+MakeList3 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1439,206" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,240" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.15000000596046448\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,90" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.15000000596046448\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeScaledLayer3 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,-195" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.30000001192092896,\"y\":0.44999998807907104\}" _rotation="0.000000" _width="0.400000" _opacity="1.000000"];
+MakeScaledLayer4 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1005,-60" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.30000001192092896,\"y\":0.44999998807907104\}" _rotation="0.000000" _width="0.400000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1200,465" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1485,195" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="465,435"];
-SummarizeValue2 [type="vuo.data.summarize.VuoBlendMode" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="930,465"];
+SummarizeValue2 [type="vuo.data.summarize.VuoBlendMode" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="930,465"];
 
-AlignLayerToWindow:alignedLayer -> MakeList3:5;
 ChangeLayerBlending:blendedLayer -> MakeList3:4;
 CountWithinRange:count -> Round:real;
-FireOnStart:started -> GetImage2:refresh;
-FireOnStart:started -> GetImage:refresh;
-FireOnStart:started -> GetItemFromList2:refresh;
+FetchImage2:image -> MakeScaledLayer3:image;
+FetchImage2:image -> MakeScaledLayer:image;
+FetchImage:image -> MakeScaledLayer2:image;
+FetchImage:image -> MakeScaledLayer4:image;
+FireOnStart:started -> FetchImage2:url;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> MakeList25:1;
 FirePeriodically:fired -> CountWithinRange:increment [event=true];
-GetImage2:image -> MakeScaledLayer4:image;
-GetImage2:image -> MakeScaledLayer:image;
-GetImage:image -> MakeScaledLayer2:image;
-GetImage:image -> MakeScaledLayer3:image;
 GetItemFromList2:item -> ChangeLayerBlending:blendMode;
 GetItemFromList2:item -> SummarizeValue2:value;
 MakeList25:list -> GetItemFromList2:list;
-MakeList32:list -> RenderLayersToWindow:setWindowProperties;
 MakeList3:list -> RenderLayersToWindow:layers;
 MakeScaledLayer2:layer -> MakeList3:3;
 MakeScaledLayer3:layer -> MakeList3:1;
 MakeScaledLayer4:layer -> MakeList3:2;
 MakeScaledLayer:layer -> ChangeLayerBlending:layer;
-MakeTextLayer:layer -> AlignLayerToWindow:layer;
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+MakeTextLayer:layer -> MakeList3:5;
 Round:rounded -> GetItemFromList2:which;
 SummarizeValue2:summary -> MakeTextLayer:text;
 }

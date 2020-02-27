@@ -2,19 +2,13 @@
  * @file
  * VuoMidiNote implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoMidiNote.h"
-#include "VuoBoolean.h"
-#include "VuoInteger.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -47,22 +41,12 @@ VuoModuleMetadata({
  */
 VuoMidiNote VuoMidiNote_makeFromJson(json_object * js)
 {
-	VuoMidiNote mn = {1,true,127,60};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "channel", &o))
-		mn.channel = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "isNoteOn", &o))
-		mn.isNoteOn = VuoBoolean_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "velocity", &o))
-		mn.velocity = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "noteNumber", &o))
-		mn.noteNumber = VuoInteger_makeFromJson(o);
-
-	return mn;
+	return (VuoMidiNote){
+		VuoJson_getObjectValue(VuoInteger, js, "channel",    1),
+		VuoJson_getObjectValue(VuoBoolean, js, "isNoteOn",   true),
+		VuoJson_getObjectValue(VuoInteger, js, "velocity",   127),
+		VuoJson_getObjectValue(VuoInteger, js, "noteNumber", 60),
+		""};
 }
 
 /**
@@ -115,4 +99,17 @@ bool VuoMidiNote_areEqual(const VuoMidiNote value1, const VuoMidiNote value2)
 		 && value1.isNoteOn   == value2.isNoteOn
 		 && value1.velocity   == value2.velocity
 		 && value1.noteNumber == value2.noteNumber);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoMidiNote_isLessThan(const VuoMidiNote a, const VuoMidiNote b)
+{
+	VuoType_returnInequality(VuoInteger, a.channel, b.channel);
+	VuoType_returnInequality(VuoBoolean, a.isNoteOn, b.isNoteOn);
+	VuoType_returnInequality(VuoInteger, a.velocity, b.velocity);
+	VuoType_returnInequality(VuoInteger, a.noteNumber, b.noteNumber);
+	return false;
 }

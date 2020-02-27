@@ -2,9 +2,9 @@
  * @file
  * VuoPoint3d C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -12,6 +12,10 @@
 #include "VuoReal.h"
 #include "VuoBoolean.h"
 #include <math.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -24,10 +28,7 @@
 /**
  * A floating-point 3-dimensional Cartesian spatial location.
  */
-typedef struct
-{
-	float x,y,z;
-} VuoPoint3d;
+typedef float __attribute__((ext_vector_type(3))) VuoPoint3d;
 
 /**
  *	Defines a bounding box.
@@ -42,7 +43,10 @@ VuoPoint3d VuoPoint3d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint3d_getJson(const VuoPoint3d value);
 char * VuoPoint3d_getSummary(const VuoPoint3d value);
 
+#define VuoPoint3d_SUPPORTS_COMPARISON
 bool VuoPoint3d_areEqual(const VuoPoint3d value1, const VuoPoint3d value2);
+bool VuoPoint3d_isLessThan(const VuoPoint3d a, const VuoPoint3d b);
+
 VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum);
 VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum);
 
@@ -62,8 +66,29 @@ void VuoPoint3d_release(VuoPoint3d value);
 static inline VuoPoint3d VuoPoint3d_make(float x, float y, float z) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_make(float x, float y, float z)
 {
-	VuoPoint3d p = {x,y,z};
-	return p;
+	return (VuoPoint3d){x, y, z};
+}
+
+/**
+ * Returns a point using the first 3 elements in the specified array.
+ *
+ * @version200New
+ */
+static inline VuoPoint3d VuoPoint3d_makeFromArray(float *f)
+{
+    return (VuoPoint3d){ f[0], f[1], f[2] };
+}
+
+/**
+ * Sets the first 3 elements in the specified array to the specified point.
+ *
+ * @version200New
+ */
+static inline void VuoPoint3d_setArray(float *f, VuoPoint3d p)
+{
+	f[0] = p.x;
+	f[1] = p.y;
+	f[2] = p.z;
 }
 
 /**
@@ -72,8 +97,7 @@ static inline VuoPoint3d VuoPoint3d_make(float x, float y, float z)
 static inline VuoBox VuoBox_make(VuoPoint3d center, VuoPoint3d size) __attribute__((const));
 static inline VuoBox VuoBox_make(VuoPoint3d center, VuoPoint3d size)
 {
-	VuoBox box = { center, size };
-	return box;
+	return (VuoBox){ center, size };
 }
 
 /**
@@ -82,12 +106,10 @@ static inline VuoBox VuoBox_make(VuoPoint3d center, VuoPoint3d size)
 static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) __attribute__((const));
 static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax)
 {
-	VuoBox box =
-	{
+	return (VuoBox){
 		(VuoPoint3d){ (xmin+xmax)/2.f, (ymin+ymax)/2.f, (zmin+zmax)/2.f },
 		(VuoPoint3d){ xmax-xmin, ymax-ymin, zmax-zmin }
 	};
-	return box;
 }
 
 /**
@@ -96,13 +118,11 @@ static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, f
 static inline VuoPoint3d VuoPoint3d_crossProduct(VuoPoint3d u, VuoPoint3d v) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_crossProduct(VuoPoint3d u, VuoPoint3d v)
 {
-	VuoPoint3d p =
-	{
+	return (VuoPoint3d){
 		u.y*v.z - u.z*v.y,
 		u.z*v.x - u.x*v.z,
 		u.x*v.y - u.y*v.x
 	};
-	return p;
 }
 
 /**
@@ -129,14 +149,7 @@ static inline float VuoPoint3d_magnitude(VuoPoint3d a)
 static inline VuoPoint3d VuoPoint3d_normalize(VuoPoint3d a) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_normalize(VuoPoint3d a)
 {
-	float length = VuoPoint3d_magnitude(a);
-	VuoPoint3d p =
-	{
-		a.x/length,
-		a.y/length,
-		a.z/length
-	};
-	return p;
+	return a / sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
 }
 
 /**
@@ -145,13 +158,7 @@ static inline VuoPoint3d VuoPoint3d_normalize(VuoPoint3d a)
 static inline VuoPoint3d VuoPoint3d_add(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_add(VuoPoint3d a, VuoPoint3d b)
 {
-	VuoPoint3d p =
-	{
-		a.x + b.x,
-		a.y + b.y,
-		a.z + b.z
-	};
-	return p;
+	return a + b;
 }
 
 /**
@@ -160,13 +167,7 @@ static inline VuoPoint3d VuoPoint3d_add(VuoPoint3d a, VuoPoint3d b)
 static inline VuoPoint3d VuoPoint3d_subtract(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_subtract(VuoPoint3d a, VuoPoint3d b)
 {
-	VuoPoint3d p =
-	{
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z
-	};
-	return p;
+	return a - b;
 }
 
 
@@ -185,13 +186,7 @@ static inline float VuoPoint3d_squaredMagnitude(VuoPoint3d a)
 static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, VuoPoint3d b)
 {
-	VuoPoint3d p =
-	{
-		a.x / b.x,
-		a.y / b.y,
-		a.z / b.z
-	};
-	return p;
+	return a / b;
 }
 
 /**
@@ -200,13 +195,31 @@ static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, VuoPoint3d b)
 static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b)
 {
-	VuoPoint3d p =
-	{
-		a.x * b,
-		a.y * b,
-		a.z * b
-	};
-	return p;
+	return a * b;
+}
+
+/**
+ * Returns component-wise min.
+ */
+static inline VuoPoint3d VuoPoint3d_min(const VuoPoint3d l, const VuoPoint3d r) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_min(const VuoPoint3d l, const VuoPoint3d r)
+{
+	return (VuoPoint3d){
+		fminf(l.x, r.x),
+		fminf(l.y, r.y),
+		fminf(l.z, r.z)};
+}
+
+/**
+ * Returns component-wise max.
+ */
+static inline VuoPoint3d VuoPoint3d_max(const VuoPoint3d l, const VuoPoint3d r) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_max(const VuoPoint3d l, const VuoPoint3d r)
+{
+	return (VuoPoint3d){
+		fmaxf(l.x, r.x),
+		fmaxf(l.y, r.y),
+		fmaxf(l.z, r.z)};
 }
 
 /**
@@ -239,7 +252,7 @@ static inline float VuoPoint3d_distance(VuoPoint3d a, VuoPoint3d b)
 static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t)
 {
-	return VuoPoint3d_add( VuoPoint3d_multiply(a, (1-t)), VuoPoint3d_multiply(b, t) );
+	return a * (1 - t) + b * t;
 }
 
 /**
@@ -248,7 +261,25 @@ static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t)
 static inline VuoPoint3d VuoPoint3d_scale(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_scale(VuoPoint3d a, VuoPoint3d b)
 {
-	return (VuoPoint3d) { a.x*b.x, a.y*b.y, a.z*b.z };
+	return a * b;
+}
+
+/**
+ * Returns the component-wise modulus of two VuoPoint3d vectors.
+ *
+ * Behavior for negative values matches
+ * [GLSL's `mod` function](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/mod.xhtml).
+ *
+ * @version200New
+ */
+static inline VuoPoint3d VuoPoint3d_mod(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_mod(VuoPoint3d a, VuoPoint3d b)
+{
+	return (VuoPoint3d){
+		a.x - b.x * floorf(a.x / b.x),
+		a.y - b.y * floorf(a.y / b.y),
+		a.z - b.z * floorf(a.z / b.z)
+	};
 }
 
 /**
@@ -345,9 +376,9 @@ static inline VuoBox VuoBox_encapsulate(VuoBox a, VuoBox b)
  */
 static inline VuoBoolean VuoBox_contains(VuoBox aabb, VuoPoint3d point)
 {
-	VuoPoint3d exents = VuoPoint3d_multiply(aabb.size, .5);
-	VuoPoint3d min = VuoPoint3d_subtract(aabb.center, exents);
-	VuoPoint3d max = VuoPoint3d_add(aabb.center, exents);
+	VuoPoint3d exents = (VuoPoint3d){aabb.size.x / 2.f, aabb.size.y / 2.f};
+	VuoPoint3d min = aabb.center - exents;
+	VuoPoint3d max = aabb.center + exents;
 
 	return 	point.x > min.x && point.x < max.x &&
 			point.y > min.y && point.y < max.y &&
@@ -370,3 +401,7 @@ static inline VuoBoolean VuoBox_intersects(VuoBox a, VuoBox b)
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

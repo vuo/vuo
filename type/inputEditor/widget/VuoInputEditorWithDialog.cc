@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorWithDialog implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorWithDialog.hh"
@@ -16,6 +16,7 @@
 VuoInputEditorWithDialog::VuoInputEditorWithDialog(void)
 	: VuoInputEditor()
 {
+	dialogPointer = NULL;
 	firstWidgetInTabOrder = NULL;
 	lastWidgetInTabOrder = NULL;
 }
@@ -27,7 +28,7 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 {
 	json_object *o = NULL;
 
-	bool isDark = false;
+	isDark = false;
 	if (json_object_object_get_ex(details, "isDark", &o))
 		isDark = json_object_get_boolean(o);
 

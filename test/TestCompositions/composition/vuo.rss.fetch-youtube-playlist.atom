@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <link rel="self" href="http://www.youtube.com/feeds/videos.xml?playlist_id=PLCD1B521208BFBE05"/>
+ <id>yt:playlist:PLCD1B521208BFBE05</id>
+ <yt:playlistId>PLCD1B521208BFBE05</yt:playlistId>
+ <yt:channelId>UCV1-6fXv7Cdj83qbhMcvjjg</yt:channelId>
+ <title>Photonics</title>
+ <author>
+  <name>photonal</name>
+  <uri>https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg</uri>
+ </author>
+ <published>2009-12-07T09:13:13+00:00</published>
+ <entry>
+  <id>yt:video:vMagG0AR84w</id>
+  <yt:videoId>vMagG0AR84w</yt:videoId>
+  <yt:channelId>UCV1-6fXv7Cdj83qbhMcvjjg</yt:channelId>
+  <title>Nightclubbing</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=vMagG0AR84w"/>
+  <author>
+   <name>photonal</name>
+   <uri>https://www.youtube.com/channel/UCV1-6fXv7Cdj83qbhMcvjjg</uri>
+  </author>
+  <published>2010-05-24T01:27:42+00:00</published>
+  <updated>2017-08-25T13:34:49+00:00</updated>
+  <media:group>
+   <media:title>Nightclubbing</media:title>
+   <media:content url="https://www.youtube.com/v/vMagG0AR84w?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:thumbnail url="https://i3.ytimg.com/vi/vMagG0AR84w/hqdefault.jpg" width="480" height="360"/>
+   <media:description>G8 clubs, nightclubbing and future clubs.</media:description>
+   <media:community>
+    <media:starRating count="3" average="5.00" min="1" max="5"/>
+    <media:statistics views="398"/>
+   </media:community>
+  </media:group>
+ </entry>
+</feed>

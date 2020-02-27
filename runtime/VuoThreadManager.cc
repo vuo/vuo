@@ -2,18 +2,18 @@
  * @file
  * VuoThreadManager implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoThreadManager.hh"
 
-#include <stdexcept>
 #include "VuoRuntimePersistentState.hh"
 #include "VuoRuntimeState.hh"
 #include "VuoRuntimeUtilities.hh"
 #include "VuoEventLoop.h"
+#include "VuoException.hh"
 
 /**
  * Constructs a trigger worker.
@@ -191,7 +191,7 @@ bool VuoThreadManager::ThreadPool::tryClaimThreads(int minThreadsNeeded, int max
 /**
  * Returns the number of threads currently claimed by the given worker.
  *
- * @throw std::logic_error The worker is not currently using the thread pool.
+ * @throw VuoException The worker is not currently using the thread pool.
  */
 int VuoThreadManager::ThreadPool::getThreadsClaimed(unsigned long workerId)
 {
@@ -199,13 +199,13 @@ int VuoThreadManager::ThreadPool::getThreadsClaimed(unsigned long workerId)
 	if (iter != workersClaimingThreads.end())
 		return iter->second;
 	else
-		throw std::logic_error("Couldn't find worker in thread pool to get its claimed threads.");
+		throw VuoException("Couldn't find worker in thread pool to get its claimed threads.");
 }
 
 /**
  * Puts the worker's threads back into the thread pool, making them available again.
  *
- * @throw std::logic_error The worker is not currently using the thread pool.
+ * @throw VuoException The worker is not currently using the thread pool.
  */
 void VuoThreadManager::ThreadPool::returnThreads(unsigned long workerId)
 {
@@ -218,7 +218,7 @@ void VuoThreadManager::ThreadPool::returnThreads(unsigned long workerId)
 		workersClaimingThreads.erase(iter);
 	}
 	else
-		throw std::logic_error("Couldn't find worker in thread pool to return its threads.");
+		throw VuoException("Couldn't find worker in thread pool to return its threads.");
 }
 
 
@@ -473,7 +473,7 @@ void VuoThreadManager::grantThreadsToChain(int minThreadsNeeded, int maxThreadsN
 					  int threadsClaimed;
 					  bool gotThreads = triggerThreadPool.tryClaimThreads(minThreadsNeeded, maxThreadsNeeded, chainIndex, threadsClaimed);
 					  if (! gotThreads) {
-						  throw std::logic_error("Not enough threads available in the thread pool to execute the chain.");
+						  throw VuoException("Not enough threads available in the thread pool to execute the chain.");
 					  }
 				  });
 

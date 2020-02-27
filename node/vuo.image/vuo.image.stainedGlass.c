@@ -2,9 +2,9 @@
  * @file
  * vuo.image.stainedGlass node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,18 +19,18 @@ VuoModuleMetadata({
 						  "pixellate", "pixels", "lofi", "simplify", "cube", "square", "filter", "overenlarge", "mosaic", "censor",
 						  "pixelate" // American spelling
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "MakeStainedGlassImage.vuo" ]
 					  }
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(VuoGlslRandom)
-	include(noise2D)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslRandom.glsl"
+	\n#include "noise2D.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec2 gridSpacing;
@@ -60,7 +60,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 uv = fragmentTextureCoordinate.xy;
+		vec2 uv = fragmentTextureCoordinate;
 
 		// Quantize the texture coordinate so it lands exactly on an output pixel,
 		// since snapping near a big pixel boundary
@@ -73,6 +73,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 		vec2 closest = vec2(0);
 		float minDistance = 999;
+		float secondMinDistance = 999;
 		for (float y = uv.y - gridSpacing.y*searchWidth; y < uv.y + gridSpacing.y*searchWidth; y += gridSpacing.y)
 		for (float x = uv.x - gridSpacing.x*searchWidth; x < uv.x + gridSpacing.x*searchWidth; x += gridSpacing.x)
 		{
@@ -83,21 +84,12 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 			if (d < minDistance)
 			{
+				secondMinDistance = minDistance;
+
 				closest = p;
 				minDistance = d;
 			}
-		}
-
-		float secondMinDistance = 999;
-		for (float y = uv.y - gridSpacing.y*searchWidth; y < uv.y + gridSpacing.y*searchWidth; y += gridSpacing.y)
-		for (float x = uv.x - gridSpacing.x*searchWidth; x < uv.x + gridSpacing.x*searchWidth; x += gridSpacing.x)
-		{
-			vec2 p = makeGridPoint(vec2(x,y));
-
-			// Aspect-corrected distance(p, uv)^2
-			float d = (uv.x-p.x)*(uv.x-p.x) + (uv.y-p.y)*(uv.y-p.y)/aspectSquared;
-
-			if (d > minDistance && d < secondMinDistance)
+			else if (d < secondMinDistance && d > minDistance)
 				secondMinDistance = d;
 		}
 

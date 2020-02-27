@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.sort node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"list", "inputPortValues":{"list":[
+                    "millennium",
+					"century",
+					"decade",
+					"year",
+					"quarter",
+					"month",
+					"week-sunday",
+					"week-monday",
+					"day",
+					"hour",
+					"half-hour",
+					"quarter-hour",
+					"minute",
+					"second"
+				], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[
+					"second",
+					"minute",
+					"quarter-hour",
+					"half-hour",
+					"hour",
+					"day",
+					"week-monday",
+					"week-sunday",
+					"month",
+					"quarter",
+					"year",
+					"decade",
+					"century",
+					"millennium"
+				]}},
+]}

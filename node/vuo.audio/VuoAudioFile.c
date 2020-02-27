@@ -2,9 +2,9 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoAudioFile.h"
@@ -230,7 +230,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		}
 
 		// https://b33p.net/kosada/node/7971
-		VuoApp_init();
+		VuoApp_init(false);
 
 		OSStatus err = ExtAudioFileOpenURL(url, &afi->audioFile);
 		CFRelease(urlCFS);
@@ -323,7 +323,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 
 	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", VuoEventLoop_getDispatchInteractiveAttribute());
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
+	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, q);
 	afi->playbackTimerCanceled = dispatch_semaphore_create(0);
 
 	uint64_t nanoseconds = (float)VuoAudioSamples_bufferSize/VuoAudioSamples_sampleRate * NSEC_PER_SEC;	///< @todo https://b33p.net/kosada/node/4726#comment-27512

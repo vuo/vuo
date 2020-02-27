@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.invert node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Invert Image Colors",
-					 "keywords" : [ "reverse", "negative", "filter" ],
+					 "keywords" : [ "reverse", "negative", "flip", "filter" ],
 					 "version" : "1.1.2",
 					 "node" : {
 						 "exampleCompositions" : [ ]
@@ -20,14 +20,14 @@ VuoModuleMetadata({
 				 });
 
 static const char * invertFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)
 	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate);
 		color.rgb /= color.a > 0. ? color.a : 1.;
 		color.rgb = 1. - color.rgb;
 		color.rgb *= color.a;

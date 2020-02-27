@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Gradually displays a phrase, adding one character at a time.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="375,450" fillcolor="orange"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="600,390" _increment="1" _decrement="1" _setCount="1" _minimum="1" _wrapMode="\"wrap\""];
+Cut1 [type="vuo.text.cut" version="2.0.0" label="Cut Text|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="795,285" fillcolor="orange" _startPosition="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-45,285" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically1 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="375,360" fillcolor="lime" _seconds="0.5" _fired_eventThrottling="enqueue"];
+MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1229,296" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1050,285" _font="\{\"fontName\":\"Courier\",\"pointSize\":72,\"underline\":false,\"color\":\{\"r\":0,\"g\":1,\"b\":0.50196081399917603,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1275,285" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="195,285" _value="\"Wake Up Now...\""];
+
+CountCharacters:characterCount -> CountWithinRange:maximum;
+CountWithinRange:count -> Cut1:characterCount;
+Cut1:partialText -> MakeTextLayer:text;
+FireOnStart:started -> ShareValue2:value;
+FirePeriodically1:fired -> CountWithinRange:increment [event=true];
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList4:1;
+ShareValue2:sameValue -> CountCharacters:text;
+ShareValue2:sameValue -> Cut1:text;
+}

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.flip.vertical node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Flip Image Vertically",
-					  "keywords" : [ "mirror", "rotate" ],
+					  "keywords" : [ "mirror", "rotate", "reverse", "invert", ],
 					  "version" : "1.1.2",
 					  "node": {
 						  "exampleCompositions" : [ "FlipMovie.vuo" ]
@@ -20,9 +20,9 @@ VuoModuleMetadata({
 				 });
 
 static const char * verticalFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)

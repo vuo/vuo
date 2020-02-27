@@ -1,0 +1,4 @@
+VuoInputEditor(NAME VuoInputEditorMidiOutputDevice SOURCE VuoInputEditorMidiOutputDevice.cc)
+target_link_libraries(VuoInputEditorMidiOutputDevice PRIVATE
+	"-framework CoreMIDI"
+)

@@ -1,13 +1,20 @@
 /**
  * @file
- * Ensures that `Step Movie Frame` can decode movie frames with appropriate timestamps and without crashing.
+ * Ensures that `Step Movie Frame` can decode movie frames with appropriate timestamps and without crashing or hanging.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 {"portConfiguration": [
-	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.03690}},
-	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.07027}},
+	{"firingPort":"URL", "inputPortValues":{"URL":"../../../node/vuo.video/examples/chess.mov"}, "outputPortValues":{"Timestamp":0}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.03337}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.06673}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.10009}},
+
+	{"firingPort":"URL", "inputPortValues":{"URL":"~/Movies/Test Movies/mp4/cremaschi AUP ANIMO Festiwal 2014.mp4"}, "outputPortValues":{"Timestamp":0.1001}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.04}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.08}},
+	{"firingPort":"GoForward", "inputPortValues":{}, "outputPortValues":{"Timestamp":0.12}},
 ]}

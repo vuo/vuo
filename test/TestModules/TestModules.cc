@@ -2,20 +2,22 @@
  * @file
  * TestModules interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunreachable-code"
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Winvalid-constexpr"
 #include <QtTest/QtTest>
 #pragma clang diagnostic pop
 
 #include <Vuo/Vuo.h>
 
-#include <wjelement.h>
-#include <wjreader.h>
+#include <wjelement/wjelement.h>
+#include <wjelement/wjreader.h>
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoCompilerType *);
@@ -72,8 +74,10 @@ private:
 	#define validate(schema, jsonString, explanation) validateF(schema, jsonString, #schema, explanation)
 	bool validateF(WJElement &schema, const char *jsonString, QString schemaString, QString explanation)
 	{
-		// It's OK for port details to be null.
-		if (QString(jsonString) == "null")
+		// It's OK for port details to be null or empty.
+		if (QString(jsonString) == "null"
+		 || QString(jsonString) == "{}"
+		 || QString(jsonString) == "{ }")
 		{
 			if (schemaString == "VuoInputEvent"
 			 || schemaString == "VuoInputData"
@@ -114,12 +118,13 @@ private:
 	}
 
 
-private slots:
-
-	void initTestCase()
+public:
+	TestModules()
 	{
 		compiler = new VuoCompiler();
-		compiler->loadStoredLicense();
+#if VUO_PRO
+		compiler->load_Pro(true);
+#endif
 
 		loadSchema("schema/VuoType.jsonschema",          VuoType);
 		loadSchema("schema/VuoLibrary.jsonschema",       VuoLibrary);
@@ -131,7 +136,7 @@ private slots:
 		loadSchema("schema/VuoOutputTrigger.jsonschema", VuoOutputTrigger);
 	}
 
-	void cleanupTestCase()
+	~TestModules()
 	{
 		WJECloseDocument(VuoType);
 		WJECloseDocument(VuoLibrary);
@@ -146,6 +151,7 @@ private slots:
 	}
 
 
+private slots:
 	void testType_data()
 	{
 		QTest::addColumn<VuoCompilerType *>("type");
@@ -182,7 +188,12 @@ private slots:
 
 		map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
 		for (map<string, VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
+		{
+			if (VuoStringUtilities::beginsWith(i->first, "vuo.test."))
+				continue;
+
 			QTest::newRow(i->first.c_str()) << i->second;
+		}
 	}
 	void testNode()
 	{

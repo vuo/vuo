@@ -2,9 +2,9 @@
  * @file
  * VuoTransform C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -14,6 +14,7 @@
 #include <float.h>
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
+#include "VuoRectangle.h"
 #include "VuoTransform2d.h"
 #include <stdio.h>
 
@@ -49,7 +50,7 @@ typedef struct
 
 	// The following values are stored so we can display a meaningful summary.
 	enum VuoTransformType type;
-	union
+	struct
 	{
 		VuoPoint3d euler; ///< Radians
 		VuoPoint4d quaternion;
@@ -61,22 +62,22 @@ typedef struct
 	} rotationSource;
 } VuoTransform;
 
-void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoReal meshX, float *billboardMatrix);
+void VuoTransform_getMatrix(const VuoTransform value, float *matrix) __attribute__((nonnull));
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoPoint2d mesh0, float *billboardMatrix)  __attribute__((nonnull));
 VuoPoint3d VuoTransform_getEuler(const VuoTransform transform);
 VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform);
 VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale);
-void VuoTransform_rotationMatrixFromQuaternion(const VuoPoint4d quaternion, float* matrix);
-void VuoTransform_rotationMatrixFromEuler(const VuoPoint3d euler, float* matrix);
+void VuoTransform_rotationMatrixFromQuaternion(const VuoPoint4d quaternion, float *matrix) __attribute__((nonnull));
+void VuoTransform_rotationMatrixFromEuler(const VuoPoint3d euler, float *matrix) __attribute__((nonnull));
 
 VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
 VuoTransform2d VuoTransform_get2d(VuoTransform transform);
 
 VuoTransform VuoTransform_makeFromTarget(VuoPoint3d position, VuoPoint3d target, VuoPoint3d upDirection);
-VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix);
+VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix) __attribute__((nonnull));
 VuoTransform VuoTransform_composite(const VuoTransform a, const VuoTransform b);
 
 /**
@@ -142,10 +143,10 @@ static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, Vuo
 
 /**
  * Create a unit quaternion from a rotation matrix (3x3).
- * http://web.archive.org/web/20170705120459/http://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
+ * https://web.archive.org/web/20170705120459/http://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
  */
-static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation) __attribute__((const));
-static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation)
+static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float *rotation) __attribute__((nonnull));
+static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float *rotation)
 {
 	float t;
 	VuoPoint4d q;
@@ -247,8 +248,8 @@ static inline VuoPoint3d VuoTransform_eulerFromQuaternion(const VuoPoint4d quate
 /**
  * Convert a rotation matrix (3x3) to an euler angle.
  */
-static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float* matrix) __attribute__((const));
-static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float* matrix)
+static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float *matrix) __attribute__((nonnull));
+static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float *matrix)
 {
 	// "Euler Angle Conversion" by Ken Shoemake.  Graphics Gems IV, pp. 222–229.
 	VuoPoint3d ea;
@@ -277,7 +278,7 @@ static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float* matrix)
 static inline VuoPoint3d VuoTransform_rotateVectorWithQuaternion(const VuoPoint3d v, const VuoPoint4d q) __attribute__((const));
 static inline VuoPoint3d VuoTransform_rotateVectorWithQuaternion(const VuoPoint3d v, const VuoPoint4d q)
 {
-	// http://math.stackexchange.com/questions/40164/how-do-you-rotate-a-vector-by-a-unit-quaternion/535223
+	// https://math.stackexchange.com/questions/40164/how-do-you-rotate-a-vector-by-a-unit-quaternion/535223
 	VuoPoint4d vQuaternion = (VuoPoint4d){v.x, v.y, v.z, 0};
 	VuoPoint4d qConjugate = (VuoPoint4d){-q.x, -q.y, -q.z, q.w};
 	VuoPoint4d result = VuoTransform_quaternionComposite(VuoTransform_quaternionComposite(q, vQuaternion), qConjugate);
@@ -321,6 +322,7 @@ static inline bool VuoTransform_isIdentity(const VuoTransform transform)
 /**
  * Multiplies the specified matrices.
  */
+static inline void VuoTransform_multiplyMatrices4x4(const float *a, const float *b, float *outputMatrix) __attribute__((nonnull));
 static inline void VuoTransform_multiplyMatrices4x4(const float *a, const float *b, float *outputMatrix)
 {
 	outputMatrix[0*4+0] = a[0*4+0] * b[0*4+0] + a[0*4+1] * b[1*4+0] + a[0*4+2] * b[2*4+0] + a[0*4+3] * b[3*4+0];
@@ -344,6 +346,7 @@ static inline void VuoTransform_multiplyMatrices4x4(const float *a, const float 
 /**
  * Copies @c sourceMatrix to @c destMatrix.
  */
+static inline void VuoTransform_copyMatrix4x4(const float *sourceMatrix, float *destMatrix) __attribute__((nonnull));
 static inline void VuoTransform_copyMatrix4x4(const float *sourceMatrix, float *destMatrix)
 {
 	for (int i=0; i<16; ++i)
@@ -351,15 +354,40 @@ static inline void VuoTransform_copyMatrix4x4(const float *sourceMatrix, float *
 }
 
 /**
+ * Returns the translation specified in `matrix`.
+ * @version200New
+ */
+static inline VuoPoint3d VuoTransform_getMatrix4x4Translation(const float *matrix) __attribute__((nonnull));
+static inline VuoPoint3d VuoTransform_getMatrix4x4Translation(const float *matrix)
+{
+	return (VuoPoint3d){matrix[12], matrix[13], matrix[14]};
+}
+
+/**
+ * Returns the scale specified in `matrix`.
+ * @version200New
+ */
+static inline VuoPoint3d VuoTransform_getMatrix4x4Scale(const float *matrix) __attribute__((nonnull));
+static inline VuoPoint3d VuoTransform_getMatrix4x4Scale(const float *matrix)
+{
+	return (VuoPoint3d){
+		VuoPoint3d_magnitude((VuoPoint3d){matrix[0], matrix[1], matrix[ 2]}),
+		VuoPoint3d_magnitude((VuoPoint3d){matrix[4], matrix[5], matrix[ 6]}),
+		VuoPoint3d_magnitude((VuoPoint3d){matrix[8], matrix[9], matrix[10]})
+	};
+}
+
+/**
  * Prints the specified column-major matrix.
  */
+static inline void VuoTransform_printMatrix4x4(const float *matrix) __attribute__((nonnull));
 static inline void VuoTransform_printMatrix4x4(const float *matrix)
 {
 	for (int i=0; i<4; ++i)
 		fprintf(stderr, "[ %11.6f %11.6f %11.6f %11.6f ]\n",matrix[i+0*4],matrix[i+1*4],matrix[i+2*4],matrix[i+3*4]);
 }
 
-void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatrix);
+void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatrix) __attribute__((nonnull));
 
 /**
  * @ingroup VuoTransform
@@ -367,15 +395,18 @@ void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatr
  *
  * @see VuoTransform_getMatrix
  */
+static inline VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point) __attribute__((nonnull));
 static inline VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point)
 {
-	VuoPoint3d transformedPoint = {
+	return (VuoPoint3d){
 		point.x * matrix[0] + point.y * matrix[4] + point.z * matrix[ 8] + matrix[12],
 		point.x * matrix[1] + point.y * matrix[5] + point.z * matrix[ 9] + matrix[13],
 		point.x * matrix[2] + point.y * matrix[6] + point.z * matrix[10] + matrix[14]
 	};
-	return transformedPoint;
 }
+
+VuoPoint2d VuoTransform_transform_VuoPoint2d(VuoTransform transform, VuoPoint2d point);
+VuoPoint3d VuoTransform_transform_VuoPoint3d(VuoTransform transform, VuoPoint3d point);
 
 /**
  * @ingroup VuoTransform
@@ -385,18 +416,18 @@ static inline VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoi
  *
  * @see VuoTransform_getMatrix
  */
+static inline VuoPoint3d VuoTransform_transformVector(const float *matrix, VuoPoint3d point) __attribute__((nonnull));
 static inline VuoPoint3d VuoTransform_transformVector(const float *matrix, VuoPoint3d point)
 {
-	VuoPoint3d transformedPoint = {
+	return (VuoPoint3d){
 		point.x * matrix[0] + point.y * matrix[4] + point.z * matrix[ 8],
 		point.x * matrix[1] + point.y * matrix[5] + point.z * matrix[ 9],
 		point.x * matrix[2] + point.y * matrix[6] + point.z * matrix[10]
 	};
-	return transformedPoint;
 }
 
 
-VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle rectangle);
+VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle rectangle) __attribute__((nonnull));
 
 VuoTransform VuoTransform_makeFromJson(struct json_object *js);
 struct json_object * VuoTransform_getJson(const VuoTransform value);

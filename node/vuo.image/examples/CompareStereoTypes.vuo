@@ -3,55 +3,61 @@
  * Shows the different ways a pair of images (left and right eyes) can be combined into a single image.
  * Click to change the type.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AlignLayerToWindow3 [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1575,90" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
-ChangeResizableStatus [type="vuo.window.resizable" version="1.0.0" label="Change Resizable Status|<refresh>refresh\l|<resizable>resizable\l|<property>property\r" pos="1575,555" _resizable="false"];
-ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<unit>unit\l|<property>property\r" pos="1590,465" _unit="\"pixels\""];
-Combine3DStereoImages [type="vuo.image.combine.stereo" version="1.0.0" label="Combine 3D Stereo Images|<refresh>refresh\l|<stereoType>stereoType\l|<leftImage>leftImage\l|<rightImage>rightImage\l|<combinedImage>combinedImage\r" pos="1275,375" fillcolor="violet"];
-Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="810,405"];
-CycleThroughList2 [type="vuo.list.cycle.VuoImageStereoType" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="1095,105" _wrapMode="\"wrap\""];
-FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="225,120" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetImageSize4 [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="1410,465"];
-Make3DGridPoints2 [type="vuo.scene.make.grid.points.VuoColor" version="1.0.0" label="Make Grid Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<pointSize>pointSize\l|<object>object\r" pos="360,405" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rows="3" _columns="3" _pointSize="0.100000"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1590,360" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeList [type="vuo.list.make.13.VuoImageStereoType" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<list>list\r" pos="1027,116" _1="\"left-right-half\"" _2="\"left-right-full\"" _3="\"top-bottom-half\"" _4="\"anaglyph-red-cyan\"" _5="\"anaglyph-amber-blue\"" _6="\"anaglyph-green-magenta\"" _7="\"vertical-stripe\"" _8="\"horizontal-stripe\"" _9="\"checkerboard\"" _10="\"blend\"" _11="\"difference\"" _12="\"left-only\"" _13="\"right-only\""];
-MakeList16 [type="vuo.list.make.3.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="655,431" _1="{\"x\":0.000000,\"y\":0.000000,\"z\":-2.000000}" _2="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _3="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}"];
-MakeList17 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1827,281" fillcolor="green"];
-MakeList18 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1793,266" fillcolor="green"];
-MakeList24 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="723,446"];
-MakeList6 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="780,461" _1="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}"];
-MakeList9 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="956,401" fillcolor="green"];
-MakeStereoCamera [type="vuo.scene.make.camera.stereo" version="1.0.0" label="Make Stereo Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<distanceToFocalPlane>distanceToFocalPlane\l|<distanceBetweenEyes>distanceBetweenEyes\l|<object>object\r" pos="720,240" _name="\"camera\"" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000" _distanceToFocalPlane="1.000000" _distanceBetweenEyes="0.030000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1380,105" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="885,45" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1860,255" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-RenderSceneToImage3 [type="vuo.scene.render.image.stereo" version="1.0.0" label="Render Scene to Stereo Images|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<leftImage>leftImage\r|<leftDepthImage>leftDepthImage\r|<rightImage>rightImage\r|<rightDepthImage>rightDepthImage\r" pos="1020,390" fillcolor="green" _width="768" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"1\"" _cameraName="\"\""];
-SummarizeValue2 [type="vuo.data.summarize.VuoImageStereoType" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1260,105"];
+AlignLayerToWindow3 [type="vuo.layer.align.window2" version="2.0.0" label="Align Layer to Window|<refresh>refresh\l|<layer>layer\l|<window>window\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1710,690" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000"];
+ChangeResizableStatus [type="vuo.window.resizable2" version="2.0.0" label="Change Resizable Status|<refresh>refresh\l|<windowDescription>windowDescription\l|<resizable>resizable\l|<changedWindowDescription>changedWindowDescription\r" pos="1890,390" _resizable="false"];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="1680,390" _unit="\"pixels\""];
+Combine3DStereoImages [type="vuo.image.combine.stereo" version="1.0.0" label="Combine 3D Stereo Images|<refresh>refresh\l|<stereoType>stereoType\l|<leftImage>leftImage\l|<rightImage>rightImage\l|<combinedImage>combinedImage\r" pos="1245,240" fillcolor="orange"];
+CompareNumbers [type="vuo.math.compareNumbers.VuoInteger" version="1.0.0" label="Compare Numbers|<refresh>refresh\l|<a>a\l|<comparison>comparison\l|<b>b\l|<result>result\r" pos="1230,780" _comparison="\"=\"" _b="2"];
+CompareNumbers2 [type="vuo.math.compareNumbers.VuoInteger" version="1.0.0" label="Compare Numbers|<refresh>refresh\l|<a>a\l|<comparison>comparison\l|<b>b\l|<result>result\r" pos="1230,900" _comparison="\"=\"" _b="3"];
+Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="750,270"];
+CycleThroughList2 [type="vuo.list.cycle2.VuoImageStereoType" version="2.0.0" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="945,570" _wrapMode="\"wrap\""];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="60,285" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetImageSize4 [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="1485,405"];
+Make3DGridPoints2 [type="vuo.scene.make.grid.points.VuoColor" version="1.1.0" label="Make Grid Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<pointSize>pointSize\l|<object>object\r" pos="300,270" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _rows="3" _columns="3" _pointSize="0.100000"];
+MakeLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1680,240" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList [type="vuo.list.make.13.VuoImageStereoType" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<list>list\r" pos="878,626" _1="\"left-right-half\"" _2="\"left-right-full\"" _3="\"top-bottom-half\"" _4="\"anaglyph-red-cyan\"" _5="\"anaglyph-amber-blue\"" _6="\"anaglyph-green-magenta\"" _7="\"vertical-stripe\"" _8="\"horizontal-stripe\"" _9="\"checkerboard\"" _10="\"blend\"" _11="\"difference\"" _12="\"left-only\"" _13="\"right-only\""];
+MakeList16 [type="vuo.list.make.3.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="589,296" _1="\{\"x\":0.000000,\"y\":0.000000,\"z\":-2.000000\}" _2="\{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000\}" _3="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}"];
+MakeList18 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1973,251" fillcolor="blue"];
+MakeList24 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="653,311"];
+MakeList6 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="717,326" _1="\{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000\}"];
+MakeList9 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="899,266" fillcolor="blue"];
+MakeStereoCamera [type="vuo.scene.make.camera.stereo" version="1.0.0" label="Make Stereo Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<distanceToFocalPlane>distanceToFocalPlane\l|<distanceBetweenEyes>distanceBetweenEyes\l|<object>object\r" pos="570,705" _name="\"camera\"" _position="\{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000" _distanceToFocalPlane="1.000000" _distanceBetweenEyes="0.030000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1230,570" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="555,570" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2025,240" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderSceneToImage3 [type="vuo.scene.render.image.stereo2" version="1.0.0" label="Render Scene to Stereo Images|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<leftImage>leftImage\r|<leftDepthImage>leftDepthImage\r|<rightImage>rightImage\r|<rightDepthImage>rightDepthImage\r" pos="960,255" fillcolor="blue" _width="768" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"1\"" _cameraName="\"\""];
+SelectInput [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1440,780" _falseOption="-0.0050000000000000001" _trueOption="0.12"];
+SelectInput3 [type="vuo.select.in.boolean.VuoVerticalAlignment" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1440,900" _falseOption="\"bottom\"" _trueOption="\"center\""];
+SummarizeValue2 [type="vuo.data.summarize.VuoImageStereoType" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1260,105"];
 
 AlignLayerToWindow3:alignedLayer -> MakeList18:2;
-ChangeResizableStatus:property -> MakeList17:2;
-ChangeWindowSize:property -> MakeList17:1;
+ChangeResizableStatus:changedWindowDescription -> RenderLayersToWindow2:setWindowDescription;
+ChangeWindowSize:changedWindowDescription -> ChangeResizableStatus:windowDescription;
 Combine3DStereoImages:combinedImage -> GetImageSize4:image;
 Combine3DStereoImages:combinedImage -> MakeLayer:image;
+CompareNumbers2:result -> SelectInput3:which;
+CompareNumbers:result -> SelectInput:which;
 Copy3DObject:copies -> MakeList9:2;
 CycleThroughList2:item -> Combine3DStereoImages:stereoType;
 CycleThroughList2:item -> SummarizeValue2:value;
+CycleThroughList2:position -> CompareNumbers2:a;
+CycleThroughList2:position -> CompareNumbers:a;
 FireOnStart3:started -> CycleThroughList2:goForward;
-FireOnStart3:started -> Make3DGridPoints2:refresh;
-FireOnStart3:started -> MakeStereoCamera:refresh;
-GetImageSize4:height -> ChangeResizableStatus:refresh;
+FireOnStart3:started -> Make3DGridPoints2:material;
+FireOnStart3:started -> MakeStereoCamera:name;
 GetImageSize4:height -> ChangeWindowSize:height;
 GetImageSize4:width -> ChangeWindowSize:width;
 Make3DGridPoints2:object -> Copy3DObject:object;
 MakeLayer:layer -> MakeList18:1;
 MakeList16:list -> Copy3DObject:translations;
-MakeList17:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList18:list -> RenderLayersToWindow2:layers;
 MakeList24:list -> Copy3DObject:rotations;
 MakeList6:list -> Copy3DObject:scales;
@@ -60,9 +66,11 @@ MakeList:list -> CycleThroughList2:list;
 MakeStereoCamera:object -> MakeList9:1;
 MakeTextLayer:layer -> AlignLayerToWindow3:layer;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
-RenderLayersToWindow2:showedWindow -> AlignLayerToWindow3:window [style=invis];
-RenderLayersToWindow2:showedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderLayersToWindow2:updatedWindow -> AlignLayerToWindow3:window [style=invis];
+RenderLayersToWindow2:updatedWindow -> ReceiveMouseButtons:window [style=invis];
 RenderSceneToImage3:leftImage -> Combine3DStereoImages:leftImage;
 RenderSceneToImage3:rightImage -> Combine3DStereoImages:rightImage;
+SelectInput3:out -> AlignLayerToWindow3:verticalAlignment;
+SelectInput:out -> AlignLayerToWindow3:verticalMargin;
 SummarizeValue2:summary -> MakeTextLayer:text;
 }

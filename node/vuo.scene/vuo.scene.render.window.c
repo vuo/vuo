@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.render.window node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -20,15 +20,19 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Scene to Window",
-					 "keywords" : [ "draw", "graphics", "display", "view", "object", "screen", "full screen", "fullscreen" ],
+					 "keywords" : [
+						 "draw", "graphics",
+						 "3D", "object", "opengl", "scenegraph",
+						 "display", "view", "screen", "full screen", "fullscreen",
+					 ],
 					 "version" : "2.3.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer",
 						 "VuoWindow"
 					 ],
 					 "node": {
-						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayScene.vuo", "DisplaySquare.vuo", "DisplaySphere.vuo", "MoveSpinningSphere.vuo", "SwitchCameras.vuo" ]
+						 "isDeprecated": true,
+						 "exampleCompositions" : [ "DisplayScene.vuo", "DisplaySphere.vuo", "MoveSpinningSphere.vuo", "SwitchCameras.vuo" ]
 					 }
 				 });
 
@@ -41,7 +45,7 @@ struct nodeInstanceData
 	dispatch_queue_t sceneRendererQueue;
 };
 
-void vuo_scene_render_window_init(void *ctx, float backingScaleFactor)
+static void vuo_scene_render_window_init(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
@@ -49,7 +53,7 @@ void vuo_scene_render_window_init(void *ctx, float backingScaleFactor)
 	VuoRetain(context->sceneRenderer);
 }
 
-void vuo_scene_render_window_updateBacking(void *ctx, float backingScaleFactor)
+static void vuo_scene_render_window_updateBacking(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
@@ -71,7 +75,7 @@ void vuo_scene_render_window_updateBacking(void *ctx, float backingScaleFactor)
 				  });
 }
 
-void vuo_scene_render_window_resize(void *ctx, unsigned int width, unsigned int height)
+static void vuo_scene_render_window_resize(void *ctx, unsigned int width, unsigned int height)
 {
 	struct nodeInstanceData *context = ctx;
 	dispatch_sync(context->sceneRendererQueue, ^{
@@ -79,7 +83,7 @@ void vuo_scene_render_window_resize(void *ctx, unsigned int width, unsigned int 
 	});
 }
 
-VuoIoSurface vuo_scene_render_window_draw(void *ctx)
+static VuoIoSurface vuo_scene_render_window_draw(void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 	__block VuoIoSurface vis;
@@ -113,10 +117,10 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
+		VuoOutputTrigger(requestedFrame, VuoReal, {"name":"Refreshed at Time", "eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow, requestedFrame);
+	VuoWindowOpenGl_enableTriggers_deprecated((*context)->window, showedWindow, requestedFrame);
 }
 
 void nodeInstanceEvent
@@ -134,7 +138,7 @@ void nodeInstanceEvent
 	if (setWindowPropertiesEvent)
 		VuoWindowOpenGl_setProperties((*context)->window, setWindowProperties);
 
-	VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), objects);
+	VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
 
 	dispatch_sync((*context)->sceneRendererQueue, ^{
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
@@ -159,8 +163,17 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoWindowOpenGl_close((*context)->window);
-	VuoRelease((*context)->sceneRenderer);
-	VuoRelease((*context)->window);
-	dispatch_release((*context)->sceneRendererQueue);
+	struct nodeInstanceData *c = *context;
+
+	// Ensure the context isn't deallocated until the window has finished closing
+	// (which might be a while if macOS is doing its exit-fullscreen animation).
+	VuoRetain(c);
+
+	VuoWindowOpenGl_close(c->window, ^{
+		VuoRelease(c->sceneRenderer);
+		dispatch_release(c->sceneRendererQueue);
+		VuoRelease(c);
+	});
+
+	VuoRelease(c->window);
 }

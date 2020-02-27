@@ -2,44 +2,44 @@
  * @file
  * Plays a sine wave with varying amounts of bit crushing.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="540,45" _loudness="0.40000000000000002"];
-AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="615,240"];
-BitCrushAudio [type="vuo.audio.bitCrush" version="1.0.0" label="Bit Crush Audio|<refresh>refresh\l|<bitDepth>bitDepth\l|<samples>samples\l|<crushedSamples>crushedSamples\r" pos="345,45" fillcolor="violet"];
-FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="390,285" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="1" _decimalPlaces="1" _showThousandSeparator="true"];
-MakeAudioWave [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="120,60" _wave="\"sine\"" _frequency="468.75" _setPhase="0.0"];
-MakeImageLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,105" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="1" _opacity="1"];
-MakeList14 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="566,251" _1="\"Sine Wave\\n\\nBit Depth: \""];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="919,251" fillcolor="green"];
-MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="478,56"];
-MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="949,281" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="765,255" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.44999998807907104}"];
-MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="555,120" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _height="256" _syncAmplitude="0.0"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="990,240" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="735,30" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
-Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="165,165" _wave="\"sine\"" _period="4" _center="4.5" _amplitude="3.5" _phase="0.5"];
+AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="555,45" _loudness="0.40000000000000002"];
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="510,300"];
+BitCrushAudio [type="vuo.audio.bitCrush" version="1.0.0" label="Bit Crush Audio|<refresh>refresh\l|<bitDepth>bitDepth\l|<samples>samples\l|<crushedSamples>crushedSamples\r" pos="345,45" fillcolor="orange"];
+FireAtAudioRate [type="vuo.audio.fireAtBufferRate" version="1.0.0" label="Fire at Audio Rate|<refresh>refresh\l|<requestedChannels>requestedChannels\r" pos="-165,60" fillcolor="lime" _requestedChannels_eventThrottling="enqueue"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="255,315" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="1" _decimalPlaces="1" _showThousandSeparator="true"];
+MakeAudioWave [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="75,60" _wave="\"sine\"" _frequency="468.75" _setPhase="0.0"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="765,135" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1" _opacity="1"];
+MakeList14 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="469,311" _1="\"Sine Wave\\n\\nBit Depth: \""];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="944,251" fillcolor="blue"];
+MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="501,56"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="765,300" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\"left-center\"" _center="\{\"x\":-0.15000000596046448,\"y\":-0.44999998807907104\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<syncCenter>syncCenter\l|<attenuateEnds>attenuateEnds\l|<image>image\r" pos="555,135" _fillColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25\}" _lineColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _height="256" _syncAmplitude="0.0" _syncCenter="0.0" _attenuateEnds="false"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="990,240" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="765,30" fillcolor="blue"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="90,180" _wave="\"sine\"" _period="4" _center="4.5" _amplitude="3.5" _phase="0.5"];
 
-AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
+AdjustLoudness:adjustedSamples -> SendLiveAudio2:sendChannels;
 AppendTexts:compositeText -> MakeTextLayer:text;
 BitCrushAudio:crushedSamples -> MakeList4:1;
 BitCrushAudio:crushedSamples -> MakeWaveformImage:samples;
+FireAtAudioRate:requestedChannels -> MakeAudioWave:calculateSamples;
+FireAtAudioRate:requestedChannels -> Wave2:time;
 FormatNumber:text -> MakeList14:2;
 MakeAudioWave:samples -> BitCrushAudio:samples;
 MakeImageLayer:layer -> MakeList2:1;
 MakeList14:list -> AppendTexts:texts;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList4:list -> AdjustLoudness:samples;
-MakeList9:list -> RenderLayersToWindow:setWindowProperties;
 MakeTextLayer:layer -> MakeList2:2;
 MakeWaveformImage:image -> MakeImageLayer:image;
-SendLiveAudio:requestedChannels -> MakeAudioWave:calculateSamples;
-SendLiveAudio:requestedChannels -> Wave2:time;
 Wave2:value -> BitCrushAudio:bitDepth;
 Wave2:value -> FormatNumber:value;
 }

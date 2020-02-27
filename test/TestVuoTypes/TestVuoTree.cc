@@ -2,9 +2,9 @@
  * @file
  * TestVuoTree implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -289,6 +289,18 @@ private slots:
 			QTest::newRow("no name, constructed") << VuoTree_make(NULL, attributesDict, "a", children)
 												  << "" << attributes << "a" << "ac" << 1;
 		}
+
+		QTest::newRow("linebreaks in string content, JSON")
+			<< VuoTree_makeFromJsonText(QUOTE({"Shader":{"renderpass":[{"code":"\/*\n\n*"}]}}))
+			<< "Shader" << noAttributes << "" << "/*\n\n*" << 1;
+
+		QTest::newRow("ampersand in string content, JSON")
+			<< VuoTree_makeFromJsonText(QUOTE("if (a & b)"))
+			<< "" << noAttributes << "if (a & b)" << "if (a & b)" << 0;
+
+		QTest::newRow("ampersands in string content, JSON")
+			<< VuoTree_makeFromJsonText(QUOTE("if (a && b)"))
+			<< "" << noAttributes << "if (a && b)" << "if (a && b)" << 0;
 
 		VuoDictionary_VuoText_VuoText_retain(noAttributesDict);
 		VuoDictionary_VuoText_VuoText_release(noAttributesDict);
@@ -613,8 +625,8 @@ private slots:
 			<< false;
 
 		QTest::newRow("XML property list, root dict, app") << makeTreeFromXmlFile("resources/TestVuoTree-plist-rootDict-app.plist", false)
-			<< "<document><CFBundleIconFile>vuo.icns</CFBundleIconFile><CFBundlePackageType>APPL</CFBundlePackageType><CFBundleExecutable>Vuo Editor</CFBundleExecutable><CFBundleIdentifier>org.vuo.editor</CFBundleIdentifier><CFBundleVersion>1.3.0</CFBundleVersion><CFBundleShortVersionString>1.3.0</CFBundleShortVersionString><LSMinimumSystemVersion>10.8</LSMinimumSystemVersion><NSPrincipalClass>NSApplication</NSPrincipalClass><NSHighResolutionCapable>true</NSHighResolutionCapable><CFBundleDocumentTypes><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Viewer</CFBundleTypeRole><CFBundleTypeName>Vuo Node</CFBundleTypeName><LSItemContentTypes><item>org.vuo.node</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo-node</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-node.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuonode</item></CFBundleTypeExtensions></item><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Viewer</CFBundleTypeRole><CFBundleTypeName>Vuo Premium Node</CFBundleTypeName><LSItemContentTypes><item>org.vuo.node.premium</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo-node+</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-node.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuonode+</item></CFBundleTypeExtensions></item><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Editor</CFBundleTypeRole><CFBundleTypeName>Vuo Composition</CFBundleTypeName><LSItemContentTypes><item>org.vuo.composition</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-composition.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuo</item></CFBundleTypeExtensions></item></CFBundleDocumentTypes><UTExportedTypeDeclarations><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Node</UTTypeDescription><UTTypeIdentifier>org.vuo.node</UTTypeIdentifier><UTTypeReferenceURL>http://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuonode</item></public.filename-extension><public.mime-type><item>application/x-vuo-node</item></public.mime-type></UTTypeTagSpecification></item><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Premium Node</UTTypeDescription><UTTypeIdentifier>org.vuo.node.premium</UTTypeIdentifier><UTTypeReferenceURL>http://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuonode+</item></public.filename-extension><public.mime-type><item>application/x-vuo-node+</item></public.mime-type></UTTypeTagSpecification></item><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Composition</UTTypeDescription><UTTypeIdentifier>org.vuo.composition</UTTypeIdentifier><UTTypeReferenceURL>http://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuo</item></public.filename-extension><public.mime-type><item>application/x-vuo</item></public.mime-type></UTTypeTagSpecification></item></UTExportedTypeDeclarations><CFBundleURLTypes><item><CFBundleURLName>Vuo License</CFBundleURLName><CFBundleURLSchemes><item>vuo-license</item></CFBundleURLSchemes></item><item><CFBundleURLName>Vuo Example Composition</CFBundleURLName><CFBundleURLSchemes><item>vuo-example</item></CFBundleURLSchemes></item></CFBundleURLTypes></document>"
-			<< VUO_STRINGIFY({"document":{"CFBundleIconFile":"vuo.icns","CFBundlePackageType":"APPL","CFBundleExecutable":"Vuo Editor","CFBundleIdentifier":"org.vuo.editor","CFBundleVersion":"1.3.0","CFBundleShortVersionString":"1.3.0","LSMinimumSystemVersion":"10.8","NSPrincipalClass":"NSApplication","NSHighResolutionCapable":"true","CFBundleDocumentTypes":{"item":[{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Viewer","CFBundleTypeName":"Vuo Node","LSItemContentTypes":{"item":"org.vuo.node"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo-node"},"CFBundleTypeIconFile":"vuo-node.icns","CFBundleTypeExtensions":{"item":"vuonode"}},{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Viewer","CFBundleTypeName":"Vuo Premium Node","LSItemContentTypes":{"item":"org.vuo.node.premium"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo-node+"},"CFBundleTypeIconFile":"vuo-node.icns","CFBundleTypeExtensions":{"item":"vuonode+"}},{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Editor","CFBundleTypeName":"Vuo Composition","LSItemContentTypes":{"item":"org.vuo.composition"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo"},"CFBundleTypeIconFile":"vuo-composition.icns","CFBundleTypeExtensions":{"item":"vuo"}}]},"UTExportedTypeDeclarations":{"item":[{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Node","UTTypeIdentifier":"org.vuo.node","UTTypeReferenceURL":"http:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuonode"},"public.mime-type":{"item":"application\/x-vuo-node"}}},{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Premium Node","UTTypeIdentifier":"org.vuo.node.premium","UTTypeReferenceURL":"http:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuonode+"},"public.mime-type":{"item":"application\/x-vuo-node+"}}},{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Composition","UTTypeIdentifier":"org.vuo.composition","UTTypeReferenceURL":"http:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuo"},"public.mime-type":{"item":"application\/x-vuo"}}}]},"CFBundleURLTypes":{"item":[{"CFBundleURLName":"Vuo License","CFBundleURLSchemes":{"item":"vuo-license"}},{"CFBundleURLName":"Vuo Example Composition","CFBundleURLSchemes":{"item":"vuo-example"}}]}}})
+			<< "<document><CFBundleIconFile>vuo.icns</CFBundleIconFile><CFBundlePackageType>APPL</CFBundlePackageType><CFBundleExecutable>Vuo</CFBundleExecutable><CFBundleIdentifier>org.vuo.editor</CFBundleIdentifier><CFBundleVersion>1.3.0</CFBundleVersion><CFBundleShortVersionString>1.3.0</CFBundleShortVersionString><LSMinimumSystemVersion>10.8</LSMinimumSystemVersion><NSPrincipalClass>NSApplication</NSPrincipalClass><NSHighResolutionCapable>true</NSHighResolutionCapable><CFBundleDocumentTypes><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Viewer</CFBundleTypeRole><CFBundleTypeName>Vuo Node</CFBundleTypeName><LSItemContentTypes><item>org.vuo.node</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo-node</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-node.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuonode</item></CFBundleTypeExtensions></item><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Viewer</CFBundleTypeRole><CFBundleTypeName>Vuo Premium Node</CFBundleTypeName><LSItemContentTypes><item>org.vuo.node.premium</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo-node+</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-node.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuonode+</item></CFBundleTypeExtensions></item><item><LSIsAppleDefaultForType>true</LSIsAppleDefaultForType><CFBundleTypeRole>Editor</CFBundleTypeRole><CFBundleTypeName>Vuo Composition</CFBundleTypeName><LSItemContentTypes><item>org.vuo.composition</item></LSItemContentTypes><CFBundleTypeMIMETypes><item>application/x-vuo</item></CFBundleTypeMIMETypes><CFBundleTypeIconFile>vuo-composition.icns</CFBundleTypeIconFile><CFBundleTypeExtensions><item>vuo</item></CFBundleTypeExtensions></item></CFBundleDocumentTypes><UTExportedTypeDeclarations><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Node</UTTypeDescription><UTTypeIdentifier>org.vuo.node</UTTypeIdentifier><UTTypeReferenceURL>https://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuonode</item></public.filename-extension><public.mime-type><item>application/x-vuo-node</item></public.mime-type></UTTypeTagSpecification></item><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Premium Node</UTTypeDescription><UTTypeIdentifier>org.vuo.node.premium</UTTypeIdentifier><UTTypeReferenceURL>https://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuonode+</item></public.filename-extension><public.mime-type><item>application/x-vuo-node+</item></public.mime-type></UTTypeTagSpecification></item><item><UTTypeConformsTo><item>public.data</item></UTTypeConformsTo><UTTypeDescription>Vuo Composition</UTTypeDescription><UTTypeIdentifier>org.vuo.composition</UTTypeIdentifier><UTTypeReferenceURL>https://vuo.org</UTTypeReferenceURL><UTTypeTagSpecification><public.filename-extension><item>vuo</item></public.filename-extension><public.mime-type><item>application/x-vuo</item></public.mime-type></UTTypeTagSpecification></item></UTExportedTypeDeclarations><CFBundleURLTypes><item><CFBundleURLName>Vuo License</CFBundleURLName><CFBundleURLSchemes><item>vuo-license</item></CFBundleURLSchemes></item><item><CFBundleURLName>Vuo Example Composition</CFBundleURLName><CFBundleURLSchemes><item>vuo-example</item></CFBundleURLSchemes></item></CFBundleURLTypes></document>"
+			<< VUO_STRINGIFY({"document":{"CFBundleIconFile":"vuo.icns","CFBundlePackageType":"APPL","CFBundleExecutable":"Vuo","CFBundleIdentifier":"org.vuo.editor","CFBundleVersion":"1.3.0","CFBundleShortVersionString":"1.3.0","LSMinimumSystemVersion":"10.8","NSPrincipalClass":"NSApplication","NSHighResolutionCapable":"true","CFBundleDocumentTypes":{"item":[{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Viewer","CFBundleTypeName":"Vuo Node","LSItemContentTypes":{"item":"org.vuo.node"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo-node"},"CFBundleTypeIconFile":"vuo-node.icns","CFBundleTypeExtensions":{"item":"vuonode"}},{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Viewer","CFBundleTypeName":"Vuo Premium Node","LSItemContentTypes":{"item":"org.vuo.node.premium"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo-node+"},"CFBundleTypeIconFile":"vuo-node.icns","CFBundleTypeExtensions":{"item":"vuonode+"}},{"LSIsAppleDefaultForType":"true","CFBundleTypeRole":"Editor","CFBundleTypeName":"Vuo Composition","LSItemContentTypes":{"item":"org.vuo.composition"},"CFBundleTypeMIMETypes":{"item":"application\/x-vuo"},"CFBundleTypeIconFile":"vuo-composition.icns","CFBundleTypeExtensions":{"item":"vuo"}}]},"UTExportedTypeDeclarations":{"item":[{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Node","UTTypeIdentifier":"org.vuo.node","UTTypeReferenceURL":"https:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuonode"},"public.mime-type":{"item":"application\/x-vuo-node"}}},{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Premium Node","UTTypeIdentifier":"org.vuo.node.premium","UTTypeReferenceURL":"https:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuonode+"},"public.mime-type":{"item":"application\/x-vuo-node+"}}},{"UTTypeConformsTo":{"item":"public.data"},"UTTypeDescription":"Vuo Composition","UTTypeIdentifier":"org.vuo.composition","UTTypeReferenceURL":"https:\/\/vuo.org","UTTypeTagSpecification":{"public.filename-extension":{"item":"vuo"},"public.mime-type":{"item":"application\/x-vuo"}}}]},"CFBundleURLTypes":{"item":[{"CFBundleURLName":"Vuo License","CFBundleURLSchemes":{"item":"vuo-license"}},{"CFBundleURLName":"Vuo Example Composition","CFBundleURLSchemes":{"item":"vuo-example"}}]}}})
 			<< false;
 
 		// Don't crash.
@@ -640,11 +652,15 @@ private slots:
 		QFETCH(bool, indent);
 
 		VuoText actualXml = VuoTree_serializeAsXml(tree, indent);
+//		VLog("expected=%s",xml.toUtf8().data());
+//		VLog("actual  =%s",actualXml.toUtf8().data());
 		QCOMPARE(QString::fromUtf8(actualXml), xml);
 		VuoRetain(actualXml);
 		VuoRelease(actualXml);
 
 		VuoText actualJson = VuoTree_serializeAsJson(tree, indent);
+//		VLog("expected=%s",json.toUtf8().data());
+//		VLog("actual  =%s",actualJson.toUtf8().data());
 		QCOMPARE(QString::fromUtf8(actualJson), json);
 		VuoRetain(actualJson);
 		VuoRelease(actualJson);
@@ -1198,7 +1214,7 @@ private slots:
 		QFETCH(QStringList, names);
 		QFETCH(QStringList, contents);
 
-		VuoTextComparison comparison = { VuoTextComparison_Equals, caseSensitive };
+		VuoTextComparison comparison = { VuoTextComparison_Equals, caseSensitive, "" };
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithName(tree, name.toUtf8().constData(), comparison, includeDescendants);
 
 		unsigned long count = VuoListGetCount_VuoTree(foundTrees);
@@ -1261,7 +1277,7 @@ private slots:
 		QFETCH(bool, includeDescendants);
 		QFETCH(QStringList, names);
 
-		VuoTextComparison comparison = { VuoTextComparison_BeginsWith, true };
+		VuoTextComparison comparison = { VuoTextComparison_BeginsWith, true, "" };
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithAttribute(tree, attribute.toUtf8().constData(), value.toUtf8().constData(),
 																	comparison, includeDescendants);
 
@@ -1339,7 +1355,7 @@ private slots:
 		QFETCH(bool, includeDescendants);
 		QFETCH(QStringList, names);
 
-		VuoTextComparison comparison = { VuoTextComparison_Contains, true };
+		VuoTextComparison comparison = { VuoTextComparison_Contains, true, "" };
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithContent(tree, content.toUtf8().constData(), comparison, includeDescendants);
 
 		unsigned long count = VuoListGetCount_VuoTree(foundTrees);
@@ -1567,7 +1583,7 @@ private slots:
 		{
 			size_t results[2][numIterations];
 			const char *content = "Bob";
-			VuoTextComparison comparison = { VuoTextComparison_Equals, true };
+			VuoTextComparison comparison = { VuoTextComparison_Equals, true, "" };
 
 			for (int h = 0; h < 2; ++h)
 			{

@@ -6,33 +6,37 @@
  *
  * Then, to play back the recording in a high-quality offline render, use the File > Export > Movie… menu option.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="45,-105"];
-HoldValue2 [type="vuo.data.hold.VuoSceneObject" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="-15,150"];
-MakeCube [type="vuo.scene.make.cube.1.VuoGenericType1" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="195,-60" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.75,0.75,0.75]}"];
-MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.1" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="-15,285" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
-MakeList5 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="380,11"];
-RecordAndPlayValues2 [type="vuo.data.record.VuoSceneObject" version="1.0.0" label="Record and Play Values|<refresh>refresh\l|<recordValue>recordValue\l|<time>time\l|<url>url\l|<overwriteUrl>overwriteUrl\l|<mode>mode\l|<finalize>finalize\l|<value>value\r" pos="150,60" fillcolor="violet" _url="\"~\\/Desktop\\/CameraDragRecording.json\"" _overwriteUrl="false"];
-RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="450,0" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r|<offlineRender>offlineRender\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal" _offlineRender_type="VuoInteger" _offlineRender="0"];
+ConvertBooleanToInteger [type="vuo.type.boolean.integer" version="1.0.0" label="Convert Boolean to Integer|<refresh>refresh\l|<boolean>boolean\l|<integer>integer\r" pos="240,225"];
+HoldValue2 [type="vuo.data.hold2.VuoSceneObject" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-165,150"];
+MakeCube [type="vuo.scene.make.cube.1.VuoColor" version="1.0.1" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="195,-60" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.75,0.75,0.75]\}" _material="\{\"r\":0,\"g\":0.25098040699958801,\"b\":0.50196081399917603,\"a\":1\}"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag2" version="2.0.0" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="-390,165" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
+MakeList5 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="389,11"];
+RecordAndPlayValues2 [type="vuo.data.record.VuoSceneObject" version="1.1.0" label="Record and Play Values|<refresh>refresh\l|<recordValue>recordValue\l|<time>time\l|<url>url\l|<overwriteUrl>overwriteUrl\l|<mode>mode\l|<finalize>finalize\l|<value>value\r|<finishedPlayback>finishedPlayback\r" pos="150,60" fillcolor="orange" _url="\"~\\/Desktop\\/CameraDragRecording.json\"" _overwriteUrl="false"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="450,0" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r|<offlineRender>offlineRender\r" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedMax="4096" _width_suggestedStep="256" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedMax="4096" _height_suggestedStep="256" _time_type="VuoReal" _offlineRender_type="VuoBoolean" _offlineRender="false"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-AllowFirstEvent:firstEvent -> MakeCube:refresh;
+AllowFirstEvent:firstEvent -> MakeCube:transform;
+ConvertBooleanToInteger:integer -> RecordAndPlayValues2:mode;
 HoldValue2:heldValue -> RecordAndPlayValues2:recordValue;
 MakeCube:cube -> MakeList5:1;
-MakeDraggableCamera:updatedCamera -> HoldValue2:newValue;
+MakeDraggableCamera:updatedCamera -> HoldValue2:value;
 MakeList5:list -> RenderSceneToImage:objects;
-PublishedInputs:offlineRender -> RecordAndPlayValues2:mode;
+PublishedInputs:height -> RenderSceneToImage:height;
+PublishedInputs:offlineRender -> ConvertBooleanToInteger:boolean;
 PublishedInputs:time -> AllowFirstEvent:event;
-PublishedInputs:time -> HoldValue2:refresh;
+PublishedInputs:time -> HoldValue2:update;
 PublishedInputs:time -> RecordAndPlayValues2:time;
-PublishedInputs:time -> RenderSceneToImage:refresh;
+PublishedInputs:width -> RenderSceneToImage:width;
 RecordAndPlayValues2:value -> MakeList5:2;
 RenderSceneToImage:image -> PublishedOutputs:outputImage;
 }

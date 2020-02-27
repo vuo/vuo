@@ -2,15 +2,20 @@
  * @file
  * VuoPoint4d C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include <math.h>
+#include "VuoPoint3d.h"
 #include "VuoReal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -23,16 +28,16 @@
 /**
  * A floating-point 4-dimensional point.
  */
-typedef struct
-{
-	float x,y,z,w;
-} VuoPoint4d;
+typedef float __attribute__((ext_vector_type(4))) VuoPoint4d;
 
 VuoPoint4d VuoPoint4d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint4d_getJson(const VuoPoint4d value);
 char * VuoPoint4d_getSummary(const VuoPoint4d value);
 
+#define VuoPoint4d_SUPPORTS_COMPARISON
 bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2);
+bool VuoPoint4d_isLessThan(const VuoPoint4d a, const VuoPoint4d b);
+
 VuoPoint4d VuoPoint4d_random(const VuoPoint4d minimum, const VuoPoint4d maximum);
 VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d minimum, const VuoPoint4d maximum);
 
@@ -52,8 +57,52 @@ void VuoPoint4d_release(VuoPoint4d value);
 static inline VuoPoint4d VuoPoint4d_make(float x, float y, float z, float w) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_make(float x, float y, float z, float w)
 {
-	VuoPoint4d p = {x,y,z,w};
-	return p;
+	return (VuoPoint4d){x, y, z, w};
+}
+
+/**
+ * Returns a point using the first 4 elements in the specified array.
+ *
+ * @version200New
+ */
+static inline VuoPoint4d VuoPoint4d_makeFromArray(float *f)
+{
+    return (VuoPoint4d){ f[0], f[1], f[2], f[3] };
+}
+
+/**
+ * Sets the first 4 elements in the specified array to the specified point.
+ *
+ * @version200New
+ */
+static inline void VuoPoint4d_setArray(float *f, VuoPoint4d p)
+{
+	f[0] = p.x;
+	f[1] = p.y;
+	f[2] = p.z;
+	f[3] = p.w;
+}
+
+/**
+ * Discards the `w` coordinate.
+ *
+ * @version200New
+ */
+static inline VuoPoint3d VuoPoint4d_to3d(VuoPoint4d p) __attribute__((const));
+static inline VuoPoint3d VuoPoint4d_to3d(VuoPoint4d p)
+{
+	return (VuoPoint3d){p.x, p.y, p.z};
+}
+
+/**
+ * Appends `w` coordinate with value 1.
+ *
+ * @version200New
+ */
+static inline VuoPoint4d VuoPoint3d_to4d1(VuoPoint3d p) __attribute__((const));
+static inline VuoPoint4d VuoPoint3d_to4d1(VuoPoint3d p)
+{
+	return (VuoPoint4d){p.x, p.y, p.z, 1};
 }
 
 /**
@@ -62,14 +111,12 @@ static inline VuoPoint4d VuoPoint4d_make(float x, float y, float z, float w)
 static inline VuoPoint4d VuoPoint4d_crossProduct(VuoPoint4d u, VuoPoint4d v) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_crossProduct(VuoPoint4d u, VuoPoint4d v)
 {
-	VuoPoint4d p =
-	{
+	return (VuoPoint4d){
 		u.y*v.z - u.z*v.y,
 		u.z*v.x - u.x*v.z,
 		u.x*v.y - u.y*v.x,
 		1.
 	};
-	return p;
 }
 
 /**
@@ -97,15 +144,8 @@ static inline float VuoPoint4d_magnitude(VuoPoint4d a)
 static inline VuoPoint4d VuoPoint4d_normalize3d(VuoPoint4d a) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_normalize3d(VuoPoint4d a)
 {
-	float length = sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);
-	VuoPoint4d p =
-	{
-		a.x/length,
-		a.y/length,
-		a.z/length,
-		a.w
-	};
-	return p;
+	VuoPoint3d p = a.xyz / sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
+	return (VuoPoint4d){p.x, p.y, p.z, a.w};
 }
 
 /**
@@ -114,15 +154,7 @@ static inline VuoPoint4d VuoPoint4d_normalize3d(VuoPoint4d a)
 static inline VuoPoint4d VuoPoint4d_normalize(VuoPoint4d a) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_normalize(VuoPoint4d a)
 {
-	float length = sqrtf(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
-	VuoPoint4d p =
-	{
-		a.x/length,
-		a.y/length,
-		a.z/length,
-		a.w/length
-	};
-	return p;
+	return a / sqrtf(a.x * a.x + a.y * a.y + a.z * a.z + a.w * a.w);
 }
 
 /**
@@ -131,14 +163,7 @@ static inline VuoPoint4d VuoPoint4d_normalize(VuoPoint4d a)
 static inline VuoPoint4d VuoPoint4d_add(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_add(VuoPoint4d a, VuoPoint4d b)
 {
-	VuoPoint4d p =
-	{
-		a.x + b.x,
-		a.y + b.y,
-		a.z + b.z,
-		a.w + b.w
-	};
-	return p;
+	return a + b;
 }
 
 /**
@@ -147,14 +172,7 @@ static inline VuoPoint4d VuoPoint4d_add(VuoPoint4d a, VuoPoint4d b)
 static inline VuoPoint4d VuoPoint4d_subtract(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_subtract(VuoPoint4d a, VuoPoint4d b)
 {
-	VuoPoint4d p =
-	{
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z,
-		a.w - b.w
-	};
-	return p;
+	return a - b;
 }
 
 /**
@@ -173,14 +191,7 @@ static inline float VuoPoint4d_squaredMagnitude(VuoPoint4d a)
 static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, VuoPoint4d b)
 {
-	VuoPoint4d p =
-	{
-		a.x / b.x,
-		a.y / b.y,
-		a.z / b.z,
-		a.w / b.w
-	};
-	return p;
+	return a / b;
 }
 
 /**
@@ -189,14 +200,7 @@ static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, VuoPoint4d b)
 static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 {
-	VuoPoint4d p =
-	{
-		a.x * b,
-		a.y * b,
-		a.z * b,
-		a.w * b
-	};
-	return p;
+	return a * b;
 }
 
 /**
@@ -205,7 +209,7 @@ static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 static inline VuoPoint4d VuoPoint4d_scale(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_scale(VuoPoint4d a, VuoPoint4d b)
 {
-	return (VuoPoint4d){ a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w };
+	return a * b;
 }
 
 /**
@@ -266,3 +270,7 @@ static inline VuoPoint4d VuoPoint4d_clampn(VuoPoint4d point, VuoPoint4d limitA, 
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

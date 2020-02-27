@@ -2,9 +2,9 @@
  * @file
  * VuoSerialIO implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoSerial.h"
@@ -12,17 +12,13 @@
 #include "VuoTriggerSet.hh"
 
 #include <sys/ioctl.h>
-#include <sys/fcntl.h>
 #include <termios.h>
 #include <IOKit/serial/ioss.h>
 #include <errno.h>
 
-#include <map>
-#include <string>
 
 extern "C"
 {
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -70,7 +66,7 @@ static void __attribute__((constructor)) VuoSerialIO_init()
 void VuoSerial_processPacket(VuoSerial_internal si)
 {
 	ssize_t bytesRead = 0;
-	int fd = -1;
+	int fd;
 	int bytesAvailable = dispatch_source_get_data(si->source);
 	if (bytesAvailable == 0)
 		goto fail;
@@ -175,7 +171,7 @@ void VuoSerial_checkPendingDevices(void)
 }
 
 
-/// @{
+/// @{ VuoKeyedPool_VuoSerial
 VUOKEYEDPOOL(std::string, VuoSerial_internal);
 static void VuoSerial_destroy(VuoSerial_internal si);
 VuoSerial_internal VuoSerial_make(std::string devicePath)

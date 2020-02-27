@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.find node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -49,24 +49,25 @@ static bool typeMatches(VuoSceneObjectSubType subtype, VuoSceneObjectType type)
 	}
 }
 
-static void findSceneObjectsRecursive(const VuoSceneObject* node, VuoText name, VuoSceneObjectType type, VuoList_VuoSceneObject foundObjects)
+static void findSceneObjectsRecursive(const VuoSceneObject node, VuoText name, VuoSceneObjectType type, VuoList_VuoSceneObject foundObjects)
 {
-	if( typeMatches(node->type, type) &&
+	if (typeMatches(VuoSceneObject_getType(node), type) &&
 		(
 			VuoText_isEmpty(name)
-			|| (node->name && strstr(node->name, name))
+			|| (VuoSceneObject_getName(node) && strstr(VuoSceneObject_getName(node), name))
 		)
 	)
 	{
-		VuoListAppendValue_VuoSceneObject(foundObjects, *node);
+		VuoListAppendValue_VuoSceneObject(foundObjects, node);
 	}
 
-	if(node->childObjects != NULL)
+	VuoList_VuoSceneObject childObjects = VuoSceneObject_getChildObjects(node);
+	if (childObjects)
 	{
-		for(int i = 0; i < VuoListGetCount_VuoSceneObject(node->childObjects); i++)
+		for (int i = 0; i < VuoListGetCount_VuoSceneObject(childObjects); i++)
 		{
-			VuoSceneObject child = VuoListGetValue_VuoSceneObject(node->childObjects, i+1);
-			findSceneObjectsRecursive( &child, name, type, foundObjects );
+			VuoSceneObject child = VuoListGetValue_VuoSceneObject(childObjects, i+1);
+			findSceneObjectsRecursive(child, name, type, foundObjects);
 		}
 	}
 }
@@ -81,5 +82,5 @@ void nodeEvent
 {
 	*foundObjects = VuoListCreate_VuoSceneObject();
 
-	findSceneObjectsRecursive(&object, name, type, *foundObjects);
+	findSceneObjectsRecursive(object, name, type, *foundObjects);
 }

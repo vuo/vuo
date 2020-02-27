@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorCurve SOURCE VuoInputEditorCurve.cc)

@@ -2,15 +2,16 @@
  * @file
  * VuoRendererInputAttachment implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererInputAttachment.hh"
-#include "VuoRendererNode.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCable.hh"
+#include "VuoNodeClass.hh"
+#include "VuoPort.hh"
 
 /**
  * Creates a node that is rendered as an attachment to another node's input port.
@@ -18,6 +19,8 @@
 VuoRendererInputAttachment::VuoRendererInputAttachment(VuoNode *baseNode, VuoRendererSignaler *signaler)
 	: VuoRendererNode(baseNode, signaler)
 {
+	setZValue(attachmentZValue);
+
 	setAlwaysDisplayPortNames(true);
 }
 

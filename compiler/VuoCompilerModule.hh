@@ -2,9 +2,9 @@
  * @file
  * VuoCompilerModule interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -12,7 +12,6 @@
 #include "VuoCompilerTargetSet.hh"
 
 class VuoCompilerBitcodeParser;
-class VuoCompilerModule;
 class VuoModule;
 
 /**
@@ -23,8 +22,9 @@ class VuoModule;
 class VuoCompilerModule
 {
 private:
+	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
 	VuoCompilerTargetSet compatibleTargets;  ///< The set of targets with which this module is compatible.
-	bool builtIn;
+	bool builtIn;  ///< True if this is one of the modules built-in to Vuo.
 	string modulePath;  ///< The file from which the LLVM module was loaded, if any.
 
 	static bool isModule(Module *module, string moduleKey);
@@ -33,18 +33,12 @@ protected:
 	struct json_object *moduleDetails;  ///< This module's metadata, found in the argument to @c VuoModuleMetadata in the module definition.
 	set<string> dependencies;  ///< The dependencies found in this module's metadata
 	Module *module;  ///< The LLVM module that defines this node class or type
-	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
 	VuoCompilerBitcodeParser *parser;  ///< The parser of the LLVM module
-	bool isPremium;  ///< A boolean indicating whether this module contains premium content
 
 	VuoCompilerModule(VuoModule *base, Module *module);
 
 	virtual void parse(void);
 	virtual void parseMetadata(void);
-	static string parseString(json_object *o, string key, bool *foundValue=NULL);
-	static int parseInt(json_object *o, string key, bool *foundValue=NULL);
-	static bool parseBool(json_object *o, string key, bool *foundValue=NULL);
-	static vector<string> parseArrayOfStrings(json_object *o, string key);
 	virtual set<string> globalsToRename(void);
 	string nameForGlobal(string genericGlobalVarOrFuncName);
 	static string nameForGlobal(string nameBeforeCompilation, string moduleKey);
@@ -66,9 +60,16 @@ public:
 	VuoCompilerTargetSet getCompatibleTargets(void);
 	Module * getModule(void);
 	VuoModule * getPseudoBase(void);
-	bool getPremium(void);
-	void setPremium(bool premium);
 	bool isBuiltIn(void);
 	void setBuiltIn(bool builtIn);
 	string getModulePath(void);
+
+private:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+	void *p;
+#pragma clang diagnostic pop
+#if VUO_PRO
+#include "pro/VuoCompilerModule_Pro.hh"
+#endif
 };

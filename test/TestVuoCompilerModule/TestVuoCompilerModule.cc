@@ -2,16 +2,12 @@
  * @file
  * TestVuoCompilerModule interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerComposition.hh"
-#include "VuoCompilerModule.hh"
-#include "VuoCompilerSpecializedNodeClass.hh"
-#include "VuoStringUtilities.hh"
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(set<string>);
@@ -73,6 +69,7 @@ private slots:
 			set<string> dependencies;
 			dependencies.insert("VuoPoint4d");
 			dependencies.insert("VuoReal");
+			dependencies.insert("vuo.point.distance");
 			QTest::newRow("Node class with specialized generic port type") << "vuo.point.distance.VuoPoint4d" << dependencies;
 		}
 
@@ -80,6 +77,7 @@ private slots:
 			set<string> dependencies;
 			dependencies.insert("VuoPoint2d");
 			dependencies.insert("VuoReal");
+			dependencies.insert("vuo.point.distance");
 			QTest::newRow("Node class with unspecialized generic port type") << "vuo.point.distance.VuoGenericType1" << dependencies;
 		}
 
@@ -88,6 +86,7 @@ private slots:
 			dependencies.insert("VuoInteger");
 			dependencies.insert("VuoList_VuoKey");
 			dependencies.insert("VuoKey");
+			dependencies.insert("vuo.list.count");
 			QTest::newRow("Node class with specialized generic list port type") << "vuo.list.count.VuoKey" << dependencies;
 		}
 
@@ -95,6 +94,7 @@ private slots:
 			set<string> dependencies;
 			dependencies.insert("VuoInteger");
 			dependencies.insert("VuoList_VuoInteger");
+			dependencies.insert("vuo.list.count");
 			QTest::newRow("Node class with unspecialized generic list port type") << "vuo.list.count.VuoGenericType1" << dependencies;
 		}
 
@@ -105,6 +105,30 @@ private slots:
 			dependencies.insert("VuoBoolean");
 			dependencies.insert("VuoSceneObject");
 			QTest::newRow("Node class with dependencies in metadata") << "vuo.scene.fetch" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoReal");
+			dependencies.insert("VuoList_VuoReal");
+			QTest::newRow("List node class") << "vuo.list.make.2.VuoReal" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoText");
+			dependencies.insert("VuoReal");
+			dependencies.insert("VuoList_VuoText");
+			dependencies.insert("VuoList_VuoReal");
+			dependencies.insert("VuoDictionary_VuoText_VuoReal");
+			QTest::newRow("Dictionary node class") << "vuo.dictionary.make.VuoText.VuoReal" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoInteger");
+			dependencies.insert("VuoPoint2d");
+			QTest::newRow("Published input node class") << "vuo.out.2.first.second.VuoInteger.VuoPoint2d" << dependencies;
 		}
 	}
 	void testDependencies()
@@ -205,6 +229,27 @@ private slots:
 		QCOMPARE(actualTargets.isCompatibleWithAllOf(target107), shouldBeCompatibleWith107);
 		QCOMPARE(actualTargets.isCompatibleWithAllOf(target108), shouldBeCompatibleWith108);
 		QCOMPARE(actualTargets.isCompatibleWithAllOf(target109), shouldBeCompatibleWith109);
+	}
+
+	void testModuleKeyForPath_data()
+	{
+		QTest::addColumn<QString>("path");
+		QTest::addColumn<QString>("moduleKey");
+
+		QTest::newRow("compiled node class with author and node set") << "/Users/me/Library/Caches/org.vuo/1.2.3.45678/Modules/cat.food.eat.vuonode" << "cat.food.eat";
+		QTest::newRow("subcomposition with author") << "~/Library/Application Support/Vuo/Modules/cat.purr.vuo" << "cat.purr";
+		QTest::newRow("compiled type") << "VuoAudioBins.bc" << "VuoAudioBins";
+		QTest::newRow("ISF with double extension") << "me.double.fs.fs" << "me.double";
+		QTest::newRow("ISF with spaces") << "me.Space out Words.vs" << "me.spaceOutWords";
+		QTest::newRow("ISF with no author") << "anonymous.vs" << "isf.anonymous";
+		QTest::newRow("ISF with all of the above") << "Modules/VHS Glitch.fs.fs" << "isf.vhsGlitch";
+	}
+	void testModuleKeyForPath()
+	{
+		QFETCH(QString, path);
+		QFETCH(QString, moduleKey);
+
+		QCOMPARE(QString::fromStdString(compiler->getModuleKeyForPath(path.toStdString())), moduleKey);
 	}
 };
 

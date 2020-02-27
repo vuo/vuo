@@ -1,58 +1,57 @@
 /**
  * @file
- * Records the location of each double-click and, when the Save button is pressed, saves them to a CSV-formatted file (similar to the `Record and Play Values` node).
+ * @brief Record Mouse Clicks to CSV File
+ * Records the location of each double-click and, when the Save button is pressed, saves them to a CSV-formatted file (similar to the [Record and Play Values](vuo-node://vuo.data.record) node).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * @license This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
- * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AddTableColumn [type="vuo.table.add.column" version="1.0.0" label="Add Table Column|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="1125,15" fillcolor="violet" _position="\"end\""];
-AddTableColumn3 [type="vuo.table.add.column" version="1.0.0" label="Add Table Column|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="1125,105" fillcolor="violet" _position="\"end\""];
-AddToList2 [type="vuo.list.add.VuoLayer" version="1.0.0" label="Add to List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="660,285" _position="\"beginning\""];
+AddTableColumn [type="vuo.table.add.column" version="1.0.0" label="Add Table Column|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="1125,15" fillcolor="orange" _position="\"end\""];
+AddTableColumn3 [type="vuo.table.add.column" version="1.0.0" label="Add Table Column|<refresh>refresh\l|<table>table\l|<position>position\l|<values>values\l|<modifiedTable>modifiedTable\r" pos="1125,105" fillcolor="orange" _position="\"end\""];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="885,405"];
 Convert2DPointListToRealList [type="vuo.type.list.point2d.real.x" version="1.0.2" label="Convert 2D Point List to Real List|<refresh>refresh\l|<point2d>point2d\l|<x>x\r" pos="780,45"];
 Convert2DPointListToRealList2 [type="vuo.type.list.point2d.real.y" version="1.0.2" label="Convert 2D Point List to Real List|<refresh>refresh\l|<point2d>point2d\l|<y>y\r" pos="780,135"];
 ConvertRealListToTextList [type="vuo.type.list.real.text" version="1.0.0" label="Convert Real List to Text List|<refresh>refresh\l|<reals>reals\l|<texts>texts\r" pos="1185,165"];
 ConvertRealListToTextList2 [type="vuo.type.list.real.text" version="1.0.0" label="Convert Real List to Text List|<refresh>refresh\l|<reals>reals\l|<texts>texts\r" pos="1215,255"];
 ConvertTextToData2 [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="1335,240"];
 Enqueue3 [type="vuo.list.enqueue.VuoPoint2d" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="375,90" _maxItemCount="100"];
-Enqueue4 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="420,285" _maxItemCount="100"];
-FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="1320,60" fillcolor="violet" _format="\"csv\""];
-HoldList4 [type="vuo.data.hold.list.VuoPoint2d" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="600,75"];
-MakeButton [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="300,-120" _label="\"Save Double-Clicks\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.18336766958236694,\"g\":0.46413367986679077,\"b\":0.80923169851303101,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0,\"y\":0.5}" _width="0.59999999999999998" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeList5 [type="vuo.list.make.0.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="572,86"];
-MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="812,326" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="240,285" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":18,\"underline\":false,\"color\":{\"r\":0.9920269250869751,\"g\":0.60579818487167358,\"b\":0.34412083029747009,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
-ReceiveMouseClicks [type="vuo.mouse.click" version="1.0.2" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="-120,165" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="840,285" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1560,45" fillcolor="green" _url="\"~\\/Desktop\\/MouseClicks.csv\"" _overwriteUrl="false"];
+Enqueue4 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="450,225" _maxItemCount="100"];
+FormatTable [type="vuo.table.format" version="1.0.0" label="Format Table|<refresh>refresh\l|<table>table\l|<format>format\l|<text>text\r" pos="1320,60" fillcolor="orange" _format="\"csv\""];
+HoldList4 [type="vuo.data.hold.list2.VuoPoint2d" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="600,75"];
+MakeActionButton [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="330,-30" _label="\"Save Double-Clicks\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0.5\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="726,221" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="270,240" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":18,\"underline\":false,\"color\":\{\"r\":0.9920269250869751,\"g\":0.60579818487167358,\"b\":0.34412083029747009,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseClicks [type="vuo.mouse.click2" version="2.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="-75,90" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="780,210" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1560,45" fillcolor="blue" _url="\"~\\/Desktop\\/MouseClicks.csv\"" _overwriteUrl="false"];
 SummarizeValue4 [type="vuo.data.summarize.VuoPoint2d" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="330,390"];
 
 AddTableColumn3:modifiedTable -> FormatTable:table;
 AddTableColumn:modifiedTable -> AddTableColumn3:table;
-AddToList2:modifiedList -> RenderLayersToWindow:layers;
+CombineLayers:combinedLayer -> MakeList:2;
 Convert2DPointListToRealList2:y -> ConvertRealListToTextList2:reals;
 Convert2DPointListToRealList:x -> ConvertRealListToTextList:reals;
 ConvertRealListToTextList2:texts -> AddTableColumn3:values;
 ConvertRealListToTextList:texts -> AddTableColumn:values;
 ConvertTextToData2:data -> SaveData:saveData;
-Enqueue3:list -> HoldList4:newValue;
-Enqueue4:list -> AddToList2:list;
+Enqueue3:list -> HoldList4:value;
+Enqueue4:list -> CombineLayers:layers;
 FormatTable:text -> ConvertTextToData2:text;
 HoldList4:heldValue -> Convert2DPointListToRealList2:point2d;
 HoldList4:heldValue -> Convert2DPointListToRealList:point2d;
-MakeButton:pressed -> HoldList4:refresh;
-MakeButton:updatedLayer -> AddToList2:item;
-MakeList5:list -> HoldList4:initialValue;
-MakeList8:list -> RenderLayersToWindow:setWindowProperties;
+MakeActionButton:pressed -> HoldList4:update;
+MakeActionButton:updatedLayer -> MakeList:1;
+MakeList:list -> RenderLayersToWindow:layers;
 MakeTextLayer:layer -> Enqueue4:addItem;
 ReceiveMouseClicks:doubleClicked -> Enqueue3:addItem;
 ReceiveMouseClicks:doubleClicked -> MakeTextLayer:center;
 ReceiveMouseClicks:doubleClicked -> SummarizeValue4:value;
-RenderLayersToWindow:renderedLayers -> MakeButton:renderedLayers [style=invis];
-RenderLayersToWindow:showedWindow -> ReceiveMouseClicks:window [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveMouseClicks:window [style=invis];
 SummarizeValue4:summary -> MakeTextLayer:text;
 }

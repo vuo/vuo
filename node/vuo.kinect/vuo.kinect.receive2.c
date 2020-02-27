@@ -1,0 +1,269 @@
+/**
+ * @file
+ * vuo.kinect.receive node implementation.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+#include "node.h"
+#include "libfreenect/libfreenect.h"
+#include <OpenGL/CGLMacro.h>
+#include <string.h>
+
+VuoModuleMetadata({
+					  "title" : "Receive Kinect Images",
+					  "keywords" : [ "video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body" ],
+					  "version" : "3.1.0",
+					  "dependencies" : [
+						  "freenect",
+						  "usb"
+					  ],
+					  "node": {
+						  "exampleCompositions" : [ "DisplayKinectImages.vuo", "RideRollercoaster.vuo" ]
+					  }
+				 });
+
+struct nodeInstanceData
+{
+	int imageType;
+
+	bool cancelRequested;
+	dispatch_semaphore_t canceled;
+
+	freenect_context *freenectContext;
+	freenect_device *freenectDevice;
+
+	dispatch_queue_t triggerQueue;  // Ensures the below trigger callbacks don't change between the null check and invocation.
+	void (*receivedImage)(VuoImage);
+	void (*receivedDepthImage)(VuoImage);
+};
+
+static void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint32_t timestamp)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)freenect_get_user(dev);
+	freenect_frame_mode mode = freenect_get_current_depth_mode(dev);
+
+	uint16_t *depth = (uint16_t*)v_depth;
+	float *depthOutput = (float*)malloc(mode.width*mode.height*sizeof(float)*2);
+
+	for(unsigned int y=0; y<mode.height; ++y)
+	{
+		for(unsigned int x=0; x<mode.width; ++x)
+		{
+			// Flip the image vertically, because Kinect provides it right-side-up, and VuoImage_makeFromBuffer() expects it flipped.
+			unsigned int pos = 2 * ((mode.height-y-1)*mode.width + x);
+
+			uint16_t v = depth[y*mode.width + x];
+			if (v)
+			{
+				// Invert the intensities, because Kinect provides low=near, but people expect high=near.
+				// https://b33p.net/kosada/node/15796
+				depthOutput[pos+0] = 1. - v/16383.;
+				depthOutput[pos+1] = 1;
+			}
+			else
+			{
+				// If the raw depth value is 0, that means the Kinect couldn't figure out the depth, so make that pixel transparent.
+				depthOutput[pos+0] = 0;
+				depthOutput[pos+1] = 0;
+			}
+		}
+	}
+
+	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_32, ^(void *buffer){ free(buffer); });
+	dispatch_sync(context->triggerQueue, ^{
+		if (context->receivedDepthImage)
+			context->receivedDepthImage(image);
+	});
+}
+
+static void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *pixels, uint32_t timestamp)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)freenect_get_user(dev);
+	freenect_frame_mode mode = freenect_get_current_video_mode(dev);
+
+	// Flip the image vertically, because Kinect provides it right-side-up, and VuoImage_makeFromBuffer() expects it flipped.
+	int lines = mode.height;
+	int bpp = mode.video_format == FREENECT_VIDEO_RGB ? 3 : 1;
+	unsigned int stride = mode.width * bpp;
+	unsigned int size = stride * sizeof(uint8_t);
+	void *pixelsOut = malloc(size*lines);
+	for (int i = 0; i < lines; ++i)
+		memcpy(pixelsOut + stride * (lines - i - 1), pixels + stride * i, size);
+
+	VuoImage image = VuoImage_makeFromBuffer(pixelsOut,
+		mode.video_format == FREENECT_VIDEO_RGB ? GL_RGB : GL_LUMINANCE,
+		mode.width, mode.height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
+	dispatch_sync(context->triggerQueue, ^{
+		if (context->receivedImage)
+			context->receivedImage(image);
+	});
+}
+
+static void vuo_kinect_receive_worker(void *ctx)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)ctx;
+
+	while (!context->cancelRequested)
+	{
+		bool haveKinect = false;
+
+		int ret = freenect_init(&context->freenectContext, NULL);
+		if (ret == 0)
+		{
+			freenect_set_log_level(context->freenectContext, FREENECT_LOG_ERROR);
+
+			freenect_select_subdevices(context->freenectContext, (freenect_device_flags)(FREENECT_DEVICE_CAMERA));
+
+			int deviceCount = freenect_num_devices(context->freenectContext);
+			if (deviceCount >= 1)
+			{
+				int deviceNumber = 0;
+				// freenect_open_device_by_camera_serial() may also be useful
+				int ret = freenect_open_device(context->freenectContext, &context->freenectDevice, deviceNumber);
+				if (ret == 0)
+					haveKinect = true;
+				else
+				{
+					VUserLog("freenect_open_device(%d) failed, returned %d", deviceNumber, ret);
+				}
+			}
+		}
+		else
+			VUserLog("freenect_init() failed, returned %d", ret);
+
+		if (haveKinect)
+		{
+			freenect_set_user(context->freenectDevice, context);
+
+			freenect_set_depth_callback(context->freenectDevice, vuo_kinect_receive_depth_callback);
+			freenect_set_video_callback(context->freenectDevice, vuo_kinect_receive_rgb_callback);
+
+			freenect_set_video_mode(context->freenectDevice, freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM,
+				context->imageType == 0 ? FREENECT_VIDEO_RGB : FREENECT_VIDEO_IR_8BIT));
+			freenect_set_depth_mode(context->freenectDevice, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED));
+
+			freenect_start_depth(context->freenectDevice);
+			freenect_start_video(context->freenectDevice);
+
+			struct timeval timeout;
+			timeout.tv_sec = 0;
+			timeout.tv_usec = USEC_PER_SEC/10;
+			while (!context->cancelRequested)
+			{
+				int ret = freenect_process_events_timeout(context->freenectContext, &timeout);
+				if (ret < 0 && ret != -10)
+				{
+					VUserLog("freenect_process_events_timeout() failed, returned %d", ret);
+							haveKinect = false;
+					break;
+				}
+			}
+
+			if (haveKinect)
+			{
+				freenect_stop_depth(context->freenectDevice);
+				freenect_stop_video(context->freenectDevice);
+
+				freenect_close_device(context->freenectDevice);
+			}
+
+			freenect_shutdown(context->freenectContext);
+		}
+
+		if (!haveKinect)
+			sleep(1);
+	}
+
+	if (context->cancelRequested)
+		dispatch_semaphore_signal(context->canceled);
+}
+
+struct nodeInstanceData * nodeInstanceInit(
+	VuoInputData(VuoInteger) imageType)
+{
+	__block struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+
+	context->imageType = imageType;
+
+	context->cancelRequested = false;
+	context->canceled = dispatch_semaphore_create(0);
+	context->triggerQueue = dispatch_queue_create("vuo.kinect.receive", NULL);
+
+	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), context, vuo_kinect_receive_worker);
+
+	return context;
+}
+
+static void vuo_kinect_receive_restart(struct nodeInstanceData *context)
+{
+	context->cancelRequested = true;
+	dispatch_semaphore_wait(context->canceled, DISPATCH_TIME_FOREVER);
+
+	context->cancelRequested = false;
+	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), context, vuo_kinect_receive_worker);
+}
+
+void nodeInstanceTriggerUpdate(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoInteger) imageType)
+{
+	if (imageType != (*context)->imageType)
+	{
+		(*context)->imageType = imageType;
+		vuo_kinect_receive_restart(*context);
+	}
+}
+
+void nodeInstanceTriggerStart
+(
+		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoOutputTrigger(receivedImage, VuoImage, {"eventThrottling":"drop"}),
+		VuoOutputTrigger(receivedDepthImage, VuoImage, {"eventThrottling":"drop"})
+)
+{
+	dispatch_sync((*context)->triggerQueue, ^{
+		(*context)->receivedImage = receivedImage;
+		(*context)->receivedDepthImage = receivedDepthImage;
+	});
+}
+
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoInteger, {"menuItems":[
+		{"value":0, "name":"RGB"},
+		{"value":1, "name":"Infrared"},
+	], "default":0}) imageType)
+{
+	if (imageType != (*context)->imageType)
+	{
+		(*context)->imageType = imageType;
+		vuo_kinect_receive_restart(*context);
+	}
+}
+
+void nodeInstanceTriggerStop
+(
+		VuoInstanceData(struct nodeInstanceData *) context
+)
+{
+	dispatch_sync((*context)->triggerQueue, ^{
+		(*context)->receivedImage = NULL;
+		(*context)->receivedDepthImage = NULL;
+	});
+}
+
+void nodeInstanceFini
+(
+		VuoInstanceData(struct nodeInstanceData *) context
+)
+{
+	(*context)->cancelRequested = true;
+	dispatch_semaphore_wait((*context)->canceled, DISPATCH_TIME_FOREVER);
+
+	dispatch_release((*context)->canceled);
+	dispatch_release((*context)->triggerQueue);
+}

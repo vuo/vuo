@@ -2,9 +2,9 @@
  * @file
  * VuoMesh implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <stdio.h>
@@ -12,17 +12,13 @@
 #include <string.h>
 
 #include <OpenGL/CGLMacro.h>
-/// @{
+/// @{ Stub.
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 /// @}
 
 #include "type.h"
-#include "VuoMesh.h"
-#include "VuoGlPool.h"
-#include "VuoTransform.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -32,9 +28,11 @@ VuoModuleMetadata({
 					 "keywords" : [ "mesh", "vertex" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						"VuoColor",
 						"VuoPoint2d",
 						"VuoPoint3d",
 						"VuoPoint4d",
+						"VuoList_VuoColor",
 						"VuoList_VuoPoint2d",
 						"VuoList_VuoPoint3d",
 						"VuoText",
@@ -47,162 +45,268 @@ VuoModuleMetadata({
 /// @}
 
 /**
- * Allocates the vertex (position, normal, ...) and element arrays.
+ * @private VuoMesh fields.
  */
-VuoSubmesh VuoSubmesh_make(unsigned int vertexCount, unsigned int elementCount)
+typedef struct
 {
-	VuoSubmesh sm;
+	unsigned int vertexCount;        ///< Number of vertices in `positions`, `normals`, and `textureCoordinates`.
+	float *positions;                ///< XYZ vertex positions.
+	float *normals;                  ///< XYZ vertex normals.  May be `NULL`.
+	float *textureCoordinates;       ///< ST texture coordinates.  May be `NULL`.
+	float *colors;                   ///< RGBA colors.  May be `NULL`.
 
-	sm.vertexCount = vertexCount;
-	sm.positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	sm.normals = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	sm.tangents = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	sm.bitangents = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	sm.textureCoordinates = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	sm.elementCount = elementCount;
-	sm.elements = (unsigned int *)malloc(sizeof(unsigned int)*sm.elementCount);
-	sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	sm.primitiveSize = 0;
-	sm.faceCullingMode = GL_BACK;
-	memset(&sm.glUpload, 0, sizeof(sm.glUpload));
+	unsigned int elementCount;       ///< Number of elements in @c elements.
+	/**
+	 * An array of size elementCount of integer elements (triangle indices) which are indexes into `positions`.
+	 */
+	unsigned int *elements;
 
-	return sm;
+	/// The way in which the `elements` array should be interpreted during rasterization.
+	VuoMesh_ElementAssemblyMethod elementAssemblyMethod;
+
+	/**
+	 * For lines, the width (in scene units).
+	 * For points, the width and height (in scene units).
+	 */
+	VuoReal primitiveSize;
+
+	VuoMesh_FaceCulling faceCulling;
+
+	/**
+	 * References to mesh data uploaded to the GPU.
+	 */
+	struct
+	{
+		unsigned int combinedBuffer;
+		unsigned int combinedBufferSize;
+		unsigned int combinedBufferStride;  ///< Number of bytes per buffer entry.  If 0, the stride is calculated automatically based on sizeof(VuoPoint4d) multiplied by 1 (position) + the number of non-NULL offsets below.
+
+		void *normalOffset;
+		void *textureCoordinateOffset;
+		void *colorOffset;
+
+		unsigned int elementBuffer;
+		unsigned int elementBufferSize;
+	} glUpload;
+} VuoMesh_internal;
+
+/**
+ * Allocates:
+ *
+ *    - positions — 3 floats per vertex
+ *    - normals — 3 floats per vertex
+ *    - texture coordinates — 2 floats per vertex
+ *    - colors — 4 floats per vertex
+ *    - elements — 1 unsigned int per element
+ *
+ * @version200New
+ */
+void VuoMesh_allocateCPUBuffers(unsigned int vertexCount,
+    float **positions, float **normals, float **textureCoordinates, float **colors,
+    unsigned int elementCount, unsigned int **elements)
+{
+	if (positions)
+		*positions          = (float *)malloc(sizeof(float) * 3 * vertexCount);
+	if (normals)
+		*normals            = (float *)malloc(sizeof(float) * 3 * vertexCount);
+	if (textureCoordinates)
+		*textureCoordinates = (float *)malloc(sizeof(float) * 2 * vertexCount);
+	if (colors)
+		*colors             = (float *)malloc(sizeof(float) * 4 * vertexCount);
+	if (elements)
+		*elements = elementCount ? (unsigned int *)malloc(sizeof(unsigned int) * elementCount) : NULL;
 }
 
 /**
- * Creates a @c VuoSubmesh consisting of data that already exists in CPU RAM.
+ * Frees the mesh and each of its submeshes, including the vertex and element arrays within it.
  */
-VuoSubmesh VuoSubmesh_makeFromBuffers(unsigned int vertexCount,
-									  VuoPoint4d *positions, VuoPoint4d *normals, VuoPoint4d *tangents, VuoPoint4d *bitangents, VuoPoint4d *textureCoordinates,
-									  unsigned int elementCount, unsigned int *elements, VuoMesh_ElementAssemblyMethod elementAssemblyMethod)
+static void VuoMesh_free(void *value)
 {
-	VuoSubmesh sm;
+	VuoMesh_internal *m = (VuoMesh_internal *)value;
 
-	sm.vertexCount = vertexCount;
-	sm.positions = positions;
-	sm.normals = normals;
-	sm.tangents = tangents;
-	sm.bitangents = bitangents;
-	sm.textureCoordinates = textureCoordinates;
-	sm.elementCount = elementCount;
-	sm.elements = elements;
-	sm.elementAssemblyMethod = elementAssemblyMethod;
-	sm.primitiveSize = 0;
-	sm.faceCullingMode = GL_BACK;
-	memset(&sm.glUpload, 0, sizeof(sm.glUpload));
+	free(m->positions);
+	free(m->normals);
+	free(m->textureCoordinates);
+	free(m->colors);
+	free(m->elements);
 
-	return sm;
+	VuoGlPool_release(VuoGlPool_ArrayBuffer, m->glUpload.combinedBufferSize, m->glUpload.combinedBuffer);
+	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, m->glUpload.elementBufferSize, m->glUpload.elementBuffer);
+
+	free(m);
+}
+
+/**
+ * @private Creates and registers a mesh.
+ */
+static VuoMesh_internal *VuoMesh_makeInternal(void)
+{
+	VuoMesh_internal *m = (VuoMesh_internal *)calloc(1, sizeof(VuoMesh_internal));
+	VuoRegister(m, VuoMesh_free);
+	m->faceCulling = VuoMesh_CullBackfaces;
+	return m;
+}
+
+/**
+ * @private Creates and registers a singleton mesh.
+ */
+static VuoMesh_internal *VuoMesh_makeSingletonInternal(void)
+{
+	VuoMesh_internal *m = (VuoMesh_internal *)calloc(1, sizeof(VuoMesh_internal));
+	VuoRegisterSingleton(m);
+	m->faceCulling = VuoMesh_CullBackfaces;
+	return m;
+}
+
+static void VuoMesh_upload(VuoMesh_internal *m);
+
+/**
+ * Creates a mesh consisting of data that already exists in CPU RAM,
+ * and uploads it to the GPU.
+ *
+ * The mesh object takes ownership of the arrays passed into it,
+ * which it will eventually release using `free()`.
+ *
+ * @see VuoMesh_getCPUBuffers
+ *
+ * @version200Changed{positions and normals are now VuoPoint3d; textureCoordinates is now VuoPoint2d;
+ * tangents and bitangents are no longer stored (they're now calculated when needed).}
+ */
+VuoMesh VuoMesh_makeFromCPUBuffers(unsigned int vertexCount,
+    float *positions, float *normals, float *textureCoordinates, float *colors,
+    unsigned int elementCount, unsigned int *elements, VuoMesh_ElementAssemblyMethod elementAssemblyMethod)
+{
+	VuoMesh_internal *m = VuoMesh_makeInternal();
+
+	m->vertexCount = vertexCount;
+	m->positions = positions;
+	m->normals = normals;
+	m->textureCoordinates = textureCoordinates;
+	m->colors = colors;
+	m->elementCount = elementCount;
+	m->elements = elements;
+	m->elementAssemblyMethod = elementAssemblyMethod;
+
+	VuoMesh_upload(m);
+	return (VuoMesh)m;
 }
 
 /**
  * Creates a @c VuoSubmesh consisting of data that's already been uploaded to the GPU.
  */
-VuoSubmesh VuoSubmesh_makeGl(unsigned int vertexCount, unsigned int combinedBuffer, unsigned int combinedBufferSize, unsigned int combinedBufferStride, void *normalOffset, void *tangentOffset, void *bitangentOffset, void *textureCoordinateOffset, unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod)
+VuoMesh VuoMesh_makeFromGPUBuffers(unsigned int vertexCount, unsigned int combinedBuffer, unsigned int combinedBufferSize, void *normalOffset, void *textureCoordinateOffset, void *colorOffset, unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod)
 {
-	VuoSubmesh sm;
+	VuoMesh_internal *m = VuoMesh_makeInternal();
 
-	sm.vertexCount = vertexCount;
-	sm.positions = NULL;
-	sm.normals = NULL;
-	sm.tangents = NULL;
-	sm.bitangents = NULL;
-	sm.textureCoordinates = NULL;
-	sm.elementCount = elementCount;
-	sm.elements = NULL;
-	sm.elementAssemblyMethod = elementAssemblyMethod;
-	sm.primitiveSize = 0;
-	sm.faceCullingMode = GL_BACK;
-	sm.glUpload.combinedBuffer = combinedBuffer;
-	sm.glUpload.combinedBufferSize = combinedBufferSize;
-	sm.glUpload.combinedBufferStride = combinedBufferStride;
-	sm.glUpload.normalOffset = normalOffset;
-	sm.glUpload.tangentOffset = tangentOffset;
-	sm.glUpload.bitangentOffset = bitangentOffset;
-	sm.glUpload.textureCoordinateOffset = textureCoordinateOffset;
-	sm.glUpload.elementBuffer = elementBuffer;
-	sm.glUpload.elementBufferSize = elementBufferSize;
+	m->vertexCount = vertexCount;
+	m->elementCount = elementCount;
+	m->elementAssemblyMethod = elementAssemblyMethod;
+	m->glUpload.combinedBuffer = combinedBuffer;
+	m->glUpload.combinedBufferSize = combinedBufferSize;
+	m->glUpload.normalOffset = normalOffset;
+	m->glUpload.textureCoordinateOffset = textureCoordinateOffset;
+	m->glUpload.colorOffset = colorOffset;
+	m->glUpload.elementBuffer = elementBuffer;
+	m->glUpload.elementBufferSize = elementBufferSize;
 
-	return sm;
+	return (VuoMesh)m;
 }
 
 /**
- * Returns the GL mode (e.g., `GL_TRIANGLES`) that @c submesh should be interpreted as.
+ * Returns the GL mode (e.g., `GL_TRIANGLES`) that the mesh should be interpreted as.
  */
-unsigned long VuoSubmesh_getGlMode(VuoSubmesh submesh)
+unsigned long VuoMesh_getGlMode(VuoMesh mesh)
 {
-	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
+	if (!mesh)
+		return GL_NONE;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+
+	if (m->elementAssemblyMethod == VuoMesh_IndividualTriangles)
 		return GL_TRIANGLES;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleStrip)
 		return GL_TRIANGLE_STRIP;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleFan)
 		return GL_TRIANGLE_FAN;
-	else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
+	else if (m->elementAssemblyMethod == VuoMesh_IndividualLines)
 		return GL_LINES;
-	else if (submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+	else if (m->elementAssemblyMethod == VuoMesh_LineStrip)
 		return GL_LINE_STRIP;
-	else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+	else if (m->elementAssemblyMethod == VuoMesh_Points)
 		return GL_POINTS;
 
 	return GL_TRIANGLES;
 }
 
 /**
- * Returns the number of split primitives in @c submesh.
+ * Returns the number of split primitives in the mesh.
  *
  * For example:
  *
- *    - If the submesh is VuoMesh_IndividualTriangles and has elementCount=6, it would render 2 triangles, so this function returns 2.
- *    - If the submesh is VuoMesh_TriangleStrip       and has elementCount=6, it would render 4 triangles, so this function returns 4.
+ *    - If the mesh is VuoMesh_IndividualTriangles and has elementCount=6, it would render 2 triangles, so this function returns 2.
+ *    - If the mesh is VuoMesh_TriangleStrip       and has elementCount=6, it would render 4 triangles, so this function returns 4.
  */
-unsigned long VuoSubmesh_getSplitPrimitiveCount(VuoSubmesh submesh)
+unsigned long VuoMesh_getSplitPrimitiveCount(VuoMesh mesh)
 {
-	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
-		return submesh.elementCount ? submesh.elementCount/3 : submesh.vertexCount/3;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
-		return submesh.elementCount ? submesh.elementCount-2 : submesh.vertexCount-2;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
-		return submesh.elementCount ? submesh.elementCount-2 : submesh.vertexCount-2;
-	else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
-		return submesh.elementCount ? submesh.elementCount/2 : submesh.vertexCount/2;
-	else if (submesh.elementAssemblyMethod == VuoMesh_LineStrip)
-		return submesh.elementCount ? submesh.elementCount-1 : submesh.vertexCount-1;
-	else if (submesh.elementAssemblyMethod == VuoMesh_Points)
-		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
-
-	return 0;
-}
-
-/**
- * Returns the number of split vertices in @c submesh.
- *
- * For example:
- *
- *    - If the submesh is VuoMesh_IndividualTriangles and has elementCount=6, it would render 2 triangles, each of which has 3 vertices, so this function returns 6.
- *    - If the submesh is VuoMesh_TriangleStrip       and has elementCount=6, it would render 4 triangles, each of which has 3 vertices, so this function returns 12.
- */
-unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh)
-{
-	if (submesh.elementCount == 0 && submesh.vertexCount == 0)
+	if (!mesh)
 		return 0;
 
-	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
-		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
-		return submesh.elementCount ? (submesh.elementCount-2)*3 : (submesh.vertexCount-2)*3;
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
-		return submesh.elementCount ? (submesh.elementCount-2)*3 : (submesh.vertexCount-2)*3;
-	else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
-		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
-	else if (submesh.elementAssemblyMethod == VuoMesh_LineStrip)
-		return submesh.elementCount ? (submesh.elementCount-1)*2 : (submesh.vertexCount-1)*2;
-	else if (submesh.elementAssemblyMethod == VuoMesh_Points)
-		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+
+	if (m->elementAssemblyMethod == VuoMesh_IndividualTriangles)
+		return m->elementCount ? m->elementCount/3 : m->vertexCount/3;
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleStrip)
+		return m->elementCount ? m->elementCount-2 : m->vertexCount-2;
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleFan)
+		return m->elementCount ? m->elementCount-2 : m->vertexCount-2;
+	else if (m->elementAssemblyMethod == VuoMesh_IndividualLines)
+		return m->elementCount ? m->elementCount/2 : m->vertexCount/2;
+	else if (m->elementAssemblyMethod == VuoMesh_LineStrip)
+		return m->elementCount ? m->elementCount-1 : m->vertexCount-1;
+	else if (m->elementAssemblyMethod == VuoMesh_Points)
+		return m->elementCount ? m->elementCount : m->vertexCount;
 
 	return 0;
 }
 
 /**
- * Returns the number of complete elements in @c submesh.
+ * Returns the number of split vertices in the mesh.
+ *
+ * For example:
+ *
+ *    - If the mesh is VuoMesh_IndividualTriangles and has elementCount=6, it would render 2 triangles, each of which has 3 vertices, so this function returns 6.
+ *    - If the mesh is VuoMesh_TriangleStrip       and has elementCount=6, it would render 4 triangles, each of which has 3 vertices, so this function returns 12.
+ */
+unsigned long VuoMesh_getSplitVertexCount(VuoMesh mesh)
+{
+	if (!mesh)
+		return 0;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+
+	if (m->elementCount == 0 && m->vertexCount == 0)
+		return 0;
+
+	if (m->elementAssemblyMethod == VuoMesh_IndividualTriangles)
+		return m->elementCount ? m->elementCount : m->vertexCount;
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleStrip)
+		return m->elementCount ? (m->elementCount-2)*3 : (m->vertexCount-2)*3;
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleFan)
+		return m->elementCount ? (m->elementCount-2)*3 : (m->vertexCount-2)*3;
+	else if (m->elementAssemblyMethod == VuoMesh_IndividualLines)
+		return m->elementCount ? m->elementCount : m->vertexCount;
+	else if (m->elementAssemblyMethod == VuoMesh_LineStrip)
+		return m->elementCount ? (m->elementCount-1)*2 : (m->vertexCount-1)*2;
+	else if (m->elementAssemblyMethod == VuoMesh_Points)
+		return m->elementCount ? m->elementCount : m->vertexCount;
+
+	return 0;
+}
+
+static unsigned long VuoMesh_getCompleteElementCountInternal(unsigned long elementCount, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
+
+/**
+ * Returns the number of complete elements in the mesh.
  *
  * If elementCount represents an incomplete element,
  * this function returns the rounded-down number of elements.
@@ -210,234 +314,121 @@ unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh)
  * For example, if elementCount = 5 and elementAssemblyMethod = VuoMesh_IndividualTriangles,
  * this function returns 3, discarding the last 2 elements that fail to form a complete triangle.
  */
-unsigned long VuoSubmesh_getCompleteElementCount(const VuoSubmesh submesh)
+unsigned long VuoMesh_getCompleteElementCount(const VuoMesh mesh)
 {
-	unsigned long elementCount = submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
-
-	if (elementCount == 0)
+	if (!mesh)
 		return 0;
 
-	// Verify that the input mesh has a valid number of elements.
-	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
-	{
-		if (elementCount % 3 != 0)
-		{
-			VUserLog("Warning: VuoMesh_IndividualTriangles requires elementCount %% 3 == 0, but this mesh has %ld.  Rounding down.", elementCount);
-			return (elementCount/3)*3;
-		}
-	}
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
-	{
-		if (elementCount < 3)
-		{
-			VUserLog("Warning: VuoMesh_TriangleStrip requires elementCount >= 3, but this mesh only has %ld.", elementCount);
-			return 0;
-		}
-	}
-	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
-	{
-		if (elementCount < 3)
-		{
-			VUserLog("Warning: VuoMesh_TriangleFan requires elementCount >= 3, but this mesh only has %ld.", elementCount);
-			return 0;
-		}
-	}
-	else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
-	{
-		if (elementCount % 2 != 0)
-		{
-			VUserLog("Warning: VuoMesh_IndividualLines requires elementCount %% 2 == 0, but this mesh has %ld.  Rounding down.", elementCount);
-			return (elementCount/2)*2;
-		}
-	}
-	else if (submesh.elementAssemblyMethod == VuoMesh_LineStrip)
-	{
-		if (elementCount < 2)
-		{
-			VUserLog("Warning: VuoMesh_LineStrip requires elementCount >= 2, but this mesh only has %ld.", elementCount);
-			return 0;
-		}
-	}
-	else if (submesh.elementAssemblyMethod == VuoMesh_Points)
-	{
-		// Since all points are independent, any number of points is fine.
-	}
-	else
-	{
-		VUserLog("Error: Unknown submesh element assembly method: %d", submesh.elementAssemblyMethod);
-		return 0;
-	}
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
 
-	return elementCount;
-}
-
-/**
- * Frees the mesh and each of its submeshes, including the vertex and element arrays within it.
- */
-void VuoMesh_free(void *value)
-{
-	VuoMesh m = (VuoMesh)value;
-
-	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-	for (unsigned int i = 0; i < m->submeshCount; ++i)
-	{
-		VuoSubmesh sm = m->submeshes[i];
-		free(sm.positions);
-		free(sm.normals);
-		free(sm.tangents);
-		free(sm.bitangents);
-		free(sm.textureCoordinates);
-		free(sm.elements);
-
-		VuoGlPool_release(cgl_ctx, VuoGlPool_ArrayBuffer, sm.glUpload.combinedBufferSize, sm.glUpload.combinedBuffer);
-		if (sm.glUpload.elementBufferSize && sm.glUpload.elementBuffer)
-			VuoGlPool_release(cgl_ctx, VuoGlPool_ElementArrayBuffer, sm.glUpload.elementBufferSize, sm.glUpload.elementBuffer);
-	}
-	});
-
-	free(m->submeshes);
-	free(m);
-}
-
-/**
- * Creates and registers a mesh with empty slots for the given number of sub-meshes.
- *
- * After you've populated the sub-meshes, call @ref VuoMesh_upload().
- */
-VuoMesh VuoMesh_make(unsigned int submeshCount)
-{
-	if (submeshCount == 0)
-		return NULL;
-
-	VuoMesh m = (VuoMesh)malloc(submeshCount * sizeof(struct _VuoMesh));
-	VuoRegister(m, VuoMesh_free);
-	m->submeshCount = submeshCount;
-	m->submeshes = (VuoSubmesh *)calloc(submeshCount, sizeof(VuoSubmesh));
-	return m;
+	unsigned long elementCount = m->elementCount ? m->elementCount : m->vertexCount;
+	return VuoMesh_getCompleteElementCountInternal(elementCount, m->elementAssemblyMethod);
 }
 
 /**
  * Uploads @c mesh to the GPU.
  */
-void VuoMesh_upload(VuoMesh mesh)
+static void VuoMesh_upload(VuoMesh_internal *m)
 {
-	if (!mesh)
+	if (!m || m->glUpload.combinedBuffer)
 		return;
 
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
-	// Create a temporary Vertex Array Object, so we can bind the buffers in order to upload them.
-	GLuint vertexArray;
-	glGenVertexArrays(1, &vertexArray);
-	glBindVertexArray(vertexArray);
+		// Create a temporary Vertex Array Object, so we can bind the buffers in order to upload them.
+		GLuint vertexArray;
+		glGenVertexArrays(1, &vertexArray);
+		glBindVertexArray(vertexArray);
 
-	// For each mesh item in the sceneobject...
-	for (unsigned long i = 0; i < mesh->submeshCount; ++i)
-	{
-		VuoSubmesh meshItem = mesh->submeshes[i];
+		// Combine the vertex attribute buffers together, so we only have to upload a single one per mesh:
 
+		m->glUpload.combinedBufferSize = sizeof(float) * 3 * m->vertexCount;  // positions
 
-		// Combine the vertex attribute buffers together, so we only have to upload a single one per submesh:
+		uint64_t normalOffsetBytes = 0;
+		if (m->normals)
+		{
+			normalOffsetBytes = m->glUpload.combinedBufferSize;
+			m->glUpload.combinedBufferSize += sizeof(float) * 3 * m->vertexCount;
+		}
+		m->glUpload.normalOffset = (void *)normalOffsetBytes;
 
+		uint64_t textureCoordinateOffsetBytes = 0;
+		if (m->textureCoordinates)
+		{
+			textureCoordinateOffsetBytes = m->glUpload.combinedBufferSize;
+			m->glUpload.combinedBufferSize += sizeof(float) * 2 * m->vertexCount;
+		}
+		m->glUpload.textureCoordinateOffset = (void *)textureCoordinateOffsetBytes;
 
-		// Decide on interleaved positions for vertex attributes.
-		// Needs to be interleaved because glTransformFeedbackVaryings is only able to write to 4 buffers, but we have more than 4 buffers.
-		unsigned int bufferCount = 0;
+		uint64_t colorOffsetBytes = 0;
+		if (m->colors)
+		{
+			colorOffsetBytes = m->glUpload.combinedBufferSize;
+			m->glUpload.combinedBufferSize += sizeof(float) * 4 * m->vertexCount;
+		}
+		m->glUpload.colorOffset = (void *)colorOffsetBytes;
 
-		++bufferCount; // position
-
-		unsigned int normalOffset = 0; // Offsets are VuoPoint4ds (not bytes).
-		if (meshItem.normals)
-			normalOffset = bufferCount++;
-		mesh->submeshes[i].glUpload.normalOffset = (void *)(normalOffset*sizeof(VuoPoint4d));
-
-		unsigned int tangentOffset = 0;
-		if (meshItem.tangents)
-			tangentOffset = bufferCount++;
-		mesh->submeshes[i].glUpload.tangentOffset = (void *)(tangentOffset*sizeof(VuoPoint4d));
-
-		unsigned int bitangentOffset = 0;
-		if (meshItem.bitangents)
-			bitangentOffset = bufferCount++;
-		mesh->submeshes[i].glUpload.bitangentOffset = (void *)(bitangentOffset*sizeof(VuoPoint4d));
-
-		unsigned int textureCoordinateOffset = 0;
-		if (meshItem.textureCoordinates)
-			textureCoordinateOffset = bufferCount++;
-		mesh->submeshes[i].glUpload.textureCoordinateOffset = (void *)(textureCoordinateOffset*sizeof(VuoPoint4d));
-
-		unsigned long singleBufferSize = sizeof(VuoPoint4d)*meshItem.vertexCount;
-		VuoPoint4d *combinedData = (VuoPoint4d *)malloc(singleBufferSize*bufferCount);
+		float *combinedData = (float *)malloc(m->glUpload.combinedBufferSize);
+		for (int i =0; i < m->glUpload.combinedBufferSize/sizeof(float); ++i)
+			combinedData[i]=-42;
 
 
 		// Combine vertex attributes into the interleaved client-side buffer.
-		for (unsigned long i = 0; i < meshItem.vertexCount; ++i)
+		for (unsigned long i = 0; i < m->vertexCount; ++i)
 		{
-			combinedData[i*bufferCount] = meshItem.positions[i];
-			if (meshItem.normals)
-				combinedData[i*bufferCount+normalOffset] = meshItem.normals[i];
-			if (meshItem.tangents)
-				combinedData[i*bufferCount+tangentOffset] = meshItem.tangents[i];
-			if (meshItem.bitangents)
-				combinedData[i*bufferCount+bitangentOffset] = meshItem.bitangents[i];
-			if (meshItem.textureCoordinates)
-				combinedData[i*bufferCount+textureCoordinateOffset] = meshItem.textureCoordinates[i];
+			combinedData[i * 3    ] = m->positions[i * 3    ];
+			combinedData[i * 3 + 1] = m->positions[i * 3 + 1];
+			combinedData[i * 3 + 2] = m->positions[i * 3 + 2];
+			if (m->normals)
+			{
+				combinedData[i * 3 + normalOffsetBytes / sizeof(float)    ] = m->normals[i * 3    ];
+				combinedData[i * 3 + normalOffsetBytes / sizeof(float) + 1] = m->normals[i * 3 + 1];
+				combinedData[i * 3 + normalOffsetBytes / sizeof(float) + 2] = m->normals[i * 3 + 2];
+			}
+			if (m->textureCoordinates)
+			{
+				combinedData[i * 2 + textureCoordinateOffsetBytes / sizeof(float)    ] = m->textureCoordinates[i * 2    ];
+				combinedData[i * 2 + textureCoordinateOffsetBytes / sizeof(float) + 1] = m->textureCoordinates[i * 2 + 1];
+			}
+			if (m->colors)
+			{
+				combinedData[i * 4 + colorOffsetBytes / sizeof(float)    ] = m->colors[i * 4    ];
+				combinedData[i * 4 + colorOffsetBytes / sizeof(float) + 1] = m->colors[i * 4 + 1];
+				combinedData[i * 4 + colorOffsetBytes / sizeof(float) + 2] = m->colors[i * 4 + 2];
+				combinedData[i * 4 + colorOffsetBytes / sizeof(float) + 3] = m->colors[i * 4 + 3];
+			}
 		}
+
+//		for (int i =0; i < m->glUpload.combinedBufferSize/sizeof(float); ++i)
+//			VLog("%3d  %f",i,combinedData[i]);
 
 
 		// Upload the combined buffer.
-		mesh->submeshes[i].glUpload.combinedBufferSize = singleBufferSize*bufferCount;
-		mesh->submeshes[i].glUpload.combinedBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, mesh->submeshes[i].glUpload.combinedBufferSize);
-		VuoGlPool_retain(mesh->submeshes[i].glUpload.combinedBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->submeshes[i].glUpload.combinedBuffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, singleBufferSize * bufferCount, combinedData);
+//		VLog("vertexCount=%d  normals=%d  tc=%d  colors=%d  combinedBuffer=%u", m->vertexCount, m->normals?1:0, m->textureCoordinates?1:0, m->colors?1:0, m->glUpload.combinedBufferSize);
+		m->glUpload.combinedBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, m->glUpload.combinedBufferSize);
+		VuoGlPool_retain(m->glUpload.combinedBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, m->glUpload.combinedBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m->glUpload.combinedBufferSize, combinedData);
 		free(combinedData);
 
 
 		// Upload the Element Buffer and add it to the Vertex Array Object
-		mesh->submeshes[i].glUpload.elementBufferSize = sizeof(unsigned int)*meshItem.elementCount;
-		mesh->submeshes[i].glUpload.elementBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ElementArrayBuffer, mesh->submeshes[i].glUpload.elementBufferSize);
-		VuoGlPool_retain(mesh->submeshes[i].glUpload.elementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->submeshes[i].glUpload.elementBuffer);
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned int) * meshItem.elementCount, meshItem.elements);
-	}
+		m->glUpload.elementBufferSize = sizeof(unsigned int)*m->elementCount;
+		m->glUpload.elementBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ElementArrayBuffer, m->glUpload.elementBufferSize);
+		VuoGlPool_retain(m->glUpload.elementBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->glUpload.elementBuffer);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned int) * m->elementCount, m->elements);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // handled by glDeleteVertexArrays()
-//	glBindVertexArray(0); // handled by glDeleteVertexArrays()
-	glDeleteVertexArrays(1, &vertexArray);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+//		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // handled by glDeleteVertexArrays()
+//		glBindVertexArray(0); // handled by glDeleteVertexArrays()
+		glDeleteVertexArrays(1, &vertexArray);
 
-	// Prepare for this mesh to be used on a different OpenGL context.
-	glFlushRenderAPPLE();
+		// Prepare for this mesh to be used on a different OpenGL context.
+		// @@@ is this still needed?
+		glFlushRenderAPPLE();
 
 	});
-}
-
-/**
- * Creates and registers a mesh with space for one submesh, and sets it to the given submesh.
- * Uploads the submesh to the GPU.
- */
-VuoMesh VuoMesh_makeFromSingleSubmesh(VuoSubmesh submesh)
-{
-	VuoMesh m = VuoMesh_make(1);
-	m->submeshes[0] = submesh;
-	VuoMesh_upload(m);
-	return m;
-}
-
-/**
- * Creates and registers a singleton mesh with space for one submesh, and sets it to the given submesh.
- * Uploads the submesh to the GPU.
- */
-static VuoMesh VuoMesh_makeSingletonFromSingleSubmesh(VuoSubmesh submesh)
-{
-	VuoMesh m = (VuoMesh)malloc(sizeof(struct _VuoMesh));
-	VuoRegisterSingleton(m);
-	m->submeshCount = 1;
-	m->submeshes = (VuoSubmesh *)calloc(1, sizeof(VuoSubmesh));
-	m->submeshes[0] = submesh;
-	VuoMesh_upload(m);
-	return m;
 }
 
 /**
@@ -445,54 +436,40 @@ static VuoMesh VuoMesh_makeSingletonFromSingleSubmesh(VuoSubmesh submesh)
  */
 static VuoMesh VuoMesh_makeQuadWithNormalsInternal(void)
 {
-	VuoSubmesh sm = VuoSubmesh_make(4, 6);
+	VuoMesh_internal *m = VuoMesh_makeSingletonInternal();
+	m->vertexCount = 4;
+	m->elementCount = 6;
+	VuoMesh_allocateCPUBuffers(m->vertexCount, &m->positions, &m->normals, &m->textureCoordinates, NULL, m->elementCount, &m->elements);
 
 	// Positions
-	{
-		sm.positions[0] = VuoPoint4d_make(-.5,-.5,0,1);
-		sm.positions[1] = VuoPoint4d_make( .5,-.5,0,1);
-		sm.positions[2] = VuoPoint4d_make(-.5, .5,0,1);
-		sm.positions[3] = VuoPoint4d_make( .5, .5,0,1);
-	}
+	VuoPoint3d_setArray(&m->positions[0 * 3], (VuoPoint3d){-.5, -.5, 0});
+	VuoPoint3d_setArray(&m->positions[1 * 3], (VuoPoint3d){ .5, -.5, 0});
+	VuoPoint3d_setArray(&m->positions[2 * 3], (VuoPoint3d){-.5,  .5, 0});
+	VuoPoint3d_setArray(&m->positions[3 * 3], (VuoPoint3d){ .5,  .5, 0});
 
 	// Normals
-	{
-		for (int i=0; i<sm.vertexCount; ++i)
-			sm.normals[i] = VuoPoint4d_make(0,0,1,1);
-	}
-
-	// Tangents
-	{
-		for (int i=0; i<sm.vertexCount; ++i)
-			sm.tangents[i] = VuoPoint4d_make(1,0,0,1);
-	}
-
-	// Bitangents
-	{
-		for (int i=0; i<sm.vertexCount; ++i)
-			sm.bitangents[i] = VuoPoint4d_make(0,1,0,1);
-	}
+	for (int i = 0; i < m->vertexCount; ++i)
+		VuoPoint3d_setArray(&m->normals[i * 3], (VuoPoint3d){0, 0, 1});
 
 	// Texture Coordinates
-	{
-		sm.textureCoordinates[0] = VuoPoint4d_make(0,0,0,1);
-		sm.textureCoordinates[1] = VuoPoint4d_make(1,0,0,1);
-		sm.textureCoordinates[2] = VuoPoint4d_make(0,1,0,1);
-		sm.textureCoordinates[3] = VuoPoint4d_make(1,1,0,1);
-	}
+	VuoPoint2d_setArray(&m->textureCoordinates[0 * 2], (VuoPoint2d){0, 0});
+	VuoPoint2d_setArray(&m->textureCoordinates[1 * 2], (VuoPoint2d){1, 0});
+	VuoPoint2d_setArray(&m->textureCoordinates[2 * 2], (VuoPoint2d){0, 1});
+	VuoPoint2d_setArray(&m->textureCoordinates[3 * 2], (VuoPoint2d){1, 1});
 
 	// Triangle elements
-	sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+	m->elementAssemblyMethod = VuoMesh_IndividualTriangles;
 	// Order the elements so that the diagonal edge of each triangle
 	// is last, so that vuo.shader.make.wireframe can optionally omit them.
-	sm.elements[0] = 2;
-	sm.elements[1] = 0;
-	sm.elements[2] = 1;
-	sm.elements[3] = 1;
-	sm.elements[4] = 3;
-	sm.elements[5] = 2;
+	m->elements[0] = 2;
+	m->elements[1] = 0;
+	m->elements[2] = 1;
+	m->elements[3] = 1;
+	m->elements[4] = 3;
+	m->elements[5] = 2;
 
-	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
+	VuoMesh_upload(m);
+	return (VuoMesh)m;
 }
 
 /**
@@ -502,34 +479,54 @@ static VuoMesh VuoMesh_makeQuadWithNormalsInternal(void)
  */
 static VuoMesh VuoMesh_makeQuadWithoutNormalsInternal(void)
 {
-	unsigned int positionCount = 4;
-	VuoPoint4d *positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * positionCount);
-	positions[0] = VuoPoint4d_make(-.5,-.5,0,1);
-	positions[1] = VuoPoint4d_make( .5,-.5,0,1);
-	positions[2] = VuoPoint4d_make(-.5, .5,0,1);
-	positions[3] = VuoPoint4d_make( .5, .5,0,1);
+	VuoMesh_internal *m = VuoMesh_makeSingletonInternal();
+	m->vertexCount = 4;
+	m->elementCount = 6;
+	VuoMesh_allocateCPUBuffers(m->vertexCount, &m->positions, NULL, &m->textureCoordinates, NULL, m->elementCount, &m->elements);
 
-	VuoPoint4d *textureCoordinates = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * positionCount);
-	textureCoordinates[0] = VuoPoint4d_make(0,0,0,1);
-	textureCoordinates[1] = VuoPoint4d_make(1,0,0,1);
-	textureCoordinates[2] = VuoPoint4d_make(0,1,0,1);
-	textureCoordinates[3] = VuoPoint4d_make(1,1,0,1);
+	// Positions
+	m->positions[0]  = -.5;
+	m->positions[1]  = -.5;
+	m->positions[2]  = 0;
 
-	unsigned int elementCount = 6;
-	unsigned int *elements = (unsigned int *)malloc(sizeof(unsigned int) * elementCount);
+	m->positions[3]  =  .5;
+	m->positions[4]  = -.5;
+	m->positions[5]  = 0;
+
+	m->positions[6]  = -.5;
+	m->positions[7]  =  .5;
+	m->positions[8]  = 0;
+
+	m->positions[9]  =  .5;
+	m->positions[10] =  .5;
+	m->positions[11] = 0;
+
+	// Texture Coordinates
+	m->textureCoordinates[0] = 0;
+	m->textureCoordinates[1] = 0;
+
+	m->textureCoordinates[2] = 1;
+	m->textureCoordinates[3] = 0;
+
+	m->textureCoordinates[4] = 0;
+	m->textureCoordinates[5] = 1;
+
+	m->textureCoordinates[6] = 1;
+	m->textureCoordinates[7] = 1;
+
+	// Triangle elements
+	m->elementAssemblyMethod = VuoMesh_IndividualTriangles;
 	// Order the elements so that the diagonal edge of each triangle
 	// is last, so that vuo.shader.make.wireframe can optionally omit them.
-	elements[0] = 2;
-	elements[1] = 0;
-	elements[2] = 1;
-	elements[3] = 1;
-	elements[4] = 3;
-	elements[5] = 2;
+	m->elements[0] = 2;
+	m->elements[1] = 0;
+	m->elements[2] = 1;
+	m->elements[3] = 1;
+	m->elements[4] = 3;
+	m->elements[5] = 2;
 
-	VuoSubmesh sm = VuoSubmesh_makeFromBuffers(positionCount,
-											   positions, NULL, NULL, NULL, textureCoordinates,
-											   elementCount, elements, VuoMesh_IndividualTriangles);
-	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
+	VuoMesh_upload(m);
+	return (VuoMesh)m;
 }
 
 /**
@@ -537,39 +534,35 @@ static VuoMesh VuoMesh_makeQuadWithoutNormalsInternal(void)
  */
 static VuoMesh VuoMesh_makeEquilateralTriangleInternal(void)
 {
-	VuoSubmesh sm = VuoSubmesh_make(3, 3);
+	VuoMesh_internal *m = VuoMesh_makeSingletonInternal();
+	m->vertexCount = 3;
+	m->elementCount = 3;
+	VuoMesh_allocateCPUBuffers(m->vertexCount, &m->positions, &m->normals, &m->textureCoordinates, NULL, m->elementCount, &m->elements);
 
 	// Positions
-	for (int i = 0; i < sm.vertexCount; ++i)
+	for (int i = 0; i < m->vertexCount; ++i)
 	{
 		float angle = M_PI/2. + i * 2*M_PI/3.;
-		sm.positions[i] = VuoPoint4d_make(cos(angle)/sqrt(3), sin(angle)/sqrt(3), 0, 1);
+		VuoPoint3d_setArray(&m->positions[i * 3], (VuoPoint3d){ cos(angle) / sqrt(3), sin(angle) / sqrt(3), 0 });
 	}
 
 	// Normals
-	for (int i=0; i<sm.vertexCount; ++i)
-		sm.normals[i] = VuoPoint4d_make(0,0,1,1);
-
-	// Tangents
-	for (int i=0; i<sm.vertexCount; ++i)
-		sm.tangents[i] = VuoPoint4d_make(1,0,0,1);
-
-	// Bitangents
-	for (int i=0; i<sm.vertexCount; ++i)
-		sm.bitangents[i] = VuoPoint4d_make(0,1,0,1);
+	for (int i = 0; i < m->vertexCount; ++i)
+		VuoPoint3d_setArray(&m->normals[i * 3], (VuoPoint3d){ 0, 0, 1 });
 
 	// Texture Coordinates
-	sm.textureCoordinates[0] = VuoPoint4d_make(.5,1,0,1);
-	sm.textureCoordinates[1] = VuoPoint4d_make(0,0,0,1);
-	sm.textureCoordinates[2] = VuoPoint4d_make(1,0,0,1);
+	VuoPoint2d_setArray(&m->textureCoordinates[0 * 2], (VuoPoint2d){.5, 1});
+	VuoPoint2d_setArray(&m->textureCoordinates[1 * 2], (VuoPoint2d){ 0, 0});
+	VuoPoint2d_setArray(&m->textureCoordinates[2 * 2], (VuoPoint2d){ 1, 0});
 
 	// Triangle Strip elements
-	sm.elementAssemblyMethod = VuoMesh_TriangleStrip;
-	sm.elements[0] = 0;
-	sm.elements[1] = 1;
-	sm.elements[2] = 2;
+	m->elementAssemblyMethod = VuoMesh_TriangleStrip;
+	m->elements[0] = 0;
+	m->elements[1] = 1;
+	m->elements[2] = 2;
 
-	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
+	VuoMesh_upload(m);
+	return (VuoMesh)m;
 }
 
 /**
@@ -629,169 +622,103 @@ static VuoMesh VuoMesh_makeCubeInternal(void)
 {
 	// Separate vertices for each face, so each face can have its own sharp normals and texture coordinates.
 
-	VuoPoint4d positions[] = (VuoPoint4d[]){
-			// Front
-			-.5, -.5,  .5, 1,
-			 .5, -.5,  .5, 1,
-			-.5,  .5,  .5, 1,
-			 .5,  .5,  .5, 1,
-			// Right
-			 .5, -.5,  .5, 1,
-			 .5, -.5, -.5, 1,
-			 .5,  .5,  .5, 1,
-			 .5,  .5, -.5, 1,
-			// Bottom
-			-.5, -.5, -.5, 1,
-			 .5, -.5, -.5, 1,
-			-.5, -.5,  .5, 1,
-			 .5, -.5,  .5, 1,
-			// Left
-			-.5, -.5, -.5, 1,
-			-.5, -.5,  .5, 1,
-			-.5,  .5, -.5, 1,
-			-.5,  .5,  .5, 1,
-			// Top
-			-.5,  .5,  .5, 1,
-			 .5,  .5,  .5, 1,
-			-.5,  .5, -.5, 1,
-			 .5,  .5, -.5, 1,
-			// Back
-			 .5, -.5, -.5, 1,
-			-.5, -.5, -.5, 1,
-			 .5,  .5, -.5, 1,
-			-.5,  .5, -.5, 1,
+	VuoPoint3d positions[] = (VuoPoint3d[]){
+		// Front
+		{-.5, -.5,  .5},
+		{ .5, -.5,  .5},
+		{-.5,  .5,  .5},
+		{ .5,  .5,  .5},
+		// Right
+		{ .5, -.5,  .5},
+		{ .5, -.5, -.5},
+		{ .5,  .5,  .5},
+		{ .5,  .5, -.5},
+		// Bottom
+		{-.5, -.5, -.5},
+		{ .5, -.5, -.5},
+		{-.5, -.5,  .5},
+		{ .5, -.5,  .5},
+		// Left
+		{-.5, -.5, -.5},
+		{-.5, -.5,  .5},
+		{-.5,  .5, -.5},
+		{-.5,  .5,  .5},
+		// Top
+		{-.5,  .5,  .5},
+		{ .5,  .5,  .5},
+		{-.5,  .5, -.5},
+		{ .5,  .5, -.5},
+		// Back
+		{ .5, -.5, -.5},
+		{-.5, -.5, -.5},
+		{ .5,  .5, -.5},
+		{-.5,  .5, -.5},
 	};
 
-	VuoPoint4d normals[] = (VuoPoint4d[]){
-			// Front
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			// Right
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			// Bottom
-			0, -1, 0, 1,
-			0, -1, 0, 1,
-			0, -1, 0, 1,
-			0, -1, 0, 1,
-			// Left
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-			// Top
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			// Back
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
+	VuoPoint3d normals[] = (VuoPoint3d[]){
+		// Front
+		{0, 0, 1},
+		{0, 0, 1},
+		{0, 0, 1},
+		{0, 0, 1},
+		// Right
+		{1, 0, 0},
+		{1, 0, 0},
+		{1, 0, 0},
+		{1, 0, 0},
+		// Bottom
+		{0, -1, 0},
+		{0, -1, 0},
+		{0, -1, 0},
+		{0, -1, 0},
+		// Left
+		{-1, 0, 0},
+		{-1, 0, 0},
+		{-1, 0, 0},
+		{-1, 0, 0},
+		// Top
+		{0, 1, 0},
+		{0, 1, 0},
+		{0, 1, 0},
+		{0, 1, 0},
+		// Back
+		{0, 0, -1},
+		{0, 0, -1},
+		{0, 0, -1},
+		{0, 0, -1},
 	};
 
-	VuoPoint4d tangents[] = (VuoPoint4d[]){
-			// Front
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			// Right
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			// Bottom
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			// Left
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			// Top
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			1, 0, 0, 1,
-			// Back
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-			-1, 0, 0, 1,
-	};
-
-	VuoPoint4d bitangents[] = (VuoPoint4d[]){
-			// Front
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			// Right
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			// Bottom
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			0, 0, 1, 1,
-			// Left
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			// Top
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			0, 0, -1, 1,
-			// Back
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-			0, 1, 0, 1,
-	};
-
-	VuoPoint4d textureCoordinates[] = (VuoPoint4d[]){
-			// Front
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
-			// Right
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
-			// Bottom
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
-			// Left
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
-			// Top
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
-			// Back
-			0, 0, 0, 1,
-			1, 0, 0, 1,
-			0, 1, 0, 1,
-			1, 1, 0, 1,
+	VuoPoint2d textureCoordinates[] = (VuoPoint2d[]){
+		// Front
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		// Right
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		// Bottom
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		// Left
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		// Top
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		// Back
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
 	};
 
 	unsigned int elements[] = (unsigned int[]){
@@ -815,15 +742,21 @@ static VuoMesh VuoMesh_makeCubeInternal(void)
 			21, 23, 22,
 	};
 
-	VuoSubmesh sm = VuoSubmesh_make(6*4, 6*6);
-	memcpy(sm.positions, positions, sizeof(positions));
-	memcpy(sm.normals, normals, sizeof(normals));
-	memcpy(sm.tangents, tangents, sizeof(tangents));
-	memcpy(sm.bitangents, bitangents, sizeof(bitangents));
-	memcpy(sm.textureCoordinates, textureCoordinates, sizeof(textureCoordinates));
-	memcpy(sm.elements, elements, sizeof(elements));
+	VuoMesh_internal *m = VuoMesh_makeSingletonInternal();
+	m->vertexCount = 6 * 4;
+	m->elementCount = 6 * 6;
+	VuoMesh_allocateCPUBuffers(m->vertexCount, &m->positions, &m->normals, &m->textureCoordinates, NULL, m->elementCount, &m->elements);
 
-	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
+	for (int i = 0; i < m->vertexCount; ++i)
+	{
+		VuoPoint3d_setArray(&m->positions[i * 3], positions[i]);
+		VuoPoint3d_setArray(&m->normals[i * 3], normals[i]);
+		VuoPoint2d_setArray(&m->textureCoordinates[i * 2], textureCoordinates[i]);
+	}
+	memcpy(m->elements, elements, sizeof(elements));
+
+	VuoMesh_upload(m);
+	return (VuoMesh)m;
 }
 
 /**
@@ -843,132 +776,537 @@ VuoMesh VuoMesh_makeCube(void)
 }
 
 /**
+ * Creates a flat mesh subdivided into rows and columns.
+ *
+ * @version200New
+ */
+VuoMesh VuoMesh_makePlane(VuoInteger columns, VuoInteger rows)
+{
+	unsigned int vertexCount = rows * columns;
+	unsigned int triangleCount = (rows-1) * (columns-1) * 6;
+
+	float *positions, *normals, *textureCoordinates;
+	unsigned int *elements;
+	VuoMesh_allocateCPUBuffers(vertexCount, &positions, &normals, &textureCoordinates, NULL, triangleCount, &elements);
+
+	unsigned int index = 0, t_index = 0;
+
+	for(unsigned int i = 0; i < rows; i++)
+	{
+		float y = (i/(float)(rows-1)) - .5;
+
+		for(unsigned int n = 0; n < columns; n++)
+		{
+			float x = (n/(float)(columns-1)) - .5;
+
+			VuoPoint3d_setArray(&positions         [index * 3], (VuoPoint3d){x, y, 0});
+			VuoPoint3d_setArray(&normals           [index * 3], (VuoPoint3d){0, 0, 1});
+			VuoPoint2d_setArray(&textureCoordinates[index * 2], (VuoPoint2d){x + .5, y + .5});
+
+			if(n < columns-1 && i < rows-1)
+			{
+				elements[t_index++] = index + columns;
+				elements[t_index++] = index;
+				elements[t_index++] = index + 1;
+
+				elements[t_index++] = index + 1;
+				elements[t_index++] = index + columns + 1;
+				elements[t_index++] = index + columns;
+			}
+
+			index++;
+		}
+	}
+
+	return VuoMesh_makeFromCPUBuffers(vertexCount,
+									  positions, normals, textureCoordinates, NULL,
+									  triangleCount, elements, VuoMesh_IndividualTriangles);
+}
+
+/**
+ * @private Helper for VuoMesh_make_VuoPoint* and VuoMesh_getCompleteElementCount.
+ */
+static unsigned long VuoMesh_getCompleteElementCountInternal(unsigned long elementCount, VuoMesh_ElementAssemblyMethod elementAssemblyMethod)
+{
+	if (elementAssemblyMethod == VuoMesh_IndividualTriangles)
+		// Round down to a multiple of 3, since each triangle requires 3 vertices.
+		return (elementCount / 3) * 3;
+
+	else if (elementAssemblyMethod == VuoMesh_TriangleStrip
+		  || elementAssemblyMethod == VuoMesh_TriangleFan)
+		// Triangle strips and fans must have at least 1 complete triangle.
+		return elementCount < 3 ? 0 : elementCount;
+
+	else if (elementAssemblyMethod == VuoMesh_IndividualLines)
+		// Round down to an even number of vertices, since each line requires a pair of vertices.
+		return (elementCount / 2) * 2;
+
+	else if (elementAssemblyMethod == VuoMesh_LineStrip)
+		// Line strips must have at least 1 complete line.
+		return elementCount < 2 ? 0 : elementCount;
+
+	else if (elementAssemblyMethod == VuoMesh_Points)
+		// Since all points are independent, any number of points is fine.
+		return elementCount;
+
+	else
+	{
+		VUserLog("Error: Unknown submesh element assembly method: %d", elementAssemblyMethod);
+		return 0;
+	}
+}
+
+/**
  * Returns a VuoMesh consisting of the given positions and element assembly method.
  * Its normals, tangents, bitangents, and texture coordinates are all null.
  */
-VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
+VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoList_VuoColor colors, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
 {
-	unsigned long count = VuoListGetCount_VuoPoint2d(positions);
+	unsigned long positionCount = VuoListGetCount_VuoPoint2d(positions);
 	VuoPoint2d *positionValues = VuoListGetData_VuoPoint2d(positions);
-	VuoPoint4d *positions4d = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * count);
-	unsigned int *elements = (unsigned int *)malloc(sizeof(unsigned int) * count);
-	for (unsigned long i = 0; i < count; ++i)
+
+	positionCount = VuoMesh_getCompleteElementCountInternal(positionCount, elementAssemblyMethod);
+	if (!positionCount)
+		return NULL;
+
+	unsigned long colorCount = VuoListGetCount_VuoColor(colors);
+	VuoColor *colorValues = VuoListGetData_VuoColor(colors);
+
+	float *positionsFloat, *normals, *colorsFloat = NULL;
+	VuoMesh_allocateCPUBuffers(positionCount, &positionsFloat, &normals, NULL, colorCount ? &colorsFloat : NULL, 0, NULL);
+	for (unsigned long i = 0; i < positionCount; ++i)
 	{
 		VuoPoint2d xy = positionValues[i];
-		positions4d[i] = (VuoPoint4d){xy.x, xy.y, 0, 1};
-		elements[i] = i;
+		positionsFloat[i * 3    ] = xy.x;
+		positionsFloat[i * 3 + 1] = xy.y;
+		positionsFloat[i * 3 + 2] = 0;
+
+		normals[i * 3    ] = 0;
+		normals[i * 3 + 1] = 0;
+		normals[i * 3 + 2] = 1;
+
+		if (colorCount)
+		{
+			float progress = (float)i / MAX(1, positionCount - 1);
+			unsigned long colorIndex = round(progress * (colorCount - 1));
+			VuoColor c = colorValues[colorIndex];
+			colorsFloat[i * 4    ] = c.r * c.a;
+			colorsFloat[i * 4 + 1] = c.g * c.a;
+			colorsFloat[i * 4 + 2] = c.b * c.a;
+			colorsFloat[i * 4 + 3] = c.a;
+		}
 	}
 
-	VuoSubmesh sm = VuoSubmesh_makeFromBuffers(count,
-											   positions4d, NULL, NULL, NULL, NULL,
-											   count, elements, elementAssemblyMethod);
-	sm.primitiveSize = primitiveSize;
-	return VuoMesh_makeFromSingleSubmesh(sm);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(positionCount,
+		positionsFloat, normals, NULL, colorsFloat,
+		0, NULL, elementAssemblyMethod);
+	VuoMesh_setPrimitiveSize(mesh, primitiveSize);
+	return mesh;
 }
 
 /**
  * Returns a VuoMesh consisting of the given positions and element assembly method.
  * Its normals, tangents, bitangents, and texture coordinates are all null.
  */
-VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
+VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoList_VuoColor colors, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
 {
-	unsigned long count = VuoListGetCount_VuoPoint3d(positions);
+	unsigned long positionCount  = VuoListGetCount_VuoPoint3d(positions);
 	VuoPoint3d *positionValues = VuoListGetData_VuoPoint3d(positions);
-	VuoPoint4d *positions4d = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * count);
-	unsigned int *elements = (unsigned int *)malloc(sizeof(unsigned int) * count);
-	for (unsigned long i = 0; i < count; ++i)
+
+	positionCount = VuoMesh_getCompleteElementCountInternal(positionCount, elementAssemblyMethod);
+	if (!positionCount)
+		return NULL;
+
+	unsigned long colorCount = VuoListGetCount_VuoColor(colors);
+	VuoColor *colorValues = VuoListGetData_VuoColor(colors);
+
+	float *positionsFloat, *normals, *colorsFloat = NULL;
+	VuoMesh_allocateCPUBuffers(positionCount, &positionsFloat, &normals, NULL, colorCount ? &colorsFloat : NULL, 0, NULL);
+	for (unsigned long i = 0; i < positionCount; ++i)
 	{
-		VuoPoint3d xyz = positionValues[i];
-		positions4d[i] = (VuoPoint4d){xyz.x, xyz.y, xyz.z, 1};
-		elements[i] = i;
+		VuoPoint3d_setArray(&positionsFloat[i * 3], positionValues[i]);
+
+		normals[i * 3    ] = 0;
+		normals[i * 3 + 1] = 0;
+		normals[i * 3 + 2] = 1;
+
+		if (colorCount)
+		{
+			float progress = (float)i / MAX(1, positionCount - 1);
+			unsigned long colorIndex = round(progress * (colorCount - 1));
+			VuoColor c = colorValues[colorIndex];
+			colorsFloat[i * 4    ] = c.r * c.a;
+			colorsFloat[i * 4 + 1] = c.g * c.a;
+			colorsFloat[i * 4 + 2] = c.b * c.a;
+			colorsFloat[i * 4 + 3] = c.a;
+		}
 	}
 
-	VuoSubmesh sm = VuoSubmesh_makeFromBuffers(count,
-											   positions4d, NULL, NULL, NULL, NULL,
-											   count, elements, elementAssemblyMethod);
-	sm.primitiveSize = primitiveSize;
-	return VuoMesh_makeFromSingleSubmesh(sm);
+	VuoMesh mesh = VuoMesh_makeFromCPUBuffers(positionCount,
+		positionsFloat, normals, NULL, colorsFloat,
+		0, NULL, elementAssemblyMethod);
+	VuoMesh_setPrimitiveSize(mesh, primitiveSize);
+	return mesh;
 }
 
 /**
- * Makes a copy of the mesh and its submeshes.
- * CPU mesh data is duplicated.
+ * Duplicates the mesh's CPU data, and retains the mesh's GPU data.
  */
 VuoMesh VuoMesh_copy(const VuoMesh mesh)
 {
 	if (!mesh)
 		return NULL;
 
-	VuoMesh copiedMesh = VuoMesh_make(mesh->submeshCount);
-	for (unsigned int i = 0; i < mesh->submeshCount; ++i)
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	VuoMesh_internal *copiedMesh = VuoMesh_makeInternal();
+	copiedMesh->vertexCount = m->vertexCount;
+	copiedMesh->elementCount = m->elementCount;
+
+	if (m->positions)
 	{
-		VuoSubmesh submesh = mesh->submeshes[i];
-		VuoSubmesh copiedSubmesh;
-
-		copiedSubmesh.vertexCount = submesh.vertexCount;
-		unsigned long attributeByteCount = sizeof(VuoPoint4d)*copiedSubmesh.vertexCount;
-
-		if (submesh.positions)
-		{
-			copiedSubmesh.positions = (VuoPoint4d *)malloc(attributeByteCount);
-			memcpy(copiedSubmesh.positions, submesh.positions, attributeByteCount);
-		}
-		else
-			copiedSubmesh.positions = NULL;
-
-		if (submesh.normals)
-		{
-			copiedSubmesh.normals = (VuoPoint4d *)malloc(attributeByteCount);
-			memcpy(copiedSubmesh.normals, submesh.normals, attributeByteCount);
-		}
-		else
-			copiedSubmesh.normals = NULL;
-
-		if (submesh.tangents)
-		{
-			copiedSubmesh.tangents = (VuoPoint4d *)malloc(attributeByteCount);
-			memcpy(copiedSubmesh.tangents, submesh.tangents, attributeByteCount);
-		}
-		else
-			copiedSubmesh.tangents = NULL;
-
-		if (submesh.bitangents)
-		{
-			copiedSubmesh.bitangents = (VuoPoint4d *)malloc(attributeByteCount);
-			memcpy(copiedSubmesh.bitangents, submesh.bitangents, attributeByteCount);
-		}
-		else
-			copiedSubmesh.bitangents = NULL;
-
-		if (submesh.textureCoordinates)
-		{
-			copiedSubmesh.textureCoordinates = (VuoPoint4d *)malloc(attributeByteCount);
-			memcpy(copiedSubmesh.textureCoordinates, submesh.textureCoordinates, attributeByteCount);
-		}
-		else
-			copiedSubmesh.textureCoordinates = NULL;
-
-		copiedSubmesh.elementCount = submesh.elementCount;
-		if (submesh.elements)
-		{
-			unsigned long elementByteCount = sizeof(unsigned int)*submesh.elementCount;
-			copiedSubmesh.elements = (unsigned int *)malloc(elementByteCount);
-			memcpy(copiedSubmesh.elements, submesh.elements, elementByteCount);
-		}
-		else
-			copiedSubmesh.elements = NULL;
-
-		copiedSubmesh.elementAssemblyMethod = submesh.elementAssemblyMethod;
-		copiedSubmesh.primitiveSize = submesh.primitiveSize;
-		copiedSubmesh.faceCullingMode = submesh.faceCullingMode;
-
-		memcpy(&copiedSubmesh.glUpload, &submesh.glUpload, sizeof(copiedSubmesh.glUpload));
-		VuoGlPool_retain(copiedSubmesh.glUpload.combinedBuffer);
-		VuoGlPool_retain(copiedSubmesh.glUpload.elementBuffer);
-
-		copiedMesh->submeshes[i] = copiedSubmesh;
+		unsigned long size = sizeof(float) * 3 * copiedMesh->vertexCount;
+		copiedMesh->positions = (float *)malloc(size);
+		memcpy(copiedMesh->positions, m->positions, size);
 	}
-	return copiedMesh;
+	else
+		copiedMesh->positions = NULL;
+
+	if (m->normals)
+	{
+		unsigned long size = sizeof(float) * 3 * copiedMesh->vertexCount;
+		copiedMesh->normals = (float *)malloc(size);
+		memcpy(copiedMesh->normals, m->normals, size);
+	}
+	else
+		copiedMesh->normals = NULL;
+
+	if (m->textureCoordinates)
+	{
+		unsigned long size = sizeof(float) * 3 * copiedMesh->vertexCount;
+		copiedMesh->textureCoordinates = (float *)malloc(size);
+		memcpy(copiedMesh->textureCoordinates, m->textureCoordinates, size);
+	}
+	else
+		copiedMesh->textureCoordinates = NULL;
+
+	if (m->colors)
+	{
+		unsigned long size = sizeof(float) * 3 * copiedMesh->vertexCount;
+		copiedMesh->colors = (float *)malloc(size);
+		memcpy(copiedMesh->colors, m->colors, size);
+	}
+	else
+		copiedMesh->colors = NULL;
+
+	copiedMesh->elementCount = m->elementCount;
+	if (m->elements)
+	{
+		unsigned long elementByteCount = sizeof(unsigned int)*m->elementCount;
+		copiedMesh->elements = (unsigned int *)malloc(elementByteCount);
+		memcpy(copiedMesh->elements, m->elements, elementByteCount);
+	}
+	else
+		copiedMesh->elements = NULL;
+
+	copiedMesh->elementAssemblyMethod = m->elementAssemblyMethod;
+	copiedMesh->primitiveSize = m->primitiveSize;
+	copiedMesh->faceCulling = m->faceCulling;
+
+	memcpy(&copiedMesh->glUpload, &m->glUpload, sizeof(copiedMesh->glUpload));
+	VuoGlPool_retain(copiedMesh->glUpload.combinedBuffer);
+	VuoGlPool_retain(copiedMesh->glUpload.elementBuffer);
+
+	return (VuoMesh)copiedMesh;
+}
+
+/**
+ * Makes a shallow copy of the mesh and its submeshes.
+ * CPU mesh data is not present in the copy.
+ * GPU mesh data is retained.
+ *
+ * @version200New
+ *
+ * @todo Maybe someday redesign VuoMesh so CPU mesh data is reference-counted,
+ * to avoid having to make the deep/shallow distinction?
+ */
+VuoMesh VuoMesh_copyShallow(const VuoMesh mesh)
+{
+	if (!mesh)
+		return NULL;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	VuoMesh_internal *copiedMesh = VuoMesh_makeInternal();
+
+	copiedMesh->vertexCount = m->vertexCount;
+	copiedMesh->elementCount = m->elementCount;
+
+	copiedMesh->elementAssemblyMethod = m->elementAssemblyMethod;
+	copiedMesh->primitiveSize = m->primitiveSize;
+	copiedMesh->faceCulling = m->faceCulling;
+
+	memcpy(&copiedMesh->glUpload, &m->glUpload, sizeof(copiedMesh->glUpload));
+	VuoGlPool_retain(copiedMesh->glUpload.combinedBuffer);
+	VuoGlPool_retain(copiedMesh->glUpload.elementBuffer);
+
+	return (VuoMesh)copiedMesh;
+}
+
+/**
+ * Deallocates and clears the texture coordinate arrays associated with this mesh.
+ *
+ * @version200New
+ */
+void VuoMesh_removeTextureCoordinates(VuoMesh mesh)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	if (m->textureCoordinates)
+	{
+		free(m->textureCoordinates);
+		m->textureCoordinates = NULL;
+	}
+
+	if (m->glUpload.combinedBuffer && m->glUpload.textureCoordinateOffset)
+	{
+		m->glUpload.textureCoordinateOffset = NULL;
+		// The data is still allocated in GPU RAM as part of combinedBuffer;
+		// just ignore that (rather than wasting time repacking the buffer).
+	}
+}
+
+static void VuoMesh_download(VuoMesh_internal *m);
+
+/**
+ * Outputs vertex and element information, downloading the data from the GPU if needed.
+ *
+ * You may pass NULL to any of the output variables.
+ *
+ * Do not modify or free the output arrays; the mesh continues to own them.
+ *
+ * @version200New
+ */
+void VuoMesh_getCPUBuffers(const VuoMesh mesh, unsigned int *vertexCount,
+    float **positions, float **normals, float **textureCoordinates, float **colors,
+    unsigned int *elementCount, unsigned int **elements)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	VuoMesh_download(m);
+	if (vertexCount)
+		*vertexCount = m->vertexCount;
+	if (positions)
+		*positions = m->positions;
+	if (normals)
+		*normals = m->normals;
+	if (textureCoordinates)
+		*textureCoordinates = m->textureCoordinates;
+	if (colors)
+		*colors = m->colors;
+	if (elementCount)
+		*elementCount = m->elementCount;
+	if (elements)
+		*elements = m->elements;
+}
+
+/**
+ * Outputs OpenGL vertex and element buffer information, uploading the data to the GPU if needed.
+ *
+ * You may pass NULL to any of the output variables.
+ *
+ * @version200New
+ */
+void VuoMesh_getGPUBuffers(const VuoMesh mesh, unsigned int *vertexCount,
+    unsigned int *combinedBuffer,
+    void **normalOffset, void **textureCoordinateOffset, void **colorOffset,
+    unsigned int *elementCount, unsigned int *elementBuffer)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	VuoMesh_upload(m);
+	if (vertexCount)
+		*vertexCount = m->vertexCount;
+	if (combinedBuffer)
+		*combinedBuffer = m->glUpload.combinedBuffer;
+	if (normalOffset)
+		*normalOffset = m->glUpload.normalOffset;
+	if (textureCoordinateOffset)
+		*textureCoordinateOffset = m->glUpload.textureCoordinateOffset;
+	if (colorOffset)
+		*colorOffset = m->glUpload.colorOffset;
+	if (elementCount)
+		*elementCount = m->elementCount;
+	if (elementBuffer)
+		*elementBuffer = m->glUpload.elementBuffer;
+}
+
+/**
+ * Returns the mesh's element assembly method.
+ *
+ * @version200New
+ */
+VuoMesh_ElementAssemblyMethod VuoMesh_getElementAssemblyMethod(const VuoMesh mesh)
+{
+	if (!mesh)
+		return VuoMesh_IndividualTriangles;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	return m->elementAssemblyMethod;
+}
+
+/**
+ * Returns the mesh's face culling mode.
+ *
+ * @version200New
+ */
+VuoMesh_FaceCulling VuoMesh_getFaceCulling(const VuoMesh mesh)
+{
+	if (!mesh)
+		return VuoMesh_CullNone;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	return m->faceCulling;
+}
+
+/**
+ * Returns the OpenGL enum value for the mesh's face culling mode.
+ *
+ * @version200New
+ */
+unsigned int VuoMesh_getFaceCullingGL(const VuoMesh mesh)
+{
+	if (!mesh)
+		return GL_NONE;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	if (m->faceCulling == VuoMesh_CullBackfaces)
+		return GL_BACK;
+	else if (m->faceCulling == VuoMesh_CullFrontfaces)
+		return GL_FRONT;
+	else // if (m->faceCulling == VuoMesh_CullNone)
+		return GL_NONE;
+}
+
+/**
+ * Returns the size, in Vuo Coordinates, at which lines and points should be rendered.
+ *
+ * @version200New
+ */
+VuoReal VuoMesh_getPrimitiveSize(const VuoMesh mesh)
+{
+	if (!mesh)
+		return 0;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	return m->primitiveSize;
+}
+
+/**
+ * Returns the size, in bytes, of the GPU element buffer.
+ *
+ * @version200New
+ */
+unsigned int VuoMesh_getElementBufferSize(const VuoMesh mesh)
+{
+	if (!mesh)
+		return 0;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	return m->glUpload.elementBufferSize;
+}
+
+/**
+ * Changes the mesh's CPU buffers, and uploads them to the GPU.
+ *
+ * The mesh takes ownership of the buffers, and will `free()` them when finished.
+ *
+ * @see VuoMesh_makeFromCPUBuffers
+ * @version200New
+ */
+void VuoMesh_setCPUBuffers(VuoMesh mesh, unsigned int vertexCount,
+    float *positions, float *normals, float *textureCoordinates, float *colors,
+    unsigned int elementCount, unsigned int *elements)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+
+	m->vertexCount = vertexCount;
+
+	if (m->positions != positions)
+	{
+		free(m->positions);
+		m->positions = positions;
+	}
+
+	if (m->normals != normals)
+	{
+		free(m->normals);
+		m->normals = normals;
+	}
+
+	if (m->textureCoordinates != textureCoordinates)
+	{
+		free(m->textureCoordinates);
+		m->textureCoordinates = textureCoordinates;
+	}
+
+	if (m->colors != colors)
+	{
+		free(m->colors);
+		m->colors = colors;
+	}
+
+	m->elementCount = elementCount;
+
+	if (m->elements != elements)
+	{
+		free(m->elements);
+		m->elements = elements;
+	}
+
+	VuoGlPool_release(VuoGlPool_ArrayBuffer, m->glUpload.combinedBufferSize, m->glUpload.combinedBuffer);
+	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, m->glUpload.elementBufferSize, m->glUpload.elementBuffer);
+	m->glUpload.combinedBufferSize = 0;
+	m->glUpload.combinedBuffer = 0;
+	m->glUpload.elementBufferSize = 0;
+	m->glUpload.elementBuffer = 0;
+
+	VuoMesh_upload(m);
+}
+
+/**
+ * Changes the mesh's face culling mode.
+ *
+ * @version200New
+ */
+void VuoMesh_setFaceCulling(VuoMesh mesh, VuoMesh_FaceCulling faceCulling)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	m->faceCulling = faceCulling;
+}
+
+/**
+ * Changes the size, in Vuo Coordinates, at which lines and points should be rendered.
+ *
+ * @version200New
+ */
+void VuoMesh_setPrimitiveSize(VuoMesh mesh, VuoReal primitiveSize)
+{
+	if (!mesh)
+		return;
+
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	m->primitiveSize = primitiveSize;
 }
 
 /**
@@ -1015,119 +1353,90 @@ const char * VuoMesh_cStringForElementAssemblyMethod(VuoMesh_ElementAssemblyMeth
 		case VuoMesh_Points:
 			return "points";
 	}
-	return "(unknown element assembly method)";
 }
 
 /**
- * Returns the number of bytes per combined-buffer entry.
+ * Copies element data from the GPU back to the CPU.
  */
-unsigned long VuoSubmesh_getStride(const VuoSubmesh submesh)
+static void VuoMesh_download(VuoMesh_internal *m)
 {
-	if (submesh.glUpload.combinedBufferStride)
-		return submesh.glUpload.combinedBufferStride;
+	if (!m->glUpload.combinedBuffer
+	 || (m->positions
+			&& (m->normals || !m->glUpload.normalOffset)
+			&& (m->textureCoordinates || !m->glUpload.textureCoordinateOffset)
+			&& (m->colors || !m->glUpload.colorOffset)
+			&& (m->elements || !m->glUpload.elementBuffer)))
+		return;
 
-	int bufferCount = 0;
-	++bufferCount; // position
-	if (submesh.glUpload.normalOffset)
-		++bufferCount;
-	if (submesh.glUpload.tangentOffset)
-		++bufferCount;
-	if (submesh.glUpload.bitangentOffset)
-		++bufferCount;
-	if (submesh.glUpload.textureCoordinateOffset)
-		++bufferCount;
-
-	return sizeof(VuoPoint4d) * bufferCount;
-}
-
-/**
- *	Pulls an element array from gl buffer.
- */
-VuoPoint4d *extractElements(CGLContextObj cgl_ctx, VuoSubmesh *submesh, unsigned int vertexCount, unsigned int bufferStrideInBytes, unsigned int bufferIndex)
-{
-	unsigned int bufferStrideInFloats = bufferStrideInBytes / sizeof(GLfloat);
-	GLfloat *feedback = (GLfloat *)malloc(submesh->glUpload.combinedBufferSize);
-	glGetBufferSubData(GL_ARRAY_BUFFER, 0, submesh->glUpload.combinedBufferSize, feedback);
-
-	VuoPoint4d *elements = (VuoPoint4d*)malloc(sizeof(VuoPoint4d)*vertexCount);
-
-	for (int vertex = 0; vertex < vertexCount; vertex++)
-	{
-		elements[vertex] = (VuoPoint4d)
-			{
-				feedback[vertex*bufferStrideInFloats + 0 + (bufferIndex*4)],
-				feedback[vertex*bufferStrideInFloats + 1 + (bufferIndex*4)],
-				feedback[vertex*bufferStrideInFloats + 2 + (bufferIndex*4)],
-				feedback[vertex*bufferStrideInFloats + 3 + (bufferIndex*4)]
-			};
-	}
-	free(feedback);
-
-	return elements;
-}
-
-/**
- *	Copies element data from GPU back to the CPU.
- */
-void VuoSubmeshMesh_download(VuoSubmesh *submesh)
-{
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		glBindBuffer(GL_ARRAY_BUFFER, m->glUpload.combinedBuffer);
 
-	unsigned int vertexCount = submesh->vertexCount;
+		// @@@ is this necessary?
+//		glFlush();
 
-	// Attach the input combinedBuffer for rendering.
-	glBindBuffer(GL_ARRAY_BUFFER, submesh->glUpload.combinedBuffer);
+		float *vertexData = (float *)malloc(m->glUpload.combinedBufferSize);
+		glGetBufferSubData(GL_ARRAY_BUFFER, 0, m->glUpload.combinedBufferSize, vertexData);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	int stride = VuoSubmesh_getStride(*submesh);
+		if (!m->positions)
+		{
+			m->positions = (float *)malloc(sizeof(float) * 3 * m->vertexCount);
+			memcpy(m->positions, vertexData, sizeof(float) * 3 * m->vertexCount);
+		}
 
-	glFlush();
+		if (!m->normals && m->glUpload.normalOffset)
+		{
+			m->normals = (float *)malloc(sizeof(float) * 3 * m->vertexCount);
+			memcpy(m->normals, (char *)vertexData + (int)m->glUpload.normalOffset, sizeof(float) * 3 * m->vertexCount);
+		}
 
-	int bufferIndex = 0;
+		if (!m->textureCoordinates && m->glUpload.textureCoordinateOffset)
+		{
+			m->textureCoordinates = (float *)malloc(sizeof(float) * 2 * m->vertexCount);
+			memcpy(m->textureCoordinates, (char *)vertexData + (int)m->glUpload.textureCoordinateOffset, sizeof(float) * 2 * m->vertexCount);
+		}
 
-	if (!submesh->positions)
-		submesh->positions = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
+		if (!m->colors && m->glUpload.colorOffset)
+		{
+			m->colors = (float *)malloc(sizeof(float) * 4 * m->vertexCount);
+			memcpy(m->colors, (char *)vertexData + (int)m->glUpload.colorOffset, sizeof(float) * 4 * m->vertexCount);
+		}
 
-	if (!submesh->normals && submesh->glUpload.normalOffset)
-		submesh->normals = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
-
-	if (!submesh->tangents && submesh->glUpload.tangentOffset)
-		submesh->tangents = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
-
-	if (!submesh->bitangents && submesh->glUpload.bitangentOffset)
-		submesh->bitangents = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
-
-	if (!submesh->textureCoordinates && submesh->glUpload.textureCoordinateOffset)
-		submesh->textureCoordinates = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+		if (!m->elements && m->glUpload.elementBuffer)
+		{
+			m->elements = malloc(m->glUpload.elementBufferSize);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->glUpload.elementBuffer);
+			glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, m->glUpload.elementBufferSize, m->elements);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
 	});
 }
 
 /**
- *	Iterates through mesh's vertices finding the center and extents.  Returns the axis aligned bounding box taking into account the passed transform.
+ * Finds the mesh's center and axis-aligned extents, taking into account the passed transform.
  */
-VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
+VuoBox VuoMesh_bounds(const VuoMesh mesh, float matrix[16])
 {
+	if (!mesh)
+		return VuoBox_make((VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0});
+
 	VuoPoint3d min, max;
 	bool init = false;
 
-	for(int i = 0; i < v->submeshCount; i++)
-	{
-		unsigned int vertexCount = v->submeshes[i].vertexCount;
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	unsigned int vertexCount = m->vertexCount;
 
-		if(v->submeshes[i].positions == NULL)
-			VuoSubmeshMesh_download(&v->submeshes[i]);
+	VuoMesh_download(m);
 
 		if(vertexCount > 0 && !init)
 		{
-			min = max = VuoTransform_transformPoint((float*)matrix, VuoPoint3d_make(v->submeshes[i].positions[0].x, v->submeshes[i].positions[0].y, v->submeshes[i].positions[0].z));
+			min = max = VuoTransform_transformPoint((float*)matrix, VuoPoint3d_makeFromArray(&m->positions[0]));
 			init = true;
 		}
 
 		for(int n = 0; n < vertexCount; n++)
 		{
-			VuoPoint3d p = VuoTransform_transformPoint((float*)matrix, VuoPoint3d_make(v->submeshes[i].positions[n].x, v->submeshes[i].positions[n].y, v->submeshes[i].positions[n].z));
+			VuoPoint3d p = VuoTransform_transformPoint((float*)matrix, VuoPoint3d_makeFromArray(&m->positions[n * 3]));
 
 			min.x = MIN(p.x, min.x);
 			min.y = MIN(p.y, min.y);
@@ -1137,30 +1446,26 @@ VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
 			max.y = MAX(p.y, max.y);
 			max.z = MAX(p.z, max.z);
 		}
-	}
+
+//		VLog("%fx%fx%f @ %f,%f,%f",bounds->size.x,bounds->size.y,bounds->size.z,bounds->center.x,bounds->center.y,bounds->center.z);
+
 
 	if(init)
-		return VuoBox_make( VuoPoint3d_multiply(VuoPoint3d_add(min, max), 0.5), VuoPoint3d_subtract(max, min) );
+		return VuoBox_make((min + max) / (VuoPoint3d)(2.), max - min);
 	else
 		return VuoBox_make( (VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0} );
 }
 
 /**
- * Returns true if the mesh has at least one submesh with a non-zero vertex count.
+ * Returns true if the mesh has any vertices.
  */
 bool VuoMesh_isPopulated(const VuoMesh mesh)
 {
 	if (!mesh)
 		return false;
 
-	for (unsigned long i = 0; i < mesh->submeshCount; ++i)
-	{
-		VuoSubmesh meshItem = mesh->submeshes[i];
-		if (meshItem.vertexCount > 0)
-			return true;
-	}
-
-	return false;
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+	return m->vertexCount > 0;
 }
 
 /**
@@ -1204,111 +1509,68 @@ json_object * VuoMesh_getInterprocessJson(const VuoMesh value)
 
 /**
  * @ingroup VuoMesh
- * A brief summary of the contents of this submesh.
- *
- * @eg{4 vertices in a fan of 2 triangles
- * with first position (0,0,0,0)}
- * @eg{8 vertices, 12 triangles
- * with first position (-0.5,-0.5,-0.5,0)}
+ * Returns a brief summary of the contents of this mesh.
  */
-char * VuoSubmesh_getSummary(const VuoSubmesh value)
+char *VuoMesh_getSummary(const VuoMesh mesh)
 {
-	if (value.vertexCount == 0)
-	{
-		char * zero = strdup("0 vertices");
-		return zero;
-	}
+	if (!mesh)
+		return strdup("Empty mesh");
 
-	unsigned long objectCount = VuoSubmesh_getSplitPrimitiveCount(value);
+	VuoMesh_internal *m = (VuoMesh_internal *)mesh;
+
+	if (!m->vertexCount)
+		return strdup("Mesh without any vertices");
+
+	unsigned long objectCount = VuoMesh_getSplitPrimitiveCount(mesh);
 	const char * objectString = "";
 	const char * assemblyMethod = " (unknown element assembly method)";
-	if (value.elementAssemblyMethod == VuoMesh_IndividualTriangles)
+	if (m->elementAssemblyMethod == VuoMesh_IndividualTriangles)
 	{
 		assemblyMethod = ", ";
 		objectString = "triangle";
 		/// @todo Report if value.elementCount isn't a multiple of 3.
 	}
-	else if (value.elementAssemblyMethod == VuoMesh_TriangleStrip)
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleStrip)
 	{
 		assemblyMethod = " in a strip of ";
 		objectString = "triangle";
 	}
-	else if (value.elementAssemblyMethod == VuoMesh_TriangleFan)
+	else if (m->elementAssemblyMethod == VuoMesh_TriangleFan)
 	{
 		assemblyMethod = " in a fan of ";
 		objectString = "triangle";
 	}
-	else if (value.elementAssemblyMethod == VuoMesh_IndividualLines)
+	else if (m->elementAssemblyMethod == VuoMesh_IndividualLines)
 	{
 		assemblyMethod = ", ";
 		objectString = "line";
 	}
-	else if (value.elementAssemblyMethod == VuoMesh_LineStrip)
+	else if (m->elementAssemblyMethod == VuoMesh_LineStrip)
 	{
 		assemblyMethod = " in a strip of ";
 		objectString = "line";
 	}
-	else if (value.elementAssemblyMethod == VuoMesh_Points)
+	else if (m->elementAssemblyMethod == VuoMesh_Points)
 	{
 		assemblyMethod = ", ";
 		objectString = "point";
 	}
 
-	const char * vertexCountString = value.vertexCount==1 ? "vertex" : "vertices";
+	const char * vertexCountString = m->vertexCount==1 ? "vertex" : "vertices";
 	const char * objectStringPlural = objectCount==1 ? "" : "s";
-	VuoPoint4d p = value.positions[0];
 
-	return VuoText_format("%u %s%s%lu %s%s<br>with first position (%g, %g, %g, %g)<br>%s positions<br>%s normals<br>%s tangents<br>%s bitangents<br>%s texture coordinates",
-						  value.vertexCount, vertexCountString, assemblyMethod, objectCount, objectString, objectStringPlural,
-						  p.x, p.y, p.z, p.w,
-						  value.positions          ? "✓" : "◻",
-						  value.normals            ? "✓" : "◻",
-						  value.tangents           ? "✓" : "◻",
-						  value.bitangents         ? "✓" : "◻",
-						  value.textureCoordinates ? "✓" : "◻");
-}
+	char *firstPosition = NULL;
+	if (m->positions)
+		firstPosition = VuoText_format("<div>with first position (%s)</div>", VuoPoint3d_getSummary(VuoPoint3d_makeFromArray(&m->positions[0])));
 
-/**
- * @ingroup VuoMesh
- * A brief summary of the contents of this mesh, including a list of sub-meshes.
- */
-char * VuoMesh_getSummary(const VuoMesh value)
-{
-	if (!value || value->submeshCount == 0)
-		return strdup("(empty mesh)");
+	char *summary = VuoText_format("<div>%u %s%s%lu %s%s</div>%s<div>%s positions</div><div>%s normals</div><div>%s texture coordinates</div><div>%s vertex colors</div>",
+						  m->vertexCount, vertexCountString, assemblyMethod, objectCount, objectString, objectStringPlural,
+						  firstPosition ? firstPosition : "",
+						  (m->positions          || m->glUpload.combinedBuffer         ) ? "✓" : "◻",
+						  (m->normals            || m->glUpload.normalOffset           ) ? "✓" : "◻",
+						  (m->textureCoordinates || m->glUpload.textureCoordinateOffset) ? "✓" : "◻",
+						  (m->colors             || m->glUpload.colorOffset            ) ? "✓" : "◻");
 
-	char *prefix = "Mesh containing: <ul>";
-	unsigned int prefixBytes = strlen(prefix);
-
-	const int maxSubmeshCount = 20;
-	unsigned int submeshCount = MIN(value->submeshCount, maxSubmeshCount);
-	char **submeshes = (char **)malloc(submeshCount * sizeof(char *));
-	unsigned int submeshBytes = 0;
-	for (unsigned int i = 0; i < submeshCount; ++i)
-	{
-		char *s = VuoSubmesh_getSummary(value->submeshes[i]);
-		submeshes[i] = (char *)malloc((strlen(s) + 4 + 5 + 1));
-		submeshes[i][0] = 0;
-		strncat(submeshes[i], "<li>", 4);
-		strncat(submeshes[i], s, strlen(s));
-		strncat(submeshes[i], "</li>", 5);
-		submeshBytes += strlen(submeshes[i]);
-		free(s);
-	}
-
-	char *suffix = (value->submeshCount > maxSubmeshCount ? "<li>...</li></ul>" : "</ul>");
-	unsigned int suffixBytes = strlen(suffix);
-
-	char *summary = (char *)malloc(prefixBytes + submeshBytes + suffixBytes + 1);
-	summary[0] = 0;
-	strncat(summary, prefix, prefixBytes);
-	for (unsigned int i = 0; i < submeshCount; ++i)
-		strncat(summary, submeshes[i], strlen(submeshes[i]));
-	strncat(summary, suffix, suffixBytes);
-
-	for (unsigned int i = 0; i < submeshCount; ++i)
-		free(submeshes[i]);
-	free(submeshes);
-
+	free(firstPosition);
 	return summary;
 }

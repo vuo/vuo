@@ -2,21 +2,18 @@
  * @file
  * VuoRendererValueListForReadOnlyDictionary implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoRendererReadOnlyDictionary.hh"
-#include "VuoRendererCable.hh"
-#include "VuoRendererInputListDrawer.hh"
-#include "VuoRendererTypecastPort.hh"
-#include "VuoRendererColors.hh"
-#include "VuoRendererFonts.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerInputEventPort.hh"
-#include "VuoStringUtilities.hh"
+#include "VuoNodeClass.hh"
+#include "VuoPort.hh"
+#include "VuoRendererPort.hh"
 
 /**
  * Creates the compact form for a collapsed "Make List" node that outputs a list of values
@@ -98,10 +95,7 @@ void VuoRendererValueListForReadOnlyDictionary::paint(QPainter *painter, const Q
 
 
 	// Drawer frame
-	painter->setPen(QPen(drawerColors->nodeFrame(),1,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin));
-	painter->setBrush(drawerColors->nodeFill());
-	QPainterPath drawerPath = getDrawerPath();
-	painter->drawPath(drawerPath);
+	painter->fillPath(getDrawerPath(false), drawerColors->nodeFill());
 
 	// Child input ports
 	layoutPorts();
@@ -114,7 +108,7 @@ void VuoRendererValueListForReadOnlyDictionary::paint(QPainter *painter, const Q
  */
 QRectF VuoRendererValueListForReadOnlyDictionary::boundingRect(void) const
 {
-	QRectF r = getDrawerPath().boundingRect();
+	QRectF r = getDrawerPath(false).boundingRect();
 
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);
@@ -129,7 +123,7 @@ QRectF VuoRendererValueListForReadOnlyDictionary::boundingRect(void) const
 QPainterPath VuoRendererValueListForReadOnlyDictionary::shape() const
 {
 	QPainterPath p;
-	p.addPath(getDrawerPath());
+	p.addPath(getDrawerPath(false));
 
 	return p;
 }
@@ -167,60 +161,6 @@ VuoNode * VuoRendererValueListForReadOnlyDictionary::getKeyListNode()
 }
 
 /**
- * Returns a closed path representing the drawer of the collapsed "Make List" node.
- */
-QPainterPath VuoRendererValueListForReadOnlyDictionary::getDrawerPath() const
-{
-	// Create a hybrid rect having the width of the port's inset rect and the customized
-	// height of a constant flag, so that the "Make List" arm has the desired height but
-	// directly adjoins the inset port shape.
-	QRectF hostPortRect = VuoRendererPort::getPortRect();
-	vector<VuoRendererPort *> drawerPorts = getDrawerPorts();
-	QRectF hostPortHybridRect = QRectF(hostPortRect.x(), -0.5*VuoRendererPort::constantFlagHeight, hostPortRect.width(), VuoRendererPort::constantFlagHeight);
-
-	qreal hostPortContactPointX = horizontalDrawerOffset -0.5*hostPortRect.width() + VuoRendererPort::portInset;
-	qreal drawerBottomExtensionWidth = getMaxDrawerLabelWidth();
-
-	QPainterPath p;
-
-	// Drawer top left
-	p.moveTo(0, -0.5*hostPortHybridRect.height());
-	// Arm top edge
-	p.lineTo(hostPortContactPointX-0.5*hostPortHybridRect.height(), -0.5*hostPortHybridRect.height());
-	// Arm right triangular point
-	p.lineTo(hostPortContactPointX, 0);
-	p.lineTo(hostPortContactPointX-0.5*hostPortHybridRect.height(), 0.5*hostPortHybridRect.height());
-	// Arm bottom edge
-	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortHybridRect.height());
-	// Right drawer wall
-	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortHybridRect.height() + drawerBottomExtensionHeight);
-	// Far drawer bottom
-	p.lineTo(0, 0.5*hostPortHybridRect.height() + drawerBottomExtensionHeight);
-	p.closeSubpath();
-
-	// Carve the input child ports out of the frame.
-	QPainterPath drawerPortsPath;
-
-	for (int i=0; i < drawerPorts.size(); ++i)
-	{
-		VuoRendererPort *p = drawerPorts[i];
-		VuoRendererTypecastPort *tp = dynamic_cast<VuoRendererTypecastPort *>(p);
-		QPainterPath insetPath;
-
-		if (tp)
-			insetPath = tp->getPortPath(true, false, NULL);
-		else
-			insetPath = p->getPortPath(VuoRendererPort::portInset);
-
-		drawerPortsPath.addPath(insetPath.translated(p->pos()));
-	}
-
-	p = p.subtracted(drawerPortsPath);
-
-	return p;
-}
-
-/**
   * Returns the input port to which this item is visually attached in the rendered composition.
   */
 VuoPort * VuoRendererValueListForReadOnlyDictionary::getRenderedHostPort()
@@ -243,7 +183,7 @@ VuoNode * VuoRendererValueListForReadOnlyDictionary::getRenderedHostNode()
  */
 QRectF VuoRendererValueListForReadOnlyDictionary::getOuterNodeFrameBoundingRect(void) const
 {
-	return getDrawerPath().boundingRect();
+	return getDrawerPath(false).boundingRect();
 }
 
 /**

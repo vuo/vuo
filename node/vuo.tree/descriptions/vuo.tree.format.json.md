@@ -2,7 +2,7 @@ Turns a tree (including descendants) into JSON-formatted text.
 
    - `Indent` — If true, the output will include spacing and linebreaks so it's easier to read. If false, the output will have no whitespace between items.
 
-If the tree was created with text fed into the `Make Tree from JSON` node, this node outputs the original JSON information, preserving the data types of JSON numbers, booleans, and null values. Otherwise, the tree is translated to JSON format, with all content translated to JSON strings.
+If the tree was created with text fed into the [Make Tree from JSON](vuo-node://vuo.tree.make.json) node, this node outputs the original JSON information, preserving the data types of JSON numbers, booleans, and null values. Otherwise, the tree is translated to JSON format, with all content translated to JSON strings.
 
 A tree that has just a name and content, no attributes or children, is turned into a JSON object, like this:
 

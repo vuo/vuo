@@ -4,12 +4,12 @@ Creates an image from GLSL source code.
 
 Shadertoy provides some special `uniform` values that are exposed as port values on the node:
 
-   - `Global Time` — The current time that is passed to the shader.  Usually you'll want to connect a `Render Image/Layers/Scene to Window` node's `Requested Frame` output to this port.
+   - `Global Time` — The current time that is passed to the shader.  Usually you'll want to connect a [Render Image](vuo-node://vuo.image.render.window)/[Layers](vuo-node://vuo.layer.render.window)/[Scene to Window](vuo-node://vuo.scene.render.window) node's `Refreshed at Time` output to this port.
    - `Channel 0–3` — Images to be passed to the shader.
    - `Mouse Position` — The mouse position in Vuo Coordinates.
    - `Mouse Is Pressed` — Whether the mouse button is pressed.
 
-To mimic the way the Shadertoy website handles interaction, connect the `Check Mouse Status` node's corresponding ports to this node.
+To mimic the way the Shadertoy website handles interaction, connect the [Check Mouse Status](vuo-node://vuo.mouse.status) node's corresponding ports to this node.
 
 All Shadertoy-specific inputs are supported, except `iChannelTime` and the ability to feed audio into the `iChannel` ports.
 
@@ -20,7 +20,7 @@ When typing in the `Fragment Shader` port's input editor, the Return and Tab key
    - Make sure that you have images in the appropriate Channel ports.  If a shader makes use of an image and it is not provided, things may go awry.
    - If your screen is blank, the shader may contain an error.  In the event that a shader fails compilation, Vuo will print the error to the Console app.
    - Check that a time source is connected to the `Global Time` port.  Some shaders require a time base to function correctly.
-   - If your shader code uses `iMouse`, make sure that you have connected the ports from `Check Mouse Status` to `Mouse Position` and `Mouse Is Pressed`.
+   - If your shader code uses `iMouse`, make sure that you have connected the ports from [Check Mouse Status](vuo-node://vuo.mouse.status) to `Mouse Position` and `Mouse Is Pressed`.
 
 ### Shadertoy uniforms
 

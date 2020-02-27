@@ -1,0 +1,55 @@
+/**
+ * @file
+ * @brief Save Word Definition
+ * Fetches a word's definition via RSS, and writes it to a text file on the Desktop.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendTexts4 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="225,165" _separator="\"\\n\""];
+AppendTexts5 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="285,420" _separator="\"\""];
+AppendTexts6 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="525,405" _separator="\"\\n\""];
+ConvertTextToData2 [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="165,255"];
+FetchRSSItems2 [type="vuo.rss.fetch" version="1.2.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="-495,165" _url="\"https:\\/\\/vuo.org\\/wotd.rss\"" _fetchImages="false"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-765,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetFirstItemInList2 [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="-60,615"];
+GetFirstItemInList3 [type="vuo.list.get.first.VuoRssItem" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="-120,360"];
+GetRSSItemValues2 [type="vuo.rss.get" version="1.1.0" label="Get RSS Item Values|<refresh>refresh\l|<item>item\l|<title>title\r|<author>author\r|<description>description\r|<categories>categories\r|<url>url\r|<time>time\r|<imageUrl>imageUrl\r|<image>image\r" pos="-195,195"];
+MakeList5 [type="vuo.list.make.6.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="184,176" _1="\"Word in the Spotlight\"" _2="\" \"" _5="\" \""];
+MakeList6 [type="vuo.list.make.6.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="484,416" _2="\" \"" _4="\"\"" _5="\"This word has been saved to a file on your desktop.\""];
+MakeList8 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="244,431" _2="\"…\""];
+MakeList9 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="974,416" fillcolor="blue"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,315" _text="\"Word in the Spotlight\"" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\"center-center\"" _center="\{\"x\":0,\"y\":0.25\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,495" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":18,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\"center-center\"" _center="\{\"x\":0,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1020,405" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SaveData3 [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="540,150" fillcolor="orange" _url="\"~\\/Desktop\\/WordInTheSpotlight.txt\"" _overwriteUrl="false"];
+SplitText2 [type="vuo.text.split.VuoText" version="1.0.0" label="Split Text|<refresh>refresh\l|<text>text\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<splitTexts>splitTexts\r" pos="0,420" _separator="\" 2. \"" _includeEmptyParts="false"];
+
+AppendTexts4:compositeText -> ConvertTextToData2:text;
+AppendTexts5:compositeText -> MakeList6:3;
+AppendTexts6:compositeText -> MakeTextLayer3:text [event=true];
+AppendTexts6:compositeText -> MakeTextLayer4:text;
+ConvertTextToData2:data -> SaveData3:saveData;
+FetchRSSItems2:items -> GetFirstItemInList3:list;
+FireOnStart2:started -> FetchRSSItems2:url;
+GetFirstItemInList2:firstItem -> MakeList8:1;
+GetFirstItemInList3:firstItem -> GetRSSItemValues2:item;
+GetRSSItemValues2:description -> MakeList5:4;
+GetRSSItemValues2:description -> SplitText2:text;
+GetRSSItemValues2:title -> MakeList5:3;
+GetRSSItemValues2:title -> MakeList6:1;
+GetRSSItemValues2:url -> MakeList5:6;
+GetRSSItemValues2:url -> MakeList6:6;
+MakeList5:list -> AppendTexts4:texts;
+MakeList6:list -> AppendTexts6:texts;
+MakeList8:list -> AppendTexts5:texts;
+MakeList9:list -> RenderLayersToWindow2:layers;
+MakeTextLayer3:layer -> MakeList9:1;
+MakeTextLayer4:layer -> MakeList9:2;
+SplitText2:splitTexts -> GetFirstItemInList2:list;
+}

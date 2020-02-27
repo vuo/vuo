@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorPoint4d SOURCE VuoInputEditorPoint4d.cc)

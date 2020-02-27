@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.cube node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,63 +13,29 @@
 VuoModuleMetadata({
 					 "title" : "Make Cube with Materials",
 					 "keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square", "shape", "object" ],
-					 "version" : "1.0.1",
+					 "version" : "1.1.0",
 					 "node": {
 						  "exampleCompositions" : [ ]
 					 }
 				 });
 
-static VuoSubmesh makePlane(unsigned int rows, unsigned int columns)
+struct nodeInstanceData
 {
-	unsigned int vertexCount = rows * columns;
-	unsigned int triangleCount = (rows-1) * (columns-1) * 6;
+	VuoInteger rows;
+	VuoInteger columns;
+	VuoInteger slices;
+};
 
-	VuoPoint4d* positions = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* normals = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* uvs = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* tangents = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	VuoPoint4d* bitangents = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
-	unsigned int* triangles = (unsigned int*)malloc(sizeof(unsigned int) * triangleCount);
-
-	unsigned int index = 0, t_index = 0;
-
-	for(unsigned int i = 0; i < rows; i++)
-	{
-		float y = (i/(float)(rows-1)) - .5;
-
-		for(unsigned int n = 0; n < columns; n++)
-		{
-			float x = (n/(float)(columns-1)) - .5;
-
-			positions[index] = VuoPoint4d_make( x, y, 0, 1);
-			normals[index] = VuoPoint4d_make(0,0,1,1);
-			uvs[index] = VuoPoint4d_make(x+.5, y+.5, 0, 1);
-			tangents[index] = VuoPoint4d_make(1, 0, 0, 1);
-			bitangents[index] = VuoPoint4d_make(0, 1, 0, 1);
-
-			if(n < columns-1 && i < rows-1)
-			{
-				triangles[t_index++] = index+columns;
-				triangles[t_index++] = index;
-				triangles[t_index++] = index+1;
-
-				triangles[t_index++] = index+1;
-				triangles[t_index++] = index+columns+1;
-				triangles[t_index++] = index+columns;
-			}
-
-			index++;
-		}
-	}
-
-	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
-													positions, normals, tangents, bitangents, uvs,
-													triangleCount, triangles, VuoMesh_IndividualTriangles);
-	return submesh;
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
 }
 
-void nodeEvent
+void nodeInstanceEvent
 (
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoTransform) transform,
 		VuoInputData(VuoShader) frontShader,
 		VuoInputData(VuoShader) leftShader,
@@ -83,83 +49,27 @@ void nodeEvent
 		VuoOutputData(VuoSceneObject) cube
 )
 {
-	VuoList_VuoSceneObject cubeChildObjects = VuoListCreate_VuoSceneObject();
-
-	unsigned int _rows = MAX(2, MIN(512, rows));
-	unsigned int _columns = MAX(2, MIN(512, columns));
-	unsigned int _slices = MAX(2, MIN(512, slices));
-
-	VuoMesh frontBackMesh = VuoMesh_makeFromSingleSubmesh(makePlane(_rows, _columns));
-	VuoMesh leftRightMesh = VuoMesh_makeFromSingleSubmesh(makePlane(_rows, _slices));
-	VuoMesh topBottomMesh = VuoMesh_makeFromSingleSubmesh(makePlane(_slices, _columns));
-
-	// Front Face
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (rows == (*context)->rows
+	 && columns == (*context)->columns
+	 && slices == (*context)->slices)
 	{
-		VuoSceneObject so = VuoSceneObject_make(
-					frontBackMesh,
-					frontShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+		*cube = VuoSceneObject_copy(*cube);
+
+		VuoSceneObject_setTransform(*cube, transform);
+
+		VuoSceneObject *objects = VuoListGetData_VuoSceneObject(VuoSceneObject_getChildObjects(*cube));
+		VuoShader shaders[6] = {frontShader, leftShader, rightShader, backShader, topShader, bottomShader};
+		for (int i = 0; i < 6; ++i)
+			VuoSceneObject_setShader(objects[i], VuoShader_make_VuoShader(shaders[i]));
+
+		return;
 	}
 
-	// Left Face
-	{
-		VuoSceneObject so = VuoSceneObject_make(
-					leftRightMesh,
-					leftShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
-	}
+	*cube = VuoSceneObject_makeCubeMulti(transform, columns, rows, slices, frontShader, leftShader, rightShader, backShader, topShader, bottomShader);
+	VuoSceneObject_setName(*cube, VuoText_make("Cube"));
 
-	// Right Face
-	{
-		VuoSceneObject so = VuoSceneObject_make(
-					leftRightMesh,
-					rightShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
-	}
-
-	// Back Face
-	{
-		VuoSceneObject so = VuoSceneObject_make(
-					frontBackMesh,
-					backShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
-	}
-
-	// Top Face
-	{
-		VuoSceneObject so = VuoSceneObject_make(
-					topBottomMesh,
-					topShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
-	}
-
-	// Bottom Face
-	{
-		VuoSceneObject so = VuoSceneObject_make(
-					topBottomMesh,
-					bottomShader,
-					VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
-					NULL
-					);
-		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
-	}
-
-	*cube = VuoSceneObject_make(NULL, NULL, transform, cubeChildObjects);
-	cube->name = VuoText_make("Cube");
-	cube->type = VuoSceneObjectSubType_Group;
+	(*context)->rows = rows;
+	(*context)->columns = columns;
+	(*context)->slices = slices;
 }

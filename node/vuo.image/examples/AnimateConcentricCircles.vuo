@@ -2,19 +2,20 @@
  * @file
  * This composition uses a [shadertoy](https://www.shadertoy.com/) shader to render an  effect of moving concentric colored circles on an image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-ImageWithShadertoy [type="vuo.image.make.shadertoy" version="2.0.1" label="Image with Shadertoy|<refresh>refresh\l|<fragmentShader>fragmentShader\l|<GlobalTime>GlobalTime\l|<Channel0>Channel0\l|<Channel1>Channel1\l|<Channel2>Channel2\l|<Channel3>Channel3\l|<width>width\l|<height>height\l|<mousePosition>mousePosition\l|<mouseIsPressed>mouseIsPressed\l|<shaderImage>shaderImage\r" pos="345,210" fillcolor="violet" _fragmentShader="\"void main(void)\\n{\\n\\tvec2 uv = gl_FragCoord.xy \\/ iResolution.xy;\\n\\tuv -= vec2(.5,.5);\\n\\tfloat aspect = iResolution.x\\/iResolution.y;\\n\\tuv.x *= aspect;\\n\\n\\tfloat ringColor[3];\\n\\tfor (int i=0; i\<3; ++i)\\n\\t{\\n\\t\\tvec2 center = vec2(\\n\\t\\tcos(iGlobalTime\\/4. +float(i*20)  )\\/2.,\\n\\t\\tsin(iGlobalTime\\/4.3+float(i*20) + 100.)\\/2.);\\n\\n\\t\\tfloat dist = distance(uv,center);\\n\\t\\tfloat frequency = (sin(iGlobalTime\\/4.7+float(i*3))\\/2.+.6)*32.;\\n\\t\\tfloat sdist = sin(dist*frequency + 3.14\\/2.);\\n\\t\\tfloat delta = fwidth(sdist);\\n\\t\\tfloat pulseWidth = sin(iGlobalTime\\/5.+float(i*13))\\/1.01;\\n\\t\\tringColor[i] = smoothstep(sdist-delta,sdist,pulseWidth);\\n\\t}\\n\\n\\tgl_FragColor = vec4(\\n\\t\\tringColor[0],\\n\\t\\tringColor[1],\\n\\t\\tringColor[2],\\n\\t1);\\n}\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<height>height\r|<width>width\r|<time>time\r" _height_type="VuoInteger" _width_type="VuoInteger" _time_type="VuoReal"];
+MakeImageWithShadertoy [type="vuo.image.make.shadertoy2" version="3.0.0" label="Make Image with Shadertoy|<refresh>refresh\l|<fragmentShader>fragmentShader\l|<time>time\l|<channel0>channel0\l|<channel1>channel1\l|<channel2>channel2\l|<channel3>channel3\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<mousePosition>mousePosition\l|<mouseIsPressed>mouseIsPressed\l|<shaderImage>shaderImage\r" pos="435,105" fillcolor="orange" _fragmentShader="\"void mainImage(out vec4 fragColor, vec2 fragCoord)\\n\{\\n\\tvec2 uv = fragCoord \\/ iResolution.xy;\\n\\tuv -= vec2(.5,.5);\\n\\tfloat aspect = iResolution.x\\/iResolution.y;\\n\\tuv.x *= aspect;\\n\\n\\tfloat ringColor[3];\\n\\tfor (int i=0; i\<3; ++i)\\n\\t\{\\n\\t\\tvec2 center = vec2(\\n\\t\\t\\tcos(iTime\\/4. +float(i*20) \ )\\/2.,\\n\\t\\t\\tsin(iTime\\/4.3+float(i*20) + 100.)\\/2.);\\n\\n\\t\\tfloat dist = distance(uv,center);\\n\\t\\tfloat frequency = (sin(iTime\\/4.7+float(i*3))\\/2.+.6)*32.;\\n\\t\\tfloat sdist = sin(dist*frequency + 3.14\\/2.);\\n\\t\\tfloat delta = fwidth(sdist);\\n\\t\\tfloat pulseWidth = sin(iTime\\/5.+float(i*13))\\/1.01;\\n\\t\\tringColor[i] = smoothstep(sdist-delta,sdist,pulseWidth);\\n\\t\}\\n\\n\\tfragColor = vec4(\\n\\t\\tringColor[0],\\n\\t\\tringColor[1],\\n\\t\\tringColor[2],\\n\\t\\t1);\\n\}\"" _colorDepth="\"8bpc\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<height>height\r|<width>width\r|<time>time\r" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedStep="32" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedStep="32" _time_type="VuoReal"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-PublishedInputs:height -> ImageWithShadertoy:height;
-PublishedInputs:width -> ImageWithShadertoy:width;
-PublishedInputs:time -> ImageWithShadertoy:GlobalTime;
-ImageWithShadertoy:shaderImage -> PublishedOutputs:outputImage;
+MakeImageWithShadertoy:shaderImage -> PublishedOutputs:outputImage;
+PublishedInputs:height -> MakeImageWithShadertoy:height;
+PublishedInputs:time -> MakeImageWithShadertoy:time;
+PublishedInputs:width -> MakeImageWithShadertoy:width;
 }

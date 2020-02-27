@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="165,60" _separator="\"\\n\""];
+MakeList7 [type="vuo.list.make.7.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<list>list\r" pos="116,71"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,90" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,165"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,180"];
+SummarizeValue3 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="225,195"];
+SummarizeValue4 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,210"];
+SummarizeValue5 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,225"];
+SummarizeValue6 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,240"];
+SummarizeValue7 [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="210,255"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r|<color0>color0\r|<color1>color1\r|<color2>color2\r|<color3>color3\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal" _color0_type="VuoColor" _color1_type="VuoColor" _color2_type="VuoColor" _color3_type="VuoColor"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+AppendTexts:compositeText -> MakeTextImage:text;
+MakeList7:list -> AppendTexts:texts;
+MakeTextImage:image -> PublishedOutputs:outputImage;
+PublishedInputs:color0 -> SummarizeValue4:value;
+PublishedInputs:color1 -> SummarizeValue5:value;
+PublishedInputs:color2 -> SummarizeValue6:value;
+PublishedInputs:color3 -> SummarizeValue7:value;
+PublishedInputs:height -> SummarizeValue2:value;
+PublishedInputs:time -> SummarizeValue3:value;
+PublishedInputs:width -> SummarizeValue:value;
+SummarizeValue2:summary -> MakeList7:2;
+SummarizeValue3:summary -> MakeList7:3;
+SummarizeValue4:summary -> MakeList7:4;
+SummarizeValue5:summary -> MakeList7:5;
+SummarizeValue6:summary -> MakeList7:6;
+SummarizeValue7:summary -> MakeList7:7;
+SummarizeValue:summary -> MakeList7:1;
+}

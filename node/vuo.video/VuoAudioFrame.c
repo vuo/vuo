@@ -2,14 +2,11 @@
  * @file
  * VuoAudioFrame implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoAudioFrame.h"
 
@@ -41,20 +38,11 @@ VuoModuleMetadata({
  */
 VuoAudioFrame VuoAudioFrame_makeFromJson(json_object *js)
 {
-	VuoAudioFrame value = {NULL, 0.0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "channels", &o))
-		value.channels = VuoList_VuoAudioSamples_makeFromJson(o);
-	else
-		value.channels = NULL;
-
-	if (json_object_object_get_ex(js, "timestamp", &o))
-		value.timestamp = VuoReal_makeFromJson(o);
-	else
-		value.timestamp = 0.0;
-
-	return value;
+	return (VuoAudioFrame){
+		VuoJson_getObjectValue(VuoList_VuoAudioSamples, js, "channels",  NULL),
+		VuoJson_getObjectValue(VuoReal,                 js, "timestamp", 0),
+		""
+	};
 }
 
 /**
@@ -78,7 +66,7 @@ json_object * VuoAudioFrame_getJson(const VuoAudioFrame value)
  */
 char * VuoAudioFrame_getSummary(const VuoAudioFrame value)
 {
-	return VuoText_format("%s<br />Timestamp: %f", VuoList_VuoAudioSamples_getSummary(value.channels), value.timestamp );
+	return VuoText_format("%s<br />Timestamp: <tt>%.3f</tt> seconds", VuoList_VuoAudioSamples_getSummary(value.channels), value.timestamp );
 }
 
 /**
@@ -88,4 +76,13 @@ bool VuoAudioFrame_areEqual(VuoAudioFrame value1, VuoAudioFrame value2)
 {
 	// Maybe this should just check image?
 	return abs(value1.timestamp - value2.timestamp) < .001;
+}
+
+/**
+ * Returns true if the timestamp of `a` is less than the timestamp of `b`.
+ * @version200New
+ */
+bool VuoAudioFrame_isLessThan(const VuoAudioFrame a, const VuoAudioFrame b)
+{
+	return a.timestamp < b.timestamp;
 }

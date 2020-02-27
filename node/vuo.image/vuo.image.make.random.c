@@ -2,9 +2,9 @@
  * @file
  * vuo.image.make.random node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,14 +16,14 @@ VuoModuleMetadata({
 					  "keywords" : [ "noise", "snow", "static" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "ShowRandomImage.vuo" ]
+						  "exampleCompositions" : [ "MakeRandomImagePattern.vuo" ]
 					  }
 				 });
 
 static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslRandom)
+	\n#include "VuoGlslRandom.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform vec4 colorA;
 	uniform vec4 colorB;
@@ -32,7 +32,7 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		vec2 noiseCoordinate = fragmentTextureCoordinate.xy;
+		vec2 noiseCoordinate = fragmentTextureCoordinate;
 		noiseCoordinate.x += seed;
 		float intensity = VuoGlsl_random2D1D(noiseCoordinate);
 		gl_FragColor = mix(colorA, colorB, intensity);

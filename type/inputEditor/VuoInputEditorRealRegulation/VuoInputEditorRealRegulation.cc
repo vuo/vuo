@@ -2,13 +2,12 @@
  * @file
  * VuoInputEditorRealRegulation implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorRealRegulation.hh"
-#include "VuoInputEditorIcon.hh"
 
 extern "C"
 {
@@ -46,7 +45,7 @@ QLayout *VuoInputEditorRealRegulation::setUpRow(QDialog &dialog, QLineEdit *line
 		lineEdit->setFixedWidth(50);
 
 		QLabel *label = new QLabel(&dialog);
-		label->setText("seconds");
+		label->setText(tr("seconds"));
 		label->setFont(getDefaultFont());
 		if (row != 4)
 			label->setStyleSheet("QLabel { color: transparent; }");

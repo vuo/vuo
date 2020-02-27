@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="330,150"];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="-150,180"];
+MakeList [type="vuo.list.make.5.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="297,161" _1="0.10000000000000001" _2="3.7999999999999998" _5="-0.20000000000000001"];
+MeasureLength [type="vuo.point.length.VuoPoint2d" version="1.0.0" label="Measure Length|<refresh>refresh\l|<point>point\l|<length>length\r" pos="75,255"];
+ReceiveMouseScrolls [type="vuo.mouse.scroll2" version="2.0.0" label="Receive Mouse Scrolls|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<scrolled>scrolled\r" pos="-165,240" _modifierKey="\"any\"" _scrolled_eventThrottling="drop"];
+ShareValue [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="630,150"];
+
+Add:sum -> ShareValue:value;
+CalculateLoudness:loudness -> MakeList:3;
+MakeList:list -> Add:values;
+MeasureLength:length -> MakeList:4;
+ReceiveMouseScrolls:scrolled -> MeasureLength:point;
+}

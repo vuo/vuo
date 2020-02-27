@@ -1,0 +1,15 @@
+/**
+ * @file
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="30,30"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r|<duration>duration\r|<framerate>framerate\r|<frameNumber>frameNumber\r|<quality>quality\r" _time_type="VuoReal" _width_type="VuoInteger" _height_type="VuoInteger" _duration_type="VuoReal" _framerate_type="VuoReal" _frameNumber_type="VuoInteger" _quality_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+PublishedInputs:time -> AllowFirstEvent:event;
+}

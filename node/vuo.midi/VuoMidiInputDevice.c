@@ -2,14 +2,11 @@
  * @file
  * VuoMidiInputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoMidiInputDevice.h"
 
@@ -40,18 +37,10 @@ VuoModuleMetadata({
  */
 VuoMidiInputDevice VuoMidiInputDevice_makeFromJson(json_object * js)
 {
-	VuoMidiInputDevice md = {-1,""};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "id", &o))
-		md.id = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "name", &o))
-		md.name = VuoText_makeFromJson(o);
-	else
-		md.name = VuoText_make("");
-
-	return md;
+	return (VuoMidiInputDevice){
+		VuoJson_getObjectValue(VuoInteger, js, "id",   -1),
+		VuoJson_getObjectValue(VuoText,    js, "name", NULL),
+		""};
 }
 
 /**
@@ -61,11 +50,17 @@ json_object * VuoMidiInputDevice_getJson(const VuoMidiInputDevice md)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_getJson(md.id);
-	json_object_object_add(js, "id", idObject);
+	if (md.id > 0)
+	{
+		json_object *idObject = VuoInteger_getJson(md.id);
+		json_object_object_add(js, "id", idObject);
+	}
 
-	json_object *nameObject = VuoText_getJson(md.name);
-	json_object_object_add(js, "name", nameObject);
+	if (md.name)
+	{
+		json_object *nameObject = VuoText_getJson(md.name);
+		json_object_object_add(js, "name", nameObject);
+	}
 
 	return js;
 }
@@ -92,4 +87,13 @@ bool VuoMidiInputDevice_areEqual(const VuoMidiInputDevice value1, const VuoMidiI
 {
 	return value1.id == value2.id
 		&& VuoText_areEqual(value1.name, value2.name);
+}
+
+/**
+ * Returns true if the id of `a` is less than the id of `b`.
+ * @version200New
+ */
+bool VuoMidiInputDevice_isLessThan(const VuoMidiInputDevice a, const VuoMidiInputDevice b)
+{
+	return a.id < b.id;
 }

@@ -2,9 +2,9 @@
  * @file
  * vuo.audio.file.play node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -25,7 +25,6 @@ VuoModuleMetadata({
 						  "VuoAudioFile"
 					  ],
 					  "node" : {
-						  "isInterface" : true,
 						  "exampleCompositions" : [ "PlayAudioFile.vuo" ]
 					  }
 				 });
@@ -34,6 +33,7 @@ struct nodeInstanceData
 {
 	VuoAudioFile af;
 	VuoText url;
+	bool triggersEnabled;
 };
 
 struct nodeInstanceData *nodeInstanceInit
@@ -64,6 +64,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(finishedPlayback, void)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoAudioFile_enableTriggers((*context)->af, decodedChannels, finishedPlayback);
 }
 
@@ -75,18 +76,21 @@ void nodeInstanceTriggerUpdate( VuoInputData(VuoLoopType, {"default":"none", "in
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoText, {"name":"URL"}) url,
-		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
 		VuoInputEvent({"eventBlocking":"none"}) play,
 		VuoInputEvent({"eventBlocking":"none"}) pause,
-		VuoInputData(VuoLoopType, {"default":"none", "includeValues":["none","loop"]}) loop,
 		VuoInputData(VuoReal, {"default":""}) setTime,
 		VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
+		VuoInputData(VuoText, {"name":"URL"}) url,
+		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
+		VuoInputData(VuoLoopType, {"default":"none", "includeValues":["none","loop"]}) loop,
 		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"}),
 		VuoOutputTrigger(finishedPlayback, void),
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (urlEvent || !VuoText_areEqual((*context)->url, url))
 	{
 		bool wasPlaying = VuoAudioFile_isPlaying((*context)->af);
@@ -126,6 +130,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoAudioFile_disableTriggers((*context)->af);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini(

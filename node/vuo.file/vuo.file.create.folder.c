@@ -2,9 +2,9 @@
  * @file
  * vuo.file.create.folder node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <errno.h>
@@ -69,7 +69,10 @@ void nodeEvent
 	for (unsigned long i = count; i >= 1; --i)
 	{
 		VuoText currFolder = VuoListGetValue_VuoText(foldersToCreate, i);
-		int ret = mkdir(currFolder, 0700);
+
+		// `mkdir` ANDs the mode with the process's umask,
+		// so by default the created directory's mode will end up being 0755.
+		int ret = mkdir(currFolder, 0777);
 		if (ret)
 		{
 			VUserLog("Error: Couldn't create folder '%s' : %s", currFolder, strerror(errno));

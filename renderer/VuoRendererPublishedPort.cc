@@ -2,23 +2,15 @@
  * @file
  * VuoRendererPublishedPort implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include "VuoPortClass.hh"
-#include "VuoGenericType.hh"
-#include "VuoCompilerInputDataClass.hh"
-#include "VuoCompilerInputEventPortClass.hh"
-#include "VuoCompilerOutputDataClass.hh"
-#include "VuoCompilerOutputEventPortClass.hh"
-#include "VuoCompilerPublishedPort.hh"
-#include "VuoCompilerPort.hh"
-#include "VuoCompilerPortClass.hh"
-#include "VuoCompilerCable.hh"
 #include "VuoRendererPublishedPort.hh"
-#include "VuoRendererPort.hh"
+
+#include "VuoCable.hh"
+#include "VuoCompilerPort.hh"
 
 /**
  * Creates a renderer detail for the specified base published port.
@@ -35,6 +27,7 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
 {
 	this->compositionViewportPos = QPoint();
 	this->isActive = false;
+	this->permanent = false;
 
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
 	updateNameRect();
@@ -102,7 +95,6 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternal
 	bool isPublishedInput = !getInput();
 	return (isPublishedInput? canConnectDirectlyWithoutSpecializationTo(internalPort, eventOnlyConnection) :
 							  internalPort->canConnectDirectlyWithoutSpecializationTo(this, eventOnlyConnection));
-	return false;
 }
 
 /**
@@ -158,7 +150,6 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPor
 	bool isPublishedInput = !getInput();
 	return (isPublishedInput? canConnectDirectlyWithSpecializationTo(internalPort, eventOnlyConnection, portToSpecialize, specializedTypeName) :
 								   internalPort->canConnectDirectlyWithSpecializationTo(this, eventOnlyConnection, portToSpecialize, specializedTypeName));
-	return false;
 }
 
 /**
@@ -235,6 +226,22 @@ void VuoRendererPublishedPort::setCurrentlyActive(bool active)
 bool VuoRendererPublishedPort::getCurrentlyActive()
 {
 	return this->isActive;
+}
+
+/**
+ * Sets whether this published port is intended to be permanently affixed to the composition (un-deletable and un-renamable).
+ */
+void VuoRendererPublishedPort::setPermanent(bool permanent)
+{
+	this->permanent = permanent;
+}
+
+/**
+ * Returns true if this published port is intended to be permanent affixed to the composition (un-deletable and un-renamable).
+ */
+bool VuoRendererPublishedPort::isPermanent(void)
+{
+	return permanent;
 }
 
 /**

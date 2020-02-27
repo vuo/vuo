@@ -2,14 +2,11 @@
  * @file
  * VuoRealRegulation implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoRealRegulation.h"
 
@@ -43,27 +40,13 @@ VuoModuleMetadata({
  */
 VuoRealRegulation VuoRealRegulation_makeFromJson(json_object * js)
 {
-	VuoRealRegulation value = {"",0,0,0,0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-	else
-		value.name = VuoText_make("");
-
-	if (json_object_object_get_ex(js, "minimumValue", &o))
-		value.minimumValue = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "maximumValue", &o))
-		value.maximumValue = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "defaultValue", &o))
-		value.defaultValue = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "smoothDuration", &o))
-		value.smoothDuration = VuoReal_makeFromJson(o);
-
-	return value;
+	return (VuoRealRegulation){
+		VuoJson_getObjectValue(VuoText, js, "name",           NULL),
+		VuoJson_getObjectValue(VuoReal, js, "minimumValue",   0),
+		VuoJson_getObjectValue(VuoReal, js, "maximumValue",   0),
+		VuoJson_getObjectValue(VuoReal, js, "defaultValue",   0),
+		VuoJson_getObjectValue(VuoReal, js, "smoothDuration", 0)
+	};
 }
 
 /**

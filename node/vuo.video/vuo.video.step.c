@@ -2,9 +2,9 @@
  * @file
  * vuo.video.step node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -56,6 +56,7 @@ static void setMovie(struct nodeInstanceData *context, VuoText url)
 		VuoRelease(context->player);
 
 	context->player = VuoVideo_make(url, VuoVideoOptimization_Random);
+	VuoVideo_setPlaybackRate(context->player, FORWARD_PLAYBACK_RATE);
 	context->forward = true;
 	if(context->image != NULL) { VuoRelease(context->image); context->image = NULL; }
 	context->timestamp = VuoVideoFrame_NoTimestamp;
@@ -81,12 +82,12 @@ struct nodeInstanceData * nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoText, {"name":"URL"}) url,
-		VuoInputEvent({"eventBlocking":"wall", "data":"url", "hasPortAction":true}) urlEvent,
 		VuoInputEvent({"name":"Go Forward","eventBlocking":"none"}) next,
 		VuoInputEvent({"name":"Go Backward","eventBlocking":"none"}) previous,
 		VuoInputData(VuoReal, {"default":0}) setTime,
 		VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
+		VuoInputData(VuoText, {"name":"URL"}) url,
+		VuoInputEvent({"eventBlocking":"wall", "data":"url", "hasPortAction":true}) urlEvent,
 		VuoInputData(VuoLoopType, {"default":"none", "includeValues":["none","loop"]}) loop,
 		VuoOutputData(VuoVideoFrame) videoFrame
 )
@@ -111,7 +112,8 @@ void nodeInstanceEvent
 												loop,
 												NULL);
 
-		VuoVideo_seekToSecond( (*context)->player, t);
+		if (!VuoVideo_seekToSecond( (*context)->player, t))
+			VUserLog("Error: Couldn't seek.");
 
 		if(VuoVideo_getCurrentVideoFrame((*context)->player, videoFrame))
 		{
@@ -153,12 +155,16 @@ void nodeInstanceEvent
 				// grab duration from VuoVideo instead of caching it on setUrl because it can change during playback as
 				// more accurate values are gathered
 				VuoReal duration = VuoVideo_getDuration((*context)->player);
-				VuoVideo_seekToSecond((*context)->player, (*context)->forward ? 0 : duration);
-				VuoVideo_getCurrentVideoFrame((*context)->player, videoFrame);
+				if (!VuoVideo_seekToSecond((*context)->player, (*context)->forward ? 0 : duration))
+					VUserLog("Error: Couldn't seek.");
+
+				if (!VuoVideo_getCurrentVideoFrame((*context)->player, videoFrame))
+					VUserLog("Error: Couldn't get current video frame.");
 			}
 			else
 			{
-				VuoVideo_getFrameAtSecond((*context)->player, (*context)->forward ? VuoVideo_getDuration((*context)->player) : 0, videoFrame);
+				if (!VuoVideo_getFrameAtSecond((*context)->player, (*context)->forward ? VuoVideo_getDuration((*context)->player) : 0, videoFrame))
+					VUserLog("Error: Couldn't get video frame.");
 			}
 
 			break;

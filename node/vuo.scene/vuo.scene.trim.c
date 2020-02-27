@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.trim node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -28,26 +28,23 @@ VuoModuleMetadata({
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
-	attribute vec4 position;
-	attribute vec4 normal;
-	attribute vec4 tangent;
-	attribute vec4 bitangent;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec2 textureCoordinate;
+	attribute vec4 vertexColor;
 
 	// Outputs
-	varying vec4 geometryPosition;
-	varying vec4 geometryNormal;
-	varying vec4 geometryTangent;
-	varying vec4 geometryBitangent;
-	varying vec4 geometryTextureCoordinate;
+	varying vec3 geometryPosition;
+	varying vec3 geometryNormal;
+	varying vec2 geometryTextureCoordinate;
+	varying vec4 geometryVertexColor;
 
 	void main()
 	{
 		geometryPosition = position;
 		geometryNormal = normal;
-		geometryTangent = tangent;
-		geometryBitangent = bitangent;
 		geometryTextureCoordinate = textureCoordinate;
+		geometryVertexColor = vertexColor;
 
 		// Older systems (e.g., NVIDIA GeForce 9400M on Mac OS 10.6)
 		// fall back to the software renderer if gl_Position is not initialized.
@@ -57,11 +54,10 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
-	varying in vec4 geometryPosition[3];
-	varying in vec4 geometryNormal[3];
-	varying in vec4 geometryTangent[3];
-	varying in vec4 geometryBitangent[3];
-	varying in vec4 geometryTextureCoordinate[3];
+	varying in vec3 geometryPosition[3];
+	varying in vec3 geometryNormal[3];
+	varying in vec2 geometryTextureCoordinate[3];
+	varying in vec4 geometryVertexColor[3];
 	uniform mat4 modelviewMatrix;
 	uniform float left;
 	uniform float right;
@@ -71,18 +67,17 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float back;
 
 	// Outputs
-	varying out vec4 outPosition;
-	varying out vec4 outNormal;
-	varying out vec4 outTangent;
-	varying out vec4 outBitangent;
-	varying out vec4 outTextureCoordinate;
+	varying out vec3 outPosition;
+	varying out vec3 outNormal;
+	varying out vec2 outTextureCoordinate;
+	varying out vec4 outVertexColor;
 
 	void main()
 	{
 		for (int i = 0; i < gl_VerticesIn; ++i)
 		{
 			// Transform into worldspace.
-			vec4 positionInScene = modelviewMatrix * geometryPosition[i];
+			vec3 positionInScene = (modelviewMatrix * vec4(geometryPosition[i], 1.)).xyz;
 
 			if (positionInScene.x < left  || positionInScene.x > right
 			 || positionInScene.y > top   || positionInScene.y < bottom
@@ -94,9 +89,8 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		{
 			outPosition = geometryPosition[i];
 			outNormal = geometryNormal[i];
-			outTangent = geometryTangent[i];
-			outBitangent = geometryBitangent[i];
 			outTextureCoordinate = geometryTextureCoordinate[i];
+			outVertexColor = geometryVertexColor[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -142,16 +136,38 @@ void nodeInstanceEvent
 		VuoOutputData(VuoSceneObject) trimmedObject
 )
 {
+	double left   = center.x - width  / 2;
+	double right  = center.x + width  / 2;
+	double top    = center.y + height / 2;
+	double bottom = center.y - height / 2;
+	double front  = center.z + depth  / 2;
+	double back   = center.z - depth  / 2;
+
 	// Feed parameters to the shader.
-	VuoShader_setUniform_VuoReal((*instance)->shader, "left",   center.x-width/2);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "right",  center.x+width/2);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "top",    center.y+height/2);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "bottom", center.y-height/2);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "front",  center.z+depth/2);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "back",   center.z-depth/2);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "left",   left);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "right",  right);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "top",    top);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "bottom", bottom);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "front",  front);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "back",   back);
 
 	// Render.
-	*trimmedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*trimmedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object,
+		^(float *modelMatrix, float *modelMatrixInverse, int *vertexCount, float *positions, float *normals, float *textureCoordinates, float *colors) {
+			for (int i = 0; i < *vertexCount; ++i)
+			{
+				// Transform into worldspace.
+				VuoPoint3d positionInScene = VuoTransform_transformPoint(modelMatrix, VuoPoint3d_makeFromArray(&positions[i * 3]));
+
+				if (positionInScene.x < left  || positionInScene.x > right
+				 || positionInScene.y > top   || positionInScene.y < bottom
+				 || positionInScene.z > front || positionInScene.z < back)
+				{
+					*vertexCount = 0;
+					return;
+				}
+			}
+		});
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

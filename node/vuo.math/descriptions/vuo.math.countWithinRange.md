@@ -13,4 +13,4 @@ When the composition starts or this node is added to a running composition, the 
 
 If an event reaches both the `Set Count` port and the `Increment` or `Decrement` port, the count is set, and the increment or decrement is ignored. After the count is set, wrapping is applied. 
 
-For the Integer type, the minimum and maximum are inclusive (a closed interval) — when incrementing and wrapping, the output value can become exactly the maximum followed by exactly the minimum.  But for the Real type, the minimum and maximum are exclusive (a half-closed interval) — when incrementing, the output value can become exactly the maximum, but cannot become exactly the minimum.
+For the Integer type, the minimum and maximum are inclusive (a closed interval) — when incrementing and wrapping, the output value can become exactly the maximum followed by exactly the minimum.  But for the Real type, the minimum is inclusive and maximum is exclusive (a half-closed interval) — the output value can become exactly the minimum, but cannot become exactly the maximum.

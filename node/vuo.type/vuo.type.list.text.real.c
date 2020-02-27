@@ -2,9 +2,9 @@
  * @file
  * vuo.type.list.text.real node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert Text List to Real List",
-					  "description": "Outputs a list containing real numbers representing the input list's text numbers.  See `Convert Text to Real` for info on how the text is interpreted.",
+					  "description": "Outputs a list containing real numbers representing the input list's text numbers.  See [Convert Text to Real](vuo-node://vuo.type.text.real) for info on how the text is interpreted.",
 					  "version": "1.0.0"
 				 });
 

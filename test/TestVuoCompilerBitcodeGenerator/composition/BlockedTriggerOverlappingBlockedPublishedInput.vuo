@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="120,90" _seconds="1.0" _fired_eventThrottling="drop"];
+HoldValue [type="vuo.data.hold2.VuoText" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="375,30"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Folder>Folder\r" _Folder_type="VuoText" _Folder="\"\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<HeldValue>HeldValue\l" _HeldValue_type="VuoText"];
+
+FirePeriodically:fired -> HoldValue:value [event=true];
+HoldValue:heldValue -> PublishedOutputs:HeldValue;
+PublishedInputs:Folder -> HoldValue:value;
+}

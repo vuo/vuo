@@ -2,9 +2,9 @@
  * @file
  * TestVuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -17,6 +17,7 @@ extern "C" {
 }
 
 // Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(VuoMultisample);
 Q_DECLARE_METATYPE(VuoPoint3d);
 Q_DECLARE_METATYPE(VuoSceneObject);
 
@@ -38,7 +39,7 @@ class TestVuoSceneObject : public QObject
 			VuoShader_makeDefaultShader(),
 			VuoShader_makeDefaultShader(),
 			VuoShader_makeDefaultShader()));
-		VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), childObjects);
+		VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(childObjects, VuoTransform_makeIdentity());
 		return rootSceneObject;
 	}
 
@@ -56,7 +57,7 @@ class TestVuoSceneObject : public QObject
 											   false,		// close v
 											   0, 1,
 											   NULL);
-		return VuoSceneObject_make(m, VuoShader_makeDefaultShader(), VuoTransform_makeIdentity(), NULL);
+		return VuoSceneObject_makeMesh(m, VuoShader_makeDefaultShader(), VuoTransform_makeIdentity());
 	}
 
 private slots:
@@ -68,19 +69,17 @@ private slots:
 		QTest::addColumn<QString>("json");
 
 		QTest::newRow("emptystring")	<< VuoSceneObject_makeFromString("")
-										<< "object named \"\"<br>0 vertices, 0 elements<br><br>identity transform (no change)<br><br>0 child objects"
-										<< QUOTE({"type":"empty","transform":"identity"});
+										<< "no object"
+										<< QUOTE(null);
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeQuad(),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
-			o.name = VuoText_make("quad");
+						VuoTransform_makeIdentity());
+			VuoSceneObject_setName(o, VuoText_make("quad"));
 			QTest::newRow("quad")		<< o
-										<< "object named \"quad\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+										<< "<div>object named \"quad\"</div><div>4 vertices, 6 elements</div><div>identity transform (no change)</div><div>id 0</div><div>0 child objects</div><div>shaders:<ul><li>Default Shader (Checkerboard)</li></ul></div>"
 										<< "";	// Don't test serialization since it includes object pointers.
 		}
 
@@ -88,71 +87,50 @@ private slots:
 			VuoImage image = VuoImage_make(42,0,640,480);
 			VuoShader s = VuoShader_makeUnlitImageShader(image, 1);
 
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeQuad(),
 						s,
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 
 			QTest::newRow("quad image")	<< o
-										<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Image Shader (Unlit)</li></ul>"
+										<< "<div>object named \"\"</div><div>4 vertices, 6 elements</div><div>identity transform (no change)</div><div>id 0</div><div>0 child objects</div><div>shaders:<ul><li>Image Shader (Unlit)</li></ul></div>"
 										<< "";	// Don't test serialization since it includes object pointers.
 		}
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeQuad(),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 
 			// Create parent of VuoSceneObject o.
 			VuoList_VuoSceneObject o2ChildObjects = VuoListCreate_VuoSceneObject();
 			VuoListAppendValue_VuoSceneObject(o2ChildObjects, o);
-			VuoSceneObject o2 = VuoSceneObject_make(
-						VuoMesh_makeQuad(),
-						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						o2ChildObjects
-					);
+			VuoSceneObject o2 = VuoSceneObject_makeGroup(o2ChildObjects, VuoTransform_makeIdentity());
 
-			QTest::newRow("quad quad")	<< o2
-										<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>1 descendant<br><br>total, including descendants:<br>8 vertices, 12 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+			QTest::newRow("quad in group") << o2
+										<< "<div>object named \"\"</div><div>0 vertices, 0 elements</div><div>identity transform (no change)</div><div>id 0</div><div>1 child object</div><div>1 descendant</div><div>total, including descendants:</div><div>4 vertices, 6 elements</div><div>shaders:<ul><li>Default Shader (Checkerboard)</li></ul></div>"
 										<< "";	// Don't test serialization since it includes object pointers.
 		}
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeQuad(),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 
 			// Create parent of VuoSceneObject o.
 			VuoList_VuoSceneObject o2ChildObjects = VuoListCreate_VuoSceneObject();
 			VuoListAppendValue_VuoSceneObject(o2ChildObjects, o);
-			VuoSceneObject o2 = VuoSceneObject_make(
-						VuoMesh_makeQuad(),
-						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						o2ChildObjects
-					);
+			VuoSceneObject o2 = VuoSceneObject_makeGroup(o2ChildObjects, VuoTransform_makeIdentity());
 
 			// Create parent of VuoSceneObject o2.
 			VuoList_VuoSceneObject o3ChildObjects = VuoListCreate_VuoSceneObject();
 			VuoListAppendValue_VuoSceneObject(o3ChildObjects, o2);
-			VuoSceneObject o3 = VuoSceneObject_make(
-						VuoMesh_makeQuad(),
-						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						o3ChildObjects
-					);
+			VuoSceneObject o3 = VuoSceneObject_makeGroup(o3ChildObjects, VuoTransform_makeIdentity());
 
-			QTest::newRow("quad quad quad")	<< o3
-											<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>2 descendants<br><br>total, including descendants:<br>12 vertices, 18 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+			QTest::newRow("quad in group in group") << o3
+											<< "<div>object named \"\"</div><div>0 vertices, 0 elements</div><div>identity transform (no change)</div><div>id 0</div><div>1 child object</div><div>2 descendants</div><div>total, including descendants:</div><div>4 vertices, 6 elements</div><div>shaders:<ul><li>Default Shader (Checkerboard)</li></ul></div>"
 											<< "";	// Don't test serialization since it includes object pointers.
 		}
 
@@ -163,14 +141,14 @@ private slots:
 						VuoPoint3d_make(1,1,1)
 					);
 			VuoSceneObject o = VuoSceneObject_makePerspectiveCamera(
-						"vuocam",
+						VuoText_make("vuocam"),
 						transform,
 						42.0,
 						1.0,
 						20.0
 					);
 			QTest::newRow("perspective camera")		<< o
-													<< "camera-perspective named \"vuocam\"<br>at (42, 43, 44)<br>rotated (-0, 28.6479, 57.2958)<br>42° field of view<br>shows objects between depth 1 and 20"
+													<< "<div>camera-perspective named \"vuocam\"</div><div>at (42, 43, 44)</div><div>rotated (-0, 28.6479, 57.2958)</div><div>42° field of view</div><div>shows objects between depth 1 and 20</div>"
 													<< "{\"type\":\"camera-perspective\",\"cameraDistanceMin\":1,\"cameraDistanceMax\":20,\"cameraFieldOfView\":42,\"name\":\"vuocam\",\"transform\":{\"translation\":[42,43,44],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
@@ -181,14 +159,14 @@ private slots:
 						VuoPoint3d_make(0,1,0)
 					);
 			VuoSceneObject o = VuoSceneObject_makePerspectiveCamera(
-						"vuocam",
+						VuoText_make("vuocam"),
 						transform,
 						42.0,
 						1.0,
 						20.0
 					);
 			QTest::newRow("targeted perspective camera")	<< o
-															<< "camera-perspective named \"vuocam\"<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
+															<< "<div>camera-perspective named \"vuocam\"</div><div>at (42, 43, 44)</div><div>target (45, 46, 47)</div><div>42° field of view</div><div>shows objects between depth 1 and 20</div>"
 															<< QUOTE({"type":"camera-perspective","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
@@ -199,7 +177,7 @@ private slots:
 						VuoPoint3d_make(0,1,0)
 					);
 			VuoSceneObject o = VuoSceneObject_makeStereoCamera(
-						"vuocam",
+						VuoText_make("vuocam"),
 						transform,
 						42.0,
 						1.0,
@@ -208,7 +186,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("targeted stereo camera")	<< o
-													<< "camera-stereo named \"vuocam\"<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
+													<< "<div>camera-stereo named \"vuocam\"</div><div>at (42, 43, 44)</div><div>target (45, 46, 47)</div><div>42° field of view (stereoscopic)</div><div>shows objects between depth 1 and 20</div>"
 													<< QUOTE({"type":"camera-stereo","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"cameraConfocalDistance":1,"cameraIntraocularDistance":0.5,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
@@ -219,14 +197,14 @@ private slots:
 						VuoPoint3d_make(1,1,1)
 					);
 			VuoSceneObject o = VuoSceneObject_makeOrthographicCamera(
-						"vuocam ortho",
+						VuoText_make("vuocam ortho"),
 						transform,
 						2.0,
 						3.0,
 						22.0
 					);
 			QTest::newRow("orthographic camera")	<< o
-													<< "camera-orthographic named \"vuocam ortho\"<br>at (52, 53, 54)<br>rotated (-0, 28.6479, 57.2958)<br>2 unit width<br>shows objects between depth 3 and 22"
+													<< "<div>camera-orthographic named \"vuocam ortho\"</div><div>at (52, 53, 54)</div><div>rotated (-0, 28.6479, 57.2958)</div><div>2 unit width</div><div>shows objects between depth 3 and 22</div>"
 													<< "{\"type\":\"camera-orthographic\",\"cameraDistanceMin\":3,\"cameraDistanceMax\":22,\"cameraWidth\":2,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52,53,54],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
@@ -236,7 +214,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("ambient light")	<< o
-											<< "light-ambient<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5"
+											<< "<div>light-ambient</div><div>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00</div><div>brightness 0.5</div>"
 											<< QUOTE({"type":"light-ambient","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"name":"Ambient Light"});
 		}
 
@@ -249,7 +227,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("point light")	<< o
-											<< "light-point<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
+											<< "<div>light-point</div><div>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00</div><div>brightness 0.5</div><div>position (1, 2, 3)</div><div>range 2.5 units (0.5 sharpness)</div>"
 											<< QUOTE({"type":"light-point","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"name":"Point Light","transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
@@ -263,7 +241,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("spotlight")	<< o
-											<< "light-spot<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
+											<< "<div>light-spot</div><div>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00</div><div>brightness 0.5</div><div>position (1, 2, 3)</div><div>range 2.5 units (0.5 sharpness)</div><div>direction (1, 0, 0)</div><div>cone 45°</div>"
 											<< QUOTE({"type":"light-spot","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"lightCone":0.78539818525314331,"name":"Spot Light","transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
@@ -274,14 +252,14 @@ private slots:
 						VuoPoint3d_make(0,1,0)
 					);
 			VuoSceneObject o = VuoSceneObject_makeOrthographicCamera(
-						"vuocam ortho",
+						VuoText_make("vuocam ortho"),
 						transform,
 						2.0,
 						3.0,
 						22.0
 					);
 			QTest::newRow("targeted orthographic camera")	<< o
-															<< "camera-orthographic named \"vuocam ortho\"<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
+															<< "<div>camera-orthographic named \"vuocam ortho\"</div><div>at (52, 53, 54)</div><div>target (55, 56, 57)</div><div>2 unit width</div><div>shows objects between depth 3 and 22</div>"
 															<< QUOTE({"type":"camera-orthographic","cameraDistanceMin":3,"cameraDistanceMax":22,"cameraWidth":2,"name":"vuocam ortho","transform":{"translation":[52,53,54],"target":[55,56,57],"upDirection":[0,1,0]}});
 		}
 	}
@@ -294,8 +272,18 @@ private slots:
 		QCOMPARE(QString::fromUtf8(VuoSceneObject_getSummary(value)), summary);
 		if (json.length())
 		{
-			QCOMPARE(QString::fromUtf8(VuoSceneObject_getString(value)), json);
-			QCOMPARE(QString::fromUtf8(VuoSceneObject_getString(VuoSceneObject_makeFromString(json.toUtf8().data()))), json);
+			// Exclude the unique id from the serialization tests.
+			json_object *actualJson = VuoSceneObject_getJson(value);
+			if (actualJson)
+				json_object_object_del(actualJson, "id");
+			const char *actualJsonString = json_object_to_json_string_ext(actualJson, JSON_C_TO_STRING_PLAIN);
+			QCOMPARE(QString::fromUtf8(actualJsonString), json);
+
+			json_object *actualRoundtripJson = VuoSceneObject_getJson(VuoSceneObject_makeFromString(json.toUtf8().data()));
+			if (actualRoundtripJson)
+				json_object_object_del(actualRoundtripJson, "id");
+			const char *actualRoundtripJsonString = json_object_to_json_string_ext(actualRoundtripJson, JSON_C_TO_STRING_PLAIN);
+			QCOMPARE(QString::fromUtf8(actualRoundtripJsonString), json);
 		}
 	}
 
@@ -311,12 +299,10 @@ private slots:
 										<< false;
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeQuad(),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 			QTest::newRow("quad at origin")	<< o
 											<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(1,1,0)
 											<< true;
@@ -324,137 +310,127 @@ private slots:
 
 		{
 			VuoMesh m = VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL);
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						m,
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 			QTest::newRow("off-center 2x3 square at origin")	<< o
 																<< VuoPoint3d_make(2,4.5,0) << VuoPoint3d_make(2,3,0)
 																<< true;
 		}
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 			QTest::newRow("centered 2x2 square, transformed off-center")	<< o
 																			<< VuoPoint3d_make(1,2,3) << VuoPoint3d_make(2,2,0)
 																			<< true;
 		}
 
 		{
-			VuoSceneObject child = VuoSceneObject_make(
+			VuoSceneObject child0 = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						VuoListCreate_VuoSceneObject()
-					);
-
-			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
-			VuoListAppendValue_VuoSceneObject(childObjects, child);
-
-			VuoSceneObject parent = VuoSceneObject_make(
+						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
+			VuoSceneObject child1 = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						childObjects
-					);
+						VuoTransform_makeIdentity());
+			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
+			VuoListAppendValue_VuoSceneObject(childObjects, child0);
+			VuoListAppendValue_VuoSceneObject(childObjects, child1);
 
-			QTest::newRow("off-center with child")	<< parent
+			QTest::newRow("2 off-center") << VuoSceneObject_makeGroup(childObjects,
+				VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)))
 													<< VuoPoint3d_make(0.5,1.5,-1.5) << VuoPoint3d_make(3,5,3)
 													<< true;
 		}
 
 		{
-			VuoSceneObject grandchild = VuoSceneObject_make(
+			VuoSceneObject grandchildMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 
 			VuoList_VuoSceneObject grandchildObjects = VuoListCreate_VuoSceneObject();
-			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchild);
+			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchildMesh);
+			VuoSceneObject grandchildGroup = VuoSceneObject_makeGroup(grandchildObjects, VuoTransform_makeIdentity());
 
-			VuoSceneObject child = VuoSceneObject_make(
+			VuoSceneObject childMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						grandchildObjects
-					);
+						VuoTransform_makeIdentity());
 
 			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
-			VuoListAppendValue_VuoSceneObject(childObjects, child);
+			VuoListAppendValue_VuoSceneObject(childObjects, childMesh);
+			VuoListAppendValue_VuoSceneObject(childObjects, grandchildGroup);
+			VuoSceneObject childGroup = VuoSceneObject_makeGroup(childObjects, VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 
-			VuoSceneObject parent = VuoSceneObject_make(
+			VuoSceneObject parentMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						childObjects
-					);
+						VuoTransform_makeIdentity());
 
-			QTest::newRow("off-center with child and grandchild")	<< parent
+			VuoList_VuoSceneObject groupObjects = VuoListCreate_VuoSceneObject();
+			VuoListAppendValue_VuoSceneObject(groupObjects, parentMesh);
+			VuoListAppendValue_VuoSceneObject(groupObjects, childGroup);
+
+			QTest::newRow("off-center with child and grandchild") << VuoSceneObject_makeGroup(groupObjects, VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)))
 																	<< VuoPoint3d_make(0.5,1.5,0) << VuoPoint3d_make(3,5,6)
 																	<< true;
 		}
 
 		{
-			VuoSceneObject grandchild = VuoSceneObject_make(
+			VuoSceneObject grandchildMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 
 			VuoList_VuoSceneObject grandchildObjects = VuoListCreate_VuoSceneObject();
-			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchild);
+			VuoListAppendValue_VuoSceneObject(grandchildObjects, grandchildMesh);
+			VuoSceneObject grandchildGroup = VuoSceneObject_makeGroup(grandchildObjects, VuoTransform_makeIdentity());
 
-			VuoSceneObject child = VuoSceneObject_make(
+			VuoSceneObject childMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 2, 2, false, -1, 1, false, -1, 1, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
-						grandchildObjects
-					);
+						VuoTransform_makeIdentity());
 
 			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
-			VuoListAppendValue_VuoSceneObject(childObjects, child);
+			VuoListAppendValue_VuoSceneObject(childObjects, childMesh);
+			VuoListAppendValue_VuoSceneObject(childObjects, grandchildGroup);
+			VuoSceneObject childGroup = VuoSceneObject_makeGroup(childObjects, VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)));
 
-			VuoSceneObject parent = VuoSceneObject_make(
+			VuoSceneObject parentMesh = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(2,2,2)),
-						childObjects
-					);
+						VuoTransform_makeIdentity());
 
-			QTest::newRow("scaled, off-center with child and grandchild")	<< parent
+			VuoList_VuoSceneObject groupObjects = VuoListCreate_VuoSceneObject();
+			VuoListAppendValue_VuoSceneObject(groupObjects, parentMesh);
+			VuoListAppendValue_VuoSceneObject(groupObjects, childGroup);
+
+			QTest::newRow("scaled, off-center with child and grandchild") << VuoSceneObject_makeGroup(groupObjects, VuoTransform_makeEuler(VuoPoint3d_make(-1,-2,-3), VuoPoint3d_make(0,0,0), VuoPoint3d_make(2,2,2)))
 																			<< VuoPoint3d_make(2,5,3) << VuoPoint3d_make(6,10,12)
 																			<< true;
 		}
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMeshParametric_generate(0, "u", "v", "0", 4, 4, false, 1, 3, false, 3, 6, NULL),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0,0,M_PI/2), VuoPoint3d_make(1,1,1)),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0,0,M_PI/2), VuoPoint3d_make(1,1,1)));
 			QTest::newRow("2x3 square, rotated")	<< o
 													<< VuoPoint3d_make(-4.5,2,0) << VuoPoint3d_make(3,2,0)
 													<< true;
 		}
 
 		{
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						VuoMesh_makeEquilateralTriangle(),
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-						);
+						VuoTransform_makeIdentity());
 			double firstY = sin(M_PI/2)/sqrt(3);
 			double secondY = sin(M_PI/2+2*M_PI/3)/sqrt(3);
 			QTest::newRow("triangle at origin")	<< o
@@ -466,13 +442,11 @@ private slots:
 			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
-			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_Points, .01);
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, NULL, VuoMesh_Points, .01);
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						m,
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-					);
+						VuoTransform_makeIdentity());
 			QTest::newRow("points at origin")	<< o
 												<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
 												<< true;
@@ -482,13 +456,11 @@ private slots:
 			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
-			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_IndividualLines, .01);
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, NULL, VuoMesh_IndividualLines, .01);
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						m,
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-						);
+						VuoTransform_makeIdentity());
 			QTest::newRow("line at origin")	<< o
 											<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
 											<< true;
@@ -498,13 +470,11 @@ private slots:
 			VuoList_VuoPoint3d positions = VuoListCreate_VuoPoint3d();
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){-1,-1,-1});
 			VuoListAppendValue_VuoPoint3d(positions, (VuoPoint3d){1,1,1});
-			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, VuoMesh_LineStrip, .01);
-			VuoSceneObject o = VuoSceneObject_make(
+			VuoMesh m = VuoMesh_make_VuoPoint3d(positions, NULL, VuoMesh_LineStrip, .01);
+			VuoSceneObject o = VuoSceneObject_makeMesh(
 						m,
 						VuoShader_makeDefaultShader(),
-						VuoTransform_makeIdentity(),
-						VuoListCreate_VuoSceneObject()
-						);
+						VuoTransform_makeIdentity());
 			QTest::newRow("line strip at origin")	<< o
 													<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(2,2,2)
 													<< true;
@@ -532,7 +502,7 @@ private slots:
 
 		// Ensure the flattened scene's bounds match the expected bounds.
 		{
-			VuoSceneObject flattened = VuoSceneObject_flatten(scene, true);
+			VuoSceneObject flattened = VuoSceneObject_flatten(scene);
 			VuoBox flattenedBounds = VuoSceneObject_bounds(flattened);
 
 			QCOMPARE(flattenedBounds.center.x + 10, expectedCenter.x + 10);
@@ -545,7 +515,7 @@ private slots:
 
 		// Once the scene is centered, ensure the center is at the origin.
 		{
-			VuoSceneObject_center(&scene);
+			VuoSceneObject_center(scene);
 			VuoBox bounds = VuoSceneObject_bounds(scene);
 //			VLog("centered bounds		center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 
@@ -559,7 +529,7 @@ private slots:
 
 		// Once the scene is centered and normalized, ensure one of the dimensions is exactly 1, and the other 2 dimensions are <= 1.
 		{
-			VuoSceneObject_normalize(&scene);
+			VuoSceneObject_normalize(scene);
 			VuoBox bounds = VuoSceneObject_bounds(scene);
 //			VLog("normalized bounds	center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 
@@ -578,22 +548,33 @@ private slots:
 		}
 	}
 
+	void testRenderEmptySceneToImagePerformance_data()
+	{
+		QTest::addColumn<VuoMultisample>("multisampling");
+
+		QTest::newRow("1") << VuoMultisample_Off;
+		QTest::newRow("2") << VuoMultisample_2;
+		QTest::newRow("4") << VuoMultisample_4;
+		QTest::newRow("8") << VuoMultisample_8;
+	}
 	void testRenderEmptySceneToImagePerformance()
 	{
+		QFETCH(VuoMultisample, multisampling);
+
 		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
 			// Copied from vuo.scene.render.image.
 
-			VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), VuoListCreate_VuoSceneObject());
+			VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
 			VuoSceneObject_retain(rootSceneObject);
 
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, multisampling, NULL, false);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -604,8 +585,19 @@ private slots:
 		VuoRelease(sr);
 	}
 
+	void testRenderSphereToImagePerformance_data()
+	{
+		QTest::addColumn<VuoMultisample>("multisampling");
+
+		QTest::newRow("1") << VuoMultisample_Off;
+		QTest::newRow("2") << VuoMultisample_2;
+		QTest::newRow("4") << VuoMultisample_4;
+		QTest::newRow("8") << VuoMultisample_8;
+	}
 	void testRenderSphereToImagePerformance()
 	{
+		QFETCH(VuoMultisample, multisampling);
+
 		VuoSceneRenderer sr = VuoSceneRenderer_make(1);
 		VuoRetain(sr);
 
@@ -618,7 +610,7 @@ private slots:
 			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, multisampling, NULL, false);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -646,7 +638,7 @@ private slots:
 			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL, false);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -675,7 +667,7 @@ private slots:
 
 		QBENCHMARK {
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL, false);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -700,7 +692,7 @@ private slots:
 		for (int i = 0; i < count; ++i)
 		{
 			// Give each cube a random position.
-			cube.transform.translation = VuoPoint3d_random(VuoPoint3d_make(-1,-1,-1), VuoPoint3d_make(1,1,1));
+			VuoSceneObject_setTranslation(cube, VuoPoint3d_random(VuoPoint3d_make(-1,-1,-1), VuoPoint3d_make(1,1,1)));
 
 			VuoListAppendValue_VuoSceneObject(cubes, cube);
 		}
@@ -731,13 +723,13 @@ private slots:
 
 		// Render one to prime the caches.
 		VuoImage i;
-		VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+		VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL, false);
 		VuoRetain(i);
 		VuoRelease(i);
 
 		QBENCHMARK {
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL, false);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
@@ -787,7 +779,7 @@ private slots:
 		VuoRelease(objects);
 
 		QBENCHMARK {
-			VuoSceneObject_normalize(&so);
+			VuoSceneObject_normalize(so);
 		}
 
 		VuoSceneObject_release(so);
@@ -837,9 +829,9 @@ private slots:
 		QVERIFY(VuoColor_areEqual(ambientColor, (VuoColor){0,0,0,0}));
 		QVERIFY(VuoReal_areEqual(ambientBrightness, 0));
 		QCOMPARE(VuoListGetCount_VuoSceneObject(pointLights), 3UL);
-		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 1).transform.translation, (VuoPoint3d){1,2,3}));
-		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 2).transform.translation, (VuoPoint3d){11,12,13}));
-		QVERIFY(VuoPoint3d_areEqual(VuoListGetValue_VuoSceneObject(pointLights, 3).transform.translation, (VuoPoint3d){21,22,23}));
+		QVERIFY(VuoPoint3d_areEqual(VuoSceneObject_getTranslation(VuoListGetValue_VuoSceneObject(pointLights, 1)), (VuoPoint3d){1,2,3}));
+		QVERIFY(VuoPoint3d_areEqual(VuoSceneObject_getTranslation(VuoListGetValue_VuoSceneObject(pointLights, 2)), (VuoPoint3d){11,12,13}));
+		QVERIFY(VuoPoint3d_areEqual(VuoSceneObject_getTranslation(VuoListGetValue_VuoSceneObject(pointLights, 3)), (VuoPoint3d){21,22,23}));
 		QCOMPARE(VuoListGetCount_VuoSceneObject(spotLights), 0UL);
 
 		VuoRetain(pointLights);
@@ -888,9 +880,9 @@ private slots:
 		QVERIFY(VuoColor_areEqual(ambientColor, (VuoColor){0,0,1,1}));
 		QVERIFY(VuoReal_areEqual(ambientBrightness, .8));
 		QCOMPARE(VuoListGetCount_VuoSceneObject(pointLights), 1UL);
-		QCOMPARE(VuoListGetValue_VuoSceneObject(pointLights, 1).type, VuoSceneObjectSubType_PointLight);
+		QCOMPARE(VuoSceneObject_getType(VuoListGetValue_VuoSceneObject(pointLights, 1)), VuoSceneObjectSubType_PointLight);
 		QCOMPARE(VuoListGetCount_VuoSceneObject(spotLights), 1UL);
-		QCOMPARE(VuoListGetValue_VuoSceneObject(spotLights, 1).type, VuoSceneObjectSubType_Spotlight);
+		QCOMPARE(VuoSceneObject_getType(VuoListGetValue_VuoSceneObject(spotLights, 1)), VuoSceneObjectSubType_Spotlight);
 
 		VuoRetain(pointLights);
 		VuoRelease(pointLights);
@@ -928,17 +920,6 @@ private slots:
 		QCOMPARE(descendantCount, expectedDescendants);
 		QCOMPARE(totalVertexCount, expectedVertices);
 		QCOMPARE(totalElementCount, expectedElements);
-
-		__block bool hasMultipleSubmeshes = false;
-		VuoSceneObject_visit(scene, ^bool(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
-			if (currentObject->mesh && currentObject->mesh->submeshCount > 1)
-			{
-				hasMultipleSubmeshes = true;
-				return false;
-			}
-			return true;
-		});
-		QVERIFY2(hasMultipleSubmeshes == false, "An object has multiple submeshes, but the multiple submesh feature is deprecated.");
 	}
 };
 

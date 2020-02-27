@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorInteger implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorInteger.hh"
@@ -77,7 +77,7 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 	spinbox->setValue(current);
 	spinbox->setEnabled(autoToggle == NULL || !autoToggle->isChecked());
 
-	connect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinbox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorInteger::onSpinboxUpdate);
 
 	if(hasMinMax)
 	{
@@ -90,7 +90,7 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 		slider->setValue(current);
 		slider->setEnabled(autoToggle == NULL || !autoToggle->isChecked());
 
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider, &QSlider::valueChanged, this, &VuoInputEditorInteger::onSliderUpdate);
 	}
 
 	// layout dialog
@@ -109,7 +109,7 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 	if(hasAutoValue)
 	{
 		autoToggle = new QCheckBox("Auto");
-		connect(autoToggle, SIGNAL(stateChanged(int)), this, SLOT(setAutoToggled(int)));
+		connect(autoToggle, &QCheckBox::stateChanged, this, &VuoInputEditorInteger::setAutoToggled);
 		bool currentIsAuto = (current == autoValue);
 		autoToggle->setChecked(currentIsAuto);
 		if (currentIsAuto)
@@ -175,9 +175,9 @@ void VuoInputEditorInteger::onSliderUpdate(int sliderValue)
 	current = sliderValue;
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	disconnect(spinbox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorInteger::onSpinboxUpdate);
 	spinbox->setValue( current );
-	connect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinbox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorInteger::onSpinboxUpdate);
 
 	spinbox->setFocus();
 	spinbox->selectAll();
@@ -194,9 +194,9 @@ void VuoInputEditorInteger::onSpinboxUpdate(QString spinboxValue)
 
 	if(slider != NULL)
 	{
-		disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		disconnect(slider, &QSlider::valueChanged, this, &VuoInputEditorInteger::onSliderUpdate);
 		slider->setValue( current );
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(slider, &QSlider::valueChanged, this, &VuoInputEditorInteger::onSliderUpdate);
 	}
 
 	emit valueChanged(getAcceptedValue());

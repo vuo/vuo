@@ -2,59 +2,56 @@
  * @file
  * Displays the average color that falls between a chosen color and each of red, green, and blue.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1144,485" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="867,198" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="3" _height="1.250000" _rows="3"];
-AverageColors [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="304,329" fillcolor="violet"];
-AverageColors3 [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="303,176" fillcolor="violet"];
-AverageColors4 [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="303,487" fillcolor="violet"];
-Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="-43,81"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-325,368" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="30,-30" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
-MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="258,340" fillcolor="violet"];
-MakeList30 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1177,208" fillcolor="green"];
-MakeList31 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="257,187" fillcolor="violet"];
-MakeList32 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="257,498" fillcolor="violet"];
-MakeList48 [type="vuo.list.make.9.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="797,209"];
-MakeList50 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1147,193" fillcolor="green"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="485,-43" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.300000" _height="0.300000" _sharpness="1.000000"];
-MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="488,315" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000"];
-MakeOvalLayer3 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="484,828" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.180000" _height="0.180000" _sharpness="1.000000"];
-MakeOvalLayer4 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="485,677" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.180000" _height="0.180000" _sharpness="1.000000"];
-MakeOvalLayer5 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="488,161" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000"];
-MakeOvalLayer6 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="487,473" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000"];
-MakeOvalLayer7 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="483,986" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.180000" _height="0.180000" _sharpness="1.000000"];
-MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-54,594" _red="0.000000" _green="1.000000" _blue="0.000000" _opacity="1.000000"];
-MakeRGBColor2 [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-51,478" _red="1.000000" _green="0.000000" _blue="0.000000" _opacity="1.000000"];
-MakeRGBColor3 [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-54,707" _red="0.000000" _green="0.000000" _blue="1.000000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="940,498" _text="\"Move the mouse left and right to change the top color.\\nThe top and the bottom colors are averaged to create the middle colors.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.100000}"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-396,-31" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1218,182" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-142,-29" _start="-0.670000" _end="0.670000" _scaledStart="0.000000" _scaledEnd="0.670000"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="930,180" _scaleToFit="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.10000000149011612\}" _width="1.2" _columns="3" _height="1" _rows="3"];
+AverageColors [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="300,315" fillcolor="orange"];
+AverageColors3 [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="300,135" fillcolor="orange"];
+AverageColors4 [type="vuo.color.average" version="1.0.0" label="Average Colors|<refresh>refresh\l|<colors>colors\l|<averageColor>averageColor\r" pos="300,495" fillcolor="orange"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="-45,75"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-450,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="-75,-30" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,326" fillcolor="orange"];
+MakeList31 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,146" fillcolor="orange"];
+MakeList32 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,506" fillcolor="orange"];
+MakeList48 [type="vuo.list.make.9.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="861,191"];
+MakeList50 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1163,191" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,-45" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.300000" _height="0.300000" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer2 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,315" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer3 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,825" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.25" _height="0.25" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer4 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,660" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.25" _height="0.25" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer5 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,135" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer6 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,495" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.250000" _height="0.250000" _sharpness="1.000000" _opacity="1.0"];
+MakeOvalLayer7 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="495,990" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="0.25" _height="0.25" _sharpness="1" _opacity="1.0"];
+MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-60,600" _red="0.000000" _green="1.000000" _blue="0.000000" _opacity="1.000000"];
+MakeRGBColor2 [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-60,480" _red="1.000000" _green="0.000000" _blue="0.000000" _opacity="1.000000"];
+MakeRGBColor3 [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="-60,705" _red="0.000000" _green="0.000000" _blue="1.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="960,360" _text="\"Move the mouse left and right to change the top color.\\nThe top and the bottom colors are averaged to create the middle colors.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-495,-30" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1215,180" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="-240,-30" _start="-0.670000" _end="0.670000" _scaledStart="0.000000" _scaledEnd="0.670000" _limitToRange="false"];
 
-AlignLayerToWindow:alignedLayer -> MakeList50:2;
 ArrangeLayersInGrid:griddedLayer -> MakeList50:1;
 AverageColors3:averageColor -> MakeOvalLayer5:color;
 AverageColors4:averageColor -> MakeOvalLayer6:color;
 AverageColors:averageColor -> MakeOvalLayer2:color;
 Convert2DPointToReal2:x -> Scale:value;
-FireOnStart:started -> MakeHSLColor:refresh;
-FireOnStart:started -> MakeOvalLayer:refresh;
-FireOnStart:started -> MakeRGBColor2:refresh;
-FireOnStart:started -> MakeRGBColor3:refresh;
-FireOnStart:started -> MakeRGBColor:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> MakeHSLColor:hue;
+FireOnStart:started -> MakeOvalLayer:center;
+FireOnStart:started -> MakeRGBColor2:red;
+FireOnStart:started -> MakeRGBColor3:red;
+FireOnStart:started -> MakeRGBColor:red;
+FireOnStart:started -> MakeTextLayer:center;
 MakeHSLColor:color -> MakeList31:1;
 MakeHSLColor:color -> MakeList32:1;
 MakeHSLColor:color -> MakeList:1;
 MakeHSLColor:color -> MakeOvalLayer:color;
-MakeList30:list -> RenderLayersToWindow:setWindowProperties;
 MakeList31:list -> AverageColors3:colors;
 MakeList32:list -> AverageColors4:colors;
 MakeList48:list -> ArrangeLayersInGrid:layers;
@@ -73,9 +70,8 @@ MakeRGBColor3:color -> MakeList32:2;
 MakeRGBColor3:color -> MakeOvalLayer7:color;
 MakeRGBColor:color -> MakeList:2;
 MakeRGBColor:color -> MakeOvalLayer3:color;
-MakeTextLayer:layer -> AlignLayerToWindow:layer;
+MakeTextLayer:layer -> MakeList50:2;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
-RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window;
 Scale:scaledValue -> MakeHSLColor:hue;
 }

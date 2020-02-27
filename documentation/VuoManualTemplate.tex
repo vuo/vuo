@@ -3,7 +3,6 @@
 \usepackage{lmodern}
 \usepackage{amssymb,amsmath}
 \usepackage{ifxetex,ifluatex}
-\usepackage{fixltx2e} % provides \textsubscript
 % use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
@@ -92,7 +91,6 @@ $endif$
   \usepackage[unicode=true]{hyperref}
 \fi
 \hypersetup{breaklinks=true,
-            bookmarks=true,
             pdfauthor={$author-meta$},
             pdftitle={$title-meta$},
             colorlinks=true,
@@ -137,8 +135,8 @@ $endfor$
 
 \begin{titlepage}
 	\vspace*{10cm}
-	\vuoScreenshot{../../editor/VuoEditorApp/Icons/vuo}\\
-	{\color{base03}\fontsize{3.3cm}{1em}\selectfont $title$} {\color{base1.5}\fontsize{2.5cm}{1em}\selectfont $author$}
+	\includegraphics[scale=0.95]{../../../documentation/image/vuo-wordmark-teal-cropped.pdf}
+	{\color{base1.5}\fontsize{3.93cm}{1em}\selectfont $author$}
 \end{titlepage}
 \addtocounter{page}{1} % Count the titlepage as page #1.
 
@@ -171,6 +169,9 @@ $if(biblatex)$
 \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
 
 $endif$
+
+\printglossaries
+
 $for(include-after)$
 $include-after$
 

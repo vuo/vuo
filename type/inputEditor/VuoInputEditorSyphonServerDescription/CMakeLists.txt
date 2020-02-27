@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorSyphonServerDescription SOURCE VuoInputEditorSyphonServerDescription.cc)

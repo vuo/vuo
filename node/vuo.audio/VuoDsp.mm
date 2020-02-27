@@ -2,14 +2,12 @@
  * @file
  * VuoDsp implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-extern "C" {
 #include "module.h"
-}
 #include "VuoDsp.h"
 #include <Accelerate/Accelerate.h>
 
@@ -56,8 +54,8 @@ VuoModuleMetadata({
  */
 - (id) initWithSize:(unsigned int)frameSize windowing:(VuoWindowing)windowMode
 {
-	if(!self)
-		self = [super init];
+	if (self = [super init])
+	{
 
 	_fftSetup = vDSP_create_fftsetup( log2f(frameSize), kFFTRadix2 );
 	// WARNING:  we're minimizing allocations here, but we _have_ to keep in mind that _split.realp and _split.imagp _MUST_ by
@@ -71,7 +69,7 @@ VuoModuleMetadata({
 	priorFrequencyMode = (VuoAudioBinAverageType)-1;
 
 	// https://developer.apple.com/library/prerelease/ios/documentation/Accelerate/Reference/vDSPRef/index.html#//apple_ref/c/func/vDSP_blkman_window
-	// http://stackoverflow.com/questions/12642916/fft-output-with-float-buffer-audiounit
+	// https://stackoverflow.com/questions/12642916/fft-output-with-float-buffer-audiounit
 
 	switch(windowMode)
 	{
@@ -93,6 +91,7 @@ VuoModuleMetadata({
 		default:
 			_window = NULL;
 			break;
+	}
 	}
 
 	return self;

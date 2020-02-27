@@ -1,32 +1,33 @@
 /**
  * @file
- * Extrudes a grid in the shape of a cone using an image.
+ * Extrudes a set of lines in the shape of a rounded mound using the brightness of an image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.0.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="330,315" fillcolor="violet" _channel="\"rec709\"" _distance="0.4"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,105" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoGenericType1" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="75,315" fillcolor="violet" _transform="{\"translation\":[0,-0.30000001192092896,0],\"eulerRotation\":[-1.0471975803375244,0,0],\"scale\":[0.40000000596046448,0.40000000596046448,0.40000000596046448]}" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.005000"];
-MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-55,161" _1="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
-MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,266" fillcolor="green"];
-MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,236" fillcolor="green"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="15,150" _center="{\"x\":0.000000,\"y\":0.000000}" _radius="1" _noiseAmount="0.2" _width="480" _height="480"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="315,150" _center="{\"x\":0.000000,\"y\":0.400000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.400000" _opacity="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="660,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.1.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="450,420" fillcolor="orange" _channel="\"rec709\"" _distance="0.20000000000000001"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-675,240" fillcolor="lime" _started_eventThrottling="enqueue"];
+Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoShader" version="1.1.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="165,420" fillcolor="orange" _transform="\{\"translation\":[0,-0.34999999403953552,0],\"eulerRotation\":[-1.5707963705062866,0,0],\"scale\":[1,1,1]\}" _rows="24" _columns="48" _gridType="\"horizontal\"" _lineWidth="0.0025000000000000001"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-511,251" _1="\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\}" _2="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="734,266" fillcolor="blue"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="-450,240" _center="\{\"x\":0.000000,\"y\":0.000000\}" _radius="1" _noiseAmount="0" _width="512" _height="512"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="435,255" _center="\{\"x\":0.000000,\"y\":0.400000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _width="0.5" _opacity="1.000000"];
+MakeUnlitImageShader [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="-180,435" _opacity="1.0"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="780,255" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 Displace3DObjectWithImage:deformedObject -> MakeList3:2;
-FireOnStart:started -> Make3DGridLines2:refresh;
-FireOnStart:started -> MakeRadialGradientImage:refresh;
+FireOnStart:started -> MakeList:1;
 Make3DGridLines2:object -> Displace3DObjectWithImage:object;
-MakeList2:list -> RenderSceneToWindow:setWindowProperties;
 MakeList3:list -> RenderSceneToWindow:objects;
 MakeList:list -> MakeRadialGradientImage:colors;
 MakeRadialGradientImage:image -> Displace3DObjectWithImage:image;
 MakeRadialGradientImage:image -> MakeUnlit3DObjectFromImage:image;
+MakeRadialGradientImage:image -> MakeUnlitImageShader:image;
 MakeUnlit3DObjectFromImage:object -> MakeList3:1;
+MakeUnlitImageShader:shader -> Make3DGridLines2:material;
 }

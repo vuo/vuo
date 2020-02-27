@@ -2,9 +2,9 @@
  * @file
  * Vuo AV Foundation Player interface implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -51,7 +51,7 @@ double VuoAvPlayer_getFrameRate(VuoAvPlayerObjPtr player);
 /**
  * Seek playhead to second.
  */
-bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second, VuoVideoFrame *frame);
+bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second, VuoVideoFrame *frame) VuoWarnUnusedResult;
 
 /**
  * Set the VuoVideoPlayer instance to call OnDecoderPlaybackReady
@@ -61,12 +61,12 @@ void VuoAvPlayer_setOnPlaybackReadyCallbackObject(VuoAvPlayerObjPtr player, void
 /**
  * Get the next video frame (forwards or backwards).
  */
-bool VuoAvPlayer_nextVideoFrame(VuoAvPlayerObjPtr player, VuoVideoFrame* videoFrame);
+bool VuoAvPlayer_nextVideoFrame(VuoAvPlayerObjPtr player, VuoVideoFrame* videoFrame) VuoWarnUnusedResult;
 
 /**
  * Get the next audio frame.
  */
-bool VuoAvPlayer_nextAudioFrame(VuoAvPlayerObjPtr player, VuoAudioFrame* audioFrame);
+bool VuoAvPlayer_nextAudioFrame(VuoAvPlayerObjPtr player, VuoAudioFrame* audioFrame) VuoWarnUnusedResult;
 
 /**
  * Return the last decoded and accessed timestamp.

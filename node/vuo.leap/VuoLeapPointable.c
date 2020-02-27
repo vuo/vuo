@@ -2,17 +2,13 @@
  * @file
  * VuoLeapPointable implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
-
-#include <stdio.h>
-#include <string.h>
 
 #include "type.h"
 #include "VuoLeapPointable.h"
-#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -55,57 +51,19 @@ VuoModuleMetadata({
  */
 VuoLeapPointable VuoLeapPointable_makeFromJson(json_object * js)
 {
-	VuoLeapPointable pointable =
-	{
-		-1,
-		VuoLeapPointableType_Finger,
-		0,
-		0,
-		VuoPoint3d_make(0,0,0),
-		VuoPoint3d_make(0,0,0),
-		VuoPoint3d_make(0,0,0),
-		0,
-		0,
-		VuoLeapTouchZone_None,
-		false
+	return (VuoLeapPointable){
+		VuoJson_getObjectValue(VuoInteger,       js, "id",            -1),
+		VuoJson_getObjectValue(VuoInteger,       js, "type",          VuoLeapPointableType_Finger),
+		VuoJson_getObjectValue(VuoReal,          js, "length",        0),
+		VuoJson_getObjectValue(VuoReal,          js, "width",         0),
+		VuoJson_getObjectValue(VuoPoint3d,       js, "direction",     (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoPoint3d,       js, "tipPosition",   (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoPoint3d,       js, "tipVelocity",   (VuoPoint3d){0,0,0}),
+		VuoJson_getObjectValue(VuoReal,          js, "timeVisible",   0),
+		VuoJson_getObjectValue(VuoReal,          js, "touchDistance", 0),
+		VuoJson_getObjectValue(VuoLeapTouchZone, js, "touchZone",     VuoLeapTouchZone_None),
+		VuoJson_getObjectValue(VuoBoolean,       js, "isExtended",    false)
 	};
-
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "id", &o))
-		pointable.id = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "type", &o))
-		pointable.type = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "length", &o))
-		pointable.length = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "width", &o))
-		pointable.width = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "direction", &o))
-		pointable.direction = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "tipPosition", &o))
-		pointable.tipPosition = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "tipVelocity", &o))
-		pointable.tipVelocity = VuoPoint3d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "timeVisible", &o))
-		pointable.timeVisible = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "touchDistance", &o))
-		pointable.touchDistance = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "touchZone", &o))
-		pointable.touchZone = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "isExtended", &o))
-		pointable.isExtended = VuoBoolean_makeFromJson(o);
-
-	return pointable;
 }
 
 /**

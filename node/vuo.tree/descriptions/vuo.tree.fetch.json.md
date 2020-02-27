@@ -56,4 +56,4 @@ If the outermost JSON is something other than an object containing a single name
       - Tree with no name and content "1998"
       - Tree with no name and content "2001"
 
-This node is a shortcut for `Fetch Data -> Convert Data to Text -> Make Tree from JSON`.
+This node is a shortcut for [Fetch Data](vuo-node://vuo.data.fetch) -> [Convert Data to Text](vuo-node://vuo.type.data.text) -> [Make Tree from JSON](vuo-node://vuo.tree.make.json).

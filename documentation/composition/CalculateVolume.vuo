@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="480,105" fillcolor="orange" _expression="\{\"expressions\":[\"length * width * height\"],\"inputVariables\":[\"height\",\"length\",\"width\"],\"outputVariables\":[\"result\"]\}"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="210,135"];
+MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="255,150" fillcolor="orange"];
+MakeList [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="255,150" fillcolor="orange" _1="\"height\"" _2="\"length\"" _3="\"width\""];
+MakeList2 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="425,131" fillcolor="orange" _1="1"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="15,135" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+
+Get2DPointValues:x -> MakeList2:2;
+Get2DPointValues:y -> MakeList2:3;
+MakeDictionary:dictionary -> Calculate:values;
+MakeList2:list -> MakeDictionary:values;
+MakeList:list -> MakeDictionary:keys;
+ReceiveMouseMoves:movedTo -> Get2DPointValues:point;
+}

@@ -6,7 +6,7 @@
  * Copyright (c) 2009 Charles J. Cliffe.
  *
  * BeatDetektor is distributed under the terms of the MIT License.
- * http://opensource.org/licenses/MIT
+ * https://opensource.org/licenses/MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,10 @@
  * IN THE SOFTWARE.
  */
 
-extern "C"
-{
 #include "module.h"
 
+extern "C"
+{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "BeatDetektor"

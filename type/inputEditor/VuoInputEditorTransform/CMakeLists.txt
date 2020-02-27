@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorTransform SOURCE VuoInputEditorTransform.cc)

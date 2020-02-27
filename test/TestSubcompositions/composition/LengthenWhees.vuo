@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="300,240"];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="525,240"];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="270,105"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="251,251" _2="\"e\""];
+MakeList5 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="479,251" _1="\"wh\"" _2="\"!\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Lengthen>Lengthen\r" _Lengthen_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Es>Es\l" _Es_type="VuoText"];
+
+AppendTexts2:compositeText -> PublishedOutputs:Es;
+AppendTexts:compositeText -> AppendTexts2:separator;
+AppendTexts:compositeText -> HoldValue2:newValue;
+HoldValue2:heldValue -> MakeList:1;
+MakeList5:list -> AppendTexts2:texts;
+MakeList:list -> AppendTexts:texts;
+PublishedInputs:Lengthen -> HoldValue2:refresh;
+}

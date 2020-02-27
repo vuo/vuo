@@ -2,9 +2,9 @@
  * @file
  * TestControlAndTelemetry interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
@@ -46,12 +46,14 @@ private:
 		{
 			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 			*composition = new VuoCompilerComposition(new VuoComposition, parser);
-			compiler->compileComposition(*composition, bcPath);
+			VuoCompilerIssues issues;
+			compiler->compileComposition(*composition, bcPath, true, &issues);
 			delete parser;
 		}
 		else
 		{
-			compiler->compileComposition(compositionPath, bcPath);
+			VuoCompilerIssues issues;
+			compiler->compileComposition(compositionPath, bcPath, true, &issues);
 		}
 		compiler->linkCompositionToCreateExecutable(bcPath, exePath, optimization);
 		remove(bcPath.c_str());
@@ -81,18 +83,18 @@ private:
 	/**
 	 * Builds the composition at @a compositionPath into a dylib.
 	 */
-	void buildDylibForNewProcess(const string &compositionPath, string &compositionLoaderPath, string &dylibPath, string &resourceDylibPath, string &compositionDir)
+	void buildDylibForNewProcess(const string &compositionPath, string &compositionLoaderPath, string &dylibPath,
+								 VuoRunningCompositionLibraries *runningCompositionLibraries, string &compositionDir)
 	{
 		string file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource", "dylib");
 
-		compiler->compileComposition(compositionPath, bcPath);
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
-		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, bcPath, true, &issues);
+
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 		compositionLoaderPath = compiler->getCompositionLoaderPath();
 		remove(bcPath.c_str());
 	}
@@ -102,10 +104,11 @@ private:
 	 */
 	VuoRunner * createRunnerInNewProcessWithDylib(const string &compositionPath)
 	{
-		string compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir;
-		buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir);
+		string compositionLoaderPath, dylibPath, compositionDir;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries, compositionDir);
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, false, true);
+		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, runningCompositionLibraries, compositionDir, false, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 		return runner;
 	}
@@ -121,7 +124,8 @@ private:
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
-		compiler->compileComposition(compositionPath, bcPath);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, bcPath, true, &issues);
 		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath, optimization);
 		remove(bcPath.c_str());
 
@@ -145,51 +149,53 @@ private:
 	}
 
 	/**
-	 * Builds the composition at @a compositionPath into a dylib plus resource dylib for live coding. Returns a newly
+	 * Builds the composition at @a compositionPath into a dylib plus resource dylibs for live coding. Returns a newly
 	 * allocated `VuoRunner` for the dylibs.
 	 */
-	VuoRunner * createRunnerForLiveCoding(const string &compositionPath, const string &resourceDylibSuffix,
-										  VuoCompilerComposition *&composition, string &bcPath, string &dylibPath,
-										  vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources)
+	VuoRunner * createRunnerForLiveCoding(const string &compositionPath, VuoCompilerComposition *&composition,
+										  VuoRunningCompositionLibraries *runningCompositionLibraries)
 	{
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
-		bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoComposition *baseComposition = new VuoComposition();
 		composition = new VuoCompilerComposition(baseComposition, parser);
 		delete parser;
 
-		compiler->compileComposition(composition, bcPath);
-		string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + resourceDylibSuffix, "dylib");
-		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(composition, bcPath, true, &issues);
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 		remove(bcPath.c_str());
 
-		return VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, dir);
+		return VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, runningCompositionLibraries, dir, false, true);
 	}
 
 	/**
 	 * Builds @a composition into a dylib plus resource dylib for live coding, and replaces the running composition with it.
 	 */
-	void replaceCompositionForLiveCoding(const string &compositionPath, const string &resourceDylibSuffix,
-										 VuoCompilerComposition *composition, VuoRunner *runner,
-										 const string &bcPath, const string &dylibPath,
-										 vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources)
+	void replaceCompositionForLiveCoding(const string &compositionPath, VuoCompilerComposition *composition,
+										 VuoRunningCompositionLibraries *runningCompositionLibraries,
+										 const string &oldCompositionSource, VuoCompilerCompositionDiff *diffInfo,
+										 VuoRunner *runner)
 	{
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
-		compiler->compileComposition(composition, bcPath);
-		string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + resourceDylibSuffix, "dylib");
-		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(composition, bcPath, true, &issues);
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 		remove(bcPath.c_str());
 
-		string compositionGraphviz = composition->getGraphvizDeclaration();
-		string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler,
-																		  set<VuoCompilerComposition::NodeReplacement>());
-		runner->replaceComposition(dylibPath, "", compositionDiff);
+		if (! diffInfo)
+			diffInfo = new VuoCompilerCompositionDiff();
+		string compositionDiff = diffInfo->diff(oldCompositionSource, composition, compiler);
+		runner->replaceComposition(dylibPath, compositionDiff);
+		delete diffInfo;
 	}
 
 	/**
@@ -373,8 +379,6 @@ private slots:
 		}
 		else if (testNum == 6)  // Error handling: New process, runOnMainThread()
 		{
-			WriteTimesToFileHelper helper;
-
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
 			try
@@ -382,14 +386,12 @@ private slots:
 				runner->runOnMainThread();
 				QFAIL("Exception not thrown for runOnMainThread() with new process.");
 			}
-			catch (std::logic_error) { }
+			catch (VuoException) { }
 			runner->stop();
 			delete runner;
 		}
 		else if (testNum == 7)  // Error handling: Current process, runOnMainThread() on non-main thread
 		{
-			WriteTimesToFileHelper helper;
-
 			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath);
 			runner->start();
 			dispatch_group_t group = dispatch_group_create();
@@ -400,7 +402,7 @@ private slots:
 										 runner->runOnMainThread();
 										 QFAIL("Exception not thrown for runOnMainThread() run on non-main thread.");
 									 }
-									 catch (std::logic_error) { }
+									 catch (VuoException) { }
 								 });
 			dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 			dispatch_async(queue, ^{
@@ -418,8 +420,9 @@ private slots:
 		}
 		else if (testNum == 9)  // Error handling: New process, non-existent dylib
 		{
+			VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(),
-																					  nonExistentFile, nonExistentFile,
+																					  nonExistentFile, runningCompositionLibraries,
 																					  "", false, false);
 			runner->start();
 			runner->waitUntilStopped();
@@ -456,7 +459,8 @@ private slots:
 		QFETCH(int, testNum);
 
 		string compositionPath = getCompositionPath("WriteTimesToFile.vuo");
-		string exePath, compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir;
+		string exePath, compositionLoaderPath, dylibPath, compositionDir;
+		VuoRunningCompositionLibraries *runningCompositionLibraries[2] = { NULL, NULL };
 
 		if (testNum == 0)  // New process, executable
 		{
@@ -464,7 +468,9 @@ private slots:
 		}
 		else if (testNum == 1)  // New process, dylib
 		{
-			buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir);
+			runningCompositionLibraries[0] = new VuoRunningCompositionLibraries();
+			buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries[0], compositionDir);
+			runningCompositionLibraries[1] = new VuoRunningCompositionLibraries(*runningCompositionLibraries[0]);
 		}
 		else if (testNum == 2)  // Current process
 		{
@@ -488,7 +494,7 @@ private slots:
 				}
 				else
 				{
-					runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, false, deleteBinaries);
+					runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, runningCompositionLibraries[i], compositionDir, false, deleteBinaries);
 					// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 				}
 
@@ -523,11 +529,12 @@ private slots:
 	void testRunningMultipleSeparateProcessCompositionInstancesSimultaneously()
 	{
 		string compositionPath = getCompositionPath("Recur_Count.vuo");
+		VuoCompilerIssues issues;
 
-		VuoRunner *runner1 = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath);
+		VuoRunner *runner1 = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath, &issues);
 		runner1->start();
 
-		VuoRunner *runner2 = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath);
+		VuoRunner *runner2 = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath, &issues);
 		runner2->start();
 
 		QVERIFY(!runner1->lostContact);
@@ -539,10 +546,12 @@ private slots:
 
 	void testRunningMultipleCurrentProcessDifferentCompositionInstancesSimultaneously()
 	{
-		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Count.vuo"));
+		VuoCompilerIssues issues;
+
+		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Count.vuo"), &issues);
 		runner1->start();
 
-		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Add_published.vuo"));
+		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Add_published.vuo"), &issues);
 		runner2->start();
 
 		QVERIFY(!runner1->lostContact);
@@ -555,11 +564,12 @@ private slots:
 	void testRunningMultipleCurrentProcessSameCompositionInstancesSimultaneously()
 	{
 		string compositionPath = getCompositionPath("Recur_Count.vuo");
+		VuoCompilerIssues issues;
 
-		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath);
+		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath, &issues);
 		runner1->start();
 
-		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath);
+		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath, &issues);
 		runner2->start();
 
 		QVERIFY(!runner1->lostContact);
@@ -582,7 +592,8 @@ private slots:
 		string directory, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		compiler->compileComposition(compositionPath, compiledCompositionPath, true);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, &issues);
 
 		for (int i = 1; i <= 8; ++i)
 		{
@@ -611,10 +622,22 @@ private:
 	{
 	public:
 		map<string, string> publishedOutputData;
+		dispatch_semaphore_t gotPublishedOutputEvent;
+
+		TestRunningMultipleRunnerDelegate(void)
+		{
+			gotPublishedOutputEvent = dispatch_semaphore_create(0);
+		}
+
+		~TestRunningMultipleRunnerDelegate(void)
+		{
+			dispatch_release(gotPublishedOutputEvent);
+		}
 
 		void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary)
 		{
 			publishedOutputData[port->getName()] = dataSummary;
+			dispatch_semaphore_signal(gotPublishedOutputEvent);
 		}
 	};
 
@@ -627,7 +650,8 @@ private slots:
 		string directory, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		compiler->compileComposition(compositionPath, compiledCompositionPath, true);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true, &issues);
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 		compiler->linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
@@ -665,17 +689,21 @@ private slots:
 		// Ensure the compositions execute independently.
 		{
 			VuoRunner::Port *incrementPort1 = runner1->getPublishedInputPortWithName("Increment");
-			runner1->setPublishedInputPortValue(incrementPort1, VuoInteger_getJson(10));
-			runner1->firePublishedInputPortEvent();
-			runner1->waitForAnyPublishedOutputPortEvent();
+			map<VuoRunner::Port *, json_object *> m1;
+			m1[incrementPort1] = VuoInteger_getJson(10);
+			runner1->setPublishedInputPortValues(m1);
+			runner1->firePublishedInputPortEvent(incrementPort1);
+			dispatch_semaphore_wait(delegate1.gotPublishedOutputEvent, DISPATCH_TIME_FOREVER);
 			QCOMPARE(delegate1.publishedOutputData.size(), (size_t)1);
 			QCOMPARE(QString::fromStdString(delegate1.publishedOutputData["Count"]), QString("11"));
 			QCOMPARE(delegate2.publishedOutputData.size(), (size_t)0);
 
 			VuoRunner::Port *incrementPort2 = runner2->getPublishedInputPortWithName("Increment");
-			runner2->setPublishedInputPortValue(incrementPort2, VuoInteger_getJson(100));
-			runner2->firePublishedInputPortEvent();
-			runner2->waitForAnyPublishedOutputPortEvent();
+			map<VuoRunner::Port *, json_object *> m2;
+			m2[incrementPort2] = VuoInteger_getJson(100);
+			runner2->setPublishedInputPortValues(m2);
+			runner2->firePublishedInputPortEvent(incrementPort2);
+			dispatch_semaphore_wait(delegate2.gotPublishedOutputEvent, DISPATCH_TIME_FOREVER);
 			QCOMPARE(delegate2.publishedOutputData.size(), (size_t)1);
 			QCOMPARE(QString::fromStdString(delegate2.publishedOutputData["Count"]), QString("101"));
 			QCOMPARE(delegate1.publishedOutputData.size(), (size_t)1);
@@ -911,13 +939,13 @@ private:
 			runner->startPaused();
 
 			{
-				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( firedPortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( incrementPortIdentifier )), QString("1"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( countPortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( item1PortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( sumPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", firedPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", incrementPortIdentifier )), QString("1"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", countPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", item1PortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", sumPortIdentifier )), QString("0"));
 			}
 
 			runner->unpause();
@@ -981,12 +1009,12 @@ private:
 			}
 		}
 
-		void receivedTelemetryInputPortUpdated(string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
+		void receivedTelemetryInputPortUpdated(string compositionIdentifier, string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
 		{
 			appendIdentifierAndSummary(portIdentifier, dataSummary);
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			appendIdentifierAndSummary(portIdentifier, dataSummary);
 		}
@@ -1066,8 +1094,8 @@ private:
 			runner->setDelegate(this);
 
 			runner->startPaused();
-			runner->subscribeToInputPortTelemetry(incrementPortIdentifier);
-			runner->subscribeToOutputPortTelemetry(countPortIdentifier);
+			runner->subscribeToInputPortTelemetry("", incrementPortIdentifier);
+			runner->subscribeToOutputPortTelemetry("", countPortIdentifier);
 
 			runner->unpause();
 			runner->waitUntilStopped();
@@ -1076,7 +1104,7 @@ private:
 			QCOMPARE(timesIncrementReceivedData, 2);
 		}
 
-		void receivedTelemetryInputPortUpdated(string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
+		void receivedTelemetryInputPortUpdated(string compositionIdentifier, string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
 		{
 			if (receivedEvent)
 				++timesIncrementReceivedEvent;
@@ -1087,7 +1115,7 @@ private:
 			QCOMPARE((VuoInteger)atol(dataSummary.c_str()), incrementPortValue);
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			if (isStopping)
 				return;
@@ -1098,9 +1126,9 @@ private:
 
 			// For this value to be in sync with valueAsString, the composition needs to have been paused before the next event fired.
 			// The firing rate of the composition is set slow enough that the composition is very likely to be paused in time.
-			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue(countPortIdentifier) );
+			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue("", countPortIdentifier) );
 
-			VuoInteger incrementFromRunner = VuoInteger_makeFromJson( runner->getInputPortValue(incrementPortIdentifier) );
+			VuoInteger incrementFromRunner = VuoInteger_makeFromJson( runner->getInputPortValue("", incrementPortIdentifier) );
 			VuoInteger countFromSummary = atol(dataSummary.c_str());
 
 			if (timesCountSentEvent == 0)
@@ -1117,8 +1145,8 @@ private:
 				QCOMPARE(countFromRunner, expectedCount);
 
 				incrementPortValue = 100;
-				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
-				runner->setInputPortValue(decrementPortIdentifier, VuoInteger_getJson(2));
+				runner->setInputPortValue("", incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
+				runner->setInputPortValue("", decrementPortIdentifier, VuoInteger_getJson(2));
 			}
 			else if (timesCountSentEvent == 2)
 			{
@@ -1129,7 +1157,7 @@ private:
 				QCOMPARE(countFromRunner, expectedCount);
 
 				incrementPortValue = 1000;
-				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
+				runner->setInputPortValue("", incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
 			}
 			else if (timesCountSentEvent == 3)
 			{
@@ -1204,12 +1232,12 @@ private:
 			runner->setDelegate(this);
 
 			runner->startPaused();
-			runner->subscribeToAllTelemetry();
+			runner->subscribeToAllTelemetry("");
 			runner->unpause();
 			runner->waitUntilStopped();
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			if (isStopping)
 				return;
@@ -1220,7 +1248,7 @@ private:
 
 			// For this value to be in sync with valueAsString, the composition needs to have been paused before the next event fired.
 			// The firing rate of the composition is set slow enough that the composition is very likely to be paused in time.
-			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue(firedPortIdentifier.c_str()) );
+			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue("", firedPortIdentifier.c_str()) );
 
 			VuoInteger countFromSummary = atol(dataSummary.c_str());
 
@@ -1309,27 +1337,27 @@ private:
 			runner->setDelegate(this);
 
 			runner->startPaused();
-			runner->subscribeToOutputPortTelemetry(sumPortIdentifier);
+			runner->subscribeToOutputPortTelemetry("", sumPortIdentifier);
 			runner->unpause();
 			runner->waitUntilStopped();
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			if (timesSumChanged == 0)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("1"));
-				runner->fireTriggerPortEvent(startedPortIdentifier);
+				runner->fireTriggerPortEvent("", startedPortIdentifier);
 			}
 			else if (timesSumChanged == 1)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("2"));
-				runner->fireTriggerPortEvent(startedPortIdentifier);
+				runner->fireTriggerPortEvent("", startedPortIdentifier);
 			}
 			else if (timesSumChanged == 2)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("3"));
-				runner->fireTriggerPortEvent(spunOffPortIdentifier);
+				runner->fireTriggerPortEvent("", spunOffPortIdentifier);
 			}
 			else if (timesSumChanged == 3)
 			{
@@ -1556,7 +1584,9 @@ private:
 			QVERIFY(publishedSum != NULL);
 
 			QCOMPARE((VuoInteger)0, VuoInteger_makeFromJson(runner->getPublishedInputPortValue(publishedIn0)));
-			runner->setPublishedInputPortValue(publishedIn0, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIn0] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
 			QCOMPARE((VuoInteger)100, VuoInteger_makeFromJson(runner->getPublishedInputPortValue(publishedIn0)));
 
 			runner->unpause();
@@ -1581,7 +1611,9 @@ private:
 				VuoInteger sumFromRunner = VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) );
 				QCOMPARE(sumFromRunner, (VuoInteger)201);
 
-				runner->setPublishedInputPortValue(publishedIn1, VuoInteger_getJson(1000));
+				map<VuoRunner::Port *, json_object *> m;
+				m[publishedIn1] = VuoInteger_getJson(1000);
+				runner->setPublishedInputPortValues(m);
 			}
 			else
 			{
@@ -1667,22 +1699,32 @@ private:
 			++timesSumChanged;
 			if (timesSumChanged == 1)
 			{
-				QCOMPARE(QString(dataSummary.c_str()), QString("42"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("42"));  // 42 + 0
 
-				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_getJson(3));
+				map<VuoRunner::Port *, json_object *> m;
+				m[publishedDecrementBoth] = VuoInteger_getJson(3);
+				runner->setPublishedInputPortValues(m);
+
 				runner->firePublishedInputPortEvent(publishedDecrementBoth);
 			}
 			else if (timesSumChanged == 2)
 			{
-				QCOMPARE(QString(dataSummary.c_str()), QString("78"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("36"));  // 39 + -3
 
-				runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1));
-				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_getJson(5));
-				runner->firePublishedInputPortEvent();
+				map<VuoRunner::Port *, json_object *> m;
+				m[publishedIncrementOne] = VuoInteger_getJson(1);
+				m[publishedDecrementBoth] = VuoInteger_getJson(5);
+				runner->setPublishedInputPortValues(m);
+
+				set<VuoRunner::Port *> firePorts;
+				firePorts.insert(publishedIncrementOne);
+				firePorts.insert(publishedDecrementBoth);
+
+				runner->firePublishedInputPortEvent(firePorts);
 			}
 			else if (timesSumChanged == 3)
 			{
-				QCOMPARE(QString(dataSummary.c_str()), QString("69"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("27"));  // 35 + -8
 
 				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 				dispatch_async(queue, ^{
@@ -1700,7 +1742,7 @@ private slots:
 		delegate.runComposition(compiler);
 	}
 
-	void testWaitingForAnyPublishedPortEvent()
+	void testWaitingForFiredPublishedPortEvent_timingOfWaitCall()
 	{
 		string compositionPath = getCompositionPath("MultiplePublishedOutputs.vuo");
 
@@ -1710,7 +1752,7 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
@@ -1722,9 +1764,12 @@ private slots:
 			expectedCounts.push_back(20);
 			for (vector<VuoInteger>::iterator i = expectedCounts.begin(); i != expectedCounts.end(); ++i)
 			{
-				runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(true));
+				map<VuoRunner::Port *, json_object *> m;
+				m[shouldDelay] = VuoBoolean_getJson(true);
+				runner->setPublishedInputPortValues(m);
+
 				runner->firePublishedInputPortEvent(shouldDelay);
-				runner->waitForAnyPublishedOutputPortEvent();
+				runner->waitForFiredPublishedInputPortEvent();
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), *i);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)0);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)0);
@@ -1740,7 +1785,7 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
@@ -1752,10 +1797,13 @@ private slots:
 			expectedCounts.push_back(200);
 			for (vector<VuoInteger>::iterator i = expectedCounts.begin(); i != expectedCounts.end(); ++i)
 			{
-				runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+				map<VuoRunner::Port *, json_object *> m;
+				m[shouldDelay] = VuoBoolean_getJson(false);
+				runner->setPublishedInputPortValues(m);
+
 				runner->firePublishedInputPortEvent(shouldDelay);
 				sleep(1);
-				runner->waitForAnyPublishedOutputPortEvent();
+				runner->waitForFiredPublishedInputPortEvent();
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)0);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), *i);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), *i);
@@ -1771,24 +1819,29 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
 			VuoRunner::Port *publishedCount2 = runner->getPublishedOutputPortWithName("publishedCount2");
 			VuoRunner::Port *publishedCount3 = runner->getPublishedOutputPortWithName("publishedCount3");
 
-			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(true));
+			map<VuoRunner::Port *, json_object *> m;
+			m[shouldDelay] = VuoBoolean_getJson(true);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(shouldDelay);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)0);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)0);
 
-			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+			m[shouldDelay] = VuoBoolean_getJson(false);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(shouldDelay);
 			sleep(1);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)100);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)100);
@@ -1803,18 +1856,74 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 
-			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+			map<VuoRunner::Port *, json_object *> m;
+			m[shouldDelay] = VuoBoolean_getJson(false);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(shouldDelay);
 			runner->firePublishedInputPortEvent(shouldDelay);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 
 			runner->stop();
 			delete runner;
 		}
+	}
+
+	void testWaitingForFiredPublishedPortEvent_eventLifetime_data()
+	{
+		QTest::addColumn<QString>("composition");
+		QTest::addColumn<bool>("pause");
+		QTest::addColumn<bool>("allowLostContact");
+		QTest::addColumn<int>("expectedOutput");
+
+		QTest::newRow("published input port has no outgoing cables") << "UnconnectedPublishedPorts.vuo" << false << false << 0;
+		QTest::newRow("published input event blocked") << "PublishedBlocked.vuo" << false << false << 0;
+		QTest::newRow("internal trigger fired") << "PublishedBlockedInternalFired.vuo" << false << false << 0;
+		QTest::newRow("published input event spun off by Spin Off Value") << "PublishedToSpinOffValue.vuo" << false << false << 1;
+		QTest::newRow("published input event spun off by Spin Off Event") << "PublishedToSpinOffEvent.vuo" << false << false << 2;
+		QTest::newRow("published input event spun off by Spin Off Events") << "PublishedToSpinOffEvents.vuo" << false << false << 10;
+		QTest::newRow("published input event spun off by Build List") << "PublishedToBuildList.vuo" << false << false << 101;
+		QTest::newRow("published input event spun off by Process List") << "PublishedToProcessList.vuo" << false << false << 12;
+		QTest::newRow("published input event spun off to multiple sequentially") << "PublishedToSpinOffSeries.vuo" << false << false << 99;
+		QTest::newRow("published input event spun off to multiple concurrently") << "PublishedToSpinOffScatter.vuo" << false << false << 4;
+		QTest::newRow("spun off event dropped") << "PublishedToSpinOffDelayDrop.vuo" << false << false << 1;
+		QTest::newRow("spun off event skipped because composition paused") << "PublishedToDelaySpinOff.vuo" << true << false << 1;
+		QTest::newRow("published input event caused composition to stop itself") << "PublishedToStop.vuo" << false << true << 0;
+		QTest::newRow("published input event caused composition to crash") << "PublishedToExit.vuo" << false << true << 0;
+	}
+	void testWaitingForFiredPublishedPortEvent_eventLifetime()
+	{
+		QFETCH(QString, composition);
+		QFETCH(bool, pause);
+		QFETCH(bool, allowLostContact);
+		QFETCH(int, expectedOutput);
+
+		string compositionPath = getCompositionPath(composition.toStdString());
+		VuoRunner *runner = createRunnerInNewProcess(compositionPath);
+		if (allowLostContact)
+			runner->setDelegate(nullptr);  // Don't use TestRunnerDelegate, which fails if the runner loses contact with the composition.
+		runner->start();
+
+		VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("in");
+		VuoRunner::Port *outPort = runner->getPublishedOutputPortWithName("out");
+		QVERIFY(inPort);
+		QVERIFY(outPort);
+
+		runner->firePublishedInputPortEvent(inPort);
+		if (pause)
+			runner->pause();
+		runner->waitForFiredPublishedInputPortEvent();
+
+		json_object *actualOutput = runner->getPublishedOutputPortValue(outPort);
+		QCOMPARE(VuoInteger_makeFromJson(actualOutput), (VuoInteger)expectedOutput);
+		json_object_put(actualOutput);
+
+		runner->stop();
+		delete runner;
 	}
 
 	void testUnconnectedPublishedPorts()
@@ -1831,7 +1940,10 @@ private slots:
 		QCOMPARE(outPorts.size(), (size_t)1);
 		VuoRunner::Port *outPort = outPorts[0];
 
-		runner->setPublishedInputPortValue(inPort, VuoInteger_getJson(49));
+		map<VuoRunner::Port *, json_object *> m;
+		m[inPort] = VuoInteger_getJson(49);
+		runner->setPublishedInputPortValues(m);
+
 		runner->firePublishedInputPortEvent(inPort);
 
 		json_object *outPortValue = runner->getPublishedOutputPortValue(outPort);
@@ -1853,9 +1965,12 @@ private slots:
 		vector<VuoRunner::Port *> outPorts = runner->getPublishedOutputPorts();
 		QCOMPARE(outPorts.size(), (size_t)2);
 
-		runner->setPublishedInputPortValue(inPorts[0], VuoInteger_getJson(9));
-		runner->firePublishedInputPortEvent();
-		runner->waitForAnyPublishedOutputPortEvent();
+		map<VuoRunner::Port *, json_object *> m;
+		m[inPorts[0]] = VuoInteger_getJson(9);
+		runner->setPublishedInputPortValues(m);
+
+		runner->firePublishedInputPortEvent(inPorts[0]);
+		runner->waitForFiredPublishedInputPortEvent();
 
 		json_object *outPort1Value = runner->getPublishedOutputPortValue(outPorts[0]);
 		QCOMPARE(VuoInteger_makeFromJson(outPort1Value), (VuoInteger)9);
@@ -1894,8 +2009,9 @@ private:
 			runner->setDelegate(this);
 
 			runner->start();
-			runner->firePublishedInputPortEvent();
-			runner->firePublishedInputPortEvent();
+			VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("start");
+			runner->firePublishedInputPortEvent(inPort);
+			runner->firePublishedInputPortEvent(inPort);
 			runner->waitUntilStopped();
 		}
 
@@ -1962,46 +2078,47 @@ private slots:
 		QVERIFY(! partialListPortIdentifier.empty());
 
 		runner->start();
-		runner->firePublishedInputPortEvent();
-		runner->waitForAnyPublishedOutputPortEvent();
+		VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("Refresh");
+		runner->firePublishedInputPortEvent(inPort);
+		runner->waitForFiredPublishedInputPortEvent();
 
 		{
-			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			json_object *item1Value = runner->getInputPortValue("", item1PortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("11"));
 
-			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			json_object *listValue = runner->getInputPortValue("", listPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22,33]"));
 
-			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			json_object *partialListValue = runner->getInputPortValue("", partialListPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22]"));
 		}
 
 		json_object *newValue = VuoInteger_getJson(44);
-		runner->setInputPortValue(item1PortIdentifier, newValue);
+		runner->setInputPortValue("", item1PortIdentifier, newValue);
 		json_object_put(newValue);
 
 		{
-			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			json_object *item1Value = runner->getInputPortValue("", item1PortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("44"));
 
-			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			json_object *listValue = runner->getInputPortValue("", listPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22,33]"));
 
-			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			json_object *partialListValue = runner->getInputPortValue("", partialListPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22]"));
 		}
 
-		runner->firePublishedInputPortEvent();
-		runner->waitForAnyPublishedOutputPortEvent();
+		runner->firePublishedInputPortEvent(inPort);
+		runner->waitForFiredPublishedInputPortEvent();
 
 		{
-			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			json_object *item1Value = runner->getInputPortValue("", item1PortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("44"));
 
-			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			json_object *listValue = runner->getInputPortValue("", listPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22,33]"));
 
-			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			json_object *partialListValue = runner->getInputPortValue("", partialListPortIdentifier);
 			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22]"));
 		}
 
@@ -2027,11 +2144,14 @@ private slots:
 		VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 		runner->start();
 
+		map<VuoRunner::Port *, json_object *> m;
 		VuoRunner::Port *shouldDelayPort = runner->getPublishedInputPortWithName("ShouldDelay");
-		runner->setPublishedInputPortValue(shouldDelayPort, VuoBoolean_getJson(true));
+		m[shouldDelayPort] = VuoBoolean_getJson(true);
 		VuoRunner::Port *shouldDisablePort = runner->getPublishedInputPortWithName("ShouldDisable");
-		runner->setPublishedInputPortValue(shouldDisablePort, VuoBoolean_getJson(shouldDisable));
-		runner->firePublishedInputPortEvent();
+		m[shouldDisablePort] = VuoBoolean_getJson(shouldDisable);
+		runner->setPublishedInputPortValues(m);
+
+		runner->firePublishedInputPortEvent(shouldDelayPort);
 
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 		dispatch_async(queue, ^{
@@ -2067,32 +2187,24 @@ private slots:
 
 		string compositionPath = getCompositionPath(compositionFile.toUtf8().constData());
 
-		string bcPath;
-		string dylibPath;
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
-
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 
 		// Build and run the composition.
 		{
-			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
-											   alreadyLinkedResourcePaths, alreadyLinkedResources);
+			runner = createRunnerForLiveCoding(compositionPath, composition, runningCompositionLibraries);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
-											alreadyLinkedResourcePaths, alreadyLinkedResources);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
 		runner->stop();
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 
 		delete runner;
 		delete composition;
@@ -2105,7 +2217,7 @@ private:
 	public:
 		map<string, bool> outputPortsUpdated;
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			outputPortsUpdated[portIdentifier] = sentData;
 		}
@@ -2127,8 +2239,8 @@ private slots:
 
 		{
 			set<string> portsSendingDataTelemetry;
-			portsSendingDataTelemetry.insert("Count1__count");
-			portsSendingDataTelemetry.insert("Count2__count");
+			portsSendingDataTelemetry.insert(VuoStringUtilities::buildPortIdentifier("Count1", "count"));
+			portsSendingDataTelemetry.insert(VuoStringUtilities::buildPortIdentifier("Count2", "count"));
 			QTest::newRow("port data telemetry") << false << false << portsSendingDataTelemetry;
 		}
 	}
@@ -2140,48 +2252,42 @@ private slots:
 
 		string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
 
-		string bcPath;
-		string dylibPath;
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
-
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 
 		// Build and run the composition.
 		{
-			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
-											   alreadyLinkedResourcePaths, alreadyLinkedResources);
+			runner = createRunnerForLiveCoding(compositionPath, composition, runningCompositionLibraries);
 			runner->start();
 		}
 
 		// Subscribe to telemetry.
 		{
 			if (isSendingAllTelemetry)
-				runner->subscribeToAllTelemetry();
+				runner->subscribeToAllTelemetry("");
 			if (isSendingEventTelemetry)
-				runner->subscribeToEventTelemetry();
+				runner->subscribeToEventTelemetry("");
 			for (set<string>::iterator i = portsSendingDataTelemetry.begin(); i != portsSendingDataTelemetry.end(); ++i)
-				runner->subscribeToInputPortTelemetry(*i);
+				runner->subscribeToOutputPortTelemetry("", *i);
 		}
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
-											alreadyLinkedResourcePaths, alreadyLinkedResources);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
 		// Fire an event into the composition and collect telemetry.
 		TestPreservingTelemetrySubscriptionsRunnerDelegate runnerDelegate;
 		{
 			runner->setDelegate(&runnerDelegate);
-			runner->firePublishedInputPortEvent();
+
+			VuoRunner::Port *decrementBothPort = runner->getPublishedInputPortWithName("publishedDecrementBoth");
+			runner->firePublishedInputPortEvent(decrementBothPort);
 		}
 
 		runner->stop();
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 
 		delete runner;
 		delete composition;
@@ -2189,7 +2295,7 @@ private slots:
 		// Check the telemetry collected.
 		{
 			{
-				map<string, bool>::iterator portIter = runnerDelegate.outputPortsUpdated.find("Add1__sum");
+				map<string, bool>::iterator portIter = runnerDelegate.outputPortsUpdated.find(VuoStringUtilities::buildPortIdentifier("Add1", "sum"));
 				bool portIterFound = portIter != runnerDelegate.outputPortsUpdated.end();
 				QVERIFY(portIterFound == isSendingAllTelemetry || isSendingEventTelemetry);
 				if (portIterFound)
@@ -2214,32 +2320,27 @@ private slots:
 
 		string bcPath;
 		string dylibPath;
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 
 		// Build and run the composition.
 		{
-			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
-											   alreadyLinkedResourcePaths, alreadyLinkedResources);
+			runner = createRunnerForLiveCoding(compositionPath, composition, runningCompositionLibraries);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
-											alreadyLinkedResourcePaths, alreadyLinkedResources);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
 		QVERIFY(! VuoFileUtilities::fileExists(createdFile));
 
 		runner->stop();
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 
 		delete runner;
 		delete composition;
@@ -2255,22 +2356,21 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 
 		// Build and run an empty composition.
 		{
 			composition = new VuoCompilerComposition(new VuoComposition(), NULL);
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+			VuoCompilerIssues issues;
+			compiler->compileComposition(composition, bcPath, true, &issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, false, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, runningCompositionLibraries, compositionDir, false, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
@@ -2286,14 +2386,8 @@ private slots:
 			VuoNode *fireOnStartNode = fireOnStartNodeClass->newNode("FireOnStart1");
 			composition->getBase()->addNode(fireOnStartNode);
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											oldCompositionGraphviz, nullptr, runner);
 		}
 
 		// Replace the composition with one in which a new node class with library dependencies has been added.
@@ -2305,20 +2399,11 @@ private slots:
 			VuoNode *displayConsoleWindowNode = displayConsoleWindowNodeClass->newNode("DisplayConsoleWindow1");
 			composition->getBase()->addNode(displayConsoleWindowNode);
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource2", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											oldCompositionGraphviz, nullptr, runner);
 		}
 
 		runner->stop();
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 
 		delete runner;
 		delete composition;
@@ -2331,8 +2416,8 @@ private slots:
 
 		int testNum = 0;
 		QTest::newRow("no change") << testNum++ << 10110;
-		QTest::newRow("cable endpoint changed") << testNum++ << 10110;
-		QTest::newRow("stateful node added") << testNum++ << 11110;
+		QTest::newRow("cable endpoint changed") << testNum++ << 10220;
+		QTest::newRow("stateful node added") << testNum++ << 12330;
 		QTest::newRow("drawer resized") << testNum++ << 10110;
 		QTest::newRow("published port added") << testNum++ << 10100;
 		QTest::newRow("all published ports removed") << testNum++ << 10010;
@@ -2347,37 +2432,22 @@ private slots:
 
 		string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
 
-		string compositionDir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
-		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
-
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 		VuoRunner::Port *publishedIncrementOne = NULL;
 		VuoRunner::Port *publishedSum = NULL;
 		string originalCompositionGraphviz;
 
 		// Build and run the original composition.
 		{
-			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
-			VuoComposition *baseComposition = new VuoComposition();
-			composition = new VuoCompilerComposition(baseComposition, parser);
-			delete parser;
+			runner = createRunnerForLiveCoding(compositionPath, composition, runningCompositionLibraries);
 
 			originalCompositionGraphviz = composition->getGraphvizDeclaration();
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, false, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
-			runner->subscribeToEventTelemetry();
+			runner->subscribeToEventTelemetry("");
 
 			publishedIncrementOne = runner->getPublishedInputPortWithName("publishedIncrementOne");
 			QVERIFY(publishedIncrementOne != NULL);
@@ -2386,9 +2456,12 @@ private slots:
 
 			// "Count1:increment" becomes 10, "Count1:count" becomes 10,
 			// "Add1:sum" becomes 10 + 0 = 10.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(10));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(10);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)10);
 		}
 
@@ -2410,28 +2483,22 @@ private slots:
 
 		if (testNum == 0)  // no change
 		{
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionGraphviz = composition->getGraphvizDeclaration();
-			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Add1:sum" becomes 110 + 0 = 110.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
 		}
 
 		else if (testNum == 1)  // cable endpoint changed
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			VuoCable *cableToModify = NULL;
 			foreach (VuoCable *c, composition->getBase()->getCables())
 			{
@@ -2440,32 +2507,29 @@ private slots:
 			}
 			QVERIFY(cableToModify != NULL);
 
-			// Change "Count2:count -> Add1:in1" to "Count1:count -> Add1:in1".
+			// Change "Count2:count -> MakeList1:2" to "Count1:count -> MakeList1:2".
 			VuoPort *count1NodeCountPort = count1Node->getOutputPortWithName("count");
 			QVERIFY(count1NodeCountPort != NULL);
 			cableToModify->setFrom(count1Node, count1NodeCountPort);
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Add1:sum" becomes 110 + 110 = 220.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)220);
+
+			// When the composition is reverted, "MakeList1:2" remains at 110.
 		}
 
 		else if (testNum == 2)  // stateful node added
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			// Add "Count3".
 			VuoCompilerNodeClass *countNodeClass = count1Node->getNodeClass()->getCompiler();
 			VuoNode *count3Node = countNodeClass->newNode("Count3");
@@ -2495,70 +2559,57 @@ private slots:
 																	   makeList1Node->getCompiler(), makeList1NodeItem2Port);
 			composition->getBase()->addCable(count3ToAdd1Cable->getBase());
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Count3:increment" becomes 110, "Count3:count" becomes 110,
 			// "Add1:sum" becomes 110 + 110 = 220.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)220);
 
 			// "Count1:increment" becomes 1000, "Count1:count" becomes 1110,
 			// "Count3:increment" becomes 1110, "Count3:count" becomes 1220,
 			// "Add1:sum" becomes 1110 + 1220 = 2330.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1000));
+			m[publishedIncrementOne] = VuoInteger_getJson(1000);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)2330);
+
+			// When the composition is reverted, "MakeList1:2" remains at 1220.
 		}
 
 		else if (testNum == 3)  // drawer resized
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
-			// Replace 2-input "MakeList1" with 3-input "MakeList2".
+			// Replace 2-input "MakeList1" with 3-input "MakeList1".
 			VuoCompilerNodeClass *makeListNodeClass = compiler->getNodeClass("vuo.list.make.3.VuoInteger");
-			VuoNode *makeList2Node = makeListNodeClass->newNode("MakeList2");
-			composition->getBase()->replaceNode(makeList1Node, makeList2Node);
+			VuoNode *makeList2Node = makeListNodeClass->newNode("MakeList1");
+			makeList2Node->getCompiler()->setGraphvizIdentifier( makeList1Node->getCompiler()->getGraphvizIdentifier() );
+			composition->replaceNode(makeList1Node, makeList2Node);
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			VuoCompilerComposition::NodeReplacement nodeReplacement;
-			nodeReplacement.oldNodeIdentifier = "MakeList1";
-			nodeReplacement.newNodeIdentifier = "MakeList2";
-			nodeReplacement.oldAndNewPortIdentifiers["1"] = "1";
-			nodeReplacement.oldAndNewPortIdentifiers["2"] = "2";
-			nodeReplacement.oldAndNewPortIdentifiers["list"] = "list";
-			set<VuoCompilerComposition::NodeReplacement> nodeReplacements;
-			nodeReplacements.insert(nodeReplacement);
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, nodeReplacements);
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Add1:sum" becomes 110 + 0 = 110.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
 		}
 
 		else if (testNum == 4)  // published port added
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			// Add "publishedSetOne".
 			VuoCompilerType *type = compiler->getType("VuoInteger");
 			VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass("publishedSetOne", VuoPortClass::dataAndEventPort, type->getType());
@@ -2573,61 +2624,57 @@ private slots:
 			VuoCompilerCable *publishedCable = new VuoCompilerCable(NULL, compilerPublishedPort, count1Node->getCompiler(), count1NodeSetPort);
 			composition->getBase()->addCable(publishedCable->getBase());
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:setCount" becomes 100, "Count1:count" becomes 100,
 			// "Add1:sum" becomes 100 + 0 = 100.
 			VuoRunner::Port *publishedSetOne = runner->getPublishedInputPortWithName("publishedSetOne");
-			runner->setPublishedInputPortValue(publishedSetOne, VuoInteger_getJson(100));
-			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedSetOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
+			runner->firePublishedInputPortEvent(publishedSetOne);
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)100);
 		}
 
 		else if (testNum == 5)  // all published ports removed
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			for (int i = composition->getBase()->getPublishedInputPorts().size() - 1; i >= 0; --i)
+			{
+				for (VuoCable *publishedCable : composition->getBase()->getPublishedInputPorts().at(i)->getConnectedCables(true))
+					composition->getBase()->removeCable(publishedCable);
+
 				composition->getBase()->removePublishedInputPort(i);
+			}
 
 			for (int i = composition->getBase()->getPublishedOutputPorts().size() - 1; i >= 0; --i)
+			{
+				for (VuoCable *publishedCable : composition->getBase()->getPublishedOutputPorts().at(i)->getConnectedCables(true))
+					composition->getBase()->removeCable(publishedCable);
+
 				composition->getBase()->removePublishedOutputPort(i);
+			}
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// Don't test anything here, but below test that the published ports get added back in.
 		}
 
 		else if (testNum == 6)  // all published input ports removed
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			for (int i = composition->getBase()->getPublishedInputPorts().size() - 1; i >= 0; --i)
+			{
+				for (VuoCable *publishedCable : composition->getBase()->getPublishedInputPorts().at(i)->getConnectedCables(true))
+					composition->getBase()->removeCable(publishedCable);
+
 				composition->getBase()->removePublishedInputPort(i);
+			}
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Add1:sum" stays at 10.
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)10);
@@ -2635,33 +2682,26 @@ private slots:
 
 		else if (testNum == 7)  // published port renamed
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			VuoPublishedPort *publishedPort = composition->getBase()->getPublishedInputPortWithName("publishedIncrementOne");
 			publishedPort->getClass()->setName("publishedIncrementOneRenamed");
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Add1:sum" becomes 110 + 0 = 110.
 			VuoRunner::Port *publishedIncrementOneRenamed = runner->getPublishedInputPortWithName("publishedIncrementOneRenamed");
-			runner->setPublishedInputPortValue(publishedIncrementOneRenamed, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOneRenamed] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOneRenamed);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
 		}
 
 		else if (testNum == 8)  // published port type changed
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			// Remove "publishedIncrementOne -> Count1:increment".
 			VuoPublishedPort *publishedPort = composition->getBase()->getPublishedInputPortWithName("publishedIncrementOne");
 			VuoCable *publishedToCount1Cable = NULL;
@@ -2695,51 +2735,41 @@ private slots:
 																		count1Node->getCompiler(), count1NodeIncrementPort);
 			composition->getBase()->addCable(roundToCount1Cable->getBase());
 
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
 			// "Add1:sum" becomes 110 + 0 = 110.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(100);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
 		}
 
 		// Replace the latest composition with the original composition.
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
 			VuoCompilerComposition *originalComposition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(originalCompositionGraphviz, compiler);
 
-			compiler->compileComposition(originalComposition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource2", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
+			replaceCompositionForLiveCoding(compositionPath, originalComposition, runningCompositionLibraries,
+											composition->getGraphvizDeclaration(), nullptr, runner);
 
-			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																					  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 			delete originalComposition;
 
 			// "Count1:increment" becomes 10000, "Count1:count" becomes X,
 			// "Add1:sum" becomes X + Y = finalSum.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(10000));
+			map<VuoRunner::Port *, json_object *> m;
+			m[publishedIncrementOne] = VuoInteger_getJson(10000);
+			runner->setPublishedInputPortValues(m);
+
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
-			runner->waitForAnyPublishedOutputPortEvent();
+			runner->waitForFiredPublishedInputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)finalSum);
 		}
 
 		runner->stop();
-
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
 
 		delete runner;
 		delete composition;

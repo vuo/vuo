@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AllowFirstValue5 [type="vuo.event.allowFirstValue.VuoInteger" version="1.0.0" label="Allow First Value|<refresh>refresh\l|<value>value\l|<reset>reset\l|<firstValue>firstValue\r" pos="1320,285"];
+GetImageWidth4 [type="vuo.image.get.width" version="1.0.0" label="Get Image Width|<refresh>refresh\l|<image>image\l|<width>width\r" pos="1350,345"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="405,300" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,296"];
+MakeTube2 [type="vuo.scene.make.tube.VuoShader.VuoGenericType2.VuoGenericType3.VuoGenericType4" version="1.1.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="840,285" _rows="16" _columns="32" _thickness="0.3"];
+RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1050,285" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+ShadeWithImage2 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="630,300" _opacity="1.000000"];
+SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="210,300" _fire="2" _spunOffIndex_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Width>Width\l" _Width_type="VuoInteger"];
+
+AllowFirstValue5:firstValue -> PublishedOutputs:Width;
+GetImageWidth4:width -> AllowFirstValue5:value;
+MakeCheckerboardImage:image -> ShadeWithImage2:image;
+MakeList:list -> RenderSceneToImage:objects;
+MakeTube2:object -> MakeList:1;
+PublishedInputs:Event -> SpinOffEvents:fire;
+RenderSceneToImage:image -> GetImageWidth4:image;
+ShadeWithImage2:shader -> MakeTube2:outsideMaterial;
+SpinOffEvents:spunOffIndex -> MakeCheckerboardImage:upperLeftColor [event=true];
+}

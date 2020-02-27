@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.sort node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"list", "inputPortValues":{"list":[
+					{"channel":16,"controllerNumber":127,"value":127},
+					{"channel":16,"controllerNumber":127,"value":0},
+					{"channel":16,"controllerNumber":0,"value":127},
+					{"channel":16,"controllerNumber":0,"value":0},
+					{"channel":1,"controllerNumber":127,"value":127},
+					{"channel":1,"controllerNumber":127,"value":0},
+					{"channel":1,"controllerNumber":0,"value":127},
+					{"channel":1,"controllerNumber":0,"value":0},
+				], "sortOrder":"ascending" }, "outputPortValues":{"sortedList":[
+					{"channel":1,"controllerNumber":0,"value":0},
+					{"channel":1,"controllerNumber":0,"value":127},
+					{"channel":1,"controllerNumber":127,"value":0},
+					{"channel":1,"controllerNumber":127,"value":127},
+					{"channel":16,"controllerNumber":0,"value":0},
+                    {"channel":16,"controllerNumber":0,"value":127},
+					{"channel":16,"controllerNumber":127,"value":0},
+                    {"channel":16,"controllerNumber":127,"value":127}
+				]}},
+]}

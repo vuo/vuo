@@ -1,24 +1,24 @@
 /**
  * @file
- * Acts as a Syphon client, receiving images from a server with "Vuo" in its name if available, or else falling back on one of the available Syphon servers. Try running this composition at the same time as [SendImages.vuo](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/). 
+ * @brief Receive Images preferably from Vuo
+ * Acts as a Syphon client, receiving images from a server with "Vuo" in its name if available, or else falling back on one of the available Syphon servers. Try running this composition at the same time as [Send Images](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/).
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-FindServersByName [type="vuo.syphon.find.server.name" version="2.0.0" label="Find Servers by Name|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<serverName>serverName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="243,118" fillcolor="violet" _serverName="\"Vuo\""];
-GetFirstItemInList [type="vuo.list.get.first.VuoSyphonServerDescription" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="320,413"];
-ListSyphonServers [type="vuo.syphon.listServers" version="1.0.1" label="List Syphon Servers|<refresh>refresh\l|<serversChanged>serversChanged\r" pos="50,119" fillcolor="violet" _serversChanged_eventThrottling="enqueue"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="762,147"];
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.1" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="530,122" fillcolor="violet" _receivedImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="803,121" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+FindServersByName [type="vuo.syphon.find.server.name2" version="3.0.0" label="Find Servers by Name|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<serverName>serverName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="240,120" fillcolor="orange" _serverName="\"*Vuo*\""];
+GetFirstItemInList [type="vuo.list.get.first.VuoSyphonServerDescription" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="315,420"];
+ListSyphonServers [type="vuo.syphon.listServers" version="1.0.1" label="List Syphon Servers|<refresh>refresh\l|<serversChanged>serversChanged\r" pos="45,120" fillcolor="orange" _serversChanged_eventThrottling="enqueue"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.2" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="525,120" fillcolor="orange" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="795,120" _updatedWindow_eventThrottling="enqueue"];
 
 FindServersByName:foundServerDescriptions -> GetFirstItemInList:list;
 GetFirstItemInList:firstItem -> ReceiveImageFromSyphon:serverDescription;
 ListSyphonServers:serversChanged -> FindServersByName:serverDescriptions;
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
 ReceiveImageFromSyphon:receivedImage -> RenderImageToWindow:image;
 }

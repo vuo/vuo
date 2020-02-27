@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorDispersion implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorDispersion.hh"
@@ -14,7 +14,7 @@ extern "C"
 	#include "VuoDispersion.h"
 }
 
-#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+#include "VuoInputEditorCurveRenderer.hh"
 
 /**
  * Constructs a VuoInputEditorDispersion object.
@@ -27,10 +27,10 @@ VuoInputEditor * VuoInputEditorDispersionFactory::newInputEditor()
 /**
  * Renders an icon representing the specified dispersion type.
  */
-static QIcon *renderMenuIconWithDispersion(VuoDispersion dispersion)
+static QIcon *renderMenuIconWithDispersion(VuoDispersion dispersion, bool isDark)
 {
 	return VuoInputEditorIcon::renderIcon(^(QPainter &p){
-											  p.setPen(QPen(Qt::black, 1.));
+											  p.setPen(QPen(QColor(isDark ? "#ffffff" : "#000000"), 1.));
 											  if (dispersion == VuoDispersion_Linear)
 												  p.drawLine(QPointF(0.5, 7.5), QPointF(14.5, 7.5));
 											  else if (dispersion == VuoDispersion_Radial)
@@ -50,7 +50,7 @@ VuoInputEditorMenuItem * VuoInputEditorDispersion::setUpMenuTree()
 	{
 		json_object *optionAsJson = VuoDispersion_getJson( (VuoDispersion)i );
 		char *optionSummary = VuoDispersion_getSummary( (VuoDispersion)i );
-		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDispersion((VuoDispersion)i));
+		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDispersion((VuoDispersion)i, isInterfaceDark()));
 		free(optionSummary);
 
 		optionsTree->addItem(optionItem);

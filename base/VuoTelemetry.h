@@ -2,9 +2,9 @@
  * @file
  * VuoTelemetry interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -40,6 +40,7 @@ enum VuoControlRequest
 	 * Request that the input port be set to the given value (converted to the port's type).
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 *		@arg @c char *valueAsString;
 	 */
@@ -49,6 +50,8 @@ enum VuoControlRequest
 	 * Request that the input port's value be looked up and returned.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c bool shouldUseInterprocessSerialization;
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestInputPortValueRetrieve,
@@ -58,6 +61,7 @@ enum VuoControlRequest
 	 *
 	 * Includes data message-parts:
 	 *		@arg @c bool shouldUseInterprocessSerialization;
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestOutputPortValueRetrieve,
@@ -66,6 +70,7 @@ enum VuoControlRequest
 	 * Request that the input port's summary be looked up and returned.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestInputPortSummaryRetrieve,
@@ -74,6 +79,7 @@ enum VuoControlRequest
 	 * Request that the output port's summary be looked up and returned.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestOutputPortSummaryRetrieve,
@@ -82,6 +88,7 @@ enum VuoControlRequest
 	 * Request that an event be fired from the trigger port.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestTriggerPortFireEvent,
@@ -120,16 +127,22 @@ enum VuoControlRequest
 	 * Request that an event be fired through the published input port.
 	 *
 	 * Includes data message-parts:
-	 *		@arg @c char *name
+	 *     @arg @c int count;
+	 *     @arg @c char *name0;
+	 *     @arg @c char *name1;
+	 *     @arg ...
 	 */
 	VuoControlRequestPublishedInputPortFireEvent,
 
 	/**
-	 * Request that the published input port be set to the given value (converted to the port's type).
+	 * Request that published input ports be set to the given values (converted to the port's type).
 	 *
 	 * Includes data message-parts:
-	 *		@arg @c char *name;
-	 *		@arg @c char *valueAsString;
+	 *     @arg @c char *port0Name;
+	 *     @arg @c char *port0Value;
+	 *     @arg @c char *port1Name;
+	 *     @arg @c char *port1Value;
+	 *     @arg ...
 	 */
 	VuoControlRequestPublishedInputPortValueModify,
 
@@ -162,6 +175,7 @@ enum VuoControlRequest
 	 * The telemetry includes a summary of the port's data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestInputPortTelemetrySubscribe,
@@ -171,6 +185,7 @@ enum VuoControlRequest
 	 * The telemetry includes a summary of the port's data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestOutputPortTelemetrySubscribe,
@@ -180,6 +195,7 @@ enum VuoControlRequest
 	 * The telemetry includes a summary of the port's data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestInputPortTelemetryUnsubscribe,
@@ -189,27 +205,40 @@ enum VuoControlRequest
 	 * The telemetry includes a summary of the port's data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoControlRequestOutputPortTelemetryUnsubscribe,
 
 	/**
 	 * Request that the composition start sending telemetry for all events.
+	 *
+	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 */
 	VuoControlRequestEventTelemetrySubscribe,
 
 	/**
 	 * Request that the composition stop sending telemetry for all events.
+	 *
+	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 */
 	VuoControlRequestEventTelemetryUnsubscribe,
 
 	/**
 	 * Request that the composition start sending all telemetry.
+	 *
+	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 */
 	VuoControlRequestAllTelemetrySubscribe,
 
 	/**
 	 * Request that the composition stop sending all telemetry.
+	 *
+	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 */
 	VuoControlRequestAllTelemetryUnsubscribe
 };
@@ -342,7 +371,7 @@ enum VuoControlReply
 	VuoControlReplyPublishedInputPortFiredEvent,
 
 	/**
-	 * The published input port's value has been set.
+	 * The published input port values have been set.
 	 */
 	VuoControlReplyPublishedInputPortValueModified,
 
@@ -426,6 +455,14 @@ enum VuoLoaderControlRequest
 	 *
 	 * Includes data message-parts:
 	 *		@arg @c char *dylibPath;
+	 *      @arg @c int resouceDylibsAddedCount;
+	 *      @arg @c char *resourceDylibAdded0;
+	 *      @arg @c char *resourceDylibAdded1;
+	 *      @arg @c ...
+	 *      @arg @c int resourceDylibsRemovedCount;
+	 *      @arg @c char *resourceDylibRemoved0;
+	 *      @arg @c char *resourceDylibRemoved1;
+	 *      @arg @c ...
 	 *		@arg @c char *compositionDiff;
 	 */
 	VuoLoaderControlRequestCompositionReplace
@@ -460,6 +497,7 @@ enum VuoTelemetry
 	 * Published just prior to calling each node's nodeEvent/nodeInstanceEvent function.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *nodeIdentifier;
 	 */
 	VuoTelemetryNodeExecutionStarted,
@@ -468,21 +506,21 @@ enum VuoTelemetry
 	 * Published just after each node's nodeEvent/nodeInstanceEvent function returns.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *nodeIdentifier;
 	 */
 	VuoTelemetryNodeExecutionFinished,
 
 	/**
-	 * Published just after each node's nodeEvent/nodeInstanceEvent function returns
-	 * (for each input port that receives an event from the node)
-	 * and just after an input port's value is set in response to a
-	 * VuoControlRequestInputPortValueModify message.
+	 * Published just after an input port receives an event and/or data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier0;
 	 *		@arg @c char *portIdentifier0;
 	 *		@arg @c bool receivedEvent0;
 	 *		@arg @c bool receivedData0;
 	 *		@arg @c char *portDataSummary0;
+	 *      @arg @c char *compositionIdentifier1;
 	 *		@arg @c char *portIdentifier1;
 	 *		@arg @c bool receivedEvent1;
 	 *		@arg @c bool receivedData1;
@@ -493,15 +531,17 @@ enum VuoTelemetry
 	VuoTelemetryInputPortsUpdated,
 
 	/**
-	 * Published just after each node's nodeEvent/nodeInstanceEvent function returns,
-	 * (for each output port that transmits an event)
-	 * and just after a trigger port fires an event.
+	 * Published just after an output port transmits/fires an event and/or data.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier0;
 	 *		@arg @c char *portIdentifier0;
+	 *      @arg @c bool sentEvent0;
 	 *		@arg @c bool sentData0;
 	 *		@arg @c char *portDataSummary0;
+	 *      @arg @c char *compositionIdentifier1;
 	 *		@arg @c char *portIdentifier1;
+	 *      @arg @c bool sentEvent1;
 	 *		@arg @c bool sentData1;
 	 *		@arg @c char *portData1;
 	 *		@arg @c char *portDataSummary1;
@@ -525,9 +565,16 @@ enum VuoTelemetry
 	VuoTelemetryPublishedOutputPortsUpdated,
 
 	/**
+	 * Published when the event most recently fired into the published inputs (and any events spun off from it)
+	 * finishes propagating through the composition.
+	 */
+	VuoTelemetryEventFinished,
+
+	/**
 	 * Published just after a trigger port drops an event.
 	 *
 	 * Includes data message-parts:
+	 *      @arg @c char *compositionIdentifier;
 	 *		@arg @c char *portIdentifier;
 	 */
 	VuoTelemetryEventDropped,
@@ -555,6 +602,7 @@ char * vuoCopyStringFromMessage(zmq_msg_t *message);
 void vuoInitMessageWithString(zmq_msg_t *message, const char *string);
 void vuoInitMessageWithInt(zmq_msg_t *message, int value);
 void vuoInitMessageWithBool(zmq_msg_t *message, bool value);
+bool VuoTelemetry_hasMoreToReceive(void *socket);
 char * vuoReceiveAndCopyString(void *socket, char **error);
 unsigned long vuoReceiveUnsignedInt64(void *socket, char **error);
 int vuoReceiveInt(void *socket, char **error);

@@ -2,9 +2,9 @@
  * @file
  * VuoAudioSamples C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -19,6 +19,10 @@
 
 #include "VuoInteger.h"
 #include "VuoReal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern const VuoInteger VuoAudioSamples_bufferSize;	///<https://b33p.net/kosada/node/7650
 extern const VuoReal VuoAudioSamples_sampleRate;	///<https://b33p.net/kosada/node/7649
@@ -53,8 +57,10 @@ void VuoAudioSamples_retain(VuoAudioSamples value);
 void VuoAudioSamples_release(VuoAudioSamples value);
 ///@}
 
+#ifdef __cplusplus
+}
+#endif
+
 /**
  * @}
  */
-
-

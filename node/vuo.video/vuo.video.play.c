@@ -2,9 +2,9 @@
  * @file
  * vuo.video.play node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -32,10 +32,10 @@ VuoModuleMetadata({
 						"VuoVideoPlayer"
 					],
 					"node": {
-					"isInterface" : true,
 					"exampleCompositions" : [
 						"PlayMovie.vuo",
 						"PlayMoviesAndCameraOnCube.vuo",
+						"PlayMoviesInFolder.vuo",
 						"PlayMovieWithSound.vuo"
 						]
 					}
@@ -51,6 +51,8 @@ struct nodeInstanceData
 	VuoReal lastSoughtTime;
 	VuoReal playbackRate;
 	VuoVideoOptimization optimizeFor;
+
+	bool triggersEnabled;
 };
 
 bool setVideoPath(struct nodeInstanceData* instance, VuoUrl url)
@@ -108,7 +110,9 @@ static void vuo_video_play_setTime(struct nodeInstanceData *instance, VuoReal ti
 	int direction;
 	VuoReal sought = VuoVideo_validateTimestamp(time, duration, instance->loop, &direction);
 	instance->lastSoughtTime = sought;
-	VuoVideo_seekToSecond(instance->player, sought);
+	if (!VuoVideo_seekToSecond(instance->player, sought))
+		VUserLog("Error: Couldn't seek.");
+
 	VuoVideo_setPlaybackRate(instance->player, instance->playbackRate * direction);
 }
 
@@ -141,6 +145,8 @@ void nodeInstanceTriggerStart(
 	VuoOutputTrigger(finishedPlayback, void)
 	)
 {
+	(*instance)->triggersEnabled = true;
+
 	vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 }
 
@@ -156,18 +162,20 @@ void nodeInstanceTriggerStop(
 		VuoVideo_setAudioDelegate((*instance)->player, NULL);
 		VuoVideo_setPlaybackFinishedDelegate((*instance)->player, NULL);
 	}
+
+	(*instance)->triggersEnabled = false;
 }
 
 void nodeInstanceEvent(
 	VuoInstanceData(struct nodeInstanceData*) instance,
-	VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
-	VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
 	VuoInputEvent({"eventBlocking":"none"}) play,
 	VuoInputEvent({"eventBlocking":"none"}) pause,
-	VuoInputData(VuoLoopType, {"default":"loop"}) loop,
-	VuoInputData(VuoReal, {"default":1, "suggestedMin":-2, "suggestedMax":2, "suggestedStep":0.1}) playbackRate,
 	VuoInputData(VuoReal, {"default":""}) setTime,
 	VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
+	VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
+	VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
+	VuoInputData(VuoLoopType, {"default":"loop"}) loop,
+	VuoInputData(VuoReal, {"default":1, "suggestedMin":-2, "suggestedMax":2, "suggestedStep":0.1}) playbackRate,
 	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
 	VuoInputEvent({"eventBlocking":"none", "data":"optimization"}) optimizationChanged,
 	VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
@@ -175,6 +183,9 @@ void nodeInstanceEvent(
 	VuoOutputTrigger(finishedPlayback, void)
 	)
 {
+	if (!(*instance)->triggersEnabled)
+		return;
+
 	if(urlEvent)
 	{
 		if(setVideoPath(*instance, url))
@@ -195,7 +206,8 @@ void nodeInstanceEvent(
 
 		setVideoPath(*instance, url);
 
-		VuoVideo_seekToSecond((*instance)->player, timestamp);
+		if (!VuoVideo_seekToSecond((*instance)->player, timestamp))
+			VUserLog("Error: Couldn't seek.");
 
 		vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 	}
@@ -257,7 +269,8 @@ void nodeInstanceTriggerUpdate(
 
 		setVideoPath(*instance, url);
 
-		VuoVideo_seekToSecond((*instance)->player, timestamp);
+		if (!VuoVideo_seekToSecond((*instance)->player, timestamp))
+			VUserLog("Error: Couldn't seek.");
 
 		vuo_video_play_resume(*instance, decodedVideo, decodedAudio, finishedPlayback);
 	}

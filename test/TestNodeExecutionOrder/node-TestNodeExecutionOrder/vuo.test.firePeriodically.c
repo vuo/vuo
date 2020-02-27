@@ -2,9 +2,9 @@
  * @file
  * vuo.test.firePeriodically node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,9 +19,6 @@ VuoModuleMetadata({
 					 "title" : "TestFirePeriodically",
 					 "description" : "Periodically fires events until a maximum number is reached. Together with each event, outputs either 'nodeTitle eventCount' (for all but the last event) or a sentinel string (for the last event).",
 					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 
@@ -37,6 +34,7 @@ struct nodeInstanceData
 	bool timerEnabled;
 	dispatch_queue_t timerEnabledQueue;
 	int eventCount;
+	bool triggersEnabled;
 };
 
 static void cancelRepeatingTimer(struct nodeInstanceData *ctx)
@@ -60,7 +58,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const int millisecon
 		cancelRepeatingTimer(ctx);
 
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
+	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, q);
 
 	uint64_t periodNsec = milliseconds * USEC_PER_SEC;
 	dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, periodNsec), periodNsec, 0);
@@ -99,6 +97,7 @@ struct nodeInstanceData * nodeInstanceInit()
 	ctx->timerEnabled = false;
 	ctx->timerEnabledQueue = dispatch_queue_create("org.vuo.test.firePeriodically", DISPATCH_QUEUE_PRIORITY_DEFAULT);
 	ctx->eventCount = 0;
+	ctx->triggersEnabled = false;
 	return ctx;
 }
 
@@ -107,6 +106,7 @@ void nodeInstanceTriggerStart
 		VuoInstanceData(struct nodeInstanceData *) ctx
 )
 {
+	(*ctx)->triggersEnabled = true;
 	dispatch_sync((*ctx)->timerEnabledQueue, ^{
 					  (*ctx)->timerEnabled = true;
 				  });
@@ -126,6 +126,9 @@ void nodeInstanceEvent
 	VuoOutputData(VuoText) nodeInfo
 )
 {
+	if (!(*ctx)->triggersEnabled)
+		return;
+
 	setRepeatingTimer(*ctx, milliseconds, fired, maxEventCount, nodeTitle);
 
 	*triggerInfoOut = triggerInfoIn;
@@ -145,6 +148,7 @@ void nodeInstanceTriggerStop
 					  (*ctx)->timerEnabled = false;
 				  });
 	cancelRepeatingTimer(*ctx);
+	(*ctx)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

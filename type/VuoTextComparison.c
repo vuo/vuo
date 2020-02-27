@@ -2,13 +2,12 @@
  * @file
  * VuoTextComparison implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
-#include "VuoTextComparison.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -18,7 +17,8 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoText"
+						 "VuoText",
+						 "VuoList_VuoTextComparison",
 					 ]
 				 });
 #endif
@@ -30,7 +30,7 @@ VuoModuleMetadata({
  */
 VuoTextComparison VuoTextComparison_makeFromJson(json_object *js)
 {
-	VuoTextComparison value = { VuoTextComparison_Equals, true };
+	VuoTextComparison value = { VuoTextComparison_Equals, true, "" };
 
 	json_object *o;
 	if (json_object_object_get_ex(js, "type", &o))
@@ -44,6 +44,10 @@ VuoTextComparison VuoTextComparison_makeFromJson(json_object *js)
 			value.type = VuoTextComparison_BeginsWith;
 		else if (! strcmp(typeAsString, "endsWith"))
 			value.type = VuoTextComparison_EndsWith;
+		else if (! strcmp(typeAsString, "wildcard"))
+			value.type = VuoTextComparison_MatchesWildcard;
+		else if (! strcmp(typeAsString, "regex"))
+			value.type = VuoTextComparison_MatchesRegEx;
 	}
 
 	if (json_object_object_get_ex(js, "isCaseSensitive", &o))
@@ -75,6 +79,12 @@ json_object * VuoTextComparison_getJson(const VuoTextComparison value)
 		case VuoTextComparison_EndsWith:
 			typeAsString = "endsWith";
 			break;
+		case VuoTextComparison_MatchesWildcard:
+			typeAsString = "wildcard";
+			break;
+		case VuoTextComparison_MatchesRegEx:
+			typeAsString = "regex";
+			break;
 	}
 	json_object_object_add(js, "type", json_object_new_string(typeAsString));
 
@@ -82,6 +92,31 @@ json_object * VuoTextComparison_getJson(const VuoTextComparison value)
 
 	return js;
 }
+
+#if 0
+// VuoRuntimeCommunicator::mergeEnumDetails and VuoInputEditorWithEnumMenu::setUpMenuTree
+// currently assume that types implementing a _getAllowedValues function can be stored in int64_t.
+// Since VuoTextComparison is a struct, it topples the stack.
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoTextComparison VuoTextComparison_getAllowedValues(void)
+{
+	VuoList_VuoTextComparison l = VuoListCreate_VuoTextComparison();
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_Equals,     false, ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_Equals,     true,  ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_Contains,   false, ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_Contains,   true,  ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_BeginsWith, false, ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_BeginsWith, true,  ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_EndsWith,   false, ""});
+	VuoListAppendValue_VuoTextComparison(l, (VuoTextComparison){VuoTextComparison_EndsWith,   true,  ""});
+	VuoTextComparison_MatchesWildcard…
+	VuoTextComparison_MatchesRegEx…
+	return l;
+}
+#endif
 
 /**
  * @ingroup VuoTextComparison
@@ -103,6 +138,12 @@ char * VuoTextComparison_getSummary(const VuoTextComparison value)
 			break;
 		case VuoTextComparison_EndsWith:
 			typeAsString = "Ends with";
+			break;
+		case VuoTextComparison_MatchesWildcard:
+			typeAsString = "Matches wildcard";
+			break;
+		case VuoTextComparison_MatchesRegEx:
+			typeAsString = "Matches regex";
 			break;
 	}
 

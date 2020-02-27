@@ -2,40 +2,39 @@
  * @file
  * Shows images dragged from other apps and dropped onto the composition's window.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CombineLayersWithTransform [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="990,780"];
-Enqueue2 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="840,795" _maxItemCount="10"];
+CombineLayersWithTransform [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="1305,765"];
+Enqueue2 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="1155,780" _maxItemCount="10"];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="825,645"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="645,240" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="570,630" fillcolor="violet"];
-GetDragValues2 [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="570,510" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="345,270" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="540,615" fillcolor="orange"];
+GetDragValues2 [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="555,510" fillcolor="orange"];
 GetFirstItemInList [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="630,750"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="780,420" _name="\"\"" _rotation="0.0" _width="0.5" _height="0.5"];
-MakeList3 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1062,401" fillcolor="green"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1082,416" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,810" _rotation="0.0" _width="0.5" _opacity="1.0"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="795,270" _text="\"Drag images onto this window.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
-ReceiveFileDrags [type="vuo.ui.drag.file" version="1.0.0" label="Receive File Drags|<refresh>refresh\l|<window>window\l|<dragEntered>dragEntered\r|<dragMovedTo>dragMovedTo\r|<dragCompleted>dragCompleted\r|<dragExited>dragExited\r" pos="330,435" fillcolor="violet" _dragEntered_eventThrottling="enqueue" _dragMovedTo_eventThrottling="enqueue" _dragCompleted_eventThrottling="enqueue" _dragExited_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1110,390" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SelectLatest3 [type="vuo.select.latest.2.VuoColor" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="585,435" _option1="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25000381469726562}" _option2="{\"r\":0,\"g\":0,\"b\":0,\"a\":0}"];
+MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="795,450" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.5" _height="0.5" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList3 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1469,431" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="960,795" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.5" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="825,270" _text="\"Drag images onto this window.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":28,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveFileDrags [type="vuo.ui.drag.file2" version="2.0.0" label="Receive File Drags|<refresh>refresh\l|<window>window\l|<dragEntered>dragEntered\r|<dragMovedTo>dragMovedTo\r|<dragCompleted>dragCompleted\r|<dragExited>dragExited\r" pos="315,375" fillcolor="orange" _dragEntered_eventThrottling="enqueue" _dragMovedTo_eventThrottling="enqueue" _dragCompleted_eventThrottling="enqueue" _dragExited_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1515,420" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest3 [type="vuo.select.latest.2.VuoColor" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="570,420" _option1="\{\"r\":1,\"g\":1,\"b\":1,\"a\":0.25000381469726562\}" _option2="\{\"r\":0,\"g\":0,\"b\":0,\"a\":0\}"];
 
 CombineLayersWithTransform:layer -> MakeList3:2;
 Enqueue2:list -> CombineLayersWithTransform:layers;
 FetchImage:image -> MakeScaledLayer:image;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> MakeTextLayer:text;
 GetDragValues2:position -> MakeColorLayer:center;
 GetDragValues:position -> MakeScaledLayer:center;
 GetDragValues:urls -> GetFirstItemInList:list;
 GetFirstItemInList:firstItem -> FetchImage:url;
 MakeColorLayer:layer -> MakeList3:3;
 MakeList3:list -> RenderLayersToWindow:layers;
-MakeList6:list -> RenderLayersToWindow:setWindowProperties;
 MakeScaledLayer:layer -> Enqueue2:addItem;
 MakeTextLayer:layer -> MakeList3:1;
 ReceiveFileDrags:dragCompleted -> GetDragValues:drag;
@@ -43,6 +42,6 @@ ReceiveFileDrags:dragCompleted -> SelectLatest3:option2 [event=true];
 ReceiveFileDrags:dragEntered -> SelectLatest3:option1 [event=true];
 ReceiveFileDrags:dragExited -> SelectLatest3:option2 [event=true];
 ReceiveFileDrags:dragMovedTo -> GetDragValues2:drag;
-RenderLayersToWindow:showedWindow -> ReceiveFileDrags:window [style=invis];
+RenderLayersToWindow:updatedWindow -> ReceiveFileDrags:window [style=invis];
 SelectLatest3:latest -> MakeColorLayer:color;
 }

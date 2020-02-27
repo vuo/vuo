@@ -2,14 +2,16 @@
  * @file
  * TestSubcompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
 
 #include <Vuo/Vuo.h>
+
+#include "VuoRendererCommon.hh"
 
 // Be able to use these types in QTest::addColumn()
 typedef QList<VuoPortClass::EventBlocking> EventBlockingList;
@@ -18,6 +20,7 @@ typedef QList<bool> BoolList;
 Q_DECLARE_METATYPE(BoolList);
 typedef QMap<QString, QString> QStringMap;
 Q_DECLARE_METATYPE(QStringMap);
+Q_DECLARE_METATYPE(VuoCompilerCompositionDiff *);
 
 
 /**
@@ -30,45 +33,67 @@ class TestSubcompositions : public TestCompositionExecution
 private:
 
 	VuoCompiler *compiler;
+	TestCompilerDelegate *compilerDelegate;
 
 	/**
-	 * Copy the provided composition into the "User Modules" directory in preparation for installation as a subcomposition.
-	 * Return the path to which it was copied.
+	 * Returns the path where the composition would be copied to in order to install it,
+	 * and outputs the node class name it would have.
 	 */
-	string copyIntoSubcompositionDir(string compositionPath)
+	string getInstalledCompositionPath(string compositionPath, string &nodeClassName)
 	{
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
 
-		string copiedCompositionFileName = file + "." + ext;
-		copiedCompositionFileName[0] = tolower(copiedCompositionFileName[0]);
-		copiedCompositionFileName = "vuo.test." + copiedCompositionFileName;
-		string installedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + copiedCompositionFileName;
-		VuoFileUtilities::copyFile(compositionPath, installedCompositionPath);
+		nodeClassName = file;
+		nodeClassName[0] = tolower(nodeClassName[0]);
+		nodeClassName = "vuo.test." + nodeClassName;
 
-		return installedCompositionPath;
+		string copiedCompositionFileName = nodeClassName + "." + ext;
+		return VuoFileUtilities::getUserModulesPath() + "/" + copiedCompositionFileName;
 	}
 
 	/**
-	 * For each .vuo file in the compositions folder, delete the corresponding .vuo file and .vuonode file in the Modules folder.
+	 * Returns the path where the compiled composition would be cached.
+	 */
+	string getCachedCompiledCompositionPath(string nodeClassName)
+	{
+		return VuoFileUtilities::getCachePath() + "/User/Modules/" + nodeClassName + ".vuonode";
+	}
+
+	/**
+	 * Copy the provided composition into the "User Modules" directory. Returns the node class name.
+	 */
+	string installSubcomposition(string compositionPath)
+	{
+		string nodeClassName;
+		string installedCompositionPath = getInstalledCompositionPath(compositionPath, nodeClassName);
+
+		VuoFileUtilities::copyFile(compositionPath, installedCompositionPath);
+
+		return nodeClassName;
+	}
+
+	/**
+	 * For each .vuo file in the compositions folder, delete the corresponding installed composition files.
 	 */
 	void uninstallSubcompositions()
 	{
 		QDir compositionDir = getCompositionDir();
 		QStringList filter("*.vuo");
 		QStringList compositionFileNames = compositionDir.entryList(filter);
+		compositionFileNames.append("ParseError.vuo");
 		foreach (QString compositionFileName, compositionFileNames)
 		{
-			string dir, nodeClassName, ext;
-			VuoFileUtilities::splitPath(compositionFileName.toStdString(), dir, nodeClassName, ext);
-			nodeClassName[0] = tolower(nodeClassName[0]);
-			nodeClassName = "vuo.test." + nodeClassName;
+			string nodeClassName;
+			string installedCompositionPath = getInstalledCompositionPath(compositionFileName.toStdString(), nodeClassName);
 
-			if (compiler)
-				compiler->uninstallSubcomposition(nodeClassName);
+			VuoFileUtilities::deleteFile(installedCompositionPath);
 
-			string copiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
-			remove(copiedCompositionPath.c_str());
+			if (! compiler)
+			{
+				string cachedModulePath = getCachedCompiledCompositionPath(nodeClassName);
+				VuoFileUtilities::deleteFile(cachedModulePath);
+			}
 		}
 	}
 
@@ -82,12 +107,16 @@ private slots:
 	void init()
 	{
 		compiler = initCompiler();
+		compilerDelegate = new TestCompilerDelegate();
+		compiler->setDelegate(compilerDelegate);
 	}
 
 	void cleanup()
 	{
-		uninstallSubcompositions();
 		delete compiler;
+		delete compilerDelegate;
+		VuoCompiler::reset();
+		uninstallSubcompositions();
 	}
 
 	void testNodeInterface_data(void)
@@ -95,7 +124,6 @@ private slots:
 		QTest::addColumn< QString >("compositionName");
 		QTest::addColumn< QString >("expectedNodeClassName");
 		QTest::addColumn< QString >("expectedDefaultTitle");
-		QTest::addColumn< bool >("expectedIsInterface");
 		QTest::addColumn< bool >("expectedIsStateful");
 		QTest::addColumn< QStringList >("expectedInputPortNames");
 		QTest::addColumn< QStringList >("expectedInputPortDisplayNames");
@@ -114,7 +142,7 @@ private slots:
 		eventBlockingTemplate.append(VuoPortClass::EventBlocking_None);
 
 		{
-			QTest::newRow("Empty composition") << "Empty" << "vuo.test.empty" << "Empty" << false << false << inputNamesTemplate << QStringList() << inputTypesTemplate << QStringList() << QStringList() << QStringList() << eventBlockingTemplate << BoolList();
+			QTest::newRow("Empty composition") << "Empty" << "vuo.test.empty" << "Empty" << false << inputNamesTemplate << QStringList() << inputTypesTemplate << QStringList() << QStringList() << QStringList() << eventBlockingTemplate << BoolList();
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -151,24 +179,7 @@ private slots:
 			outputTypes.append("VuoPoint2d");
 			isTrigger.append(true);
 
-			QTest::newRow("All kinds of ports") << "PortKinds" << "vuo.test.portKinds" << "Port Kinds" << true << true << inputNames << inputDisplayNames << inputTypes << outputNames << outputDisplayNames << outputTypes << eventBlocking << isTrigger;
-		}
-		{
-			QStringList inputNames = inputNamesTemplate;
-			QStringList inputTypes = inputTypesTemplate;
-			EventBlockingList eventBlocking = eventBlockingTemplate;
-			inputNames.append("In");
-			inputTypes.append("VuoPoint2d");
-			eventBlocking.append(VuoPortClass::EventBlocking_None);
-
-			QStringList outputNames;
-			QStringList outputTypes;
-			BoolList isTrigger;
-			outputNames.append("Out");
-			outputTypes.append("VuoPoint2d");
-			isTrigger.append(true);
-
-			QTest::newRow("Trigger joining event flow to output") << "TriggerConfluence" << "vuo.test.triggerConfluence" << "Trigger Confluence" << true << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("All kinds of ports") << "PortKinds" << "vuo.test.portKinds" << "Port Kinds" << true << inputNames << inputDisplayNames << inputTypes << outputNames << outputDisplayNames << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -185,7 +196,7 @@ private slots:
 			outputTypes.append("VuoPoint2d");
 			isTrigger.append(false);
 
-			QTest::newRow("Trigger joining data flow to output") << "TriggerBlocked" << "vuo.test.triggerBlocked" << "Trigger Blocked" << true << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Trigger joining data flow to output") << "TriggerBlocked" << "vuo.test.triggerBlocked" << "Trigger Blocked" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -202,7 +213,7 @@ private slots:
 			outputTypes.append("VuoReal");
 			isTrigger.append(false);
 
-			QTest::newRow("Input event to door") << "AllowAlternating" << "vuo.test.allowAlternating" << "Allow Alternating" << false << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Input event to door") << "AllowAlternating" << "vuo.test.allowAlternating" << "Allow Alternating" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -219,7 +230,7 @@ private slots:
 			outputTypes.append("VuoInteger");
 			isTrigger.append(false);
 
-			QTest::newRow("Input event to wall") << "InputBlocked" << "vuo.test.inputBlocked" << "Input Blocked" << false << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Input event to wall") << "InputBlocked" << "vuo.test.inputBlocked" << "Input Blocked" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -227,7 +238,7 @@ private slots:
 			EventBlockingList eventBlocking = eventBlockingTemplate;
 			inputNames.append("In1");
 			inputTypes.append("VuoInteger");
-			eventBlocking.append(VuoPortClass::EventBlocking_None);
+			eventBlocking.append(VuoPortClass::EventBlocking_Wall);
 			inputNames.append("In2");
 			inputTypes.append("event");
 			eventBlocking.append(VuoPortClass::EventBlocking_None);
@@ -239,7 +250,7 @@ private slots:
 			outputTypes.append("VuoInteger");
 			isTrigger.append(false);
 
-			QTest::newRow("Input event to wall and output") << "InputBlockedAndNotBlocked" << "vuo.test.inputBlockedAndNotBlocked" << "Input Blocked And Not Blocked" << false << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Input event to wall and output") << "InputBlockedAndNotBlocked" << "vuo.test.inputBlockedAndNotBlocked" << "Input Blocked And Not Blocked" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -247,7 +258,7 @@ private slots:
 			EventBlockingList eventBlocking = eventBlockingTemplate;
 			inputNames.append("In1");
 			inputTypes.append("VuoPoint3d");
-			eventBlocking.append(VuoPortClass::EventBlocking_Door);
+			eventBlocking.append(VuoPortClass::EventBlocking_Wall);
 			inputNames.append("In2");
 			inputTypes.append("VuoBoolean");
 			eventBlocking.append(VuoPortClass::EventBlocking_Door);
@@ -262,7 +273,30 @@ private slots:
 			outputTypes.append("VuoPoint3d");
 			isTrigger.append(false);
 
-			QTest::newRow("Input event to wall and door") << "InputBlockedAndDoored" << "vuo.test.inputBlockedAndDoored" << "Input Blocked And Doored" << false << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Input event to wall and door") << "InputBlockedAndDoored" << "vuo.test.inputBlockedAndDoored" << "Input Blocked And Doored" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+		}
+		{
+			QStringList inputNames = inputNamesTemplate;
+			QStringList inputTypes = inputTypesTemplate;
+			EventBlockingList eventBlocking = eventBlockingTemplate;
+			inputNames.append("Value");
+			inputTypes.append("VuoColor");
+			eventBlocking.append(VuoPortClass::EventBlocking_Door);
+			inputNames.append("Value2");
+			inputTypes.append("VuoColor");
+			eventBlocking.append(VuoPortClass::EventBlocking_Door);
+
+			QStringList outputNames;
+			QStringList outputTypes;
+			BoolList isTrigger;
+			outputNames.append("SameValue");
+			outputTypes.append("VuoColor");
+			isTrigger.append(false);
+			outputNames.append("SameValue2");
+			outputTypes.append("VuoColor");
+			isTrigger.append(false);
+
+			QTest::newRow("Input event to only some outputs") << "PassThru" << "vuo.test.passThru" << "Pass Thru" << false << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -282,7 +316,7 @@ private slots:
 			outputTypes.append("event");
 			isTrigger.append(true);
 
-			QTest::newRow("Only trigger output ports") << "FireNPeriodically" << "vuo.test.fireNPeriodically" << "Fire N Periodically" << false << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Only trigger output ports") << "FireNPeriodically" << "vuo.test.fireNPeriodically" << "Fire N Periodically" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -299,7 +333,7 @@ private slots:
 			QStringList outputTypes;
 			BoolList isTrigger;
 
-			QTest::newRow("No output ports") << "SendCheckerboard" << "vuo.test.sendCheckerboard" << "Send Checkerboard" << true << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("No output ports") << "SendCheckerboard" << "vuo.test.sendCheckerboard" << "Send Checkerboard" << true << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -316,7 +350,7 @@ private slots:
 			outputTypes.append("VuoText");
 			isTrigger.append(false);
 
-			QTest::newRow("Unconnected input port") << "PublishedInputAndOutput" << "vuo.test.publishedInputAndOutput" << "Published Input And Output" << false << false << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("Unconnected input port") << "PublishedInputAndOutput" << "vuo.test.publishedInputAndOutput" << "Published Input And Output" << false << inputNames << QStringList() << inputTypes << outputNames << QStringList() << outputTypes << eventBlocking << isTrigger;
 		}
 		{
 			QStringList inputNames = inputNamesTemplate;
@@ -337,7 +371,7 @@ private slots:
 			outputTypes.append("VuoBoolean");
 			isTrigger.append(false);
 
-			QTest::newRow("All-caps port name") << "IsHttps" << "vuo.test.isHttps" << "Is Https" << false << false << inputNames << inputDisplayNames << inputTypes << outputNames << outputDisplayNames << outputTypes << eventBlocking << isTrigger;
+			QTest::newRow("All-caps port name") << "IsHttps" << "vuo.test.isHttps" << "Is Https" << false << inputNames << inputDisplayNames << inputTypes << outputNames << outputDisplayNames << outputTypes << eventBlocking << isTrigger;
 		}
 	}
 	void testNodeInterface(void)
@@ -345,7 +379,6 @@ private slots:
 		QFETCH(QString, compositionName);
 		QFETCH(QString, expectedNodeClassName);
 		QFETCH(QString, expectedDefaultTitle);
-		QFETCH(bool, expectedIsInterface);
 		QFETCH(bool, expectedIsStateful);
 		QFETCH(QStringList, expectedInputPortNames);
 		QFETCH(QStringList, expectedInputPortDisplayNames);
@@ -356,15 +389,16 @@ private slots:
 		QFETCH(EventBlockingList, expectedEventBlocking);
 		QFETCH(BoolList, expectedIsTrigger);
 
-		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
-		string copiedSubcompositionPath = copyIntoSubcompositionDir(compositionPath);
-		VuoCompilerNodeClass *subcomposition = compiler->installSubcomposition(copiedSubcompositionPath);
+		string originalPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		string nodeClassName;
+		string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+		compilerDelegate->installModule(originalPath, installedPath);
+		VuoCompilerNodeClass *subcomposition = compiler->getNodeClass(nodeClassName);
 
 		QVERIFY(subcomposition != NULL);
 
 		QCOMPARE(QString::fromStdString(subcomposition->getBase()->getClassName()), expectedNodeClassName);
 		QCOMPARE(QString::fromStdString(subcomposition->getBase()->getDefaultTitle()), expectedDefaultTitle);
-		QCOMPARE(subcomposition->getBase()->isInterface(), expectedIsInterface);
 		QCOMPARE(subcomposition->isStateful(), expectedIsStateful);
 
 		vector<VuoPortClass *> actualInputPortClasses = subcomposition->getBase()->getInputPortClasses();
@@ -436,7 +470,7 @@ private:
 			gotAllExpectedEvents[1] = false;
 		}
 
-		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		void receivedTelemetryOutputPortUpdated(string compositionIdentifier, string portIdentifier, bool sentEvent, bool sentData, string dataSummary)
 		{
 			int index = (gotAllExpectedEvents[0] ? 1 : 0);
 
@@ -463,7 +497,7 @@ private:
 									   runner->stop();
 								   });
 				else if (gotAllExpectedEvents[0])
-					runner->fireTriggerPortEvent(fireOnStartIdentifier);
+					runner->fireTriggerPortEvent("", fireOnStartIdentifier);
 			}
 		}
 	};
@@ -523,7 +557,7 @@ private slots:
 			QStringMap inputPortData;
 			inputPortData["Value"] = "4";
 			QStringMap expectedOutputPortData;
-			expectedOutputPortData["Sum"] = "5";
+			expectedOutputPortData["Sum"] = "0";
 			QStringList expectedOutputPortEvents;
 			expectedOutputPortEvents.append("Sum");
 			QTest::newRow("Event into refresh port") << "AddOne" << subcompositionNames << "refresh" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
@@ -551,15 +585,13 @@ private slots:
 			QStringList expectedOutputPortEvents;
 			QTest::newRow("No outputs") << "SendCheckerboard" << subcompositionNames << "refresh" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
 		}
-/*		{
-			/// @todo https://b33p.net/kosada/node/11146 Need port actions so we can send an event into 'Go to First' without also hitting 'Go Forward'.
+		{
+			QStringList subcompositionNames;
 			QStringMap inputPortData;
 			QStringMap expectedOutputPortData;
-			expectedOutputPortData["Season"] = "<code>Spring</code>";
 			QStringList expectedOutputPortEvents;
-			expectedOutputPortEvents.append("Season");
-			QTest::newRow("Wall on input port") << "CycleSeasons" << "GoToFirst" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
-		}*/
+			QTest::newRow("Wall on input port") << "CycleSeasons" << subcompositionNames << "GoToFirst" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
+		}
 		{
 			QStringList subcompositionNames;
 			QStringMap inputPortData;
@@ -587,6 +619,15 @@ private slots:
 			QStringList expectedOutputPortEvents;
 			expectedOutputPortEvents.append("Count");
 			QTest::newRow("Event causes trigger to fire") << "SpinOffCount" << subcompositionNames << "Increment" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
+		}
+		{
+			QStringList subcompositionNames;
+			QStringMap inputPortData;
+			QStringMap expectedOutputPortData;
+			expectedOutputPortData["Count"] = "20";
+			QStringList expectedOutputPortEvents;
+			expectedOutputPortEvents.append("Count");
+			QTest::newRow("Event causes trigger with no outgoing cables to fire") << "SpinOffDisconnected" << subcompositionNames << "Increment" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
 		}
 		{
 			QStringList subcompositionNames;
@@ -684,9 +725,11 @@ private slots:
 		compositionsToInstall.append(compositionName);
 		foreach (QString currentCompositionName, compositionsToInstall)
 		{
-			string compositionPath = getCompositionPath(currentCompositionName.toStdString() + ".vuo");
-			string copiedSubcompositionPath = copyIntoSubcompositionDir(compositionPath);
-			VuoCompilerNodeClass *nodeClass = compiler->installSubcomposition(copiedSubcompositionPath);
+			string originalPath = getCompositionPath(currentCompositionName.toStdString() + ".vuo");
+			string nodeClassName;
+			string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+			compilerDelegate->installModule(originalPath, installedPath);
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName);
 			if (currentCompositionName == compositionName)
 				subcompositionNodeClass = nodeClass;
 		}
@@ -730,9 +773,11 @@ private slots:
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("TopLevelComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("TopLevelComposition-linked", "");
-		compiler->compileComposition(topLevelComposition, compiledCompositionPath);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(topLevelComposition, compiledCompositionPath, true, issues);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		remove(compiledCompositionPath.c_str());
+		delete issues;
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
 
 		QStringList expectedOutputPortEvents[2] = { expectedOutputPortEvents0, expectedOutputPortEvents1 };
@@ -752,7 +797,7 @@ private slots:
 		TestSubcompositionsRunnerDelegate delegate(runner, expectedOutputPortEventsRenamed, fireOnStartIdentifier);
 		runner->setDelegate(&delegate);
 		runner->startPaused();
-		runner->subscribeToAllTelemetry();
+		runner->subscribeToAllTelemetry("");
 		runner->unpause();
 		runner->waitUntilStopped();
 		delete runner;
@@ -774,9 +819,10 @@ private slots:
 		string subcompositionNames[] = { "SpinOffCount", "AddOne" };
 		for (int i = 0; i < 2; ++i)
 		{
-			string compositionPath = getCompositionPath(subcompositionNames[i] + ".vuo");
-			string copiedSubcompositionPath = copyIntoSubcompositionDir(compositionPath);
-			compiler->installSubcomposition(copiedSubcompositionPath);
+			string originalPath = getCompositionPath(subcompositionNames[i] + ".vuo");
+			string nodeClassName;
+			string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+			compilerDelegate->installModule(originalPath, installedPath);
 		}
 
 		string compositionName = "MultipleSubcompositions";
@@ -789,8 +835,10 @@ private slots:
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(compositionName, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(compositionName + "-linked", "");
-		compiler->compileComposition(topLevelComposition, compiledCompositionPath);
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(topLevelComposition, compiledCompositionPath, true, issues);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		delete issues;
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
 
 		map<string, VuoNode *> nodeForIdentifier;
@@ -817,7 +865,7 @@ private slots:
 		TestSubcompositionsRunnerDelegate delegate(runner, expectedOutputPortEvents, fireOnStartIdentifier);
 		runner->setDelegate(&delegate);
 		runner->startPaused();
-		runner->subscribeToAllTelemetry();
+		runner->subscribeToAllTelemetry("");
 		runner->unpause();
 		runner->waitUntilStopped();
 		delete runner;
@@ -840,14 +888,113 @@ private slots:
 		delete topLevelComposition;
 	}
 
-	void testLiveCoding()
+private:
+
+	class TestNodeExecutionRunnerDelegate : public VuoRunnerDelegateAdapter
 	{
-		string subcompositionNames[] = { "LengthenEs", "FireAlternating" };
-		for (int i = 0; i < 2; ++i)
+	public:
+		QStringList started;
+		QStringList finished;
+		VuoRunner *runner;
+
+		TestNodeExecutionRunnerDelegate(VuoRunner *runner)
 		{
-			string compositionPath = getCompositionPath(subcompositionNames[i] + ".vuo");
-			string copiedSubcompositionPath = copyIntoSubcompositionDir(compositionPath);
-			compiler->installSubcomposition(copiedSubcompositionPath);
+			this->runner = runner;
+		}
+
+		void receivedTelemetryNodeExecutionStarted(string compositionIdentifier, string nodeIdentifier)
+		{
+			started.append(QString::fromStdString(compositionIdentifier + "/" + nodeIdentifier));
+		}
+
+		void receivedTelemetryNodeExecutionFinished(string compositionIdentifier, string nodeIdentifier)
+		{
+			finished.append(QString::fromStdString(compositionIdentifier + "/" + nodeIdentifier));
+
+			if (started.size() == finished.size())
+			{
+				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+								   runner->stop();
+							   });
+			}
+		}
+	};
+
+private slots:
+
+	void testNodeExecutionTelemetry()
+	{
+		// Install the subcompositions.
+
+		QStringList subcompositionNames;
+		subcompositionNames << "AddOne" << "AddOneAndDouble";
+		for (QString subcompositionName : subcompositionNames)
+		{
+			string originalPath = getCompositionPath(subcompositionName.toStdString() + ".vuo");
+			string nodeClassName;
+			string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+			compilerDelegate->installModule(originalPath, installedPath);
+		}
+
+		// Build and run the top-level composition.
+
+		string topLevelCompositionPath = getCompositionPath("AddOneAndDoubleOnStart.vuo");
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(topLevelCompositionPath, issues);
+		delete issues;
+
+		TestNodeExecutionRunnerDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->startPaused();
+		runner->subscribeToEventTelemetry("Top");
+		runner->subscribeToEventTelemetry("Top/AddOneAndDouble");
+		runner->subscribeToEventTelemetry("Top/AddOneAndDouble/AddOne");
+		runner->unpause();
+		runner->waitUntilStopped();
+		delete runner;
+
+		QStringList expectedStarted;
+		expectedStarted << "Top/AddOneAndDouble"
+						<< "Top/AddOneAndDouble/AddOne"
+						<< "Top/AddOneAndDouble/AddOne/MakeList"
+						<< "Top/AddOneAndDouble/AddOne/Add"
+						<< "Top/AddOneAndDouble/MakeList"
+						<< "Top/AddOneAndDouble/Multiply";
+
+		QStringList expectedFinished;
+		expectedFinished << "Top/AddOneAndDouble/AddOne/MakeList"
+						 << "Top/AddOneAndDouble/AddOne/Add"
+						 << "Top/AddOneAndDouble/AddOne"
+						 << "Top/AddOneAndDouble/MakeList"
+						 << "Top/AddOneAndDouble/Multiply"
+						 << "Top/AddOneAndDouble";
+
+		QCOMPARE(delegate.started, expectedStarted);
+		QCOMPARE(delegate.finished, expectedFinished);
+	}
+
+	void testLiveCodingInTopLevelComposition_data()
+	{
+		QTest::addColumn<int>("testNum");
+
+		int testNum = 0;
+		QTest::newRow("stateful subcomposition node added") << testNum++;
+		QTest::newRow("trigger subcomposition node added") << testNum++;
+		QTest::newRow("multi-level subcomposition node added") << testNum++;
+		QTest::newRow("subcomposition nodes added and removed") << testNum++;
+	}
+	void testLiveCodingInTopLevelComposition()
+	{
+		QFETCH(int, testNum);
+
+		string subcompositionNames[] = { "AppendWithSpaces", "AppendWord", "FireWordOnStart",
+										 "LengthenEs", "LengthenEsAndDouble", "LengthenEsAndDoubleAndAddK" };
+		for (int i = 0; i < 6; ++i)
+		{
+			string originalPath = getCompositionPath(subcompositionNames[i] + ".vuo");
+			string nodeClassName;
+			string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+			compilerDelegate->installModule(originalPath, installedPath);
 		}
 
 		string compositionPath = getCompositionPath("PublishedInputAndOutput.vuo");
@@ -856,13 +1003,286 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		vector<string> alreadyLinkedResourcePaths;
-		set<string> alreadyLinkedResources;
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
 
-		VuoCompilerComposition *composition = NULL;
-		VuoRunner *runner = NULL;
-		VuoRunner::Port *outPort = NULL;
-		string originalCompositionGraphviz;
+		VuoCompilerComposition *composition = nullptr;
+		VuoRunner *runner = nullptr;
+		VuoRunner::Port *inPort = nullptr;
+		VuoRunner::Port *outPort = nullptr;
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+
+		{
+			// Build and run the original composition.
+
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+			VuoComposition *baseComposition = new VuoComposition();
+			composition = new VuoCompilerComposition(baseComposition, parser);
+			delete parser;
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
+																		   runningCompositionLibraries, compositionDir, false, true);
+			runner->start();
+
+			inPort = runner->getPublishedInputPortWithName("In");
+			outPort = runner->getPublishedOutputPortWithName("Out");
+		}
+
+		VuoPort *basePublishedInputPort = composition->getBase()->getPublishedInputPorts().front();
+		VuoCompilerPublishedPort *publishedInputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedInputPort->getCompiler() );
+
+		VuoPort *basePublishedOutputPort = composition->getBase()->getPublishedOutputPorts().front();
+		VuoCompilerPublishedPort *publishedOutputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedOutputPort->getCompiler() );
+
+		if (testNum == 0)  // stateful subcomposition node added
+		{
+			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			// Add a stateful subcomposition node.
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.lengthenEs");
+			VuoNode *node = compiler->createNode(nodeClass);
+			VuoCompilerPort *lengthenPort = static_cast<VuoCompilerPort *>( node->getInputPortWithName("Lengthen")->getCompiler() );
+			VuoCompilerPort *esPort = static_cast<VuoCompilerPort *>( node->getOutputPortWithName("Es")->getCompiler() );
+			composition->getBase()->addNode(node);
+
+			// Connect a published input cable to the node.
+			VuoCompilerCable *inputCable = new VuoCompilerCable(NULL, publishedInputPort, node->getCompiler(), lengthenPort);
+			composition->getBase()->addCable(inputCable->getBase());
+
+			// Connect a published output cable to the node.
+			VuoCompilerCable *outputCable = new VuoCompilerCable(node->getCompiler(), esPort, NULL, publishedOutputPort);
+			composition->getBase()->addCable(outputCable->getBase());
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("e"));
+		}
+
+		else if (testNum == 1)  // trigger subcomposition node added
+		{
+			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			// Add a subcomposition node with a trigger port.
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.fireWordOnStart");
+			VuoNode *node = compiler->createNode(nodeClass);
+			VuoCompilerPort *wordPort = static_cast<VuoCompilerPort *>( node->getOutputPortWithName("Word")->getCompiler() );
+			composition->getBase()->addNode(node);
+
+			// Connect a published output cable to the node.
+			VuoCompilerCable *outputCable = new VuoCompilerCable(node->getCompiler(), wordPort, NULL, publishedOutputPort);
+			composition->getBase()->addCable(outputCable->getBase());
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("word"));
+		}
+
+		else if (testNum == 2)  // multi-level subcomposition node added
+		{
+			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			// Add a subcomposition node with other subcompositions inside it.
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.lengthenEsAndDoubleAndAddK");
+			VuoNode *node = compiler->createNode(nodeClass);
+			VuoCompilerPort *lengthenPort = static_cast<VuoCompilerPort *>( node->getInputPortWithName("Lengthen")->getCompiler() );
+			VuoCompilerPort *compositeTextPort = static_cast<VuoCompilerPort *>( node->getOutputPortWithName("CompositeText")->getCompiler() );
+			composition->getBase()->addNode(node);
+
+			// Connect a published input cable to the node.
+			VuoCompilerCable *inputCable = new VuoCompilerCable(NULL, publishedInputPort, node->getCompiler(), lengthenPort);
+			composition->getBase()->addCable(inputCable->getBase());
+
+			// Connect a published output cable to the node.
+			VuoCompilerCable *outputCable = new VuoCompilerCable(node->getCompiler(), compositeTextPort, NULL, publishedOutputPort);
+			composition->getBase()->addCable(outputCable->getBase());
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("e ek"));
+		}
+
+		else if (testNum == 3)  // subcomposition nodes added and removed
+		{
+			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			// Add two instances of a subcomposition node.
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.appendWord");
+			QVERIFY(nodeClass);
+			VuoNode *node1 = compiler->createNode(nodeClass);
+			VuoNode *node2 = compiler->createNode(nodeClass);
+			VuoCompilerPort *textPort1 = static_cast<VuoCompilerPort *>( node1->getInputPortWithName("Text")->getCompiler() );
+			VuoCompilerPort *textPort2 = static_cast<VuoCompilerPort *>( node2->getInputPortWithName("Text")->getCompiler() );
+			VuoCompilerPort *compositeTextPort1 = static_cast<VuoCompilerPort *>( node1->getOutputPortWithName("CompositeText")->getCompiler() );
+			VuoCompilerPort *compositeTextPort2 = static_cast<VuoCompilerPort *>( node2->getOutputPortWithName("CompositeText")->getCompiler() );
+			composition->getBase()->addNode(node1);
+			composition->getBase()->addNode(node2);
+			composition->setUniqueGraphvizIdentifierForNode(node2);
+
+			// Connect a cable between the two nodes.
+			VuoCompilerCable *internalCable = new VuoCompilerCable(node1->getCompiler(), compositeTextPort1, node2->getCompiler(), textPort2);
+			composition->getBase()->addCable(internalCable->getBase());
+
+			// Connect a published input cable to the first node.
+			VuoCompilerCable *inputCable = new VuoCompilerCable(NULL, publishedInputPort, node1->getCompiler(), textPort1);
+			composition->getBase()->addCable(inputCable->getBase());
+
+			// Connect a published output cable to the second node.
+			VuoCompilerCable *outputCable = new VuoCompilerCable(node2->getCompiler(), compositeTextPort2, NULL, publishedOutputPort);
+			composition->getBase()->addCable(outputCable->getBase());
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("blahwordword"));
+
+			oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			// Remove the second node and its connected cables.
+			composition->getBase()->removeNode(node2);
+			composition->getBase()->removeCable(internalCable->getBase());
+			composition->getBase()->removeCable(outputCable->getBase());
+
+			// Connect a published output cable to the first node.
+			VuoCompilerCable *otherOutputCable = new VuoCompilerCable(node1->getCompiler(), compositeTextPort1, NULL, publishedOutputPort);
+			composition->getBase()->addCable(otherOutputCable->getBase());
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			diffInfo = new VuoCompilerCompositionDiff();
+			compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("blahword"));
+		}
+
+		runner->stop();
+
+		delete runner;
+		delete composition;
+		delete issues;
+	}
+
+	void testLiveCodingInSubcomposition_data()
+	{
+		QTest::addColumn<QString>("subcompositionAtTopLevel");
+		QTest::addColumn<QString>("originalSubcomposition");
+		QTest::addColumn<QString>("modifiedSubcomposition");
+		QTest::addColumn<QString>("otherSubcomposition");
+		QTest::addColumn<QString>("firstOutput");
+		QTest::addColumn<QString>("secondOutput");
+
+		QTest::newRow("cable added to subcomposition") << "AppendWord.vuo" << "AppendWord.vuo" << "AppendSelf.vuo" << "" << "blahword" << "blahblah";
+		QTest::newRow("stateless node added to subcomposition") << "LengthenEs.vuo" << "LengthenEs.vuo" << "LengthenBeeps.vuo" << "" << "e" << "beep";
+		QTest::newRow("stateless node removed from subcomposition") << "LengthenBeeps.vuo" << "LengthenBeeps.vuo" << "LengthenEs.vuo" << "" << "bep" << "ee";
+		QTest::newRow("stateful node added to subcomposition") << "LengthenEs.vuo" << "LengthenEs.vuo" << "LengthenEsAndCount.vuo" << "" << "e" << "ee1";
+		QTest::newRow("stateful node removed from subcomposition") << "LengthenEsAndCount.vuo" << "LengthenEsAndCount.vuo" << "LengthenEs.vuo" << "" << "e1" << "ee";
+
+		QTest::newRow("node added to subcomposition within subcomposition") << "LengthenEsAndDouble.vuo" << "LengthenEs.vuo" << "LengthenBeeps.vuo" << "AppendWithSpaces.vuo" << "e e" << "beep beep";
+
+		QTest::newRow("change to subcomposition with trigger port") << "AppendWordTrigger.vuo" << "AppendWordTrigger.vuo" << "AppendSelfTrigger.vuo" << "" << "blahword" << "blahblah";
+
+		QTest::newRow("drawer expanded in subcomposition") << "AppendWordStateful.vuo" << "AppendWordStateful.vuo" << "AppendWordsStateful.vuo" << "" << "blahword" << "blahwords";
+		QTest::newRow("node with data-only transmission added to subcomposition") << "LengthenEs.vuo" << "LengthenEs.vuo" << "LengthenWhees.vuo" << "" << "e" << "whee!";
+
+		// The second output should actually be "ef", but editing constants outside of Vuo Editor is not supported.
+		QTest::newRow("constant modified in subcomposition") << "LengthenEs.vuo" << "LengthenEs.vuo" << "LengthenFs.vuo" << "" << "e" << "ee";
+	}
+	void testLiveCodingInSubcomposition()
+	{
+		QFETCH(QString, subcompositionAtTopLevel);  // An instance of this node class is added to the top-level composition.
+		QFETCH(QString, originalSubcomposition);  // This node class gets replaced with a new implementation. May be the same as subcompositionAtTopLevel or contained within it.
+		QFETCH(QString, modifiedSubcomposition);  // The new implementation of the node class being replaced.
+		QFETCH(QString, otherSubcomposition);  // Additional subcomposition that needs to be installed in order to compile subcompositionAtTopLevel.
+		QFETCH(QString, firstOutput);
+		QFETCH(QString, secondOutput);
+
+		string nodeClassName;
+		string installedPath;
+		{
+			string subcompositionPath = getCompositionPath(originalSubcomposition.toStdString());
+			installedPath = getInstalledCompositionPath(subcompositionPath, nodeClassName);
+			compilerDelegate->installModule(subcompositionPath, installedPath);
+		}
+
+		if (! otherSubcomposition.isEmpty())
+		{
+			string otherNodeClassName;
+			string subcompositionPath = getCompositionPath(otherSubcomposition.toStdString());
+			string otherInstalledPath = getInstalledCompositionPath(subcompositionPath, otherNodeClassName);
+			compilerDelegate->installModule(subcompositionPath, otherInstalledPath);
+		}
+
+		string topNodeClassName;
+		string topInstalledPath;
+		if (subcompositionAtTopLevel == originalSubcomposition)
+		{
+			topNodeClassName = nodeClassName;
+			topInstalledPath = installedPath;
+		}
+		else
+		{
+			string subcompositionPath = getCompositionPath(subcompositionAtTopLevel.toStdString());
+			topInstalledPath = getInstalledCompositionPath(subcompositionPath, topNodeClassName);
+			compilerDelegate->installModule(subcompositionPath, topInstalledPath);
+		}
+
+		string compositionPath = getCompositionPath("PublishedInputAndOutput.vuo");
+
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
+		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+
+		VuoCompilerComposition *composition = nullptr;
+		VuoRunner *runner = nullptr;
+		VuoRunner::Port *inPort = nullptr;
+		VuoRunner::Port *outPort = nullptr;
+		string oldCompositionGraphviz;
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
 
 		// Build and run the original composition.
 		{
@@ -871,101 +1291,335 @@ private slots:
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 
-			originalCompositionGraphviz = composition->getGraphvizDeclaration();
-
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, false, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
+																		   runningCompositionLibraries, compositionDir, false, true);
 			runner->start();
 
+			oldCompositionGraphviz = composition->getGraphvizDeclaration();
+
+			inPort = runner->getPublishedInputPortWithName("In");
 			outPort = runner->getPublishedOutputPortWithName("Out");
 		}
 
-		// Replace the composition with one in which a stateful subcomposition node and published input and output cables have been added.
+		VuoPort *basePublishedInputPort = composition->getBase()->getPublishedInputPorts().front();
+		VuoCompilerPublishedPort *publishedInputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedInputPort->getCompiler() );
+
+		VuoPort *basePublishedOutputPort = composition->getBase()->getPublishedOutputPorts().front();
+		VuoCompilerPublishedPort *publishedOutputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedOutputPort->getCompiler() );
+
+		// Add a subcomposition node.
+		VuoCompilerNodeClass *topNodeClass = compiler->getNodeClass(topNodeClassName);
+		QVERIFY2(topNodeClass, topNodeClassName.c_str());
+		VuoNode *node = compiler->createNode(topNodeClass);
+		VuoCompilerPort *inputPort = static_cast<VuoCompilerPort *>( node->getInputPorts().at(VuoNodeClass::unreservedInputPortStartIndex)->getCompiler() );
+		VuoCompilerPort *outputPort = static_cast<VuoCompilerPort *>( node->getOutputPorts().at(VuoNodeClass::unreservedOutputPortStartIndex)->getCompiler() );
+		composition->getBase()->addNode(node);
+
+		// Connect a published input cable to the node.
+		VuoCompilerCable *inputCable = new VuoCompilerCable(NULL, publishedInputPort, node->getCompiler(), inputPort);
+		composition->getBase()->addCable(inputCable->getBase());
+
+		// Connect a published output cable to the node.
+		VuoCompilerCable *outputCable = new VuoCompilerCable(node->getCompiler(), outputPort, NULL, publishedOutputPort);
+		composition->getBase()->addCable(outputCable->getBase());
+
+		// Build the modified composition and replace the running composition with it.
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
-			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.lengthenEs");
-			VuoNode *node = compiler->createNode(nodeClass);
-			VuoCompilerPort *lengthenPort = static_cast<VuoCompilerPort *>( node->getInputPortWithName("Lengthen")->getCompiler() );
-			VuoCompilerPort *esPort = static_cast<VuoCompilerPort *>( node->getOutputPortWithName("Es")->getCompiler() );
-			composition->getBase()->addNode(node);
-
-			VuoPort *basePublishedInputPort = composition->getBase()->getPublishedInputPorts().front();
-			VuoCompilerPublishedPort *publishedInputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedInputPort->getCompiler() );
-			VuoCompilerCable *inputCable = new VuoCompilerCable(NULL, publishedInputPort, node->getCompiler(), lengthenPort);
-			composition->getBase()->addCable(inputCable->getBase());
-
-			VuoPort *basePublishedOutputPort = composition->getBase()->getPublishedOutputPorts().front();
-			VuoCompilerPublishedPort *publishedOutputPort = static_cast<VuoCompilerPublishedPort *>( basePublishedOutputPort->getCompiler() );
-			VuoCompilerCable *outputCable = new VuoCompilerCable(node->getCompiler(), esPort, NULL, publishedOutputPort);
-			composition->getBase()->addCable(outputCable->getBase());
-
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+			runner->replaceComposition(dylibPath, compositionDiff);
+			delete diffInfo;
 
-			// Fire an event through the published input port.
-			runner->firePublishedInputPortEvent();
-			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("e"));
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), firstOutput);
+
+			oldCompositionGraphviz = composition->getGraphvizDeclaration();
 		}
 
-		// Replace the composition with one in which a subcomposition node that fires events has been added.
+		// Simulate editing the subcomposition.
+		compilerDelegate->installModule(getCompositionPath(modifiedSubcomposition.toStdString()), installedPath, topNodeClassName);
+		VuoCompilerCompositionDiff *diffInfo = compilerDelegate->takeDiffInfo();
+		VuoCompilerComposition *composition2 = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(oldCompositionGraphviz, compiler);
+
+		// Build the modified composition and replace the running composition with it.
 		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
+			runningCompositionLibraries->enqueueLibraryContainingDependencyToUnload(nodeClassName);
 
-			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.fireAlternating");
-			VuoNode *node = compiler->createNode(nodeClass);
-			composition->getBase()->addNode(node);
-
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource2", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+			compiler->compileComposition(composition2, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition2, compiler);
+			delete diffInfo;
 
-			// Fire an event through the published input port.
-			runner->firePublishedInputPortEvent();
-			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("ee"));
-		}
+			runner->replaceComposition(dylibPath, compositionDiff);
 
-		// Replace the latest composition with the original composition.
-		{
-			string oldCompositionGraphviz = composition->getGraphvizDeclaration();
-
-			VuoCompilerComposition *originalComposition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(originalCompositionGraphviz, compiler);
-
-			compiler->compileComposition(originalComposition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource3", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
-																					  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
-			delete originalComposition;
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), secondOutput);
 		}
 
 		runner->stop();
 
-		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
-			remove((*i).c_str());
+		delete runner;
+		delete composition;
+		delete composition2;
+		delete issues;
+	}
+
+private:
+
+	class TestLiveCodingDelegate : public TestCompilerDelegate
+	{
+	private:
+		VuoCompilerComposition *composition;
+
+	public:
+		TestLiveCodingDelegate(void)
+		{
+			composition = nullptr;
+		}
+
+		// suppress "hides overloaded virtual function" warning
+		void installModule(const string &originalPath, const string &installedPath, const string &moduleToWaitOn)
+		{
+			TestCompilerDelegate::installModule(originalPath, installedPath, moduleToWaitOn);
+		}
+
+		void installModule(const string &originalPath, const string &installedPath, VuoCompilerComposition *composition)
+		{
+			this->composition = composition;
+			TestCompilerDelegate::installModule(originalPath, installedPath);
+		}
+
+		void loadedModules(const map<string, VuoCompilerModule *> &modulesAdded,
+						   const map<string, pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified,
+						   const map<string, VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues)
+		{
+			if (composition)
+			{
+				foreach (VuoNode *node, composition->getBase()->getNodes())
+				{
+					for (auto m : modulesModified)
+					{
+						if (m.second.first->getPseudoBase() == node->getNodeClass())
+						{
+							VuoCompilerNodeClass *newNodeClass = static_cast<VuoCompilerNodeClass *>(m.second.second);
+							VuoNode *newNode = newNodeClass->newNode(node);
+							composition->replaceNode(node, newNode);
+							delete node;
+						}
+					}
+				}
+
+				composition = nullptr;
+			}
+
+			TestCompilerDelegate::loadedModules(modulesAdded, modulesModified, modulesRemoved, issues);
+		}
+	};
+
+private slots:
+
+	void testLiveCodingSubcompositionInterface_data()
+	{
+		QTest::addColumn<int>("testNum");
+
+		int testNum = 0;
+		QTest::newRow("published ports added") << testNum++;
+		QTest::newRow("published ports removed") << testNum++;
+		QTest::newRow("published ports reordered") << testNum++;
+		QTest::newRow("published port data types changed") << testNum++;
+	}
+	void testLiveCodingSubcompositionInterface()
+	{
+		QFETCH(int, testNum);
+
+		TestLiveCodingDelegate delegate;
+		compiler->setDelegate(&delegate);
+
+		string nodeClassName;
+		string installedPath;
+		{
+			string subcompositionPath = getCompositionPath("AddThings.vuo");
+			installedPath = getInstalledCompositionPath(subcompositionPath, nodeClassName);
+			delegate.installModule(subcompositionPath, installedPath, nullptr);
+		}
+
+		string compositionPath = getCompositionPath("AddThingsTest.vuo");
+
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
+		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		VuoCompilerCompositionDiff *diffInfo = nullptr;
+
+		VuoCompilerComposition *composition = nullptr;
+		VuoRunner *runner = nullptr;
+		VuoRunner::Port *inPort = nullptr;
+		VuoRunner::Port *outPort = nullptr;
+		string oldCompositionGraphviz;
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+
+		// Build and run the original composition.
+		{
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+			VuoComposition *baseComposition = new VuoComposition();
+			composition = new VuoCompilerComposition(baseComposition, parser);
+			delete parser;
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
+																		   runningCompositionLibraries, compositionDir, false, true);
+			runner->start();
+
+			inPort = runner->getPublishedInputPortWithName("In");
+			outPort = runner->getPublishedOutputPortWithName("Out");
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString("5 5  "));
+		}
+
+		// Install the new version of the subcomposition.
+		{
+			string modifiedComposition;
+			if (testNum == 0)
+				modifiedComposition = "AddThings-added.vuo";
+			else if (testNum == 1)
+				modifiedComposition = "AddThings-removed.vuo";
+			else if (testNum == 2)
+				modifiedComposition = "AddThings-reordered.vuo";
+			else if (testNum == 3)
+				modifiedComposition = "AddThings-typesChanged.vuo";
+
+			delegate.installModule(getCompositionPath(modifiedComposition), installedPath, composition);
+			diffInfo = delegate.takeDiffInfo();
+
+			oldCompositionGraphviz = composition->getGraphvizDeclaration();
+		}
+
+		VuoNode *subcompositionNode = NULL;
+		VuoNode *summarizeValueNode = NULL;
+		VuoNode *formatTableNode = NULL;
+		VuoNode *convertIntegerRealNode = NULL;
+		VuoNode *formatNumberNode = NULL;
+		foreach (VuoNode *node, composition->getBase()->getNodes())
+		{
+			string identifier = node->getCompiler()->getGraphvizIdentifier();
+			if (identifier == "AddThings")
+				subcompositionNode = node;
+			else if (identifier == "SummarizeValue4")
+				summarizeValueNode = node;
+			else if (identifier == "FormatTable")
+				formatTableNode = node;
+			else if (identifier == "ConvertIntegerToRealNumber")
+				convertIntegerRealNode = node;
+			else if (identifier == "FormatNumber")
+				formatNumberNode = node;
+		}
+
+		if (testNum == 0)
+		{
+			// Connect cables to the added ports on the subcomposition node.
+			{
+				VuoPort *baseAddedInput = subcompositionNode->getInputPortWithName("AddColumn");
+				VuoCompilerPort *addedInput = static_cast<VuoCompilerPort *>(baseAddedInput->getCompiler());
+
+				VuoPort *baseAddedOutput = subcompositionNode->getOutputPortWithName("ModifiedTable");
+				VuoCompilerPort *addedOutput = static_cast<VuoCompilerPort *>(baseAddedOutput->getCompiler());
+
+				VuoPort *baseSummarizeValueOutput = summarizeValueNode->getOutputPortWithName("summary");
+				VuoCompilerPort *summarizeValueOutput = static_cast<VuoCompilerPort *>(baseSummarizeValueOutput->getCompiler());
+
+				VuoPort *baseFormatTableInput = formatTableNode->getInputPortWithName("table");
+				VuoCompilerPort *formatTableInput = static_cast<VuoCompilerPort *>(baseFormatTableInput->getCompiler());
+
+				VuoCompilerCable *inputCable = new VuoCompilerCable(summarizeValueNode->getCompiler(), summarizeValueOutput, subcompositionNode->getCompiler(), addedInput);
+				composition->getBase()->addCable(inputCable->getBase());
+
+				VuoCompilerCable *outputCable = new VuoCompilerCable(subcompositionNode->getCompiler(), addedOutput, formatTableNode->getCompiler(), formatTableInput);
+				composition->getBase()->addCable(outputCable->getBase());
+			}
+		}
+		else if (testNum == 1)
+		{
+			// The cables are removed in the process of installing the new version of the subcomposition.
+		}
+		else if (testNum == 2)
+		{
+			// The cables stay the same.
+		}
+		else if (testNum == 3)
+		{
+			// Connect cables to the ports whose types have changed on the subcomposition node.
+			{
+				VuoPort *baseChangedInput = subcompositionNode->getInputPortWithName("Increment");
+				VuoCompilerPort *changedInput = static_cast<VuoCompilerPort *>(baseChangedInput->getCompiler());
+
+				VuoPort *baseChangedOutput = subcompositionNode->getOutputPortWithName("Count");
+				VuoCompilerPort *changedOutput = static_cast<VuoCompilerPort *>(baseChangedOutput->getCompiler());
+
+				VuoPort *baseConvertIntegerRealOutput = convertIntegerRealNode->getOutputPortWithName("real");
+				VuoCompilerPort *convertIntegerRealOutput = static_cast<VuoCompilerPort *>(baseConvertIntegerRealOutput->getCompiler());
+
+				VuoPort *baseFormatNumberInput = formatNumberNode->getInputPortWithName("value");
+				VuoCompilerPort *formatNumberInput = static_cast<VuoCompilerPort *>(baseFormatNumberInput->getCompiler());
+
+				VuoCompilerCable *inputCable = new VuoCompilerCable(convertIntegerRealNode->getCompiler(), convertIntegerRealOutput, subcompositionNode->getCompiler(), changedInput);
+				composition->getBase()->addCable(inputCable->getBase());
+
+				VuoCompilerCable *outputCable = new VuoCompilerCable(subcompositionNode->getCompiler(), changedOutput, formatNumberNode->getCompiler(), formatNumberInput);
+				composition->getBase()->addCable(outputCable->getBase());
+			}
+		}
+
+		// Build the modified composition and replace the running composition with it.
+		{
+			runningCompositionLibraries->enqueueLibraryContainingDependencyToUnload(nodeClassName);
+
+			compiler->compileComposition(composition, bcPath, true, issues);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			remove(bcPath.c_str());
+
+			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);
+
+			runner->replaceComposition(dylibPath, compositionDiff);
+
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+
+			QString expectedOutput;
+			if (testNum == 0)
+				expectedOutput = "10 55 \"5\" ";
+			else if (testNum == 1)
+				expectedOutput = "5 55  ";
+			else if (testNum == 2)
+				expectedOutput = "10 55  ";
+			else if (testNum == 3)
+				expectedOutput = "5 55  5.0";
+
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), expectedOutput);
+		}
+
+		runner->stop();
 
 		delete runner;
 		delete composition;
+		delete issues;
+		delete diffInfo;
 	}
 
 	void testInstallingWithoutCrashing_data()
@@ -981,9 +1635,10 @@ private slots:
 	{
 		QFETCH(QString, compositionName);
 
-		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
-		string copiedSubcompositionPath = copyIntoSubcompositionDir(compositionPath);
-		compiler->installSubcomposition(copiedSubcompositionPath);
+		string originalPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		string nodeClassName;
+		string installedPath = getInstalledCompositionPath(originalPath, nodeClassName);
+		compilerDelegate->installModule(originalPath, installedPath);
 	}
 
 	void testLoadingInstalledSubcompositions()
@@ -991,26 +1646,28 @@ private slots:
 		string nodeClassName = "vuo.test.alternate";
 		string origCompositionPath = getCompositionPath("Alternate.vuo");
 		string copiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
-		string compiledCompositionPath = VuoCompiler::getCachedModulesPath() + "/" + nodeClassName + ".vuonode";
-		VuoFileUtilities::copyFile(origCompositionPath, copiedCompositionPath);
+		string compiledCompositionPath = getCachedCompiledCompositionPath(nodeClassName);
 
 		// The subcomposition source file is in the Modules folder when the compiler is initialized.
-		// When any node class is loaded, the subcomposition gets compiled.
-		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
+		// When all node classes are loaded, the subcomposition gets compiled.
 		delete compiler;
+		VuoCompiler::reset();
+		VuoFileUtilities::copyFile(origCompositionPath, copiedCompositionPath);
 		compiler = initCompiler();
 		QVERIFY(! VuoFileUtilities::fileExists(compiledCompositionPath));
-		compiler->getNodeClass("vuo.event.fireOnStart");
+		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
 
 		// The subcomposition source file is newer than the compiled file when the compiler is initialized.
-		// When any node class is loaded, the subcomposition gets recompiled.
+		// When all node classes are loaded, the subcomposition gets recompiled.
 		unsigned long lastModified1 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		sleep(2);
-		VuoFileUtilities::copyFile(origCompositionPath, copiedCompositionPath);
 		delete compiler;
+		VuoCompiler::reset();
+		string origCompositionContents = VuoFileUtilities::readFileToString(origCompositionPath);
+		VuoFileUtilities::writeStringToFile(origCompositionContents + "/* modified */", copiedCompositionPath);
 		compiler = initCompiler();
-		compiler->getNodeClass("vuo.event.fireOnStart");
+		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
 		unsigned long lastModified2 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		QVERIFY(lastModified2 > lastModified1);
@@ -1018,7 +1675,9 @@ private slots:
 		// When the subcomposition is reinstalled, it gets recompiled.
 		sleep(2);
 		VuoCompilerNodeClass *oldNodeClass = compiler->getNodeClass(nodeClassName);
-		VuoCompilerNodeClass *newNodeClass = compiler->installSubcomposition(copiedCompositionPath);
+		compiler->setDelegate(compilerDelegate);
+		compilerDelegate->installModule(origCompositionPath, copiedCompositionPath);
+		VuoCompilerNodeClass *newNodeClass = compiler->getNodeClass(nodeClassName);
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
 		unsigned long lastModified3 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		QVERIFY(lastModified3 > lastModified2);
@@ -1026,8 +1685,9 @@ private slots:
 
 		// The compiler has 'shouldLoadAllModules' turned off.
 		// When a node class other than the subcomposition is loaded, the subcomposition does not get compiled.
-		VuoFileUtilities::deleteFile(compiledCompositionPath);
 		delete compiler;
+		VuoCompiler::reset();
+		VuoFileUtilities::deleteFile(compiledCompositionPath);
 		compiler = initCompiler();
 		compiler->setLoadAllModules(false);
 		compiler->getNodeClass("vuo.event.fireOnStart");
@@ -1041,33 +1701,33 @@ private slots:
 		string outerNodeClassName = "vuo.test.lengthenEsAndDoubleAndAddK";
 		string outerOrigCompositionPath = getCompositionPath("LengthenEsAndDoubleAndAddK.vuo");
 		string outerCopiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + outerNodeClassName + ".vuo";
-		string outerCompiledCompositionPath = VuoCompiler::getCachedModulesPath() + "/" + outerNodeClassName + ".vuonode";
+		string outerCompiledCompositionPath = getCachedCompiledCompositionPath(outerNodeClassName);
 
 		string midNodeClassName = "vuo.test.lengthenEsAndDouble";
 		string midOrigCompositionPath = getCompositionPath("LengthenEsAndDouble.vuo");
 		string midCopiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + midNodeClassName + ".vuo";
-		string midCompiledCompositionPath = VuoCompiler::getCachedModulesPath() + "/" + midNodeClassName + ".vuonode";
+		string midCompiledCompositionPath = getCachedCompiledCompositionPath(midNodeClassName);
 
 		string inner1NodeClassName = "vuo.test.lengthenEs";
 		string inner1OrigCompositionPath = getCompositionPath("LengthenEs.vuo");
 		string inner1CopiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + inner1NodeClassName + ".vuo";
-		string inner1CompiledCompositionPath = VuoCompiler::getCachedModulesPath() + "/" + inner1NodeClassName + ".vuonode";
+		string inner1CompiledCompositionPath = getCachedCompiledCompositionPath(inner1NodeClassName);
 
 		string inner2NodeClassName = "vuo.test.appendWithSpaces";
 		string inner2OrigCompositionPath = getCompositionPath("AppendWithSpaces.vuo");
 		string inner2CopiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + inner2NodeClassName + ".vuo";
-		string inner2CompiledCompositionPath = VuoCompiler::getCachedModulesPath() + "/" + inner2NodeClassName + ".vuonode";
+		string inner2CompiledCompositionPath = getCachedCompiledCompositionPath(inner2NodeClassName);
 
 		// When a subcomposition containing another subcomposition is loaded, the inner subcomposition gets
 		// compiled first so that the outer subcomposition can be compiled — with 'shouldLoadAllModules" turned off...
+		delete compiler;
+		VuoCompiler::reset();
 		VuoFileUtilities::deleteFile(copiedCompositionPath);
 		VuoFileUtilities::deleteFile(compiledCompositionPath);
 		VuoFileUtilities::copyFile(outerOrigCompositionPath, outerCopiedCompositionPath);
 		VuoFileUtilities::copyFile(midOrigCompositionPath, midCopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner1OrigCompositionPath, inner1CopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner2OrigCompositionPath, inner2CopiedCompositionPath);
-		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
-		delete compiler;
 		compiler = initCompiler();
 		compiler->setLoadAllModules(false);
 		QVERIFY(! VuoFileUtilities::fileExists(outerCompiledCompositionPath));
@@ -1082,51 +1742,179 @@ private slots:
 		QVERIFY(VuoFileUtilities::fileExists(inner2CompiledCompositionPath));
 
 		// ... and with 'shouldLoadAllModules' turned on.
+		delete compiler;
+		VuoCompiler::reset();
 		VuoFileUtilities::deleteFile(outerCompiledCompositionPath);
 		VuoFileUtilities::deleteFile(midCompiledCompositionPath);
 		VuoFileUtilities::deleteFile(inner1CompiledCompositionPath);
 		VuoFileUtilities::deleteFile(inner2CompiledCompositionPath);
-		delete compiler;
 		compiler = initCompiler();
-		compiler->getNodeClass("vuo.event.fireOnStart");
+		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(outerCompiledCompositionPath));
 		QVERIFY(VuoFileUtilities::fileExists(midCompiledCompositionPath));
 		QVERIFY(VuoFileUtilities::fileExists(inner1CompiledCompositionPath));
 		QVERIFY(VuoFileUtilities::fileExists(inner2CompiledCompositionPath));
 
 		// When a subcomposition is reinstalled, each subcomposition containing it gets recompiled.
+		sleep(1);
 		VuoCompilerNodeClass *oldOuterNodeClass = compiler->getNodeClass(outerNodeClassName);
 		VuoCompilerNodeClass *oldMidNodeClass = compiler->getNodeClass(midNodeClassName);
 		VuoCompilerNodeClass *oldInner1NodeClass = compiler->getNodeClass(inner1NodeClassName);
 		VuoCompilerNodeClass *oldInner2NodeClass = compiler->getNodeClass(inner2NodeClassName);
-		compiler->installSubcomposition(inner1CopiedCompositionPath);
-		QVERIFY(oldOuterNodeClass != compiler->getNodeClass(outerNodeClassName));
-		QVERIFY(oldMidNodeClass != compiler->getNodeClass(midNodeClassName));
-		QVERIFY(oldInner1NodeClass != compiler->getNodeClass(inner1NodeClassName));
-		QVERIFY(oldInner2NodeClass == compiler->getNodeClass(inner2NodeClassName));
+		compiler->setDelegate(compilerDelegate);
+		compilerDelegate->installModuleWithSuperficialChange(inner1OrigCompositionPath, inner1CopiedCompositionPath);
+		VuoCompilerNodeClass *newOuterNodeClass = compiler->getNodeClass(outerNodeClassName);
+		QVERIFY(newOuterNodeClass);
+		QVERIFY(oldOuterNodeClass != newOuterNodeClass);
+		VuoCompilerNodeClass *newMidNodeClass = compiler->getNodeClass(midNodeClassName);
+		QVERIFY(newMidNodeClass);
+		QVERIFY(oldMidNodeClass != newMidNodeClass);
+		VuoCompilerNodeClass *newInner1NodeClass = compiler->getNodeClass(inner1NodeClassName);
+		QVERIFY(newInner1NodeClass);
+		QVERIFY(oldInner1NodeClass != newInner1NodeClass);
+		VuoCompilerNodeClass *newInner2NodeClass = compiler->getNodeClass(inner2NodeClassName);
+		QVERIFY(newInner2NodeClass);
+		QVERIFY(oldInner2NodeClass == newInner2NodeClass);
 	}
+
+	void testOverridingInstalledSubcomposition()
+	{
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
+
+		// Install two different versions of the same subcomposition,
+		// one in user modules and the other in composition-local modules.
+
+		string compositionLocalPath = VuoFileUtilities::getTmpDir() + "/TestSubcompositions";
+		string nodeClassName = "vuo.test.lengthenEs";
+		string origUserSubcompositionPath = getCompositionPath("LengthenEs.vuo");
+		string origCompSubcompositionPath = getCompositionPath("LengthenBeeps.vuo");
+		string installedUserSubcompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
+		string installedCompSubcompositionPath = compositionLocalPath + "/Modules/" + nodeClassName + ".vuo";
+
+		VuoFileUtilities::makeDir(compositionLocalPath + "/Modules/");
+		VuoFileUtilities::copyFile(origUserSubcompositionPath, installedUserSubcompositionPath);
+		VuoFileUtilities::copyFile(origCompSubcompositionPath, installedCompSubcompositionPath);
+
+		VuoFileUtilities::copyFile(getCompositionPath("AppendWithSpaces.vuo"), VuoFileUtilities::getUserModulesPath() + "/vuo.test.appendWithSpaces.vuo");
+
+		// Build and run a composition that refers to the subcomposition,
+		// once with access to only the user modules version (that version should be used)
+		// and once with access to both versions (the composition-local version should be used).
+
+		string compositionPath = getCompositionPath("LengthenEsAndDouble.vuo");
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("LengthenEsAndDouble", "bc");
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("LengthenEsAndDouble-linked", "");
+
+		VuoCompiler *compilers[4];
+		VuoCompilerNodeClass *nodeClasses[4];
+		string installDirs[2] = { VuoFileUtilities::getUserModulesPath(), compositionLocalPath };
+		string expectedOutputs[2] = { "e e", "bep bep" };
+		for (int i = 0; i < 4; ++i)
+		{
+			compilers[i] = new VuoCompiler(installDirs[i%2] + "/unused");
+			nodeClasses[i] = compilers[i]->getNodeClass(nodeClassName);
+
+			VuoCompilerIssues *issues = new VuoCompilerIssues();
+			compilers[i]->compileComposition(compositionPath, compiledCompositionPath, true, issues);
+			compilers[i]->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+			remove(compiledCompositionPath.c_str());
+
+			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
+			runner->start();
+
+			VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("Lengthen");
+			VuoRunner::Port *outPort = runner->getPublishedOutputPortWithName("CompositeText");
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitForFiredPublishedInputPortEvent();
+			QCOMPARE(QString(VuoText_makeFromJson(runner->getPublishedOutputPortValue(outPort))), QString::fromStdString(expectedOutputs[i%2]));
+
+			runner->stop();
+			delete runner;
+			delete issues;
+		}
+
+		QVERIFY(nodeClasses[0] != nodeClasses[1]);
+		QVERIFY(nodeClasses[0] == nodeClasses[2]);
+		QVERIFY(nodeClasses[1] == nodeClasses[3]);
+
+		for (int i = 0; i < 4; ++i)
+			delete compilers[i];
+
+		VuoFileUtilities::deleteDir(compositionLocalPath);
+	}
+
+private:
+
+	class TestErrorsCompilerDelegate : public VuoCompilerDelegate
+	{
+	private:
+		VuoCompilerIssues *issues;
+		dispatch_queue_t issuesQueue;
+
+		void loadedModules(const map<string, VuoCompilerModule *> &modulesAdded,
+						   const map<string, pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified,
+						   const map<string, VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues)
+		{
+			dispatch_sync(issuesQueue, ^{
+							  this->issues->append(issues);
+						  });
+
+			loadedModulesCompleted();
+		}
+
+	public:
+		TestErrorsCompilerDelegate(void)
+		{
+			issues = new VuoCompilerIssues();
+			issuesQueue = dispatch_queue_create("org.vuo.TestSubcompositions", NULL);
+		}
+
+		map<string, VuoCompilerIssue> getIssuesByFilePath(VuoCompiler *compiler)
+		{
+			compiler->getNodeClasses();
+
+			__block map<string, VuoCompilerIssue> issuesByFilePath;
+			dispatch_sync(issuesQueue, ^{
+							  vector<VuoCompilerIssue> issueList = issues->getList();
+							  for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i) {
+								  issuesByFilePath[(*i).getFilePath()] = *i;
+							  }
+
+							  delete issues;
+							  issues = new VuoCompilerIssues();
+						  });
+
+			return issuesByFilePath;
+		}
+	};
+
+private slots:
 
 	void testErrors()
 	{
 		string parseErrorNodeClassName = "vuo.test.parseError";
 		string copiedParseErrorPath = VuoFileUtilities::getUserModulesPath() + "/" + parseErrorNodeClassName + ".vuo";
-		string compiledParseErrorPath = VuoCompiler::getCachedModulesPath() + "/" + parseErrorNodeClassName + ".vuonode";
+		string compiledParseErrorPath = getCachedCompiledCompositionPath(parseErrorNodeClassName);
 
 		// Try to install a subcomposition that can't be parsed.
+		compiler->setDelegate(NULL);
 		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
-		try {
-			compiler->installSubcomposition(copiedParseErrorPath);
-			QFAIL("");
-		} catch (VuoCompilerException &e) {
-			QVERIFY(! VuoFileUtilities::fileExists(compiledParseErrorPath));
-		}
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(parseErrorNodeClassName);
+		QVERIFY(! nodeClass);
+		QVERIFY(! VuoFileUtilities::fileExists(compiledParseErrorPath));
+
+		TestErrorsCompilerDelegate delegate;
 
 		// Initialize a compiler when the Modules folder contains a subcomposition that can't be parsed.
-		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
 		delete compiler;
+		VuoCompiler::reset();
+		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
 		compiler = initCompiler();
-		map<string, VuoCompilerException> errors = compiler->checkForErrorsLoadingModules();
-		QVERIFY(errors.find(copiedParseErrorPath) != errors.end());
+		compiler->setDelegate(&delegate);
+		map<string, VuoCompilerIssue> issues = delegate.getIssuesByFilePath(compiler);
+		QVERIFY(issues.find(copiedParseErrorPath) != issues.end());
 		QVERIFY(! VuoFileUtilities::fileExists(compiledParseErrorPath));
 		VuoFileUtilities::deleteFile(copiedParseErrorPath);
 
@@ -1135,33 +1923,41 @@ private slots:
 		string lengthenEsAndDoubleAndAddKPath = getCompositionPath("LengthenEsAndDoubleAndAddK.vuo");
 		string lengthenEsNodeClassName = "vuo.test.lengthenEs";
 		string copiedLengthenEsPath = VuoFileUtilities::getUserModulesPath() + "/" + lengthenEsNodeClassName + ".vuo";
-		string compiledLengthenEsPath = VuoCompiler::getCachedModulesPath() + "/" + lengthenEsNodeClassName + ".vuonode";
+		string compiledLengthenEsPath = getCachedCompiledCompositionPath(lengthenEsNodeClassName);
 		string appendWithSpacesPath = getCompositionPath("AppendWithSpaces.vuo");
 
 		// Initialize a compiler when the Modules folder contains a subcomposition that contains an instance of itself.
-		copyIntoSubcompositionDir(appendWithSpacesPath);
-		VuoFileUtilities::copyFile(lengthenEsAndDoublePath, copiedLengthenEsPath);
-		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
+		VuoCompiler::reset();
+		installSubcomposition(appendWithSpacesPath);
+		VuoFileUtilities::copyFile(lengthenEsAndDoublePath, copiedLengthenEsPath);
 		compiler = initCompiler();
-		errors = compiler->checkForErrorsLoadingModules();
-		QVERIFY(errors.find(copiedLengthenEsPath) != errors.end());
-		QVERIFY(VuoStringUtilities::beginsWith(errors[copiedLengthenEsPath].what(), "Subcomposition contains itself"));
+		compiler->setDelegate(&delegate);
+		issues = delegate.getIssuesByFilePath(compiler);
+		QVERIFY(issues.find(copiedLengthenEsPath) != issues.end());
+		QVERIFY(VuoStringUtilities::beginsWith(issues[copiedLengthenEsPath].getShortDescription(false), "Subcomposition contains itself"));
 		QVERIFY(! VuoFileUtilities::fileExists(compiledLengthenEsPath));
 
 		// Initialize a compiler when the Modules folder contains a subcomposition that indirectly contains an instance of itself.
-		copyIntoSubcompositionDir(lengthenEsAndDoublePath);
-		VuoFileUtilities::copyFile(lengthenEsAndDoubleAndAddKPath, copiedLengthenEsPath);
-		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
+		VuoCompiler::reset();
+		installSubcomposition(lengthenEsAndDoublePath);
+		VuoFileUtilities::copyFile(lengthenEsAndDoubleAndAddKPath, copiedLengthenEsPath);
 		compiler = initCompiler();
-		errors = compiler->checkForErrorsLoadingModules();
-		QVERIFY(errors.find(copiedLengthenEsPath) != errors.end());
-		QVERIFY(VuoStringUtilities::beginsWith(errors[copiedLengthenEsPath].what(), "Subcomposition contains itself"));
+		compiler->setDelegate(&delegate);
+		issues = delegate.getIssuesByFilePath(compiler);
+		QVERIFY(issues.find(copiedLengthenEsPath) != issues.end());
+		QVERIFY(VuoStringUtilities::beginsWith(issues[copiedLengthenEsPath].getShortDescription(false), "Subcomposition contains itself"));
 		QVERIFY(! VuoFileUtilities::fileExists(compiledLengthenEsPath));
 	}
 };
 
+int main(int argc, char *argv[])
+{
+    qInstallMessageHandler(VuoRendererCommon::messageHandler);
+    TestSubcompositions tc;
+    QTEST_SET_MAIN_SOURCE_PATH
+    return QTest::qExec(&tc, argc, argv);
+}
 
-QTEST_APPLESS_MAIN(TestSubcompositions)
 #include "TestSubcompositions.moc"

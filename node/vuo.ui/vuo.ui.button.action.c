@@ -2,9 +2,9 @@
  * @file
  * vuo.ui.button.action node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,6 +19,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "pushed", "command", "selected", "pressed" ],
 					 "version" : "1.0.0",
 					 "node": {
+						 "isDeprecated": true,
 						 "exampleCompositions" : [ "ChangeColorWithButton.vuo", "FlipPhoto.vuo" ],
 					 },
 					 "dependencies": [
@@ -30,6 +31,7 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoText uniqueID;
+	uint64_t id;
 
 	VuoMouse *mouseMovedListener;
 	VuoMouse *mouseDraggedListener;
@@ -53,6 +55,8 @@ struct nodeInstanceData
 	VuoPoint2d center;
 	VuoReal width;
 	VuoReal height;
+
+	bool triggersEnabled;
 };
 
 struct nodeInstanceData *nodeInstanceInit()
@@ -65,6 +69,8 @@ struct nodeInstanceData *nodeInstanceInit()
 	context->uniqueID = VuoText_format("%p", context);
 	VuoRegister(context->uniqueID, free);
 	VuoRetain(context->uniqueID);
+
+	context->id = VuoSceneObject_getNextId();
 
 	context->mouseMovedListener = VuoMouse_make();
 	VuoRetain(context->mouseMovedListener);
@@ -182,8 +188,8 @@ static void renderButton(struct nodeInstanceData *context)
 	VuoLayer textLayer;
 	if (haveText)
 	{
-		textLayer.sceneObject = VuoSceneObject_makeText(context->label, context->font);
-		textLayer.sceneObject.mesh = VuoMesh_makeQuadWithoutNormals();
+		textLayer = (VuoLayer)VuoSceneObject_makeText(context->label, context->font, true, INFINITY);
+		VuoSceneObject_setMesh((VuoSceneObject)textLayer, VuoMesh_makeQuadWithoutNormals());
 	}
 
 	VuoRectangle iconContainerRectangle = contentRectangle;
@@ -195,7 +201,7 @@ static void renderButton(struct nodeInstanceData *context)
 		{
 			case VuoIconPosition_Left:
 				// Center the label in the right 2/3.
-				textLayer.sceneObject.transform.translation = VuoPoint3d_make(contentRectangle.size.x/6., 0, 0);
+				VuoSceneObject_translate((VuoSceneObject)textLayer, (VuoPoint3d){contentRectangle.size.x/6., 0, 0});
 				// Center the icon in the left 1/3.
 				iconContainerRectangle.size.x = contentRectangle.size.x/3.;
 				iconContainerRectangle.center.x = -contentRectangle.size.x/3.;
@@ -203,7 +209,7 @@ static void renderButton(struct nodeInstanceData *context)
 
 			case VuoIconPosition_Right:
 				// Center the label in the left 2/3.
-				textLayer.sceneObject.transform.translation = VuoPoint3d_make(-contentRectangle.size.x/6., 0, 0);
+				VuoSceneObject_translate((VuoSceneObject)textLayer, (VuoPoint3d){-contentRectangle.size.x/6., 0, 0});
 				// Center the icon in the right 1/3.
 				iconContainerRectangle.size.x = contentRectangle.size.x/3.;
 				iconContainerRectangle.center.x = contentRectangle.size.x/3.;
@@ -211,7 +217,7 @@ static void renderButton(struct nodeInstanceData *context)
 
 			case VuoIconPosition_Above:
 				// Center the label in the bottom 2/3.
-				textLayer.sceneObject.transform.translation = VuoPoint3d_make(0, -contentRectangle.size.y/6., 0);
+				VuoSceneObject_translate((VuoSceneObject)textLayer, (VuoPoint3d){0, -contentRectangle.size.y/6., 0});
 				// Center the icon in the top 1/3.
 				iconContainerRectangle.size.y = contentRectangle.size.y/3.;
 				iconContainerRectangle.center.y = contentRectangle.size.y/3.;
@@ -219,7 +225,7 @@ static void renderButton(struct nodeInstanceData *context)
 
 			case VuoIconPosition_Below:
 				// Center the label in the top 2/3.
-				textLayer.sceneObject.transform.translation = VuoPoint3d_make(0, contentRectangle.size.y/6., 0);
+				VuoSceneObject_translate((VuoSceneObject)textLayer, (VuoPoint3d){0, contentRectangle.size.y/6., 0});
 				// Center the icon in the bottom 1/3.
 				iconContainerRectangle.size.y = contentRectangle.size.y/3.;
 				iconContainerRectangle.center.y = -contentRectangle.size.y/3.;
@@ -258,6 +264,7 @@ static void renderButton(struct nodeInstanceData *context)
 //	VuoListAppendValue_VuoLayer(layers, VuoLayer_makeColor(VuoText_make(""), VuoColor_makeWithRGBA(0,0,1,0.5), iconContainerRectangle.center, 0, iconContainerRectangle.size.x, iconContainerRectangle.size.y));
 
 	VuoLayer group = VuoLayer_makeGroup(layers, VuoTransform2d_make(context->center, 0, VuoPoint2d_make(1,1)));
+	VuoLayer_setId(group, context->id);
 	VuoRelease(layers);
 	context->updatedLayer(group);
 }
@@ -298,18 +305,22 @@ static void mouseReleased(struct nodeInstanceData *context, VuoPoint2d point)
 
 static void startTriggers(struct nodeInstanceData *context)
 {
+	VuoWindowReference window = NULL;
+	(void)VuoRenderedLayers_getWindow(context->renderedLayers, &window);
+
 	VuoMouse_startListeningForMovesWithCallback(context->mouseMovedListener,
 												^(VuoPoint2d point) { mouseMoved(context, point); },
-												context->renderedLayers.window, VuoModifierKey_Any);
+												window, VuoModifierKey_Any);
 	VuoMouse_startListeningForDragsWithCallback(context->mouseDraggedListener,
 												^(VuoPoint2d point) { mouseMoved(context, point); },
-												VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any, true);
+												VuoMouseButton_Left, window, VuoModifierKey_Any, true);
 	VuoMouse_startListeningForPressesWithCallback(context->mousePressedListener,
 												  ^(VuoPoint2d point) { mousePressed(context, point); },
-												  VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any);
+												  NULL,
+												  VuoMouseButton_Left, window, VuoModifierKey_Any);
 	VuoMouse_startListeningForReleasesWithCallback(context->mouseReleasedListener,
 												   ^(VuoPoint2d point) { mouseReleased(context, point); },
-												   VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any, true);
+												   VuoMouseButton_Left, window, VuoModifierKey_Any, true);
 }
 
 static void stopTriggers(struct nodeInstanceData *context)
@@ -336,6 +347,8 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(pressed, void)
 )
 {
+	(*context)->triggersEnabled = true;
+
 	(*context)->renderedLayers = renderedLayers;
 	VuoRenderedLayers_retain((*context)->renderedLayers);
 
@@ -361,7 +374,12 @@ void nodeInstanceTriggerUpdate
 		VuoInputData(VuoReal) height
 )
 {
-	bool windowChanged = (*context)->renderedLayers.window != renderedLayers.window;
+	VuoWindowReference contextWindow = NULL;
+	(void)VuoRenderedLayers_getWindow((*context)->renderedLayers, &contextWindow);
+	VuoWindowReference newWindow = NULL;
+	(void)VuoRenderedLayers_getWindow(renderedLayers, &newWindow);
+
+	bool windowChanged = contextWindow != newWindow;
 
 	dispatch_sync((*context)->renderedLayersQueue, ^{
 					  VuoRenderedLayers_release((*context)->renderedLayers);
@@ -393,9 +411,17 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (renderedLayersEvent)
 	{
-		bool windowChanged = (*context)->renderedLayers.window != renderedLayers.window;
+		VuoWindowReference contextWindow = NULL;
+		(void)VuoRenderedLayers_getWindow((*context)->renderedLayers, &contextWindow);
+		VuoWindowReference newWindow = NULL;
+		(void)VuoRenderedLayers_getWindow(renderedLayers, &newWindow);
+
+		bool windowChanged = contextWindow != newWindow;
 
 		dispatch_sync((*context)->renderedLayersQueue, ^{
 						  VuoRenderedLayers_release((*context)->renderedLayers);
@@ -420,6 +446,7 @@ void nodeInstanceTriggerStop
 {
 	stopTriggers(*context);
 	VuoRenderedLayers_release((*context)->renderedLayers);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

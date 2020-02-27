@@ -2,9 +2,9 @@
  * @file
  * vuo.image.twirl node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -25,19 +25,19 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
 	// Inputs
 	uniform sampler2D texture;
 	uniform vec2 center;
 	uniform float angle;
 	uniform float cutoffRadius;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	void main()
 	{
 		// Adapted from http://www.geeks3d.com/20110428/shader-library-swirl-post-processing-filter-in-glsl/
-		vec2 coord = fragmentTextureCoordinate.xy;
+		vec2 coord = fragmentTextureCoordinate;
 		if (cutoffRadius > 0)
 		{
 			coord -= center;
@@ -79,7 +79,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0},"suggestedMin":{"x":-1,"y":-1},"suggestedMax":{"x":1,"y":1}}) center,
-		VuoInputData(VuoReal, {"default":135.0,"suggestedMin":0,"suggestedMax":360,"suggestedStep":1}) angle,
+		VuoInputData(VuoReal, {"default":135.0,"suggestedMin":-360,"suggestedMax":360,"suggestedStep":1}) angle,
 		VuoInputData(VuoReal, {"default":0.5,"suggestedMin":0,"suggestedMax":2}) radius,
 		VuoOutputData(VuoImage) twirledImage
 )

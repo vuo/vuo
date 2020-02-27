@@ -2,9 +2,9 @@
  * @file
  * vuo.image.tileable node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -24,16 +24,16 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform float blendWidth;
 	uniform float aspectRatio;
 
 	void main(void)
 	{
-		vec2 p = fract(fragmentTextureCoordinate.xy + blendWidth/2.);
+		vec2 p = fract(fragmentTextureCoordinate + blendWidth/2.);
 
 		float spx = smoothstep(0., blendWidth, p.x);
 		float spy = smoothstep(0., blendWidth, p.y);

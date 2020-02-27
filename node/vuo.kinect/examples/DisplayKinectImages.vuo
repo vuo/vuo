@@ -2,23 +2,22 @@
  * @file
  * If a Kinect device is attached, displays the visible and depth images it provides.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-MakeLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,480" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,330" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="852,401" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="872,416" fillcolor="green"];
-ReceiveKinectFrame [type="vuo.kinect.receive" version="2.0.0" label="Receive Kinect Frame|<refresh>refresh\l|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="375,345" fillcolor="violet" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="900,390" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,480" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,330" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="854,401" fillcolor="blue"];
+ReceiveKinectFrame [type="vuo.kinect.receive2" version="3.0.0" label="Receive Kinect Images|<refresh>refresh\l|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="375,345" fillcolor="orange" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="900,390" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 MakeLayer2:layer -> MakeList:1;
 MakeLayer:layer -> MakeList:2;
-MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList:list -> RenderLayersToWindow2:layers;
 ReceiveKinectFrame:receivedDepthImage -> MakeLayer:image;
 ReceiveKinectFrame:receivedImage -> MakeLayer2:image;

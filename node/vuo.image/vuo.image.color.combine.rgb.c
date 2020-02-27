@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.combine.rgb node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -20,10 +20,10 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(hsl)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslHsl.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D redTexture;
 	uniform int redExists;
@@ -39,10 +39,10 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 redColor   = VuoGlsl_sample(redTexture, fragmentTextureCoordinate.xy);
-		vec4 greenColor = VuoGlsl_sample(greenTexture, fragmentTextureCoordinate.xy);
-		vec4 blueColor  = VuoGlsl_sample(blueTexture, fragmentTextureCoordinate.xy);
-		vec4 alphaColor = VuoGlsl_sample(alphaTexture, fragmentTextureCoordinate.xy);
+		vec4 redColor   = VuoGlsl_sample(redTexture, fragmentTextureCoordinate);
+		vec4 greenColor = VuoGlsl_sample(greenTexture, fragmentTextureCoordinate);
+		vec4 blueColor  = VuoGlsl_sample(blueTexture, fragmentTextureCoordinate);
+		vec4 alphaColor = VuoGlsl_sample(alphaTexture, fragmentTextureCoordinate);
 
 		vec4 result = vec4(0,0,0,0);
 
@@ -60,7 +60,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 		if (alphaExists == 1)
 		{
 			result.rgb /= result.a;
-			result.a *= rgbToHsl(alphaColor.rgb).z;
+			result.a *= VuoGlsl_rgbToHsl(alphaColor.rgb).z;
 			result.rgb *= result.a;
 		}
 
@@ -81,6 +81,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->shader = VuoShader_make("Combine Image RGB Colors Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
 	VuoRetain(instance->shader);
+
+	// An opaque, nonwhite `opacityImage` should output a semitransparent image with an alpha channel.
+	instance->shader->isTransparent = true;
 
 	return instance;
 }

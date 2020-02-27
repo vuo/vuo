@@ -2,9 +2,9 @@
  * @file
  * VuoOsc implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoOsc.h"
@@ -310,6 +310,14 @@ public:
 			{
 				VUserLog("OSC: Excess argument: %s", e.what());
 			}
+			catch (std::runtime_error &e)
+			{
+				VUserLog("OSC runtime error: %s", e.what());
+			}
+			catch (std::exception &e)
+			{
+				VUserLog("OSC exception: %s", e.what());
+			}
 			catch (...)
 			{
 				VUserLog("Unknown OSC exception");
@@ -601,7 +609,7 @@ static int VuoOsc_findAvailableUdpPort(void)
 	return ntohs(sin.sin_port);
 }
 
-/// @{
+/// @{ VuoKeyedPool_VuoOscOut
 VUOKEYEDPOOL(VuoOscOutputIdentifier, VuoOscOut_internal);
 static void VuoOscOut_destroy(VuoOscOut_internal ai);
 VuoOscOut_internal VuoOscOut_make(VuoOscOutputIdentifier device)
@@ -635,6 +643,7 @@ VuoOscOut_internal VuoOscOut_make(VuoOscOutputIdentifier device)
 		{
 			for (struct ifaddrs *address = interfaces; address; address = address->ifa_next)
 			{
+				// Only add IPv4 interfaces.
 				if (address->ifa_addr->sa_family != AF_INET)
 					continue;
 
@@ -796,7 +805,7 @@ void VuoOscOut_sendMessages(VuoOscOut ao, VuoList_VuoOscMessage messages)
 								   (*socket)->Send(p.Data(), p.Size());
 							   done = true;
 						   }
-						   catch (osc::OutOfBufferMemoryException const &e)
+						   catch (osc::OutOfBufferMemoryException const &)
 						   {
 							   bufferSize *= 2;
 						   }

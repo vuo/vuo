@@ -2,9 +2,9 @@
  * @file
  * VuoCompilerPublishedOutputNodeClass implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerPublishedOutputNodeClass.hh"
@@ -18,17 +18,29 @@
 #include "VuoCompilerType.hh"
 #include "VuoGenericType.hh"
 #include "VuoNode.hh"
+#include "VuoNodeClass.hh"
 #include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
-#include "VuoType.hh"
-#include <sstream>
 
+
+VuoCompilerPublishedOutputNodeClass * VuoCompilerPublishedOutputNodeClass::singleton = nullptr;
+
+/**
+ * Returns an empty instance used to enable polymorphism. Functions that would otherwise be static are called on this instance.
+ */
+VuoCompilerPublishedOutputNodeClass * VuoCompilerPublishedOutputNodeClass::getSingleton(void)
+{
+	if (! singleton)
+		singleton = new VuoCompilerPublishedOutputNodeClass(new VuoNodeClass(VuoNodeClass::publishedOutputNodeClassName, vector<string>(), vector<string>()));
+
+	return singleton;
+}
 
 /**
  * Creates a node class implementation from an LLVM module, and creates its corresponding base @c VuoNodeClass.
  */
 VuoCompilerPublishedOutputNodeClass::VuoCompilerPublishedOutputNodeClass(string nodeClassName, Module *module) :
-	VuoCompilerSpecializedNodeClass(nodeClassName, module)
+	VuoCompilerPublishedNodeClass(nodeClassName, module)
 {
 }
 
@@ -36,7 +48,7 @@ VuoCompilerPublishedOutputNodeClass::VuoCompilerPublishedOutputNodeClass(string 
  * Creates a new compiler node class and a new base @c VuoNodeClass, both from @c compilerNodeClass.
  */
 VuoCompilerPublishedOutputNodeClass::VuoCompilerPublishedOutputNodeClass(VuoCompilerPublishedOutputNodeClass *compilerNodeClass) :
-	VuoCompilerSpecializedNodeClass(compilerNodeClass)
+	VuoCompilerPublishedNodeClass(compilerNodeClass)
 {
 }
 
@@ -44,105 +56,79 @@ VuoCompilerPublishedOutputNodeClass::VuoCompilerPublishedOutputNodeClass(VuoComp
  * Creates a new implementation-less compiler node class, using the given node class for its base VuoNodeClass.
  */
 VuoCompilerPublishedOutputNodeClass::VuoCompilerPublishedOutputNodeClass(VuoNodeClass *baseNodeClass) :
-	VuoCompilerSpecializedNodeClass(baseNodeClass)
+	VuoCompilerPublishedNodeClass(baseNodeClass)
 {
 }
 
 /**
- * Returns a node class with an input port corresponding to (same name, same type) each of @a publishedOutputPorts.
+ * Returns a new node class with port names and types as specified by @a nodeClassName, or null if @a nodeClassName is not a
+ * valid published output node class name.
  */
-VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClass(vector<VuoPublishedPort *> publishedOutputPorts)
+VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue)
 {
-	bool isFullySpecialized = true;
-	vector<string> typeNames;
-	for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
-	{
-		VuoType *type = static_cast<VuoCompilerPort *>((*i)->getCompiler())->getDataVuoType();
-		string typeName = (type ? type->getModuleKey() : "event");
-		typeNames.push_back(typeName);
+	return VuoCompilerPublishedNodeClass::newNodeClass(nodeClassName, compiler, llvmQueue, getSingleton());
+}
 
-		if (dynamic_cast<VuoGenericType *>(type))
-			isFullySpecialized = false;
+/**
+ * Returns a new node class with port names and types corresponding to @a publishedOutputPorts.
+ */
+VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClass(vector<VuoPublishedPort *> publishedOutputPorts, dispatch_queue_t llvmQueue)
+{
+	return VuoCompilerPublishedNodeClass::newNodeClass(publishedOutputPorts, llvmQueue, getSingleton());
+}
+
+/**
+ * Returns a node class that has, for each of @a publishedOutputPorts, a corresponding input port of the same
+ * data type. In addition, the node class has an event input port to be used for gathering events.
+ */
+VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClassWithImplementation(const string &nodeClassName,
+																				   const vector<string> &portNames, const vector<VuoType *> &types)
+{
+	Module *module = new Module(nodeClassName, getGlobalContext());
+
+	// VuoModuleMetadata({});
+	VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
+
+	// For published ports a (data+event) and b (event):
+	//
+	// void nodeEvent
+	// (
+	//   VuoInputData(<data type>) a,
+	//   VuoInputEvent() b,
+	//   VuoInputEvent() gather
+	// )
+	// {
+	// }
+
+
+	vector<VuoPort *> modelInputPorts;
+	for (size_t i = 0; i < portNames.size(); ++i)
+	{
+		VuoCompilerPublishedPort *modelPort = VuoCompilerPublishedPort::newPort(portNames.at(i), types.at(i));
+		modelInputPorts.push_back(modelPort->getBase());
 	}
 
-	ostringstream typeCount;
-	typeCount << typeNames.size();
+	VuoCompilerInputEventPortClass *gatherPortClass = new VuoCompilerInputEventPortClass("gather");
+	VuoCompilerPort *gatherPort = gatherPortClass->newPort();
+	modelInputPorts.push_back(gatherPort->getBase());
 
-	vector<string> nodeClassNameParts;
-	nodeClassNameParts.push_back(VuoNodeClass::publishedOutputNodeClassName);
-	nodeClassNameParts.push_back(typeCount.str());
-	nodeClassNameParts.insert(nodeClassNameParts.end(), typeNames.begin(), typeNames.end());
-	string nodeClassName = VuoStringUtilities::join(nodeClassNameParts, '.');
+	map<VuoPort *, size_t> indexOfDataParameter;
+	map<VuoPort *, size_t> indexOfEventParameter;
+	VuoCompilerConstantStringCache constantStrings;
 
+	Function *eventFunction = VuoCompilerCodeGenUtilities::getNodeEventFunction(module, "", false, false,
+																				nullptr, modelInputPorts, vector<VuoPort *>(),
+																				map<VuoPort *, json_object *>(), map<VuoPort *, string>(),
+																				map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
+																				indexOfDataParameter, indexOfEventParameter, constantStrings);
 
-	VuoCompilerPublishedOutputNodeClass *nodeClass = NULL;
-
-	if (isFullySpecialized)
-	{
-		// The generic port types have been specialized, so generate LLVM bitcode for the node class.
-
-		Module *module = new Module(nodeClassName, getGlobalContext());
-
-		// VuoModuleMetadata({});
-		VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
-
-		// void nodeEvent
-		// (
-		//	VuoInputData(<item type>,<default value>) publishedPort1,
-		//  VuoInputData(<item type>,<default value>) publishedPort2,
-		//  VuoInputEvent() publishedPort3,
-		//	...
-		// )
-		// {}
-
-		vector<VuoPort *> modelInputPorts(publishedOutputPorts.begin(), publishedOutputPorts.end());
-		map<VuoPort *, size_t> indexOfDataParameter;
-		map<VuoPort *, size_t> indexOfEventParameter;
-		VuoCompilerConstantStringCache constantStrings;
-
-		Function *eventFunction = VuoCompilerCodeGenUtilities::getNodeEventFunction(module, "", false, false, modelInputPorts, vector<VuoPort *>(),
-																					map<VuoPort *, json_object *>(), map<VuoPort *, string>(),
-																					map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-																					indexOfDataParameter, indexOfEventParameter, constantStrings);
-
-		BasicBlock *block = &(eventFunction->getEntryBlock());
-		ReturnInst::Create(module->getContext(), block);
+	BasicBlock *block = &(eventFunction->getEntryBlock());
+	ReturnInst::Create(module->getContext(), block);
 
 
-		VuoCompilerPublishedOutputNodeClass *dummyNodeClass = new VuoCompilerPublishedOutputNodeClass(nodeClassName, module);
-		nodeClass = new VuoCompilerPublishedOutputNodeClass(dummyNodeClass);
-		delete dummyNodeClass;
-	}
-	else
-	{
-		// The generic ports have not been specialized, so construct a node class that doesn't yet have an implementation.
-
-		VuoPortClass *refreshPortClass = (new VuoCompilerInputEventPortClass("refresh"))->getBase();
-
-		vector<VuoPortClass *> inputPortClasses;
-		inputPortClasses.push_back(refreshPortClass);
-		for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
-		{
-			VuoPublishedPort *publishedOutputPorts = *i;
-
-			string portName = publishedOutputPorts->getClass()->getName();
-			VuoType *portType = static_cast<VuoCompilerPort *>((*i)->getCompiler())->getDataVuoType();
-
-			VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(portName);
-			if (portType)
-			{
-				VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("", NULL, false);
-				portClass->setDataClass(dataClass);
-				portClass->setDataVuoType(portType);
-			}
-			inputPortClasses.push_back(portClass->getBase());
-		}
-
-		vector<VuoPortClass *> outputPortClasses;
-
-		VuoNodeClass *baseNodeClass = new VuoNodeClass(nodeClassName, refreshPortClass, inputPortClasses, outputPortClasses);
-		nodeClass = new VuoCompilerPublishedOutputNodeClass(baseNodeClass);
-	}
+	VuoCompilerPublishedOutputNodeClass *dummyNodeClass = new VuoCompilerPublishedOutputNodeClass(nodeClassName, module);
+	VuoCompilerNodeClass *nodeClass = new VuoCompilerPublishedOutputNodeClass(dummyNodeClass);
+	delete dummyNodeClass;
 
 	nodeClass->getBase()->setDefaultTitle(VuoNodeClass::publishedOutputNodeIdentifier);
 	nodeClass->getBase()->setVersion("1.0.0");
@@ -151,80 +137,81 @@ VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClass(vector<VuoPubli
 }
 
 /**
- * Returns a fully specialized node of class @a backingNodeClassName that will replace the node class of @a nodeToBack.
+ * Returns a node class with the same ports as the return value of VuoCompilerPublishedOutputNodeClass::newNodeClass(),
+ * but without an implementation (LLVM module).
  */
-VuoCompilerNode * VuoCompilerPublishedOutputNodeClass::createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler)
+VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClassWithoutImplementation(const string &nodeClassName,
+																					  const vector<string> &portNames, const vector<VuoType *> &types)
 {
-	vector<string> nodeClassNameParts = VuoStringUtilities::split(backingNodeClassName, '.');
-	vector<string> typeNames( nodeClassNameParts.begin() + 3, nodeClassNameParts.end() );
-	vector<VuoPort *> ports = nodeToBack->getInputPorts();
+	vector<VuoPortClass *> inputPortClasses;
+	vector<VuoPortClass *> outputPortClasses;
 
-	vector<VuoPublishedPort *> publishedPorts;
-	for (int i = VuoNodeClass::unreservedInputPortStartIndex; i < ports.size(); ++i)
+	VuoPortClass *refreshPortClass = (new VuoCompilerInputEventPortClass("refresh"))->getBase();
+	inputPortClasses.push_back(refreshPortClass);
+
+	for (size_t i = 0; i < portNames.size(); ++i)
 	{
-		VuoPort *port = ports[i];
-		string portName = port->getClass()->getName();
-		string typeName = typeNames[i - VuoNodeClass::unreservedInputPortStartIndex];
-		VuoType *vuoType = (typeName == "event" ? NULL : compiler->getType(typeName)->getBase());
-		Type *llvmType = (vuoType == NULL ? NULL : vuoType->getCompiler()->getType());
-		VuoPortClass::PortType eventOrData = (vuoType == NULL ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort);
-		VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass(portName, eventOrData, llvmType);
-		portClass->setDataVuoType(vuoType);
-		VuoCompilerPublishedPort *publishedPort = static_cast<VuoCompilerPublishedPort *>( portClass->newPort() );
-		publishedPorts.push_back( static_cast<VuoPublishedPort *>(publishedPort->getBase()) );
+		VuoCompilerInputEventPortClass *inputPortClass = new VuoCompilerInputEventPortClass(portNames.at(i));
+		if (types.at(i))
+		{
+			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("", nullptr, false);
+			inputPortClass->setDataClass(inputDataClass);
+			inputPortClass->setDataVuoType(types.at(i));
+		}
+
+		inputPortClasses.push_back(inputPortClass->getBase());
 	}
 
-	return compiler->createPublishedOutputNode(publishedPorts)->getCompiler();
+	VuoPortClass *gatherPortClass = (new VuoCompilerInputEventPortClass("gather"))->getBase();
+	inputPortClasses.push_back(gatherPortClass);
+
+	VuoNodeClass *baseNodeClass = new VuoNodeClass(nodeClassName, refreshPortClass, inputPortClasses, outputPortClasses);
+	VuoCompilerNodeClass *nodeClass = new VuoCompilerPublishedOutputNodeClass(baseNodeClass);
+
+	nodeClass->getBase()->setDefaultTitle(VuoNodeClass::publishedOutputNodeIdentifier);
+
+	return nodeClass->getBase();
 }
 
 /**
- * Returns this port's type in the (hypothetical) unspecialized published output node class.
+ * Returns the index of the input port on this node class that corresponds to the published output port.
  */
-VuoType * VuoCompilerPublishedOutputNodeClass::getOriginalPortType(VuoPortClass *portClass)
+size_t VuoCompilerPublishedOutputNodeClass::getInputPortIndexForPublishedOutputPort(size_t publishedOutputPortIndex)
 {
-	/// @todo https://b33p.net/kosada/node/7655
-	return NULL;
+	return VuoNodeClass::unreservedInputPortStartIndex + publishedOutputPortIndex;
 }
 
 /**
- * Returns the original node's class name (without any type suffixes).
+ * Returns the index of the input port on this node class that is intended for gathering events.
  */
-string VuoCompilerPublishedOutputNodeClass::getOriginalGenericNodeClassName(void)
+size_t VuoCompilerPublishedOutputNodeClass::getGatherInputPortIndex(void)
+{
+	return getBase()->getInputPortClasses().size() - 1;
+}
+
+/**
+ * Creates a class name for a published output node with the given published output ports.
+ */
+string VuoCompilerPublishedOutputNodeClass::buildNodeClassName(const vector<VuoPublishedPort *> &publishedOutputPorts)
+{
+	return getSingleton()->buildNodeClassNameFromPorts(publishedOutputPorts);
+}
+
+/**
+ * Returns the prefix common to all published output node class names.
+ */
+string VuoCompilerPublishedOutputNodeClass::getNodeClassNamePrefix(void)
 {
 	return VuoNodeClass::publishedOutputNodeClassName;
 }
 
 /**
- * Returns the original node's class description (i.e., nothing).
+ * Returns the names of input port classes that are added automatically to all published output node classes.
  */
-string VuoCompilerPublishedOutputNodeClass::getOriginalGenericNodeClassDescription(void)
+set<string> VuoCompilerPublishedOutputNodeClass::getReservedPortNames(void)
 {
-	return "";
-}
-
-/**
- * Returns the original node's node set (i.e., none).
- */
-VuoNodeSet * VuoCompilerPublishedOutputNodeClass::getOriginalGenericNodeSet(void)
-{
-	return NULL;
-}
-
-/**
- * Returns the name for the published output node class that would result if the given ports were changed back to their original types.
- */
-string VuoCompilerPublishedOutputNodeClass::createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize)
-{
-	/// @todo https://b33p.net/kosada/node/7655
-	return "";
-}
-
-/**
- * Returns the name for the published output node class that would result if the given specialized type were substituted for the
- * generic item type.
- */
-string VuoCompilerPublishedOutputNodeClass::createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName)
-{
-	/// @todo https://b33p.net/kosada/node/7655
-	return "";
+	set<string> names;
+	names.insert("refresh");
+	names.insert("gather");
+	return names;
 }

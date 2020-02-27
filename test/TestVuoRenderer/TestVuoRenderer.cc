@@ -2,22 +2,19 @@
  * @file
  * TestVuoRenderer implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include "VuoRendererPort.hh"
-#include "VuoPortClass.hh"
-#include "VuoPort.hh"
-#include "VuoCompiler.hh"
-#include "VuoCompilerNodeClass.hh"
+#include <Vuo/Vuo.h>
+
+#include "VuoRendererCable.hh"
 #include "VuoRendererComposition.hh"
 #include "VuoRendererNode.hh"
-#include "VuoRendererCable.hh"
-#include "VuoRendererTypecastPort.hh"
-#include "VuoCompilerCable.hh"
+#include "VuoRendererPort.hh"
 #include "VuoRendererSignaler.hh"
+#include "VuoRendererTypecastPort.hh"
 
 /**
  * Tests for the VuoRenderer* classes.
@@ -99,42 +96,14 @@ private slots:
 		VuoNode * n = cnc->newNode();
 		VuoRendererNode * rn = new VuoRendererNode(n, new VuoRendererSignaler());
 		QRectF nodeRect = rn->boundingRect();
-		foreach (VuoRendererPort * p, rn->getInputPorts()->childItems())
-			QVERIFY2(nodeRect.intersects(p->boundingRect()), "An input port isn't visually connected to its node");
-		foreach (VuoRendererPort * p, rn->getOutputPorts()->childItems())
-			QVERIFY2(nodeRect.intersects(p->boundingRect()), "An output port isn't visually connected to its node");
+		for (vector<VuoRendererPort *>::iterator it = rn->getInputPorts().begin(); it != rn->getInputPorts().end(); ++it)
+			if (! (*it)->getRefreshPort())
+				QVERIFY2(nodeRect.intersects((*it)->boundingRect()), "An input port isn't visually connected to its node");
+		for (vector<VuoRendererPort *>::iterator it = rn->getOutputPorts().begin(); it != rn->getOutputPorts().end(); ++it)
+			QVERIFY2(nodeRect.intersects((*it)->boundingRect()), "An output port isn't visually connected to its node");
 
 		delete rn;
 		delete n;
-	}
-
-
-	void testNodeWideEnoughForPort_data()
-	{
-		QTest::addColumn<QString>("portDisplayName");
-
-		QTest::newRow("time") << "Time";
-		QTest::newRow("long") << "Node Instance Trigger Stop Start 123";
-	}
-	void testNodeWideEnoughForPort()
-	{
-		QFETCH(QString, portDisplayName);
-
-		vector<string> inputs, outputs;
-		inputs.push_back("i");
-		inputs.push_back(portDisplayName.toStdString());
-		VuoNodeClass *nc = new VuoNodeClass("test", inputs, outputs);
-		VuoNode *n = nc->newNode();
-		VuoRendererNode *rn = new VuoRendererNode(n, new VuoRendererSignaler());
-		VuoRendererPortList *rp = rn->getInputPorts();
-
-		float nodeRight = rn->boundingRect().right();
-		float portRight = rp->childItems().at(2)->boundingRect().right();
-		QVERIFY(portRight < nodeRight);
-
-		delete rn;
-		delete n;
-		delete nc;
 	}
 
 
@@ -215,7 +184,7 @@ private slots:
 
 		int expectedNumInputPorts = 2;
 		QCOMPARE(write->getInputPorts().size(), (size_t)expectedNumInputPorts);
-		QCOMPARE(write->getRenderer()->getInputPorts()->childItems().size(), expectedNumInputPorts);
+		QCOMPARE(write->getRenderer()->getInputPorts().size(), (size_t)expectedNumInputPorts);
 
 		composition->collapseTypecastNodes();
 
@@ -226,10 +195,45 @@ private slots:
 		QVERIFY2(writePortTypecast->getChildPort() != NULL, "The target node's typecast port should have a child port.");
 
 		QCOMPARE(write->getInputPorts().size(), (size_t)expectedNumInputPorts);
-		QCOMPARE(write->getRenderer()->getInputPorts()->childItems().size(), expectedNumInputPorts);
+		QCOMPARE(write->getRenderer()->getInputPorts().size(), (size_t)expectedNumInputPorts);
 
 		delete composition;
 		delete baseComposition;
+		delete compiler;
+	}
+
+	void testPortConstant_data()
+	{
+		QTest::addColumn<QString>("type");
+		QTest::addColumn<QString>("valueJson");
+		QTest::addColumn<QString>("expectedConstantFlag");
+
+		QTest::newRow("VuoReal precise") << "VuoReal" << VUO_QSTRINGIFY(1.0000000001) << "1.0000000001";
+
+		QTest::newRow("VuoPoint2d 0.1" ) << "VuoPoint2d" << VUO_QSTRINGIFY([0.1, 0.1]) << "(0.1, 0.1)";
+		QTest::newRow("VuoPoint2d 0.03") << "VuoPoint2d" << VUO_QSTRINGIFY([0.03, 0.03]) << "(0.03, 0.03)";
+	}
+	void testPortConstant()
+	{
+		QFETCH(QString, type);
+		QFETCH(QString, valueJson);
+		QFETCH(QString, expectedConstantFlag);
+
+		VuoCompiler *compiler = new VuoCompiler();
+
+		auto ct = compiler->getType(type.toStdString());
+		QVERIFY(ct);
+
+		auto cp = VuoCompilerInputEventPort::newPort("test", ct->getBase());
+		QVERIFY(cp);
+
+		cp->getData()->setInitialValue(valueJson.toStdString());
+
+		auto rp = new VuoRendererPort(cp->getBase(), nullptr, false, false, false);
+		QCOMPARE(QString::fromStdString(rp->getConstantAsStringToRender()), expectedConstantFlag);
+
+		delete rp;
+		delete cp;
 		delete compiler;
 	}
 };

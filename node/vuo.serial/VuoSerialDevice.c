@@ -2,14 +2,11 @@
  * @file
  * VuoSerialDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoSerialDevice.h"
 #include "VuoSerial.h"
@@ -32,9 +29,9 @@ VuoModuleMetadata({
 /**
  * Returns a device matching type constant for the specified identifier string.
  */
-static VuoSerialDevice_MatchType VuoSerialDevice_getMatchTypeForString(const char *string)
+static VuoSerialDevice_MatchType VuoSerialDevice_MatchType_makeFromJson(json_object *js)
 {
-	if (strcmp(string, "path") == 0)
+	if (strcmp(json_object_get_string(js), "path") == 0)
 		return VuoSerialDevice_MatchPath;
 
 	return VuoSerialDevice_MatchName;
@@ -64,17 +61,11 @@ static const char *VuoSerialDevice_getStringForMatchType(VuoSerialDevice_MatchTy
  */
 VuoSerialDevice VuoSerialDevice_makeFromJson(json_object *js)
 {
-	VuoSerialDevice value = {VuoSerialDevice_MatchName, NULL, NULL};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "matchType", &o))
-		value.matchType = VuoSerialDevice_getMatchTypeForString(json_object_get_string(o));
-	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_makeFromJson(o);
-	if (json_object_object_get_ex(js, "path", &o))
-		value.path = VuoText_makeFromJson(o);
-
-	return value;
+	return (VuoSerialDevice){
+		VuoJson_getObjectValue(VuoSerialDevice_MatchType, js, "matchType", VuoSerialDevice_MatchName),
+		VuoJson_getObjectValue(VuoText,                   js, "name",      NULL),
+		VuoJson_getObjectValue(VuoText,                   js, "path",      NULL)
+	};
 }
 
 /**
@@ -204,5 +195,5 @@ char *VuoSerialDevice_getSummary(const VuoSerialDevice value)
 		VuoSerialDevice_release(realizedDevice);
 		return outputText;
 	}
-	return strdup("(unknown device)");
+	return strdup("Unknown device");
 }

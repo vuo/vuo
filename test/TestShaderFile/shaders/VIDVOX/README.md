@@ -1,0 +1,4 @@
+   - The `ISF files` and `ISF tests+tutorials` folders are from https://vdmx.vidvox.net/blog/isf
+      - `Meta Image.fs` was updated to match https://www.interactiveshaderformat.com/sketches/215 since the old version used `mix` as a variable name, which conflicts with the built-in `mix()` function.
+      - `Shockwave.fs` was updated to match https://www.interactiveshaderformat.com/sketches/247, as above.
+   - The `ISFGLScene Test App` folder is from https://github.com/mrRay/vvopensource

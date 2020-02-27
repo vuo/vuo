@@ -2,26 +2,13 @@
  * @file
  * TestVuoCompilerBitcodeGenerator interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <fstream>
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerBitcodeGenerator.hh"
-#include "VuoCompilerBitcodeParser.hh"
-#include "VuoCompilerChain.hh"
-#include "VuoCompilerComposition.hh"
-#include "VuoCompilerException.hh"
-#include "VuoCompilerGraph.hh"
-#include "VuoCompilerGraphvizParser.hh"
-#include "VuoCompilerTriggerPort.hh"
-#include "VuoCable.hh"
-#include "VuoFileUtilities.hh"
-#include "VuoPort.hh"
-#include "VuoStringUtilities.hh"
-
 
 typedef map<string, set<string> > nodesMap;  ///< Typedef needed for Q_DECLARE_METATYPE and QFETCH to compile. (The comma causes an error.)
 
@@ -69,6 +56,11 @@ private slots:
 	void cleanupTestCase()
 	{
 		cleanupCompiler();
+	}
+
+	string getPublishedInputTriggerIdentifier()
+	{
+		return VuoCompilerGraph::getPublishedInputTriggerNodeIdentifier() + ":spunOff";;
 	}
 
 	void testEventMayTransmitThroughNode_data()
@@ -207,25 +199,25 @@ private slots:
 		}
 		{
 			map<string, set<string> > downstreamNodes;
-			downstreamNodes["FirePeriodically1:fired"].insert("Subtract1");
-			downstreamNodes["FirePeriodically1:fired"].insert("Subtract2");
-			downstreamNodes["FirePeriodically1:fired"].insert("Subtract3");
-			downstreamNodes["FirePeriodically1:fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract1");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract2");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract3");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published" << downstreamNodes;
+			string publishedInputTriggerIdentifier = getPublishedInputTriggerIdentifier();
+			downstreamNodes[publishedInputTriggerIdentifier].insert("Subtract1");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("Subtract2");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("Subtract3");
+			downstreamNodes[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedInputNodeIdentifier);
+			downstreamNodes[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			QTest::newRow("Published input and output ports.") << "Subtract_published" << downstreamNodes;
 		}
 		{
 			map<string, set<string> > downstreamNodes;
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("ShareValue");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldValue");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("FireOnStart");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldList");
-			downstreamNodes[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("AddToList");
-			downstreamNodes["FireOnStart:started"];
+			string publishedInputTriggerIdentifier = getPublishedInputTriggerIdentifier();
+			downstreamNodes[publishedInputTriggerIdentifier].insert("ShareValue");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("HoldValue");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("FireOnStart");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("HoldList");
+			downstreamNodes[publishedInputTriggerIdentifier].insert("AddToList");
+			downstreamNodes[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedInputNodeIdentifier);
+			downstreamNodes[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			downstreamNodes["FireOnStart:started"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
 			QTest::newRow("Leaf nodes gather at published output node.") << "PublishedOutputGather" << downstreamNodes;
 		}
 	}
@@ -239,28 +231,35 @@ private slots:
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 
+		vector<string> autoAddedTriggers(1, VuoCompilerGraph::getManuallyFirableTriggerNodeIdentifier());
+
 		vector<string> triggerTitles;
 		for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = generator->graph->nodeForTrigger.begin(); i != generator->graph->nodeForTrigger.end(); ++i)
 		{
 			VuoCompilerTriggerPort *trigger = i->first;
 			VuoCompilerNode *triggerNode = i->second;
-			string triggerTitle = triggerNode->getBase()->getTitle() + ":" + trigger->getBase()->getClass()->getName();
-			triggerTitles.push_back(triggerTitle);
-			QVERIFY2(expectedDownstreamNodes.find(triggerTitle) != expectedDownstreamNodes.end(), triggerTitle.c_str());
+
+			if (find(autoAddedTriggers.begin(), autoAddedTriggers.end(), triggerNode->getIdentifier()) != autoAddedTriggers.end())
+				continue;
+
+			string triggerIdentifier = triggerNode->getIdentifier() + ":" + trigger->getBase()->getClass()->getName();
+			triggerTitles.push_back(triggerIdentifier);
+			QVERIFY2(expectedDownstreamNodes.find(triggerIdentifier) != expectedDownstreamNodes.end(), triggerIdentifier.c_str());
 			vector<VuoCompilerNode *> actualDownstreamNodes = generator->graph->getNodesDownstream(trigger);
 			vector<string> actualDownstreamNodeTitles;
 
-			for (vector<VuoCompilerNode *>::iterator j = actualDownstreamNodes.begin(); j != actualDownstreamNodes.end(); ++j)
+			for (VuoCompilerNode *downstreamNode : actualDownstreamNodes)
 			{
-				string nodeTitle = (*j)->getBase()->getTitle();
-				actualDownstreamNodeTitles.push_back(nodeTitle);
-				QVERIFY2(expectedDownstreamNodes[triggerTitle].find(nodeTitle) != expectedDownstreamNodes[triggerTitle].end(),
-						 (triggerTitle + " " + nodeTitle).c_str());
+				string nodeIdentifier = downstreamNode->getIdentifier();
+				actualDownstreamNodeTitles.push_back(nodeIdentifier);
+				QVERIFY2(expectedDownstreamNodes[triggerIdentifier].find(nodeIdentifier) != expectedDownstreamNodes[triggerIdentifier].end(),
+						 (triggerIdentifier + " " + nodeIdentifier).c_str());
 			}
-			QVERIFY2(actualDownstreamNodes.size() == expectedDownstreamNodes[triggerTitle].size(),
-					 (triggerTitle + " " + VuoStringUtilities::join(actualDownstreamNodeTitles, ',')).c_str());
+			QVERIFY2(actualDownstreamNodes.size() == expectedDownstreamNodes[triggerIdentifier].size(),
+					 (triggerIdentifier + " " + VuoStringUtilities::join(actualDownstreamNodeTitles, ',')).c_str());
 		}
-		QVERIFY2(generator->graph->nodeForTrigger.size() == expectedDownstreamNodes.size(),
+
+		QVERIFY2(generator->graph->nodeForTrigger.size() - autoAddedTriggers.size() == expectedDownstreamNodes.size(),
 				 (VuoStringUtilities::join(triggerTitles, ',')).c_str());
 
 		delete parser;
@@ -270,53 +269,44 @@ private slots:
 	void testOrderedNodes_data()
 	{
 		QTest::addColumn< QString >("compositionName");
-		QTest::addColumn< set<string> >("omittedNodes");
-		QTest::addColumn< set<string> >("extraNodes");
-
-		set<string> noNodes;
 
 		{
-			QTest::newRow("Trigger with self-loop and non-blocking output port.") << "TriggerPortWithOutputPort" << noNodes << noNodes;
+			QTest::newRow("Trigger with self-loop and non-blocking output port.") << "TriggerPortWithOutputPort";
 		}
 		{
-			QTest::newRow("Trigger pushing 2 nodes that gather at the 2nd node.") << "Recur_Count_Count_gather" << noNodes << noNodes;
+			QTest::newRow("Trigger pushing 2 nodes that gather at the 2nd node.") << "Recur_Count_Count_gather";
 		}
 		{
-			QTest::newRow("Trigger in a loop with 1 other node.") << "Recur_Count_loop" << noNodes << noNodes;
+			QTest::newRow("Trigger in a loop with 1 other node.") << "Recur_Count_loop";
 		}
 		{
-			QTest::newRow("2 triggers with overlapping paths.") << "2Recur_2Count_Count" << noNodes << noNodes;
+			QTest::newRow("2 triggers with overlapping paths.") << "2Recur_2Count_Count";
 		}
 		{
-			QTest::newRow("0 triggers.") << "Add" << noNodes << noNodes;
+			QTest::newRow("0 triggers.") << "Add";
 		}
 		{
-			QTest::newRow("Trigger pushing several nodes, including 2 nodes in a feedback loop.") << "Recur_Hold_Add_Write_loop" << noNodes << noNodes;
+			QTest::newRow("Trigger pushing several nodes, including 2 nodes in a feedback loop.") << "Recur_Hold_Add_Write_loop";
 		}
 		{
-			QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop" << noNodes << noNodes;
+			QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop";
 		}
 		{
-			QTest::newRow("Feedback loop with a passive cable bypassing it.") << "PassiveBypassFeedbackLoop" << noNodes << noNodes;
+			QTest::newRow("Feedback loop with a passive cable bypassing it.") << "PassiveBypassFeedbackLoop";
 		}
 		{
-			QTest::newRow("Trigger cable to each node in a feedback loop.") << "TriggerEachFeedbackLoopNode" << noNodes << noNodes;
+			QTest::newRow("Trigger cable to each node in a feedback loop.") << "TriggerEachFeedbackLoopNode";
 		}
 		{
-			QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText" << noNodes << noNodes;
+			QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText";
 		}
 		{
-			set<string> extraNodes;
-			extraNodes.insert(VuoNodeClass::publishedInputNodeIdentifier);
-			extraNodes.insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published" << noNodes << extraNodes;
+			QTest::newRow("Published input and output ports.") << "Subtract_published";
 		}
 	}
 	void testOrderedNodes()
 	{
 		QFETCH(QString, compositionName);
-		QFETCH(set<string>, omittedNodes);
-		QFETCH(set<string>, extraNodes);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
@@ -324,51 +314,21 @@ private slots:
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 		vector<VuoCompilerNode *> orderedNodes = generator->orderedNodes;
 
-		set<VuoNode *> expectedNodes = composition.getBase()->getNodes();
+		set<VuoCompilerNode *> expectedNodes = composition.getCachedGraph(compiler)->getNodes();
 
-		// Check that each element of expectedNodes is also in orderedNodes.
-		vector<VuoCompilerNode *> orderedNodesRemaining = orderedNodes;
-		for (set<VuoNode *>::iterator i = expectedNodes.begin(); i != expectedNodes.end(); ++i)
-		{
-			VuoCompilerNode *expectedNode = (*i)->getCompiler();
-			string expectedNodeTitle = (*i)->getTitle();
-			bool shouldBeInOrderedNodes = (omittedNodes.find(expectedNodeTitle) == omittedNodes.end());
-			bool isInOrderedNodes = find(orderedNodes.begin(), orderedNodes.end(), expectedNode) != orderedNodes.end();
-			QVERIFY2(shouldBeInOrderedNodes == isInOrderedNodes, expectedNodeTitle.c_str());
+		vector<string> orderedNodeIdentifiers;
+		for (VuoCompilerNode *node : orderedNodes)
+			orderedNodeIdentifiers.push_back(node->getIdentifier());
 
-			if (isInOrderedNodes)
-			{
-				vector<VuoCompilerNode *>::iterator orderedNodeIter = find(orderedNodesRemaining.begin(), orderedNodesRemaining.end(), expectedNode);
-				orderedNodesRemaining.erase(orderedNodeIter);
-			}
-		}
+		vector<string> expectedNodeIdentifiers;
+		for (VuoCompilerNode *node : expectedNodes)
+			expectedNodeIdentifiers.push_back(node->getIdentifier());
 
-		// Check that each element of extraNodes is also in orderedNodes.
-		for (set<string>::iterator i = extraNodes.begin(); i != extraNodes.end(); ++i)
-		{
-			string extraNodeTitle = *i;
+		std::sort(orderedNodeIdentifiers.begin(), orderedNodeIdentifiers.end());
+		std::sort(expectedNodeIdentifiers.begin(), expectedNodeIdentifiers.end());
 
-			bool found = false;
-			vector<VuoCompilerNode *> orderedNodesRemainingCopy = orderedNodesRemaining;
-			for (vector<VuoCompilerNode *>::iterator j = orderedNodesRemainingCopy.begin(); j != orderedNodesRemainingCopy.end(); ++j)
-			{
-				if ((*j)->getBase()->getTitle() == extraNodeTitle)
-				{
-					found = true;
-					orderedNodesRemaining.erase( find(orderedNodesRemaining.begin(), orderedNodesRemaining.end(), *j) );
-					break;
-				}
-			}
-
-			QVERIFY2(found, extraNodeTitle.c_str());
-		}
-
-		// Check that there are no other extra elements in orderedNodes.
-		for (vector<VuoCompilerNode *>::iterator i = orderedNodesRemaining.begin(); i != orderedNodesRemaining.end(); ++i)
-		{
-			VuoCompilerNode *remainingNode = *i;
-			QFAIL(remainingNode->getBase()->getTitle().c_str());
-		}
+		QCOMPARE(QString::fromStdString(VuoStringUtilities::join(orderedNodeIdentifiers, " ")),
+				 QString::fromStdString(VuoStringUtilities::join(expectedNodeIdentifiers, " ")));
 
 		delete parser;
 		delete generator;
@@ -513,26 +473,27 @@ private slots:
 
 		{
 			map<string, set<string> > chains;
-			chains["FirePeriodically1:fired"].insert("Subtract1");
-			chains["FirePeriodically1:fired"].insert("Subtract2");
-			chains["FirePeriodically1:fired"].insert("Subtract3");
-			chains["FirePeriodically1:fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract1");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract2");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract3");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published" << chains;
+			string publishedInputTriggerIdentifier = getPublishedInputTriggerIdentifier();
+			chains[publishedInputTriggerIdentifier].insert("Subtract1");
+			chains[publishedInputTriggerIdentifier].insert("Subtract2");
+			chains[publishedInputTriggerIdentifier].insert("Subtract3");
+			chains[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedInputNodeIdentifier);
+			chains[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			QTest::newRow("Published input and output ports.") << "Subtract_published" << chains;
 		}
 
 		{
 			map<string, set<string> > chains;
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("ShareValue");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldValue");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("FireOnStart");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldList");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("AddToList");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldList");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			string publishedInputTriggerIdentifier = getPublishedInputTriggerIdentifier();
+			chains[publishedInputTriggerIdentifier].insert("ShareValue");
+			chains[publishedInputTriggerIdentifier].insert("HoldValue");
+			chains[publishedInputTriggerIdentifier].insert("FireOnStart");
+			chains[publishedInputTriggerIdentifier].insert("HoldList");
+			chains[publishedInputTriggerIdentifier].insert("AddToList");
+			chains[publishedInputTriggerIdentifier].insert("HoldList");
+			chains[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedInputNodeIdentifier);
+			chains[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			chains["FireOnStart:started"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
 			QTest::newRow("Leaf nodes gather at published output node.") << "PublishedOutputGather" << chains;
 		}
 	}
@@ -549,20 +510,19 @@ private slots:
 
 		map<string, set<string> > actualChains;
 		map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > chainsForTrigger = generator->chainsForTrigger;
-		for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+		for (const map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::value_type i : chainsForTrigger)
 		{
-			VuoCompilerTriggerPort *trigger = i->first;
-			VuoCompilerNode *node = nodeForTrigger[trigger];
-			string triggerString = node->getBase()->getTitle() + ":" + trigger->getBase()->getClass()->getName();
+			VuoCompilerTriggerPort *trigger = i.first;
+			VuoCompilerNode *triggerNode = nodeForTrigger[trigger];
+			string triggerString = triggerNode->getIdentifier() + ":" + trigger->getBase()->getClass()->getName();
 
-			for (vector<VuoCompilerChain *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			for (VuoCompilerChain *chain : i.second)
 			{
-				vector<VuoCompilerNode *> nodes = (*j)->getNodes();
+				vector<string> chainNodeIdentifiers;
+				for (VuoCompilerNode *chainNode : chain->getNodes())
+					chainNodeIdentifiers.push_back(chainNode->getIdentifier());
 
-				string chainString;
-				for (vector<VuoCompilerNode *>::iterator k = nodes.begin(); k != nodes.end(); ++k)
-					chainString += (*k)->getBase()->getTitle() + (k+1 == nodes.end() ? "" : " ");
-
+				string chainString = VuoStringUtilities::join(chainNodeIdentifiers, " ");
 				actualChains[triggerString].insert(chainString);
 			}
 		}
@@ -572,9 +532,8 @@ private slots:
 		{
 			string triggerString = i->first;
 			QVERIFY2(actualChains.find(triggerString) != actualChains.end(), triggerString.c_str());
-			for (set<string>::iterator j = expectedChains[triggerString].begin(); j != expectedChains[triggerString].end(); ++j)
+			for (const string &expectedChainString : expectedChains[triggerString])
 			{
-				string expectedChainString = *j;
 				set<string>::iterator actualChainIter = actualChains[triggerString].find(expectedChainString);
 				QVERIFY2(actualChainIter != actualChains[triggerString].end(), (triggerString + " " + expectedChainString).c_str());
 				actualChains[triggerString].erase(actualChainIter);
@@ -585,9 +544,8 @@ private slots:
 		for (map<string, set<string> >::iterator i = actualChains.begin(); i != actualChains.end(); ++i)
 		{
 			string triggerString = i->first;
-			for (set<string>::iterator j = actualChains[triggerString].begin(); j != actualChains[triggerString].end(); ++j)
+			for (const string &actualChainString : actualChains[triggerString])
 			{
-				string actualChainString = *j;
 				QFAIL((triggerString + " " + actualChainString).c_str());
 			}
 		}
@@ -673,25 +631,31 @@ private slots:
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage BlendImages"].insert("MakeImageLayer");
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("MakeList1");
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("MakeList2");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("HoldValue");
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeList1"].insert("RenderLayersToWindow");
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeList2"].insert("RenderLayersToImage");
 			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage RenderLayersToImage"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("BlendImages");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeImageLayer");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeList1");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeList2");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("RenderLayersToImage");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame HoldValue"].insert("BlendImages");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame BlendImages"].insert("MakeImageLayer");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList1");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList2");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList1"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList2"].insert("RenderLayersToImage");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame RenderLayersToImage"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:showedWindow"].insert("RenderLayersToWindow");
-			// expectedNodesForTriggerOrNode["RenderLayersToWindow:renderedLayers"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("FireOnDisplayRefresh");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("BlendImages");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("MakeImageLayer");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("MakeList1");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("MakeList2");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame HoldValue"].insert("BlendImages");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame BlendImages"].insert("MakeImageLayer");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeImageLayer"].insert("MakeList1");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeImageLayer"].insert("MakeList2");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeImageLayer"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeImageLayer"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeImageLayer"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeList1"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame MakeList2"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["FireOnDisplayRefresh:requestedFrame RenderLayersToImage"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:updatedWindow"].insert("RenderLayersToWindow");
 			QTest::newRow("Triggers entering a feedback loop at different points") << "TriggersEnteringFeedback" << expectedNodesForTriggerOrNode;
 		}
 
@@ -804,83 +768,85 @@ private slots:
 
 		{
 			map<string, set<string> > expectedNodesForTriggerOrNode;
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedInputNodeIdentifier);
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("ShareValue");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired ShareValue"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldValue");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired HoldValue"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("FireOnStart");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired FireOnStart"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("HoldList");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired HoldList"].insert("AddToList");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired AddToList"].insert("HoldList");
-			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired HoldList"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
-			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("FireOnStart");
+			string publishedInputTriggerIdentifier = getPublishedInputTriggerIdentifier();
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier].insert(VuoCompilerGraph::getPublishedInputTriggerNodeIdentifier());
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier].insert(VuoNodeClass::publishedInputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert("ShareValue");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert("HoldValue");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert("FireOnStart");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert("HoldList");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert("AddToList");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " " + VuoNodeClass::publishedInputNodeIdentifier].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " ShareValue"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " HoldValue"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " FireOnStart"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " HoldList"].insert("AddToList");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " HoldList"].insert("HoldList");
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " HoldList"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
+			expectedNodesForTriggerOrNode[publishedInputTriggerIdentifier + " AddToList"].insert("HoldList");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("FireOnStart " + VuoNodeClass::publishedOutputNodeIdentifier);
 			QTest::newRow("Leaf nodes gather at published output node") << "PublishedOutputGather" << expectedNodesForTriggerOrNode;
 		}
 
 		{
 			map<string, set<string> > expectedNodesForTriggerOrNode;
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Fire on Start");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Spin Off Event");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make RGB Color");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Fire on Start:started Make RGB Color"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Fire on Start:started Make Color Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Fire on Start:started Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Event");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Fetch Image");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff Fetch Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("FireOnStart");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("SpinOffEvent");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("MakeRGBColor");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["FireOnStart:started MakeRGBColor"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["FireOnStart:started MakeColorImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["FireOnStart:started SelectLatest"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff"].insert("SpinOffEvent");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff"].insert("FetchImage");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff FetchImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff SelectLatest"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("RenderImageToWindow");
 			QTest::newRow("Trigger overlaps with Spin Off node") << "SpinOffEventFetchImage" << expectedNodesForTriggerOrNode;
 		}
 
 		{
 			map<string, set<string> > expectedNodesForTriggerOrNode;
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Allow First Event");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Spin Off Value");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Spin Off Value");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Make Color Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Spin Off Value");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Fetch Image");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Fetch Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("AllowFirstEvent");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("SpinOffValue");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow AllowFirstEvent"].insert("SpinOffValue");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow AllowFirstEvent"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow AllowFirstEvent"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow AllowFirstEvent"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow MakeColorImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow SelectLatest"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("SpinOffValue");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("FetchImage");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff FetchImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff SelectLatest"].insert("RenderImageToWindow");
 			QTest::newRow("Trigger overlaps with Spin Off node whose downstream nodes are out of order") << "SpinOffValueFetchImage" << expectedNodesForTriggerOrNode;
 		}
 
 		{
 			map<string, set<string> > expectedNodesForTriggerOrNode;
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Fire on Start");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Spin Off Event");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make RGB Color");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Fire on Start:started Make RGB Color"].insert("Make Color Image");
-			expectedNodesForTriggerOrNode["Fire on Start:started Make Color Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Fire on Start:started Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Event");
-			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Value");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Spin Off Value");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Fetch Image");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Fetch Image"].insert("Select Latest");
-			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Select Latest"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
-			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("FireOnStart");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("SpinOffEvent");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("MakeRGBColor");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["FireOnStart:started MakeRGBColor"].insert("MakeColorImage");
+			expectedNodesForTriggerOrNode["FireOnStart:started MakeColorImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["FireOnStart:started SelectLatest"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff"].insert("SpinOffEvent");
+			expectedNodesForTriggerOrNode["SpinOffEvent:spunOff"].insert("SpinOffValue");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("SpinOffValue");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff"].insert("FetchImage");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff FetchImage"].insert("SelectLatest");
+			expectedNodesForTriggerOrNode["SpinOffValue:spunOff SelectLatest"].insert("RenderImageToWindow");
+			expectedNodesForTriggerOrNode["RenderImageToWindow:updatedWindow"].insert("RenderImageToWindow");
 			QTest::newRow("Trigger overlaps indirectly with Spin Off node") << "SpinOffEventValueFetchImage" << expectedNodesForTriggerOrNode;
 		}
 	}
@@ -895,26 +861,26 @@ private slots:
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 
 		map<string, vector<string> > actualNodesForTriggerOrNode;
-		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodesForTriggers = generator->graph->getNodesForTriggerPorts();
-		for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = nodesForTriggers.begin(); i != nodesForTriggers.end(); ++i)
+		for (VuoCompilerTriggerPort *trigger : generator->graph->getTriggerPorts())
 		{
-			VuoCompilerTriggerPort *trigger = i->first;
-			VuoCompilerNode *triggerNode = i->second;
-			string triggerId = triggerNode->getBase()->getTitle() + ":" + trigger->getBase()->getClass()->getName();
+			if (trigger == generator->graph->getManuallyFirableTrigger())
+				continue;
+
+			VuoCompilerNode *triggerNode = generator->graph->getNodeForTriggerPort(trigger);
+			string triggerId = triggerNode->getIdentifier() + ":" + trigger->getBase()->getClass()->getName();
 
 			vector<VuoCompilerNode *> actualNodesForTrigger = generator->getNodesToWaitOnBeforeTransmission(trigger);
-			for (vector<VuoCompilerNode *>::iterator j = actualNodesForTrigger.begin(); j != actualNodesForTrigger.end(); ++j)
-				actualNodesForTriggerOrNode[triggerId].push_back( (*j)->getBase()->getTitle() );
+			for (VuoCompilerNode *node : actualNodesForTrigger)
+				actualNodesForTriggerOrNode[triggerId].push_back( node->getIdentifier() );
 
 			vector<VuoCompilerNode *> downstreamNodes = generator->graph->getNodesDownstream(trigger);
-			for (vector<VuoCompilerNode *>::iterator j = downstreamNodes.begin(); j != downstreamNodes.end(); ++j)
+			for (VuoCompilerNode *node : downstreamNodes)
 			{
-				VuoCompilerNode *node = *j;
-				string nodeId = triggerId + " " + node->getBase()->getTitle();
+				string nodeId = triggerId + " " + node->getIdentifier();
 
 				vector<VuoCompilerNode *> actualNodesForNode = generator->getNodesToWaitOnBeforeTransmission(trigger, node);
-				for (vector<VuoCompilerNode *>::iterator k = actualNodesForNode.begin(); k != actualNodesForNode.end(); ++k)
-					actualNodesForTriggerOrNode[nodeId].push_back( (*k)->getBase()->getTitle() );
+				for (VuoCompilerNode *nodeToWaitOn : actualNodesForNode)
+					actualNodesForTriggerOrNode[nodeId].push_back( nodeToWaitOn->getIdentifier() );
 			}
 		}
 
@@ -924,82 +890,128 @@ private slots:
 		vector<string> expectedKeys;
 		for (map<string, set<string> >::iterator i = expectedNodesForTriggerOrNode.begin(); i != expectedNodesForTriggerOrNode.end(); ++i)
 			expectedKeys.push_back( i->first );
-		QVERIFY2(expectedKeys == actualKeys, VuoStringUtilities::join(actualKeys, ',').c_str());
+		QCOMPARE(QString::fromStdString(VuoStringUtilities::join(actualKeys, ", ")),
+				 QString::fromStdString(VuoStringUtilities::join(expectedKeys, ", ")));
 
 		for (map<string, vector<string> >::iterator i = actualNodesForTriggerOrNode.begin(); i != actualNodesForTriggerOrNode.end(); ++i)
 		{
 			string triggerOrNode = i->first;
-			vector<string> actualNodesVector = i->second;
-			set<string> actualNodes(actualNodesVector.begin(), actualNodesVector.end());
-			set<string> expectedNodes = expectedNodesForTriggerOrNode[triggerOrNode];
+			vector<string> actualNodes = i->second;
 
-			QVERIFY2(expectedNodes == actualNodes, (triggerOrNode + " : " + VuoStringUtilities::join(actualNodesVector, ',')).c_str());
+			vector<string> expectedNodes;
+			for (string nodeId : expectedNodesForTriggerOrNode[triggerOrNode])
+				expectedNodes.push_back(nodeId);
+
+			std::sort(actualNodes.begin(), actualNodes.end());
+			std::sort(expectedNodes.begin(), expectedNodes.end());
+
+			QCOMPARE(QString::fromStdString(triggerOrNode + " : " + VuoStringUtilities::join(actualNodes, " ")),
+					 QString::fromStdString(triggerOrNode + " : " + VuoStringUtilities::join(expectedNodes, " ")));
 		}
 
 		delete parser;
 		delete generator;
 	}
 
-	void testInfiniteFeedbackLoops_data()
+	void testNodesDownstreamViaDataOnlyTransmission_data()
 	{
-		QTest::addColumn< QString >("compositionFile");
-		QTest::addColumn< bool >("hasInfiniteFeedbackLoop");
+		QTest::addColumn<QString>("compositionFile");
+		QTest::addColumn<QString>("selectedNodeIdentifier");
+		QTest::addColumn<bool>("isSourceNode");
+		QTest::addColumn<QStringList>("expectedDownstreamNodeIdentifiers");
 
-		QTest::newRow("Infinite feedback loop containing 2 nodes.") << "TriggerPortWithOutputPort_Count_infiniteLoop.vuo" << true;
-		QTest::newRow("Infinite feedback loop containing 1 node.") << "Recur_Count_infiniteLoop.vuo" << true;
-		QTest::newRow("No feedback loops.") << "Recur_Count_Count_gather_Count.vuo" << false;
+		QString publishedInputNodeIdentifier = QString::fromStdString(VuoNodeClass::publishedInputNodeIdentifier);
+
+		QTest::newRow("Node can't transmit data only") << "Recur_Count_2Count.vuo" << "Count1" << false << QStringList();
+		QTest::newRow("Node can transmit data only but no outgoing cables") << "PublishedInputNotConnected.vuo" << publishedInputNodeIdentifier << false << QStringList();
+		QTest::newRow("Drawer without incoming cable") << "PublishedOutputGather.vuo" << "MakeList" << true << QStringList("HoldList");
+		QTest::newRow("Drawer with incoming cable") << "Recur_Hold_Add_Write_loop.vuo" << "MakeList1" << true << QStringList("Add1");
+		QTest::newRow("Published input transmits events only") << "PublishedOutputGather.vuo" << publishedInputNodeIdentifier << false << QStringList();
+
+		{
+			QStringList downstreamNodes;
+			downstreamNodes << "Subtract1" << "Subtract2";
+			QTest::newRow("Published input transmits data") << "Subtract_published.vuo" << publishedInputNodeIdentifier << true << downstreamNodes;
+		}
+		{
+			QStringList downstreamNodes;
+			downstreamNodes << "MakeList" << "Add";
+			QTest::newRow("Published input into drawer : published input node") << "PublishedInputIntoDrawer.vuo" << publishedInputNodeIdentifier << true << downstreamNodes;
+		}
+
+		QTest::newRow("Published input into drawer : drawer node") << "PublishedInputIntoDrawer.vuo" << "MakeList" << false << QStringList("Add");
 	}
-	void testInfiniteFeedbackLoops()
+	void testNodesDownstreamViaDataOnlyTransmission()
 	{
 		QFETCH(QString, compositionFile);
-		QFETCH(bool, hasInfiniteFeedbackLoop);
+		QFETCH(QString, selectedNodeIdentifier);
+		QFETCH(bool, isSourceNode);
+		QFETCH(QStringList, expectedDownstreamNodeIdentifiers);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
 
-		bool gotException = false;
-		try {
-			graph.checkForInfiniteFeedback();
-		} catch (const VuoCompilerException &e) {
-			gotException = true;
+		VuoCompilerNode *selectedNode = NULL;
+		for (VuoCompilerNode *node : graph.getNodes())
+		{
+			if (node->getIdentifier() == selectedNodeIdentifier.toStdString())
+			{
+				selectedNode = node;
+				break;
+			}
 		}
-		QCOMPARE(gotException, hasInfiniteFeedbackLoop);
+		QVERIFY(selectedNode);
+
+		set<VuoCompilerNode *> sourceNodes = graph.getSourceNodesOfDataOnlyTransmission();
+		QCOMPARE(sourceNodes.find(selectedNode) != sourceNodes.end(), isSourceNode);
+
+		vector<VuoCompilerNode *> downstreamNodes = graph.getNodesDownstreamViaDataOnlyTransmission(selectedNode);
+
+		QStringList downstreamNodeIdentifiers;
+		for (VuoCompilerNode *downstreamNode : downstreamNodes)
+			downstreamNodeIdentifiers.append(QString::fromStdString(downstreamNode->getIdentifier()));
+
+		downstreamNodeIdentifiers.sort();
+		expectedDownstreamNodeIdentifiers.sort();
+
+		QCOMPARE(downstreamNodeIdentifiers, expectedDownstreamNodeIdentifiers);
 
 		delete parser;
 	}
 
-	void testDeadlockedFeedbackLoops_data()
+	void testPublishedOutputTriggers_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
-		QTest::addColumn< bool >("hasDeadlockedFeedbackLoop");
+		QTest::addColumn< QString >("publishedOutput");
+		QTest::addColumn< bool >("isTrigger");
 
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 2-node feedback loop.") << "DeadlockedFeedbackLoop2Nodes.vuo" << true;
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 3-node feedback loop.") << "DeadlockedFeedbackLoop3Nodes.vuo" << true;
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 4-node feedback loop.") << "DeadlockedFeedbackLoop4Nodes.vuo" << true;
-		QTest::newRow("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.") << "AsymmetricFeedbackLoop.vuo" << false;
-		QTest::newRow("Trigger unambiguously pushing 2 nested feedback loops.") << "NestedLoopsBothTriggered.vuo" << false;
-		QTest::newRow("Trigger unambiguously pushing nodes not in a feedback loop.") << "NonDeadlockedWithSemiconductor.vuo" << false;
-		QTest::newRow("2 triggers that start at different points in a feedback loop.") << "NonDeadlocked2Triggers.vuo" << false;
+		QTest::newRow("Internal trigger overlapping published input trigger immediately") << "TriggerOverlappingPublishedInputImmediately.vuo" << "Remainder" << false;
+		QTest::newRow("Internal trigger overlapping published input trigger downstream") << "TriggerOverlappingPublishedInputDownstream.vuo" << "Remainder" << false;
+		QTest::newRow("Internal trigger overlapping published input trigger at published output port") << "TriggerOverlappingPublishedInputAtOutput.vuo" << "SameValue" << false;
+		QTest::newRow("No cables connected to published inputs") << "PublishedInputNotConnected.vuo" << "Remainder" << true;
+		QTest::newRow("Internal trigger not overlapping published input trigger") << "TriggerSeparateFromPublishedInput.vuo" << "Quotient" << true;
+		QTest::newRow("Published input trigger not overlapping internal trigger") << "TriggerSeparateFromPublishedInput.vuo" << "Remainder" << false;
+		QTest::newRow("Overlap but published input events don't reach published outputs") << "TriggerOverlappingBlockedPublishedInput.vuo" << "BuiltList" << true;
+		QTest::newRow("Overlap but internal trigger events don't reach published outputs") << "BlockedTriggerOverlappingPublishedInput.vuo" << "HeldValue" << false;
+		QTest::newRow("Overlap but neither events reach published outputs") << "BlockedTriggerOverlappingBlockedPublishedInput.vuo" << "HeldValue" << false;
 	}
-	void testDeadlockedFeedbackLoops()
+	void testPublishedOutputTriggers()
 	{
 		QFETCH(QString, compositionFile);
-		QFETCH(bool, hasDeadlockedFeedbackLoop);
+		QFETCH(QString, publishedOutput);
+		QFETCH(bool, isTrigger);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
 
-		bool gotException = false;
-		try {
-			graph.checkForDeadlockedFeedback();
-		} catch (const VuoCompilerException &e) {
-			gotException = true;
-		}
-		QCOMPARE(gotException, hasDeadlockedFeedbackLoop);
+		QVERIFY(composition.getBase()->getPublishedOutputPortWithName(publishedOutput.toStdString()));
+
+		set<string> triggers = graph.getPublishedOutputTriggers();
+		QCOMPARE(triggers.find(publishedOutput.toStdString()) != triggers.end(), isTrigger);
 
 		delete parser;
 	}
@@ -1029,7 +1041,8 @@ private slots:
 		for (int i = 0; i < 2; ++i)
 		{
 			bool isTopLevelComposition = (i == 0);
-			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition);
+			VuoCompilerIssues issues;
+			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition, &issues);
 
 			Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
 			remove(bcPath.c_str());
@@ -1051,11 +1064,12 @@ private slots:
 
 	void testPublishedPortGetters()
 	{
-		string compositionPath = getCompositionPath("Recur_Subtract_published.vuo");
+		string compositionPath = getCompositionPath("Subtract_published.vuo");
 		string dir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		compiler->compileComposition(compositionPath, bcPath);
+		VuoCompilerIssues issues;
+		compiler->compileComposition(compositionPath, bcPath, true, &issues);
 
 		Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
 		remove(bcPath.c_str());

@@ -2,9 +2,9 @@
  * @file
  * vuo.image.ripple node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -34,7 +34,7 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
 	// Inputs
 	uniform sampler2D texture;
@@ -44,13 +44,13 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float amplitude;
 	uniform float wavelength;
 	uniform float phase;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	void main()
 	{
-		float samplerPhase = dot(vec2(cos(angle), sin(angle)), (fragmentTextureCoordinate.xy - vec2(.5,.5)) * vec2(aspectRatio, 1.));
+		float samplerPhase = dot(vec2(cos(angle), sin(angle)), (fragmentTextureCoordinate - vec2(.5,.5)) * vec2(aspectRatio, 1.));
 		float offset = sin(samplerPhase/wavelength + phase) * amplitude;
-		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy + vec2(cos(angle+angleDelta)*offset, sin(angle+angleDelta)*offset) * vec2(1., aspectRatio));
+		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate + vec2(cos(angle+angleDelta)*offset, sin(angle+angleDelta)*offset) * vec2(1., aspectRatio));
 	}
 );
 

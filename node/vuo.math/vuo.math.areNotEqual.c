@@ -2,16 +2,16 @@
  * @file
  * vuo.math.areNotEqual node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					  "title" : "Are Not Equal",
-					  "keywords" : [ "!=", "≠", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional", "unequal", "inequality", "different" ],
+					  "keywords" : [ "!=", "≠", "<>", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional", "unequal", "inequality", "different" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

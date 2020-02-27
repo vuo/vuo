@@ -2,14 +2,11 @@
  * @file
  * VuoVideoFrame implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoVideoFrame.h"
 
@@ -41,29 +38,24 @@ VuoModuleMetadata({
  */
 VuoVideoFrame VuoVideoFrame_makeFromJson(json_object *js)
 {
-	VuoVideoFrame value = {NULL,0,0};
-	json_object *o = NULL;
-
-	if (json_object_object_get_ex(js, "image", &o))
-		value.image = VuoImage_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "timestamp", &o))
-		value.timestamp = VuoReal_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "duration", &o))
-		value.duration = VuoReal_makeFromJson(o);
-
-	return value;
+	return (VuoVideoFrame){
+		VuoJson_getObjectValue(VuoImage, js, "image",     NULL),
+		VuoJson_getObjectValue(VuoReal,  js, "timestamp", 0),
+		VuoJson_getObjectValue(VuoReal,  js, "duration",  0),
+		""
+	};
 }
 
 /**
- * Encodes @c value as a JSON object.
+ * Helper for VuoVideoFrame_getJson and VuoVideoFrame_getInterprocessJson.
  */
-json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
+json_object *VuoVideoFrame_getJsonInternal(const VuoVideoFrame value, bool isInterprocess)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *imageObject = VuoImage_getJson(value.image);
+	json_object *imageObject = isInterprocess
+							   ? VuoImage_getInterprocessJson(value.image)
+							   : VuoImage_getJson(value.image);
 	json_object_object_add(js, "image", imageObject);
 
 	json_object *timestampObject = VuoReal_getJson(value.timestamp);
@@ -76,11 +68,27 @@ json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
 }
 
 /**
+ * Encodes @c value as a JSON object.
+ */
+json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
+{
+	return VuoVideoFrame_getJsonInternal(value, false);
+}
+
+/**
+ * Returns a JSON object containing an interprocess handle for the specified video frame's texture.
+ */
+json_object *VuoVideoFrame_getInterprocessJson(const VuoVideoFrame value)
+{
+	return VuoVideoFrame_getJsonInternal(value, true);
+}
+
+/**
  * Returns a compact string representation of @c value.
  */
 char * VuoVideoFrame_getSummary(const VuoVideoFrame value)
 {
-	return VuoText_format("%s<br />Timestamp: %f<br />Duration: %f", VuoImage_getSummary(value.image), value.timestamp, value.duration);
+	return VuoText_format("%s<br />Timestamp: <tt>%.3f</tt> seconds<br />Frame duration: <tt>%.3f</tt> seconds", VuoImage_getSummary(value.image), value.timestamp, value.duration);
 }
 
 /**
@@ -92,4 +100,16 @@ bool VuoVideoFrame_areEqual(VuoVideoFrame value1, VuoVideoFrame value2)
 	return VuoReal_areEqual(value1.timestamp, value2.timestamp)
 		&& VuoReal_areEqual(value1.duration, value2.duration)
 		&& VuoImage_areEqual(value1.image, value2.image);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoVideoFrame_isLessThan(const VuoVideoFrame a, const VuoVideoFrame b)
+{
+	VuoType_returnInequality(VuoReal,  a.timestamp, b.timestamp);
+	VuoType_returnInequality(VuoReal,  a.duration,  b.duration);
+	VuoType_returnInequality(VuoImage, a.image,     b.image);
+	return false;
 }

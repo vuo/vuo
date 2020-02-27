@@ -1,6 +1,14 @@
+/**
+ * @file
+ * VuoAvWriterObject implementation.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
 #include "module.h"
 #include "VuoAvWriterObject.h"
-#include "VuoImageWatermark.h"
 #include "VuoOsStatus.h"
 #include <CoreVideo/CoreVideo.h>
 #import <AVFoundation/AVFoundation.h>
@@ -28,18 +36,6 @@ const double TIMEBASE = 1000.;  ///< The resolution with which to measure time. 
 
 const long MIN_AUDIO_BITRATE = 64000;	///< Minimum audio bitrate used when encoding AAC.
 const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when encoding AAC.
-
-/**
- * Returns true if ProRes4444 and ProRes422 are available on this system.
- */
-static bool VuoAvWriterObject_isProResAvailable(void)
-{
-	struct stat buf;
-	if (stat("/Library/QuickTime/AppleProResCodec.component", &buf) == 0)
-		return true;
-	else
-		return false;
-}
 
 /**
  * Manages writing audio and video samples to a movie file.  Do not use this class directly - use VuoAvWriter.
@@ -83,26 +79,60 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	NSString* videoEncoding = AVVideoCodecJPEG;
 
 	if (format.imageEncoding == VuoMovieImageEncoding_H264)
-	{
 		videoEncoding = AVVideoCodecH264;
-	}
 	else if(format.imageEncoding == VuoMovieImageEncoding_ProRes4444)
-	{
-		if (!VuoAvWriterObject_isProResAvailable())
-		{
-			VUserLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
-			return NO;
-		}
 		videoEncoding = AVVideoCodecAppleProRes4444;
-	}
 	else if(format.imageEncoding == VuoMovieImageEncoding_ProRes422)
+		videoEncoding = AVVideoCodecAppleProRes422;
+	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422HQ)
 	{
-		if (!VuoAvWriterObject_isProResAvailable())
+		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+			videoEncoding = @"apch"; // AVVideoCodecTypeAppleProRes422HQ
+		else
 		{
-			VUserLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
+			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 HQ.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
-		videoEncoding = AVVideoCodecAppleProRes422;
+	}
+	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422LT)
+	{
+		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+			videoEncoding = @"apcs"; // AVVideoCodecTypeAppleProRes422LT
+		else
+		{
+			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 LT.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			return NO;
+		}
+	}
+	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422Proxy)
+	{
+		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+			videoEncoding = @"apco"; // AVVideoCodecTypeAppleProRes422Proxy
+		else
+		{
+			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 Proxy.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			return NO;
+		}
+	}
+	else if (format.imageEncoding == VuoMovieImageEncoding_HEVC)
+	{
+		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 13)
+			videoEncoding = @"hvc1"; // AVVideoCodecTypeHEVC
+		else
+		{
+			VUserLog("Error: macOS 10.%d doesn't support HEVC/h.265.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			return NO;
+		}
+	}
+	else if (format.imageEncoding == VuoMovieImageEncoding_HEVCAlpha)
+	{
+		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+			videoEncoding = @"muxa"; // AVVideoCodecTypeHEVCWithAlpha
+		else
+		{
+			VUserLog("Error: macOS 10.%d doesn't support HEVC/h.265 with alpha channel.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			return NO;
+		}
 	}
 
 	// allocate the writer object with our output file URL
@@ -121,13 +151,26 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		AVVideoHeightKey: [NSNumber numberWithInt:self.originalHeight]
 	} mutableCopy];
 
-	if( [videoEncoding isEqualToString:AVVideoCodecJPEG] )
-		[videoOutputSettings setObject:@{AVVideoQualityKey:[NSNumber numberWithDouble:format.imageQuality]} forKey:AVVideoCompressionPropertiesKey];
+	float fudge = 0.75;
+	float clampedQuality = MAX(format.imageQuality, 0.01);
+	float bitrate = clampedQuality * width * height * 60. * fudge;
 
-	if( [videoEncoding isEqualToString:AVVideoCodecH264] )
+	if( [videoEncoding isEqualToString:AVVideoCodecJPEG] )
+		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{
+			AVVideoQualityKey: @(clampedQuality),
+		};
+	else if ([videoEncoding isEqualToString:AVVideoCodecH264]
+		|| [videoEncoding isEqualToString:@"hvc1" /*AVVideoCodecTypeHEVC*/])
+		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{
+			AVVideoAverageBitRateKey: @(bitrate),
+		};
+	else if ([videoEncoding isEqualToString:@"muxa" /*AVVideoCodecTypeHEVCWithAlpha*/])
 	{
-		float fudge = 0.75;
-		[videoOutputSettings setObject:@{AVVideoAverageBitRateKey: [NSNumber numberWithDouble:(MAX(format.imageQuality, 0.01) * width * height * 60. * fudge)]} forKey:AVVideoCompressionPropertiesKey];
+		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{
+			AVVideoAverageBitRateKey: @(bitrate),
+			@"TargetQualityForAlpha" /*kVTCompressionPropertyKey_TargetQualityForAlpha*/: @(clampedQuality),
+			@"AlphaChannelMode" /*kVTCompressionPropertyKey_AlphaChannelMode*/: @"PremultipliedAlpha",  // kVTAlphaChannelMode_PremultipliedAlpha
+		};
 	}
 
 	self.videoInput = [[[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSettings] autorelease];
@@ -158,7 +201,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	self.originalChannelCount = channels;
 
-	/// AUDIO AUDIO AUDIO http://stackoverflow.com/questions/12187124/writing-video-generated-audio-to-avassetwriterinput-audio-stuttering
+	/// AUDIO AUDIO AUDIO https://stackoverflow.com/questions/12187124/writing-video-generated-audio-to-avassetwriterinput-audio-stuttering
 	if(channels > 0)
 	{
 		AudioStreamBasicDescription audioFormat;
@@ -246,7 +289,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	return YES;
 }
 
-- (void) appendImage:(VuoImage)image presentationTime:(double)timestamp
+- (void) appendImage:(VuoImage)image presentationTime:(double)timestamp blockIfNotReady:(BOOL)blockIfNotReady
 {
 	if(image->pixelsWide != self.originalWidth || image->pixelsHigh != self.originalHeight)
 	{
@@ -256,15 +299,17 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	if(!self.videoInput.readyForMoreMediaData)
 	{
-		VUserLog("Error: AVFoundation asset writer is still catching up, dropping this frame.");
-		return;
-	}
-
-	if (VuoIsTrial())
-	{
-		VuoImage watermarkedImage = VuoImage_watermark(image);
-		VuoRetain(watermarkedImage);
-		image = watermarkedImage;
+		if (blockIfNotReady)
+		{
+			VUserLog("Warning: The AVFoundation asset writer isn't keeping up; waiting for it to catch up before writing this video frame.");
+			while (!self.videoInput.readyForMoreMediaData)
+				usleep(USEC_PER_SEC/10);
+		}
+		else
+		{
+			VUserLog("Error: The AVFoundation asset writer isn't keeping up; dropping this video frame.");
+			return;
+		}
 	}
 
 	CVPixelBufferRef pb = nil;
@@ -300,9 +345,6 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	for(unsigned long y = 0; y < self.originalHeight; y++)
 		memcpy(bytes + bytesPerRow * (self.originalHeight - y - 1), buf + self.originalWidth * y * 4, self.originalWidth * 4);
 
-	if (VuoIsTrial())
-		VuoRelease(image);
-
 	ret = CVPixelBufferUnlockBaseAddress(pb, 0);
 
 	if(ret != kCVReturnSuccess)
@@ -329,7 +371,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		CVPixelBufferRelease(pb);
 }
 
-- (void) appendAudio:(VuoList_VuoAudioSamples) samples presentationTime:(VuoReal)timestamp
+- (void) appendAudio:(VuoList_VuoAudioSamples) samples presentationTime:(VuoReal)timestamp blockIfNotReady:(BOOL)blockIfNotReady
 {
 	long sampleCount = VuoAudioSamples_bufferSize;
 	long channelCount = VuoListGetCount_VuoAudioSamples(samples);
@@ -344,8 +386,17 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	}
 
 	if ( !self.audioInput.readyForMoreMediaData) {
-		VUserLog("Error: Dropped audio frame because AVFoundation is too slow.");
-		return;
+		if (blockIfNotReady)
+		{
+			VUserLog("Warning: The AVFoundation asset writer isn't keeping up; waiting for it to catch up before writing this audio frame.");
+			while (!self.audioInput.readyForMoreMediaData)
+				usleep(USEC_PER_SEC/10);
+		}
+		else
+		{
+			VUserLog("Error: The AVFoundation asset writer isn't keeping up; dropping this audio frame.");
+			return;
+		}
 	}
 
 	OSStatus status;
@@ -466,8 +517,16 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		if(self.audioInput != nil)
 			[self.audioInput markAsFinished];
 
-		// deprecated @ 10.9
-		[self.assetWriter finishWriting];
+		dispatch_semaphore_t finishedWriting = dispatch_semaphore_create(0);
+		[_assetWriter finishWritingWithCompletionHandler:^{
+			dispatch_semaphore_signal(finishedWriting);
+		}];
+		dispatch_semaphore_wait(finishedWriting, DISPATCH_TIME_FOREVER);
+		dispatch_release(finishedWriting);
+
+		if (_assetWriter.status != AVAssetWriterStatusCompleted)
+			VUserLog("Error: %s", [[_assetWriter.error localizedDescription] UTF8String]);
+
 		self.assetWriter = nil;
 		self.videoInput  = nil;
 		self.audioInput = nil;

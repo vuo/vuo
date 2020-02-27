@@ -2,13 +2,11 @@
  * @file
  * VuoVideoInputDevice implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "type.h"
 #include "VuoVideoInputDevice.h"
@@ -61,7 +59,7 @@ static const char *VuoVideoInputDevice_getStringForMatchType(VuoVideoInputDevice
  */
 VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(json_object *js)
 {
-	VuoVideoInputDevice value = {VuoVideoInputDevice_MatchIdThenName, "",""};
+	VuoVideoInputDevice value = {VuoVideoInputDevice_MatchIdThenName, "", "", ""};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "matchType", &o))
@@ -104,7 +102,15 @@ json_object * VuoVideoInputDevice_getJson(const VuoVideoInputDevice value)
  */
 char * VuoVideoInputDevice_getSummary(const VuoVideoInputDevice value)
 {
-	return VuoText_format("Video input device: \"%s\"", value.name);
+	if (VuoText_isEmpty(value.name) && VuoText_isEmpty(value.id))
+		return strdup("Default device");
+	else
+	{
+		if (value.matchType == VuoVideoInputDevice_MatchId)
+			return VuoText_format("Device with ID \"%s\" (\"%s\")", value.id, value.name);
+		else
+			return VuoText_format("Device with name \"%s\"", value.name);
+	}
 }
 
 /**
@@ -115,4 +121,16 @@ bool VuoVideoInputDevice_areEqual(VuoVideoInputDevice value1, VuoVideoInputDevic
 	return value1.matchType == value2.matchType
 		&& VuoText_areEqual(value1.id, value2.id)
 		&& VuoText_areEqual(value1.name, value2.name);
+}
+
+/**
+ * Returns true if `a < b`.
+ * @version200New
+ */
+bool VuoVideoInputDevice_isLessThan(const VuoVideoInputDevice a, const VuoVideoInputDevice b)
+{
+	VuoType_returnInequality(VuoInteger, a.matchType, b.matchType);
+	VuoType_returnInequality(VuoText,    a.id,        b.id);
+	VuoType_returnInequality(VuoText,    a.name,      b.name);
+	return false;
 }

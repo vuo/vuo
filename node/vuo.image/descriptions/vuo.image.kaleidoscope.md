@@ -6,7 +6,7 @@ Applies a radial reflection effect to an image.
    - `Image Center` — The position in the input image at which all the reflections intersect, in Vuo Coordinates.
    - `Reflect Odd Sides` — When true, odd-numbered sides (counting counterclockwise from the reflection origin) are flipped, to produce a continuous image.  When false, each copy of the image is rotated but not reflected.
 
-By default Vuo's images are transparent outside their defined bounds.  Before feeding an image to this node, you can use the `Change Wrap Mode` node's "Mirrored Repeat" mode to produce a solid image no matter which center points you choose.
+By default Vuo's images are transparent outside their defined bounds.  Before feeding an image to this node, you can use the [Change Wrap Mode](vuo-node://vuo.image.wrapMode) node's "Mirrored Repeat" mode to produce a solid image no matter which center points you choose.
 
 ![](mountains.png)
 

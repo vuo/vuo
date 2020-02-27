@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorInteger SOURCE VuoInputEditorInteger.cc)

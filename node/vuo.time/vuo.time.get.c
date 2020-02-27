@@ -2,9 +2,9 @@
  * @file
  * vuo.time.get node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Date-Time Values",
 					  "keywords" : [ "split", "components" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ ],
 					  "node" : {
 						  "exampleCompositions" : [ "ShowSecondTicks.vuo" ]
@@ -34,5 +34,16 @@ void nodeEvent
 	VuoOutputData(VuoReal) second
 )
 {
-	VuoTime_getComponents(time, year, dayOfYear, month, dayOfMonth, week, dayOfWeek, hour, minute, second);
+	if (!VuoTime_getComponents(time, year, dayOfYear, month, dayOfMonth, week, dayOfWeek, hour, minute, second))
+	{
+		*year = 0;
+		*dayOfYear = 0;
+		*month = 0;
+		*dayOfMonth = 0;
+		*week = 0;
+		*dayOfWeek = VuoWeekday_Sunday;
+		*hour = 0;
+		*minute = 0;
+		*second = 0;
+	}
 }

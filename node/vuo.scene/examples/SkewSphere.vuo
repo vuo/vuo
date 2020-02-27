@@ -2,28 +2,31 @@
  * @file
  * Deforms a sphere by skewing it along a diagonal.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="375,345" _startPosition="-1.000000" _endPosition="1.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,210" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="724,236" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="694,206" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="360,195" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.80000001192092896,0.80000001192092896,0.80000001192092896]}" _rows="32" _columns="32"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="765,195" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="180,255" _color="{\"r\":1.000000,\"g\":0.906874,\"b\":0.402197,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-SkewObject [type="vuo.scene.skew" version="1.0.1" label="Skew 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<direction>direction\l|<skewedObject>skewedObject\r" pos="525,195" fillcolor="violet" _direction="0.000000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-210,210"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="660,330" _startPosition="-1.000000" _endPosition="1.000000" _duration="2" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-360,330" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1004,206" fillcolor="blue"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="360,195" _transform="\{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.80000001192092896,0.80000001192092896,0.80000001192092896]\}" _rows="32" _columns="32"];
+MakeWireframeShader [type="vuo.shader.make.wireframe" version="1.1.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<uniformWidth>uniformWidth\l|<shader>shader\r" pos="-30,210" _frontColor="\{\"r\":0.90196079015731812,\"g\":0.90196079015731812,\"b\":0.90196079015731812,\"a\":1\}" _backColor="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":0.40000000596046448,\"a\":1\}" _width="0.10000000000000001" _standoffWidth="0.10000000000000001" _showThirdEdge="true" _uniformWidth="false"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1050,195" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="600,195" _keepFront="true"];
+SkewObject [type="vuo.scene.skew" version="1.0.1" label="Skew 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<direction>direction\l|<skewedObject>skewedObject\r" pos="825,195" fillcolor="orange" _direction="0.000000"];
 
+AllowFirstEvent:firstEvent -> MakeWireframeShader:frontColor;
 Curve2:value -> SkewObject:amount;
-FireOnStart2:started -> ShadeWithColor:refresh;
-MakeList0:list -> RenderSceneToWindow:setWindowProperties;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeList5:list -> RenderSceneToWindow:objects;
-MakeSphere2:object -> SkewObject:object;
-RenderSceneToWindow:requestedFrame -> Curve2:time;
-ShadeWithColor:shader -> MakeSphere2:material;
+MakeSphere2:object -> ShowBackOf3DObject:object;
+MakeWireframeShader:shader -> MakeSphere2:material;
+ShowBackOf3DObject:backObject -> SkewObject:object;
 SkewObject:skewedObject -> MakeList5:1;
 }

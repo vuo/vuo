@@ -2,38 +2,34 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <list>
 #include <map>
-#include <string>
+using namespace std;
 
 #include "VuoSceneRenderer.h"
 
 #include "VuoCglPixelFormat.h"
-#include "VuoSceneObject.h"
-#include "VuoGlPool.h"
 #include "VuoImageText.h"
+#include "VuoSceneText.h"
 
 #include <CoreServices/CoreServices.h>
 
-#include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
-/// @{
+/// @{ Stub.
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 /// @}
 
-#include <dispatch/dispatch.h>
+#include "module.h"
 
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoSceneRenderer",
@@ -43,6 +39,7 @@ VuoModuleMetadata({
 						 "VuoImageColorDepth",
 						 "VuoImageText",
 						 "VuoSceneObject",
+						 "VuoSceneText",
 						 "VuoText",
 						 "VuoList_VuoSceneObject",
 						 "VuoGlContext"
@@ -51,7 +48,8 @@ VuoModuleMetadata({
 #endif
 }
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
+#include <string>
 typedef std::pair<std::string, double> VuoProfileEntry;	///< Description + time (seconds).
 static bool VuoProfileSort(const VuoProfileEntry &first, const VuoProfileEntry &second)
 {
@@ -59,7 +57,7 @@ static bool VuoProfileSort(const VuoProfileEntry &first, const VuoProfileEntry &
 }
 #endif
 
-typedef std::pair<void *, void *> VuoSceneRendererMeshShader;	///< A VuoMesh/VuoShader combination
+typedef std::pair<VuoMesh, VuoShader> VuoSceneRendererMeshShader;  ///< A VuoMesh/VuoShader combination
 typedef std::map<VuoSceneRendererMeshShader, GLuint> VuoSceneRendererMeshShaderVAOs; ///< The VAO for each VuoMesh/VuoShader combination
 
 /**
@@ -70,17 +68,23 @@ class VuoSceneRendererInternal_object
 public:
 	GLuint vao; ///< This VuoSceneObject's VAO.
 
-	VuoMesh overrideMesh;	///< If non-null, this mesh is rendered instead of the actual object's mesh.
 	enum
 	{
 		RealSize_Inherit,
 		RealSize_True,
 	} overrideIsRealSize;	///< If not Inherit, this overrides the actual object's isRealSize property.
 	VuoShader overrideShader;	///< If non-null, this shader is rendered instead of the actual object's shader.
-
-	unsigned long childObjectCount; ///< Size of `childObjects`
-	VuoSceneRendererInternal_object *childObjects; ///< Hierarchy
 };
+
+/**
+ * State for rendering an object at its particular place in the hierarchy.
+ */
+typedef struct
+{
+	VuoSceneObject so;
+	VuoSceneRendererInternal_object *soi;
+	float modelviewMatrix[16];
+} VuoSceneRenderer_TreeRenderState;
 
 /**
  * Internal state data for a VuoSceneRenderer instance.
@@ -89,7 +93,6 @@ class VuoSceneRendererInternal
 {
 public:
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to other data in this structure.
-	bool needToRegenerateProjectionMatrix;
 	unsigned int viewportWidth;
 	unsigned int viewportHeight;
 	float backingScaleFactor;
@@ -100,7 +103,16 @@ public:
 
 	VuoSceneObject rootSceneObject;					///< The latest scene that's actually been uploaded and drawn.
 	bool           rootSceneObjectValid;			///< Whether rootSceneObject has already been initialized (and uploaded and drawn).
-	VuoSceneRendererInternal_object rootSceneObjectInternal;
+	VuoShader      sharedTextOverrideShader;
+
+	list<VuoSceneRenderer_TreeRenderState> opaqueObjects;
+	list<VuoSceneRenderer_TreeRenderState> potentiallyTransparentObjects;
+	/**
+	 * If true, `opaqueObjects` and `potentiallyTransparentObjects` are ordered by distance from the camera
+	 * (descending and ascending, respectively).
+	 * If false, only `opaqueObjects` is populated, ordered by depth-first traversal of the scenegraph.
+	 */
+	bool           shouldSortByDepth;
 
 	VuoSceneRendererMeshShaderVAOs meshShaderItems;	///< Given a VuoMesh and a VuoShader, stores a set of VAOs.
 
@@ -145,7 +157,13 @@ public:
 		bool vGL_SAMPLE_ALPHA_TO_ONE;
 	} glState;
 
-#ifdef PROFILE
+	// State for VuoSceneRenderer_renderInternal().
+	GLuint renderBuffer;
+	GLuint renderDepthBuffer;
+	GLuint outputFramebuffer;
+	GLuint outputFramebuffer2;
+
+#ifdef VUO_PROFILE
 	std::list<VuoProfileEntry> profileTimes;	///< How long each object took to render.
 #endif
 };
@@ -223,10 +241,10 @@ public:
 
 void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
 
-static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache);
+static bool VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache);
 
-#if LIBRARY_PREMIUM_AVAILABLE
-#include "premium/VuoSceneRendererPremium.h"
+#if VUO_PRO
+#include "pro/VuoSceneRendererPro.h"
 #endif
 
 /**
@@ -244,7 +262,8 @@ VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 	sceneRenderer->rootSceneObjectPendingValid = false;
 	sceneRenderer->rootSceneObjectPendingUpdated = false;
 	sceneRenderer->rootSceneObjectValid = false;
-	sceneRenderer->needToRegenerateProjectionMatrix = false;
+	sceneRenderer->sharedTextOverrideShader = NULL;
+	sceneRenderer->shouldSortByDepth = false;
 	sceneRenderer->cameraName = NULL;
 	sceneRenderer->camera = VuoSceneObject_makeDefaultCamera();
 	VuoSceneObject_retain(sceneRenderer->camera);
@@ -256,9 +275,15 @@ VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		sceneRenderer->vignetteShader = NULL;
-#if LIBRARY_PREMIUM_AVAILABLE
-		VuoSceneRendererPremium_init(sceneRenderer, cgl_ctx);
+		sceneRenderer->vignetteQuad = nullptr;
+#if VUO_PRO
+		VuoSceneRendererPro_init(sceneRenderer, cgl_ctx);
 #endif
+
+		glGenRenderbuffersEXT(1, &sceneRenderer->renderBuffer);
+		glGenRenderbuffersEXT(1, &sceneRenderer->renderDepthBuffer);
+		glGenFramebuffers(1, &sceneRenderer->outputFramebuffer);
+		glGenFramebuffers(1, &sceneRenderer->outputFramebuffer2);
 
 		CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &sceneRenderer->glContextRendererID);
 	});
@@ -267,6 +292,40 @@ VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 }
 
 static void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer);
+
+/**
+ * Sets `sceneRenderer->camera` to the scenegraph's active camera
+ * (or, if there's no explicit camera in the scenegraph, sets it to the default camera).
+ */
+static void VuoSceneRenderer_findCameraOrDefault(VuoSceneRendererInternal *sceneRenderer)
+{
+	VuoSceneObject camera;
+	if (sceneRenderer->rootSceneObjectValid)
+	{
+		if (VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, sceneRenderer->cameraName, &camera))
+		{
+			VuoSceneObject_retain(camera);
+			VuoSceneObject_release(sceneRenderer->camera);
+			sceneRenderer->camera = camera;
+			return;
+		}
+
+		if (sceneRenderer->cameraName && strlen(sceneRenderer->cameraName) != 0)
+			// Search again, and this time just pick the first camera we find.
+			if (VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, "", &camera))
+			{
+				VuoSceneObject_retain(camera);
+				VuoSceneObject_release(sceneRenderer->camera);
+				sceneRenderer->camera = camera;
+				return;
+			}
+	}
+
+	camera = VuoSceneObject_makeDefaultCamera();
+	VuoSceneObject_retain(camera);
+	VuoSceneObject_release(sceneRenderer->camera);
+	sceneRenderer->camera = camera;
+}
 
 /**
  * Using the first camera found in the scene (or VuoSceneObject_makeDefaultCamera() if there is no camera in the scene),
@@ -285,6 +344,7 @@ void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sr, unsigned i
 	sceneRenderer->viewportWidth = width;
 	sceneRenderer->viewportHeight = height;
 
+	VuoSceneRenderer_findCameraOrDefault(sceneRenderer);
 	VuoSceneRenderer_regenerateProjectionMatrixInternal(sceneRenderer);
 
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
@@ -297,29 +357,15 @@ void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sr, unsigned i
  */
 void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer)
 {
-	VuoSceneObject camera;
-
-	{
-		bool foundCamera = false;
-
-		if (sceneRenderer->rootSceneObjectValid)
-		{
-			foundCamera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, sceneRenderer->cameraName, &camera);
-			if (!foundCamera && sceneRenderer->cameraName && strlen(sceneRenderer->cameraName) != 0)
-				// Search again, and this time just pick the first camera we find.
-				foundCamera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, "", &camera);
-		}
-
-		if (!foundCamera)
-			camera = VuoSceneObject_makeDefaultCamera();
-	}
-
+	float cameraDistanceMin = VuoSceneObject_getCameraDistanceMin(sceneRenderer->camera);
+	float cameraDistanceMax = VuoSceneObject_getCameraDistanceMax(sceneRenderer->camera);
 
 	// Build a projection matrix for a camera located at the origin, facing along the -z axis.
 	float aspectRatio = (float)sceneRenderer->viewportWidth/(float)sceneRenderer->viewportHeight;
-	if (camera.type == VuoSceneObjectSubType_PerspectiveCamera)
+	VuoSceneObjectSubType type = VuoSceneObject_getType(sceneRenderer->camera);
+	if (type == VuoSceneObjectSubType_PerspectiveCamera)
 	{
-		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
+		float halfFieldOfView = (VuoSceneObject_getCameraFieldOfView(sceneRenderer->camera) * (float)M_PI / 180.f) / 2.f;
 
 		// left matrix column
 		sceneRenderer->projectionMatrix[ 0] = 1.f/tanf(halfFieldOfView);
@@ -334,21 +380,22 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 
 		sceneRenderer->projectionMatrix[ 8] = 0;
 		sceneRenderer->projectionMatrix[ 9] = 0;
-		sceneRenderer->projectionMatrix[10] = (camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[10] = (cameraDistanceMax + cameraDistanceMin) / (cameraDistanceMin - cameraDistanceMax);
 		sceneRenderer->projectionMatrix[11] = -1.f;
 
 		// right matrix column
 		sceneRenderer->projectionMatrix[12] = 0;
 		sceneRenderer->projectionMatrix[13] = 0;
-		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[14] = 2.f * cameraDistanceMax * cameraDistanceMin / (cameraDistanceMin - cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.type == VuoSceneObjectSubType_StereoCamera)
+	else if (type == VuoSceneObjectSubType_StereoCamera)
 	{
-		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
-		float top = camera.cameraDistanceMin * tanf(halfFieldOfView);
-		float right = aspectRatio*top;
-		float frustumshift = (camera.cameraIntraocularDistance/2.f) * camera.cameraDistanceMin / camera.cameraConfocalDistance;
+		float cameraIntraocularDistance = VuoSceneObject_getCameraIntraocularDistance(sceneRenderer->camera);
+		float halfFieldOfView = (VuoSceneObject_getCameraFieldOfView(sceneRenderer->camera) * (float)M_PI / 180.f) / 2.f;
+		float top = cameraDistanceMin * tanf(halfFieldOfView);
+		float right = aspectRatio * top;
+		float frustumshift = (cameraIntraocularDistance / 2.f) * cameraDistanceMin / VuoSceneObject_getCameraConfocalDistance(sceneRenderer->camera);
 		if (!sceneRenderer->useLeftCamera)
 			frustumshift *= -1.f;
 
@@ -367,18 +414,19 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		// column 2
 		sceneRenderer->projectionMatrix[ 8] = 2.f * frustumshift / right;
 		sceneRenderer->projectionMatrix[ 9] = 0;
-		sceneRenderer->projectionMatrix[10] = (camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[10] = (cameraDistanceMax + cameraDistanceMin) / (cameraDistanceMin - cameraDistanceMax);
 		sceneRenderer->projectionMatrix[11] = -1.f;
 
 		// column 3
-		sceneRenderer->projectionMatrix[12] = (sceneRenderer->useLeftCamera? 1.f : -1.f) * camera.cameraIntraocularDistance/2.f;
+		sceneRenderer->projectionMatrix[12] = (sceneRenderer->useLeftCamera ? 1.f : -1.f) * cameraIntraocularDistance / 2.f;
 		sceneRenderer->projectionMatrix[13] = 0;
-		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[14] = 2.f * cameraDistanceMax * cameraDistanceMin / (cameraDistanceMin - cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.type == VuoSceneObjectSubType_OrthographicCamera)
+	else if (type == VuoSceneObjectSubType_OrthographicCamera)
 	{
-		float halfWidth = camera.cameraWidth / 2.f;
+		float cameraWidth = VuoSceneObject_getCameraWidth(sceneRenderer->camera);
+		float halfWidth = cameraWidth / 2.f;
 
 		// left matrix column
 		sceneRenderer->projectionMatrix[ 0] = 1.f/halfWidth;
@@ -393,42 +441,37 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 
 		sceneRenderer->projectionMatrix[ 8] = 0;
 		sceneRenderer->projectionMatrix[ 9] = 0;
-		sceneRenderer->projectionMatrix[10] = -2.f / (camera.cameraDistanceMax-camera.cameraDistanceMin);
+		sceneRenderer->projectionMatrix[10] = -2.f / (cameraDistanceMax - cameraDistanceMin);
 		sceneRenderer->projectionMatrix[11] = 0;
 
 		// right matrix column
 		sceneRenderer->projectionMatrix[12] = 0;
 		sceneRenderer->projectionMatrix[13] = 0;
-		sceneRenderer->projectionMatrix[14] = -(camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMax-camera.cameraDistanceMin);
+		sceneRenderer->projectionMatrix[14] = -(cameraDistanceMax + cameraDistanceMin) / (cameraDistanceMax - cameraDistanceMin);
 		sceneRenderer->projectionMatrix[15] = 1;
 	}
-	else if (camera.type == VuoSceneObjectSubType_FisheyeCamera)
+	else if (type == VuoSceneObjectSubType_FisheyeCamera)
 	{
 		bzero(sceneRenderer->projectionMatrix, sizeof(float)*16);
-#if LIBRARY_PREMIUM_AVAILABLE
-		VuoSceneRendererPremium_generateFisheyeProjectionMatrix(sceneRenderer, camera, aspectRatio);
+#if VUO_PRO
+		VuoSceneRendererPro_generateFisheyeProjectionMatrix(sceneRenderer, sceneRenderer->camera, aspectRatio);
 #endif
 	}
 	else
-		VUserLog("Unknown type %d", camera.type);
+		VUserLog("Unknown type %d", type);
 
 
 	// Transform the scene by the inverse of the camera's transform.
 	// (Don't move the ship around the universe: move the universe around the ship.)
 	{
 		float cameraMatrix[16];
-		VuoTransform_getMatrix(camera.transform, cameraMatrix);
+		VuoTransform_getMatrix(VuoSceneObject_getTransform(sceneRenderer->camera), cameraMatrix);
 
 		float invertedCameraMatrix[16];
 		VuoTransform_invertMatrix4x4(cameraMatrix, invertedCameraMatrix);
 
 		VuoTransform_copyMatrix4x4(invertedCameraMatrix, sceneRenderer->cameraMatrixInverse);
 	}
-
-
-	VuoSceneObject_retain(camera);
-	VuoSceneObject_release(sceneRenderer->camera);
-	sceneRenderer->camera = camera;
 }
 
 /**
@@ -454,7 +497,7 @@ static void VuoSceneRenderer_addUniformSuffix(char *address, int i, const char *
  *
  * This is time-consuming (since it downloads data from the GPU), so it should be used sparingly (e.g., in debug mode).
  */
-void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh, GLuint positionAttribute)
+void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoMesh mesh, GLuint positionAttribute)
 {
 	GLint enabled = -1;
 	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
@@ -464,10 +507,13 @@ void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh,
 		return;
 	}
 
+	unsigned int vertexCount, combinedBuffer, elementCount;
+	VuoMesh_getGPUBuffers(mesh, &vertexCount, &combinedBuffer, nullptr, nullptr, nullptr, &elementCount, nullptr);
+
 	GLint vaovbo = -1;
 	glGetVertexAttribiv(positionAttribute, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &vaovbo);
-	if (vaovbo != (GLint)submesh.glUpload.combinedBuffer)
-		VUserLog("Error: GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING (%d) doesn't match submesh's VBO (%d).", vaovbo, submesh.glUpload.combinedBuffer);
+	if (vaovbo != (GLint)combinedBuffer)
+		VUserLog("Error: GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING (%d) doesn't match submesh's VBO (%d).", vaovbo, combinedBuffer);
 
 	GLint vertexBufferBound = -1;
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vertexBufferBound);
@@ -476,11 +522,11 @@ void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh,
 
 	GLint elementBufferBound = -1;
 	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementBufferBound);
-	if (submesh.elementCount && !elementBufferBound)
+	if (elementCount && !elementBufferBound)
 		VUserLog("Error: GL_ELEMENT_ARRAY_BUFFER_BINDING is 0 (it should be nonzero, since we're trying to draw elements).");
 
 	GLint combinedBufferSize = -1;
-	glBindBuffer(GL_ARRAY_BUFFER, submesh.glUpload.combinedBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, combinedBuffer);
 	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &combinedBufferSize);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	if (combinedBufferSize < 4)
@@ -511,15 +557,16 @@ void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh,
 
 	unsigned int minIndex = 0;
 	unsigned int maxIndex = 0;
-	if (submesh.elementCount)
+	if (elementCount)
 	{
-		if (submesh.glUpload.elementBufferSize != submesh.elementCount * sizeof(unsigned int))
+		unsigned int elementBufferSize = VuoMesh_getElementBufferSize(mesh);
+		if (elementBufferSize != elementCount * sizeof(unsigned int))
 			VUserLog("Error: elementBufferSize doesn't match elementCount.");
 
-		unsigned int *b = (unsigned int *)malloc(submesh.glUpload.elementBufferSize);
-		glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, submesh.glUpload.elementBufferSize, b);
+		unsigned int *b = (unsigned int *)malloc(elementBufferSize);
+		glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, elementBufferSize, b);
 
-		for (unsigned int i = 0; i < submesh.elementCount; ++i)
+		for (unsigned int i = 0; i < elementCount; ++i)
 		{
 			if (b[i] > maxIndex)
 				maxIndex = b[i];
@@ -530,7 +577,7 @@ void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh,
 		free(b);
 	}
 	else
-		maxIndex = submesh.vertexCount - 1;
+		maxIndex = vertexCount - 1;
 
 	long startWithinVBO = (long)attribBase + (unsigned int)attribStride * minIndex;
 	long   endWithinVBO = (long)attribBase +(unsigned int) attribStride * maxIndex + (unsigned int)attribComponents * bytesPerComponent;
@@ -558,52 +605,72 @@ void VuoSceneRenderer_checkDataBounds(CGLContextObj cgl_ctx, VuoSubmesh submesh,
 static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
 {
 	// Apply the overrides just within this function's scope.
-	if (soi->overrideMesh)
-		so.mesh = soi->overrideMesh;
+	bool isRealSize = VuoSceneObject_isRealSize(so);
 	if (soi->overrideIsRealSize != VuoSceneRendererInternal_object::RealSize_Inherit)
-		so.isRealSize = soi->overrideIsRealSize;
+		isRealSize = soi->overrideIsRealSize;
+	VuoShader shader = VuoSceneObject_getShader(so);
 	if (soi->overrideShader)
-		so.shader = soi->overrideShader;
-
-
-	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
+		shader = soi->overrideShader;
+	if (!shader)
 		return;
 
-	VuoImage image = VuoShader_getUniform_VuoImage(so.shader, "texture");
-	if (so.isRealSize && !image)
+
+	if (VuoSceneObject_getType(so) == VuoSceneObjectSubType_Text && !VuoText_isEmpty(VuoSceneObject_getText(so)))
+	{
+		// Text has to be rasterized while rendering (instead of while uploading)
+		// since resizing the window (which doesn't re-upload) could cause the text to change size
+		// (and we want to ensure the text is crisp, so we can't just scale the pre-rasterized bitmap).
+
+		float verticalScale = 1.;
+		float rotationZ = 0.;
+		float wrapWidth = VuoSceneObject_getTextWrapWidth(so);
+		VuoFont font = VuoSceneObject_getTextFont(so);
+		if (VuoSceneObject_shouldTextScaleWithScene(so))
+		{
+			font.pointSize *= (double)sceneRenderer->viewportWidth / (VuoGraphicsWindowDefaultWidth * sceneRenderer->backingScaleFactor);
+			wrapWidth      *= (double)sceneRenderer->viewportWidth / (VuoGraphicsWindowDefaultWidth * sceneRenderer->backingScaleFactor);
+
+			VuoTransform transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			font.pointSize *= transform.scale.x;
+			wrapWidth      *= transform.scale.x;
+			verticalScale   = transform.scale.y / transform.scale.x;
+			rotationZ       = VuoTransform_getEuler(transform).z;
+		}
+
+		VuoPoint2d corners[4];
+		VuoImage textImage = VuoImage_makeText(VuoSceneObject_getText(so), font, sceneRenderer->backingScaleFactor, verticalScale, rotationZ, wrapWidth, corners);
+
+		VuoPoint2d anchorOffset = VuoSceneText_getAnchorOffset(so, verticalScale, rotationZ, wrapWidth, sceneRenderer->viewportWidth, sceneRenderer->backingScaleFactor);
+		modelviewMatrix[12] += anchorOffset.x;
+		modelviewMatrix[13] += anchorOffset.y;
+
+		VuoShader_setUniform_VuoImage(shader, "texture", textImage);
+	}
+
+	VuoMesh mesh = VuoSceneObject_getMesh(so);
+	if (!mesh)
+		return;
+
+	VuoImage image = VuoShader_getUniform_VuoImage(shader, "texture");
+	if (isRealSize && !image)
 		return;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 	GLuint timeElapsedQuery;
-	double timeStart = 0;
-	SInt32 macMinorVersion;
-	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-	if (macMinorVersion < 9)
-	{
-		// Prior to OS X v10.9, glGetQueryObjectuiv() isn't likely to work.
-		// (On NVIDIA GeForce 9400M on OS X v10.8, it hangs for 6 seconds then returns bogus data.)
-		// https://www.mail-archive.com/mac-opengl@lists.apple.com/msg00003.html
-		// https://b33p.net/kosada/node/10677
-		glFinish();
-		timeStart = VuoLogGetTime();
-	}
-	else
-	{
-		glGenQueries(1, &timeElapsedQuery);
-		glBeginQuery(GL_TIME_ELAPSED_EXT, timeElapsedQuery);
-	}
+	glGenQueries(1, &timeElapsedQuery);
+	glBeginQuery(GL_TIME_ELAPSED_EXT, timeElapsedQuery);
 #endif
 
-	GLint positionAttribute;
+	GLint positionAttribute = -1;
 	if (VuoIsDebugEnabled())
-		VuoShader_getAttributeLocations(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx, &positionAttribute, NULL, NULL, NULL, NULL);
+		if (!VuoShader_getAttributeLocations(shader, VuoMesh_getElementAssemblyMethod(mesh), cgl_ctx, &positionAttribute, NULL, NULL, NULL))
+			VDebugLog("Error: Couldn't fetch the 'position' attribute, needed to check data bounds.");
 
 
-	// All VuoSubmeshes are assumed to have the same elementAssemblyMethod.
 	VuoGlProgram program;
-	if (!VuoShader_activate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx, &program))
+	if (!VuoShader_activate(shader, VuoMesh_getElementAssemblyMethod(mesh), cgl_ctx, &program))
 	{
 		VUserLog("Shader activation failed.");
 		return;
@@ -615,14 +682,17 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 		GLint useFisheyeProjectionUniform = VuoGlProgram_getUniformLocation(program, "useFisheyeProjection");
 		if (useFisheyeProjectionUniform != -1)
-			glUniform1i(useFisheyeProjectionUniform, sceneRenderer->camera.type == VuoSceneObjectSubType_FisheyeCamera);
+			glUniform1i(useFisheyeProjectionUniform, VuoSceneObject_getType(sceneRenderer->camera) == VuoSceneObjectSubType_FisheyeCamera);
 
 		GLint modelviewMatrixUniform = VuoGlProgram_getUniformLocation(program, "modelviewMatrix");
 
-		if (so.isRealSize)
+		if (isRealSize)
 		{
 			float billboardMatrix[16];
-			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, sceneRenderer->backingScaleFactor, so.mesh->submeshes[0].positions[0].x, billboardMatrix);
+			float *positions;
+			VuoMesh_getCPUBuffers(mesh, nullptr, &positions, nullptr, nullptr, nullptr, nullptr, nullptr);
+			VuoPoint2d mesh0 = (VuoPoint2d){ positions[0], positions[1] };
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, VuoSceneObject_shouldPreservePhysicalSize(so), modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, sceneRenderer->backingScaleFactor, mesh0, billboardMatrix);
 			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, billboardMatrix);
 		}
 		else
@@ -634,7 +704,10 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 		GLint cameraPositionUniform = VuoGlProgram_getUniformLocation(program, "cameraPosition");
 		if (cameraPositionUniform != -1)
-			glUniform3f(cameraPositionUniform, sceneRenderer->camera.transform.translation.x, sceneRenderer->camera.transform.translation.y, sceneRenderer->camera.transform.translation.z);
+		{
+			VuoPoint3d p = VuoSceneObject_getTranslation(sceneRenderer->camera);
+			glUniform3f(cameraPositionUniform, p.x, p.y, p.z);
+		}
 
 		GLint aspectRatioUniform = VuoGlProgram_getUniformLocation(program, "aspectRatio");
 		if (aspectRatioUniform != -1)
@@ -646,16 +719,19 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 		GLint ambientColorUniform = VuoGlProgram_getUniformLocation(program, "ambientColor");
 		if (ambientColorUniform != -1)
+			// Unlike typical VuoColors, convert these from sRGB-gamma2.2 into sRGB-linear,
+			// since that's what lighting.glsl expects.
 			glUniform4f(ambientColorUniform,
-						sceneRenderer->ambientColor.r * sceneRenderer->ambientColor.a,
-						sceneRenderer->ambientColor.g * sceneRenderer->ambientColor.a,
-						sceneRenderer->ambientColor.b * sceneRenderer->ambientColor.a,
+						pow(sceneRenderer->ambientColor.r, 2.2) * sceneRenderer->ambientColor.a,
+						pow(sceneRenderer->ambientColor.g, 2.2) * sceneRenderer->ambientColor.a,
+						pow(sceneRenderer->ambientColor.b, 2.2) * sceneRenderer->ambientColor.a,
 						sceneRenderer->ambientColor.a);
 		GLint ambientBrightnessUniform = VuoGlProgram_getUniformLocation(program, "ambientBrightness");
 		if (ambientBrightnessUniform != -1)
-			glUniform1f(ambientBrightnessUniform, sceneRenderer->ambientBrightness);
+			glUniform1f(ambientBrightnessUniform, pow(sceneRenderer->ambientBrightness, 2.2));
 
-		char uniformName[27]; // strlen("pointLights[15].brightness")+1
+		size_t uniformSize = 27;  // strlen("pointLights[15].brightness")+1
+		char uniformName[uniformSize];
 
 		int pointLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->pointLights);
 		GLint pointLightCountUniform = VuoGlProgram_getUniformLocation(program, "pointLightCount");
@@ -663,7 +739,7 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		{
 			glUniform1i(pointLightCountUniform, pointLightCount);
 
-			strcpy(uniformName, "pointLights[");
+			strlcpy(uniformName, "pointLights[", uniformSize);
 			const int prefixLength = 12; // strlen("pointLights[")
 
 			for (int i=1; i<=pointLightCount; ++i)
@@ -672,27 +748,31 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].color");
 				GLint colorUniform = VuoGlProgram_getUniformLocation(program, uniformName);
+				// Unlike typical VuoColors, convert these from sRGB-gamma2.2 into sRGB-linear,
+				// since that's what lighting.glsl expects.
+				VuoColor c = VuoSceneObject_getLightColor(pointLight);
 				glUniform4f(colorUniform,
-							pointLight.lightColor.r * pointLight.lightColor.a,
-							pointLight.lightColor.g * pointLight.lightColor.a,
-							pointLight.lightColor.b * pointLight.lightColor.a,
-							pointLight.lightColor.a);
+							pow(c.r, 2.2) * c.a,
+							pow(c.g, 2.2) * c.a,
+							pow(c.b, 2.2) * c.a,
+							c.a);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].brightness");
 				GLint brightnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(brightnessUniform, pointLight.lightBrightness);
+				glUniform1f(brightnessUniform, pow(VuoSceneObject_getLightBrightness(pointLight), 2.2));
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].position");
 				GLint positionUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform3f(positionUniform, pointLight.transform.translation.x, pointLight.transform.translation.y, pointLight.transform.translation.z);
+				VuoPoint3d p = VuoSceneObject_getTranslation(pointLight);
+				glUniform3f(positionUniform, p.x, p.y, p.z);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].range");
 				GLint rangeUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(rangeUniform, pointLight.lightRange);
+				glUniform1f(rangeUniform, VuoSceneObject_getLightRange(pointLight));
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].sharpness");
 				GLint sharpnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(sharpnessUniform, pointLight.lightSharpness);
+				glUniform1f(sharpnessUniform, VuoSceneObject_getLightSharpness(pointLight));
 			}
 		}
 
@@ -702,7 +782,7 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		{
 			glUniform1i(spotLightCountUniform, spotLightCount);
 
-			strcpy(uniformName, "spotLights[");
+			strlcpy(uniformName, "spotLights[", uniformSize);
 			const int prefixLength = 11; // strlen("spotLights[")
 
 			for (int i=1; i<=spotLightCount; ++i)
@@ -711,45 +791,50 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].color");
 				GLint colorUniform = VuoGlProgram_getUniformLocation(program, uniformName);
+				// Unlike typical VuoColors, convert these from sRGB-gamma2.2 into sRGB-linear,
+				// since that's what lighting.glsl expects.
+				VuoColor c = VuoSceneObject_getLightColor(spotLight);
 				glUniform4f(colorUniform,
-							spotLight.lightColor.r * spotLight.lightColor.a,
-							spotLight.lightColor.g * spotLight.lightColor.a,
-							spotLight.lightColor.b * spotLight.lightColor.a,
-							spotLight.lightColor.a);
+							pow(c.r, 2.2) * c.a,
+							pow(c.g, 2.2) * c.a,
+							pow(c.b, 2.2) * c.a,
+							c.a);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].brightness");
 				GLint brightnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(brightnessUniform, spotLight.lightBrightness);
+				glUniform1f(brightnessUniform, pow(VuoSceneObject_getLightBrightness(spotLight), 2.2));
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].position");
 				GLint positionUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform3f(positionUniform, spotLight.transform.translation.x, spotLight.transform.translation.y, spotLight.transform.translation.z);
+				VuoPoint3d p = VuoSceneObject_getTranslation(spotLight);
+				glUniform3f(positionUniform, p.x, p.y, p.z);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].direction");
 				GLint directionUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				VuoPoint3d direction = VuoTransform_getDirection(spotLight.transform);
+				VuoPoint3d direction = VuoTransform_getDirection(VuoSceneObject_getTransform(spotLight));
 				glUniform3f(directionUniform, direction.x, direction.y, direction.z);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].cone");
 				GLint coneUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(coneUniform, spotLight.lightCone);
+				glUniform1f(coneUniform, VuoSceneObject_getLightCone(spotLight));
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].range");
 				GLint rangeUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(rangeUniform, spotLight.lightRange);
+				glUniform1f(rangeUniform, VuoSceneObject_getLightRange(spotLight));
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].sharpness");
 				GLint sharpnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform1f(sharpnessUniform, spotLight.lightSharpness);
+				glUniform1f(sharpnessUniform, VuoSceneObject_getLightSharpness(spotLight));
 			}
 		}
 
-		VuoSceneRenderer_setGLDepthMask(!so.shader->isTransparent);
+		VuoSceneRenderer_setGLDepthMask(!shader->isTransparent);
 
-		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_COVERAGE, so.shader->useAlphaAsCoverage);
-		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_ONE,      so.shader->useAlphaAsCoverage);
+		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_COVERAGE, shader->useAlphaAsCoverage);
+		VuoSceneRenderer_setGL(GL_SAMPLE_ALPHA_TO_ONE,      shader->useAlphaAsCoverage);
 
-		if (so.blendMode == VuoBlendMode_Normal)
+		VuoBlendMode blendMode = VuoSceneObject_getBlendMode(so);
+		if (blendMode == VuoBlendMode_Normal)
 		{
 			VuoSceneRenderer_setGL(GL_DEPTH_TEST, true);
 			VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -759,28 +844,28 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		{
 			VuoSceneRenderer_setGL(GL_DEPTH_TEST, false);
 
-			if (so.blendMode == VuoBlendMode_Multiply)
+			if (blendMode == VuoBlendMode_Multiply)
 			{
 				VuoSceneRenderer_setGLBlendFunction(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_DarkerComponents)
+			else if (blendMode == VuoBlendMode_DarkerComponents)
 			{
 				/// @todo https://b33p.net/kosada/node/12014
 				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 				VuoSceneRenderer_setGLBlendEquation(GL_MIN, GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_LighterComponents)
+			else if (blendMode == VuoBlendMode_LighterComponents)
 			{
 				VuoSceneRenderer_setGLBlendFunction(GL_ZERO, GL_ZERO, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				VuoSceneRenderer_setGLBlendEquation(GL_MAX, GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_LinearDodge)
+			else if (blendMode == VuoBlendMode_LinearDodge)
 			{
 				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_ADD, GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_Subtract)
+			else if (blendMode == VuoBlendMode_Subtract)
 			{
 				VuoSceneRenderer_setGLBlendFunction(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				VuoSceneRenderer_setGLBlendEquation(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
@@ -789,71 +874,61 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 			glBindVertexArray(soi->vao);
 
-			VuoSubmesh submesh = so.mesh->submeshes[0];
-			GLenum mode = VuoSubmesh_getGlMode(submesh);
+			GLenum mode = VuoMesh_getGlMode(mesh);
+
+			unsigned int vertexCount, elementCount;
+			void *textureCoordinateOffset, *colorOffset;
+			VuoMesh_getGPUBuffers(mesh, &vertexCount, nullptr, nullptr, &textureCoordinateOffset, &colorOffset, &elementCount, nullptr);
 
 			GLint hasTextureCoordinatesUniform = VuoGlProgram_getUniformLocation(program, "hasTextureCoordinates");
 			if (hasTextureCoordinatesUniform != -1)
-				glUniform1i(hasTextureCoordinatesUniform, submesh.glUpload.textureCoordinateOffset != NULL);
+				glUniform1i(hasTextureCoordinatesUniform, textureCoordinateOffset != NULL);
+
+			GLint hasVertexColorsUniform = VuoGlProgram_getUniformLocation(program, "hasVertexColors");
+			if (hasVertexColorsUniform != -1)
+				glUniform1i(hasVertexColorsUniform, colorOffset != nullptr);
 
 			GLint primitiveHalfSizeUniform = VuoGlProgram_getUniformLocation(program, "primitiveHalfSize");
 			if (primitiveHalfSizeUniform != -1)
-				glUniform1f(primitiveHalfSizeUniform, submesh.primitiveSize/2);
+				glUniform1f(primitiveHalfSizeUniform, VuoMesh_getPrimitiveSize(mesh) / 2);
 
-			bool enableCulling = submesh.faceCullingMode != GL_NONE && !so.shader->isTransparent;
+			unsigned int faceCullingGL = VuoMesh_getFaceCullingGL(mesh);
+			bool enableCulling = faceCullingGL != GL_NONE && !shader->isTransparent;
 			VuoSceneRenderer_setGL(GL_CULL_FACE, enableCulling);
 			if (enableCulling)
-				VuoSceneRenderer_setGLFaceCulling(submesh.faceCullingMode);
+				VuoSceneRenderer_setGLFaceCulling(faceCullingGL);
 
-			if (VuoIsDebugEnabled())
+			if (VuoIsDebugEnabled() && positionAttribute)
 			{
 				VGL();
-				VuoSceneRenderer_checkDataBounds(cgl_ctx, submesh, positionAttribute);
+				VuoSceneRenderer_checkDataBounds(cgl_ctx, mesh, positionAttribute);
 			}
 
-			unsigned long completeInputElementCount = VuoSubmesh_getCompleteElementCount(submesh);
-			if (submesh.elementCount)
+			unsigned long completeInputElementCount = VuoMesh_getCompleteElementCount(mesh);
+			if (elementCount)
 				glDrawElements(mode, completeInputElementCount, GL_UNSIGNED_INT, (void*)0);
-			else if (submesh.vertexCount)
+			else if (vertexCount)
 				glDrawArrays(mode, 0, completeInputElementCount);
 
 			glBindVertexArray(0);
 	}
-	VuoShader_deactivate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, cgl_ctx);
+	VuoShader_deactivate(shader, VuoMesh_getElementAssemblyMethod(mesh), cgl_ctx);
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 	double seconds;
-	if (macMinorVersion < 9)
-	{
-		glFinish();
-		seconds = VuoLogGetTime() - timeStart;
-	}
-	else
-	{
-		glEndQuery(GL_TIME_ELAPSED_EXT);
-		GLuint nanoseconds;
-		glGetQueryObjectuiv(timeElapsedQuery, GL_QUERY_RESULT, &nanoseconds);
-		seconds = ((double)nanoseconds) / NSEC_PER_SEC;
-		glDeleteQueries(1, &timeElapsedQuery);
-	}
+	glEndQuery(GL_TIME_ELAPSED_EXT);
+	GLuint nanoseconds;
+	glGetQueryObjectuiv(timeElapsedQuery, GL_QUERY_RESULT, &nanoseconds);
+	seconds = ((double)nanoseconds) / NSEC_PER_SEC;
+	glDeleteQueries(1, &timeElapsedQuery);
 
 	std::string description = so.name ? std::string(so.name) : "no name";
-	description += std::string(" (") + so.shader->name + ")";
+	description += std::string(" (") + shader->name + ")";
 	sceneRenderer->profileTimes.push_back(make_pair(description, seconds));
 #endif
 }
 
 //static void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length);
-
-/**
- * State for rendering an object at its particular place in the hierarchy.
- */
-typedef struct
-{
-	VuoSceneObject *so;
-	VuoSceneRendererInternal_object *soi;
-	float modelviewMatrix[16];
-} VuoSceneRenderer_treeRenderState;
 
 /**
  * Draws @c so and its child objects.
@@ -862,68 +937,44 @@ typedef struct
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
+static void VuoSceneRenderer_drawSceneObjects(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext, list<VuoSceneRenderer_TreeRenderState> &renderList)
 {
-	VuoSceneRenderer_treeRenderState rootState;
-	rootState.so = &sceneRenderer->rootSceneObject;
-	rootState.soi = &sceneRenderer->rootSceneObjectInternal;
-	VuoTransform_getMatrix(VuoTransform_makeIdentity(), rootState.modelviewMatrix);
-
-	std::list<VuoSceneRenderer_treeRenderState> objectsToRender(1, rootState);
-	while (!objectsToRender.empty())
+	for (auto currentState : renderList)
 	{
-		VuoSceneRenderer_treeRenderState currentState = objectsToRender.front();
-		objectsToRender.pop_front();
+		VuoSceneRenderer_drawSceneObject(currentState.so, currentState.soi, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer, glContext);
 
-		float localModelviewMatrix[16];
-		VuoTransform_getMatrix(currentState.so->transform, localModelviewMatrix);
-		float compositeModelviewMatrix[16];
-		VuoTransform_multiplyMatrices4x4(localModelviewMatrix, currentState.modelviewMatrix, compositeModelviewMatrix);
-
-		VuoSceneRenderer_drawSceneObject(*currentState.so, currentState.soi, sceneRenderer->projectionMatrix, compositeModelviewMatrix, sceneRenderer, glContext);
-//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 0, .08f);	// Normals
-//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 1, .08f);	// Tangents
-//		VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, sceneRenderer->glContext, 2, .08f);	// Bitangents
-
-		// Prepend childObjects to the objectsToRender queue.
-		// (Do it in reverse order so the objects end up in forward order after calling ::push_front repeatedly.)
-		VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(currentState.so->childObjects);
-		for (long i = VuoListGetCount_VuoSceneObject(currentState.so->childObjects) - 1; i >= 0; --i)
-		{
-			VuoSceneRenderer_treeRenderState childState;
-			childState.so = &(childObjects[i]);
-			childState.soi = &(currentState.soi->childObjects[i]);
-			memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
-			objectsToRender.push_front(childState);
-		}
+//		if (objectTypesToRender & VuoSceneRenderer_OpaqueObjects)
+//		{
+//			VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, glContext, 0, .08f);	// Normals
+//			VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, glContext, 1, .08f);	// Tangents
+//			VuoSceneRenderer_drawElement(currentState.so, sceneRenderer->projectionMatrix, currentState.modelviewMatrix, glContext, 2, .08f);	// Bitangents
+//		}
 	}
 }
 
 //static void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
-static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
+static void VuoSceneRenderer_cleanupRenderLists(VuoSceneRendererInternal *sceneRenderer);
 static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext);
-static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
+static void VuoSceneRenderer_uploadSceneObjects(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext, VuoPoint3d cameraTranslation);
 
 /**
  * Uploads the scene to the GPU (if it's changed), and renders it.
  *
  * @threadAnyGL
  */
-extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
+extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr, CGLContextObj cgl_ctx)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	if (!sceneRenderer->rootSceneObjectPendingValid && !sceneRenderer->rootSceneObjectValid)
 		return;
 
-	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-
 	if (sceneRenderer->rootSceneObjectPendingUpdated)
 	{
 		// Release the old scenegraph.
 		if (sceneRenderer->rootSceneObjectValid)
 		{
-			VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
+			VuoSceneRenderer_cleanupRenderLists(sceneRenderer);
 			VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer, cgl_ctx);
 			VuoSceneObject_release(sceneRenderer->rootSceneObject);
 			VuoRelease(sceneRenderer->pointLights);
@@ -933,21 +984,41 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 		// Upload the new scenegraph.
 		sceneRenderer->rootSceneObject = sceneRenderer->rootSceneObjectPending;
 		VuoSceneObject_retain(sceneRenderer->rootSceneObject);
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
+
+		sceneRenderer->rootSceneObjectValid = true;
+		VuoSceneRenderer_findCameraOrDefault(sceneRenderer);
+
+		VuoSceneRenderer_uploadSceneObjects(sceneRenderer, cgl_ctx, VuoSceneObject_getTranslation(sceneRenderer->camera));
 
 		VuoSceneObject_findLights(sceneRenderer->rootSceneObject, &sceneRenderer->ambientColor, &sceneRenderer->ambientBrightness, &sceneRenderer->pointLights, &sceneRenderer->spotLights);
 		VuoRetain(sceneRenderer->pointLights);
 		VuoRetain(sceneRenderer->spotLights);
 
-		sceneRenderer->rootSceneObjectValid = true;
-		sceneRenderer->needToRegenerateProjectionMatrix = true;
 		sceneRenderer->rootSceneObjectPendingUpdated = false;
-	}
 
-	if (sceneRenderer->needToRegenerateProjectionMatrix)
-	{
-		VuoSceneRenderer_regenerateProjectionMatrixInternal(sceneRenderer);
-		sceneRenderer->needToRegenerateProjectionMatrix = false;
+#if 0
+		VLog("Render lists:");
+		VLog("    Opaque:");
+		for (auto currentState : sceneRenderer->opaqueObjects)
+		{
+			VLog("        '%s' @ %g,%g,%g with '%s'", currentState.so->name,
+				 currentState.modelviewMatrix[12],
+				 currentState.modelviewMatrix[13],
+				 currentState.modelviewMatrix[14],
+				 currentState.so->shader ? currentState.so->shader->name : NULL
+				 );
+		}
+		VLog("    Potentially Transparent:");
+		for (auto currentState : sceneRenderer->potentiallyTransparentObjects)
+		{
+			VLog("        '%s' @ %g,%g,%g with '%s'", currentState.so->name,
+				 currentState.modelviewMatrix[12],
+				 currentState.modelviewMatrix[13],
+				 currentState.modelviewMatrix[14],
+				 currentState.so->shader->name
+								 );
+		}
+#endif
 	}
 
 
@@ -966,7 +1037,12 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	sceneRenderer->glState.vGL_SAMPLE_ALPHA_TO_COVERAGE = false;
 	sceneRenderer->glState.vGL_SAMPLE_ALPHA_TO_ONE      = false;
 
-	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer, cgl_ctx);
+	VuoSceneRenderer_regenerateProjectionMatrixInternal(sceneRenderer);
+
+	VuoSceneRenderer_drawSceneObjects(sceneRenderer, cgl_ctx, sceneRenderer->opaqueObjects);
+
+	if (!sceneRenderer->potentiallyTransparentObjects.empty())
+		VuoSceneRenderer_drawSceneObjects(sceneRenderer, cgl_ctx, sceneRenderer->potentiallyTransparentObjects);
 
 	// Restore the context back to VuoGlContextPool::createContext()'s initial state.
 	VuoSceneRenderer_setGLDepthMask(                    true );
@@ -982,12 +1058,12 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 //	VuoSceneRenderer_drawLights(sceneRenderer);
 
 
-#if LIBRARY_PREMIUM_AVAILABLE
-	if (sceneRenderer->camera.type == VuoSceneObjectSubType_FisheyeCamera)
-		VuoSceneRendererPremium_drawVignette(sceneRenderer, cgl_ctx);
+#if VUO_PRO
+	if (VuoSceneObject_getType(sceneRenderer->camera) == VuoSceneObjectSubType_FisheyeCamera)
+		VuoSceneRendererPro_drawVignette(sceneRenderer, cgl_ctx);
 #endif
 
-#ifdef PROFILE
+#ifdef VUO_PROFILE
 	VL();
 	VLog("Object render time (percent of a 60 Hz frame)");
 	double totalPercent = 0;
@@ -1015,8 +1091,6 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 			sceneRenderer->glContextRendererID = rendererID;
 		}
 	}
-
-	});
 }
 
 /**
@@ -1232,26 +1306,6 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 }*/
 
 /**
- * Creates a mesh and image for the specified sceneobject.
- */
-static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi)
-{
-	// Instead of modifying the VuoSceneObject itself
-	// (which breaks Vuo's "data passed through cables is immutable" rule,
-	// since rootSceneObject is output as renderedLayers),
-	// use the shadow object to store overrides of the actual object.
-
-	// soi->overrideMesh = VuoMesh_makeQuadWithoutNormals();
-	// VuoRetain(soi->overrideMesh);
-
-	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_True;
-
-	VuoImage textImage = VuoImage_makeText(so.text, so.font, sceneRenderer->backingScaleFactor);
-	soi->overrideShader = VuoShader_makeUnlitImageShader(textImage, 1);
-	VuoRetain(soi->overrideShader);
-}
-
-/**
  * Binds the relevant (given the current shader) parts of @c so to an OpenGL Vertex Array Object.
  * Does not traverse child objects.
  *
@@ -1259,35 +1313,46 @@ static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer,
  *
  * If `cache` is true, the VAO is cached in sceneRenderer->meshShaderItems (which gets cleaned up by @ref VuoSceneRenderer_cleanupMeshShaderItems each time the root sceneobject is changed).
  *
+ * Returns false if the object can't potentially generate visible output (e.g., if it's the empty object).
+ *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache)
+static bool VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache)
 {
-	soi->overrideMesh = NULL;
 	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_Inherit;
 	soi->overrideShader = NULL;
 
-	if (so.type == VuoSceneObjectSubType_Text && so.text && so.text[0] != 0)
-		VuoSceneRenderer_renderText(sceneRenderer, so, soi);
+	if (VuoSceneObject_getType(so) == VuoSceneObjectSubType_Text && !VuoText_isEmpty(VuoSceneObject_getText(so)))
+	{
+		soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_True;
+		if (!sceneRenderer->sharedTextOverrideShader)
+		{
+			sceneRenderer->sharedTextOverrideShader = VuoShader_makeUnlitImageShader(NULL, 1);
+			VuoRetain(sceneRenderer->sharedTextOverrideShader);
+		}
+		soi->overrideShader = sceneRenderer->sharedTextOverrideShader;
+		VuoRetain(soi->overrideShader);
+	}
 
 	// Apply the overrides just within this function's scope.
-	if (soi->overrideMesh)
-		so.mesh = soi->overrideMesh;
+	VuoShader shader = VuoSceneObject_getShader(so);
 	if (soi->overrideShader)
-		so.shader = soi->overrideShader;
+		shader = soi->overrideShader;
+	if (!shader)
+		return false;
 
-
-	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
-		return;
+	VuoMesh mesh = VuoSceneObject_getMesh(so);
+	if (!mesh)
+		return false;
 
 
 	// If we already have a VAO for this mesh/shader combination, use it.
-	VuoSceneRendererMeshShader meshShader(so.mesh, so.shader);
+	VuoSceneRendererMeshShader meshShader(mesh, shader);
 	VuoSceneRendererMeshShaderVAOs::iterator i = sceneRenderer->meshShaderItems.find(meshShader);
 	if (cache && i != sceneRenderer->meshShaderItems.end())
 	{
 		soi->vao = i->second;
-		return;
+		return true;
 	}
 
 
@@ -1297,11 +1362,14 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 
 	// Fetch the shader's attribute locations.
 	// All VuoSubmeshes are assumed to have the same elementAssemblyMethod.
-	GLint positionAttribute, normalAttribute, tangentAttribute, bitangentAttribute, textureCoordinateAttribute;
-	VuoShader_getAttributeLocations(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, glContext, &positionAttribute, &normalAttribute, &tangentAttribute, &bitangentAttribute, &textureCoordinateAttribute);
+	GLint positionAttribute, normalAttribute, textureCoordinateAttribute, colorAttribute;
+	if (!VuoShader_getAttributeLocations(shader, VuoMesh_getElementAssemblyMethod(mesh), glContext, &positionAttribute, &normalAttribute, &textureCoordinateAttribute, &colorAttribute))
+		VUserLog("Error: Couldn't fetch the shader's attribute locations.");
 
+	unsigned int combinedBuffer, elementCount, elementBuffer;
+	void *normalOffset, *textureCoordinateOffset, *colorOffset;
+	VuoMesh_getGPUBuffers(mesh, nullptr, &combinedBuffer, &normalOffset, &textureCoordinateOffset, &colorOffset, &elementCount, &elementBuffer);
 
-		VuoSubmesh meshItem = so.mesh->submeshes[0];
 		GLuint vertexArray;
 
 
@@ -1311,43 +1379,36 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 
 
 		// Bind the combined buffer to the Vertex Array Object.
-		glBindBuffer(GL_ARRAY_BUFFER, so.mesh->submeshes[0].glUpload.combinedBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, combinedBuffer);
 
 
 		// Populate the Vertex Array Object with the various vertex attributes.
 
-		int stride = VuoSubmesh_getStride(so.mesh->submeshes[0]);
+		int stride = sizeof(float) * 3;
 		glEnableVertexAttribArray((GLuint)positionAttribute);
-		glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glVertexAttribPointer((GLuint)positionAttribute, 3 /* XYZ */, GL_FLOAT, GL_FALSE, stride, (void*)0);
 
-		if (meshItem.glUpload.normalOffset && normalAttribute>=0)
+		if (normalOffset && normalAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)normalAttribute);
-			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.normalOffset);
+			glVertexAttribPointer((GLuint)normalAttribute, 3 /* XYZ */, GL_FLOAT, GL_FALSE, stride, normalOffset);
 		}
 
-		if (meshItem.glUpload.tangentOffset && tangentAttribute>=0)
-		{
-			glEnableVertexAttribArray((GLuint)tangentAttribute);
-			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.tangentOffset);
-		}
-
-		if (meshItem.glUpload.bitangentOffset && bitangentAttribute>=0)
-		{
-			glEnableVertexAttribArray((GLuint)bitangentAttribute);
-			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.bitangentOffset);
-		}
-
-		if (meshItem.glUpload.textureCoordinateOffset && textureCoordinateAttribute>=0)
+		if (textureCoordinateOffset && textureCoordinateAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)textureCoordinateAttribute);
-			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[0].glUpload.textureCoordinateOffset);
+			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 2 /* XY */, GL_FLOAT, GL_FALSE, sizeof(float) * 2, textureCoordinateOffset);
 		}
 
+		if (colorOffset && colorAttribute >= 0)
+		{
+			glEnableVertexAttribArray((GLuint)colorAttribute);
+			glVertexAttribPointer((GLuint)colorAttribute, 4 /* RGBA */, GL_FLOAT, GL_FALSE, sizeof(float) * 4, colorOffset);
+		}
 
 		// Bind the Element Buffer to the Vertex Array Object
-		if (so.mesh->submeshes[0].elementCount)
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, so.mesh->submeshes[0].glUpload.elementBuffer);
+		if (elementCount)
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 
 
 		glBindVertexArray(0);
@@ -1358,62 +1419,109 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 
 	if (cache)
 		sceneRenderer->meshShaderItems[meshShader] = soi->vao;
+
+	return true;
 }
 
 /**
- * Uploads @c so and its child objects to the GPU, and stores the uploaded object names in @c soi.
+ * Uploads @c so and its child objects to the GPU, and stores the uploaded object names in the `opaqueObjects` and `potentiallyTransparentObjects` render lists.
  *
  * Must be called while scenegraphSemaphore is locked.
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_uploadSceneObjects(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext, VuoPoint3d cameraTranslation)
 {
-	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, soi, glContext, true);
+	VuoSceneRenderer_TreeRenderState rootState;
+	rootState.so = sceneRenderer->rootSceneObject;
+	rootState.soi = new VuoSceneRendererInternal_object;
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), rootState.modelviewMatrix);
 
-	if (!so.childObjects)
+	list<VuoSceneRenderer_TreeRenderState> objects(1, rootState);
+	while (!objects.empty())
 	{
-		soi->childObjectCount = 0;
-		soi->childObjects = NULL;
-		return;
+		VuoSceneRenderer_TreeRenderState currentState = objects.front();
+		objects.pop_front();
+
+		float localModelviewMatrix[16];
+		VuoTransform_getMatrix(VuoSceneObject_getTransform(currentState.so), localModelviewMatrix);
+		float compositeModelviewMatrix[16];
+		VuoTransform_multiplyMatrices4x4(localModelviewMatrix, currentState.modelviewMatrix, compositeModelviewMatrix);
+		VuoTransform_copyMatrix4x4(compositeModelviewMatrix, currentState.modelviewMatrix);
+
+		bool isRenderable = VuoSceneRenderer_uploadSceneObject(sceneRenderer, currentState.so, currentState.soi, glContext, true);
+		if (isRenderable)
+		{
+			if (sceneRenderer->shouldSortByDepth)
+			{
+				if (VuoShader_isOpaque(VuoSceneObject_getShader(currentState.so)))
+					sceneRenderer->opaqueObjects.push_back(currentState);
+				else
+					sceneRenderer->potentiallyTransparentObjects.push_back(currentState);
+			}
+			else
+				sceneRenderer->opaqueObjects.push_back(currentState);
+		}
+
+		// Prepend childObjects to the objects queue.
+		// (Do it in reverse order so the objects end up in forward order after calling ::push_front repeatedly.) @@@
+		VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(VuoSceneObject_getChildObjects(currentState.so));
+		for (long i = VuoListGetCount_VuoSceneObject(VuoSceneObject_getChildObjects(currentState.so)) - 1; i >= 0; --i)
+		{
+			VuoSceneRenderer_TreeRenderState childState;
+			childState.so = childObjects[i];
+			childState.soi = new VuoSceneRendererInternal_object;
+			memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
+			objects.push_front(childState);
+		}
+
+		if (!isRenderable)
+			delete currentState.soi;
 	}
 
-	unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
-	VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(so.childObjects);
-	soi->childObjects = new VuoSceneRendererInternal_object[childObjectCount];
-	soi->childObjectCount = childObjectCount;
-	for (unsigned long i = 0; i < childObjectCount; ++i)
+	if (sceneRenderer->shouldSortByDepth)
 	{
-		VuoSceneRendererInternal_object childObjectInternal;
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObjects[i], &childObjectInternal, glContext);
-		soi->childObjects[i] = childObjectInternal;
+		// Sort opaque objects to render front to back (to reduce overdraw).
+		// For better performance, this takes into account the object's transform but not the object's vertices.
+		sceneRenderer->opaqueObjects.sort([=](const VuoSceneRenderer_TreeRenderState &a, const VuoSceneRenderer_TreeRenderState &b){
+			return VuoPoint3d_distance(VuoTransform_getMatrix4x4Translation(a.modelviewMatrix), cameraTranslation)
+				 < VuoPoint3d_distance(VuoTransform_getMatrix4x4Translation(b.modelviewMatrix), cameraTranslation);
+		});
+
+		// Sort potentially-transparent objects to render back to front (for proper blending).
+		sceneRenderer->potentiallyTransparentObjects.sort([=](const VuoSceneRenderer_TreeRenderState &a, const VuoSceneRenderer_TreeRenderState &b){
+			return VuoPoint3d_distance(VuoTransform_getMatrix4x4Translation(a.modelviewMatrix), cameraTranslation)
+				 > VuoPoint3d_distance(VuoTransform_getMatrix4x4Translation(b.modelviewMatrix), cameraTranslation);
+		});
 	}
 }
 
 /**
- * Cleans up internal state created by @c VuoSceneRenderer_uploadSceneObjectsRecursively.
+ * Cleans up internal state created by @c VuoSceneRenderer_uploadSceneObjects.
  *
  * Must be called while scenegraphSemaphore is locked.
- *
- * @threadAnyGL
  */
-static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_cleanupRenderLists(VuoSceneRendererInternal *sceneRenderer)
 {
-	VuoSceneObject *childObjects = VuoListGetData_VuoSceneObject(so.childObjects);
-	for (unsigned int i = 0; i < soi->childObjectCount; ++i)
-		VuoSceneRenderer_cleanupSceneObjectsRecursively(childObjects[i], &(soi->childObjects[i]), glContext);
+	for (auto object : sceneRenderer->opaqueObjects)
+	{
+		if (object.soi->overrideShader)
+			VuoRelease(object.soi->overrideShader);
+		delete object.soi;
+	}
+	sceneRenderer->opaqueObjects.clear();
 
-	if (soi->overrideMesh)
-		VuoRelease(soi->overrideMesh);
-	if (soi->overrideShader)
-		VuoRelease(soi->overrideShader);
-
-	if (soi->childObjects)
-		delete[] soi->childObjects;
+	for (auto object : sceneRenderer->potentiallyTransparentObjects)
+	{
+		if (object.soi->overrideShader)
+			VuoRelease(object.soi->overrideShader);
+		delete object.soi;
+	}
+	sceneRenderer->potentiallyTransparentObjects.clear();
 }
 
 /**
- * Releases the GPU objects created by @c VuoSceneRenderer_uploadSceneObjectsRecursively.
+ * Releases the GPU objects created by @c VuoSceneRenderer_uploadSceneObjects.
  */
 static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer, VuoGlContext glContext)
 {
@@ -1487,8 +1595,6 @@ void VuoSceneRenderer_setCameraName(VuoSceneRenderer sr, VuoText cameraName, Vuo
 		VuoRetain(sceneRenderer->cameraName);
 
 		sceneRenderer->useLeftCamera = useLeftCamera;
-
-		sceneRenderer->needToRegenerateProjectionMatrix = true;
 	}
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 }
@@ -1510,7 +1616,7 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 	if (sceneRenderer->rootSceneObjectValid)
 	{
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-			VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, cgl_ctx);
+			VuoSceneRenderer_cleanupRenderLists(sceneRenderer);
 			VuoSceneRenderer_cleanupMeshShaderItems(sceneRenderer, cgl_ctx);
 		});
 		VuoSceneObject_release(sceneRenderer->rootSceneObject);
@@ -1519,24 +1625,35 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 		VuoRelease(sceneRenderer->spotLights);
 	}
 
+	if (sceneRenderer->sharedTextOverrideShader)
+		VuoRelease(sceneRenderer->sharedTextOverrideShader);
+
 	if (sceneRenderer->cameraName)
 		VuoRelease(sceneRenderer->cameraName);
 	VuoSceneObject_release(sceneRenderer->camera);
 
-#if LIBRARY_PREMIUM_AVAILABLE
+#if VUO_PRO
 	VuoRelease(sceneRenderer->vignetteShader);
+	VuoRelease(sceneRenderer->vignetteQuad);
 #endif
+
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		glDeleteRenderbuffersEXT(1, &sceneRenderer->renderBuffer);
+		glDeleteRenderbuffersEXT(1, &sceneRenderer->renderDepthBuffer);
+		glDeleteFramebuffers(1, &sceneRenderer->outputFramebuffer);
+		glDeleteFramebuffers(1, &sceneRenderer->outputFramebuffer2);
+	});
 
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 	dispatch_release(sceneRenderer->scenegraphSemaphore);
 
-	free(sceneRenderer);
+	delete sceneRenderer;
 }
 
 /**
  * Helper for `VuoSceneRenderer_render*`.
  */
-extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContext glContext, GLuint *outputTexture, GLenum target, GLuint imageGlInternalFormat, VuoMultisample multisample, GLuint *outputDepthTexture)
+extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContext glContext, GLuint *outputTexture, GLenum target, GLuint imageGlInternalFormat, VuoMultisample multisample, GLuint *outputDepthTexture, bool invertDepthImage)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
@@ -1577,8 +1694,12 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 	multisample = (VuoMultisample)MIN(multisample, supportedSamples);
 	bool actuallyMultisampling = multisample > 1;
 
-	// See https://b33p.net/kosada/node/12030
-	float fudge = 2.5;
+	float fudge = 1;
+	const char *renderer = (const char *)glGetString(GL_RENDERER);
+	if (strcmp(renderer, "Intel HD Graphics 3000") == 0)
+		// See https://b33p.net/kosada/node/12030
+		fudge = 2.5;
+
 	if (multisample)
 		requiredBytes += requiredBytes * multisample * fudge;
 
@@ -1596,37 +1717,32 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 
 	// Create a new GL Texture Object and Framebuffer Object.
 	if (!*outputTexture)
-		*outputTexture = VuoGlTexturePool_use(glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
+		*outputTexture = VuoGlTexturePool_use(glContext, VuoGlTexturePool_Allocate, GL_TEXTURE_2D, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA, NULL);
 
 	if (outputDepthTexture)
-		*outputDepthTexture = VuoGlTexturePool_use(glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
+		*outputDepthTexture = VuoGlTexturePool_use(glContext, VuoGlTexturePool_Allocate, GL_TEXTURE_2D, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT, NULL);
 
 	if (!*outputTexture || (outputDepthTexture && !*outputDepthTexture))
 		return false;
 
-	GLuint outputFramebuffer;
-	glGenFramebuffers(1, &outputFramebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, outputFramebuffer);
+	sceneRenderer->shouldSortByDepth = *outputDepthTexture;
 
+	glBindFramebuffer(GL_FRAMEBUFFER, sceneRenderer->outputFramebuffer);
 
 	// If multisampling, create high-res intermediate renderbuffers.
 	// Otherwise, directly bind the textures to the framebuffer.
-	GLuint renderBuffer=0;
-	GLuint renderDepthBuffer=0;
 	if (actuallyMultisampling)
 	{
-		glGenRenderbuffersEXT(1, &renderBuffer);
-		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, renderBuffer);
+		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, sceneRenderer->renderBuffer);
 //		VLog("glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, %d, %s, %d, %d);", multisample, VuoGl_stringForConstant(imageGlInternalFormat), sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, multisample, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER_EXT, renderBuffer);
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER_EXT, sceneRenderer->renderBuffer);
 
 		if (outputDepthTexture)
 		{
-			glGenRenderbuffersEXT(1, &renderDepthBuffer);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, renderDepthBuffer);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, sceneRenderer->renderDepthBuffer);
 			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, multisample, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER_EXT, renderDepthBuffer);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER_EXT, sceneRenderer->renderDepthBuffer);
 		}
 	}
 	else
@@ -1640,27 +1756,38 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 	// Render.
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	{
+		if (invertDepthImage)
+		{
+			glClearDepth(0);
+			glDepthRange(1, 0);
+			glDepthFunc(GL_GREATER);
+		}
+		else
+		{
+			glClearDepth(1);
+			glDepthRange(0, 1);
+			glDepthFunc(GL_LESS);
+		}
+
 		glViewport(0, 0, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 		glClearColor(0,0,0,0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		VuoSceneRenderer_draw(sceneRenderer);
+		VuoSceneRenderer_draw(sceneRenderer, cgl_ctx);
 	}
 
 
 	// If multisampling, resolve the renderbuffers into standard textures by blitting them.
 	if (actuallyMultisampling)
 	{
-		GLuint outputFramebuffer2;
-		glGenFramebuffers(1, &outputFramebuffer2);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, outputFramebuffer2);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneRenderer->outputFramebuffer2);
 
 		{
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, *outputTexture, 0);
 			if (outputDepthTexture)
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, force2DDepth ? GL_TEXTURE_2D : target, *outputDepthTexture, 0);
 
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, outputFramebuffer);
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, sceneRenderer->outputFramebuffer);
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glBlitFramebufferEXT(0, 0, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight,
@@ -1674,11 +1801,6 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &outputFramebuffer2);
-
-		glDeleteRenderbuffersEXT(1, &renderBuffer);
-		if (outputDepthTexture)
-			glDeleteRenderbuffersEXT(1, &renderDepthBuffer);
 	}
 	else
 	{
@@ -1689,7 +1811,6 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDeleteFramebuffers(1, &outputFramebuffer);
 
 	// Make sure the render commands are actually submitted before we release the semaphore,
 	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).
@@ -1702,15 +1823,21 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 
 /**
  * Renders the scene onto `image` and optionally `depthImage`.
+ *
+ * If `depthImage` is NULL, the scenegraph is traversed in depth-first order for rendering.
+ * If non-NULL, objects are rendered according to their distance from the camera
+ * (opaque objects front-to-back, then transparent objects back-to-front).
+ *
+ * @version200Changed{Added depth-sorting behavior.}
  */
-void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage)
+void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage, bool invertDepthImage)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
 	__block GLuint texture = 0;
 	__block GLuint depthTexture = 0;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-	if (!VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_2D, imageGlInternalFormat, multisample, depthImage ? &depthTexture : NULL))
+	if (!VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_2D, imageGlInternalFormat, multisample, depthImage ? &depthTexture : NULL, invertDepthImage))
 	{
 		*image = NULL;
 		if (depthImage)
@@ -1725,6 +1852,12 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 
 /**
  * Renders the scene onto an IOSurface.
+ *
+ * If `includeDepthBuffer` is false, the scenegraph is traversed in depth-first order for rendering.
+ * If true, objects are rendered according to their distance from the camera
+ * (opaque objects front-to-back, then transparent objects back-to-front).
+ *
+ * @version200Changed{Added depth-sorting behavior.}
  */
 VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sr, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, bool includeDepthBuffer)
 {
@@ -1736,11 +1869,11 @@ VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sr, VuoImageCol
 	__block VuoIoSurface vis;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		vis = VuoIoSurfacePool_use(cgl_ctx, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, &texture);
-		renderSucceeded = VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_RECTANGLE_ARB, imageGlInternalFormat, multisample, includeDepthBuffer ? &depthTexture : NULL);
+		renderSucceeded = VuoSceneRenderer_renderInternal(sr, cgl_ctx, &texture, GL_TEXTURE_RECTANGLE_ARB, imageGlInternalFormat, multisample, includeDepthBuffer ? &depthTexture : NULL, false);
 	});
 	if (!renderSucceeded)
 	{
-		VuoIoSurfacePool_disuse(vis);
+		VuoIoSurfacePool_disuse(vis, false);  // It was never used, so no need to quarantine it.
 		return NULL;
 	}
 

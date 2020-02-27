@@ -2,16 +2,15 @@
  * @file
  * VuoNode implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoNode.hh"
 
 #include "VuoNodeClass.hh"
 #include "VuoPort.hh"
-#include "VuoPortClass.hh"
 #include "VuoStringUtilities.hh"
 
 #include <stdio.h>
@@ -34,6 +33,7 @@ VuoNode::VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, 
 	this->y = y;
 	this->collapsed = collapsed;
 	this->tintColor = tintColor;
+	this->forbidden = false;
 }
 
 /**
@@ -85,11 +85,81 @@ vector<VuoPort *> VuoNode::getInputPorts(void)
 }
 
 /**
+ * Returns the input ports that appear before (above) `port`, not including `port`.
+ *
+ * If `port` is not found, returns an empty list.
+ */
+vector<VuoPort *> VuoNode::getInputPortsBeforePort(VuoPort *port)
+{
+	vector<VuoPort *> foundPorts;
+	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
+		if ((*i) == port)
+			return foundPorts;
+		else
+			foundPorts.push_back(*i);
+	return vector<VuoPort *>();
+}
+
+/**
+ * Returns the input ports that appear after (below) `port`, not including `port`.
+ *
+ * If `port` is not found, returns an empty list.
+ */
+vector<VuoPort *> VuoNode::getInputPortsAfterPort(VuoPort *port)
+{
+	vector<VuoPort *> foundPorts;
+	bool found = false;
+	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
+	{
+		if (found)
+			foundPorts.push_back(*i);
+		if ((*i) == port)
+			found = true;
+	}
+	return foundPorts;
+}
+
+/**
  * Returns all output ports.
  */
 vector<VuoPort *> VuoNode::getOutputPorts(void)
 {
 	return outputPorts;
+}
+
+/**
+ * Returns the output ports that appear before (above) `port`, not including `port`.
+ *
+ * If `port` is not found, returns an empty list.
+ */
+vector<VuoPort *> VuoNode::getOutputPortsBeforePort(VuoPort *port)
+{
+	vector<VuoPort *> foundPorts;
+	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
+		if ((*i) == port)
+			return foundPorts;
+		else
+			foundPorts.push_back(*i);
+	return vector<VuoPort *>();
+}
+
+/**
+ * Returns the output ports that appear after (below) `port`, not including `port`.
+ *
+ * If `port` is not found, returns an empty list.
+ */
+vector<VuoPort *> VuoNode::getOutputPortsAfterPort(VuoPort *port)
+{
+	vector<VuoPort *> foundPorts;
+	bool found = false;
+	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
+	{
+		if (found)
+			foundPorts.push_back(*i);
+		if ((*i) == port)
+			found = true;
+	}
+	return foundPorts;
 }
 
 /**
@@ -185,29 +255,7 @@ enum VuoNode::TintColor VuoNode::getTintColor(void)
  */
 string VuoNode::getTintColorGraphvizName(void)
 {
-	switch (tintColor)
-	{
-		case TintYellow:
-			return "yellow";
-		case TintTangerine:
-			return "tangerine";
-		case TintOrange:
-			return "orange";
-		case TintMagenta:
-			return "magenta";
-		case TintViolet:
-			return "violet";
-		case TintBlue:
-			return "blue";
-		case TintCyan:
-			return "cyan";
-		case TintGreen:
-			return "green";
-		case TintLime:
-			return "lime";
-		default:
-			return "";
-	}
+	return getGraphvizNameForTint(tintColor);
 }
 
 /**
@@ -216,6 +264,22 @@ string VuoNode::getTintColorGraphvizName(void)
 void VuoNode::setTintColor(enum VuoNode::TintColor tintColor)
 {
 	this->tintColor = tintColor;
+}
+
+/**
+ * Returns the value from @ref VuoNode::setForbidden if any, otherwise false.
+ */
+bool VuoNode::isForbidden(void)
+{
+	return forbidden;
+}
+
+/**
+ * Sets whether the caller has determined that this node class isn't allowed to be added to the intended composition.
+ */
+void VuoNode::setForbidden(bool forbidden)
+{
+	this->forbidden = forbidden;
 }
 
 /**
@@ -276,4 +340,61 @@ void VuoNode::print(void)
 	}
 
 	fflush(stdout);
+}
+
+/**
+ * Returns the Graphviz identifier corresponding to the provided @c tintColor.
+ */
+string VuoNode::getGraphvizNameForTint(enum TintColor tintColor)
+{
+	switch (tintColor)
+	{
+		case VuoNode::TintYellow:
+			return "yellow";
+		case VuoNode::TintTangerine:
+			return "tangerine";
+		case VuoNode::TintOrange:
+			return "orange";
+		case VuoNode::TintMagenta:
+			return "magenta";
+		case VuoNode::TintViolet:
+			return "violet";
+		case VuoNode::TintBlue:
+			return "blue";
+		case VuoNode::TintCyan:
+			return "cyan";
+		case VuoNode::TintGreen:
+			return "green";
+		case VuoNode::TintLime:
+			return "lime";
+		default:
+			return "";
+	}
+}
+
+/**
+ * Returns the tint color corresponding to the provided Graphviz identifier.
+ */
+enum VuoNode::TintColor VuoNode::getTintWithGraphvizName(string tintName)
+{
+	if (tintName == "yellow")
+		return VuoNode::TintYellow;
+	else if (tintName == "tangerine")
+		return VuoNode::TintTangerine;
+	else if (tintName == "orange")
+		return VuoNode::TintOrange;
+	else if (tintName == "magenta")
+		return VuoNode::TintMagenta;
+	else if (tintName == "violet")
+		return VuoNode::TintViolet;
+	else if (tintName == "blue")
+		return VuoNode::TintBlue;
+	else if (tintName == "cyan")
+		return VuoNode::TintCyan;
+	else if (tintName == "green")
+		return VuoNode::TintGreen;
+	else if (tintName == "lime")
+		return VuoNode::TintLime;
+	else
+		return VuoNode::TintNone;
 }

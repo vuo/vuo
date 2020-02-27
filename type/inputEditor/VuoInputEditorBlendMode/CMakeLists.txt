@@ -1,0 +1,1 @@
+VuoInputEditor(NAME VuoInputEditorBlendMode SOURCE VuoInputEditorBlendMode.cc)

@@ -2,9 +2,9 @@
  * @file
  * VuoKeyboard implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #ifndef NS_RETURNS_INNER_POINTER
@@ -49,13 +49,12 @@ VuoKeyboard * VuoKeyboard_make(void)
 {
 	// https://b33p.net/kosada/node/11966
 	// Keyboard events are only received if the process is in app mode.
-	VuoApp_init();
+	VuoApp_init(true);
 
 	struct VuoKeyboardContext *context = (struct VuoKeyboardContext *)calloc(1, sizeof(struct VuoKeyboardContext));
 	VuoRegister(context, free);
 	return (VuoKeyboard *)context;
 }
-
 
 /**
  * If the keypress event is not ignored, calls the trigger function(s) if this event completes a
@@ -63,9 +62,9 @@ VuoKeyboard * VuoKeyboard_make(void)
  */
 static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 										   struct VuoKeyboardContext *context,
-										   VuoOutputTrigger(typedLine, VuoText),
-										   VuoOutputTrigger(typedWord, VuoText),
-										   VuoOutputTrigger(typedCharacter, VuoText),
+										   void (^typedLine) (VuoText),
+										   void (^typedWord) (VuoText),
+										   void (^typedCharacter) (VuoText, VuoModifierKey),
 										   VuoWindowReference windowRef)
 {
 	NSWindow *targetWindow = (NSWindow *)windowRef;
@@ -76,14 +75,23 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 																	  &context->deadKeyState);
 		if (!unicodeBytes)
 			return;
+
 		NSString *unicodeString = [NSString stringWithUTF8String:unicodeBytes];
+
+		unsigned long long flags = [event modifierFlags];
+		VuoModifierKey modifiers = VuoModifierKey_None;
+
+		if(flags & NSCommandKeyMask) 	modifiers |= VuoModifierKey_Command;
+		if(flags & NSAlternateKeyMask) 	modifiers |= VuoModifierKey_Option;
+		if(flags & NSControlKeyMask) 	modifiers |= VuoModifierKey_Control;
+		if(flags & NSShiftKeyMask) 		modifiers |= VuoModifierKey_Shift;
 
 		for (NSUInteger i = 0; i < [unicodeString length]; ++i)
 		{
 			// Typed a character (e.g. Option-E-E for "é" or Option-E-Space for "ˆ", not just Option-E or Option).
 			NSString *characterAsString = [unicodeString substringWithRange:NSMakeRange(i, 1)];
 			VuoText character = VuoText_make([characterAsString UTF8String]);
-			typedCharacter(character);
+			if(typedCharacter) typedCharacter(character, modifiers);
 
 			unichar characterAsUnichar = [characterAsString characterAtIndex:0];
 			if ([[NSCharacterSet whitespaceAndNewlineCharacterSet] characterIsMember:characterAsUnichar])
@@ -93,7 +101,7 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 				{
 					// ... that completes a word.
 					VuoText word = VuoText_make([context->wordInProgress UTF8String]);
-					typedWord(word);
+					if(typedWord) typedWord(word);
 				}
 
 				[context->wordInProgress deleteCharactersInRange:NSMakeRange(0, [context->wordInProgress length])];
@@ -113,7 +121,7 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 			{
 				// Typed a newline character that completes a line.
 				VuoText line = VuoText_make([context->lineInProgress UTF8String]);
-				typedLine(line);
+				if(typedLine) typedLine(line);
 
 				[context->lineInProgress deleteCharactersInRange:NSMakeRange(0, [context->lineInProgress length])];
 			}
@@ -175,12 +183,13 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 
 /**
  * Starts listening for key presses, and calling the trigger function each time a character (Unicode), word, or line is typed.
+ * @version200New
  */
-void VuoKeyboard_startListeningForTyping(VuoKeyboard *keyboardListener,
-										 VuoOutputTrigger(typedLine, VuoText),
-										 VuoOutputTrigger(typedWord, VuoText),
-										 VuoOutputTrigger(typedCharacter, VuoText),
-										 VuoWindowReference window)
+void VuoKeyboard_startListeningForTypingWithCallback(VuoKeyboard *keyboardListener,
+													 void (^typedLine)(VuoText),
+													 void (^typedWord)(VuoText),
+													 void (^typedCharacter)(VuoText, VuoModifierKey),
+													 VuoWindowReference window)
 {
 	struct VuoKeyboardContext *context = (struct VuoKeyboardContext *)keyboardListener;
 	context->wordInProgress = [NSMutableString new];
@@ -192,6 +201,22 @@ void VuoKeyboard_startListeningForTyping(VuoKeyboard *keyboardListener,
 	}];
 
 	context->monitor = monitor;
+}
+
+/**
+ * Starts listening for key presses, and calling the trigger function each time a character (Unicode), word, or line is typed.
+ */
+void VuoKeyboard_startListeningForTyping(VuoKeyboard *keyboardListener,
+										 VuoOutputTrigger(typedLine, VuoText),
+										 VuoOutputTrigger(typedWord, VuoText),
+										 VuoOutputTrigger(typedCharacter, VuoText),
+										 VuoWindowReference window)
+{
+	VuoKeyboard_startListeningForTypingWithCallback(keyboardListener,
+													^(VuoText line) { typedLine(line); },
+													^(VuoText word) { typedWord(word); },
+													^(VuoText character, VuoModifierKey modifiers) { typedCharacter(character); },
+													window);
 }
 
 /**

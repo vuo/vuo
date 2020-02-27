@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="270,225" _width="1024" _height="1024" _unit="\"pixels\""];
+GetRenderedLayerBounds2 [type="vuo.layer.bounds.rendered2" version="2.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<layer>layer\l|<window>window\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="750,30" _includeChildren="true"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="255,45" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="443,101"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="495,90" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inputPosition>inputPosition\r|<inputWidth>inputWidth\r|<inputHeight>inputHeight\r|<inputRotation>inputRotation\r|<inputAnchor>inputAnchor\r" _inputPosition_type="VuoPoint2d" _inputPosition_suggestedMin="\{\"x\":-1,\"y\":-1\}" _inputPosition_suggestedMax="\{\"x\":1,\"y\":1\}" _inputPosition_suggestedStep="\{\"x\":0.1,\"y\":0.1\}" _inputPosition="\{\"x\":0.0,\"y\":0.0\}" _inputWidth_type="VuoReal" _inputWidth_suggestedMin="0.0" _inputWidth_suggestedMax="2.0" _inputWidth_suggestedStep="0.1" _inputWidth="1" _inputHeight_type="VuoReal" _inputHeight_suggestedMin="0.0" _inputHeight_suggestedMax="2.0" _inputHeight_suggestedStep="0.1" _inputHeight="1" _inputRotation_type="VuoReal" _inputRotation_suggestedMin="0.0" _inputRotation_suggestedMax="360.0" _inputRotation_suggestedStep="15.0" _inputRotation="0.0" _inputAnchor_type="VuoAnchor" _inputAnchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputCenter>outputCenter\l|<outputWidth>outputWidth\l|<outputHeight>outputHeight\l|<outputPixelsWide>outputPixelsWide\l|<outputPixelsHigh>outputPixelsHigh\l" _outputCenter_type="VuoPoint2d" _outputWidth_type="VuoReal" _outputHeight_type="VuoReal" _outputPixelsWide_type="VuoInteger" _outputPixelsHigh_type="VuoInteger"];
+
+ChangeWindowSize:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
+GetRenderedLayerBounds2:center -> PublishedOutputs:outputCenter;
+GetRenderedLayerBounds2:height -> PublishedOutputs:outputHeight;
+GetRenderedLayerBounds2:pixelsHigh -> PublishedOutputs:outputPixelsHigh;
+GetRenderedLayerBounds2:pixelsWide -> PublishedOutputs:outputPixelsWide;
+GetRenderedLayerBounds2:width -> PublishedOutputs:outputWidth;
+MakeColorLayer:layer -> ChangeWindowSize:windowDescription [event=true];
+MakeColorLayer:layer -> GetRenderedLayerBounds2:layer;
+MakeColorLayer:layer -> MakeList:1;
+MakeList:list -> RenderLayersToWindow:layers;
+PublishedInputs:inputAnchor -> MakeColorLayer:anchor;
+PublishedInputs:inputHeight -> MakeColorLayer:height;
+PublishedInputs:inputPosition -> MakeColorLayer:center;
+PublishedInputs:inputRotation -> MakeColorLayer:rotation;
+PublishedInputs:inputWidth -> MakeColorLayer:width;
+RenderLayersToWindow:updatedWindow -> GetRenderedLayerBounds2:window;
+}

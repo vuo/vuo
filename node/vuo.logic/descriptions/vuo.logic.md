@@ -1,4 +1,4 @@
-These nodes are for working with mathematical logic. 
+Nodes for working with mathematical logic (*true* and *false* values).
 
 These nodes are useful for making decisions within a composition, especially when connected to the `Which` input port of a `Select Input` or `Select Output` node. 
 

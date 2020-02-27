@@ -2,36 +2,35 @@
  * @file
  * VuoFileUtilitiesCocoa implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoFileUtilities.hh"
 #include "VuoFileUtilitiesCocoa.hh"
+#include "VuoException.hh"
 
 #ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
 #endif
 #include <Cocoa/Cocoa.h>
 
-#include <stdexcept>
-
 /**
  * Moves the specified file to the user's trash folder.
  *
- * @throw std::runtime_error The file couldn't be moved.
+ * @throw VuoException The file couldn't be moved.
  */
 void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath)
 {
 	NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath.c_str()]];
 	if (!url)
-		throw std::runtime_error("Couldn't move file '" + filePath + "' to the trash: Couldn't create NSURL.");
+		throw VuoException("Couldn't move file '" + filePath + "' to the trash: Couldn't create NSURL.");
 
 	NSError *error = nil;
 	bool success = [[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error];
 	if (!success)
-		throw std::runtime_error(string("Couldn't move file '" + filePath + "' to the trash: ") + [[error localizedDescription] UTF8String]);
+		throw VuoException(string("Couldn't move file '" + filePath + "' to the trash: ") + [[error localizedDescription] UTF8String]);
 }
 
 /**
@@ -42,28 +41,44 @@ void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath)
  *
  * Returns the path of the directory (without a trailing slash).
  *
- * @throw std::runtime_error
+ * @throw VuoException
  */
 string VuoFileUtilitiesCocoa_makeTmpDirOnSameVolumeAsPath(string path)
 {
 	NSString *pathNS = [NSString stringWithUTF8String:path.c_str()];
 	if (!pathNS)
-		throw std::runtime_error("Path \"" + path + "\" isn't a valid UTF-8 string.");
+		throw VuoException("Path \"" + path + "\" isn't a valid UTF-8 string.");
 
 	NSURL *baseURL = [NSURL fileURLWithPath:pathNS isDirectory:YES];
 	if (!baseURL)
-		throw std::runtime_error("Path \"" + path + "\" isn't a valid directory.");
+		throw VuoException("Path \"" + path + "\" isn't a valid directory.");
 
-	NSError *error = nil;
-	NSURL *temporaryDirectoryURL = [[NSFileManager defaultManager] URLForDirectory:NSItemReplacementDirectory
-																		  inDomain:NSUserDomainMask
-																 appropriateForURL:baseURL
-																			create:YES
-																			 error:&error];
-	if (error)
-		throw std::runtime_error([[error localizedDescription] UTF8String]);
-	if (!temporaryDirectoryURL)
-		throw std::runtime_error("Couldn't get a temp folder for path \"" + path + "\".");
+	NSURL *temporaryDirectoryURL = nil;
+	while (true)
+	{
+		NSError *error = nil;
+		temporaryDirectoryURL = [[NSFileManager defaultManager] URLForDirectory:NSItemReplacementDirectory
+																	   inDomain:NSUserDomainMask
+															  appropriateForURL:baseURL
+																		 create:YES
+																		  error:&error];
+		if (error)
+		{
+			NSError *underlyingError = [[error userInfo] objectForKey:NSUnderlyingErrorKey];
+			if ([[underlyingError domain] isEqualToString:NSPOSIXErrorDomain]
+			  && [underlyingError code] == ENOENT)
+			{
+				// File not found; go up a directory and try again.
+				baseURL = [baseURL URLByDeletingLastPathComponent];
+			}
+			else
+				throw VuoException((string("Couldn't get a temp folder: ") + [[error localizedDescription] UTF8String]).c_str());
+		}
+		else if (!temporaryDirectoryURL)
+			throw VuoException("Couldn't get a temp folder for path \"" + path + "\".");
+		else
+			break;
+	}
 
 	return [[temporaryDirectoryURL path] UTF8String];
 }
@@ -73,13 +88,13 @@ string VuoFileUtilitiesCocoa_makeTmpDirOnSameVolumeAsPath(string path)
  *
  * `path` should be an absolute POSIX path.  Its last few path components needn't exist.
  *
- * @throw std::runtime_error
+ * @throw VuoException
  */
 size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path)
 {
 	NSString *pathNS = [NSString stringWithUTF8String:path.c_str()];
 	if (!pathNS)
-		throw std::runtime_error("Path \"" + path + "\" isn't a valid UTF-8 string.");
+		throw VuoException("Path \"" + path + "\" isn't a valid UTF-8 string.");
 
 	NSDictionary *fileAttributes;
 	while (true)
@@ -96,15 +111,15 @@ size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path
 				pathNS = [pathNS stringByDeletingLastPathComponent];
 			}
 			else
-				throw std::runtime_error([[error localizedDescription] UTF8String]);
+				throw VuoException((string("Couldn't get information about path: ") + [[error localizedDescription] UTF8String]).c_str());
 		}
 		else if (!fileAttributes)
-			throw std::runtime_error("Couldn't get information about path \"" + path + "\".");
+			throw VuoException("Couldn't get information about path \"" + path + "\".");
 		else
 			break;
 	}
 
-	unsigned long long freeSpace = [[fileAttributes objectForKey:NSFileSystemFreeSize] longLongValue];
+	unsigned long long freeSpace = [fileAttributes[NSFileSystemFreeSize] longLongValue];
 	return freeSpace;
 }
 
@@ -116,5 +131,154 @@ size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path
 void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
 {
 	NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
-	[compositionApp activateWithOptions: force ? NSApplicationActivateIgnoringOtherApps : NSApplicationActivateAllWindows];
+	[compositionApp activateWithOptions: NSApplicationActivateAllWindows
+		| (force ? NSApplicationActivateIgnoringOtherApps : 0)];
+}
+
+/**
+ * Returns the minor component of the OS version.
+ */
+int VuoFileUtilitiesCocoa_getOSVersionMinor(void)
+{
+	return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
+}
+
+/**
+ * Changes the Finder icon for a file or folder.
+ */
+void VuoFileUtilitiesCocoa_setIcon(string filePath, string imagePath)
+{
+	NSImage *image = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:imagePath.c_str()]];
+	[[NSWorkspace sharedWorkspace] setIcon:image forFile:[NSString stringWithUTF8String:filePath.c_str()] options:0];
+	[image release];
+}
+
+/**
+ * Indicates that Finder should treat this folder as a bundle.
+ * (It automatically does this for folders ending in `.app`, but not `.fxplug`.)
+ */
+void VuoFileUtilitiesCocoa_setBundle(string filePath)
+{
+	CFStringRef path = CFStringCreateWithCString(NULL, filePath.c_str(), kCFStringEncodingUTF8);
+	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, path, kCFURLPOSIXPathStyle, true);
+	CFErrorRef error;
+	if (!CFURLSetResourcePropertyForKey(url, kCFURLIsPackageKey, kCFBooleanTrue, &error))
+	{
+		CFStringRef errorString = CFErrorCopyDescription(error);
+		CFIndex errorLength = CFStringGetLength(errorString);
+		char *errorCString = (char *)malloc(errorLength+1);
+		CFStringGetCString(errorString, errorCString, errorLength+1, kCFStringEncodingUTF8);
+		VUserLog("Warning: Couldn't set kCFURLIsPackageKey on this bundle: %s", errorCString);
+		free(errorCString);
+		CFRelease(errorString);
+	}
+	CFRelease(url);
+	CFRelease(path);
+}
+
+/**
+ * Returns macOS's opaque data for an alias at `path`, or NULL if it isn't an alias.
+ */
+static CFURLRef VuoFileUtilitiesCocoa_getCFURL(const string &path)
+{
+	if (path.empty())
+		return nullptr;
+
+	CFStringRef cfpath = CFStringCreateWithCString(nullptr, path.c_str(), kCFStringEncodingUTF8);
+	if (!cfpath)
+		throw VuoException("Path \"" + path + "\" isn't a valid UTF-8 string.");
+	VuoDefer(^{ CFRelease(cfpath); });
+
+	CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, cfpath, kCFURLPOSIXPathStyle, true);
+	if (!url)
+		throw VuoException("Path \"" + path + "\" isn't a valid POSIX path.");
+
+	return url;
+}
+
+/**
+ * Returns macOS's opaque data for an alias at `path`, or NULL if it isn't an alias.
+ */
+static CFDataRef VuoFileUtilitiesCocoa_getMacAliasData(const string &path)
+{
+	CFURLRef url = VuoFileUtilitiesCocoa_getCFURL(path);
+	if (!url)
+		return nullptr;
+	VuoDefer(^{ CFRelease(url); });
+
+	return CFURLCreateBookmarkDataFromFile(nullptr, url, nullptr);
+}
+
+/**
+ * Returns true if `path` is a macOS Alias (not to be confused with a POSIX symlink).
+ *
+ * @throw VuoException
+ */
+bool VuoFileUtilitiesCocoa_isMacAlias(const string &path)
+{
+	CFDataRef aliasData = VuoFileUtilitiesCocoa_getMacAliasData(path);
+	if (!aliasData)
+		return false;
+
+	CFRelease(aliasData);
+	return true;
+}
+
+/**
+ * Returns `cfs` as an `std::string`.
+ */
+static string VuoFileUtilitiesCocoa_CFStringToStdString(CFStringRef cfString)
+{
+	const char *useUTF8StringPtr = NULL;
+	char *freeUTF8StringPtr = NULL;
+
+	if ((useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8)) == NULL)
+	{
+		CFIndex stringLength = CFStringGetLength(cfString);
+		CFIndex maxBytes = 4 * stringLength + 1;
+		freeUTF8StringPtr = (char *)malloc(maxBytes);
+		CFStringGetCString(cfString, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
+		useUTF8StringPtr = freeUTF8StringPtr;
+	}
+
+	string stdString(useUTF8StringPtr);
+
+	if (freeUTF8StringPtr != NULL)
+		free(freeUTF8StringPtr);
+
+	return stdString;
+}
+
+/**
+ * If `path` is a macOS Alias, returns its target path.
+ *
+ * @throw VuoException
+ */
+string VuoFileUtilitiesCocoa_resolveMacAlias(const string &path)
+{
+	CFDataRef aliasData = VuoFileUtilitiesCocoa_getMacAliasData(path);
+	if (!aliasData)
+		throw VuoException("Path \"" + path + "\" isn't a macOS Alias.");
+	VuoDefer(^{ CFRelease(aliasData); });
+
+	CFURLRef url = VuoFileUtilitiesCocoa_getCFURL(path);
+	VuoDefer(^{ CFRelease(url); });
+
+	Boolean isStale = false;
+	CFErrorRef error = nullptr;
+	CFURLRef resolvedURL = CFURLCreateByResolvingBookmarkData(nullptr, aliasData, kCFBookmarkResolutionWithoutUIMask, url, nullptr, &isStale, &error);
+	if (!resolvedURL)
+	{
+		CFStringRef desc = CFErrorCopyDescription(error);
+		VuoDefer(^{ CFRelease(desc); });
+		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it couldn't be resolved: \"" + VuoFileUtilitiesCocoa_CFStringToStdString(desc) + "\" (isStale=" + std::to_string(isStale) + ")");
+	}
+	VuoDefer(^{ CFRelease(resolvedURL); });
+
+	CFStringRef resolvedPath = CFURLCopyFileSystemPath(resolvedURL, kCFURLPOSIXPathStyle);
+	if (!resolvedPath)
+		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it resolved to something that isn't a POSIX path (\"" + VuoLog_copyCFDescription(resolvedURL) + "\").");
+	VuoDefer(^{ CFRelease(resolvedPath); });
+
+	return VuoFileUtilitiesCocoa_CFStringToStdString(resolvedPath);
 }

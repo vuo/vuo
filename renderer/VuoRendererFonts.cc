@@ -2,9 +2,9 @@
  * @file
  * VuoRendererFonts implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRendererFonts.hh"
@@ -14,10 +14,12 @@ VuoRendererFonts *VuoRendererFonts::sharedFonts = NULL;
 const qreal VuoRendererFonts::thickPenWidth = 20;
 const qreal VuoRendererFonts::midPenWidth = VuoRendererFonts::thickPenWidth/10.0;
 
-const qreal VuoRendererFonts::nodeTitleFontSize = thickPenWidth*12.0/16.0;
-const qreal VuoRendererFonts::nodeDetailFontSize = thickPenWidth*9.0/16.0;
-const qreal VuoRendererFonts::portDetailFontSize = thickPenWidth*8.0/16.0;
-const QString VuoRendererFonts::fontFamily = "Signika";
+const QString VuoRendererFonts::fontFamily = "PT Sans";
+
+const qreal VuoRendererFonts::nodeTitleFontSize = 13;
+const qreal VuoRendererFonts::nodeClassFontSize = 10;
+const qreal VuoRendererFonts::portTitleFontSize = 11;
+const qreal VuoRendererFonts::portDetailFontSize = 10;
 
 /**
  * Returns a shared font provider.
@@ -39,8 +41,8 @@ VuoRendererFonts * VuoRendererFonts::getSharedFonts(void)
  */
 VuoRendererFonts::VuoRendererFonts(void)
 {
-	addFont("Signika-Light.otf");
-	addFont("Signika-Semibold.otf");
+	addFont("PTS55F.ttf");
+	addFont("PTS75F.ttf");
 }
 
 /**
@@ -85,7 +87,7 @@ QFont VuoRendererFonts::nodeTitleFont(void)
  */
 QFont VuoRendererFonts::nodeClassFont(void)
 {
-	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
+	return QFont(fontFamily, nodeClassFontSize, QFont::Light, false);
 }
 
 /**
@@ -93,7 +95,7 @@ QFont VuoRendererFonts::nodeClassFont(void)
  */
 QFont VuoRendererFonts::nodePortTitleFont(void)
 {
-	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
+	return QFont(fontFamily, portTitleFontSize, QFont::Light, false);
 }
 
 /**
@@ -109,15 +111,31 @@ QFont VuoRendererFonts::nodePortConstantFont(void)
  */
 QFont VuoRendererFonts::portPopoverFont(void)
 {
-	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
+	return QFont(fontFamily, portTitleFontSize, QFont::Light, false);
 }
 
 /**
- * Returns the font for text headings in dialog boxes.
+ * Returns the font for dialog box headings.
  */
-QFont VuoRendererFonts::dialogTextFont(void)
+QFont VuoRendererFonts::dialogHeadingFont()
 {
-	return QFont(fontFamily, 13, QFont::Light, false);
+	return QFont(fontFamily, 14, QFont::Bold, false);
+}
+
+/**
+ * Returns the font for text in dialog boxes.
+ */
+QFont VuoRendererFonts::dialogBodyFont()
+{
+	return QFont(fontFamily, 12, QFont::Light, false);
+}
+
+/**
+ * Returns the font for comments.
+ */
+QFont VuoRendererFonts::commentFont(void)
+{
+	return QFont(fontFamily, 14, QFont::Light, false);
 }
 
 /**

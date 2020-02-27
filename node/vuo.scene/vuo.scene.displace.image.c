@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.displace.image node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,6 +12,7 @@
 #include "VuoSceneObjectRenderer.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 #include "VuoImageWrapMode.h"
 #include "../vuo.image/VuoThresholdType.h"
@@ -33,31 +34,20 @@ VuoModuleMetadata({
 				 });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
-	include(VuoGlslBrightness)
+	\n#include "deform.glsl"
+	\n#include "VuoGlslBrightness.glsl"
 
 	// Inputs
 	uniform float amount;
 	uniform int brightnessType;
 	uniform sampler2D heightmap;
-	attribute vec4 normal;
 
-	float sum(vec3 invec)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
-		return invec.x + invec.y + invec.z;
-	}
-
-	vec3 deform(vec3 position)
-	{
-		// position is in world space, so also translate the normal into world
-		vec3 nrm = normalize( mat4to3(modelviewMatrix) * normal.xyz );
-
-		vec4 pixel = texture2D(heightmap, textureCoordinate.xy);
+		vec4 pixel = texture2D(heightmap, textureCoordinate);
 		float grayscale = VuoGlsl_brightness(pixel, brightnessType);
 
-		vec3 transformed = position + (nrm * grayscale * amount);
-
-		return transformed;
+		return position + (normal * grayscale * amount);
 	}
 );
 
@@ -84,6 +74,29 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	return instance;
 }
 
+static inline VuoColor vuo_scene_displace_image_colorAtCoordinate(const unsigned char *pixels,
+						const unsigned int width,
+						const unsigned int height,
+						const unsigned int x,
+						const unsigned int y)
+{
+	const unsigned char* position = &pixels[((4 * width * y)) + (x * 4)];
+
+	float a = ((unsigned int)position[3]) * 1./255;
+	if (fabs(a) > 0.000001)
+	{
+		// The buffer returned by VuoImage_getBuffer() has its RGB values premultiplied by A,
+		// so we need to un-premultiply them here since VuoColor expects un-premultiplied values.
+		return (VuoColor){
+			((unsigned int)position[2]) * 1./255 / a,
+			((unsigned int)position[1]) * 1./255 / a,
+			((unsigned int)position[0]) * 1./255 / a,
+			a};
+	}
+	else
+		return (VuoColor){0,0,0,0};
+}
+
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
@@ -105,7 +118,21 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal((*instance)->shader, "amount", distance);
 	VuoShader_setUniform_VuoImage((*instance)->shader, "heightmap", image);
 
-	*deformedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	const unsigned char *pixels = NULL;
+	if (!VuoSceneObjectRenderer_usingGPU())
+		pixels = VuoImage_getBuffer(image, GL_BGRA);
+
+	VuoSceneObjectRenderer_CPUGeometryOperator cpuGeometryOperator = VuoSceneObjectRenderer_makeDeformer(^(VuoPoint3d position, VuoPoint3d normal, VuoPoint2d textureCoordinate) {
+		VuoColor pixel = vuo_scene_displace_image_colorAtCoordinate(pixels, image->pixelsWide, image->pixelsHigh,
+			VuoInteger_clamp(textureCoordinate.x * image->pixelsWide, 0, image->pixelsWide-1),
+			VuoInteger_clamp(textureCoordinate.y * image->pixelsHigh, 0, image->pixelsHigh-1));
+		float grayscale = VuoColor_brightness(pixel, channel);
+		return position + normal * (VuoPoint3d)(grayscale * distance);
+	});
+
+	*deformedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object, cpuGeometryOperator);
+
+	Block_release(cpuGeometryOperator);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

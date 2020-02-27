@@ -2,9 +2,9 @@
  * @file
  * VuoPluginApp implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #import "main.hh"
@@ -26,11 +26,11 @@
  */
 - (id)init
 {
-    self = [super init];
-    if (self) {
+	self = [super init];
+	if (self) {
 		time = 0;
-    }
-    return self;
+	}
+	return self;
 }
 
 /**
@@ -88,10 +88,10 @@
  */
 - (void)windowControllerDidLoadNib:(NSWindowController *)aController
 {
-    [super windowControllerDidLoadNib:aController];
-    
-    // Add any code here that needs to be executed once the windowController has loaded the document's window.
-	
+	[super windowControllerDidLoadNib:aController];
+
+	// Add any code here that needs to be executed once the windowController has loaded the document's window.
+
 	[_imageTextField setStringValue:@"/System/Library/Automator/Send Birthday Greetings.action/Contents/Resources/3.jpg"];
 	[self setImageButtonClicked:nil];
 }
@@ -102,9 +102,9 @@
  */
 - (NSData *)dataOfType:(NSString *)typeName error:(NSError **)outError
 {
-    NSException *exception = [NSException exceptionWithName:@"UnimplementedMethod" reason:[NSString stringWithFormat:@"%@ is unimplemented", NSStringFromSelector(_cmd)] userInfo:nil];
-    @throw exception;
-    return nil;
+	NSException *exception = [NSException exceptionWithName:@"UnimplementedMethod" reason:[NSString stringWithFormat:@"%@ is unimplemented", NSStringFromSelector(_cmd)] userInfo:nil];
+	@throw exception;
+	return nil;
 }
 
 /**
@@ -129,7 +129,7 @@
  */
 - (void)windowWillClose:(NSNotification *)sender
 {
-    // Stop the running composition associated with this window.
+	// Stop the running composition associated with this window.
 	[imageFilter release];
 }
 
@@ -138,7 +138,7 @@
  */
 - (NSString *)windowNibName
 {
-    return @"Document";
+	return @"Document";
 }
 
 /**
@@ -146,7 +146,7 @@
  */
 + (BOOL)autosavesInPlace
 {
-    return YES;
+	return YES;
 }
 
 @end

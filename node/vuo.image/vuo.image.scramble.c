@@ -2,9 +2,9 @@
  * @file
  * vuo.image.scramble node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "title" : "Scramble Image",
 					 "keywords" : [
 						 "filter",
-						 "rearrange", "shuffle", "mosaic", "censor",
+						 "rearrange", "shuffle", "mosaic", "censor", "glitch",
 					 ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -27,10 +27,10 @@ VuoModuleMetadata({
 				 });
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(noise3D)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "noise3D.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 	uniform vec2 viewportSize;
@@ -41,7 +41,7 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 noisePos = fragmentTextureCoordinate.xy;
+		vec2 noisePos = fragmentTextureCoordinate;
 
 		// Quantize the texture coordinate so it lands exactly on an output pixel,
 		// since mod()ding near a big pixel boundary
@@ -69,7 +69,7 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 			samplePos = noisePos + distanceFromCorner;
 		}
 		else
-			samplePos = fragmentTextureCoordinate.xy;
+			samplePos = fragmentTextureCoordinate;
 
 		gl_FragColor = VuoGlsl_sample(texture, samplePos);
 	}

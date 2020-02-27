@@ -2,7 +2,7 @@ Creates an image where each pixel uses periodic noise to blend between 2 colors.
 
    - `Color A` and `B` — The colors to randomly blend.
    - `Center` — Moves the noise in 2D.
-   - `Time` — The time at which to evaluate the image.  To animate the noise, connect a continuously increasing number, such as the output of the `Render Image to Window` node’s `Requested Frame` port.
+   - `Time` — The time at which to evaluate the image.  To animate the noise, connect a continuously increasing number, such as the output of the [Fire on Display Refresh](vuo-node://vuo.event.fireOnDisplayRefresh) node’s `Refreshed at Time` port.
    - `Scale` — The size of the noise pattern.  At smaller values, the noise ripples are more closely packed together.
    - `Type` — Whether to render gradient (soft, Perlin-style) noise, value noise, cellular (ridged, Worley/Voronoi-style) noise, or a grid of dots.
    - `Grid` — Whether the noise grid is rectangular or triangular.

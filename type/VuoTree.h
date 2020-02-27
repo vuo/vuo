@@ -2,16 +2,16 @@
  * @file
  * VuoTree C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoDictionary_VuoText_VuoText.h"
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoTree_struct { void *l; } * VuoList_VuoTree;
 #define VuoList_VuoTree_TYPE_DEFINED
 /// @}
@@ -36,7 +36,11 @@ typedef struct
 
 VuoTree VuoTree_makeFromJson(struct json_object *js);
 struct json_object * VuoTree_getJson(const VuoTree value);
+
+/// This type has a _getInterprocessJson() function.
+#define VuoTree_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoTree_getInterprocessJson(const VuoTree value);
+
 char * VuoTree_getSummary(const VuoTree value);
 
 VuoTree VuoTree_makeEmpty(void);

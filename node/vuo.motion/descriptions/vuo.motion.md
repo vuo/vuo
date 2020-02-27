@@ -1,4 +1,4 @@
-These nodes are for animating objects and for working with numbers that change over time. 
+Nodes for making numbers change over time, useful for animations.
 
 Several of these nodes work with easing curves. An **easing curve** (easing function) is a curve that describes an object's speed over a period of time — for example, whether it starts moving slowly and picks up speed or it starts moving quickly and slows down. 
 
@@ -16,4 +16,4 @@ When you select an easing curve, you pick from two sets of options that control 
       - <img src="easingIn+Out.png" height=16> **In + Out** — The curve is shallowest near the start and end, and steepest near the middle.
       - <img src="easingMiddle.png" height=16> **Middle** — The curve is shallowest in the middle and steepest near the start and end.
 
-See [this page](http://robertpenner.com/easing/) for more information on easing curves.
+See [this page](https://web.archive.org/web/20190409200047/http://robertpenner.com/easing/) for more information on easing curves.

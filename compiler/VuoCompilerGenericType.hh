@@ -2,17 +2,15 @@
  * @file
  * VuoCompilerGenericType interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoCompilerType.hh"
 
-class VuoCompiler;
-class VuoCompilerNodeClass;
 class VuoGenericType;
 
 /**
@@ -24,8 +22,8 @@ class VuoGenericType;
 class VuoCompilerGenericType : public VuoCompilerType
 {
 public:
-	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, map<string, VuoCompilerType *> types);
-	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, VuoCompiler *compiler);
+	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, VuoCompilerType * (^getType)(string moduleKey));
+	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, const map<string, VuoCompilerType *> &types);
 	static string chooseBackingTypeName(string genericTypeName, vector<string> compatibleTypeNames);
 
 	string getBackingTypeName(void);

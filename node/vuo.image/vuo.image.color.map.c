@@ -2,16 +2,21 @@
  * @file
  * vuo.image.color.map node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
 VuoModuleMetadata({
 					  "title" : "Map Image Colors",
-					  "keywords" : [ "gradient", "replace", "heatmap", "tint", "tone", "chroma", "recolor", "colorize", "correction", "calibration", "grading", "balance", "filter" ],
+					  "keywords" : [
+						  "gradient", "heatmap",
+						  "replace", "colorize", "false color", "recolor",
+						  "tint", "tone", "chroma", "correction", "calibration", "grading", "balance",
+						  "filter",
+					  ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ "RecolorMovie.vuo" ]

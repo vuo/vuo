@@ -2,13 +2,15 @@
  * @file
  * TestNodes interface and implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "TestCompositionExecution.hh"
 #include <Vuo/Vuo.h>
+#include "VuoEditor.hh"
+#include "VuoRendererCommon.hh"
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoCompilerNodeClass *);
@@ -76,30 +78,32 @@ private:
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
 
+		VuoCompilerIssues issues;
 		try
 		{
-			compiler->compileComposition(composition, compiledCompositionPath);
+			compiler->compileComposition(composition, compiledCompositionPath, true, &issues);
 			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		}
-		catch (exception &e)
+		catch (VuoException &e)
 		{
-			fprintf(stderr, "%s\n", e.what());
+			VUserLog("%s", e.what());
 		}
 
 		ifstream file(linkedCompositionPath.c_str());
-		QVERIFY(file);
+		QVERIFY(file.is_open());
 		file.close();
 
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
 	}
 
-private slots:
-
-	void initTestCase()
+public:
+	TestNodes()
 	{
 		compiler = initCompiler();
-		compiler->loadStoredLicense();
+#if VUO_PRO
+		compiler->load_Pro(true);
+#endif
 
 		set<string> customModuleDirs;
 		customModuleDirs.insert( VuoFileUtilities::getUserModulesPath() );
@@ -120,26 +124,75 @@ private slots:
 		makeBuiltInTypes();
 	}
 
-	void cleanupTestCase()
+	~TestNodes()
 	{
 		delete compiler;
 	}
 
+private slots:
 	/**
 	 * Fires an event through all (published) input ports of the node class simultaneously,
 	 * followed by an event through each input port that has a port action.
 	 */
 	void fireEventsThroughInputPorts(VuoRunner *runner, VuoCompilerNodeClass *nodeClass)
 	{
-		runner->firePublishedInputPortEvent();
+		vector<VuoRunner::Port *> inputPortsVec = runner->getPublishedInputPorts();
+		set<VuoRunner::Port *> inputPorts(inputPortsVec.begin(), inputPortsVec.end());
+		runner->firePublishedInputPortEvent(inputPorts);
+		runner->waitForFiredPublishedInputPortEvent();
+
 		foreach (VuoPortClass *portClass, nodeClass->getBase()->getInputPortClasses())
 		{
 			if (portClass->hasPortAction())
 			{
 				VuoRunner::Port *port = runner->getPublishedInputPortWithName( portClass->getName() );
 				runner->firePublishedInputPortEvent(port);
+				runner->waitForFiredPublishedInputPortEvent();
 			}
 		}
+	}
+
+	void checkLinks(QString markdownText)
+	{
+		// vuo-node:
+		auto internalLinks = QRegularExpression(VuoEditor::vuoNodeDocumentationScheme + ":(//)?([^)]+)").globalMatch(markdownText);
+		while (internalLinks.hasNext()) {
+			QString nodeClassName = internalLinks.next().captured(2);
+			VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+			if (!nodeClass)
+				QFAIL(("Links to the '" + nodeClassName + "' node, which doesn't exist.").toUtf8().data());
+			if (nodeClass->getBase()->getDeprecated())
+				QFAIL(("Links to the '" + nodeClassName + "' node, which is deprecated.").toUtf8().data());
+		}
+
+		// vuo-nodeset:
+		internalLinks = QRegularExpression(VuoEditor::vuoNodeSetDocumentationScheme + ":(//)?([^)]+)").globalMatch(markdownText);
+		while (internalLinks.hasNext()) {
+			QString nodeSetName = internalLinks.next().captured(2);
+			VuoNodeSet *nodeSet = compiler->getNodeSetForName(nodeSetName.toStdString());
+			if (!nodeSet)
+				QFAIL(("Links to the '" + nodeSetName + "' node set, which doesn't exist.").toUtf8().data());
+		}
+	}
+
+	void testEachNodeSet_data()
+	{
+		QTest::addColumn<VuoNodeSet *>("nodeSet");
+
+		for (auto i : compiler->getNodeSets())
+			QTest::newRow(i.first.c_str()) << i.second;
+	}
+	void testEachNodeSet()
+	{
+		QFETCH(VuoNodeSet *, nodeSet);
+		VUserLog("%s", nodeSet->getName().c_str());
+
+		VuoText trimmedDescription = VuoText_trim(nodeSet->getDescription().c_str());
+		VuoLocal(trimmedDescription);
+		if (VuoText_isEmpty(trimmedDescription))
+			QFAIL("Missing node set description.");
+
+		checkLinks(trimmedDescription);
 	}
 
 	/**
@@ -238,7 +291,7 @@ private slots:
 	void testEachNode()
 	{
 		QFETCH(QString, nodeClassName);
-		printf("%s\n", nodeClassName.toUtf8().constData()); fflush(stdout);
+		VUserLog("%s", nodeClassName.toUtf8().constData());
 
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
 
@@ -249,18 +302,41 @@ private slots:
 		  && VuoText_isEmpty(trimmedDescription))
 			QFAIL("Missing node description.");
 
+		if (!nodeClass->getBase()->getDeprecated())
+			checkLinks(trimmedDescription);
+
+		// Ensure all non-deprecated nodes either have an input port or a trigger port.
+		if (!nodeClass->getBase()->getDeprecated()
+		  && nodeClass->getBase()->getInputPortClasses().size() <= 1)
+		{
+			bool hasTriggerOutput = false;
+			for (auto i : nodeClass->getBase()->getOutputPortClasses())
+				if (i->getPortType() == VuoPortClass::triggerPort)
+				{
+					hasTriggerOutput = true;
+					break;
+				}
+			if (!hasTriggerOutput)
+				QFAIL("This node doesn't have any input ports (aside from the now-hidden Refresh port).");
+		}
+
 		string composition = wrapNodeInComposition(nodeClass, compiler);
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode-linked", "");
-		compiler->compileCompositionString(composition, compiledCompositionPath);
+		VuoCompilerIssues issues;
+		compiler->compileCompositionString(composition, compiledCompositionPath, true, &issues);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		remove(compiledCompositionPath.c_str());
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
 
 		TestRunnerDelegate delegate;
 		runner->setDelegate(&delegate);
+		runner->setRuntimeChecking(true);
 		runner->start();
+
+		try
+		{
 
 		fireEventsThroughInputPorts(runner, nodeClass);
 
@@ -272,13 +348,16 @@ private slots:
 				string defaultValue = dataClass->getDefaultValue();
 				if (! defaultValue.empty())
 				{
+					map<VuoRunner::Port *, json_object *> m;
 					VuoRunner::Port *port = runner->getPublishedInputPortWithName( portClass->getName() );
-					runner->setPublishedInputPortValue(port, NULL);
+					m[port] = NULL;
+					runner->setPublishedInputPortValues(m);
 
 					fireEventsThroughInputPorts(runner, nodeClass);
 
 					json_object *defaultValueObject = json_tokener_parse(defaultValue.c_str());
-					runner->setPublishedInputPortValue(port, defaultValueObject);
+					m[port] = defaultValueObject;
+					runner->setPublishedInputPortValues(m);
 					json_object_put(defaultValueObject);
 				}
 			}
@@ -286,6 +365,13 @@ private slots:
 
 		runner->stop();
 		delete runner;
+
+		}
+		catch (VuoException &e)
+		{
+			VUserLog("error: %s", e.what());
+			return;
+		}
 	}
 
 	/**
@@ -316,7 +402,7 @@ private slots:
 	void testEachListType()
 	{
 		QFETCH(VuoCompilerNodeClass *, nodeClass);
-		printf("%s\n", nodeClass->getBase()->getClassName().c_str()); fflush(stdout);
+		VUserLog("%s", nodeClass->getBase()->getClassName().c_str());
 
 		VuoNode *node = compiler->createNode(nodeClass);
 
@@ -363,30 +449,91 @@ private slots:
 		compileAndLinkComposition(&composition);
 	}
 
-	void testExampleCompositions_data()
+	void testLintCompositions_data()
 	{
-		QTest::addColumn<VuoNodeSet *>("nodeSet");
-		QTest::addColumn<string>("exampleComposition");
+		QTest::addColumn<QString>("compositionFile");
 
+		// Example compositions.
 		map<string, VuoNodeSet *> nodeSets = compiler->getNodeSets();
 		for (map<string, VuoNodeSet *>::iterator i = nodeSets.begin(); i != nodeSets.end(); ++i)
 		{
 			vector<string> examples = i->second->getExampleCompositionFileNames();
 			for (vector<string>::iterator j = examples.begin(); j != examples.end(); ++j)
-				QTest::newRow((i->second->getName() + ":" + *j).c_str()) << i->second << *j;
+				QTest::newRow((i->second->getName() + ":" + *j).c_str()) << ("../../node/" + i->second->getName() + "/examples/" + *j).c_str();
+		}
+
+		// Documentation compositions.
+		for (auto file : VuoFileUtilities::findFilesInDirectory("../../documentation/composition", { "vuo" }))
+			QTest::newRow(("documentation:" + file->basename()).c_str()) << QString::fromStdString(file->path());
+	}
+	void testLintCompositions()
+	{
+		QFETCH(QString, compositionFile);
+
+		VuoCompilerGraphvizParser *graphParser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionFile.toStdString(), compiler);
+		foreach (VuoNode *node, graphParser->getNodes())
+			QVERIFY2(!node->getNodeClass()->getDeprecated(), ("Found deprecated node '" + node->getNodeClass()->getClassName() + "' in composition.").c_str());
+
+		foreach (VuoCable *cable, graphParser->getCables())
+			QVERIFY2(cable->getToPort() != cable->getToNode()->getRefreshPort(), "Found a cable to a node's refresh port.");
+
+		checkLinks(QString::fromStdString(graphParser->getMetadata()->getDescription()));
+	}
+
+	void testNodeExampleReferences_data()
+	{
+		QTest::addColumn<QString>("nodeClassName");
+
+		set<VuoCompilerNodeClass *> nodeClasses = builtInNodeClasses;
+		for (set<VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
+		{
+			VuoCompilerNodeClass *nodeClass = *i;
+			string nodeClassName = nodeClass->getBase()->getClassName();
+			QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
 		}
 	}
-	void testExampleCompositions()
+	void testNodeExampleReferences()
 	{
-		QFETCH(VuoNodeSet *, nodeSet);
-		QFETCH(string, exampleComposition);
+		QFETCH(QString, nodeClassName);
 
-		string compositionContents = nodeSet->getExampleCompositionContents(exampleComposition);
-		VuoCompilerGraphvizParser *graphParser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionContents, compiler);
-		foreach (VuoNode *node, graphParser->getNodes())
-			QVERIFY2(!node->getNodeClass()->getDeprecated(), ("Found deprecated node '" + node->getNodeClass()->getClassName() + "' in example composition.").c_str());
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+		for(string examplePath : nodeClass->getBase()->getExampleCompositionFileNames())
+		{
+			/// As in @ref VuoNodePopover::generateNodePopoverText().
+			string compositionAsString;
+			if (!QString::fromStdString(examplePath).startsWith("vuo-example"))
+			{
+				VuoNodeSet *nodeSet = nodeClass->getBase()->getNodeSet();
+				if (nodeSet)
+					compositionAsString = nodeSet->getExampleCompositionContents(examplePath);
+			}
+
+			else
+			{
+				QUrl exampleUrl(QString::fromStdString(examplePath));
+				string exampleNodeSetName = exampleUrl.host().toStdString();
+				string exampleFileName = VuoStringUtilities::substrAfter(exampleUrl.path().toStdString(), "/");
+
+				VuoNodeSet *exampleNodeSet = (compiler? compiler->getNodeSetForName(exampleNodeSetName) : NULL);
+				if (exampleNodeSet)
+					compositionAsString = exampleNodeSet->getExampleCompositionContents(exampleFileName);
+			}
+
+			QVERIFY2(compositionAsString.length() > 0,
+					 QString("Node %1 references example composition %2, but I can't find it.")
+					 .arg(nodeClassName)
+					 .arg(QString::fromStdString(examplePath))
+					 .toUtf8().constData());
+		}
 	}
 };
 
-QTEST_APPLESS_MAIN(TestNodes)
+int main(int argc, char *argv[])
+{
+	qInstallMessageHandler(VuoRendererCommon::messageHandler);
+	TestNodes tc;
+	QTEST_SET_MAIN_SOURCE_PATH
+	return QTest::qExec(&tc, argc, argv);
+}
+
 #include "TestNodes.moc"

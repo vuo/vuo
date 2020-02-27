@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorWithLineEditList implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorWithLineEditList.hh"
@@ -77,7 +77,7 @@ void VuoInputEditorWithLineEditList::setUpDialog(QDialog &dialog, json_object *o
 		addButton->adjustSize();
 		addButton->setFixedSize(addButton->size());
 		addButton->setFocusPolicy( (Qt::FocusPolicy)(addButton->focusPolicy() & ~Qt::TabFocus) );
-		connect(addButton, SIGNAL(clicked()), this, SLOT(addRow()));
+		connect(addButton, &QAbstractButton::clicked, this, &VuoInputEditorWithLineEditList::addRow);
 		delete addIcon;
 
 		QHBoxLayout *addButtonLayout = new QHBoxLayout;
@@ -200,7 +200,7 @@ QLayout * VuoInputEditorWithLineEditList::setUpRow(QDialog &dialog, QLineEdit *l
 		removeButton->adjustSize();
 		removeButton->setFixedSize(removeButton->size());
 		removeButton->move(lineEditWidth + horizontalSpacing, 0);
-		connect(removeButton, SIGNAL(clicked()), this, SLOT(removeRow()));
+		connect(removeButton, &QToolButton::clicked, this, &VuoInputEditorWithLineEditList::removeRow);
 		removeButtons.append(removeButton);
 		delete removeIcon;
 

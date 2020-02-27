@@ -2,12 +2,11 @@
  * @file
  * VuoUsbVendor implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include "VuoUsbVendor.h"
 
 #include "module.h"
 
@@ -132,7 +131,6 @@ char *VuoUsbVendor_getText(uint32_t vendor)
 	else if (vendor == 1155) vendorText = "STMicroelectronics";
 	else if (vendor == 1160) vendorText = "Cirque Corporation";
 	else if (vendor == 1161) vendorText = "Foxconn / Hon Hai";
-	else if (vendor == 1165) vendorText = "Integrated Technology Express";
 	else if (vendor == 1165) vendorText = "Integrated Technology Express (ITE), Inc.";
 	else if (vendor == 1169) vendorText = "Capetronic (Kaohsiung ) Corp.";
 	else if (vendor == 1170) vendorText = "Samsung Semiconductor, Inc.";
@@ -2112,8 +2110,7 @@ char *VuoUsbVendor_getText(uint32_t vendor)
 	else if (vendor == 8294) vendorText = "Unicorn Electronics Components Co., Ltd.";
 	else if (vendor == 8317) vendorText = "CESI Technology Co., Ltd.";
 	else if (vendor == 8334) vendorText = "Luxshare-ICT-LANTO";
-	else if (vendor == 8341) vendorText = "CE LINK LIMITED";
-	else if (vendor == 8341) vendorText = "China Electronics Technology Limited";
+	else if (vendor == 8341) vendorText = "China Electronics Technology (CE LINK) Limited";
 	else if (vendor == 8342) vendorText = "Microconn Electronic Co., Ltd.";
 	else if (vendor == 8367) vendorText = "Shenzhen CARVE Electronics Co., Ltd.";
 	else if (vendor == 8382) vendorText = "BURY GmbH & Co. KG";

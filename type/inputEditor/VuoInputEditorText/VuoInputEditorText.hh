@@ -2,14 +2,14 @@
  * @file
  * VuoInputEditorText interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#include "VuoInputEditorWithLineEdit.hh"
+#include "VuoTextEditor.hh"
 
 /**
  * A VuoInputEditorText factory.
@@ -34,28 +34,8 @@ public:
  *	   fixed-width font, Return and Tab keys type text instead of dismissing the input editor).
  *     Defaults to false.
  */
-class VuoInputEditorText : public VuoInputEditorWithDialog
+class VuoInputEditorText : public VuoTextEditor
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorText(void);
-	bool supportsTabbingBetweenPorts(void);
-
-protected:
-	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
-	json_object * getAcceptedValue(void);
-	QString convertToTextEditFormat(json_object *value);
-	json_object * convertFromTextEditFormat(const QString &valueAsString);
-
-	bool eventFilter(QObject *object, QEvent *event);
-	bool event(QEvent *event);
-
-private slots:
-	void resizeToFitText(void);
-
-private:
-	QPlainTextEdit *textEdit;  ///< The text area widget.
-	bool isCodeEditor;
 };
 

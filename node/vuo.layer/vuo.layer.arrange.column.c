@@ -2,9 +2,9 @@
  * @file
  * vuo.layer.arrange.column node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Arrange Layers in Column",
 					 "keywords" : [ "line", "place", "layout", "vertical", "row" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "node": {
 						 "exampleCompositions" : [ "ShowArrangedLayers.vuo", "ShowArrangedTextLayers.vuo" ]
 					 }
@@ -23,53 +23,41 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	long pixelsWide, pixelsHigh;
+	uint64_t id;
+	VuoRenderedLayers renderedLayers;
 };
 
 struct nodeInstanceData * nodeInstanceInit()
 {
-	struct nodeInstanceData* instance = (struct nodeInstanceData*) malloc(sizeof(struct nodeInstanceData));
+	struct nodeInstanceData* instance = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-	instance->pixelsWide = 0;
-	instance->pixelsHigh = 0;
+	instance->id = VuoSceneObject_getNextId();
+	instance->renderedLayers = VuoRenderedLayers_makeEmpty();
+	VuoRenderedLayers_retain(instance->renderedLayers);
 	return instance;
 }
-
-void nodeInstanceTriggerStart(VuoInstanceData(struct nodeInstanceData *) instance)
-{}
-
-void nodeInstanceTriggerUpdate(VuoInstanceData(struct nodeInstanceData *) instance)
-{}
-
-void nodeInstanceTriggerStop(VuoInstanceData(struct nodeInstanceData *) instance)
-{}
 
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoList_VuoLayer) layers,
-		VuoInputData(VuoRenderedLayers) renderedLayers,
+		VuoInputData(VuoRenderedLayers, {"name":"Window"}) renderedLayers,
 		VuoInputEvent({"eventBlocking":"door","data":"renderedLayers"}) renderedLayersEvent,
 		VuoInputData(VuoHorizontalAlignment, {"default":"center"}) horizontalAlignment,
 		VuoInputData(VuoAnchor, {"default": {"horizontalAlignment":"center", "verticalAlignment":"center"}}) anchor,
 		VuoInputData(VuoPoint2d, {"default":{"x":0, "y":0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) position,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":0, "suggestedMax":0.25, "suggestedStep":0.001}) spacing,
-		VuoOutputData(VuoLayer) arrangedLayer,
-		VuoOutputEvent({"data":"arrangedLayer"}) arrangedLayerEvent
+		VuoOutputData(VuoLayer) arrangedLayer
 )
 {
-	if(renderedLayersEvent)
-	{
-		if((*instance)->pixelsWide != renderedLayers.pixelsWide || (*instance)->pixelsHigh != renderedLayers.pixelsHigh)
-		{
-			(*instance)->pixelsWide = renderedLayers.pixelsWide;
-			(*instance)->pixelsHigh = renderedLayers.pixelsHigh;
-		}
-		else
-		{
-			return;
-		}
-	}
+	bool renderingDimensionsChanged;
+	VuoRenderedLayers_update((*instance)->renderedLayers, renderedLayers, &renderingDimensionsChanged);
+
+	unsigned long viewportWidth = 0;
+	unsigned long viewportHeight = 0;
+	float backingScaleFactor = 1;
+	// If `renderedLayers` has no dimensions, the above values are left unmodified.
+	VuoIgnoreResult(VuoRenderedLayers_getRenderingDimensions((*instance)->renderedLayers, &viewportWidth, &viewportHeight, &backingScaleFactor));
 
 	unsigned int count = VuoListGetCount_VuoLayer(layers);
 
@@ -81,20 +69,14 @@ void nodeInstanceEvent
 
 	for(int i = 1; i <= count; i++)
 	{
-		VuoLayer child = VuoListGetValue_VuoLayer(layers, i);
-
-		VuoRectangle bounds;
-
-		// getRect bounds center includes the layer trs
-		if(!VuoRenderedLayers_getRect(renderedLayers, child.sceneObject, &bounds))
-			continue;
+		VuoLayer child = (VuoLayer)VuoSceneObject_copy((VuoSceneObject)VuoListGetValue_VuoLayer(layers, i));
+		VuoRectangle bounds = VuoLayer_getBoundingRectangle(child, viewportWidth, viewportHeight, backingScaleFactor);
 
 		size_x = fmax(size_x, bounds.size.x);
 
-		VuoPoint3d translation = VuoPoint3d_make(
-			currentPosition.x + child.sceneObject.transform.translation.x,
-			(currentPosition.y + child.sceneObject.transform.translation.y) - ((bounds.size.y * .5) + bounds.center.y),
-			0);
+		VuoPoint3d translation = VuoSceneObject_getTranslation((VuoSceneObject)child);
+		translation.x += currentPosition.x;
+		translation.y += currentPosition.y - ((bounds.size.y * .5) + bounds.center.y);
 
 		if(horizontalAlignment == VuoHorizontalAlignment_Right)
 			translation.x += -bounds.center.x - (bounds.size.x * .5);
@@ -104,10 +86,10 @@ void nodeInstanceEvent
 			translation.x += -bounds.center.x + (bounds.size.x * .5);
 
 		// translation now set to where each layer is aligned exactly in the row.  applying the original translation allows for tweaks
-		translation.x += child.sceneObject.transform.translation.x;
-		translation.y += child.sceneObject.transform.translation.y;
+		translation.x += VuoSceneObject_getTranslation((VuoSceneObject)child).x;
+		translation.y += VuoSceneObject_getTranslation((VuoSceneObject)child).y;
 
-		child.sceneObject.transform.translation = translation;
+		VuoSceneObject_setTranslation((VuoSceneObject)child, translation);
 
 		currentPosition.y -= bounds.size.y + spacing;
 		VuoListAppendValue_VuoLayer(children, child);
@@ -128,19 +110,20 @@ void nodeInstanceEvent
 		unsigned long childCount = VuoListGetCount_VuoLayer(children);
 		VuoLayer* array = VuoListGetData_VuoLayer(children);
 
-		for(int i = 0; i < childCount; i++)
-		{
-			array[i].sceneObject.transform.translation.x += offset_x;
-			array[i].sceneObject.transform.translation.y += offset_y;
-		}
+		for (int i = 0; i < childCount; i++)
+			VuoSceneObject_translate((VuoSceneObject)array[i], (VuoPoint3d){offset_x, offset_y, 0});
 	}
 
 	*arrangedLayer = VuoLayer_makeGroup(children, VuoTransform2d_make(position, 0, VuoPoint2d_make(1,1)));
-	*arrangedLayerEvent = true;
+	VuoLayer_setId(*arrangedLayer, (*instance)->id);
 
 	VuoRelease(children);
 }
 
-void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
+void nodeInstanceFini
+(
+	VuoInstanceData(struct nodeInstanceData *) instance
+)
 {
+	VuoRenderedLayers_release((*instance)->renderedLayers);
 }

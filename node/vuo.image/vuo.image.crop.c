@@ -2,9 +2,9 @@
  * @file
  * vuo.image.crop node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,17 +12,20 @@
 
 VuoModuleMetadata({
 					  "title" : "Crop Image",
-					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
+					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim", "cut", ],
 					  "version" : "1.1.2",
+					  "dependencies": [
+						  "VuoRectangle",
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
 					  }
 				 });
 
 static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec2 offset;
 	uniform float width;
@@ -30,7 +33,7 @@ static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy * vec2(width, height) + offset);
+		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate * vec2(width, height) + offset);
 	}
 );
 
@@ -67,7 +70,7 @@ void nodeInstanceEvent
 		return;
 	}
 
-	VuoRectangle intersection = VuoPoint2d_rectangleIntersection(
+	VuoRectangle intersection = VuoRectangle_intersection(
 				VuoImage_getRectangle(image),
 				VuoRectangle_make(center.x,center.y,width,height)
 				);

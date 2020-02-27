@@ -2,9 +2,9 @@
  * @file
  * vuo.hid.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -21,8 +21,8 @@ VuoModuleMetadata({
 						 "VuoHidIo"
 					 ],
 					 "node": {
-						 "isInterface" : true,
-						 "exampleCompositions" : [ "MoveDotsWithTwoMice.vuo", "MoveIcosahedronWithSpacenavigator.vuo" ],
+						 "exampleCompositions" : [ "MoveDotsWithTwoMice.vuo", "MoveIcosahedronWithSpacenavigator.vuo",
+									   "ListKeypresses.vuo" ],
 					 }
 				 });
 
@@ -31,6 +31,7 @@ struct nodeInstanceData
 	VuoHidDevice device;
 	bool exclusive;
 	VuoHid s;
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoHidDevice newDevice, VuoBoolean exclusive)
@@ -66,6 +67,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedControl, VuoHidControl)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoHid_addReceiveTrigger((*context)->s, receivedControl);
 }
 
@@ -93,6 +95,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedControl, VuoHidControl)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (!(*context)->s || !VuoHidDevice_areEqual(device, (*context)->device) || (*context)->exclusive != exclusive)
 	{
 		VuoHid_removeReceiveTrigger((*context)->s, receivedControl);
@@ -108,6 +113,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoHid_removeReceiveTrigger((*context)->s, receivedControl);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

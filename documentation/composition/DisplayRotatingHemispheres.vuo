@@ -1,0 +1,52 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-90,0"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.z" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<z>z\l|<point3d>point3d\r" pos="405,495"];
+ConvertRealTo3DPoint4 [type="vuo.type.real.point3d.x" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="390,120"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="15,-90" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="315,-105" _translation="\{\"x\":-0.5,\"y\":0,\"z\":0\}" _scale="\{\"x\":0.60000002384185791,\"y\":0.60000002384185791,\"z\":0.60000002384185791\}"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="315,375" _translation="\{\"x\":0.5,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="719,191" fillcolor="blue"];
+MakeSphere [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-30,120" fillcolor="magenta" _rows="32" _columns="32"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoColor" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="-30,270" fillcolor="tangerine" _rows="32" _columns="32"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="765,180" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue [type="vuo.data.share.VuoColor" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="60,0" _value="\{\"r\":0,\"g\":1,\"b\":0.50196081399917603,\"a\":1\}"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="300,120" fillcolor="magenta" _keepFront="true"];
+ShowBackOf3DObject2 [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="300,270" fillcolor="tangerine" _keepFront="true"];
+Transform3DObject [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="510,105" fillcolor="magenta"];
+Transform3DObject2 [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="510,255" fillcolor="tangerine"];
+Trim3DObject [type="vuo.scene.trim" version="1.0.0" label="Trim 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<width>width\l|<height>height\l|<depth>depth\l|<trimmedObject>trimmedObject\r" pos="150,120" fillcolor="magenta" _center="\{\"x\":0,\"y\":0.5,\"z\":0\}" _width="1.0" _height="1.0" _depth="1.0"];
+Trim3DObject2 [type="vuo.scene.trim" version="1.0.0" label="Trim 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<width>width\l|<height>height\l|<depth>depth\l|<trimmedObject>trimmedObject\r" pos="150,270" fillcolor="tangerine" _center="\{\"x\":0,\"y\":0.5,\"z\":0\}" _width="1.0" _height="1.0" _depth="1.0"];
+
+AllowFirstEvent:firstEvent -> ShareValue:value;
+ConvertRealTo3DPoint4:point3d -> Make3DTransform:rotation;
+ConvertRealTo3DPoint:point3d -> Make3DTransform2:rotation;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo3DPoint4:x;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo3DPoint:z;
+Make3DTransform2:transform -> Transform3DObject2:transform;
+Make3DTransform:transform -> Transform3DObject:transform;
+MakeList:list -> RenderSceneToWindow:objects;
+MakeSphere2:object -> Trim3DObject2:object;
+MakeSphere:object -> Trim3DObject:object;
+ShareValue:sameValue -> MakeSphere2:material;
+ShareValue:sameValue -> MakeSphere:material;
+ShowBackOf3DObject2:backObject -> Transform3DObject2:object;
+ShowBackOf3DObject:backObject -> Transform3DObject:object;
+Transform3DObject2:transformedObject -> MakeList:2;
+Transform3DObject:transformedObject -> MakeList:1;
+Trim3DObject2:trimmedObject -> ShowBackOf3DObject2:object;
+Trim3DObject:trimmedObject -> ShowBackOf3DObject:object;
+}

@@ -1,6 +1,6 @@
 Calculates a list of points along an easing curve.
 
-This node can be used to replicate an object along a curved path. Create a list of points, and then use the `Copy Layer` or `Copy 3D Object` node to create multiple instances of an object.
+This node can be used to replicate an object along a curved path. Create a list of points, and then use the [Copy Layer](vuo-node://vuo.layer.copy) or [Copy 3D Object](vuo-node://vuo.scene.copy) node to create multiple instances of an object.
 
    - `Start Position` — The first position to output.
    - `End Position` — The last position to output.

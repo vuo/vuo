@@ -2,36 +2,37 @@
  * @file
  * Imposes an upper limit on the saturation of colors in an image.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * Image by Andreas Gücklhorn on [Unsplash](https://unsplash.com/photos/mawU2PoJWfU).
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="585,90" _blendMode="\"darker-components\"" _foregroundOpacity="0.5" _replaceOpacity="true"];
-CombineImageHSLChannels [type="vuo.image.color.combine.hsl" version="1.0.0" label="Combine Image HSL Channels|<refresh>refresh\l|<hueImage>hueImage\l|<saturationImage>saturationImage\l|<lightnessImage>lightnessImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="750,195" fillcolor="violet"];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="60,345" _url="\"Buttes.jpg\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-120,60" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorImage2 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="315,90" _color="{\"r\":0.20000000298023224,\"g\":0.20000000298023224,\"b\":0.20000000298023224,\"a\":1}" _width="640" _height="480"];
-MakeImageLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1035,330" _center="{\"x\":-0.5,\"y\":0}" _rotation="0" _width="0.90000000000000002" _opacity="1.0"];
-MakeImageLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1035,180" _center="{\"x\":0.5,\"y\":0}" _rotation="0" _width="0.90000000000000002" _opacity="1.0"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1242,266" fillcolor="green"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1262,281" fillcolor="green"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1290,255" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-SplitImageHSLChannels [type="vuo.image.color.split.hsl" version="1.0.0" label="Split Image HSL Channels|<refresh>refresh\l|<image>image\l|<colorHueImage>colorHueImage\l|<preserveOpacity>preserveOpacity\l|<hueImage>hueImage\r|<saturationImage>saturationImage\r|<lightnessImage>lightnessImage\r|<opacityImage>opacityImage\r" pos="240,195" fillcolor="violet" _colorHueImage="false" _preserveOpacity="false"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="600,60" _blendMode="\"darker-components\"" _foregroundOpacity="0.5" _replaceOpacity="true"];
+CombineImageHSLChannels [type="vuo.image.color.combine.hsl" version="1.0.0" label="Combine Image HSL Channels|<refresh>refresh\l|<hueImage>hueImage\l|<saturationImage>saturationImage\l|<lightnessImage>lightnessImage\l|<opacityImage>opacityImage\l|<combinedImage>combinedImage\r" pos="780,195" fillcolor="orange"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="60,360" _url="\"Aerial.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,60" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeColorImage2 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="315,60" _color="\{\"r\":0.20000000298023224,\"g\":0.20000000298023224,\"b\":0.20000000298023224,\"a\":1\}" _width="640" _height="480"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1035,360" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":0\}" _rotation="0" _width="0.90000000000000002" _opacity="1.0"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1035,195" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":0\}" _rotation="0" _width="0.90000000000000002" _opacity="1.0"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1253,266" fillcolor="blue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1305,255" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SplitImageHSLChannels [type="vuo.image.color.split.hsl" version="1.0.1" label="Split Image HSL Channels|<refresh>refresh\l|<image>image\l|<colorHueImage>colorHueImage\l|<preserveOpacity>preserveOpacity\l|<hueImage>hueImage\r|<saturationImage>saturationImage\r|<lightnessImage>lightnessImage\r|<opacityImage>opacityImage\r" pos="240,195" fillcolor="orange" _colorHueImage="false" _preserveOpacity="false"];
 
 BlendImages:blended -> CombineImageHSLChannels:saturationImage;
 CombineImageHSLChannels:combinedImage -> MakeImageLayer2:image;
 FetchImage:image -> MakeImageLayer:image;
 FetchImage:image -> SplitImageHSLChannels:image;
-FireOnStart:started -> FetchImage:refresh;
-FireOnStart:started -> MakeColorImage2:refresh;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> MakeColorImage2:color;
 MakeColorImage2:image -> BlendImages:background;
 MakeImageLayer2:layer -> MakeList2:1;
 MakeImageLayer:layer -> MakeList2:2;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList3:list -> RenderLayersToWindow:setWindowProperties;
 SplitImageHSLChannels:hueImage -> CombineImageHSLChannels:hueImage;
 SplitImageHSLChannels:lightnessImage -> CombineImageHSLChannels:lightnessImage;
 SplitImageHSLChannels:opacityImage -> CombineImageHSLChannels:opacityImage;

@@ -1,4 +1,4 @@
-Fires an event each time the [Kinect](http://en.wikipedia.org/wiki/Kinect) provides a new image.
+Fires an event each time the [Kinect](https://en.wikipedia.org/wiki/Kinect) provides a new image.
 
 This node can be used to display body movements captured by a Kinect in your composition.
 

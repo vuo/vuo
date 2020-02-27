@@ -2,31 +2,32 @@
  * @file
  * Quantizes a 3D object using a step size that varies over time.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-195,300" fillcolor="lime"];
 ConvertRealTo3DPoint [type="vuo.type.real.point3d.xyz" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="300,420"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="30,390" _endPosition="0.29999999999999999" _duration="15" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeIcosphere2 [type="vuo.scene.make.icosphere.VuoColor" version="1.0.0" label="Make Icosphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<subdivisions>subdivisions\l|<object>object\r" pos="0,300" _transform="\"identity\"" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _subdivisions="3"];
-MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="454,311" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="484,356" fillcolor="green"];
-MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="165,135" _name="\"camera\"" _position="{\"x\":-1,\"y\":1,\"z\":1}" _target="{\"x\":0,\"y\":0,\"z\":0}" _upDirection="{\"x\":0,\"y\":1,\"z\":0}" _fieldOfView="60" _distanceMin="0.1" _distanceMax="10.0"];
-Quantize3DObject [type="vuo.scene.quantize" version="1.0.0" label="Quantize 3D Object|<refresh>refresh\l|<object>object\l|<stepSize>stepSize\l|<center>center\l|<quantizedObject>quantizedObject\r" pos="255,300" fillcolor="violet" _center="{\"x\":0,\"y\":0,\"z\":0}"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="525,300" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-270,390" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeIcosphere2 [type="vuo.scene.make.icosphere.VuoColor" version="1.0.1" label="Make Icosphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<subdivisions>subdivisions\l|<object>object\r" pos="0,300" _transform="\"identity\"" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _subdivisions="3"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="464,311" fillcolor="blue"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="195,570" _name="\"camera\"" _position="\{\"x\":-1,\"y\":1,\"z\":1\}" _target="\{\"x\":0,\"y\":0,\"z\":0\}" _upDirection="\{\"x\":0,\"y\":1,\"z\":0\}" _fieldOfView="60" _distanceMin="0.1" _distanceMax="10.0"];
+Quantize3DObject [type="vuo.scene.quantize" version="1.0.0" label="Quantize 3D Object|<refresh>refresh\l|<object>object\l|<stepSize>stepSize\l|<center>center\l|<quantizedObject>quantizedObject\r" pos="255,300" fillcolor="orange" _center="\{\"x\":0,\"y\":0,\"z\":0\}"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="510,300" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> MakeIcosphere2:transform;
+AllowFirstEvent:firstEvent -> MakeTargetedPerspectiveCamera:name;
 ConvertRealTo3DPoint:point3d -> Quantize3DObject:stepSize;
 Curve2:value -> ConvertRealTo3DPoint:x;
-FireOnStart:started -> MakeIcosphere2:refresh;
-FireOnStart:started -> MakeTargetedPerspectiveCamera:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeIcosphere2:object -> Quantize3DObject:object;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> RenderSceneToWindow:objects;
 MakeTargetedPerspectiveCamera:object -> MakeList:2;
 Quantize3DObject:quantizedObject -> MakeList:1;
-RenderSceneToWindow:requestedFrame -> Curve2:time [style=invis];
 }

@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorLoopType implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorLoopType.hh"
@@ -14,7 +14,7 @@ extern "C"
 	#include "VuoLoopType.h"
 }
 
-#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+#include "VuoInputEditorCurveRenderer.hh"
 
 /**
  * Constructs a VuoInputEditorLoopType object.
@@ -38,7 +38,7 @@ VuoInputEditorMenuItem * VuoInputEditorLoopType::setUpMenuTree()
 			continue;
 
 		char *optionSummary = VuoLoopType_getSummary( (VuoLoopType)i );
-		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithLoopType((VuoLoopType)i));
+		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithLoopType((VuoLoopType)i, isInterfaceDark()));
 		free(optionSummary);
 		optionsTree->addItem(optionItem);
 	}

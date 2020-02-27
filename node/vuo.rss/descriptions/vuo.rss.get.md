@@ -7,4 +7,4 @@ Gives information about an item in an RSS feed.
    - `URL` — The page the feed item links to (contents of the `<link>` tag).
    - `Time` — The date and time the feed item was published.
    - `Image URL` — The address of an image selected from the feed item's attachments (contents of the `<enclosure>` or `<media:content>` tag).
-   - `Image` — If the `Fetch RSS Items` node's `Fetch Images` port is enabled, the above image is automatically downloaded.
+   - `Image` — If the [Fetch RSS Items](vuo-node://vuo.rss.fetch) node's `Fetch Images` port is enabled, the above image is automatically downloaded.

@@ -2,15 +2,12 @@
  * @file
  * TestVuoProtocol implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <QtTest/QtTest>
-
-#include "VuoProtocol.hh"
-#include "VuoFileUtilities.hh"
+#include <Vuo/Vuo.h>
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoProtocol *);
@@ -29,22 +26,59 @@ private slots:
 		QTest::addColumn<VuoProtocol *>("protocol");
 		QTest::addColumn<bool>("expectedCompliance");
 
-		QTest::newRow("ImageFilter.vuo")	<< VuoProtocol::getProtocol(VuoProtocol::imageFilter)		<< true;
-		QTest::newRow("ImageFilter.vuo")	<< VuoProtocol::getProtocol(VuoProtocol::imageGenerator)	<< false;
+		QTest::newRow("ImageFilter.vuo filter")         << VuoProtocol::getProtocol(VuoProtocol::imageFilter)       << true;
+		QTest::newRow("ImageFilter.vuo generator")      << VuoProtocol::getProtocol(VuoProtocol::imageGenerator)    << false;
+		QTest::newRow("ImageFilter.vuo transition")     << VuoProtocol::getProtocol(VuoProtocol::imageTransition)   << false;
 
-		QTest::newRow("ImageGenerator.vuo")	<< VuoProtocol::getProtocol(VuoProtocol::imageFilter)		<< false;
-		QTest::newRow("ImageGenerator.vuo")	<< VuoProtocol::getProtocol(VuoProtocol::imageGenerator)	<< true;
+		QTest::newRow("ImageGenerator.vuo filter")      << VuoProtocol::getProtocol(VuoProtocol::imageFilter)       << false;
+		QTest::newRow("ImageGenerator.vuo generator")   << VuoProtocol::getProtocol(VuoProtocol::imageGenerator)    << true;
+		QTest::newRow("ImageGenerator.vuo transition")  << VuoProtocol::getProtocol(VuoProtocol::imageTransition)   << false;
 
-		QTest::newRow("NoProtocol.vuo")		<< VuoProtocol::getProtocol(VuoProtocol::imageFilter)		<< false;
-		QTest::newRow("NoProtocol.vuo")		<< VuoProtocol::getProtocol(VuoProtocol::imageGenerator)	<< false;
+		QTest::newRow("ImageTransition.vuo filter")     << VuoProtocol::getProtocol(VuoProtocol::imageFilter)       << false;
+		QTest::newRow("ImageTransition.vuo generator")  << VuoProtocol::getProtocol(VuoProtocol::imageGenerator)    << false;
+		QTest::newRow("ImageTransition.vuo transition") << VuoProtocol::getProtocol(VuoProtocol::imageTransition)   << true;
+
+		QTest::newRow("NoProtocol.vuo filter")          << VuoProtocol::getProtocol(VuoProtocol::imageFilter)       << false;
+		QTest::newRow("NoProtocol.vuo generator")       << VuoProtocol::getProtocol(VuoProtocol::imageGenerator)    << false;
+		QTest::newRow("NoProtocol.vuo transition")      << VuoProtocol::getProtocol(VuoProtocol::imageTransition)   << false;
 	}
 	void testComplianceParsing(void)
 	{
 		QFETCH(VuoProtocol *, protocol);
 		QFETCH(bool, expectedCompliance);
-		
-		string compositionString = VuoFileUtilities::readFileToString(string("composition/") + QTest::currentDataTag());
+
+		string compositionPath = string("composition/") + QTest::currentDataTag();
+		compositionPath.erase(compositionPath.find(' '));
+
+		string compositionString = VuoFileUtilities::readFileToString(compositionPath);
+
+		VuoRunner *runner = VuoCompiler::newCurrentProcessRunnerFromCompositionString(compositionString, ".", NULL);
+		runner->setRuntimeChecking(true);
+		runner->start();
+
+		// Test isCompositionCompliant(string)
 		QCOMPARE(protocol->isCompositionCompliant(compositionString), expectedCompliance);
+
+		// Test isCompositionCompliant(VuoRunner*)
+		QCOMPARE(protocol->isCompositionCompliant(runner), expectedCompliance);
+
+		if (expectedCompliance
+		 || compositionPath == "composition/NoProtocol.vuo")
+		{
+			// Test getCompositionProtocols(string)
+			vector<VuoProtocol *> protocols = VuoProtocol::getCompositionProtocols(compositionString);
+			vector<VuoProtocol *> expectedProtocols;
+			if (expectedCompliance)
+				expectedProtocols.push_back(protocol);
+			QCOMPARE(protocols, expectedProtocols);
+
+			// Test getCompositionProtocols(VuoRunner*)
+			vector<VuoProtocol *> protocolsR = VuoProtocol::getCompositionProtocols(compositionString);
+			QCOMPARE(protocolsR, expectedProtocols);
+		}
+
+		runner->stop();
+		delete runner;
 	}
 };
 

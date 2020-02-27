@@ -2,9 +2,9 @@
  * @file
  * VuoFileFormat interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
@@ -79,7 +79,7 @@ bool VuoFileFormat_isSupportedMeshFile(const char *path)
  */
 bool VuoFileFormat_isSupportedMovieFile(const char *path)
 {
-	const char *formats[] = {"mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv", "gif"};
+	const char *formats[] = {"mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv", "gif", "qt"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }
@@ -141,7 +141,7 @@ bool VuoFileFormat_isSupportedTableFile(const char *path)
  */
 bool VuoFileFormat_isSupportedDataFile(const char *path)
 {
-	const char *formats[] = {"txt", "json", "xml", "csv", "tsv"};
+	const char *formats[] = {"txt"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }

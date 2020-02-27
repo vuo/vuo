@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.adjust node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -28,10 +28,10 @@ VuoModuleMetadata({
 				 });
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-	include(hsl)
+	\n#include "VuoGlslAlpha.glsl"
+	\n#include "VuoGlslHsl.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 	uniform sampler2D image;
 
 	uniform float saturation;
@@ -51,8 +51,8 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		// http://stackoverflow.com/questions/944713/help-with-pixel-shader-effect-for-brightness-and-contrast
-		vec4 pixelColor = VuoGlsl_sample(image, fragmentTextureCoordinate.xy);
+		// https://stackoverflow.com/questions/944713/help-with-pixel-shader-effect-for-brightness-and-contrast
+		vec4 pixelColor = VuoGlsl_sample(image, fragmentTextureCoordinate);
 
 		// compensate for channels that are completely void - this allows a fully exposed pixel
 		// to always be white, regardless of starting value. .001 is the minimum resolution that
@@ -63,7 +63,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Apply Exposure
 		pixelColor.rgb = clamp(pixelColor.rgb * pow(2., exposure), 0., 1.);
 
-		vec3 hsl = rgbToHsl(pixelColor.rgb);
+		vec3 hsl = VuoGlsl_rgbToHsl(pixelColor.rgb);
 
 		// Apply hue shift
 		hsl.x = mod(hsl.x + hueShift, 1.);
@@ -71,7 +71,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// // Apply saturation
 		hsl.y *= saturation;
 
-		pixelColor.rgb = hslToRgb(hsl);
+		pixelColor.rgb = VuoGlsl_hslToRgb(hsl);
 
 
 		// Apply vibrance

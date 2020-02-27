@@ -2,9 +2,9 @@
  * @file
  * TestVuoText implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -13,10 +13,12 @@ extern "C" {
 #include "VuoTextCase.h"
 #include "VuoData.h"
 #include <json-c/json.h>
+#include <stdint.h>
 }
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoText);
+Q_DECLARE_METATYPE(VuoTextComparison);
 Q_DECLARE_METATYPE(void *);
 
 /**
@@ -123,8 +125,8 @@ private slots:
 		QTest::addColumn<int>("length");
 		QTest::addColumn<QString>("substring");
 
-		QTest::newRow("empty string")											<< ""								<< 1	<< 0	<< "";
-		QTest::newRow("empty string, length too large")							<< ""								<< 1	<< 1	<< "";
+		QTest::newRow("empty string")											<< ""									<< 1	<< 0	<< "";
+		QTest::newRow("empty string, length too large")							<< ""									<< 1	<< 1	<< "";
 		QTest::newRow("UTF8 string, first half")								<< QString::fromUtf8("⓪①②③④⑤")	<< 1	<< 3	<< QString::fromUtf8("⓪①②");
 		QTest::newRow("UTF8 string, second half")								<< QString::fromUtf8("⓪①②③④⑤")	<< 4	<< 3	<< QString::fromUtf8("③④⑤");
 		QTest::newRow("UTF8 string, all")										<< QString::fromUtf8("⓪①②③④⑤")	<< 1	<< 6	<< QString::fromUtf8("⓪①②③④⑤");
@@ -325,7 +327,7 @@ private slots:
 		QTest::newRow("same strings, same encoding")	<< (void *)"⓪"	<< (void *)"⓪"		<< true;
 
 		{
-			// http://en.wikipedia.org/wiki/Combining_character
+			// https://en.wikipedia.org/wiki/Combining_character
 			const QChar cyrillicU_combiningBreve[] = { QChar(0x0423), QChar(0x0306) };
 			QString stringAsDecomposedCharacters(cyrillicU_combiningBreve, 2);
 			const QChar cyrillicShortU(0x040E);
@@ -350,10 +352,10 @@ private slots:
 
 		QTest::newRow("both NULL")						<< (void *)NULL	<< (void *)NULL		<< false;
 
-		// NULL should be less than any string.
-		QTest::newRow("NULL, emptystring")				<< (void *)NULL	<< (void *)""		<< true;
-		QTest::newRow("NULL, string")					<< (void *)NULL	<< (void *)"foo"	<< true;
-		QTest::newRow("emptystring, NULL")				<< (void *)""	<< (void *)NULL		<< false;
+		// NULL should be greater than any string.
+		QTest::newRow("NULL, emptystring")              << (void *)NULL << (void *)""       << false;
+		QTest::newRow("NULL, string")                   << (void *)NULL << (void *)"foo"    << false;
+		QTest::newRow("emptystring, NULL")              << (void *)""   << (void *)NULL     << true;
 		QTest::newRow("emptystring, emptystring")		<< (void *)""	<< (void *)""		<< false;
 
 		// Emptystring should be less than any non-emptystring.
@@ -366,7 +368,7 @@ private slots:
 		QTest::newRow("same strings, same encoding")	<< (void *)"⓪"	<< (void *)"⓪"		<< false;
 
 		{
-			// http://en.wikipedia.org/wiki/Combining_character
+			// https://en.wikipedia.org/wiki/Combining_character
 			const QChar cyrillicU_combiningBreve[] = { QChar(0x0423), QChar(0x0306) };
 			QString stringAsDecomposedCharacters(cyrillicU_combiningBreve, 2);
 			const QChar cyrillicShortU(0x040E);
@@ -455,10 +457,59 @@ private slots:
 		{
 			for (int j = 0; j < 4; ++j)
 			{
-				VuoTextComparison comparison = { types[j], 1-i };
+				VuoTextComparison comparison = { types[j], (bool)(1-i), "" };
 				QVERIFY2(VuoText_compare((VuoText)text1, comparison, (VuoText)text2) == expected[i][j], VuoTextComparison_getSummary(comparison));
 			}
 		}
+	}
+
+	void testCompare2_data()
+	{
+		QTest::addColumn<void *>("text1");
+		QTest::addColumn<VuoTextComparison>("comparison");
+		QTest::addColumn<void *>("text2");
+		QTest::addColumn<bool>("expectedResult");
+
+		// An empty wildcard string should match only null/empty subject strings.
+		QTest::newRow("text null, wildcard null")       << (void*)NULL            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)NULL           << true;
+		QTest::newRow("text null, wildcard empty")      << (void*)NULL            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)""             << true;
+		QTest::newRow("text empty, wildcard null")      << (void*)""              << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)NULL           << true;
+		QTest::newRow("text empty, wildcard empty")     << (void*)""              << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)""             << true;
+		QTest::newRow("text non-empty, wildcard null")  << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)NULL           << false;
+		QTest::newRow("text non-empty, wildcard empty") << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)""             << false;
+
+		QTest::newRow("literal match in wildcard mode") << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"hi"           << true;
+		QTest::newRow("wildcard matches nothing")       << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"h*i"          << true;
+		QTest::newRow("wildcard matches something")     << (void*)"h.i"           << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"h*i"          << true;
+		QTest::newRow("wildcard matches Unicode")       << (void*)"¿Dónde estás?" << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"?Dónde *?"    << true;
+		QTest::newRow("wildcard doesn't match")         << (void*)"h.i"           << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"hi*"          << false;
+		QTest::newRow("wildcard doesn't match partial") << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesWildcard, false, "" } << (void *)"h"            << false;
+
+		// An empty regex should match only null/empty subject strings.
+		QTest::newRow("text null, regex null")          << (void*)NULL            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)NULL           << true;
+		QTest::newRow("text null, regex empty")         << (void*)NULL            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)""             << true;
+		QTest::newRow("text empty, regex null")         << (void*)""              << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)NULL           << true;
+		QTest::newRow("text empty, regex empty")        << (void*)""              << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)""             << true;
+		QTest::newRow("text non-empty, regex null")     << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)NULL           << false;
+		QTest::newRow("text non-empty, regex empty")    << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)""             << false;
+
+		QTest::newRow("literal match in regex mode")    << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"hi"           << true;
+		QTest::newRow("regex matches nothing")          << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"h.*i"         << true;
+		QTest::newRow("regex matches something")        << (void*)"h.i"           << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"h.*i"         << true;
+		QTest::newRow("regex matches Unicode")          << (void*)"¿Dónde estás?" << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)".Dónde .*\\?" << true;
+		QTest::newRow("regex doesn't match")            << (void*)"h.i"           << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"hi.*"         << false;
+		QTest::newRow("regex matches partial")          << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"h"            << true;
+		QTest::newRow("regex matches anchored")         << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"^hi$"         << true;
+		QTest::newRow("regex doesn't match anchored")   << (void*)"hi"            << (VuoTextComparison){ VuoTextComparison_MatchesRegEx,    false, "" } << (void *)"^h$"          << false;
+	}
+	void testCompare2()
+	{
+		QFETCH(void *, text1);
+		QFETCH(VuoTextComparison, comparison);
+		QFETCH(void *, text2);
+		QFETCH(bool, expectedResult);
+
+		QCOMPARE(VuoText_compare((VuoText)text1, comparison, (VuoText)text2), expectedResult);
 	}
 
 	void testTrim_data()

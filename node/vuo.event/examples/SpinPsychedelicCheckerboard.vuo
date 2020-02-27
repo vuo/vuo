@@ -2,43 +2,39 @@
  * @file
  * Each time the mouse is clicked, the checkerboard rotates several degrees, leaving a trail behind it. The trail forms because the checkerboard is actually rotated in several small increments per mouse click, with image feedback applied to each one.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="705,180" _saturation="0" _hueShift="3.000000" _contrast="0" _brightness="0" _exposure="0" _gamma="1"];
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="930,390" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
-BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="390,180" _blendMode="\"luminosity\"" _foregroundOpacity="0.500000" _replaceOpacity="true"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-45,450" fillcolor="yellow" _started_eventThrottling="enqueue"];
-HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="360,390"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="120,195" _upperLeftColor="{\"r\":1.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _upperRightColor="{\"r\":0.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _center="{\"x\":0,\"y\":0}" _width="640" _height="640"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="930,165" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1227,191" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1193,176" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="735,480" _text="\"Click to rotate the checkerboard.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.050000}"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-60,0" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1260,165" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-RotateImage [type="vuo.image.rotate" version="1.0.1" label="Rotate Image|<refresh>refresh\l|<image>image\l|<rotation>rotation\l|<expandBounds>expandBounds\l|<rotatedImage>rotatedImage\r" pos="555,180" _rotation="0.500000" _expandBounds="false"];
-SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="165,30" fillcolor="violet" _fire="100" _spunOffIndex_eventThrottling="enqueue"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.3.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<vibrance>vibrance\l|<hueShift>hueShift\l|<temperature>temperature\l|<tint>tint\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="705,180" _saturation="0" _vibrance="0" _hueShift="3.000000" _temperature="0" _tint="0" _contrast="0" _brightness="0" _exposure="0" _gamma="1"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="390,180" _blendMode="\"overlay\"" _foregroundOpacity="0.500000" _replaceOpacity="true"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-165,315" fillcolor="lime" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,390"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="120,195" _upperLeftColor="\{\"r\":1.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000\}" _upperRightColor="\{\"r\":0.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000\}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0,\"y\":0\}" _width="500" _height="500"];
+MakeLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="930,165" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1214,176" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="960,420" _text="\"Click to rotate the checkerboard.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.55000001192092896\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-120,45" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1260,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RotateImage [type="vuo.image.rotate" version="1.0.2" label="Rotate Image|<refresh>refresh\l|<image>image\l|<rotation>rotation\l|<expandBounds>expandBounds\l|<rotatedImage>rotatedImage\r" pos="555,180" _rotation="1" _expandBounds="false"];
+SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="135,45" fillcolor="orange" _fire="100" _spunOffIndex_eventThrottling="enqueue"];
 
-AdjustImageColors:adjustedImage -> HoldValue2:newValue;
+AdjustImageColors:adjustedImage -> HoldValue2:value;
 AdjustImageColors:adjustedImage -> MakeLayer:image;
-AlignLayerToWindow:alignedLayer -> MakeList2:2;
 BlendImages:blended -> RotateImage:image;
-FireOnStart:started -> MakeCheckerboardImage:refresh;
-FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> MakeCheckerboardImage:upperLeftColor;
+FireOnStart:started -> MakeTextLayer:text;
 HoldValue2:heldValue -> BlendImages:background;
 MakeCheckerboardImage:image -> BlendImages:foreground;
 MakeLayer:layer -> MakeList2:1;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList:list -> RenderLayersToWindow:setWindowProperties;
-MakeTextLayer:layer -> AlignLayerToWindow:layer;
+MakeTextLayer:layer -> MakeList2:2;
 ReceiveMouseButtons:pressed -> SpinOffEvents:fire [event=true];
-RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
-RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseButtons:window;
 RotateImage:rotatedImage -> AdjustImageColors:image;
-SpinOffEvents:spunOffIndex -> HoldValue2:refresh;
+SpinOffEvents:spunOffIndex -> HoldValue2:update;
 }

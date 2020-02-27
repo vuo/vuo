@@ -2,24 +2,29 @@
  * @file
  * vuo.scene.explode node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
 
+#include "VuoGradientNoiseCommon.h"
 #include "VuoSceneObjectRenderer.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
 					 "title" : "Explode 3D Object",
-					 "keywords" : [ "break", "separate", "shatter", "fireworks", "explosion", "blow up", "burst", "implode",
+					 "keywords" : [
+						 "break", "separate", "split", "slice", "divide",
+						 "shatter", "fireworks", "explosion", "blow up", "burst", "implode",
 						 "face", "edge", "side", "gravity", "filter" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoGradientNoiseCommon",
 						 "VuoSceneObjectRenderer"
 					 ],
 					 "node": {
@@ -28,8 +33,8 @@ VuoModuleMetadata({
 				 });
 
 static const char *pointLineVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
-	include(noise3D)
+	\n#include "deform.glsl"
+	\n#include "noise3D.glsl"
 
 	// Inputs
 	uniform float time;
@@ -40,8 +45,10 @@ static const char *pointLineVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float range;
 	uniform vec3 gravity;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
+		rotationAmount;
+
 		vec3 pointNoise = snoise3D3D(position*1000);
 		vec3 pointChaos = pointNoise * chaos;
 		float distanceFromEpicenter = distance(position + pointChaos/10, center);
@@ -67,20 +74,23 @@ static const char *pointLineVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
-	attribute vec4 position;
-	attribute vec4 normal;
-	attribute vec4 textureCoordinate;
+	attribute vec3 position;
+	attribute vec3 normal;
+	attribute vec2 textureCoordinate;
+	attribute vec4 vertexColor;
 
 	// Outputs
-	varying vec4 geometryPosition;
-	varying vec4 geometryNormal;
-	varying vec4 geometryTextureCoordinate;
+	varying vec3 geometryPosition;
+	varying vec3 geometryNormal;
+	varying vec2 geometryTextureCoordinate;
+	varying vec4 geometryVertexColor;
 
 	void main()
 	{
 		geometryPosition = position;
 		geometryNormal = normal;
 		geometryTextureCoordinate = textureCoordinate;
+		geometryVertexColor = vertexColor;
 
 		// Older systems (e.g., NVIDIA GeForce 9400M on Mac OS 10.6)
 		// fall back to the software renderer if gl_Position is not initialized.
@@ -89,14 +99,15 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 );
 
 static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslRandom)
+	\n#include "VuoGlslRandom.glsl"
 
 	// Inputs
 	uniform mat4 modelviewMatrix;
 	uniform mat4 modelviewMatrixInverse;
-	varying in vec4 geometryPosition[3];
-	varying in vec4 geometryNormal[3];
-	varying in vec4 geometryTextureCoordinate[3];
+	varying in vec3 geometryPosition[3];
+	varying in vec3 geometryNormal[3];
+	varying in vec2 geometryTextureCoordinate[3];
+	varying in vec4 geometryVertexColor[3];
 	uniform float time;
 	uniform float translationAmount;
 	uniform float rotationAmount;
@@ -106,11 +117,10 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec3 gravity;
 
 	// Outputs
-	varying out vec4 outPosition;
-	varying out vec4 outNormal;
-	varying out vec4 outTangent;
-	varying out vec4 outBitangent;
-	varying out vec4 outTextureCoordinate;
+	varying out vec3 outPosition;
+	varying out vec3 outNormal;
+	varying out vec2 outTextureCoordinate;
+	varying out vec4 outVertexColor;
 
 	mat4 rotationMatrix(float angle, vec3 axis)
 	{
@@ -162,7 +172,7 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Transform into worldspace.
 		vec3 positionInScene[3];
 		for (int i = 0; i < 3; ++i)
-			positionInScene[i] = (modelviewMatrix * geometryPosition[i]).xyz;
+			positionInScene[i] = (modelviewMatrix * vec4(geometryPosition[i], 1.)).xyz;
 
 
 		vec3 triangleCenter = (positionInScene[0]+positionInScene[1]+positionInScene[2])/3;
@@ -200,9 +210,9 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Calculate two vectors in the plane of the new triangle.
 		vec3 ab = newPosition[1] - newPosition[0];
 		vec3 ac = newPosition[2] - newPosition[0];
-		vec4 normal    = vec4(normalize(cross(ab, ac)),1);
-		vec4 tangent   = vec4(normalize(ab),1);
-		vec4 bitangent = vec4(normalize(ac),1);
+		vec3 normal    = normalize(cross(ab, ac));
+		vec3 tangent   = normalize(ab);
+		vec3 bitangent = normalize(ac);
 
 		// Build a rotation matrix that transforms the initial face normal into the deformed normal.
 		mat3 initialToDeformedNormal = mat3(1);
@@ -210,10 +220,10 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 			// When calculating the initial face normal, omit vertex 1
 			// since on curved triangle-pair surfaces (e.g., a latlon sphere) vertex 1 of each triangle pair may not be coplanar,
 			// resulting in slightly-differing initialFaceNormals in situations where they look like they should be identical.
-			vec3 initialFaceNormal = normalize(geometryNormal[0].xyz + /*geometryNormal[1].xyz +*/ geometryNormal[2].xyz);
+			vec3 initialFaceNormal = normalize(geometryNormal[0] + /*geometryNormal[1] +*/ geometryNormal[2]);
 
-			vec3 axis = normalize(cross(initialFaceNormal, normal.xyz));
-			float angle = acos2(dot(initialFaceNormal, normal.xyz));
+			vec3 axis = normalize(cross(initialFaceNormal, normal));
+			float angle = acos2(dot(initialFaceNormal, normal));
 
 			// NVIDIA 9400M apparently NANs on angles closer to zero.
 			// https://b33p.net/kosada/node/11850
@@ -242,14 +252,14 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Emit the vertices with the calculated normal.
 		for (int i = 0; i < 3; ++i)
 		{
-			outPosition = vec4(newPosition[i],1);
+			outPosition = newPosition[i];
 
 			// Rotate the original normal toward the deformed normal (to preserve smoothing).
-			outNormal = vec4(normalize(geometryNormal[i].xyz * initialToDeformedNormal), 1);
+			outNormal = normalize(geometryNormal[i].xyz * initialToDeformedNormal);
 
-			outTangent = tangent;
-			outBitangent = bitangent;
 			outTextureCoordinate = geometryTextureCoordinate[i];
+			outVertexColor = geometryVertexColor[i];
+
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -279,6 +289,30 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	return instance;
 }
 
+/**
+ * Improved canonical pseudorandomness (minus the `highp` improvement which isn't supported on GLSL 1.20).
+ *
+ * Each function returns values between 0 and 1.
+ *
+ * https://web.archive.org/web/20141130173831/http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0
+ */
+static float vuo_scene_explode_random3D1D(VuoPoint3d co)
+{
+	float c  = 43758.5453;
+	float dt = co.x * 12.9898 + co.y * 78.233 + co.z * 469.398;
+	float sn = dt - 3.14 * floorf(dt / 3.14);
+	float f  = sinf(sn) * c;
+	return f - floorf(f);
+}
+
+static VuoPoint3d vuo_scene_explode_random3D3D(VuoPoint3d v)
+{
+	return (VuoPoint3d){vuo_scene_explode_random3D1D((VuoPoint3d){v.x-1, v.y-1, v.z-1}),
+						vuo_scene_explode_random3D1D((VuoPoint3d){v.x,   v.y,   v.z  }),
+						vuo_scene_explode_random3D1D((VuoPoint3d){v.x+1, v.y+1, v.z+1})};
+}
+
+
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
@@ -293,17 +327,126 @@ void nodeInstanceEvent
 		VuoOutputData(VuoSceneObject) explodedObject
 )
 {
+	float translationAmountScaled = translationAmount / -20.;
+	float rotationAmountScaled = rotationAmount * 2;
+	float chaos2 = chaos * 2;
+	VuoPoint3d gravityScaled = gravity / (VuoPoint3d)(10);
+
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "time",              time);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "translationAmount", translationAmount/-20.);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "rotationAmount",    rotationAmount*2);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "chaos",             chaos*2);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "translationAmount", translationAmountScaled);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "rotationAmount",    rotationAmountScaled);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "chaos",             chaos2);
 	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "center",            center);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "range",             range);
-	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "gravity",           VuoPoint3d_multiply(gravity, 1./10.));
+	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "gravity",           gravityScaled);
 
 	// Render.
-	*explodedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*explodedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object,
+		^(float *modelMatrix, float *modelMatrixInverse, int *vertexCount, float *positions, float *normals, float *textureCoordinates, float *colors) {
+			if (*vertexCount < 3)
+			{
+				for (int i = 0; i < *vertexCount; ++i)
+				{
+					VuoPoint3d position         = VuoPoint3d_makeFromArray(&positions[i * 3]);
+					VuoPoint3d pointNoise       = VuoGradientNoise_simplex_VuoPoint3d_VuoPoint3d(position * (VuoPoint3d)(1000));
+					VuoPoint3d pointChaos       = pointNoise * chaos2;
+					float distanceFromEpicenter = VuoPoint3d_distance(position + pointChaos / (VuoPoint3d)(10.), center);
+
+					if (distanceFromEpicenter < range)
+					{
+						float distanceFactor = 1 / (distanceFromEpicenter * distanceFromEpicenter);
+
+						// Apply translation.
+						VuoPoint3d pointVelocity = (center - position + pointChaos / (VuoPoint3d)(10.)) * translationAmountScaled * distanceFactor;
+						VuoPoint3d pointOffset   = pointVelocity * (VuoPoint3d)(time);
+						VuoPoint3d newPosition = position + pointOffset;
+
+						// Apply gravity.
+						newPosition += gravityScaled * (VuoPoint3d)(time * time);
+
+						VuoPoint3d_setArray(&positions[i * 3], newPosition);
+					}
+				}
+			}
+			else
+			{
+				// Transform into worldspace.
+				VuoPoint3d positionInScene[3];
+				for (int i = 0; i < 3; ++i)
+				{
+					VuoPoint3d position = VuoPoint3d_makeFromArray(&positions[i * 3]);
+					positionInScene[i] = VuoTransform_transformPoint(modelMatrix, position);
+				}
+
+				VuoPoint3d triangleCenter   = (positionInScene[0] + positionInScene[1] + positionInScene[2]) / (VuoPoint3d)(3);
+				VuoPoint3d triangleNoise    = vuo_scene_explode_random3D3D(triangleCenter) * (VuoPoint3d)(2.) - (VuoPoint3d)(1);
+				VuoPoint3d triangleChaos    = triangleNoise * chaos2;
+				float distanceFromEpicenter = VuoPoint3d_distance(triangleCenter + triangleChaos / (VuoPoint3d)(10), center);
+
+				VuoPoint3d newPosition[3];
+				for (int i = 0; i < 3; ++i)
+					newPosition[i] = positionInScene[i];
+
+				if (distanceFromEpicenter < range)
+				{
+					float distanceFactor = 1 / (distanceFromEpicenter * distanceFromEpicenter);
+
+					// Apply rotation.
+					VuoPoint4d q = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_normalize(VuoPoint3d_lerp(triangleCenter, triangleNoise, chaos2)),
+															  time * (1 + triangleChaos.x) * rotationAmountScaled);
+					VuoTransform t = VuoTransform_makeQuaternion((VuoPoint3d){0,0,0}, q, (VuoPoint3d){1,1,1});
+					float matrix[16];
+					VuoTransform_getMatrix(t, matrix);
+					for (int i = 0; i < 3; ++i)
+						newPosition[i] = triangleCenter + VuoTransform_transformPoint(matrix, positionInScene[i] - triangleCenter);
+
+					// Apply translation.
+					VuoPoint3d triangleVelocity = (center - triangleCenter + triangleChaos / (VuoPoint3d)(10)) * (VuoPoint3d)(translationAmountScaled * distanceFactor);
+					VuoPoint3d triangleOffset   = triangleVelocity * (VuoPoint3d)(time);
+					for (int i = 0; i < 3; ++i)
+						newPosition[i] += triangleOffset;
+
+					// Apply gravity.
+					for (int i = 0; i < 3; ++i)
+						newPosition[i] += gravityScaled * (VuoPoint3d)(time * time);
+				}
+
+				// Transform back into modelspace.
+				for (int i = 0; i < 3; ++i)
+					newPosition[i] = VuoTransform_transformPoint(modelMatrixInverse, newPosition[i]);
+
+				// Calculate two vectors in the plane of the new triangle.
+				VuoPoint3d ab        = newPosition[1] - newPosition[0];
+				VuoPoint3d ac        = newPosition[2] - newPosition[0];
+				VuoPoint3d normal    = VuoPoint3d_normalize(VuoPoint3d_crossProduct(ab, ac));
+
+				// Build a rotation matrix that transforms the initial face normal into the deformed normal.
+				float initialToDeformedNormal[16];
+				{
+					// When calculating the initial face normal, omit vertex 1
+					// since on curved triangle-pair surfaces (e.g., a latlon sphere) vertex 1 of each triangle pair may not be coplanar,
+					// resulting in slightly-differing initialFaceNormals in situations where they look like they should be identical.
+					VuoPoint3d normal0 = VuoPoint3d_makeFromArray(&normals[0 * 3]);
+					VuoPoint3d normal2 = VuoPoint3d_makeFromArray(&normals[2 * 3]);
+					VuoPoint3d initialFaceNormal = VuoPoint3d_normalize(normal0 + normal2);
+
+					VuoPoint4d q = VuoTransform_quaternionFromVectors(initialFaceNormal, normal);
+					VuoTransform t = VuoTransform_makeQuaternion((VuoPoint3d){0,0,0}, q, (VuoPoint3d){1,1,1});
+					VuoTransform_getMatrix(t, initialToDeformedNormal);
+				}
+
+				for (int i = 0; i < 3; ++i)
+				{
+					VuoPoint3d_setArray(&positions[i * 3], newPosition[i]);
+
+					// Rotate the original normal toward the deformed normal (to preserve smoothing).
+					VuoPoint3d normal0 = VuoPoint3d_makeFromArray(&normals[i * 3]);
+					VuoPoint3d rotatedNormal = VuoTransform_transformPoint(initialToDeformedNormal, normal0);
+					VuoPoint3d_setArray(&normals[i * 3], rotatedNormal);
+				}
+			}
+		});
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

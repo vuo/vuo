@@ -4,16 +4,13 @@
  *
  * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 #include "VuoInputEditorAnchor.hh"
-#include <stdio.h>
 #include "VuoInputEditorIcon.hh"
 
 extern "C"
 {
-#include "VuoHorizontalAlignment.h"
-#include "VuoVerticalAlignment.h"
 }
 
  /**
@@ -159,7 +156,7 @@ void VuoInputEditorAnchor::setUpDialog(QDialog &dialog, json_object *originalVal
 				matrix[index]->setStyleSheet( "QPushButton:checked { background:#8B8C8C; border:none; outline:none; }" );
 			else
 				matrix[index]->setStyleSheet( "QPushButton:checked { background:#909090; border:none; outline:none; }" );
-			connect(matrix[index], SIGNAL(released()), signalMapper, SLOT(map()));
+			connect(matrix[index], &QPushButton::released, signalMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
 			signalMapper->setMapping(matrix[index], index) ;
 			layout->addWidget(matrix[index], r, c);
 		}
@@ -167,7 +164,7 @@ void VuoInputEditorAnchor::setUpDialog(QDialog &dialog, json_object *originalVal
 
 	matrix[curIndex]->setChecked(true);
 
-	connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(onSetAnchor(int)));
+	connect(signalMapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &VuoInputEditorAnchor::onSetAnchor);
 
 	dialog.setFocusPolicy(Qt::NoFocus);
 	dialog.setLayout(layout);

@@ -2,14 +2,11 @@
  * @file
  * VuoTime implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/time.h>
 #include <xlocale.h>
 #include <langinfo.h>
@@ -70,7 +67,7 @@ char *VuoTime_getSummary(const VuoTime value)
 	if (ret)
 		return VuoText_format("%04lld-%02lld-%02lld %02lld:%02lld:%05.02f", year, month, dayOfMonth, hour, minute, second);
 	else
-		return strdup("(unknown)");
+		return strdup("Unknown");
 }
 
 /**
@@ -247,7 +244,7 @@ VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, V
 				+ minute * 60;
 
 		time_t t = time(NULL);
-		struct tm lt = {0};
+		struct tm lt = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL};
 		localtime_r(&t, &lt);
 		timeInt -= lt.tm_gmtoff;
 	}
@@ -337,9 +334,6 @@ static VuoTime VuoTime_makeFromFormats(const char *str, const char **formats, in
  */
 VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 {
-	if (VuoText_isEmpty(rfc822))
-		return NAN;
-
 	const int numFormats = 2;
 	const char *formats[numFormats] = {
 		"%a, %d %b %Y %T %z",
@@ -347,6 +341,25 @@ VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 	};
 
 	return VuoTime_makeFromFormats(rfc822, formats, numFormats);
+}
+
+/**
+ * Creates a date-time from an [ISO 8601 date-time string](https://en.wikipedia.org/wiki/ISO_8601#Combined_date_and_time_representations).
+ *
+ * @eg{2003-12-13T18:30:02Z}
+ * @version200New
+ */
+VuoTime VuoTime_makeFromISO8601(const char *iso8601)
+{
+	const int numFormats = 4;
+	const char *formats[numFormats] = {
+		"%Y-%m-%dT%H:%M:%SZ",
+		"%Y-%m-%d %H:%M:%SZ",
+		"%Y-%m-%dT%H:%M:%S+00:00",
+		"%Y-%m-%d %H:%M:%S+00:00"
+	};
+
+	return VuoTime_makeFromFormats(iso8601, formats, numFormats);
 }
 
 /**

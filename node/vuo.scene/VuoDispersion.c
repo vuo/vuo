@@ -2,16 +2,14 @@
  * @file
  * VuoDispersion implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoDispersion.h"
+#include "VuoList_VuoDispersion.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -19,7 +17,10 @@ VuoModuleMetadata({
 					  "title" : "Dispersion",
 					  "description" : "The pattern over which a function is applied.",
 					  "keywords" : [ ],
-					  "version" : "1.0.0"
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						 "VuoList_VuoDispersion",
+					  ],
 				  });
 #endif
 /// @}
@@ -54,6 +55,18 @@ json_object * VuoDispersion_getJson(const VuoDispersion value)
 		valueAsString = "radial";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ * @version200New
+ */
+VuoList_VuoDispersion VuoDispersion_getAllowedValues(void)
+{
+	VuoList_VuoDispersion l = VuoListCreate_VuoDispersion();
+	VuoListAppendValue_VuoDispersion(l, VuoDispersion_Linear);
+	VuoListAppendValue_VuoDispersion(l, VuoDispersion_Radial);
+	return l;
 }
 
 /**

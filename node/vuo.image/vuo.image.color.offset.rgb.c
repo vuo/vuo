@@ -2,9 +2,9 @@
  * @file
  * vuo.image.color.offset.rgb node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -31,20 +31,20 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
+	\n#include "VuoGlslAlpha.glsl"
 
 	// Inputs
 	uniform sampler2D texture;
 	uniform vec2 redOffset;
 	uniform vec2 greenOffset;
 	uniform vec2 blueOffset;
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	void main()
 	{
-		vec4 redColor   = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy - redOffset   + vec2(0.5,0.5));
-		vec4 greenColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy - greenOffset + vec2(0.5,0.5));
-		vec4 blueColor  = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy - blueOffset  + vec2(0.5,0.5));
+		vec4 redColor   = VuoGlsl_sample(texture, fragmentTextureCoordinate - redOffset   + vec2(0.5,0.5));
+		vec4 greenColor = VuoGlsl_sample(texture, fragmentTextureCoordinate - greenOffset + vec2(0.5,0.5));
+		vec4 blueColor  = VuoGlsl_sample(texture, fragmentTextureCoordinate - blueOffset  + vec2(0.5,0.5));
 
 		gl_FragColor = vec4(redColor.r, greenColor.g, blueColor.b, (redColor.a + greenColor.a + blueColor.a)/3.);
 	}

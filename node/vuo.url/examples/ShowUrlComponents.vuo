@@ -1,31 +1,32 @@
 /**
  * @file
+ * @brief Show URL Components
  * Displays the components of a URL, and downloads the image at that URL.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
 AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="495,-30" _separator="\" \""];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="345,285"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-120,-15" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetURLValues [type="vuo.url.get" version="1.0.0" label="Get URL Values|<refresh>refresh\l|<url>url\l|<scheme>scheme\r|<user>user\r|<host>host\r|<port>port\r|<path>path\r|<query>query\r|<fragment>fragment\r" pos="180,30" fillcolor="violet"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="837,26" fillcolor="green"];
-MakeList26 [type="vuo.list.make.14.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<list>list\r" pos="448,-19" _1="\"Scheme: \"" _3="\"\\nUser:\"" _5="\"\\nHost:\"" _7="\"\\nPort:\"" _9="\"\\nPath:\"" _11="\"\\nQuery:\"" _13="\"\\nFragment:\""];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="857,41" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="555,270" _center="{\"x\":0,\"y\":0.25}" _rotation="0.0" _width="1" _opacity="1.0"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="645,0" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.25}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="885,15" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
-ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="30,30" _value="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
-SpinOffValue2 [type="vuo.event.spinOffValue.VuoText" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="180,285" _spunOff_eventThrottling="enqueue"];
-SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="540,360"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="510,270"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-270,-15" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetURLValues [type="vuo.url.get" version="1.0.0" label="Get URL Values|<refresh>refresh\l|<url>url\l|<scheme>scheme\r|<user>user\r|<host>host\r|<port>port\r|<path>path\r|<query>query\r|<fragment>fragment\r" pos="180,30" fillcolor="orange"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="869,-19" fillcolor="blue"];
+MakeList26 [type="vuo.list.make.14.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<13>13\l|<14>14\l|<list>list\r" pos="447,-19" _1="\"Scheme:\"" _3="\"\\nUser:\"" _5="\"\\nHost:\"" _7="\"\\nPort:\"" _9="\"\\nPath:\"" _11="\"\\nQuery:\"" _13="\"\\nFragment:\""];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="675,270" _anchor="\"center-center\"" _center="\{\"x\":0,\"y\":-0.25\}" _rotation="0.0" _width="0.5" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="690,-30" _font="\{\"fontName\":\"Courier\",\"pointSize\":32,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.25\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="915,-30" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="30,30" _value="\"https:\\/\\/vuo.org\\/sites\\/default\\/files\\/vuo-circle-teal-256.png\""];
+SpinOffValue2 [type="vuo.event.spinOffValue.VuoText" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="180,270" _spunOff_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="540,360"];
 
 AppendTexts:compositeText -> MakeTextLayer:text;
 FetchImage:image -> MakeScaledLayer:image;
-FireOnStart:started -> ShareValue2:refresh;
+FireOnStart:started -> ShareValue2:value;
 GetURLValues:fragment -> MakeList26:14;
 GetURLValues:host -> MakeList26:6;
 GetURLValues:path -> MakeList26:10;
@@ -35,9 +36,8 @@ GetURLValues:scheme -> MakeList26:2;
 GetURLValues:user -> MakeList26:4;
 MakeList26:list -> AppendTexts:texts;
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeList3:list -> RenderLayersToWindow:setWindowProperties;
-MakeScaledLayer:layer -> MakeList2:1;
-MakeTextLayer:layer -> MakeList2:2;
+MakeScaledLayer:layer -> MakeList2:2;
+MakeTextLayer:layer -> MakeList2:1;
 ShareValue2:sameValue -> GetURLValues:url;
 ShareValue2:sameValue -> SpinOffValue2:value;
 SpinOffValue2:spunOff -> FetchImage:url;

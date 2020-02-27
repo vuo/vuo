@@ -2,16 +2,14 @@
  * @file
  * VuoVideoPlayer implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoVideoPlayer.h"
-#include "VuoVideoDecoder.h"
 #include "VuoAvDecoder.h"
 #include "VuoFfmpegDecoder.h"
-#include "VuoEventLoop.h"
 #include <unistd.h>
 
 extern "C"
@@ -20,7 +18,6 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoVideoPlayer",
 					 "dependencies" : [
-						"VuoVideoDecoder",
 						"VuoFfmpegDecoder",
 						"VuoAvDecoder",
 						"VuoImage",
@@ -110,7 +107,7 @@ void VuoVideoPlayer::Destroy()
 {
 	/// wait til ondecoderplaybackready is invoked before destroying things.
 	while( !IsReady() && !failedLoading ) {
-		usleep(USEC_PER_SEC / 24);
+		usleep(USEC_PER_SEC / 24); // @@@
 	}
 
 	delete this;
@@ -188,7 +185,8 @@ void VuoVideoPlayer::OnDecoderPlaybackReady(bool canPlayMedia)
 		_SetPlaybackRate(onReadyPlaybackRate);
 
 		if(onReadySeek > -1)
-			_Seek(onReadySeek);
+			if (!_Seek(onReadySeek))
+				VUserLog("Error: Couldn't seek.");
 
 		if(playOnReady)
 			_Play( dispatch_time(DISPATCH_TIME_NOW, 0) );
@@ -214,7 +212,8 @@ void VuoVideoPlayer::OnDecoderPlaybackReady(bool canPlayMedia)
 				_SetPlaybackRate(onReadyPlaybackRate);
 
 				if(onReadySeek > -1)
-					_Seek(onReadySeek);
+					if (!_Seek(onReadySeek))
+						VUserLog("Error: Couldn't seek.");
 
 				if(playOnReady)
 					_Play(dispatch_time(DISPATCH_TIME_NOW, 0));
@@ -396,7 +395,7 @@ double VuoVideoPlayer::GetDuration()
 	/// if ffmpeg didn't load, let avfoundation think about it before returning
 	while(!IsReady() && !failedLoading)
 	{
-		usleep(USEC_PER_SEC / 24);
+		usleep(USEC_PER_SEC / 24); // @@@
 	}
 
 	pthread_mutex_lock(&decoderMutex);
@@ -412,7 +411,7 @@ unsigned int VuoVideoPlayer::GetAudioChannels()
 
 	while(!IsReady() && !failedLoading)
 	{
-		usleep(USEC_PER_SEC / 24);
+		usleep(USEC_PER_SEC / 24); // @@@
 	}
 
 	pthread_mutex_lock(&decoderMutex);
@@ -533,7 +532,7 @@ void VuoVideoPlayer::startTimer(dispatch_source_t* timer, dispatch_time_t start,
 {
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
-	*timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
+	*timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, queue);
 
 	dispatch_source_set_timer(
 		*timer,
@@ -589,6 +588,10 @@ void VuoVideoPlayer::sendVideoFrame()
 		videoFrame.image = NULL;
 
 		// didn't get a frame, so check what the loop type is and do something
+
+		if (!isPlaying)
+			return;
+
 		pthread_mutex_lock(&decoderMutex);
 
 		if(videoPlaybackFinishedDelegate != NULL)

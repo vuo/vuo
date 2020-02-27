@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.pinch node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,6 +12,7 @@
 #include "VuoSceneObjectRenderer.h"
 
 #include "VuoGlPool.h"
+#include <Block.h>
 #include <OpenGL/CGLMacro.h>
 
 #include "VuoDispersion.h"
@@ -30,13 +31,13 @@ VuoModuleMetadata({
 				 });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	include(deform)
+	\n#include "deform.glsl"
 
 	// Inputs
 	uniform float amount;
 	uniform vec3 center;
 
-	vec3 deform(vec3 position)
+	vec3 deform(vec3 position, vec3 normal, vec2 textureCoordinate)
 	{
 		float d = distance(center, position);
 		d = amount / (d*d);
@@ -82,8 +83,18 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "amount", amount);
 	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "center", center);
 
+	VuoSceneObjectRenderer_CPUGeometryOperator cpuGeometryOperator = VuoSceneObjectRenderer_makeDeformer(^(VuoPoint3d position, VuoPoint3d normal, VuoPoint2d textureCoordinate) {
+		float d = VuoPoint3d_distance(center, position);
+		d = amount / (d * d);
+		return (VuoPoint3d){ position.x + (center.x - position.x) * d,
+							 position.y + (center.y - position.y) * d,
+							 position.z + (center.z - position.z) * d };
+	});
+
 	// Render.
-	*pinchedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
+	*pinchedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object, cpuGeometryOperator);
+
+	Block_release(cpuGeometryOperator);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

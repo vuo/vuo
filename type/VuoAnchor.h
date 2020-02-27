@@ -2,17 +2,18 @@
  * @file
  * VuoAnchor C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoHorizontalAlignment.h"
+#include "VuoPoint2d.h"
 #include "VuoVerticalAlignment.h"
 
-/// @{
+/// @{ List type.
 typedef const struct VuoList_VuoAnchor_struct { void *l; } * VuoList_VuoAnchor;
 #define VuoList_VuoAnchor_TYPE_DEFINED
 /// @}
@@ -73,23 +74,11 @@ static inline VuoAnchor VuoAnchor_makeCentered(void)
 	return VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center);
 }
 
-/**
- * Returns true if the two values are equal.
- */
-static inline bool VuoAnchor_areEqual(const VuoAnchor value1, const VuoAnchor value2)
-{
-	return VuoAnchor_getHorizontal(value1) == VuoAnchor_getHorizontal(value2)
-		&& VuoAnchor_getVertical(value1)   == VuoAnchor_getVertical(value2);
-}
+VuoPoint2d VuoAnchor_getOffset(VuoAnchor anchor);
 
-/**
- * Returns true if the value1 is less than value2.
- */
-static inline bool VuoAnchor_isLessThan(const VuoAnchor value1, const VuoAnchor value2)
-{
-	return VuoHorizontalAlignment_isLessThan(VuoAnchor_getHorizontal(value1), VuoAnchor_getHorizontal(value2))
-		&& VuoVerticalAlignment_isLessThan(VuoAnchor_getVertical(value1), VuoAnchor_getVertical(value2));
-}
+#define VuoAnchor_SUPPORTS_COMPARISON
+bool VuoAnchor_areEqual(const VuoAnchor value1, const VuoAnchor value2);
+bool VuoAnchor_isLessThan(const VuoAnchor value1, const VuoAnchor value2);
 
 /**
  * Automatically generated function.
@@ -104,5 +93,3 @@ void VuoAnchor_release(VuoAnchor value);
 /**
  * @}
  */
-
-

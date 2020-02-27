@@ -1,15 +1,15 @@
-This node set includes nodes for receiving data from a [USB Human Interface Device (HID)](https://en.wikipedia.org/wiki/USB_human_interface_device_class), and for discovering available HIDs.
+Nodes for receiving data from a USB Human Interface Device (HID) and for discovering available HIDs.
 
-Some USB devices (but not all of them) are HIDs — for example, your keyboard and mouse are HIDs, and joysticks, game pads, and other controllers may be HIDs.
+Some USB devices (but not all of them) are [HIDs](https://en.wikipedia.org/wiki/USB_human_interface_device_class) — for example, your keyboard and mouse are HIDs, and joysticks, game pads, and other controllers may be HIDs.
 
-The `Receive HID Controls` node receives values from HID **controls**.  A control is physical interface that provides a single data value.  For example, a typical 3-button mouse will have 6 controls: X, Y, Wheel, Button 1, Button 2, and Button 3.  Use the `Filter Control` or `Filter and Scale Control` node to narrow down the data to just the controls you're interested in.
+The [Receive HID Controls](vuo-node://vuo.hid.receive) node receives values from HID **controls**.  A control is physical interface that provides a single data value.  For example, a typical 3-button mouse will have 6 controls: X, Y, Wheel, Button 1, Button 2, and Button 3.  Use the [Filter Control](vuo-node://vuo.hid.filter.control2) or [Filter and Scale Control](vuo-node://vuo.hid.scale.control2) node to narrow down the data to just the controls you're interested in.
 
 
 ## Troubleshooting
 
 If you're not sure whether Vuo is detecting your HID:
 
-   - Add a `Receive HID Controls` node to your composition. Double-click on its `Device` input port to bring up a menu of all connected HIDs. See if your device is in the list.
+   - Add a [Receive HID Controls](vuo-node://vuo.hid.receive) node to your composition. Double-click on its `Device` input port to bring up a menu of all connected HIDs. See if your device is in the list.
    - Check the Console application for any messages about HIDs.
 
 If Vuo isn't detecting your device:

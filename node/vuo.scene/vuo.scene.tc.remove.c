@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.tc.remove node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -26,20 +26,9 @@ void nodeEvent
 )
 {
 	*modifiedObject = VuoSceneObject_copy(object);
-	VuoSceneObject_apply(modifiedObject, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
-		if (currentObject->mesh)
-			for (unsigned int i = 0; i < currentObject->mesh->submeshCount; ++i)
-			{
-				if (currentObject->mesh->submeshes[i].textureCoordinates)
-				{
-					free(currentObject->mesh->submeshes[i].textureCoordinates);
-					currentObject->mesh->submeshes[i].textureCoordinates = NULL;
-				}
-
-				// Clearing `textureCoordinateOffset` may change the stride if it's automatically calculated, so preserve the current stride.
-				currentObject->mesh->submeshes[i].glUpload.combinedBufferStride = VuoSubmesh_getStride(currentObject->mesh->submeshes[i]);
-
-				currentObject->mesh->submeshes[i].glUpload.textureCoordinateOffset = NULL;
-			}
+	VuoSceneObject_apply(*modifiedObject, ^(VuoSceneObject currentObject, float modelviewMatrix[16]){
+		VuoMesh m = VuoMesh_copyShallow(VuoSceneObject_getMesh(currentObject));
+		VuoMesh_removeTextureCoordinates(m);
+		VuoSceneObject_setMesh(currentObject, m);
 	});
 }

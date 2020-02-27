@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditor interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -18,7 +18,7 @@ class VuoInputEditor;
 
 /**
  * Plugin interface for input editors. To create a custom input editor for a port type, create a
- * <a href="http://qt-project.org/doc/qt-5.0/qtcore/plugins-howto.html#the-lower-level-api-extending-qt-applications">Qt plugin</a>
+ * <a href="https://doc.qt.io/qt-5/plugins-howto.html#the-lower-level-api-extending-qt-applications">Qt plugin</a>
  * that implements a derived class of VuoInputEditorFactory and a derived class of VuoInputEditor.
  *
  * @see DevelopingInputEditors

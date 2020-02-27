@@ -2,9 +2,9 @@
  * @file
  * vuo.math.compareNumbers node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -15,8 +15,9 @@ VuoModuleMetadata({
 					  "title" : "Compare Numbers",
 					  "keywords" : [
 							"comparison", "relational", "operator", "mathematical", "expression", "evaluate",
-							"==", "!=", "≠", "<", "<=", "≤", ">", ">=", "≥",
-							"same", "identical", "equivalent", "match", "approximate", "tolerance", "conditional",
+							"==", "!=", "≠", "<>", "<", "<=", "≤", ">", ">=", "≥",
+							"same", "identical", "equivalent", "match", "equal",
+							"approximate", "tolerance", "conditional",
 							"unequal", "inequality", "different",
 							"less than", "greater than"
 						],

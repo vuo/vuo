@@ -2,9 +2,9 @@
  * @file
  * vuo.window.cursor.populated node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -12,10 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Is Cursor Populated",
-					 "keywords" : [ "pointer", "hand", "arrow", "hide", "touch", "properties", "none", "non-empty", "nonempty" ],
+					 "keywords" : [ "pointer", "hand", "arrow", "hide", "touch", "properties", "none", "empty", "non-empty", "nonempty" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ ]
+						"isDeprecated": true,
+						"exampleCompositions" : [ ]
 					 }
 				 });
 

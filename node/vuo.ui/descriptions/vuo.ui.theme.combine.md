@@ -1,0 +1,1 @@
+Groups themes for individual types of widgets (such as those created by `Make Action Button Theme (Rounded)` and `Make Slider Theme (Rounded)`) into a single item which can be connected to any type of widget.

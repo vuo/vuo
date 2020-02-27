@@ -2,9 +2,9 @@
  * @file
  * vuo.image.halftone.cmyk node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -31,9 +31,9 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
-	include(noise2D)
+	\n#include "noise2D.glsl"
 
-	varying vec4 fragmentTextureCoordinate;
+	varying vec2 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
 
@@ -63,7 +63,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 st = fragmentTextureCoordinate.xy;
+		vec2 st = fragmentTextureCoordinate;
 
 		float splotchNoiseScale = scale*4;
 
@@ -191,7 +191,6 @@ void nodeInstanceEvent
 	double clampedScale = VuoReal_makeNonzero(MAX(0,scale)/100.);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "scale",       1./clampedScale);
 
-	const float sqrt2 = sqrt(2);
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "threshold",   (VuoPoint4d){
 										VuoReal_lerp(-1.5, 1.1, 1 - VuoReal_clamp(cyanAmount,    0, 1)),
 										VuoReal_lerp(-1.5, 1.1, 1 - VuoReal_clamp(magentaAmount, 0, 1)),

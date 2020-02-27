@@ -2,9 +2,9 @@
  * @file
  * VuoSerialDevice C type definition.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -47,7 +47,7 @@ char *VuoSerialDevice_getSummary(const VuoSerialDevice value);
 bool VuoSerialDevice_areEqual(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 bool VuoSerialDevice_isLessThan(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 
-bool VuoSerialDevice_realize(VuoSerialDevice device, VuoSerialDevice *realizedDevice);
+bool VuoSerialDevice_realize(VuoSerialDevice device, VuoSerialDevice *realizedDevice) VuoWarnUnusedResult;
 
 /**
  * Automatically generated function.

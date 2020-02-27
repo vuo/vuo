@@ -2,19 +2,17 @@
  * @file
  * VuoSceneGet implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoSceneObjectGet.h"
 
 #include "VuoUrlFetch.h"
-#include "VuoGlContext.h"
 #include "VuoImageGet.h"
 #include "VuoMeshUtility.h"
 
-#include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
 
 #pragma clang diagnostic push
@@ -46,7 +44,7 @@ VuoModuleMetadata({
 							"VuoUrlFetch",
 							"VuoList_VuoShader",
 							"VuoMeshUtility",
-							"assimp",
+							"oai",
 							"z"
 					  ]
 				  });
@@ -188,7 +186,7 @@ static void VuoSceneObjectGet_close(aiFileIO *afio, aiFile *af)
  */
 static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoShader *shaders, bool *shadersUsed, VuoSceneObject *sceneObject)
 {
-	sceneObject->name = VuoText_make(node->mName.data);
+	VuoSceneObject_setName(*sceneObject, VuoText_make(node->mName.data));
 
 	// Copy the node's transform into our VuoSceneObject.
 	{
@@ -197,32 +195,20 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 		struct aiQuaternion rotation;
 		struct aiVector3D position;
 		aiDecomposeMatrix(&m, &scaling, &rotation, &position);
-		sceneObject->transform = VuoTransform_makeQuaternion(
-					VuoPoint3d_make(position.x, position.y, position.z),
-					VuoPoint4d_make(rotation.x, rotation.y, rotation.z, rotation.w),
-					VuoPoint3d_make(scaling.x, scaling.y, scaling.z)
-					);
+		VuoSceneObject_setTransform(*sceneObject, VuoTransform_makeQuaternion(
+			(VuoPoint3d){position.x, position.y, position.z},
+			(VuoPoint4d){rotation.x, rotation.y, rotation.z, rotation.w},
+			(VuoPoint3d){scaling.x, scaling.y, scaling.z}));
 	}
 
-	// Convert each aiMesh to either a single VuoSceneObject,
+	// Convert each aiMesh to either a single leaf VuoSceneObject,
 	// or a VuoSceneObject group with multiple child VuoSceneObjects.
-	if (node->mNumMeshes)
+	if (node->mNumMeshes && node->mNumMeshes == 1 && node->mNumChildren == 0)
+		VuoSceneObject_setType(*sceneObject, VuoSceneObjectSubType_Mesh);
+	else
 	{
-		if (node->mNumMeshes == 1)
-		{
-			sceneObject->type = VuoSceneObjectSubType_Mesh;
-			sceneObject->mesh = VuoMesh_make(1);
-		}
-		else
-		{
-			sceneObject->type = VuoSceneObjectSubType_Group;
-			sceneObject->childObjects = VuoListCreate_VuoSceneObject();
-		}
-
-			/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
-		int materialIndex = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
-		sceneObject->shader = shaders[materialIndex];
-		shadersUsed[materialIndex] = true;
+		VuoSceneObject_setType(*sceneObject, VuoSceneObjectSubType_Group);
+		VuoSceneObject_setChildObjects(*sceneObject, VuoListCreate_VuoSceneObject());
 	}
 	for (unsigned int meshIndex = 0; meshIndex < node->mNumMeshes; ++meshIndex)
 	{
@@ -233,56 +219,52 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 			VUserLog("Error: Mesh '%s' doesn't contain any positions.  Skipping.", meshObj->mName.data);
 			continue;
 		}
-		char *missing = NULL;
 
-		if (!meshObj->mNormals)
-			missing = strdup("normals");
-		if (!meshObj->mTangents)
-			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "tangents");
-		if (!meshObj->mBitangents)
-			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "bitangents");
-		if (!meshObj->mTextureCoords[0])
-			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "texture coordinates");
+		if (!meshObj->mNormals || !meshObj->mTextureCoords[0])
+			VUserLog("Warning: Mesh '%s' is missing%s%s.  These channels will be automatically generated, but lighting and 3D object filters may not work correctly.",
+				meshObj->mName.data,
+				meshObj->mNormals ? "" : " [normals]",
+				meshObj->mTextureCoords[0] ? "" : " [texture coordinates]");
 
-		if (missing)
-		{
-			VUserLog("Warning: Mesh '%s' is missing %s.  These channels will be automatically generated, but lighting and 3D object filters may not work correctly.", meshObj->mName.data, missing);
-			free(missing);
-		}
-
-		VuoSubmesh sm = VuoSubmesh_make(meshObj->mNumVertices, meshObj->mNumFaces*3);
-		sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+		float *positions, *normals = NULL, *textureCoordinates = NULL, *colors = NULL;
+		unsigned int *elements;
+		VuoMesh_allocateCPUBuffers(meshObj->mNumVertices,
+			&positions,
+			meshObj->mNormals ? &normals : NULL,
+			meshObj->mTextureCoords[0] ? &textureCoordinates : NULL,
+			meshObj->mColors[0] ? &colors : NULL,
+			meshObj->mNumFaces * 3, &elements);
 
 		for (unsigned int vertex = 0; vertex < meshObj->mNumVertices; ++vertex)
 		{
 			struct aiVector3D position = meshObj->mVertices[vertex];
-			sm.positions[vertex] = VuoPoint4d_make(position.x, position.y, position.z, 1);
+			positions[vertex * 3    ] = position.x;
+			positions[vertex * 3 + 1] = position.y;
+			positions[vertex * 3 + 2] = position.z;
 
 			if (meshObj->mNormals)
 			{
 				struct aiVector3D normal = meshObj->mNormals[vertex];
-				sm.normals[vertex] = VuoPoint4d_make(normal.x, normal.y, normal.z, 0);
-			}
-
-			if (meshObj->mNormals && meshObj->mTangents)
-			{
-				struct aiVector3D normal = meshObj->mNormals[vertex];
-				struct aiVector3D tangent = meshObj->mTangents[vertex];
-				sm.tangents[vertex] = VuoPoint4d_make(tangent.x, tangent.y, tangent.z, 0);
-
-				VuoPoint3d n3 = VuoPoint3d_make(normal.x, normal.y, normal.z);
-				VuoPoint3d t3 = VuoPoint3d_make(tangent.x, tangent.y, tangent.z);
-				VuoPoint3d bitangent = VuoPoint3d_crossProduct(n3, t3);
-				sm.bitangents[vertex] = VuoPoint4d_make(bitangent.x, bitangent.y, bitangent.z, 0);
+				normals[vertex * 3    ] = normal.x;
+				normals[vertex * 3 + 1] = normal.y;
+				normals[vertex * 3 + 2] = normal.z;
 			}
 
 			if (meshObj->mTextureCoords[0])
 			{
 				struct aiVector3D textureCoordinate = meshObj->mTextureCoords[0][vertex];
-				sm.textureCoordinates[vertex] = VuoPoint4d_make(textureCoordinate.x, textureCoordinate.y, textureCoordinate.z, 0);
+				textureCoordinates[vertex * 2    ] = textureCoordinate.x;
+				textureCoordinates[vertex * 2 + 1] = textureCoordinate.y;
 			}
 
-				/// @todo handle other texture coordinate channels
+			if (meshObj->mColors[0])
+			{
+				struct aiColor4D color = meshObj->mColors[0][vertex];
+				colors[vertex * 4    ] = color.r;
+				colors[vertex * 4 + 1] = color.g;
+				colors[vertex * 4 + 2] = color.b;
+				colors[vertex * 4 + 3] = color.a;
+			}
 		}
 
 		unsigned int numValidElements = 0;
@@ -295,55 +277,37 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 				continue;
 			}
 
-			sm.elements[numValidElements++] = faceObj->mIndices[0];
-			sm.elements[numValidElements++] = faceObj->mIndices[1];
-			sm.elements[numValidElements++] = faceObj->mIndices[2];
+			elements[numValidElements++] = faceObj->mIndices[0];
+			elements[numValidElements++] = faceObj->mIndices[1];
+			elements[numValidElements++] = faceObj->mIndices[2];
 		}
+
+		VuoMesh mesh = VuoMesh_makeFromCPUBuffers(meshObj->mNumVertices, positions, normals, textureCoordinates, colors, numValidElements, elements, VuoMesh_IndividualTriangles);
 
 		// if no texture coordinates found, attempt to generate passable ones.
-		if(!meshObj->mTextureCoords[0] && sm.elementAssemblyMethod == VuoMesh_IndividualTriangles)
-		{
-			VuoMeshUtility_calculateSphericalUVs(&sm);
-		}
+		if (!meshObj->mTextureCoords[0])
+			VuoMeshUtility_calculateSphericalUVs(mesh);
 
-		// if mesh doesn't have tangents, but does have normals and textures, we can generate tangents & bitangents.
-		if(!meshObj->mTangents && meshObj->mNormals && sm.elementAssemblyMethod == VuoMesh_IndividualTriangles)
+		if (node->mNumMeshes == 1 && node->mNumChildren == 0)
 		{
-			VuoMeshUtility_calculateTangents(&sm);
-		}
-
-		if (node->mNumMeshes == 1)
-		{
-			sceneObject->mesh->submeshes[0] = sm;
-			VuoMesh_upload(sceneObject->mesh);
+			VuoSceneObject_setMesh(*sceneObject, mesh);
+			VuoSceneObject_setShader(*sceneObject, shaders[meshObj->mMaterialIndex]);
+			shadersUsed[meshObj->mMaterialIndex] = true;
 		}
 		else
 		{
 			// Add this aiMesh as a child of this VuoSceneObject.
-			VuoMesh m = VuoMesh_make(1);
-			m->submeshes[0] = sm;
-			VuoMesh_upload(m);
-			VuoSceneObject child = VuoSceneObject_make(m, sceneObject->shader, VuoTransform_makeIdentity(), NULL);
-			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, child);
+			VuoSceneObject child = VuoSceneObject_makeMesh(mesh, shaders[meshObj->mMaterialIndex], VuoTransform_makeIdentity());
+			VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects(*sceneObject), child);
+			shadersUsed[meshObj->mMaterialIndex] = true;
 		}
 	}
 
-	if (node->mNumMeshes > 1)
-		sceneObject->shader = NULL;
-
-	if (node->mNumChildren)
-	{
-		if (!sceneObject->childObjects)
-			sceneObject->childObjects = VuoListCreate_VuoSceneObject();
-		if (sceneObject->type == VuoSceneObjectSubType_Empty)
-			sceneObject->type = VuoSceneObjectSubType_Group;
-	}
 	for (unsigned int child = 0; child < node->mNumChildren; ++child)
 	{
 		VuoSceneObject childSceneObject = VuoSceneObject_makeEmpty();
 		convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, shadersUsed, &childSceneObject);
-		if (childSceneObject.type != VuoSceneObjectSubType_Empty)
-			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, childSceneObject);
+		VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects(*sceneObject), childSceneObject);
 	}
 }
 
@@ -355,7 +319,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
  */
 bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bool fit, bool hasLeftHandedCoordinates)
 {
-	*scene = VuoSceneObject_makeEmpty();
+	*scene = NULL;
 
 	if (VuoText_isEmpty(sceneURL))
 		return false;
@@ -369,6 +333,13 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		GLint maxVertices;
 		glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVertices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_VERTEX_LIMIT, maxVertices);
+
+		static bool limitsLogged = false;
+		if (!limitsLogged)
+		{
+			limitsLogged = true;
+			VDebugLog("OpenGL driver reports maxIndices=%d, maxVertices=%d", maxIndices, maxVertices);
+		}
 	});
 
 	struct aiFileIO fileHandlers;
@@ -379,7 +350,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 				sceneURL,
 				aiProcess_Triangulate
 //				| aiProcess_PreTransformVertices
-				| aiProcess_CalcTangentSpace
+//				| aiProcess_CalcTangentSpace
 				| aiProcess_GenSmoothNormals
 				| aiProcess_SplitLargeMeshes
 				| aiProcess_GenUVCoords,
@@ -390,7 +361,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	aiReleasePropertyStore(props);
 	if (!ais)
 	{
-		VUserLog("Error: %s\n", aiGetErrorString());
+		VUserLog("Error: %s", aiGetErrorString());
 		return false;
 	}
 
@@ -592,6 +563,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	}
 	VuoRelease(sceneURLWithoutFilename);
 
+	*scene = VuoSceneObject_makeEmpty();
 	convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, shadersUsed, scene);
 
 	for (unsigned int i = 0; i < ais->mNumMaterials; ++i)
@@ -602,42 +574,40 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		}
 
 	if(center)
-		VuoSceneObject_center(scene);
+		VuoSceneObject_center(*scene);
 
 	if(fit)
-		VuoSceneObject_normalize(scene);
+		VuoSceneObject_normalize(*scene);
 
 	if(hasLeftHandedCoordinates)
 	{
-		VuoSceneObject_apply(scene, ^(VuoSceneObject *currentObject, float modelviewMatrix[16])
+		VuoSceneObject_apply(*scene, ^(VuoSceneObject currentObject, float modelviewMatrix[16])
 		{
 			// VuoTransform flipAxis = VuoTransform_makeEuler( (VuoPoint3d) {0,0,0}, (VuoPoint3d){0,0,0}, (VuoPoint3d){-1, 1, 1} );
 			// float matrix[16];
 			// VuoTransform_getMatrix(flipAxis, matrix);
 
-			if(currentObject->mesh != NULL)
+			VuoMesh mesh = VuoSceneObject_getMesh(currentObject);
+			if (mesh)
 			{
-				for(int i = 0; i < currentObject->mesh->submeshCount; i++)
-				{
-					VuoSubmesh msh = currentObject->mesh->submeshes[i];
-					for(int n = 0; n < msh.vertexCount; n++)
-					{
-						msh.positions[n].x *= -1;
-					}
+				unsigned int vertexCount, elementCount, *elements;
+				float *positions;
+				VuoMesh_getCPUBuffers(mesh, &vertexCount, &positions, NULL, NULL, NULL, &elementCount, &elements);
 
-					// flip triangle winding order
-					switch(msh.elementAssemblyMethod)
-					{
-						case VuoMesh_IndividualTriangles:
+				for (int n = 0; n < vertexCount; n++)
+					positions[n * 3] *= -1;
+
+				// flip triangle winding order
+				switch (VuoMesh_getElementAssemblyMethod(mesh))
+				{
+					case VuoMesh_IndividualTriangles:
+						for(int i = 0; i < elementCount; i+= 3)
 						{
-							unsigned int elementCount = msh.elementCount;
-							for(int i = 0; i < elementCount; i+= 3)
-							{
-								unsigned int tmp = msh.elements[i];
-								msh.elements[i] = msh.elements[i+2];
-								msh.elements[i+2] = tmp;
-							}
-						} break;
+							unsigned int tmp = elements[i];
+							elements[i] = elements[i+2];
+							elements[i+2] = tmp;
+						}
+						break;
 
 						// @todo - fill in additional winding order flip methods whenever this loader
 						// provides the ability to read 'em
@@ -669,9 +639,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 
 						default:
 							break;
-					}
 				}
-				VuoMesh_upload(currentObject->mesh);
 			}
 		});
 	}

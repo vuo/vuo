@@ -2,19 +2,20 @@
  * @file
  * VuoDictionary_VuoText_VuoReal implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
+
+#include "type.h"
 
 extern "C"
 {
 
 #include <string.h>
 
-#include "type.h"
 #include "VuoDictionary_VuoText_VuoReal.h"
 
 /// @{
@@ -81,7 +82,7 @@ char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoR
 {
 	unsigned long keyCount = VuoListGetCount_VuoText(d.keys);
 	if (keyCount == 0)
-		return strdup("(empty dictionary)");
+		return strdup("Empty dictionary");
 
 	const int maxItems = 20;
 	size_t maxCharacters = 400;
@@ -119,7 +120,7 @@ char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoR
  */
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void)
 {
-	VuoDictionary_VuoText_VuoReal d = { VuoListCreate_VuoText(), VuoListCreate_VuoReal() };
+	VuoDictionary_VuoText_VuoReal d = { VuoListCreate_VuoText(), VuoListCreate_VuoReal(), 0 };
 	return d;
 }
 
@@ -128,7 +129,7 @@ VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void)
  */
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreateWithLists_VuoText_VuoReal(const VuoList_VuoText keys, const VuoList_VuoReal values)
 {
-	return (VuoDictionary_VuoText_VuoReal){keys, values};
+	return (VuoDictionary_VuoText_VuoReal){ keys, values, 0 };
 }
 
 /**

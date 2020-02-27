@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-240,75" _started_eventThrottling="enqueue"];
+MakeRedImage [type="me.isf.red" version="" label="Make Red Image|<refresh>refresh\l|<vuoWidth>vuoWidth\l|<vuoHeight>vuoHeight\l|<outputImage>outputImage\r" pos="225,75" _vuoWidth="640" _vuoHeight="480"];
+
+FireOnStart:started -> MakeRedImage:vuoWidth;
+}

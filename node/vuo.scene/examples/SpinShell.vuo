@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Animates a 3D seashell-shaped object.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="-60,345" _speed="50"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-270,345" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="120,330" _x="270" _z="0.0"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="345,315" _translation="\{\"x\":0,\"y\":0.30000001192092896,\"z\":0\}" _scale="\{\"x\":0.40000000596046448,\"y\":0.40000000596046448,\"z\":0.10999999940395355\}"];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="719,356" fillcolor="blue"];
+MakeParametricObject [type="vuo.scene.make.parametric.VuoColor" version="1.0.0" label="Make Parametric Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uRange>uRange\l|<vClosed>vClosed\l|<vRange>vRange\l|<object>object\r" pos="510,345" fillcolor="orange" _material="\{\"r\":0.059998475015163422,\"g\":0.42194247245788574,\"b\":0.74999618530273438,\"a\":1\}" _time="0.0" _xExpression="\"(1-exp(U)) * cos(1080*U) * cos(V)^2\"" _yExpression="\"(-1+exp(U)) * sin(1080*U) * cos(V)^2\"" _zExpression="\"1 - exp(2*U) - sin(2*V) + exp(U) * sin(2*V)\"" _rows="256" _columns="64" _uClosed="false" _uRange="\{\"minimum\":0,\"maximum\":1.3999999999999999\}" _vClosed="true" _vRange="\{\"minimum\":0,\"maximum\":-180\}"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="765,345" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+
+ChangeSpeed:changedTime -> Make3DPoint2:y;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+Make3DPoint2:point -> Make3DTransform:rotation;
+Make3DTransform:transform -> MakeParametricObject:transform;
+MakeList3:list -> RenderSceneToWindow:objects;
+MakeParametricObject:object -> MakeList3:1;
+}

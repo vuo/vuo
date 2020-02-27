@@ -2,9 +2,9 @@
  * @file
  * vuo.osc.receive node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -19,7 +19,6 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isDeprecated": true,
-						 "isInterface" : true,
 						 "exampleCompositions": [ "ReceiveOsc.vuo" ]
 					 }
 				 });
@@ -29,6 +28,7 @@ struct nodeInstanceData
 {
 	VuoInteger udpPort;
 	VuoOscIn oscManager;
+	bool triggersEnabled;
 };
 
 static void updatePort(struct nodeInstanceData *context, VuoInteger newUdpPort)
@@ -59,6 +59,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoOscIn_enableTriggers((*context)->oscManager, receivedMessage);
 }
 
@@ -81,6 +82,9 @@ void nodeInstanceEvent
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (udpPort != (*context)->udpPort)
 	{
 		VuoOscIn_disableTriggers((*context)->oscManager);
@@ -95,6 +99,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoOscIn_disableTriggers((*context)->oscManager);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

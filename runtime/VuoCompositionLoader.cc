@@ -2,9 +2,9 @@
  * @file
  * VuoCompositionLoader implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 extern "C" {
@@ -36,18 +36,17 @@ char *telemetryURL = NULL;  ///< The URL that the composition will use to initia
 
 bool isReplacing = false;  ///< True if the composition is in the process of being replaced.
 void *dylibHandle = NULL;  ///< A handle to the running composition.
-void **resourceDylibHandles = NULL;  ///< A list of handles to the running composition's resources.
-size_t resourceDylibHandlesSize = 0;  ///< The number of items in @c resourceDylibHandles.
-size_t resourceDylibHandlesCapacity = 0;  ///< The number of items that @c resourceDylibHandlesCapacity can currently hold.
+map<string, void *> resourceDylibHandles;  ///< Handles to the running composition's resources.
+vector<string> resourceDylibsToUnload;  ///< Paths of the resources to be unloaded when the composition is replaced.
+vector<string> resourceDylibsToLoad;  ///< Paths of the resources to be loaded (or reloaded) when the composition is replaced.
 pid_t runnerPid = 0;  ///< Process ID of the runner that started the composition.
 int runnerPipe = -1;  ///< The file descriptor for the composition's end of the pipe used to detect if the runner's process ends.
 bool continueIfRunnerDies = false;  ///< If true, the composition continues running if the runner's process ends.
-bool trialRestrictionsEnabled = true;	///< If true, some nodes may restrict how they can be used.
 
 bool replaceComposition(const char *dylibPath, char *compositionDiff);
 void stopComposition(void);
-bool loadResourceDylib(const char *resourceDylibPath);
-void unloadResourceDylibs(void);
+bool loadResourceDylib(const string &dylibPath);
+bool unloadResourceDylib(const string &dylibPath);
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 char *VuoApp_dylibPath = NULL;	///< The path of the most recently loaded composition dylib.
@@ -120,28 +119,28 @@ int main(int argc, char **argv)
 			{"vuo-loader", required_argument, NULL, 0},
 			{"vuo-runner-pipe", required_argument, NULL, 0},
 			{"vuo-continue-if-runner-dies", no_argument, NULL, 0},
-			{"vuo-full", no_argument, NULL, 0},
 			{"vuo-runner-pid", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+		int ret;
+		while ((ret = getopt_long(argc, argv, "", options, &optionIndex)) != -1)
 		{
+			if (ret == '?')
+				continue;
+
 			switch(optionIndex)
 			{
 				case 0:	// "vuo-control"
-					controlURL = (char *)malloc(strlen(optarg) + 1);
-					strcpy(controlURL, optarg);
+					controlURL = strdup(optarg);
 					break;
 				case 1:	// "vuo-telemetry"
-					telemetryURL = (char *)malloc(strlen(optarg) + 1);
-					strcpy(telemetryURL, optarg);
+					telemetryURL = strdup(optarg);
 					break;
 				case 2:	// "vuo-loader"
 					if (loaderControlURL)
 						free(loaderControlURL);
-					loaderControlURL = (char *)malloc(strlen(optarg) + 1);
-					strcpy(loaderControlURL, optarg);
+					loaderControlURL = strdup(optarg);
 					break;
 				case 3:  // --vuo-runner-pipe
 					runnerPipe = atoi(optarg);
@@ -149,10 +148,7 @@ int main(int argc, char **argv)
 				case 4:  // --vuo-continue-if-runner-dies
 					continueIfRunnerDies = true;
 					break;
-				case 5: // "vuo-full"
-					trialRestrictionsEnabled = false;
-					break;
-				case 6:  // --vuo-runner-pid
+				case 5:  // --vuo-runner-pid
 					runnerPid = atoi(optarg);
 					break;
 			}
@@ -174,21 +170,21 @@ int main(int argc, char **argv)
 		ZMQLoaderControl = zmq_socket(ZMQLoaderControlContext,ZMQ_REP);
 		if(zmq_bind(ZMQLoaderControl,loaderControlURL))
 		{
-			VUserLog("The composition couldn't start because the composition loader couldn't establish communication to control the composition : %s", strerror(errno));
+			VUserLog("The composition couldn't start because the composition loader couldn't establish communication to control the composition : %s", zmq_strerror(errno));
 			return -1;
 		}
 
 		ZMQLoaderSelfReceive = zmq_socket(ZMQLoaderControlContext, ZMQ_PAIR);
 		if (zmq_bind(ZMQLoaderSelfReceive, "inproc://vuo-loader-self") != 0)
 		{
-			VUserLog("Couldn't bind self-receive socket: %s (%d)", strerror(errno), errno);
+			VUserLog("Couldn't bind self-receive socket: %s (%d)", zmq_strerror(errno), errno);
 			return -1;
 		}
 
 		ZMQLoaderSelfSend = zmq_socket(ZMQLoaderControlContext, ZMQ_PAIR);
 		if (zmq_connect(ZMQLoaderSelfSend, "inproc://vuo-loader-self") != 0)
 		{
-			VUserLog("Couldn't connect self-send socket: %s (%d)", strerror(errno), errno);
+			VUserLog("Couldn't connect self-send socket: %s (%d)", zmq_strerror(errno), errno);
 			return -1;
 		}
 	}
@@ -200,7 +196,7 @@ int main(int argc, char **argv)
 	{
 		loaderControlCanceledSemaphore = dispatch_semaphore_create(0);
 		loaderControlQueue = dispatch_queue_create("org.vuo.runtime.loader", NULL);
-		loaderControlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), loaderControlQueue);
+		loaderControlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, loaderControlQueue);
 		dispatch_source_set_timer(loaderControlTimer, dispatch_walltime(NULL,0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 		dispatch_source_set_event_handler(loaderControlTimer, ^{
 
@@ -224,15 +220,26 @@ int main(int argc, char **argv)
 												  case VuoLoaderControlRequestCompositionReplace:
 												  {
 													  char *dylibPath = vuoReceiveAndCopyString(ZMQLoaderControl, NULL);
-													  char *resourceDylibPath = vuoReceiveAndCopyString(ZMQLoaderControl, NULL);
+
+													  int numResourceDylibPathsAdded = vuoReceiveInt(ZMQLoaderControl, NULL);
+													  for (int i = 0; i < numResourceDylibPathsAdded; ++i)
+													  {
+														  char *s = vuoReceiveAndCopyString(ZMQLoaderControl, NULL);
+														  resourceDylibsToLoad.push_back(s);
+														  free(s);
+													  }
+
+													  int numResourceDylibPathsRemoved = vuoReceiveInt(ZMQLoaderControl, NULL);
+													  for (int i = 0; i < numResourceDylibPathsRemoved; ++i)
+													  {
+														  char *s = vuoReceiveAndCopyString(ZMQLoaderControl, NULL);
+														  resourceDylibsToUnload.push_back(s);
+														  free(s);
+													  }
+
 													  char *compositionDiff = vuoReceiveAndCopyString(ZMQLoaderControl, NULL);
 
-													  bool ok = true;
-													  ok = ok && loadResourceDylib(resourceDylibPath);
-													  ok = ok && replaceComposition(dylibPath, compositionDiff);
-
-													  free(dylibPath);
-													  free(resourceDylibPath);
+													  bool ok = replaceComposition(dylibPath, compositionDiff);
 
 													  vuoLoaderControlReplySend(VuoLoaderControlReplyCompositionReplaced,NULL,0);
 
@@ -249,9 +256,6 @@ int main(int argc, char **argv)
 										   });
 		dispatch_resume(loaderControlTimer);
 	}
-
-	VuoEventLoop_installSignalHandlers();
-	VuoEventLoop_disableAppNap();
 
 	// Wait until the composition is permanently stopped (not just temporarily stopped for replacing).
 	{
@@ -277,7 +281,7 @@ int main(int argc, char **argv)
 			zmq_msg_init_size(&message, sizeof z);
 			memcpy(zmq_msg_data(&message), &z, sizeof z);
 			if (zmq_send(ZMQLoaderSelfSend, &message, 0) != 0)
-				VUserLog("Couldn't break: %s (%d)", strerror(errno), errno);
+				VUserLog("Couldn't break: %s (%d)", zmq_strerror(errno), errno);
 			zmq_msg_close(&message);
 		}
 
@@ -300,8 +304,6 @@ int main(int argc, char **argv)
 		vuoFini();
 	}
 
-	unloadResourceDylibs();
-
 	return 0;
 }
 
@@ -316,6 +318,17 @@ bool replaceComposition(const char *dylibPath, char *compositionDiff)
 	if (VuoApp_dylibPath)
 		free(VuoApp_dylibPath);
 	VuoApp_dylibPath = strdup(dylibPath);
+	// Provide the composition name to the crash reporter.
+	{
+		char *filename = strrchr(dylibPath, '/');
+		if (filename)
+		{
+			char *name = strdup(filename + 1); // Trim leading slash.
+			name[strlen(name) - strlen("-XXXXXX.dylib")] = 0;
+			VuoLog_status("Running Vuo composition \"%s\"", name);
+			free(name);
+		}
+	}
 
 	isReplacing = true;
 
@@ -359,16 +372,24 @@ bool replaceComposition(const char *dylibPath, char *compositionDiff)
 
 		dlclose(dylibHandle);
 		dylibHandle = NULL;
+
+		for (vector<string>::iterator i = resourceDylibsToUnload.begin(); i != resourceDylibsToUnload.end(); ++i)
+			unloadResourceDylib(*i);
+		resourceDylibsToUnload.clear();
 	}
 
 	// Start the new composition paused.
 	{
+		for (vector<string>::iterator i = resourceDylibsToLoad.begin(); i != resourceDylibsToLoad.end(); ++i)
+			loadResourceDylib(*i);
+		resourceDylibsToLoad.clear();
+
 		ZMQControlContext = zmq_init(1);
 
 		ZMQControl = zmq_socket(ZMQControlContext,ZMQ_REQ);
 		if (zmq_connect(ZMQControl,controlURL))
 		{
-			VUserLog("The composition couldn't be replaced because the composition loader couldn't establish communication to control the composition : %s", strerror(errno));
+			VUserLog("The composition couldn't be replaced because the composition loader couldn't establish communication to control the composition : %s", zmq_strerror(errno));
 			return false;
 		}
 
@@ -396,7 +417,7 @@ bool replaceComposition(const char *dylibPath, char *compositionDiff)
 		}
 
 		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid, runnerPipe, continueIfRunnerDies,
-						 trialRestrictionsEnabled, "", dylibHandle, runtimePersistentState, false);
+						 "", dylibHandle, runtimePersistentState, false);
 	}
 
 	isReplacing = false;
@@ -422,46 +443,39 @@ void stopComposition(void)
 
 /**
  * Loads the resource dylib at the given path and adds the resulting handle to the list of resource dylibs.
- *
- * If @c resourceDylibPath is the empty string, does nothing.
  */
-bool loadResourceDylib(const char *resourceDylibPath)
+bool loadResourceDylib(const string &dylibPath)
 {
-	if (strlen(resourceDylibPath) == 0)
-		return true;
-
-	void *resourceDylibHandle = dlopen(resourceDylibPath, RTLD_NOW);
-	if (! resourceDylibHandle)
+	void *dylibHandle = dlopen(dylibPath.c_str(), RTLD_NOW);
+	if (! dylibHandle)
 	{
-		VUserLog("The composition couldn't be replaced because the library '%s' couldn't be loaded : %s", resourceDylibPath, dlerror());
+		VUserLog("The composition couldn't be replaced because the library '%s' couldn't be loaded : %s", dylibPath.c_str(), dlerror());
 		return false;
 	}
 
-	if (resourceDylibHandlesSize == 0)
-	{
-		resourceDylibHandlesCapacity = 1;
-		resourceDylibHandles = (void **)malloc(resourceDylibHandlesCapacity * sizeof(void *));
-	}
-	else if (resourceDylibHandlesSize == resourceDylibHandlesCapacity)
-	{
-		resourceDylibHandlesCapacity *= 2;
-		void **newResourceDylibHandles = (void **)malloc(resourceDylibHandlesCapacity * sizeof(void *));
-		for (int i = 0; i < resourceDylibHandlesSize; ++i)
-			newResourceDylibHandles[i] = resourceDylibHandles[i];
-		free(resourceDylibHandles);
-		resourceDylibHandles = newResourceDylibHandles;
-	}
-
-	resourceDylibHandles[resourceDylibHandlesSize++] = resourceDylibHandle;
-
+	resourceDylibHandles[dylibPath] = dylibHandle;
 	return true;
 }
 
 /**
- * Unloads all resource dylibs.
+ * Unloads the resource dylib at the given path and removes its handle from the list of resource dylibs.
  */
-void unloadResourceDylibs(void)
+bool unloadResourceDylib(const string &dylibPath)
 {
-	for (int i = 0; i < resourceDylibHandlesSize; ++i)
-		dlclose(resourceDylibHandles[i]);
+	void *dylibHandle = resourceDylibHandles[dylibPath];
+	if (! dylibHandle)
+	{
+		VUserLog("The library '%s' couldn't be unloaded because its handle was not found.", dylibPath.c_str());
+		return false;
+	}
+
+	int ret = dlclose(dylibHandle);
+	if (ret != 0)
+	{
+		VUserLog("The library '%s' couldn't be unloaded : %s", dylibPath.c_str(), dlerror());
+		return false;
+	}
+
+	resourceDylibHandles.erase(dylibPath);
+	return true;
 }

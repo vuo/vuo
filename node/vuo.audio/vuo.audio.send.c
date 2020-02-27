@@ -2,9 +2,9 @@
  * @file
  * vuo.audio.send node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -18,8 +18,8 @@ VuoModuleMetadata({
 						  "VuoAudio"
 					  ],
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioWave.vuo", "PanAudio.vuo", "GenerateParametricAudio.vuo" ],
-						  "isInterface" : true
 					  }
 				 });
 
@@ -28,6 +28,7 @@ struct nodeInstanceData
 {
 	VuoAudioOutputDevice device;
 	VuoAudioIn audioManager;
+	bool triggersEnabled;
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoAudioOutputDevice newDevice)
@@ -59,6 +60,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedChannels, VuoReal)
 )
 {
+	(*context)->triggersEnabled = true;
 	VuoAudioOut_addTrigger((*context)->audioManager, requestedChannels);
 }
 
@@ -83,9 +85,12 @@ void nodeInstanceEvent
 		VuoInputData(VuoAudioOutputDevice) device,
 		VuoInputData(VuoList_VuoAudioSamples) sendChannels,
 		VuoInputEvent({"eventBlocking":"none","data":"sendChannels"}) sendChannelsEvent,
-		VuoOutputTrigger(requestedChannels, VuoReal)
+		VuoOutputTrigger(requestedChannels, VuoReal, {"name":"Refreshed at Time"})
 )
 {
+	if (!(*context)->triggersEnabled)
+		return;
+
 	if (! VuoAudioOutputDevice_areEqual(device, (*context)->device))
 	{
 		VuoAudioOut_removeTrigger((*context)->audioManager, requestedChannels);
@@ -104,6 +109,7 @@ void nodeInstanceTriggerStop
 )
 {
 	VuoAudioOut_removeTrigger((*context)->audioManager, requestedChannels);
+	(*context)->triggersEnabled = false;
 }
 
 void nodeInstanceFini

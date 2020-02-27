@@ -2,21 +2,22 @@
  * @file
  * VuoCompilerType interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
 #include "VuoBaseDetail.hh"
-#include "VuoType.hh"
 #include "VuoCompilerModule.hh"
+
+class VuoType;
 
 /**
  * The compiler detail class for @c VuoType.
  */
-class VuoCompilerType : public VuoBaseDetail<VuoType>, public VuoCompilerModule  // Order matters: VuoCompilerModule after VuoBaseDetail - http://stackoverflow.com/a/2254306/238387
+class VuoCompilerType : public VuoBaseDetail<VuoType>, public VuoCompilerModule  // Order matters: VuoCompilerModule after VuoBaseDetail - https://stackoverflow.com/a/2254306/238387
 {
 private:
 	Function *makeFromJsonFunction;
@@ -26,6 +27,8 @@ private:
 	Function *getStringFunction;
 	Function *getInterprocessStringFunction;
 	Function *getSummaryFunction;
+	Function *areEqualFunction;
+	Function *isLessThanFunction;
 	Function *retainFunction;
 	Function *releaseFunction;
 	Type *llvmType;
@@ -53,6 +56,7 @@ public:
 	void generateReleaseCall(Module *module, BasicBlock *block, Value *arg);
 	Type * getType(void);
 	Type * getFunctionParameterType(Type **secondType);
-	Attributes getFunctionParameterAttributes(void);
+	AttributeSet getFunctionParameterAttributes(void);
 	bool hasInterprocessStringFunction(void);
+	bool supportsComparison(void);
 };

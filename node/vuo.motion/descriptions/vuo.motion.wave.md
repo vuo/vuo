@@ -1,4 +1,4 @@
-Calculates the height of a [waveform](http://en.wikipedia.org/wiki/Waveform) at a given time.
+Calculates the height of a [waveform](https://en.wikipedia.org/wiki/Waveform) at a given time.
 
 This node can be used to animate an object in a wave motion by sending gradually increasing values to the `Time` port. 
 If `Wave` or `Period` is changed while the waveform is being animated, the waveform changes smoothly to its new shape.

@@ -2,9 +2,9 @@
  * @file
  * Prototypes for node class implementations.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -59,25 +59,47 @@
  *
  * @param type The port type. See @ref VuoTypes.
  * @param ... Optionally, a JSON object specification containing additional details about the data. Supported JSON keys include:
- *			- "default" — The default constant value for the port. It should have the format accepted by the port type's
- *			  MyType_makeFromJson() function.
- *			- "defaults" — For generic ports, the default constant values for data types to which the port can be specialized.
- *			  The value for this JSON key should be a JSON object in which each key is a specialized port type name and each
- *			  value has the format accepted by that port type's MyType_makeFromJson() function.
- *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
- *			  This is usually not necessary.
- *			- "includeValues" (array of strings) — Enum types by default display all `_allowedValues()` in a menu.
- *			  When this detail is present, only the values listed will be displayed in the menu.
- *			  The values should be string keys — the output of `_getJson()`.
- *			- "auto" — For VuoInteger and VuoReal ports, a special port value that signifies that the node should calculate
- *			  the value for this port automatically instead of using the set value.
- *			- "autoSupersedesDefault" — For ports with an "auto" value, true if the port should have the "auto" value instead of
+ *          - "default" — The default constant value for the port. It should have the format accepted by the port type's
+ *            MyType_makeFromJson() function.
+ *          - "defaults" — For generic ports, the default constant values for data types to which the port can be specialized.
+ *            The value for this JSON key should be a JSON object in which each key is a specialized port type name and each
+ *            value has the format accepted by that port type's MyType_makeFromJson() function.
+ *          - "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *            This is usually not necessary.
+ *          - "menuItems" (array) — For VuoInteger ports with a fixed set of values, a list of menu items.
+ *            The port's input editor will be a menu instead of a numerical input editor.  The array elements can be:
+ *             - an object with 2 keys: `value` (integer port value) and `name` (display name)
+ *             - the string `---` — a menu separator line
+ *             - any other string — a non-selectable menu label, for labeling multiple sections within the menu
+ *          - "includeValues" (array of strings) — Enum types by default display all `_allowedValues()` in a menu.
+ *            When this detail is present, only the values listed will be displayed in the menu.
+ *            The values should be string keys — the output of `_getJson()`.
+ *          - "auto" — For VuoInteger and VuoReal ports, a special port value that signifies that the node should calculate
+ *            the value for this port automatically instead of using the set value.
+ *          - "autoSupersedesDefault" (boolean) — For ports with an "auto" value, true if the port should have the "auto" value instead of
  *            the "default" value when the node is instantiated. This is useful if you want the port to start with the "auto"
  *            value but default to the "default" value if the user deselects the "auto" value in the port's input editor.
- *			.
- *		Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
+ *          .
+ *       Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,{"default":60,"suggestedMin":0,"suggestedMax":127}) noteNumber);}
+ *
+ * @eg{
+ * {
+ *     "menuItems":[
+ *         "RGB",
+ *         {"value":0, "name":"    Red"    },
+ *         {"value":1, "name":"    Green"  },
+ *         {"value":2, "name":"    Blue"   },
+ *         "---",
+ *         "CMYK",
+ *         {"value":3, "name":"    Cyan"   },
+ *         {"value":4, "name":"    Magenta"},
+ *         {"value":5, "name":"    Yellow" },
+ *         {"value":6, "name":"    Black"  }
+ *     ]
+ * }
+ * }
  */
 #define VuoInputData(type, ...) __attribute__((annotate("vuoInputData"),annotate("vuoType:" #type),annotate("vuoDetails: " #__VA_ARGS__))) const type
 
@@ -92,17 +114,17 @@
  * @hideinitializer
  *
  * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
- *			- "data" (string) — For data-and-event ports, the variable name for the VuoInputData parameter that provides the
- *			  data part of the port.
- *			- "eventBlocking" (string) — The port's policy for blocking events. Defaults to "none".
- *				- "none" — An event received by this input port is never blocked. It always flows to all non-trigger output ports.
- *				- "door" — An event received by this input port may or may not be blocked. It may or may not flow to any
- *				   non-trigger output port.
- *				- "wall" — An event received by this input port is always blocked. It never flows to any output port.
- *			- "hasPortAction" (boolean) — Overrides the default heuristics for determining whether the port has a port action
- *			  (does something special when it receives an event). This is usually not necessary.
- *			- "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
- *			  in rendered compositions. This is usually not necessary.
+ *          - "data" (string) — For data-and-event ports, the variable name for the VuoInputData parameter that provides the
+ *            data part of the port.
+ *          - "eventBlocking" (string) — The port's policy for blocking events. Defaults to "none".
+ *              - "none" — An event received by this input port is never blocked. It always flows to all non-trigger output ports.
+ *              - "door" — An event received by this input port may or may not be blocked. It may or may not flow to any
+ *                 non-trigger output port.
+ *              - "wall" — An event received by this input port is always blocked. It never flows to any output port.
+ *          - "hasPortAction" (boolean) — Overrides the default heuristics for determining whether the port has a port action
+ *            (does something special when it receives an event). This is usually not necessary.
+ *          - "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
+ *            in rendered compositions. This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,"0") seconds, VuoInputEvent({"data":"seconds","eventBlocking":"wall"}) secondsEvent);}
  * \eg{void nodeEvent(VuoInputEvent() start);}
@@ -124,8 +146,8 @@
  *
  * @param type The port type. See @ref VuoTypes.
  * @param ... Optionally, a JSON object specification containing additional details about the data. Supported JSON keys are:
- *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
- *			  This is usually not necessary.
+ *          - "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *            This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoOutputData(VuoInteger) seconds);}
  */
@@ -144,10 +166,10 @@
  * @hideinitializer
  *
  * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
- *			- "data" (string) — For data-and-event ports, the variable name for the VuoOutputData parameter that provides the
- *			  data part of the port.
- *			- "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
- *			  in rendered compositions. This is usually not necessary.
+ *          - "data" (string) — For data-and-event ports, the variable name for the VuoOutputData parameter that provides the
+ *            data part of the port.
+ *          - "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
+ *            in rendered compositions. This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoOutputData(VuoInteger) seconds, VuoOutputEvent({"data":"seconds"}) secondsEvent);}
  * \eg{void nodeEvent(VuoOutputEvent() started);}
@@ -165,14 +187,14 @@
  * @param name The name of the trigger port.
  * @param type The port type, or `void` for an event-only trigger port. See @ref VuoTypes.
  * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
- *			- "eventThrottling" (string) — How the trigger should handle events when triggers are firing events faster than the
- *			  composition can process them. Defaults to "enqueue".
- *				- "enqueue" — An event fired by this port will eventually reach downstream nodes, waiting if necessary for
- *				  previous events to flow through the composition.
- *				- "drop" — An event fired by this port will be dropped (not transmitted to any nodes downstream of the trigger
- *				  port) if it would otherwise have to wait for previous events to flow through the composition.
- *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
- *			  This is usually not necessary.
+ *          - "eventThrottling" (string) — How the trigger should handle events when triggers are firing events faster than the
+ *            composition can process them. Defaults to "enqueue".
+ *              - "enqueue" — An event fired by this port will eventually reach downstream nodes, waiting if necessary for
+ *                previous events to flow through the composition.
+ *              - "drop" — An event fired by this port will be dropped (not transmitted to any nodes downstream of the trigger
+ *                port) if it would otherwise have to wait for previous events to flow through the composition.
+ *          - "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *            This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoOutputTrigger(started,void))
  * {
@@ -216,11 +238,11 @@
  * This function is called once per event received by the node (even if the event is received through multiple input ports).
  *
  * Parameter decorations may include:
- *		@arg @ref VuoInputData
- *		@arg @ref VuoInputEvent
- *		@arg @ref VuoOutputTrigger
- *		@arg @ref VuoOutputData
- *		@arg @ref VuoOutputEvent
+ *      @arg @ref VuoInputData
+ *      @arg @ref VuoInputEvent
+ *      @arg @ref VuoOutputTrigger
+ *      @arg @ref VuoOutputData
+ *      @arg @ref VuoOutputEvent
  *
  * This function _should not_ modify heap data provided via @ref VuoInputData.
  * See @ref DevelopingNodeClassesImmutable "Developing Node Classes" for more information.
@@ -249,7 +271,7 @@ void nodeEvent(...);
  * If this function allocates memory on the heap for the instance data, it should register that memory. See @ref ManagingMemory.
  *
  * Parameter decorations may include:
- *		@arg @ref VuoInputData — This argument has the initial (constant or default) value of the input port, before it has received any events.
+ *      @arg @ref VuoInputData — This argument has the initial (constant or default) value of the input port, before it has received any events.
  */
 struct nodeInstanceData *nodeInstanceInit(...);
 
@@ -260,11 +282,11 @@ struct nodeInstanceData *nodeInstanceInit(...);
  * This function is optional.
  *
  * Parameter decorations must include:
- *		@arg @ref VuoInstanceData
+ *      @arg @ref VuoInstanceData
  *
  * Parameter decorations may include:
- *		@arg @ref VuoInputData — This argument has the current value of the input port.
- *		@arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
+ *      @arg @ref VuoInputData — This argument has the current value of the input port.
+ *      @arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
  */
 void nodeInstanceTriggerStart(...);
 
@@ -276,18 +298,25 @@ void nodeInstanceTriggerStart(...);
  * This function is called once per event received by the node (even if the event is received through multiple input ports).
  *
  * Parameter decorations must include:
- *		@arg @ref VuoInstanceData
+ *      @arg @ref VuoInstanceData
  *
  * Parameter decorations may include:
- *		@arg @ref VuoInputData
- *		@arg @ref VuoInputEvent
- *		@arg @ref VuoOutputTrigger
- *		@arg @ref VuoOutputData
- *		@arg @ref VuoOutputEvent
+ *      @arg @ref VuoInputData
+ *      @arg @ref VuoInputEvent
+ *      @arg @ref VuoOutputTrigger
+ *      @arg @ref VuoOutputData
+ *      @arg @ref VuoOutputEvent
  *
- * This function _should not_ modify heap data provided via @ref VuoInputData,
- * and it _should not_ keep references to heap data sent via @ref VuoOutputData.
+ * This function _should not_ modify heap data provided via @ref VuoInputData.
+ * The node may retain references to heap data sent via @ref VuoOutputData,
+ * but it _should not_ modify the heap data once it has been sent via @ref VuoOutputData.
+ *
  * See @ref DevelopingNodeClassesImmutable "Developing Node Classes" for more information.
+ *
+ * @note This function may be called even after @ref nodeInstanceTriggerStop has been called.
+ * For example, when a composition is stopping, the runtime may call this node's `nodeInstanceTriggerStop`,
+ * then another node (whose triggers haven't yet been stopped) may fire an event,
+ * which may call this node's `nodeInstanceEvent`.
  */
 void nodeInstanceEvent(...);
 
@@ -298,11 +327,11 @@ void nodeInstanceEvent(...);
  * This function is optional.
  *
  * Parameter decorations must include:
- *		@arg @ref VuoInstanceData
+ *      @arg @ref VuoInstanceData
  *
  * Parameter decorations may include:
- *		@arg @ref VuoInputData — This argument has the current value of the input port.
- *		@arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
+ *      @arg @ref VuoInputData — This argument has the current value of the input port.
+ *      @arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
  */
 void nodeInstanceTriggerUpdate(...);
 
@@ -317,10 +346,10 @@ void nodeInstanceTriggerUpdate(...);
  * This function is optional.
  *
  * Parameter decorations must include:
- *		@arg @ref VuoInstanceData
+ *      @arg @ref VuoInstanceData
  *
  * Parameter decorations may include:
- *		@arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
+ *      @arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
  */
 void nodeInstanceTriggerStop(...);
 
@@ -329,7 +358,7 @@ void nodeInstanceTriggerStop(...);
  * It's responsible for closing any services opened in nodeInstanceInit() or elsewhere.
  *
  * Parameter decorations must include:
- *		@arg @ref VuoInstanceData
+ *      @arg @ref VuoInstanceData
  */
 void nodeInstanceFini(...);
 

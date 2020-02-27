@@ -2,9 +2,9 @@
  * @file
  * VuoCompilerDriver interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
@@ -23,8 +23,10 @@ public:
 	VuoCompilerDriver(VuoCompiler *compiler, const string &driverAsCompositionString);
 
 	bool isValidDriverForProtocol(VuoProtocol *protocol);
-	void applyToComposition(VuoCompilerComposition *composition);
+	void applyToComposition(VuoCompilerComposition *composition, VuoCompiler *compiler, bool canPublishedInputsBeEdited = true);
 
 private:
+	VuoCompiler *compiler;
 	VuoCompilerGraphvizParser *parser;
+	string compositionString;
 };

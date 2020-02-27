@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ConnectRecentPoints [type="me.connectRecentPoints" version="" label="Connect Recent Points|<refresh>refresh\l|<MaxRecentPoints>MaxRecentPoints\l|<AddPoint>AddPoint\l|<Object>Object\r" pos="210,165" fillcolor="orange" _MaxRecentPoints="10"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="404,176" fillcolor="blue"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="0,75" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="450,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+
+ConnectRecentPoints:Object -> MakeList:1;
+MakeList:list -> RenderSceneToWindow2:objects;
+ReceiveMouseMoves:movedTo -> ConnectRecentPoints:AddPoint;
+RenderSceneToWindow2:updatedWindow -> ReceiveMouseMoves:window;
+}

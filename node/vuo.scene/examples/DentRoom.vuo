@@ -2,39 +2,41 @@
  * @file
  * Makes a room of grid lines that you can displace by moving the mouse.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
- * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="840,225" _blendMode="\"linear-dodge\"" _foregroundOpacity="0.010000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="75,-210"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="840,225" _blendMode="\"linear-dodge\"" _foregroundOpacity="0.010000" _replaceOpacity="true"];
 Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="825,-90"];
-Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-225" _transform="{\"translation\":[0,0,-0.5],\"eulerRotation\":[0,0,0],\"scale\":[1,1,1]}"];
-Combine3DObjects3 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-135" _transform="{\"translation\":[0,-0.5,0],\"eulerRotation\":[-1.5707963705062866,0,0],\"scale\":[1,1,1]}"];
-Combine3DObjects4 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-45" _transform="{\"translation\":[0,0.5,0],\"eulerRotation\":[1.5707963705062866,0,0],\"scale\":[1,1,1]}"];
-Combine3DObjects5 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,45" _transform="{\"translation\":[-0.5,0,0],\"eulerRotation\":[0,1.5707963705062866,0],\"scale\":[1,1,1]}"];
-Combine3DObjects6 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,135" _transform="{\"translation\":[0.5,0,0],\"eulerRotation\":[0,-1.5707963705062866,0],\"scale\":[1,1,1]}"];
-Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.0.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="1035,-90" fillcolor="violet" _channel="\"red\"" _distance="1.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="105,-255" fillcolor="yellow" _started_eventThrottling="enqueue"];
-HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="840,90"];
-Make3DGridLines7 [type="vuo.scene.make.grid.lines.VuoColor" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="255,-210" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.002000"];
-MakeList12 [type="vuo.list.make.5.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="779,-64"];
-MakeList16 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1279,-79" fillcolor="green"];
-MakeList21 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,-199"];
-MakeList22 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,-109"];
-MakeList23 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,71"];
-MakeList24 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,-19"];
-MakeList25 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,161"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1309,-49" fillcolor="green"];
-MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="475,251" _1="{\"r\":0.424674,\"g\":0.424659,\"b\":0.424674,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}"];
+Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-225" _transform="\{\"translation\":[0,0,-0.5],\"eulerRotation\":[0,0,0],\"scale\":[1,1,1]\}"];
+Combine3DObjects3 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-135" _transform="\{\"translation\":[0,-0.5,0],\"eulerRotation\":[-1.5707963705062866,0,0],\"scale\":[1,1,1]\}"];
+Combine3DObjects4 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,-45" _transform="\{\"translation\":[0,0.5,0],\"eulerRotation\":[1.5707963705062866,0,0],\"scale\":[1,1,1]\}"];
+Combine3DObjects5 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,45" _transform="\{\"translation\":[-0.5,0,0],\"eulerRotation\":[0,1.5707963705062866,0],\"scale\":[1,1,1]\}"];
+Combine3DObjects6 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="585,135" _transform="\{\"translation\":[0.5,0,0],\"eulerRotation\":[0,-1.5707963705062866,0],\"scale\":[1,1,1]\}"];
+Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.1.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="1035,-90" fillcolor="orange" _channel="\"red\"" _distance="1.000000"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="60,90" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="840,90"];
+Make3DGridLines7 [type="vuo.scene.make.grid.lines.VuoColor" version="1.1.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="255,-210" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.002000"];
+MakeList12 [type="vuo.list.make.5.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="792,-64"];
+MakeList16 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1304,-79" fillcolor="blue"];
+MakeList21 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,-199"];
+MakeList22 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,-109"];
+MakeList23 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,71"];
+MakeList24 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,-19"];
+MakeList25 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,161"];
+MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="483,251" _1="\{\"r\":0.424674,\"g\":0.424659,\"b\":0.424674,\"a\":1.000000\}" _2="\{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000\}"];
 MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="540,240" _radius="0.100000" _noiseAmount="0.2" _width="512" _height="512"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="270,285" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1350,-90" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="60,255" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1350,-90" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
+AllowFirstEvent:firstEvent -> Make3DGridLines7:transform;
 BlendImages:blended -> Displace3DObjectWithImage:image;
-BlendImages:blended -> HoldValue2:newValue;
+BlendImages:blended -> HoldValue2:value;
 Combine3DObjects2:object -> MakeList12:1;
 Combine3DObjects3:object -> MakeList12:2;
 Combine3DObjects4:object -> MakeList12:3;
@@ -42,7 +44,8 @@ Combine3DObjects5:object -> MakeList12:4;
 Combine3DObjects6:object -> MakeList12:5;
 Combine3DObjects:object -> Displace3DObjectWithImage:object;
 Displace3DObjectWithImage:deformedObject -> MakeList16:1;
-FireOnStart:started -> Make3DGridLines7:refresh;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> HoldValue2:update;
 HoldValue2:heldValue -> BlendImages:background;
 Make3DGridLines7:object -> MakeList21:1;
 Make3DGridLines7:object -> MakeList22:1;
@@ -56,10 +59,8 @@ MakeList22:list -> Combine3DObjects3:childObjects;
 MakeList23:list -> Combine3DObjects5:childObjects;
 MakeList24:list -> Combine3DObjects4:childObjects;
 MakeList25:list -> Combine3DObjects6:childObjects;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList8:list -> MakeRadialGradientImage:colors;
 MakeRadialGradientImage:image -> BlendImages:foreground;
 ReceiveMouseMoves:movedTo -> MakeRadialGradientImage:center;
-RenderSceneToWindow:requestedFrame -> HoldValue2:refresh [style=invis];
-RenderSceneToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+RenderSceneToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
 }

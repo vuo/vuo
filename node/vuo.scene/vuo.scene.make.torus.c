@@ -2,9 +2,9 @@
  * @file
  * vuo.scene.make.torus node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Torus",
 					  "keywords" : [ "mesh", "3d", "scene", "donut", "doughnut", "shape" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -28,8 +28,23 @@ VuoModuleMetadata({
 					  }
 				  });
 
-void nodeEvent
+struct nodeInstanceData
+{
+	VuoInteger rows;
+	VuoInteger columns;
+	VuoReal thickness;
+};
+
+struct nodeInstanceData *nodeInstanceInit(void)
+{
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	return context;
+}
+
+void nodeInstanceEvent
 (
+	VuoInstanceData(struct nodeInstanceData *) context,
 	VuoInputData(VuoTransform) transform,
 	VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
 	VuoInputData(VuoInteger, {"default":16,"suggestedMin":3, "suggestedMax":256}) rows,
@@ -40,7 +55,18 @@ void nodeEvent
 {
 	if(VuoReal_areEqual(0, thickness))
 	{
-		*object = VuoSceneObject_makeEmpty();
+		*object = NULL;
+		return;
+	}
+
+	// If the structure hasn't changed, just reuse the existing GPU mesh data.
+	if (rows == (*context)->rows
+	 && columns == (*context)->columns
+	 && thickness == (*context)->thickness)
+	{
+		*object = VuoSceneObject_copy(*object);
+		VuoSceneObject_setTransform(*object, transform);
+		VuoSceneObject_setShader(*object, VuoShader_make_VuoGenericType1(material));
 		return;
 	}
 
@@ -67,5 +93,9 @@ void nodeEvent
 	free(yExp);
 	free(zExp);
 
-	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
+	*object = VuoSceneObject_makeMesh(mesh, VuoShader_make_VuoGenericType1(material), transform);
+
+	(*context)->rows = rows;
+	(*context)->columns = columns;
+	(*context)->thickness = thickness;
 }

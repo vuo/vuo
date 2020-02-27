@@ -2,9 +2,9 @@
  * @file
  * vuo.image.blend node implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
@@ -32,12 +32,12 @@ VuoModuleMetadata({
 
 
 #define FilterSource "\
-	include(VuoGlslAlpha)\
+	\n#include \"VuoGlslAlpha.glsl\"\
 	uniform sampler2D background;\
 	uniform sampler2D foreground;\
 	uniform float foregroundOpacity;\
 	uniform bool replaceOpacity;\
-	varying vec4 fragmentTextureCoordinate;\
+	varying vec2 fragmentTextureCoordinate;\
 	\
 	float BlendLinearDodgef(float base, float blend) { return min(base + blend, 1.0); }\
 	float BlendLinearBurnf(float base, float blend) { return max(base + blend - 1.0, 0.0); }\
@@ -58,15 +58,15 @@ VuoModuleMetadata({
 	float BlendPinLightf(float base, float blend) { return ((blend < 0.5) ? BlendDarkenf(base, (2.0 * blend)) : BlendLightenf(base, (2.0 *(blend - 0.5)))); }\
 	float BlendHardMixf(float base, float blend) { return ((BlendVividLightf(base, blend) < 0.5) ? 0.0 : 1.0); }\
 	\
-	include(hsl)\
+	\n#include \"VuoGlslHsl.glsl\"\
 	\
 	vec3 blendColors(vec4 bg, vec4 fg);\
 	\
 	void main()																															\
 	{																																	\
-		vec4 backgroundColor = VuoGlsl_sample(background, fragmentTextureCoordinate.xy);												\
+		vec4 backgroundColor = VuoGlsl_sample(background, fragmentTextureCoordinate);                                                   \
 		backgroundColor.rgb /= backgroundColor.a > 0. ? backgroundColor.a : 1.;															\
-		vec4 foregroundColor = VuoGlsl_sample(foreground, fragmentTextureCoordinate.xy);												\
+		vec4 foregroundColor = VuoGlsl_sample(foreground, fragmentTextureCoordinate);                                                   \
 		foregroundColor.rgb /= foregroundColor.a > 0. ? foregroundColor.a : 1.;															\
 		foregroundColor.a *= foregroundOpacity;																							\
 																																		\
@@ -117,8 +117,8 @@ static const char * fragmentShaderSource_blendDarkerComponent = BLEND_FILTERS(
 static const char * fragmentShaderSource_blendDarkerColor = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		float bgLum = rgbToHsl(bg.rgb).b;
-		float fgLum = rgbToHsl(fg.rgb).b;
+		float bgLum = VuoGlsl_rgbToHsl(bg.rgb).b;
+		float fgLum = VuoGlsl_rgbToHsl(fg.rgb).b;
 		return bgLum < fgLum ? bg.rgb : fg.rgb;
 	}
 );
@@ -133,8 +133,8 @@ static const char * fragmentShaderSource_blendLighterComponent = BLEND_FILTERS(
 static const char * fragmentShaderSource_blendLighterColor = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		float bgLum = rgbToHsl(bg.rgb).b;
-		float fgLum = rgbToHsl(fg.rgb).b;
+		float bgLum = VuoGlsl_rgbToHsl(bg.rgb).b;
+		float fgLum = VuoGlsl_rgbToHsl(fg.rgb).b;
 		return bgLum > fgLum ? bg.rgb : fg.rgb;
 	}
 );
@@ -267,32 +267,32 @@ static const char * fragmentShaderSource_blendDivide = BLEND_FILTERS(
 static const char * fragmentShaderSource_blendHue = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		vec3 baseHSL = rgbToHsl(bg.rgb);
-		return hslToRgb(vec3(rgbToHsl(fg.rgb).r, baseHSL.g, baseHSL.b));
+		vec3 baseHSL = VuoGlsl_rgbToHsl(bg.rgb);
+		return VuoGlsl_hslToRgb(vec3(VuoGlsl_rgbToHsl(fg.rgb).r, baseHSL.g, baseHSL.b));
 	}
 );
 
 static const char * fragmentShaderSource_blendSaturation = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		vec3 baseHSL = rgbToHsl(bg.rgb);
-		return hslToRgb(vec3(baseHSL.r, rgbToHsl(fg.rgb).g, baseHSL.b));
+		vec3 baseHSL = VuoGlsl_rgbToHsl(bg.rgb);
+		return VuoGlsl_hslToRgb(vec3(baseHSL.r, VuoGlsl_rgbToHsl(fg.rgb).g, baseHSL.b));
 	}
 );
 
 static const char * fragmentShaderSource_blendColor = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		vec3 blendHSL = rgbToHsl(fg.rgb);
-		return hslToRgb(vec3(blendHSL.r, blendHSL.g, rgbToHsl(bg.rgb).b));
+		vec3 blendHSL = VuoGlsl_rgbToHsl(fg.rgb);
+		return VuoGlsl_hslToRgb(vec3(blendHSL.r, blendHSL.g, VuoGlsl_rgbToHsl(bg.rgb).b));
 	}
 );
 
 static const char * fragmentShaderSource_blendLuminosity = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		vec3 baseHSL = rgbToHsl(bg.rgb);
-		return hslToRgb(vec3(baseHSL.r, baseHSL.g, rgbToHsl(fg.rgb).b));
+		vec3 baseHSL = VuoGlsl_rgbToHsl(bg.rgb);
+		return VuoGlsl_hslToRgb(vec3(baseHSL.r, baseHSL.g, VuoGlsl_rgbToHsl(fg.rgb).b));
 	}
 );
 

@@ -2,22 +2,18 @@
  * @file
  * VuoCable implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCable.hh"
-#include "VuoNode.hh"
-#include "VuoNodeClass.hh"
-#include "VuoPort.hh"
-#include "VuoPortClass.hh"
 #include "VuoPublishedPort.hh"
 
 /**
  * Creates a cable from @c fromNode's @c fromPort to @c toNode's @c toPort.
  */
-VuoCable::VuoCable(VuoNode * fromNode, VuoPort * fromPort, VuoNode * toNode, VuoPort * toPort)
+VuoCable::VuoCable(VuoNode * fromNode, VuoPort * fromPort, VuoNode * toNode, VuoPort * toPort, bool addCableToPorts)
 	: VuoBase<VuoCompilerCable,VuoRendererCable>("VuoCable")
 {
 	this->fromNode = fromNode;
@@ -25,14 +21,13 @@ VuoCable::VuoCable(VuoNode * fromNode, VuoPort * fromPort, VuoNode * toNode, Vuo
 	this->toNode = toNode;
 	this->toPort = toPort;
 
-	if (fromPort)
+	if (addCableToPorts)
 	{
-		fromPort->addConnectedCable(this);
-	}
+		if (fromPort)
+			fromPort->addConnectedCable(this);
 
-	if (toPort)
-	{
-		toPort->addConnectedCable(this);
+		if (toPort)
+			toPort->addConnectedCable(this);
 	}
 }
 

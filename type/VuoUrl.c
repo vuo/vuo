@@ -2,9 +2,9 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "type.h"
@@ -14,7 +14,6 @@
 #include <regex.h>
 #include <mach-o/dyld.h> // for _NSGetExecutablePath()
 #include <libgen.h> // for dirname()
-#include <sys/syslimits.h> // for PATH_MAX
 #include <CoreServices/CoreServices.h>
 #include "VuoUrlParser.h"
 
@@ -466,21 +465,47 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	// Case: The url contains an absolute file path.
 	else if (VuoUrl_urlIsAbsoluteFilePath(url))
 	{
-		char *realPath = realpath(url, NULL);
+		char *filePath = (char *)url;
+
+		if (!(flags & VuoUrlNormalize_forSaving) && strncmp(filePath, "/tmp/", 5) == 0)
+		{
+			// We're trying to read a file from `/tmp`.
+			// If it doesn't exist there, also check the user's private temporary directory.
+			// Enables protocol driver compositions to find their default images.
+			if (access(filePath, 0) != 0)
+			{
+				char userTempDir[PATH_MAX];
+				size_t userTempDirLen;
+				if ((userTempDirLen = confstr(_CS_DARWIN_USER_TEMP_DIR, userTempDir, PATH_MAX)) > 0)
+				{
+					size_t filePathLen = strlen(filePath);
+					size_t mallocSize = userTempDirLen + filePathLen + 1;
+					char *privateFilePath = (char *)malloc(mallocSize);
+					strlcpy(privateFilePath, userTempDir, mallocSize);
+					strlcat(privateFilePath, filePath + 4, mallocSize);
+					filePath = privateFilePath;
+				}
+			}
+		}
+
+		char *realPath = realpath(filePath, NULL);
 		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
-		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : url);
+		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : filePath);
 		VuoRetain(escapedPath);
 		if (realPath)
 			free(realPath);
+		if (filePath != url)
+			free(filePath);
 
-		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
-		strcpy(resolvedUrl, VuoUrl_fileScheme);
-		strcat(resolvedUrl, escapedPath);
+		size_t mallocSize = strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1;
+		resolvedUrl = (char *)malloc(mallocSize);
+		strlcpy(resolvedUrl, VuoUrl_fileScheme, mallocSize);
+		strlcat(resolvedUrl, escapedPath, mallocSize);
 
 		VuoRelease(escapedPath);
 	}
 
-	// Case: The url contains a user-relative file path.
+	// Case: The url contains a user-relative (`~/…`) file path.
 	else if (VuoUrl_urlIsUserRelativeFilePath(url))
 	{
 		// 1. Expand the tilde into an absolute path.
@@ -501,18 +526,20 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			free(realPath);
 
 		// 3. Prepend the URL scheme.
-		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
-		strcpy(resolvedUrl, VuoUrl_fileScheme);
-		strcat(resolvedUrl, escapedPath);
+		size_t mallocSize = strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1;
+		resolvedUrl = (char *)malloc(mallocSize);
+		strlcpy(resolvedUrl, VuoUrl_fileScheme, mallocSize);
+		strlcat(resolvedUrl, escapedPath, mallocSize);
 	}
 
 	// Case: The url contains a web link without a protocol/scheme.
 	else if (flags & VuoUrlNormalize_assumeHttp)
 	{
 		// Prepend the URL scheme.
-		resolvedUrl = (char *)malloc(strlen(VuoUrl_httpScheme) + strlen(url) + 1);
-		strcpy(resolvedUrl, VuoUrl_httpScheme);
-		strcat(resolvedUrl, url);
+		size_t mallocSize = strlen(VuoUrl_httpScheme) + strlen(url) + 1;
+		resolvedUrl = (char *)malloc(mallocSize);
+		strlcpy(resolvedUrl, VuoUrl_httpScheme, mallocSize);
+		strlcat(resolvedUrl, url, mallocSize);
 	}
 
 	// Case: The url contains a relative file path.
@@ -537,13 +564,15 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			realpath(rawExecutablePath, cleanedExecutablePath);
 
 			// Derive the path of the app bundle's "Resources" directory from its executable path.
-			char executableDir[PATH_MAX+1];
-			strcpy(executableDir, dirname(cleanedExecutablePath));
+			size_t pathSize = PATH_MAX + 1;
+			char executableDir[pathSize];
+			strlcpy(executableDir, dirname(cleanedExecutablePath), pathSize);
 
 			const char *resourcesPathFromExecutable = "/../Resources";
-			char rawResourcesPath[strlen(executableDir)+strlen(resourcesPathFromExecutable)+1];
-			strcpy(rawResourcesPath, executableDir);
-			strcat(rawResourcesPath, resourcesPathFromExecutable);
+			pathSize = strlen(executableDir) + strlen(resourcesPathFromExecutable) + 1;
+			char rawResourcesPath[pathSize];
+			strlcpy(rawResourcesPath, executableDir, pathSize);
+			strlcat(rawResourcesPath, resourcesPathFromExecutable, pathSize);
 
 			char cleanedResourcesPath[PATH_MAX+1];
 			realpath(rawResourcesPath, cleanedResourcesPath);
@@ -558,17 +587,19 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 				{
 					char *homeDir = getenv("HOME");
 					const char *desktop = "/Desktop/";
-					absolutePath = (char *)malloc(strlen(homeDir) + strlen(desktop) + strlen(url) + 1);
-					strcpy(absolutePath, homeDir);
-					strcat(absolutePath, desktop);
-					strcat(absolutePath, url);
+					size_t mallocSize = strlen(homeDir) + strlen(desktop) + strlen(url) + 1;
+					absolutePath = (char *)malloc(mallocSize);
+					strlcpy(absolutePath, homeDir, mallocSize);
+					strlcat(absolutePath, desktop, mallocSize);
+					strlcat(absolutePath, url, mallocSize);
 				}
 				else
 				{
-					absolutePath = (char *)malloc(strlen(cleanedResourcesPath) + strlen("/") + strlen(url) + 1);
-					strcpy(absolutePath, cleanedResourcesPath);
-					strcat(absolutePath, "/");
-					strcat(absolutePath, url);
+					size_t mallocSize = strlen(cleanedResourcesPath) + strlen("/") + strlen(url) + 1;
+					absolutePath = (char *)malloc(mallocSize);
+					strlcpy(absolutePath, cleanedResourcesPath, mallocSize);
+					strlcat(absolutePath, "/", mallocSize);
+					strlcat(absolutePath, url, mallocSize);
 				}
 			}
 		}
@@ -576,10 +607,11 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		// If we are not working with an exported app, resolve resources relative to the current working directory.
 		if (!compositionIsExportedApp)
 		{
-			absolutePath = (char *)malloc(strlen(currentWorkingDir) + strlen("/") + strlen(url) + 1);
-			strcpy(absolutePath, currentWorkingDir);
-			strcat(absolutePath, "/");
-			strcat(absolutePath, url);
+			size_t mallocSize = strlen(currentWorkingDir) + strlen("/") + strlen(url) + 1;
+			absolutePath = (char *)malloc(mallocSize);
+			strlcpy(absolutePath, currentWorkingDir, mallocSize);
+			strlcat(absolutePath, "/", mallocSize);
+			strlcat(absolutePath, url, mallocSize);
 		}
 
 		char *realPath = realpath(absolutePath, NULL);
@@ -591,9 +623,10 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		free(absolutePath);
 
 		// Prepend the URL scheme.
-		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
-		strcpy(resolvedUrl, VuoUrl_fileScheme);
-		strcat(resolvedUrl, escapedPath);
+		size_t mallocSize = strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1;
+		resolvedUrl = (char *)malloc(mallocSize);
+		strlcpy(resolvedUrl, VuoUrl_fileScheme, mallocSize);
+		strlcat(resolvedUrl, escapedPath, mallocSize);
 	}
 
 	// Remove trailing slash, if any.
@@ -738,7 +771,7 @@ bool VuoUrl_isBundle(const VuoUrl url)
 /**
  * Given a filename and set of valid extensions, returns a new VuoUrl guaranteed to have the extension.
  */
-VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength)
+VuoUrl VuoUrl_appendFileExtension(const char *filename, struct json_object *validExtensions)
 {
 	char* fileSuffix = strrchr(filename, '.');
 	char* curExtension = fileSuffix != NULL ? strdup(fileSuffix+1) : NULL;
@@ -747,9 +780,9 @@ VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtens
 		for(char *p = &curExtension[0]; *p; p++) *p = tolower(*p);
 
 	// if the string already has one of the valid file extension suffixes, return.
-	for(int i = 0; i < extensionsLength; i++)
+	for (int i = 0; i < json_object_array_length(validExtensions); ++i)
 	{
-		if(curExtension != NULL && strcmp(curExtension, validExtensions[i]) == 0)
+		if (curExtension != NULL && strcmp(curExtension, json_object_get_string(json_object_array_get_idx(validExtensions, i))) == 0)
 		{
 			free(curExtension);
 			return VuoText_make(filename);
@@ -758,9 +791,10 @@ VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtens
 
 	free(curExtension);
 
-	size_t buf_size = strlen(filename) + strlen(validExtensions[0]) + 2;
+	const char *chosenExtension = json_object_get_string(json_object_array_get_idx(validExtensions, 0));
+	size_t buf_size             = strlen(filename) + strlen(chosenExtension) + 2;
 	char* newfilepath = (char*)malloc(buf_size * sizeof(char));
-	snprintf(newfilepath, buf_size, "%s.%s", filename, validExtensions[0]);
+	snprintf(newfilepath, buf_size, "%s.%s", filename, chosenExtension);
 
 	VuoText text = VuoText_make(newfilepath);
 	free(newfilepath);

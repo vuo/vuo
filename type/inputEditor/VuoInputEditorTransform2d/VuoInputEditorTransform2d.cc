@@ -2,9 +2,9 @@
  * @file
  * VuoInputEditorTransform2d implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoInputEditorTransform2d.hh"
@@ -53,7 +53,7 @@ void VuoInputEditorTransform2d::setCoordMap(map<coord, double>* coordMap, VuoTra
  */
 VuoDoubleSpinBox* VuoInputEditorTransform2d::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
 {
-	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog, 7);
 	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 	spin->setDecimals(decimalPrecision);
 	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
@@ -97,8 +97,8 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *origin
 
 	bool tabCycleForward = true;
 
-	VuoTransform2d default_min = VuoTransform2d_make( VuoPoint2d_make(-1, -.75), 0., VuoPoint2d_make(0,0));
-	VuoTransform2d default_max = VuoTransform2d_make( VuoPoint2d_make(1, .75), 360. * DEG2RAD, VuoPoint2d_make(2,2));
+	VuoTransform2d default_min = VuoTransform2d_make( VuoPoint2d_make(-1, -.75), -180. * DEG2RAD, VuoPoint2d_make(0,0));
+	VuoTransform2d default_max = VuoTransform2d_make( VuoPoint2d_make(1, .75), 180. * DEG2RAD, VuoPoint2d_make(2,2));
 	VuoTransform2d default_step = VuoTransform2d_make( VuoPoint2d_make(.01, .01), 5. * DEG2RAD, VuoPoint2d_make(.01,.01));
 
 	setCoordMap(&suggestedMinForCoord, default_min);
@@ -141,32 +141,32 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *origin
 	// x-translation
 	spinboxForCoord[xTranslation] = initSpinBox(xTranslation, dialog, currentTransform.translation.x);
 	sliderForCoord[xTranslation] = initSlider(xTranslation, dialog, currentTransform.translation.x);
-	connect(sliderForCoord[xTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[xTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[xTranslation], &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
+	connect(spinboxForCoord[xTranslation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	// y-translation
 	spinboxForCoord[yTranslation] = initSpinBox(yTranslation, dialog, currentTransform.translation.y);
 	sliderForCoord[yTranslation] = initSlider(yTranslation, dialog, currentTransform.translation.y);
-	connect(sliderForCoord[yTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[yTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[yTranslation], &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
+	connect(spinboxForCoord[yTranslation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	// rotation
 	spinboxForCoord[rotation] = initSpinBox(rotation, dialog, currentTransform.rotation * RAD2DEG);
 	sliderForCoord[rotation] = initSlider(rotation, dialog, currentTransform.rotation * RAD2DEG);
-	connect(sliderForCoord[rotation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[rotation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[rotation], &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
+	connect(spinboxForCoord[rotation], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	// x-scale
 	spinboxForCoord[xScale] = initSpinBox(xScale, dialog, currentTransform.scale.x);
 	sliderForCoord[xScale] = initSlider(xScale, dialog, currentTransform.scale.x);
-	connect(sliderForCoord[xScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[xScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[xScale], &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
+	connect(spinboxForCoord[xScale], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	// y-scale
 	spinboxForCoord[yScale] = initSpinBox(yScale, dialog, currentTransform.scale.y);
 	sliderForCoord[yScale] = initSlider(yScale, dialog, currentTransform.scale.y);
-	connect(sliderForCoord[yScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
-	connect(spinboxForCoord[yScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(sliderForCoord[yScale], &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
+	connect(spinboxForCoord[yScale], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	// layout dialog
 	QGridLayout* layout = new QGridLayout;
@@ -291,9 +291,9 @@ void VuoInputEditorTransform2d::onSliderUpdate(int sliderValue)
 	setTransformProperty(whichCoord, value);
 
 	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
-	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	disconnect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 	spinboxForCoord[whichCoord]->setValue( value );
-	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[whichCoord], static_cast<void (QDoubleSpinBox::*)(const QString &)>(&QDoubleSpinBox::valueChanged), this, &VuoInputEditorTransform2d::onSpinboxUpdate);
 
 	spinboxForCoord[whichCoord]->setFocus();
 	spinboxForCoord[whichCoord]->selectAll();
@@ -314,9 +314,9 @@ void VuoInputEditorTransform2d::onSpinboxUpdate(QString spinboxValue)
 	QSlider *targetSlider =	sliderForCoord[whichCoord];
 	int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
 
-	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	disconnect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
 	targetSlider->setValue( sliderValue );
-	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(targetSlider, &QSlider::valueChanged, this, &VuoInputEditorTransform2d::onSliderUpdate);
 
 	emit valueChanged( getAcceptedValue() );
 }

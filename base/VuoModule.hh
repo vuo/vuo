@@ -2,18 +2,14 @@
  * @file
  * VuoModule interface.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#include "VuoBase.hh"
-#include "VuoModule.hh"
-
 class VuoNodeSet;
-class VuoCompilerModule;
 
 /**
  * A modular component (i.e., node class or type) that is an add-on to the core Vuo framework.
@@ -22,6 +18,7 @@ class VuoModule
 {
 public:
 	VuoModule(string moduleKey);
+	~VuoModule();
 
 	string getModuleKey(void);
 	void setModuleKey(string moduleKey);
@@ -50,4 +47,11 @@ private:
 	vector<string> keywords;
 	VuoNodeSet *nodeSet;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+	void *p;
+#pragma clang diagnostic pop
+#if VUO_PRO
+#include "pro/VuoModule_Pro.hh"
+#endif
 };

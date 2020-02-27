@@ -2,41 +2,50 @@
  * @file
  * VuoProtocol implementation.
  *
- * @copyright Copyright © 2012–2018 Kosada Incorporated.
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
- * For more information, see http://vuo.org/license.
+ * For more information, see https://vuo.org/license.
  */
 
 #include "VuoProtocol.hh"
 
+#include "VuoRunner.hh"
 #include "VuoStringUtilities.hh"
 
-#include <dispatch/dispatch.h>
 
 static dispatch_once_t VuoProtocolsCreated = 0;	///< Make sure this process only has a single instance of each protocol.
 
 vector<VuoProtocol *> VuoProtocol::protocols;
 string VuoProtocol::imageFilter = "VuoImageFilter";			///< Processes an existing image.
 string VuoProtocol::imageGenerator = "VuoImageGenerator";	///< Produces a new image.
+string VuoProtocol::imageTransition = "VuoImageTransition";	///< Transitions between two images.
 
 /**
- * Returns the avaiable protocols.
+ * Returns the available protocols.
  */
 vector<VuoProtocol *> VuoProtocol::getProtocols(void)
 {
 	dispatch_once(&VuoProtocolsCreated, ^{
 					  VuoProtocol *imageFilterProtocol = new VuoProtocol(imageFilter, "Image Filter");
-					  imageFilterProtocol->addInputPort("image", "VuoImage");
 					  imageFilterProtocol->addInputPort("time", "VuoReal");
+					  imageFilterProtocol->addInputPort("image", "VuoImage");
 					  imageFilterProtocol->addOutputPort("outputImage", "VuoImage");
 					  protocols.push_back(imageFilterProtocol);
 
 					  VuoProtocol *imageGeneratorProtocol = new VuoProtocol(imageGenerator, "Image Generator");
+					  imageGeneratorProtocol->addInputPort("time", "VuoReal");
 					  imageGeneratorProtocol->addInputPort("width", "VuoInteger");
 					  imageGeneratorProtocol->addInputPort("height", "VuoInteger");
-					  imageGeneratorProtocol->addInputPort("time", "VuoReal");
 					  imageGeneratorProtocol->addOutputPort("outputImage", "VuoImage");
 					  protocols.push_back(imageGeneratorProtocol);
+
+					  VuoProtocol *imageTransitionProtocol = new VuoProtocol(imageTransition, "Image Transition");
+					  imageTransitionProtocol->addInputPort("time", "VuoReal");
+					  imageTransitionProtocol->addInputPort("progress", "VuoReal");
+					  imageTransitionProtocol->addInputPort("startImage", "VuoImage");
+					  imageTransitionProtocol->addInputPort("endImage", "VuoImage");
+					  imageTransitionProtocol->addOutputPort("outputImage", "VuoImage");
+					  protocols.push_back(imageTransitionProtocol);
 				  });
 
 	return protocols;
@@ -299,6 +308,80 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 	}
 
 	return true;
+}
+
+/**
+ * @see isCompositionCompliant
+ */
+bool VuoProtocol::isCompositionCompliant(VuoRunner *runner)
+{
+	// Check whether the composition contains all of the required input ports.
+	vector<VuoRunner::Port *> inputs = runner->getPublishedInputPorts();
+	vector<pair<string, string> > protocolInputs = getInputPortNamesAndTypes();
+	for (vector<pair<string, string> >::iterator i = protocolInputs.begin(); i != protocolInputs.end(); ++i)
+	{
+		string protocolInputName = i->first;
+		string protocolInputType = i->second;
+
+		bool found = false;
+		for (vector<VuoRunner::Port *>::iterator it = inputs.begin(); it != inputs.end(); ++it)
+			if ((*it)->getName() == protocolInputName
+			 && (*it)->getType() == protocolInputType)
+			{
+				found = true;
+				break;
+			}
+		if (!found)
+			return false;
+	}
+
+	// Check whether the composition contains all of the required output ports.
+	vector<VuoRunner::Port *> outputs = runner->getPublishedOutputPorts();
+	vector<pair<string, string> > protocolOutputs = getOutputPortNamesAndTypes();
+	for (vector<pair<string, string> >::iterator i = protocolOutputs.begin(); i != protocolOutputs.end(); ++i)
+	{
+		string protocolOutputName = i->first;
+		string protocolOutputType = i->second;
+
+		bool found = false;
+		for (vector<VuoRunner::Port *>::iterator it = outputs.begin(); it != outputs.end(); ++it)
+			if ((*it)->getName() == protocolOutputName
+			 && (*it)->getType() == protocolOutputType)
+			{
+				found = true;
+				break;
+			}
+		if (!found)
+			return false;
+	}
+
+	return true;
+}
+
+/**
+ * Returns the protocols the composition adheres to.
+ */
+vector<VuoProtocol *> VuoProtocol::getCompositionProtocols(string compositionAsString)
+{
+	vector<VuoProtocol *> allProtocols = VuoProtocol::getProtocols();
+	vector<VuoProtocol *> adheresToProtocols;
+	for (vector<VuoProtocol *>::iterator i = allProtocols.begin(); i != allProtocols.end(); ++i)
+		if ((*i)->isCompositionCompliant(compositionAsString))
+			adheresToProtocols.push_back(*i);
+	return adheresToProtocols;
+}
+
+/**
+ * Returns the protocols the composition adheres to.
+ */
+vector<VuoProtocol *> VuoProtocol::getCompositionProtocols(VuoRunner *runner)
+{
+	vector<VuoProtocol *> allProtocols = VuoProtocol::getProtocols();
+	vector<VuoProtocol *> adheresToProtocols;
+	for (vector<VuoProtocol *>::iterator i = allProtocols.begin(); i != allProtocols.end(); ++i)
+		if ((*i)->isCompositionCompliant(runner))
+			adheresToProtocols.push_back(*i);
+	return adheresToProtocols;
 }
 
 /**
