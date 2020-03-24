@@ -1330,6 +1330,15 @@ void VuoEditorWindow::pasteCompositionComponents()
 	QClipboard *clipboard = QApplication::clipboard();
 	const QMimeData *mimeData = clipboard->mimeData();
 
+	int publishedPortsBeforePaste = composition->getBase()->getPublishedInputPorts().size() +
+									composition->getBase()->getPublishedOutputPorts().size();
+
+	int publishedCablesBeforePaste = 0;
+	foreach (VuoPublishedPort *publishedInput, composition->getBase()->getPublishedInputPorts())
+		publishedCablesBeforePaste += publishedInput->getConnectedCables(true).size();
+	foreach (VuoPublishedPort *publishedOutput, composition->getBase()->getPublishedOutputPorts())
+		publishedCablesBeforePaste += publishedOutput->getConnectedCables(true).size();
+
 	if (mimeData->hasFormat("text/plain"))
 	{
 		// Paste at the cursor location only if the cursor is currently within the viewport bounds
@@ -1342,8 +1351,17 @@ void VuoEditorWindow::pasteCompositionComponents()
 		mergeCompositionComponentsFromString(compositionText.toUtf8().constData(), pasteAtCursorLoc, !pasteAtCursorLoc, "Paste");
 	}
 
-	// Display the published port sidebars if the composition now has any published ports.
-	if ((! composition->getBase()->getPublishedInputPorts().empty()) || (! composition->getBase()->getPublishedOutputPorts().empty()))
+	int publishedPortsAfterPaste = composition->getBase()->getPublishedInputPorts().size() +
+									composition->getBase()->getPublishedOutputPorts().size();
+
+	int publishedCablesAfterPaste = 0;
+	foreach (VuoPublishedPort *publishedInput, composition->getBase()->getPublishedInputPorts())
+		publishedCablesAfterPaste += publishedInput->getConnectedCables(true).size();
+	foreach (VuoPublishedPort *publishedOutput, composition->getBase()->getPublishedOutputPorts())
+		publishedCablesAfterPaste += publishedOutput->getConnectedCables(true).size();
+
+	// Display the published port sidebars if the composition has any new published ports or cables.
+	if ((publishedPortsAfterPaste > publishedPortsBeforePaste) || (publishedCablesAfterPaste > publishedCablesBeforePaste))
 		setPublishedPortSidebarVisibility(true);
 }
 
@@ -3962,7 +3980,10 @@ QString VuoEditorWindow::getNodeClassNameForDisplayNameAndCategory(QString compo
 	if (compositionName.isEmpty())
 		compositionName = QString::fromStdString(deriveBaseNodeClassNameFromDisplayName(defaultCompositionName.toStdString()));
 
-	category = QString::fromStdString(deriveBaseNodeClassNameFromDisplayName(category.toStdString()));
+	// Treat "vuo" as a reserved prefix.
+	QString thirdPartyCategory = category.remove(QRegExp("^(vuo\\.?)+", Qt::CaseInsensitive));
+
+	category = QString::fromStdString(deriveBaseNodeClassNameFromDisplayName(thirdPartyCategory.toStdString()));
 	if (category.isEmpty())
 		category = QString::fromStdString(deriveBaseNodeClassNameFromDisplayName(defaultCategory.toStdString()));
 
@@ -3992,18 +4013,9 @@ string VuoEditorWindow::deriveBaseNodeClassNameFromDisplayName(string displayNam
 		CFStringTransform(cfsm, NULL, kCFStringTransformStripCombiningMarks, false);
 		CFStringTransform(cfsm, NULL, kCFStringTransformStripDiacritics, false);
 		CFStringTransform(cfsm, NULL, CFSTR("ASCII"), false);  // Converts 'ß' -> 'ss'.
-		CFIndex bytes = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfsm), kCFStringEncodingUTF8);
-		if (bytes == 0)
-		{
-			CFRelease(cfsm);
-			CFRelease(cfs);
-			return "";
-		}
-		char displayNameTransliterated[bytes];
-		CFStringGetCString(cfsm, displayNameTransliterated, bytes, kCFStringEncodingUTF8);
+		displayName = VuoStringUtilities::makeFromCFString(cfsm);
 		CFRelease(cfsm);
 		CFRelease(cfs);
-		displayName = displayNameTransliterated;
 	}
 
 	return VuoStringUtilities::convertToCamelCase(displayName, false, true, false, true);

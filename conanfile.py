@@ -19,6 +19,7 @@ class VuoConan(ConanFile):
         self.requires('libcsv/3.0.3-4@vuo/stable')
         self.requires('libfacedetection/0-2@vuo/stable')
         self.requires('libfreenect/0.5.6-3@vuo/stable')
+        self.requires('libfreenect2/0-5@vuo/stable')
         self.requires('liblqr/0.4.2-4@vuo/stable')
         self.requires('libxml2/2.9.2-3@vuo/stable')
         self.requires('llvm/3.3-6@vuo/stable')

@@ -89,7 +89,8 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 		return false;
 
 	struct http_parser_url parsedUrl;
-	if (http_parser_parse_url(url, strlen(url), false, &parsedUrl))
+	size_t urlLen = strlen(url);
+	if (http_parser_parse_url(url, urlLen, false, &parsedUrl))
 	{
 		// Maybe this is a "data:" URI (which http_parser_parse_url can't parse).
 		if (strncmp(url, "data:", 5) == 0)
@@ -111,7 +112,23 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 			return true;
 		}
 
-		return false;
+		// Maybe this is a "no-authority" `file:` URI (which http_parser_parse_url can't parse);
+		// change it to an "empty-authority" URI.
+		else if (strncmp(url, "file:/", 6) == 0 && urlLen > 6 && url[6] != '/')
+		{
+			char *urlWithEmptyAuthority = malloc(urlLen + 2 + 1);
+			strcpy(urlWithEmptyAuthority, "file://");
+			strcat(urlWithEmptyAuthority, url + 5);
+			if (http_parser_parse_url(urlWithEmptyAuthority, urlLen + 2, false, &parsedUrl))
+			{
+				free(urlWithEmptyAuthority);
+				return false;
+			}
+			free(urlWithEmptyAuthority);
+		}
+
+		else
+			return false;
 	}
 
 	if (scheme)
@@ -405,7 +422,7 @@ VuoText VuoUrl_escapeUTF8(const VuoText url)
 	return escapedUrlVT;
 }
 
-static const char *VuoUrl_fileScheme = "file://"; ///< URL scheme for local files.
+static const char *VuoUrl_fileScheme = "file:"; ///< URL scheme for local files.
 static const char *VuoUrl_httpScheme = "http://"; ///< URL scheme for HTTP.
 
 /**
@@ -432,40 +449,56 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	if (!url)
 		return NULL;
 
+	// Trim off the file schema, if present, and handle such URLs via the absolute/user-relative/relative file path cases below.
+	VuoText trimmedUrl;
+	unsigned long fileSchemeLength = strlen(VuoUrl_fileScheme);
+	if (strncmp(url, VuoUrl_fileScheme, fileSchemeLength) == 0)
+	{
+		VuoText u = url + fileSchemeLength;
+		if (strncmp(u, "//", 2) == 0)
+			u += 2;
+
+		// Assume a URL with a schema is already escaped; unescape it for consistent processing below.
+		trimmedUrl = VuoUrl_decodeRFC3986(u);
+	}
+	else
+		trimmedUrl = url;
+	VuoRetain(trimmedUrl);
+
 	char *resolvedUrl;
 
 	// Case: The url contains a scheme.
-	if (VuoUrl_urlContainsScheme(url))
+	if (VuoUrl_urlContainsScheme(trimmedUrl))
 	{
 		// Some URLs have literal spaces, which we need to transform into '%20' before passing to cURL.
-		size_t urlLen = strlen(url);
+		size_t urlLen = strlen(trimmedUrl);
 		size_t spaceCount = 0;
 		for (size_t i = 0; i < urlLen; ++i)
-			if (url[i] == ' ')
+			if (trimmedUrl[i] == ' ')
 				++spaceCount;
 		if (spaceCount)
 		{
-			resolvedUrl = (char *)malloc(strlen(url) + spaceCount*2);
+			resolvedUrl = (char *)malloc(strlen(trimmedUrl) + spaceCount*2);
 			size_t p = 0;
 			for (size_t i = 0; i < urlLen; ++i)
-				if (url[i] == ' ')
+				if (trimmedUrl[i] == ' ')
 				{
 					resolvedUrl[p++] = '%';
 					resolvedUrl[p++] = '2';
 					resolvedUrl[p++] = '0';
 				}
 				else
-					resolvedUrl[p++] = url[i];
+					resolvedUrl[p++] = trimmedUrl[i];
 			resolvedUrl[p] = 0;
 		}
 		else
-			resolvedUrl = strdup(url);
+			resolvedUrl = strdup(trimmedUrl);
 	}
 
 	// Case: The url contains an absolute file path.
-	else if (VuoUrl_urlIsAbsoluteFilePath(url))
+	else if (VuoUrl_urlIsAbsoluteFilePath(trimmedUrl))
 	{
-		char *filePath = (char *)url;
+		char *filePath = (char *)trimmedUrl;
 
 		if (!(flags & VuoUrlNormalize_forSaving) && strncmp(filePath, "/tmp/", 5) == 0)
 		{
@@ -494,7 +527,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		VuoRetain(escapedPath);
 		if (realPath)
 			free(realPath);
-		if (filePath != url)
+		if (filePath != trimmedUrl)
 			free(filePath);
 
 		size_t mallocSize = strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1;
@@ -506,13 +539,13 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	}
 
 	// Case: The url contains a user-relative (`~/…`) file path.
-	else if (VuoUrl_urlIsUserRelativeFilePath(url))
+	else if (VuoUrl_urlIsUserRelativeFilePath(trimmedUrl))
 	{
 		// 1. Expand the tilde into an absolute path.
 		VuoText absolutePath;
 		{
 			char *homeDir = getenv("HOME");
-			VuoText paths[2] = { homeDir, url+1 };
+			VuoText paths[2] = { homeDir, trimmedUrl+1 };
 			absolutePath = VuoText_append(paths, 2);
 		}
 		VuoLocal(absolutePath);
@@ -536,10 +569,10 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	else if (flags & VuoUrlNormalize_assumeHttp)
 	{
 		// Prepend the URL scheme.
-		size_t mallocSize = strlen(VuoUrl_httpScheme) + strlen(url) + 1;
+		size_t mallocSize = strlen(VuoUrl_httpScheme) + strlen(trimmedUrl) + 1;
 		resolvedUrl = (char *)malloc(mallocSize);
 		strlcpy(resolvedUrl, VuoUrl_httpScheme, mallocSize);
-		strlcat(resolvedUrl, url, mallocSize);
+		strlcat(resolvedUrl, trimmedUrl, mallocSize);
 	}
 
 	// Case: The url contains a relative file path.
@@ -587,19 +620,19 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 				{
 					char *homeDir = getenv("HOME");
 					const char *desktop = "/Desktop/";
-					size_t mallocSize = strlen(homeDir) + strlen(desktop) + strlen(url) + 1;
+					size_t mallocSize = strlen(homeDir) + strlen(desktop) + strlen(trimmedUrl) + 1;
 					absolutePath = (char *)malloc(mallocSize);
 					strlcpy(absolutePath, homeDir, mallocSize);
 					strlcat(absolutePath, desktop, mallocSize);
-					strlcat(absolutePath, url, mallocSize);
+					strlcat(absolutePath, trimmedUrl, mallocSize);
 				}
 				else
 				{
-					size_t mallocSize = strlen(cleanedResourcesPath) + strlen("/") + strlen(url) + 1;
+					size_t mallocSize = strlen(cleanedResourcesPath) + strlen("/") + strlen(trimmedUrl) + 1;
 					absolutePath = (char *)malloc(mallocSize);
 					strlcpy(absolutePath, cleanedResourcesPath, mallocSize);
 					strlcat(absolutePath, "/", mallocSize);
-					strlcat(absolutePath, url, mallocSize);
+					strlcat(absolutePath, trimmedUrl, mallocSize);
 				}
 			}
 		}
@@ -607,11 +640,11 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		// If we are not working with an exported app, resolve resources relative to the current working directory.
 		if (!compositionIsExportedApp)
 		{
-			size_t mallocSize = strlen(currentWorkingDir) + strlen("/") + strlen(url) + 1;
+			size_t mallocSize = strlen(currentWorkingDir) + strlen("/") + strlen(trimmedUrl) + 1;
 			absolutePath = (char *)malloc(mallocSize);
 			strlcpy(absolutePath, currentWorkingDir, mallocSize);
 			strlcat(absolutePath, "/", mallocSize);
-			strlcat(absolutePath, url, mallocSize);
+			strlcat(absolutePath, trimmedUrl, mallocSize);
 		}
 
 		char *realPath = realpath(absolutePath, NULL);
@@ -628,6 +661,8 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		strlcpy(resolvedUrl, VuoUrl_fileScheme, mallocSize);
 		strlcat(resolvedUrl, escapedPath, mallocSize);
 	}
+
+	VuoRelease(trimmedUrl);
 
 	// Remove trailing slash, if any.
 	size_t lastIndex = strlen(resolvedUrl) - 1;
@@ -687,6 +722,10 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url)
 	unsigned long fileSchemeLength = strlen(VuoUrl_fileScheme);
 	if (strncmp(url, VuoUrl_fileScheme, fileSchemeLength) != 0)
 		return NULL;
+
+	// https://tools.ietf.org/html/rfc8089#appendix-B
+	if (strncmp(url + fileSchemeLength, "//", 2) == 0)
+		fileSchemeLength += 2;
 
 	// Unescape the string.
 	unsigned long inLength = strlen(url);

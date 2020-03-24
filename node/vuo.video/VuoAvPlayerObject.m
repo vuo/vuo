@@ -313,13 +313,10 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 			int bitsPerComponent = ((NSNumber *)CMFormatDescriptionGetExtension(desc, CFSTR("BitsPerComponent"))).intValue;
 			int depth            = ((NSNumber *)CMFormatDescriptionGetExtension(desc, CFSTR("Depth"))).intValue;
 
-			Boolean CFStringGetCString(CFStringRef theString, char *buffer, CFIndex bufferSize, CFStringEncoding encoding);
-
 			VuoText codecName = VuoText_makeFromCFString(CMFormatDescriptionGetExtension(desc, CFSTR("FormatName")));
 			VuoRetain(codecName);
 			VuoText alphaMode = VuoText_makeFromCFString(CMFormatDescriptionGetExtension(desc, CFSTR("AlphaChannelMode")));
 			VuoRetain(alphaMode);
-//			char *extensionsZ = VuoLog_copyCFDescription(CMFormatDescriptionGetExtensions(desc));
 			VUserLog("codec=\"%s\" (%s)  bpc=%d  depth=%d  hasAlpha=%d %s",
 					 codecName,
 					 codecZ,

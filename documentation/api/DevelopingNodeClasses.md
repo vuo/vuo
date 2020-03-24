@@ -152,7 +152,7 @@ void nodeInstanceFini
 }
 @endcode
 
-The state of the node is called @term{instance data}. It's created by @ref nodeInstanceInit and passed, via @ref VuoInstanceData parameters, to @ref nodeInstanceEvent and @ref nodeInstanceFini. Notice that the return type of @ref nodeInstanceInit and the type passed to each @ref VuoInstanceData call must match. Currently, it needs to be a pointer type; support for non-pointer types is planned. Unlike the type passed to @ref VuoInputData or @ref VuoOutputData, the type passed to @ref VuoInstanceData doesn't have to be a port type. For example, it can be a struct type defined in your node class. The name of the @ref VuoInstanceData parameter (@c countState) isn't important; you can choose any name. Notice that @c countState is a *pointer* to the @ref VuoInstanceData type (@c VuoReal*). 
+The state of the node is called @term{instance data}. It's created by @ref nodeInstanceInit and passed, via @ref VuoInstanceData parameters, to @ref nodeInstanceEvent and @ref nodeInstanceFini. Notice that the return type of @ref nodeInstanceInit and the type passed to each @ref VuoInstanceData call must match. Unlike the type passed to @ref VuoInputData or @ref VuoOutputData, the type passed to @ref VuoInstanceData doesn't have to be a port type. For example, it can be a struct type defined in your node class. The name of the @ref VuoInstanceData parameter (@c countState) isn't important; you can choose any name. Notice that @c countState is a *pointer* to the @ref VuoInstanceData type (@c VuoReal*).
 
 The call to @ref VuoRegister in @ref nodeInstanceInit is necessary to make sure that the memory allocated for @c countState is freed at the right time. For more information, see @ref ManagingMemory. 
 

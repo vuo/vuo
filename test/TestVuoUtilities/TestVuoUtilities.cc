@@ -9,6 +9,11 @@
 
 #include <Vuo/Vuo.h>
 
+#include <CoreFoundation/CoreFoundation.h>
+
+// Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(string);
+
 /**
  * Tests for the @c Vuo*Utilities classes.
  */
@@ -165,6 +170,26 @@ private slots:
 
 		string actualOutputString = VuoStringUtilities::expandCamelCase(inputString.toUtf8().constData());
 		QCOMPARE(QString(actualOutputString.c_str()), expectedOutputString);
+	}
+
+	void testMakeFromCFString_data()
+	{
+		QTest::addColumn<void *>("cfString");
+		QTest::addColumn<string>("expectedStdString");
+
+		QTest::newRow("null")        << (void *)nullptr     << string("");
+		QTest::newRow("emptystring") << (void *)CFSTR("")   << string("");
+		QTest::newRow("ascii")       << (void *)CFSTR("hi") << string("hi");
+		QTest::newRow("utf8")        << (void *)CFSTR("å")  << string("å");
+		QTest::newRow("utf8mb4")     << (void *)CFSTR("💯") << string("💯");
+	}
+	void testMakeFromCFString()
+	{
+		QFETCH(void *, cfString);
+		QFETCH(string, expectedStdString);
+
+		string actualStdString = VuoStringUtilities::makeFromCFString((CFStringRef)cfString);
+		QCOMPARE(actualStdString, expectedStdString);
 	}
 
 	void testFindFilesInDirectory_data()

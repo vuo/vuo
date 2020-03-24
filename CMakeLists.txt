@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.0.0 LANGUAGES NONE)
+project(Vuo VERSION 2.0.1 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).

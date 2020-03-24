@@ -11,6 +11,8 @@
 #include <sys/errno.h>
 #include <unistd.h>
 
+#include <CoreFoundation/CoreFoundation.h>
+
 #include <curl/curl.h>
 
 #include "module.h"
@@ -72,6 +74,36 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
 }
 
 /**
+ * Converts `buffer` from `sourceEncoding` to UTF-8.
+ */
+void VuoUrlFetch_convertToUTF8(struct VuoUrl_curlBuffer *buffer, CFStringEncoding sourceEncoding)
+{
+	CFStringRef cf = CFStringCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)buffer->memory, strlen(buffer->memory), sourceEncoding, true, kCFAllocatorMalloc);
+	if (!cf)
+	{
+		VuoText sourceEncodingName = VuoText_makeFromCFString(CFStringGetNameOfEncoding(sourceEncoding));
+		VuoLocal(sourceEncodingName);
+		VUserLog("Error: Couldn't convert response from %s to UTF-8.", sourceEncodingName);
+		return;
+	}
+
+	CFIndex maxBytes = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cf), kCFStringEncodingUTF8) + 1;
+	char *outBuffer = calloc(1, maxBytes);
+	CFStringGetCString(cf, outBuffer, maxBytes, kCFStringEncodingUTF8);
+	CFRelease(cf);
+
+	buffer->memory = outBuffer;
+	buffer->size = strlen(outBuffer);
+
+	if (VuoIsDebugEnabled())
+	{
+		VuoText sourceEncodingName = VuoText_makeFromCFString(CFStringGetNameOfEncoding(sourceEncoding));
+		VuoLocal(sourceEncodingName);
+		VUserLog("Converted response from %s to UTF-8.", sourceEncodingName);
+	}
+}
+
+/**
  * Receives the data at the specified @c url.
  *
  * The caller is responsible for `free()`ing the data.
@@ -125,6 +157,36 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 		return true;
 	}
 
+	VuoText resolvedUrl = VuoUrl_normalize(url, VuoUrlNormalize_default);
+	VuoLocal(resolvedUrl);
+
+	VuoText posixPath = VuoUrl_getPosixPath(resolvedUrl);
+	VuoLocal(posixPath);
+	if (posixPath)
+	{
+		FILE *fp = fopen(posixPath, "rb");
+		if (!fp)
+		{
+			VUserLog("Error: Could not read file \"%s\"", posixPath);
+			return false;
+		}
+		VuoDefer(^{ fclose(fp); });
+
+		fseek(fp, 0, SEEK_END);
+		*dataLength = ftell(fp);
+		rewind(fp);
+		*data = (char *)malloc(*dataLength + 1);
+		if (fread(*data, 1, *dataLength, fp) != *dataLength)
+		{
+			free(*data);
+			VUserLog("Error: Could not read all the data from file \"%s\": %s", posixPath, strerror(errno));
+			return false;
+		}
+		((char *)*data)[*dataLength] = 0;
+		return true;
+	}
+
+
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
 	CURL *curl;
 	CURLcode res;
@@ -139,8 +201,7 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);  // Don't use signals for the timeout logic, since they're not thread-safe.
 
-	VuoText resolvedUrl = VuoUrl_normalize(url, VuoUrlNormalize_default);
-	VuoLocal(resolvedUrl);
+	VDebugLog("GET %s", resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
 
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "Vuo/" VUO_VERSION_STRING " (https://vuo.org/)");
@@ -154,42 +215,31 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 	res = curl_easy_perform(curl);
 	if(res != CURLE_OK)
 	{
-		if (res == CURLE_FILE_COULDNT_READ_FILE)
-		{
-			// If the path has colons (which aren't valid path characters on macOS),
-			// maybe they've been escaped as UTF-8 "Modifier Letter Colon".
-			// Try escaping them and see if that leads us to the file.
-			// https://b33p.net/kosada/node/14924
-			VuoText posixPath = VuoUrl_getPosixPath(resolvedUrl);
-			VuoLocal(posixPath);
-			if (!posixPath)
-			{
-				VUserLog("Error: Could not read URL \"%s\"", resolvedUrl);
-				return false;
-			}
-
-			FILE *fp = fopen(posixPath, "rb");
-			if (!fp)
-			{
-				VUserLog("Error: Could not read file \"%s\"", posixPath);
-				return false;
-			}
-			VuoDefer(^{ fclose(fp); });
-
-			fseek(fp, 0, SEEK_END);
-			*dataLength = ftell(fp);
-			rewind(fp);
-			*data = (char *)malloc(*dataLength);
-			if (fread(*data, 1, *dataLength, fp) != *dataLength)
-			{
-				VUserLog("Error: Could not read all the data from file \"%s\": %s", posixPath, strerror(errno));
-				return false;
-			}
-			return true;
-		}
-		else
-			VUserLog("Error: cURL request failed: %s (%d)", curl_easy_strerror(res), res);
+		VUserLog("Error: cURL request failed: %s (%d)", curl_easy_strerror(res), res);
 		return false;
+	}
+
+	VDebugLog("Received %zu bytes.", buffer.size);
+
+	// Convert non-UTF-8 charsets to UTF-8.
+	char *contentType = NULL;
+	res = curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType);
+	if (res == CURLE_OK && contentType)
+	{
+		// https://tools.ietf.org/html/rfc7231#section-3.1.1.5
+		VDebugLog("Content-Type: %s", contentType);
+
+		// UTF-8 is a superset of US-ASCII, so no need to convert.
+		if (strcasecmp(contentType, "text/html; charset=utf-8") == 0
+		 || strcasecmp(contentType, "text/html; charset=us-ascii") == 0)
+			;
+
+		// According to https://www.ietf.org/rfc/rfc2854.txt, the default charset for `text/html` is `ISO-8859-1`, so fall back to that if no charset is specified.
+		else if (strcasecmp(contentType, "text/html; charset=iso-8859-1") == 0
+			  || strcasecmp(contentType, "text/html") == 0)
+			VuoUrlFetch_convertToUTF8(&buffer, kCFStringEncodingISOLatin1);
+
+		// We're not currently attempting to handle charsets other than UTF-8, US-ASCII, and ISO-8859-1.
 	}
 
 	*data = buffer.memory;

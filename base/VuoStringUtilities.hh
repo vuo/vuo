@@ -47,6 +47,7 @@ public:
 									 bool allowSeparatorDots = false);
 	static string expandCamelCase(string camelCaseString);
 
+	static string makeFromCFString(const void *cfs);
 	static string makeRandomHash(int length);
 
 	/**

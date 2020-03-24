@@ -13,8 +13,11 @@
 #include <string.h>
 
 VuoModuleMetadata({
-					  "title" : "Receive Kinect Images",
-					  "keywords" : [ "video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body" ],
+	"title": "Receive Kinect v1 Images",
+	"keywords": [
+		"video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body",
+		"Kinect for Windows v1", "Kinect for Xbox 360",
+	],
 					  "version" : "3.1.0",
 					  "dependencies" : [
 						  "freenect",

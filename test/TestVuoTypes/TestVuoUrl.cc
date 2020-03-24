@@ -34,7 +34,7 @@ private slots:
 		QTest::addColumn<QString>("expectedAppLoadPath");
 		QTest::addColumn<QString>("expectedAppSavePath");
 
-		QString fileScheme = "file://";
+		QString fileScheme = "file:";
 		QString basePath = getcwd(NULL,0);
 		QString baseUrl = fileScheme + basePath;
 		baseUrl.replace("@", "%40");
@@ -65,6 +65,7 @@ private slots:
 		QTest::newRow("absolute URL UTF-8")         << "https://de.wikipedia.org/wiki/Franzbrötchen" << "https://de.wikipedia.org/wiki/Franzbr%C3%B6tchen" << false << ""       << ""                                       << "";
 		QTest::newRow("data")                       << "data:;base64,AA=="          << "data:;base64,AA=="                      << false << ""                                  << ""                                       << "";
 		QTest::newRow("relative file")				<< "file"						<< baseUrl + "/file"						<< true  << basePath + "/file"					<< resourcesPath + "/file"					<< desktopPath + "/file";
+		QTest::newRow("relative file:file")         << "file:file"                  << baseUrl + "/file"                        << true  << basePath + "/file"                  << resourcesPath + "/file"                  << desktopPath + "/file";
 		QTest::newRow("relative file UTF-8")        << "ƒile"                       << baseUrl + "/%C6%92ile"                   << true  << basePath + "/ƒile"                  << resourcesPath + "/ƒile"                  << desktopPath + "/ƒile";
 		QTest::newRow("relative file ?")            << "file?.wav"                  << baseUrl + "/file%3F.wav"                 << true  << basePath + "/file?.wav"             << resourcesPath + "/file?.wav"             << desktopPath + "/file?.wav";
 		QTest::newRow("relative dir/")				<< "dir/"						<< baseUrl + "/dir"							<< true  << basePath + "/dir"					<< resourcesPath + "/dir"					<< desktopPath + "/dir";
@@ -72,11 +73,13 @@ private slots:
 		QTest::newRow("relative ./file")            << "./CMakeLists.txt"           << baseUrl + "/CMakeLists.txt"              << true  << basePath + "/CMakeLists.txt"        << resourcesPath + "/CMakeLists.txt"        << desktopPath + "/CMakeLists.txt";
 		QTest::newRow("relative ../file")           << "../CMakeLists.txt"          << baseUrlParent + "/CMakeLists.txt"        << true  << basePathParent + "/CMakeLists.txt"  << resourcesPathParent + "/CMakeLists.txt"  << desktopPath + "/../CMakeLists.txt" /* Doesn't exist, so ".." remains. */;
 		QTest::newRow("relative ../../file")        << "../../CMakeLists.txt"       << baseUrlParentParent + "/CMakeLists.txt"  << true  << basePathParentParent + "/CMakeLists.txt" << resourcesPathParentParent + "/CMakeLists.txt" << desktopPath + "/../../CMakeLists.txt" /* Doesn't exist, so "../.." remains. */;
+		QTest::newRow("relative file:./file")       << "file:./CMakeLists.txt"      << baseUrl + "/CMakeLists.txt"              << true  << basePath + "/CMakeLists.txt"        << resourcesPath + "/CMakeLists.txt"        << desktopPath + "/./CMakeLists.txt" /* Doesn't exist, so "." remains. */;
+		QTest::newRow("relative file:../file")      << "file:../CMakeLists.txt"     << baseUrlParent + "/CMakeLists.txt"        << true  << basePathParent + "/CMakeLists.txt"  << resourcesPathParent + "/CMakeLists.txt"  << desktopPath + "/../CMakeLists.txt" /* Doesn't exist, so ".." remains. */;
 		QTest::newRow("absolute file")				<< "/mach_kernel"				<< fileScheme + "/mach_kernel"				<< true  << "/mach_kernel"						<< "/mach_kernel"							<< "/mach_kernel";
 		QTest::newRow("absolute file @")			<< "/mach_kernel@b"				<< fileScheme + "/mach_kernel%40b"			<< true  << "/mach_kernel@b"					<< "/mach_kernel@b"							<< "/mach_kernel@b";
 		QTest::newRow("absolute colon")             << "/ScreenShot 09:41:00"       << fileScheme + "/ScreenShot%2009%3A41%3A00"<< true  << "/ScreenShot 09꞉41꞉00"              << "/ScreenShot 09꞉41꞉00"                   << "/ScreenShot 09꞉41꞉00";
 		QTest::newRow("absolute dir/")				<< "/usr/include/"				<< fileScheme + "/usr/include"				<< true  << "/usr/include"						<< "/usr/include"							<< "/usr/include";
-		QTest::newRow("absolute dir space")			<< "/Library/Desktop Pictures"	<< "file:///Library/Desktop%20Pictures"		<< true  << "/Library/Desktop Pictures"			<< "/Library/Desktop Pictures"				<< "/Library/Desktop Pictures";
+		QTest::newRow("absolute dir space")         << "/Library/Desktop Pictures"  << "file:/Library/Desktop%20Pictures"       << true  << "/Library/Desktop Pictures"         << "/Library/Desktop Pictures"              << "/Library/Desktop Pictures";
 		QTest::newRow("absolute dir/file")			<< "/usr/include/stdio.h"		<< fileScheme + "/usr/include/stdio.h"		<< true  << "/usr/include/stdio.h"				<< "/usr/include/stdio.h"					<< "/usr/include/stdio.h";
 		QTest::newRow("absolute link/dir")			<< "/var/tmp"					<< fileScheme + "/private/var/tmp"			<< true  << "/private/var/tmp"					<< "/private/var/tmp"						<< "/private/var/tmp";
 		QTest::newRow("absolute dir/../link")		<< "/usr/../var"				<< fileScheme + "/private/var"				<< true  << "/private/var"						<< "/private/var"							<< "/private/var";
@@ -95,7 +98,7 @@ private slots:
 		QFETCH(QString, expectedAppLoadPath);
 		QFETCH(QString, expectedAppSavePath);
 
-		VuoUrl normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), expectedValidPosixPath ? VuoUrlNormalize_default : VuoUrlNormalize_assumeHttp);
+		VuoUrl normalizedUrl = VuoUrl_normalize(VuoText_make(url.toUtf8().data()), expectedValidPosixPath ? VuoUrlNormalize_default : VuoUrlNormalize_assumeHttp);
 		VuoRetain(normalizedUrl);
 		QCOMPARE(normalizedUrl, expectedNormalizedUrl.toUtf8().data());
 
@@ -107,7 +110,7 @@ private slots:
 			QCOMPARE(posixPath, expectedPosixPath.toUtf8().data());
 
 			VuoText escapedPosixPath = VuoUrl_escapeUTF8(VuoUrl_escapePosixPath(expectedPosixPath.toUtf8().data()));
-			QCOMPARE(QString("file://") + escapedPosixPath, QString(expectedNormalizedUrl));
+			QCOMPARE(QString("file:") + escapedPosixPath, QString(expectedNormalizedUrl));
 
 
 			/// @todo Find a more robust way to test this.
@@ -279,7 +282,7 @@ private slots:
 		QTest::newRow("HTTP")				<< "http://vuo.org"										<< false;
 		QTest::newRow("non-bundle folder")	<< "file:///"											<< false;
 		QTest::newRow("non-bundle folder2")	<< "file:///Applications"								<< false;
-		QTest::newRow("app bundle")			<< "file:///Applications/Calculator.app"				<< true;
+		QTest::newRow("app bundle")         << "file:///Applications/Safari.app"                    << true;
 		QTest::newRow("framework bundle")	<< "file:///System/Library/Frameworks/AppKit.framework"	<< false;
 	}
 	void testBundle()
@@ -347,18 +350,28 @@ private slots:
 	{
 		QTest::addColumn<QString>("uri");
 
-		QString fileScheme = "file://";
 		QString basePath = getcwd(NULL,0);
-		QString baseUrl = fileScheme + basePath;
+
+		// https://tools.ietf.org/html/rfc8089#appendix-B
+		QString baseUrl(basePath);
 		baseUrl.replace("@", "%40");
+		QString baseUrlEmptyAuthority = "file://" + baseUrl;
+		QString baseUrlNoAuthority    = "file:"   + baseUrl;
 
 		// https://b33p.net/kosada/node/14924
 		QTest::newRow("relative path with colon")                 <<             "resources/2018-07-11 16:19:37Z.txt";
 		QTest::newRow("relative path with modifier letter colon") <<             "resources/2018-07-11 16꞉19꞉37Z.txt";
 		QTest::newRow("absolute path with colon")                 << basePath + "/resources/2018-07-11 16:19:37Z.txt";
 		QTest::newRow("absolute path with modifier letter colon") << basePath + "/resources/2018-07-11 16꞉19꞉37Z.txt";
-		QTest::newRow("url with colon")                           << baseUrl  + "/resources/2018-07-11%2016%3A19%3A37Z.txt";
-		QTest::newRow("url with modifier letter colon")           << baseUrl  + "/resources/2018-07-11%2016%EA%9E%8919%EA%9E%8937Z.txt";
+		QTest::newRow("empty-authority url with colon")                 << baseUrlEmptyAuthority + "/resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("empty-authority url with modifier letter colon") << baseUrlEmptyAuthority + "/resources/2018-07-11%2016%EA%9E%8919%EA%9E%8937Z.txt";
+		QTest::newRow("no-authority url with colon")                    << baseUrlNoAuthority    + "/resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("no-authority url with modifier letter colon")    << baseUrlNoAuthority    + "/resources/2018-07-11%2016%EA%9E%8919%EA%9E%8937Z.txt";
+		// https://b33p.net/kosada/node/17147#comment-83107
+		QTest::newRow("empty-authority relative . url")                 << "file://./resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("empty-authority relative .. url")                << "file://../TestVuoTypes/resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("no-authority relative . url")                    << "file:./resources/2018-07-11%2016%3A19%3A37Z.txt";
+		QTest::newRow("no-authority relative .. url")                   << "file:../TestVuoTypes/resources/2018-07-11%2016%3A19%3A37Z.txt";
 	}
 	void testFetch()
 	{
@@ -366,7 +379,7 @@ private slots:
 
 		void *data;
 		unsigned int dataLength;
-		bool valid = VuoUrl_fetch(uri.toUtf8().constData(), &data, &dataLength);
+		bool valid = VuoUrl_fetch(VuoText_make(uri.toUtf8().constData()), &data, &dataLength);
 		QVERIFY(valid);
 		QCOMPARE(QByteArray((const char *)data, dataLength), QByteArray("hi"));
 		free(data);

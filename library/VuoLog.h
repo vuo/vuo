@@ -28,7 +28,6 @@ extern "C" {
 double VuoLogGetTime(void);
 double VuoLogGetElapsedTime(void);
 bool VuoIsDebugEnabled(void);
-char *VuoLog_copyCFDescription(const void *variable);
 
 void VuoLog_backtrace(void);
 #ifdef __cplusplus

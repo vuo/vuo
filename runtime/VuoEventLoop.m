@@ -16,6 +16,8 @@
 #endif
 #import <AppKit/AppKit.h>
 
+#include <objc/objc-runtime.h>
+
 #include <dlfcn.h>
 
 /**
@@ -238,6 +240,31 @@ void VuoEventLoop_installSignalHandlers(void)
 }
 
 /**
+ * Log initial thermal state and state change notifications.
+ * Eventually we could use these to adapt graphics quality.
+ */
+void VuoThermalState(void)
+{
+	void (^logThermalState)(int thermalState) = ^(int thermalState){
+		if (thermalState == 0)
+			VDebugLog("thermalState = nominal");
+		else if (thermalState == 1)
+			VDebugLog("thermalState = fair (\"fans audible\")");
+		else if (thermalState == 2)
+			VDebugLog("thermalState = serious (\"fans at maximum speed\")");
+		else if (thermalState == 3)
+			VDebugLog("thermalState = critical (\"system needs to cool down\")");
+	};
+	if ([NSProcessInfo.processInfo respondsToSelector:@selector(thermalState)])
+	{
+		logThermalState((int)objc_msgSend(NSProcessInfo.processInfo, @selector(thermalState)));
+		[NSNotificationCenter.defaultCenter addObserverForName:@"NSProcessInfoThermalStateDidChangeNotification" object:nil queue:nil usingBlock:^(NSNotification *note){
+			logThermalState((int)objc_msgSend(note.object, @selector(thermalState)));
+		}];
+	}
+}
+
+/**
  * Disable "App Nap" since even if our timers are set to `DISPATCH_TIMER_STRICT`,
  * the OS still prevents the process from running smoothly while taking a nap.
  * https://b33p.net/kosada/node/12685
@@ -251,4 +278,6 @@ void VuoEventLoop_disableAppNap(void)
 		withObject: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];
 
 	[activityToken retain];
+
+	VuoThermalState();
 }

@@ -1,4 +1,3 @@
-![](https://tokei.rs/b1/github/vuo/vuo) ![](https://tokei.rs/b1/github/vuo/vuo?category=comments)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ca246f89ad984204a5ba66698c9b3228)](https://www.codacy.com/app/smokris/vuo?utm_source=github.com&utm_medium=referral&utm_content=vuo/vuo&utm_campaign=badger)
 
 These instructions are for building Vuo Base, Vuo Compiler, Vuo Renderer, Vuo Runtime, Vuo Editor, and the built-in Vuo Nodes and Types from source code.
@@ -51,10 +50,10 @@ Review the results of `brew doctor` and fix any problems it finds, then install 
    - `mkdir build`
    - `cd build`
    - On macOS:
-      - `conan config install --source-folder vuo-conan https://vuo.org/sites/default/files/conan-macos.zip`
+      - `conan config install https://vuo.org/sites/default/files/conan-macos.zip`
       - Conan may output `WARN: Remotes registry file missing, creating default one` — that's OK.
    - On Linux:
-      - `conan config install --source-folder vuo-conan https://vuo.org/sites/default/files/conan-linux.zip`
+      - `conan config install https://vuo.org/sites/default/files/conan-linux.zip`
    - `conan install ..`
 
 

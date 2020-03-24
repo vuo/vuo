@@ -698,5 +698,5 @@ QString VuoRendererComment::generateTextStyleString()
 					</style>)
 				.arg(VuoRendererColors::isDark() ? "#88a2de" : "#74acec")
 				.arg(f->getCSS(f->commentFont()))
-				.arg(VuoRendererColors::isDark() ? "#383838" : "#ececec");
+				.arg(VuoRendererColors::isDark() ? "rgba(0,0,0,.25)" : "rgba(255,255,255,.6)");
 }

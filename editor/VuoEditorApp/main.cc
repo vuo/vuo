@@ -18,6 +18,7 @@
 #include "VuoEditorWindow.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoHeap.h"
+#include "VuoProtocol.hh"
 #include "VuoRendererCommon.hh"
 #include "VuoUrl.h"
 
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 	bool doPrintHelp = false;
 	bool doOpenRecent = false;
 	bool doOpenRandom = false;
+	QString doOpenTemplate;
 	bool doRun = false;
 	bool doQuit = false;
 
@@ -58,6 +60,7 @@ int main(int argc, char *argv[])
 		{"open-random", no_argument, NULL, 0},
 		{"run", no_argument, NULL, 0},
 		{"quit", no_argument, NULL, 0},
+		{"template", required_argument, NULL, 0},
 		{NULL, no_argument, NULL, 0}
 	};
 	int optionIndex=-1;
@@ -90,6 +93,9 @@ int main(int argc, char *argv[])
 			case 6:  // --quit
 				doQuit = true;
 				break;
+			case 7:  // --template
+				doOpenTemplate = optarg;
+				break;
 		}
 	}
 
@@ -103,6 +109,9 @@ int main(int argc, char *argv[])
 			   "  --generate-docs <dir>        Saves the full collection of node class and node set documentation in <dir>, then exits.\n"
 			   "  --open-recent                Reopens the most recent composition.\n"
 			   "  --open-random                Opens a random example composition.\n"
+			   "  --template <template>        Opens a new composition with the specified template.\n"
+			   "                               E.g., \"--template VuoImageTransition\".\n"
+			   "                               See Vuo.app/Contents/Frameworks/Vuo.framework/Resources/*.vuo for a full list.\n"
 			   "  --run                        Starts all open compositions running.\n"
 			   "  --quit                       Exits after optionally opening and running compositions.  Useful for testing performance.\n",
 			   argv[0]);
@@ -126,6 +135,25 @@ int main(int argc, char *argv[])
 		if (doOpenRandom)
 			QTimer::singleShot(0, &v, &VuoEditor::openRandomExample);
 
+		if (!doOpenTemplate.isEmpty())
+		{
+			QAction *templateAction = new QAction(nullptr);
+
+			VuoProtocol *protocol = VuoProtocol::getProtocol(doOpenTemplate.toStdString());
+			if (protocol)
+			{
+				templateAction->setData(qVariantFromValue(static_cast<void *>(protocol)));
+				QObject::connect(templateAction, &QAction::triggered, &v, &VuoEditor::newCompositionWithProtocol);
+			}
+			else
+			{
+				templateAction->setData(doOpenTemplate);
+				QObject::connect(templateAction, &QAction::triggered, &v, &VuoEditor::newCompositionWithTemplate);
+			}
+
+			QTimer::singleShot(0, templateAction, &QAction::trigger);
+		}
+
 		// If there are any arguments left over after getopt_long(), try to open them.
 		for (int i = optind; i < getoptArgC; ++i)
 		{
@@ -137,12 +165,14 @@ int main(int argc, char *argv[])
 		free(getoptArgV);
 
 		if (doRun)
-			foreach (VuoEditorWindow *window, VuoEditorUtilities::getOpenCompositionEditingWindows())
-				QTimer::singleShot(0, ^{
+			QTimer::singleShot(0, ^{
+				foreach (VuoEditorWindow *window, VuoEditorUtilities::getOpenCompositionEditingWindows())
+				{
 					window->on_runComposition_triggered();
 					// Wait for the composition to launch.
 					window->getComposition()->isRunning();
-				});
+				}
+			});
 
 		if (doQuit)
 		{

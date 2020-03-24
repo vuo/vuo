@@ -436,9 +436,9 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 				}
 				@catch (NSException *e)
 				{
-					char *description = VuoLog_copyCFDescription(e);
+					VuoText description = VuoText_makeFromCFString(e.description);
+					VuoLocal(description);
 					VUserLog("Error: Couldn't change window size to %lldx%lld: %s", property.width, property.height, description);
-					free(description);
 				}
 			}
 		}

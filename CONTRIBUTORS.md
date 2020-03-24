@@ -134,6 +134,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [unicode](https://vuo.org/user/419526)
    - [useful design](https://vuo.org/user/143)
    - [video piglet](https://vuo.org/user/1900514)
+   - [visiophone](https://vuo.org/user/1330701)
    - [vjsatoshi](https://vuo.org/user/277)
    - [volkerku](https://vuo.org/user/898)
    - [WARP](https://vuo.org/user/923)

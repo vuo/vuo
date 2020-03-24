@@ -184,7 +184,10 @@ string VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(string path)
 string VuoFileUtilities::getTmpDir(void)
 {
 	char *cwd = getcwd(NULL, 0);
-	if (strstr(cwd, "/Library/Containers/"))  // We're in a sandbox.
+	if (!cwd)
+		VUserLog("Error in getcwd(): %s", strerror(errno));
+
+	if (cwd && strstr(cwd, "/Library/Containers/"))  // We're in a sandbox.
 	{
 		// https://b33p.net/kosada/node/16374
 		// In the macOS 10.15 screen saver sandbox, at least,

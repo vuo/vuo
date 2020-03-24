@@ -35,6 +35,7 @@
 #endif
 
 #include "VuoLog.h"
+#include "VuoHeap.h"
 #include "VuoStringUtilities.hh"
 
 /// The existing std::terminate handler before we installed ours.
@@ -313,8 +314,11 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 
 	const char *formattedFile = file;
 
+	if (!VuoHeap_isPointerReadable(formattedFile))
+		formattedFile = "(unknown)";
+
 	// Trim the path, if present.
-	if (const char *lastSlash = strrchr(file, '/'))
+	if (const char *lastSlash = strrchr(formattedFile, '/'))
 		formattedFile = lastSlash + 1;
 
 	double time = VuoLogGetElapsedTime();
@@ -467,24 +471,6 @@ bool VuoIsDebugEnabled(void)
 					  debug = CFPreferencesGetAppBooleanValue(CFSTR("debug"), CFSTR("org.vuo.Editor"), NULL);
 				  });
 	return debug;
-}
-
-/**
- * Returns a C string description of `variable`, a reference to a CoreFoundation object.
- *
- * The caller is responsible for `free()`ing the returned string.
- */
-char *VuoLog_copyCFDescription(const void *variable)
-{
-	if (!variable)
-		return strdup("(null)");
-
-	CFStringRef d = CFCopyDescription(variable);
-	CFIndex len = CFStringGetLength(d)+1;
-	char *z = (char *)malloc(len);
-	CFStringGetCString(d, z, len, kCFStringEncodingUTF8);
-	CFRelease(d);
-	return z;
 }
 
 /**

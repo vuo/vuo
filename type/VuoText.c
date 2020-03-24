@@ -185,25 +185,17 @@ VuoText VuoText_makeFromCFString(const void *cfs)
 	CFStringRef cfString = (CFStringRef)cfs;
 
 	// https://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
-
-	const char *useUTF8StringPtr = NULL;
-	char *freeUTF8StringPtr = NULL;
-
-	if ((useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8)) == NULL)
+	const char *utf8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8);
+	if (utf8StringPtr)
+		return VuoText_make(utf8StringPtr);
+	else
 	{
-		CFIndex stringLength = CFStringGetLength(cfString);
-		CFIndex maxBytes = 4 * stringLength + 1;
-		freeUTF8StringPtr = malloc(maxBytes);
-		CFStringGetCString(cfString, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
-		useUTF8StringPtr = freeUTF8StringPtr;
+		CFIndex maxBytes = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfString), kCFStringEncodingUTF8) + 1;
+		char *t = calloc(1, maxBytes);
+		CFStringGetCString(cfString, t, maxBytes, kCFStringEncodingUTF8);
+		VuoRegister(t, free);
+		return t;
 	}
-
-	VuoText text = VuoText_make(useUTF8StringPtr);
-
-	if (freeUTF8StringPtr != NULL)
-		free(freeUTF8StringPtr);
-
-	return text;
 }
 
 /**

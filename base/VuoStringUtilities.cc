@@ -239,29 +239,12 @@ string VuoStringUtilities::transcodeToIdentifier(string str)
 			CFStringReplace(strCF, CFRangeMake(i, 1), replacement);
 	}
 
-	// https://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
-
-	const char *useUTF8StringPtr = NULL;
-	char *freeUTF8StringPtr = NULL;
-
-	if ((useUTF8StringPtr = CFStringGetCStringPtr(strCF, kCFStringEncodingUTF8)) == NULL)
-	{
-		CFIndex maxBytes = 4 * strLength + 1;
-		freeUTF8StringPtr = (char *)malloc(maxBytes);
-		CFStringGetCString(strCF, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
-		useUTF8StringPtr = freeUTF8StringPtr;
-	}
-
-	string ret = useUTF8StringPtr;
-
-	if (freeUTF8StringPtr != NULL)
-		free(freeUTF8StringPtr);
+	string ret = makeFromCFString(strCF);
 
 	CFRelease(strCF);
 	CFRelease(empty);
 	CFRelease(underscore);
 	CFRelease(doubleUnderscore);
-	free(strBuf);
 
 	return ret;
 }
@@ -537,6 +520,31 @@ string VuoStringUtilities::expandCamelCase(string camelCaseString)
 	}
 
 	return out;
+}
+
+/**
+ * Creates a string from a `CFStringRef`.
+ */
+string VuoStringUtilities::makeFromCFString(const void *cfs)
+{
+	if (!cfs)
+		return "";
+
+	CFStringRef cfString = (CFStringRef)cfs;
+
+	// https://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
+	const char *utf8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8);
+	if (utf8StringPtr)
+		return utf8StringPtr;
+	else
+	{
+		CFIndex maxBytes = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfString), kCFStringEncodingUTF8) + 1;
+		char *t = (char *)calloc(1, maxBytes);
+		CFStringGetCString(cfString, t, maxBytes, kCFStringEncodingUTF8);
+		string s(t);
+		free(t);
+		return s;
+	}
 }
 
 /**

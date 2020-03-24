@@ -10,6 +10,7 @@
 #include "VuoFileUtilities.hh"
 #include "VuoFileUtilitiesCocoa.hh"
 #include "VuoException.hh"
+#include "VuoStringUtilities.hh"
 
 #ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
@@ -165,11 +166,7 @@ void VuoFileUtilitiesCocoa_setBundle(string filePath)
 	if (!CFURLSetResourcePropertyForKey(url, kCFURLIsPackageKey, kCFBooleanTrue, &error))
 	{
 		CFStringRef errorString = CFErrorCopyDescription(error);
-		CFIndex errorLength = CFStringGetLength(errorString);
-		char *errorCString = (char *)malloc(errorLength+1);
-		CFStringGetCString(errorString, errorCString, errorLength+1, kCFStringEncodingUTF8);
-		VUserLog("Warning: Couldn't set kCFURLIsPackageKey on this bundle: %s", errorCString);
-		free(errorCString);
+		VUserLog("Warning: Couldn't set kCFURLIsPackageKey on this bundle: %s", VuoStringUtilities::makeFromCFString(errorString).c_str());
 		CFRelease(errorString);
 	}
 	CFRelease(url);
@@ -225,31 +222,6 @@ bool VuoFileUtilitiesCocoa_isMacAlias(const string &path)
 }
 
 /**
- * Returns `cfs` as an `std::string`.
- */
-static string VuoFileUtilitiesCocoa_CFStringToStdString(CFStringRef cfString)
-{
-	const char *useUTF8StringPtr = NULL;
-	char *freeUTF8StringPtr = NULL;
-
-	if ((useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8)) == NULL)
-	{
-		CFIndex stringLength = CFStringGetLength(cfString);
-		CFIndex maxBytes = 4 * stringLength + 1;
-		freeUTF8StringPtr = (char *)malloc(maxBytes);
-		CFStringGetCString(cfString, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
-		useUTF8StringPtr = freeUTF8StringPtr;
-	}
-
-	string stdString(useUTF8StringPtr);
-
-	if (freeUTF8StringPtr != NULL)
-		free(freeUTF8StringPtr);
-
-	return stdString;
-}
-
-/**
  * If `path` is a macOS Alias, returns its target path.
  *
  * @throw VuoException
@@ -271,14 +243,14 @@ string VuoFileUtilitiesCocoa_resolveMacAlias(const string &path)
 	{
 		CFStringRef desc = CFErrorCopyDescription(error);
 		VuoDefer(^{ CFRelease(desc); });
-		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it couldn't be resolved: \"" + VuoFileUtilitiesCocoa_CFStringToStdString(desc) + "\" (isStale=" + std::to_string(isStale) + ")");
+		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it couldn't be resolved: \"" + VuoStringUtilities::makeFromCFString(desc) + "\" (isStale=" + std::to_string(isStale) + ")");
 	}
 	VuoDefer(^{ CFRelease(resolvedURL); });
 
 	CFStringRef resolvedPath = CFURLCopyFileSystemPath(resolvedURL, kCFURLPOSIXPathStyle);
 	if (!resolvedPath)
-		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it resolved to something that isn't a POSIX path (\"" + VuoLog_copyCFDescription(resolvedURL) + "\").");
+		throw VuoException("Path \"" + path + "\" is a macOS Alias, but it resolved to something that isn't a POSIX path (\"" + VuoStringUtilities::makeFromCFString(((NSURL *)resolvedURL).description) + "\").");
 	VuoDefer(^{ CFRelease(resolvedPath); });
 
-	return VuoFileUtilitiesCocoa_CFStringToStdString(resolvedPath);
+	return VuoStringUtilities::makeFromCFString(resolvedPath);
 }

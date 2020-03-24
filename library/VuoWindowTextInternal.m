@@ -257,6 +257,12 @@ VuoModuleMetadata({
 	BOOL autoscroll = abs(NSMaxY(textView.visibleRect) - NSMaxY(textView.bounds)) < 1;
 
 	NSString *line = [[NSString stringWithUTF8String:text] stringByAppendingString:@"\n"];
+	if (!line)
+	{
+		VUserLog("Warning: Attempting to write non-UTF-8 text to a console window.  Ignoring.");
+		return;
+	}
+
 	NSDictionary *attributes = @{
 		NSFontAttributeName: textFont,
 		NSForegroundColorAttributeName: NSColor.textColor,

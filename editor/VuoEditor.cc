@@ -669,7 +669,14 @@ void VuoEditor::reallyQuit()
 {
 	VUserLog("Quit");
 
-	VuoCompiler::deleteOldModuleCaches();
+	try
+	{
+		VuoCompiler::deleteOldModuleCaches();
+	}
+	catch (...)
+	{
+		// Do nothing; it doesn't matter if this sometimes fails.
+	}
 
 	QApplication::quit();
 }
