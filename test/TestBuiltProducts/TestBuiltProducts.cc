@@ -189,6 +189,7 @@ private slots:
 		vector<string> blacklistedLibraryPaths;
 		blacklistedLibraryPaths.push_back("/usr/local");
 		blacklistedLibraryPaths.push_back("/usr/X11");
+		blacklistedLibraryPaths.push_back("Modules/libc++.dylib");  // Ensure this module references the system's libc++.
 		char *userdir = getenv("HOME");
 		QVERIFY(userdir != NULL);
 		blacklistedLibraryPaths.push_back(userdir);

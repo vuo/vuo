@@ -36,6 +36,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [David](https://vuo.org/user/556801)
    - [ddelcourt](https://vuo.org/user/148)
    - [destroythings](https://vuo.org/user/89)
+   - [DetAndreTeatret](https://vuo.org/user/1378891)
    - [DiGiTaLFX](https://vuo.org/user/50)
    - [Doro](https://vuo.org/user/434891)
    - [dumski](https://vuo.org/user/3606)
