@@ -75,6 +75,7 @@ private slots:
 		QTest::newRow("Node with an input port and output port whose types are pointers to structs.") << "StructPointerPorts";
 		QTest::newRow("Make List node with 0 items.") << "AddNoTerms";
 		QTest::newRow("Published input port called 'refresh'.") << "RefreshPublishedInput";
+		QTest::newRow("Missing node class.") << "WrongNodeClassName";
 	}
 	void testCompilingWithoutCrashing()
 	{
@@ -83,8 +84,16 @@ private slots:
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string bcPath = VuoFileUtilities::makeTmpFile(compositionName.toUtf8().constData(), "bc");
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
-		compiler->compileComposition(compositionPath, bcPath, true, issues);
+		try {
+			compiler->compileComposition(compositionPath, bcPath, true, issues);
+		} catch (...) {}
 		delete issues;
+
+		// Also test compiling without populating VuoCompilerIssues.
+		try {
+			compiler->compileComposition(compositionPath, bcPath, true, nullptr);
+		} catch (...) {}
+
 		remove(bcPath.c_str());
 	}
 

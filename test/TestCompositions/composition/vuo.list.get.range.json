@@ -14,9 +14,13 @@
    {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":1,"maximum":3},{"minimum":2,"maximum":4}]},                              "outputPortValues":{"items":[11,22,33,22,33,44]}},
    {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":4,"maximum":4},{"minimum":2,"maximum":2}]},                              "outputPortValues":{"items":[44,22]}},
 
-   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[]},                                                                                 "outputPortValues":{"items":[]}},
-   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[{"minimum":1,"maximum":5}]},                                                        "outputPortValues":{"items":[]}},
-   {"firingPort":"list","inputPortValues":{"list":[11            ], "ranges":[]},                                                                                 "outputPortValues":{"items":[]}},
+	// Ensure an empty input list actually clears the output list (rather than doing nothing).
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":null},                                                                               "outputPortValues":{"items":null}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[]},                                                                                 "outputPortValues":{"items":null}},
+
+   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[]},                                                                                 "outputPortValues":{"items":null}},
+   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[{"minimum":1,"maximum":5}]},                                                        "outputPortValues":{"items":null}},
+   {"firingPort":"list","inputPortValues":{"list":[11            ], "ranges":[]},                                                                                 "outputPortValues":{"items":null}},
 
    {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":-3,"maximum":-1}]},                                                      "outputPortValues":{"items":[]}},
    {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":0,"maximum":2}]},                                                        "outputPortValues":{"items":[11,22]}},

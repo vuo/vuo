@@ -557,7 +557,7 @@ private slots:
 
 		map<VuoNode *, string> nodesToReplace;
 		set<VuoCable *> cablesToDelete;
-		composition->createReplacementsToUnspecializePort(portToUnspecialize, nodesToReplace, cablesToDelete);
+		composition->createReplacementsToUnspecializePort(portToUnspecialize, true, nodesToReplace, cablesToDelete);
 
 		for (map<VuoNode *, string>::iterator i = nodesToReplace.begin(); i != nodesToReplace.end(); ++i)
 		{
@@ -1122,6 +1122,35 @@ private slots:
 					.arg(referencedMenuPath).toUtf8().data());
 			}
 			++lineNumber;
+		}
+	}
+
+	void testCableDragPerformance_data()
+	{
+		QTest::addColumn<QString>("port");
+
+		QTest::newRow("nodes-200-cables-100-list-text.vuo")  << "GetItemFromList:item";
+		QTest::newRow("nodes-1000-cables-2000.vuo")          << "GetRGBColorValues:red";
+		QTest::newRow("nodes-1000-cables-500-list-text.vuo") << "GetItemFromList:item";
+		QTest::newRow("nodes-1000-hold-real.vuo")            << "HoldValue:heldValue";
+		QTest::newRow("nodes-1200-cables-1200-generic.vuo")  << "AddLists97:summedList";
+		QTest::newRow("nodes-2000-cables-4000.vuo")          << "GetRGBColorValues:red";
+	}
+	void testCableDragPerformance()
+	{
+		QFETCH(QString, port);
+
+		cleanupTestCase();
+		initTestCaseWithCompositionFile(QTest::currentDataTag());
+
+		VuoPort *p = composition->getPortWithStaticIdentifier(port.toStdString());
+		QVERIFY(p);
+		VuoRendererPort *rp = p->getRenderer();
+		QVERIFY(rp);
+
+		QGraphicsSceneMouseEvent e;
+		QBENCHMARK {
+			composition->initiateCableDrag(rp, nullptr, &e);
 		}
 	}
 

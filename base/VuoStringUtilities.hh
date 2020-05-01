@@ -60,4 +60,6 @@ public:
 
 	static const std::locale locale;  ///< For hashing strings.
 	static const std::collate<char> &collate;  ///< For hashing strings.
+
+	static string calculateSHA256(const string &s);
 };

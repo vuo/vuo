@@ -7,3 +7,4 @@ target_link_libraries(TestWindow
 	PRIVATE
 	"-framework CoreGraphics"
 )
+add_dependencies(TestWindow VuoEditorApp)

@@ -100,13 +100,11 @@ void vuoFreeNodeContext(struct NodeContext *nodeContext)
 	free(nodeContext->instanceData);
 	if (nodeContext->semaphore)
 		dispatch_release(nodeContext->semaphore);
-	if (nodeContext->executingEventIds)
-		delete static_cast< vector<unsigned long> *>(nodeContext->executingEventIds);
+	delete static_cast< vector<unsigned long> *>(nodeContext->executingEventIds);
 	if (nodeContext->executingGroup)
 		dispatch_release(nodeContext->executingGroup);
 	free(nodeContext->outputEvents);
-	if (nodeContext->executingEventIdsSync)
-		delete static_cast<std::mutex *>(nodeContext->executingEventIdsSync);
+	delete static_cast<std::mutex *>(nodeContext->executingEventIdsSync);
 	free(nodeContext);
 }
 

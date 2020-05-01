@@ -823,19 +823,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 													   VuoRendererColors::noSelection);
 
 	bool isHovered = isEligibleForSelection;
-
-	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
-	bool isTriggerPort = (type == VuoPortClass::triggerPort);
-
-	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
-	bool renderNodeActivity = composition && composition->getRenderNodeActivity();
-	bool renderPortActivity = composition && composition->getRenderPortActivity();
-
-	qint64 timeOfLastActivity =		((! renderNodeActivity)? VuoRendererItem::notTrackingActivity :
-									((isTriggerPort && renderPortActivity)? timeLastEventFired :
-									(getTypecastParentPort()? static_cast<VuoRendererTypecastPort *>(getTypecastParentPort())->getUncollapsedTypecastNode()->getTimeLastExecutionEnded() :
-									(renderedParentNode? renderedParentNode->getTimeLastExecutionEnded() :
-									VuoRendererItem::notTrackingActivity))));
+	qint64 timeOfLastActivity = getTimeOfLastActivity();
 
 	// If an attached drawer does have eligible ports, ensure this host port isn't faded out, so the port name is legible.
 	VuoRendererColors::HighlightType effectiveHighlight = _eligibilityHighlight;
@@ -883,15 +871,30 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	if (!isConstant())
 	{
+		bool showRightHalfOnly = false;
 		VuoRendererInputDrawer *drawer = getAttachedInputDrawer();
-		VuoRendererPort *drawerChildPort = (drawer && (drawer->getInputPorts().size() >= VuoNodeClass::unreservedInputPortStartIndex+1)?
-											   drawer->getInputPorts()[VuoNodeClass::unreservedInputPortStartIndex] :
-										   NULL);
+		if (drawer)
+		{
+			VuoRendererPort *drawerChildPort = (drawer && (drawer->getInputPorts().size() >= VuoNodeClass::unreservedInputPortStartIndex+1)?
+													drawer->getInputPorts()[VuoNodeClass::unreservedInputPortStartIndex] :
+												NULL);
 
-		// Prevent neighboring semi-transparent highlights from overlapping in a misleading way
-		bool showRightHalfOnly = !isHovered && drawerChildPort &&
-								 (drawerChildPort->eligibilityHighlight() == VuoRendererColors::subtleHighlight) &&
-								 (eligibilityHighlight() != VuoRendererColors::standardHighlight);
+			// Prevent neighboring semi-transparent highlights from overlapping in a misleading way
+			// Essentially: Paint the whole circle if the circle is meant to be more opaque than the drawer handle it intersects.
+			qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
+			const double fadeThreshold = 0.3; // Tuned visually.
+			qint64 childTimeOfLastActivity = drawerChildPort? drawerChildPort->getTimeOfLastActivity() : VuoRendererItem::notTrackingActivity;
+			bool showingActiveEvent = (timeOfLastActivity != VuoRendererItem::notTrackingActivity) &&
+									  (((timeNow - timeOfLastActivity) < VuoRendererColors::activityAnimationFadeDuration*fadeThreshold) ||
+									   (timeOfLastActivity == VuoRendererItem::activityInProgress));
+			bool childShowingActiveEvent = (childTimeOfLastActivity != VuoRendererItem::notTrackingActivity) &&
+										   (((timeNow - childTimeOfLastActivity) < VuoRendererColors::activityAnimationFadeDuration*fadeThreshold) ||
+										   (childTimeOfLastActivity == VuoRendererItem::activityInProgress));
+			showRightHalfOnly = !effectivelyHovered && drawerChildPort &&
+									 (drawerChildPort->eligibilityHighlight() <= effectiveHighlight) &&
+									 !(showingActiveEvent && !childShowingActiveEvent);
+		}
+
 		if (showRightHalfOnly)
 			painter->setClipRect(QRectF(-0.39, -portRadius, portRadius, portRadius*2.));
 
@@ -979,6 +982,26 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	delete colors;
 	delete antennaColors;
+}
+
+/**
+ * Returns the time of the port's latest activity for purposes of "Show Events" mode event tracking.
+ */
+qint64 VuoRendererPort::getTimeOfLastActivity()
+{
+	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
+	bool isTriggerPort = (type == VuoPortClass::triggerPort);
+
+	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
+	bool renderNodeActivity = composition && composition->getRenderNodeActivity();
+	bool renderPortActivity = composition && composition->getRenderPortActivity();
+	VuoRendererNode *renderedParentNode = getRenderedParentNode();
+
+	return ((! renderNodeActivity)? VuoRendererItem::notTrackingActivity :
+									((isTriggerPort && renderPortActivity)? timeLastEventFired :
+									(getTypecastParentPort()? static_cast<VuoRendererTypecastPort *>(getTypecastParentPort())->getUncollapsedTypecastNode()->getTimeLastExecutionEnded() :
+									(renderedParentNode? renderedParentNode->getTimeLastExecutionEnded() :
+									VuoRendererItem::notTrackingActivity))));
 }
 
 /**

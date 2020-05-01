@@ -15,7 +15,7 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Window State",
+					 "title" : "Window",
 					 "description" : "A set of layers, transformed to their final positions for rendering",
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
@@ -990,34 +990,40 @@ VuoRenderedLayers VuoRenderedLayers_makeFromJson(json_object * js)
 {
 	json_object *o = NULL;
 
-	VuoSceneObject rootSceneObject;
+	VuoRenderedLayers_internal *rl = (VuoRenderedLayers_internal *)VuoRenderedLayers_makeEmpty();
+
 	if (json_object_object_get_ex(js, "rootSceneObject", &o))
-		rootSceneObject = VuoSceneObject_makeFromJson(o);
-	else
-		rootSceneObject = NULL;
+	{
+		rl->rootSceneObject = VuoSceneObject_makeFromJson(o);
+		VuoSceneObject_retain(rl->rootSceneObject);
+	}
 
-	VuoInteger pixelsWide = 0;
 	if (json_object_object_get_ex(js, "pixelsWide", &o))
-		pixelsWide = json_object_get_int64(o);
+		rl->pixelsWide = json_object_get_int64(o);
 
-	VuoInteger pixelsHigh = 0;
 	if (json_object_object_get_ex(js, "pixelsHigh", &o))
-		pixelsHigh = json_object_get_int64(o);
+		rl->pixelsHigh = json_object_get_int64(o);
 
-	float backingScaleFactor = 1;
+	if (rl->pixelsWide && rl->pixelsHigh)
+		rl->hasRenderingDimensions = true;
+
 	if (json_object_object_get_ex(js, "backingScaleFactor", &o))
-		backingScaleFactor = VuoReal_makeFromJson(o);
+		rl->backingScaleFactor = VuoReal_makeFromJson(o);
 
-	VuoList_VuoInteraction interactions = NULL;
 	if (json_object_object_get_ex(js, "interactions", &o))
-		interactions = VuoList_VuoInteraction_makeFromJson(o);
-
-	VuoRenderedLayers rl = VuoRenderedLayers_make(rootSceneObject, pixelsWide, pixelsHigh, backingScaleFactor, interactions);
+	{
+		rl->interactions = VuoList_VuoInteraction_makeFromJson(o);
+		VuoRetain(rl->interactions);
+	}
 
 	if (json_object_object_get_ex(js, "window", &o))
-		VuoRenderedLayers_setWindow(rl, VuoWindowReference_makeFromJson(o));
+	{
+		rl->hasWindow = true;
+		rl->window = VuoWindowReference_makeFromJson(o);
+		VuoRetain(rl->window);
+	}
 
-	return rl;
+	return (VuoRenderedLayers)rl;
 }
 
 /**
@@ -1030,14 +1036,23 @@ json_object * VuoRenderedLayers_getJson(const VuoRenderedLayers renderedLayers)
 
 	json_object *js = json_object_new_object();
 
-	json_object *rootSceneObjectObject = VuoSceneObject_getJson(rl->rootSceneObject);
-	json_object_object_add(js, "rootSceneObject", rootSceneObjectObject);
+	if (VuoSceneObject_isPopulated(rl->rootSceneObject))
+	{
+		json_object *rootSceneObjectObject = VuoSceneObject_getJson(rl->rootSceneObject);
+		json_object_object_add(js, "rootSceneObject", rootSceneObjectObject);
+	}
 
-	json_object *pixelsWideObject = json_object_new_int64(rl->pixelsWide);
-	json_object_object_add(js, "pixelsWide", pixelsWideObject);
+	if (rl->hasRenderingDimensions)
+	{
+		json_object *pixelsWideObject = json_object_new_int64(rl->pixelsWide);
+		json_object_object_add(js, "pixelsWide", pixelsWideObject);
 
-	json_object *pixelsHighObject = json_object_new_int64(rl->pixelsHigh);
-	json_object_object_add(js, "pixelsHigh", pixelsHighObject);
+		json_object *pixelsHighObject = json_object_new_int64(rl->pixelsHigh);
+		json_object_object_add(js, "pixelsHigh", pixelsHighObject);
+
+		json_object *bsfObject = VuoReal_getJson(rl->backingScaleFactor);
+		json_object_object_add(js, "backingScaleFactor", bsfObject);
+	}
 
 	if (rl->hasWindow)
 	{
@@ -1045,11 +1060,11 @@ json_object * VuoRenderedLayers_getJson(const VuoRenderedLayers renderedLayers)
 		json_object_object_add(js, "window", windowObject);
 	}
 
-	json_object *bsfObject = VuoReal_getJson(rl->backingScaleFactor);
-	json_object_object_add(js, "backingScaleFactor", bsfObject);
-
-	json_object *interactionObj = VuoList_VuoInteraction_getJson(rl->interactions);
-	json_object_object_add(js, "interactions", interactionObj);
+	if (rl->interactions)
+	{
+		json_object *interactionObj = VuoList_VuoInteraction_getJson(rl->interactions);
+		json_object_object_add(js, "interactions", interactionObj);
+	}
 
 	return js;
 }
@@ -1062,13 +1077,26 @@ char * VuoRenderedLayers_getSummary(const VuoRenderedLayers renderedLayers)
 {
 	VuoRenderedLayers_internal *rl = (VuoRenderedLayers_internal *)renderedLayers;
 
-	char *rootSummary = VuoSceneObject_getSummary(rl->rootSceneObject);
-	char *windowSummary = VuoWindowReference_getSummary(rl->window);
+	char *windowSummary = NULL;
+	if (rl->hasWindow)
+		windowSummary = VuoText_format("<p>%s</p>", VuoWindowReference_getSummary(rl->window));
 
-	char *summary = VuoText_format("%lux%lu<br>%s<br>%s", rl->pixelsWide, rl->pixelsHigh, windowSummary, rootSummary);
+	char *sizeSummary = NULL;
+	if (rl->hasRenderingDimensions)
+		sizeSummary = VuoText_format("<p>Size: %lu×%lu @ %gx</p>", rl->pixelsWide, rl->pixelsHigh, rl->backingScaleFactor);
+
+	char *layersSummary = NULL;
+	if (VuoSceneObject_isPopulated(rl->rootSceneObject))
+		layersSummary = VuoText_format("<p>%s</p>", VuoSceneObject_getSummary(rl->rootSceneObject));
+
+	char *summary = VuoText_format("%s%s%s",
+		windowSummary ? windowSummary : "",
+		sizeSummary ? sizeSummary : "",
+		layersSummary ? layersSummary : "");
 
 	free(windowSummary);
-	free(rootSummary);
+	free(sizeSummary);
+	free(layersSummary);
 
 	return summary;
 }

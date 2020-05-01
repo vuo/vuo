@@ -49,6 +49,7 @@ public:
 	VuoCompilerTriggerPort * getPublishedInputTrigger(void);
 	VuoPort * getInputPortOnPublishedInputNode(size_t publishedInputPortIndex);
 	VuoPort * getInputPortOnPublishedOutputNode(size_t publishedOutputPortIndex);
+	VuoPort * getGatherPortOnPublishedOutputNode(void);
 	VuoCompilerTriggerPort * getManuallyFirableTrigger(void);
 	map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > getChains(void);
 	vector<VuoCompilerNode *> getNodesImmediatelyDownstream(VuoCompilerTriggerPort *trigger);
@@ -208,7 +209,6 @@ private:
 	bool mayTransmit(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	bool mayTransmit(VuoCompilerNode *fromNode, VuoCompilerNode *toNode);
 	VuoPort * getOutputPortOnPublishedInputNode(size_t publishedInputPortIndex);
-	VuoPort * getGatherPortOnPublishedOutputNode(void);
 	size_t getNumVerticesWithFromNode(VuoCompilerNode *fromNode, VuoCompilerTriggerPort *trigger);
 	size_t getNumVerticesWithToNode(VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger);
 	bool areNodesPartiallyOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &nodes, VuoCompilerTriggerPort *trigger);

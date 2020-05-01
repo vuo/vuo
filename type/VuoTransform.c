@@ -661,24 +661,24 @@ json_object * VuoTransform_getJson(const VuoTransform value)
 char * VuoTransform_getSummary(const VuoTransform value)
 {
 	if (VuoTransform_isIdentity(value))
-		return strdup("identity transform (no change)");
+		return strdup("Identity transform (no change)");
 
 	if (value.type == VuoTransformTypeTargeted)
-		return VuoText_format("<div>position (%g, %g, %g)</div><div>target (%g, %g, %g)</div><div>up (%g, %g, %g)</div>",
+		return VuoText_format("<div>Position (%g, %g, %g)</div><div>Target (%g, %g, %g)</div><div>Up (%g, %g, %g)</div>",
 							  value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
 
 	char *rotation;
 	if (value.type == VuoTransformTypeQuaternion)
-		rotation = VuoText_format("(%g, %g, %g, %g) quaternion",
+		rotation = VuoText_format("(%g, %g, %g, %g) Quaternion",
 								  value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
 	else
 	{
 		VuoPoint3d r = VuoPoint3d_multiply(value.rotationSource.euler, 180./M_PI);
-		rotation = VuoText_format("(%g°, %g°, %g°) euler",
+		rotation = VuoText_format("(%g°, %g°, %g°) Euler",
 								  r.x, r.y, r.z);
 	}
 
-	char *valueAsString = VuoText_format("<div>translation (%g, %g, %g)</div><div>rotation %s</div><div>scale (%g, %g, %g)</div>",
+	char *valueAsString = VuoText_format("<div>Translation (%g, %g, %g)</div><div>Rotation %s</div><div>Scale (%g, %g, %g)</div>",
 										 value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
 	free(rotation);
 	return valueAsString;

@@ -270,7 +270,6 @@ private:
 	void generateAllNodeSetHtmlDocumentation(string directory);
 	void reportBrokenModules();
 	void moveFileToTrash(QString filePath);
-	string externalizeVuoLinks(string markdownText);
 	dispatch_queue_t documentationQueue;
 	VuoNodeLibrary *ownedNodeLibrary; // The top-level (application-owned) node library, which may at times function as the floating node library.
 	QAction *showNodeLibraryAction;

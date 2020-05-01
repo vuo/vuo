@@ -14,4 +14,7 @@ VuoCompileNodes(
 	node-TestModuleLoading/vuo.test.TestModuleLoading.dependsOnNodeClass.c
 	node-TestModuleLoading/vuo.test.TestModuleLoading.dependsOnSubcomposition.c
 )
-add_dependencies(TestModuleLoading TestModuleLoading.nodes)
+add_dependencies(TestModuleLoading
+	VuoEditorApp
+	TestModuleLoading.nodes
+)

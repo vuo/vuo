@@ -9,6 +9,8 @@
 
 #pragma once
 
+class VuoCompiler;
+
 /**
  * Shared Qt utilities.
  */
@@ -16,4 +18,5 @@ class VuoRendererCommon
 {
 public:
 	static void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &message);
+	static QString externalizeVuoNodeLinks(VuoCompiler *compiler, QString markdownText, bool outputAbsoluteLinks);
 };

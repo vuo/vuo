@@ -60,8 +60,7 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 
 		if(alt != NULL && (player->decoder == NULL || alt->CanPlayAudio()) )
 		{
-			if(player->decoder != NULL)
-				delete player->decoder;
+			delete player->decoder;
 
 			player->decoder = alt;
 
@@ -128,11 +127,9 @@ VuoVideoPlayer::~VuoVideoPlayer()
 		stopTimer(&audio_timer, &audio_semaphore);
 	dispatch_release(audio_semaphore);
 
-	if(decoder != NULL)
-		delete decoder;
+	delete decoder;
 
-	if(videoPath != NULL)
-		VuoRelease(videoPath);
+	VuoRelease(videoPath);
 
 	TRY_RELEASE_VIDEO(videoFrame)
 	TRY_RELEASE_AUDIO(audioFrame)
@@ -140,19 +137,9 @@ VuoVideoPlayer::~VuoVideoPlayer()
 	/// always locked by the Destroy() function prior to deletion
 	pthread_mutex_unlock(&decoderMutex);
 
-	int ret =  pthread_mutex_destroy(&decoderMutex);
-
-	switch(ret)
-	{
-		case EBUSY:
-			VUserLog("Failed destroying decoder mutex: EBUSY");
-			break;
-
-		case EINVAL:
-			VUserLog("Failed destroying decoder mutex: EINVAL");
-			break;
-	}
-
+	int ret = pthread_mutex_destroy(&decoderMutex);
+	if (ret)
+		VUserLog("Error: Couldn't destroy decoder mutex: %s", strerror(ret));
 }
 
 bool VuoVideoPlayer::IsReady()
@@ -172,8 +159,7 @@ void VuoVideoPlayer::OnDecoderPlaybackReady(bool canPlayMedia)
 
 			if(alt != NULL && alt->CanPlayAudio())
 			{
-				if(decoder != NULL)
-					delete decoder;
+				delete decoder;
 
 				decoder = alt;
 
@@ -197,11 +183,8 @@ void VuoVideoPlayer::OnDecoderPlaybackReady(bool canPlayMedia)
 	{
 		if(!preferFfmpeg)
 		{
-			if(decoder != NULL)
-			{
-				delete decoder;
-				decoder = NULL;
-			}
+			delete decoder;
+			decoder = NULL;
 
 			VuoVideoDecoder* dec = (VuoVideoDecoder*) VuoFfmpegDecoder::Create(videoPath);
 

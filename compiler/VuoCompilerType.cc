@@ -416,6 +416,8 @@ void VuoCompilerType::generateReleaseCall(Module *module, BasicBlock *block, Val
 
 /**
  * Generates a call to any of the API functions for the type that takes a value of the type as its only argument.
+ *
+ * @throw VuoCompilerException `arg` couldn't be converted to `sourceFunction`'s parameter type.
  */
 Value * VuoCompilerType::generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction)
 {

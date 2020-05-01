@@ -164,6 +164,7 @@ protected:
 	bool hasConnectedWirelessDataCable(bool includePublishedCables) const;
 	bool hasConnectedWirelessEventCable(bool includePublishedCables) const;
 	VuoNode::TintColor getWirelessAntennaTint() const;
+	qint64 getTimeOfLastActivity();
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors);
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);

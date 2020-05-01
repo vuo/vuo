@@ -51,9 +51,11 @@ VuoSearchBox::VuoSearchBox(VuoEditorComposition *composition, QWidget *parent, Q
 	setTitleBarWidget(new QWidget()); // Disable the titlebar.
 
 	currentResultIndex = 0;
-
+	noResultsText = QApplication::translate("VuoSearchBox", "No results");
 	resultCount = new QLabel(this);
-	resultCount->setFixedSize(70, resultCount->height());
+	int resultCountTextWidth = qMax(70, QFontMetrics(resultCount->font()).size(0,noResultsText).width());
+
+	resultCount->setFixedSize(resultCountTextWidth, resultCount->height());
 	resultCount->setStyleSheet("QLabel { color : gray; }");
 	resultCount->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
@@ -580,7 +582,7 @@ void VuoSearchBox::updateResultCount()
 	if (ui->searchText->text().isEmpty())
 		resultCount->setText("");
 	else if (searchResults.size() == 0)
-		resultCount->setText("0");
+		resultCount->setText(noResultsText);
 	else
 		resultCount->setText(QString("%1 of %2").arg(currentResultIndex+1).arg(searchResults.size()));
 
@@ -642,11 +644,11 @@ void VuoSearchBox::closeEvent(QCloseEvent *event)
  */
 void VuoSearchBox::repositionChildWidgets()
 {
-	resultCount->move(width()-203, ui->searchText->pos().y()-5);
 	ui->searchText->resize(widget()->geometry().width()-ui->previousButton->geometry().width()
 						   -ui->nextButton->geometry().width()
 						   -ui->doneButton->geometry().width()-5,
 						   ui->searchText->height());
+	resultCount->move(ui->searchText->geometry().right()-resultCount->width()-5, ui->searchText->pos().y()-5);
 	ui->previousButton->move(ui->searchText->geometry().right()+5, ui->previousButton->y());
 	ui->nextButton->move(ui->previousButton->geometry().right()+2, ui->nextButton->y());
 	ui->doneButton->move(ui->nextButton->geometry().right(), ui->doneButton->y());
@@ -735,7 +737,7 @@ bool VuoSearchBox::itemLessThan(QGraphicsItem *item1, QGraphicsItem *item2)
 		return true;
 	else if (item2RowNum < item1RowNum)
 		return false;
-	return (item1->scenePos().x() <= item2->scenePos().x());
+	return (item1->scenePos().x() < item2->scenePos().x());
 }
 
 /**

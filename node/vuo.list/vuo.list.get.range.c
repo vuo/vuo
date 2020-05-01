@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Item Ranges from List",
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "ReorderRangesOfItems.vuo" ]
 					 }
@@ -25,7 +25,12 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) items
 )
 {
-	if(!ranges || !list) return;
+	if (VuoListGetCount_VuoIntegerRange(ranges) == 0
+	 || VuoListGetCount_VuoGenericType1(list) == 0)
+	{
+		*items = NULL;
+		return;
+	}
 
 	*items = VuoListCreate_VuoGenericType1();
 

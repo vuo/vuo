@@ -419,31 +419,31 @@ private slots:
 
 		QTest::newRow("emptystring")	<< ""
 										<< false
-										<< "identity transform (no change)";
+										<< "Identity transform (no change)";
 
 		QTest::newRow("Euler identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeEuler(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,1,1)))
 										<< true
-										<< "identity transform (no change)";
+										<< "Identity transform (no change)";
 
 		QTest::newRow("Quaternion identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0),VuoPoint4d_make(0,0,0,1),VuoPoint3d_make(1,1,1)))
 												<< true
-												<< "identity transform (no change)";
+												<< "Identity transform (no change)";
 
 		QTest::newRow("Targeted identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,0,0),VuoPoint3d_make(0,1,0)))
 											<< true
-											<< "identity transform (no change)";
+											<< "Identity transform (no change)";
 
 		QTest::newRow("Euler transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeEuler(VuoPoint3d_make(1,1,1),VuoPoint3d_make(0,M_PI/2.,2.*M_PI),VuoPoint3d_make(2,2,2)))
 											<< true
-											<< "<div>translation (1, 1, 1)</div><div>rotation (0°, 90°, 360°) euler</div><div>scale (2, 2, 2)</div>";
+											<< "<div>Translation (1, 1, 1)</div><div>Rotation (0°, 90°, 360°) Euler</div><div>Scale (2, 2, 2)</div>";
 
 		QTest::newRow("Quaternion transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeQuaternion(VuoPoint3d_make(1,1,1),VuoPoint4d_make(.5,.5,.5,.5),VuoPoint3d_make(2,2,2)))
 												<< true
-												<< "<div>translation (1, 1, 1)</div><div>rotation (0.5, 0.5, 0.5, 0.5) quaternion</div><div>scale (2, 2, 2)</div>";
+												<< "<div>Translation (1, 1, 1)</div><div>Rotation (0.5, 0.5, 0.5, 0.5) Quaternion</div><div>Scale (2, 2, 2)</div>";
 
 		QTest::newRow("Targeted transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeFromTarget(VuoPoint3d_make(1,2,3),VuoPoint3d_make(4,5,6),VuoPoint3d_make(0,1,0)))
 											<< true
-											<< "<div>position (1, 2, 3)</div><div>target (4, 5, 6)</div><div>up (0, 1, 0)</div>";
+											<< "<div>Position (1, 2, 3)</div><div>Target (4, 5, 6)</div><div>Up (0, 1, 0)</div>";
 	}
 	void testSerializationAndSummary()
 	{

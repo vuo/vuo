@@ -12,9 +12,9 @@
 // expandListIfNeeded = false
 
 	// Changing a value in a null list should leave the list empty.
-	{"firingPort":"list", "inputPortValues":{"list":null,      "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
-	{"firingPort":"list", "inputPortValues":{"list":null,      "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
-	{"firingPort":"list", "inputPortValues":{"list":null,      "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":null            }},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":null            }},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":null            }},
 
 	// Changing a value in an empty list should leave the list empty.
 	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
@@ -36,6 +36,14 @@
 	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,42,2        ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":3, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,1,42        ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":4, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,1,42        ]}},
+
+	// A null input list should clear the output list (rather than leaving it unchanged).
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,2,3,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":null            }},
+
+	// An empty input list should clear the output list (rather than leaving it unchanged).
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,2,3,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
 
 // expandListIfNeeded = true
 

@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Add to List",
 					 "keywords" : [ "push", "append", "prepend", "insert", "combine" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node" : {
 						  "exampleCompositions" : [ "ShiftSquares.vuo" ]
 					 }
@@ -27,7 +27,11 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) modifiedList
 )
 {
-	*modifiedList = VuoListCopy_VuoGenericType1(list);
+	if (list)
+		*modifiedList = VuoListCopy_VuoGenericType1(list);
+	else
+		*modifiedList = VuoListCreate_VuoGenericType1();
+
 	if (position == VuoListPosition_Beginning)
 		VuoListPrependValue_VuoGenericType1(*modifiedList, item);
 	else

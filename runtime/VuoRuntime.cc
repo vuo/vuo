@@ -111,6 +111,9 @@ void vuoInit(int argc, char **argv)
 				case 8:  // --vuo-runner-pid
 					runnerPid = atoi(optarg);
 					break;
+				default:
+					VUserLog("Error: Unknown option %d.", optionIndex);
+					break;
 			}
 		}
 		free(getoptArgV);

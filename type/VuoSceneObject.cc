@@ -2389,15 +2389,15 @@ static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject sceneObject
  */
 char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 {
-	if (!sceneObject)
-		return strdup("no object");
+	if (!VuoSceneObject_isPopulated(sceneObject))
+		return strdup("No object");
 
 	VuoSceneObject_internal *so = (VuoSceneObject_internal *)sceneObject;
 
 	if (so->type == VuoSceneObjectSubType_Text)
 	{
 		char *fontSummary = VuoFont_getSummary(so->text.font);
-		char *textSummary = VuoText_format("<div>\"%s\"</div><div>%sat (%g,%g)</div><div>id %llu</div>", so->text.text, fontSummary, so->transform.translation.x, so->transform.translation.y, so->id);
+		char *textSummary = VuoText_format("<div>\"%s\"</div><div>%sat (%g,%g)</div><div>ID %llu</div>", so->text.text, fontSummary, so->transform.translation.x, so->transform.translation.y, so->id);
 		free(fontSummary);
 		return textSummary;
 	}
@@ -2407,7 +2407,8 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 	 || so->type == VuoSceneObjectSubType_OrthographicCamera
 	 || so->type == VuoSceneObjectSubType_FisheyeCamera)
 	{
-		const char *type = VuoSceneObject_cStringForType(so->type);
+		char *type = strdup(VuoSceneObject_cStringForType(so->type));
+		type[0] = toupper(type[0]);
 
 		float cameraViewValue = 0;
 		const char *cameraViewString = "";
@@ -2438,16 +2439,16 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		char *rotationString;
 		if (so->transform.type == VuoTransformTypeEuler)
 		{
-			rotationLabel = "rotated";
+			rotationLabel = "Rotated";
 			rotationString = VuoPoint3d_getSummary(VuoPoint3d_multiply(so->transform.rotationSource.euler, -180.f/M_PI));
 		}
 		else
 		{
-			rotationLabel = "target";
+			rotationLabel = "Target";
 			rotationString = VuoPoint3d_getSummary(so->transform.rotationSource.target);
 		}
 
-		char *valueAsString = VuoText_format("<div>%s named \"%s\"</div><div>at (%s)</div><div>%s (%s)</div><div>%g%s</div><div>shows objects between depth %g and %g</div>",
+		char *valueAsString = VuoText_format("<div>%s named \"%s\"</div><div>At (%s)</div><div>%s (%s)</div><div>%g%s</div><div>Shows objects between depth %g and %g</div>",
 											 type, so->name ? so->name : "",
 											 translationString,
 											 rotationLabel, rotationString,
@@ -2455,6 +2456,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 											 so->camera.distanceMin, so->camera.distanceMax);
 		free(rotationString);
 		free(translationString);
+		free(type);
 		return valueAsString;
 	}
 
@@ -2462,7 +2464,9 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 	 || so->type == VuoSceneObjectSubType_PointLight
 	 || so->type == VuoSceneObjectSubType_Spotlight)
 	{
-		const char *type = VuoSceneObject_cStringForType(so->type);
+		char *type = strdup(VuoSceneObject_cStringForType(so->type));
+		type[0] = toupper(type[0]);
+
 		char *colorString = VuoColor_getShortSummary(so->light.color);
 
 		char *positionRangeString;
@@ -2471,7 +2475,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		{
 			char *positionString = VuoPoint3d_getSummary(so->transform.translation);
 
-			positionRangeString = VuoText_format("<div>position (%s)</div><div>range %g units (%g sharpness)</div>",
+			positionRangeString = VuoText_format("<div>Position (%s)</div><div>Range %g units (%g sharpness)</div>",
 												 positionString, so->light.range, so->light.sharpness);
 
 			free(positionString);
@@ -2485,7 +2489,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 			VuoPoint3d direction = VuoTransform_getDirection(so->transform);
 			char *directionString = VuoPoint3d_getSummary(direction);
 
-			directionConeString = VuoText_format("<div>direction (%s)</div><div>cone %g°</div>",
+			directionConeString = VuoText_format("<div>Direction (%s)</div><div>Cone %g°</div>",
 												 directionString, so->light.cone * 180./M_PI);
 
 			free(directionString);
@@ -2493,12 +2497,13 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		else
 			directionConeString = strdup("");
 
-		char *valueAsString = VuoText_format("<div>%s</div><div>color %s</div><div>brightness %g</div>%s%s",
+		char *valueAsString = VuoText_format("<div>%s</div><div>Color %s</div><div>Brightness %g</div>%s%s",
 											 type, colorString, so->light.brightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
 		free(positionRangeString);
 		free(colorString);
+		free(type);
 
 		return valueAsString;
 	}
@@ -2522,7 +2527,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		VuoSceneObject_getStatistics(sceneObject, &descendantCount, &totalVertexCount, &totalElementCount);
 		const char *descendantPlural = descendantCount == 1 ? "" : "s";
 
-		descendants = VuoText_format("<div>%ld descendant%s</div><div>total, including descendants:</div><div>%ld vertices, %ld elements</div>",
+		descendants = VuoText_format("<div>%ld descendant%s</div><div>Total, including descendants:</div><div>%ld vertices, %ld elements</div>",
 									 descendantCount, descendantPlural, totalVertexCount, totalElementCount);
 	}
 	else
@@ -2534,7 +2539,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 	if (VuoListGetCount_VuoText(shaderNames))
 	{
 		VuoInteger shaderNameCount = VuoListGetCount_VuoText(shaderNames);
-		const char *header = "<div>shaders:<ul>";
+		const char *header = "<div>Shaders:<ul>";
 		VuoInteger shaderNameLength = strlen(header);
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
 			shaderNameLength += strlen("<li>") + strlen(VuoListGetValue_VuoText(shaderNames, i)) + strlen("</li>");
@@ -2555,8 +2560,12 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		shaderNamesSummary = strdup("");
 	VuoRelease(shaderNames);
 
-	char *valueAsString = VuoText_format("<div>object named \"%s\"</div><div>%ld vertices, %ld elements</div><div>%s</div><div>id %lld</div><div>%ld child object%s</div>%s%s",
-										 so->name ? so->name : "",
+	char *name = NULL;
+	if (so->name)
+		name = VuoText_format("<div>Object named \"%s\"</div>", so->name);
+
+	char *valueAsString = VuoText_format("%s<div>%ld vertices, %ld elements</div><div>%s</div><div>ID %lld</div><div>%ld child object%s</div>%s%s",
+										 name ? name : "",
 										 vertexCount, elementCount,
 										 transform,
 										 so->id,

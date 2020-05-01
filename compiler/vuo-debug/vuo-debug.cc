@@ -85,6 +85,9 @@ int main (int argc, char * const argv[])
 				case 0:  // --help
 					doPrintHelp = true;
 					break;
+				default:
+					VUserLog("Error: Unknown option %d.", optionIndex);
+					break;
 			}
 		}
 

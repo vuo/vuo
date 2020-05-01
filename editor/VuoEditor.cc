@@ -25,6 +25,7 @@
 #include "VuoNodeClass.hh"
 #include "VuoNodeSet.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoRendererCommon.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerNodeClass.hh"
@@ -1327,6 +1328,9 @@ QMainWindow * VuoEditor::openFileWithName(QString filename, bool addToRecentFile
 	{
 		VUserLog("%s.%s:      Open", file.c_str(), ext.c_str());
 		window = createEditorWindow(filename, true);
+		if (!window)
+			return nullptr;
+
 		dynamic_cast<VuoEditorWindow *>(window)->setIncludeInRecentFileMenu(addToRecentFileMenu);
 	}
 	else
@@ -1334,6 +1338,9 @@ QMainWindow * VuoEditor::openFileWithName(QString filename, bool addToRecentFile
 		try
 		{
 			window = new VuoCodeWindow(filename.toStdString());
+			if (!window)
+				return nullptr;
+
 			dynamic_cast<VuoCodeWindow *>(window)->setIncludeInRecentFileMenu(addToRecentFileMenu);
 		}
 		catch (VuoException &e)
@@ -2227,7 +2234,7 @@ void VuoEditor::generateAllNodeSetHtmlDocumentation(string saveDirectory)
 
 		string description = nodeSet->getDescription();
 		string firstLineOfDescription = description.substr(0, description.find('\n') - 1);
-		string filteredDescription = VuoStringUtilities::generateHtmlFromMarkdownLine(externalizeVuoLinks(firstLineOfDescription));
+		string filteredDescription = VuoStringUtilities::generateHtmlFromMarkdownLine(VuoRendererCommon::externalizeVuoNodeLinks(compiler, QString::fromStdString(firstLineOfDescription), false).toStdString());
 		indexWriter << VUO_QSTRINGIFY(
 			<li><a href="%1/">%2</a><p>%3</p></li>
 			)
@@ -2357,7 +2364,7 @@ void VuoEditor::generateMainHtmlPageForNodeSet(VuoNodeSet *nodeSet, string saveF
 
 	string nodeSetDocumentationContent = nodeSet->getDescription();
 	QString filteredNodeSetDocumentationContent = VuoStringUtilities::generateHtmlFromMarkdown(publishInternalVuoLinks?
-																								  externalizeVuoLinks(nodeSetDocumentationContent) :
+																													   VuoRendererCommon::externalizeVuoNodeLinks(compiler, QString::fromStdString(nodeSetDocumentationContent), false).toStdString() :
 																								  removeVuoLinks(nodeSetDocumentationContent)).c_str();
 
 
@@ -2377,7 +2384,7 @@ void VuoEditor::generateMainHtmlPageForNodeSet(VuoNodeSet *nodeSet, string saveF
 			name = VuoEditorComposition::formatCompositionFileNameForDisplay(compositionFileName.c_str()).toUtf8().constData();
 
 		string description = metadata.getDescription();
-		string filteredDescription = (publishInternalVuoLinks? externalizeVuoLinks(description) : removeVuoLinks(description));
+		string filteredDescription = (publishInternalVuoLinks? VuoRendererCommon::externalizeVuoNodeLinks(compiler, QString::fromStdString(description), false).toStdString() : removeVuoLinks(description));
 		QString compositionDescription = VuoStringUtilities::generateHtmlFromMarkdownLine(filteredDescription).c_str();
 
 		nodeSetExampleCompositionText.append("<li>")
@@ -2495,7 +2502,7 @@ void VuoEditor::generateNodeClassHtmlPagesForNodeSet(VuoNodeSet *nodeSet, string
 
 		string nodeClassTitle = nodeClass->getBase()->getDefaultTitle();
 		string nodeClassDescription = nodeClass->getBase()->getDescription();
-		string filteredNodeClassDescription = (publishInternalVuoLinks? externalizeVuoLinks(nodeClassDescription) :
+		string filteredNodeClassDescription = (publishInternalVuoLinks? VuoRendererCommon::externalizeVuoNodeLinks(compiler, QString::fromStdString(nodeClassDescription), false).toStdString() :
 																		removeVuoLinks(nodeClassDescription));
 
 		vector<string> manualKeywords = nodeClass->getBase()->getKeywords();
@@ -2638,58 +2645,6 @@ void VuoEditor::generateNodeClassHtmlPagesForNodeSet(VuoNodeSet *nodeSet, string
 	}
 }
 
-/**
- * Maps internal vuo-node:// and vuo-nodeset:// links within the provided @c markdownText to
- * the appropriate relative links for use within web documentation.
- */
-string VuoEditor::externalizeVuoLinks(string markdownText)
-{
-	QString filteredText(markdownText.c_str());
-	QRegularExpression vuoNodeLink("\\[(.*)\\](\\(vuo-node://(.*)\\))", QRegularExpression::InvertedGreedinessOption);
-	QRegularExpression vuoNodeSetLink("\\[(.*)\\](\\(vuo-nodeset://(.*)\\))", QRegularExpression::InvertedGreedinessOption);
-
-	// Map node class links.
-	size_t startPos = 0;
-	QRegularExpressionMatch match = vuoNodeLink.match(filteredText, startPos);
-	while (match.hasMatch()) {
-		QString nodeClassDisplayTitle = match.captured(1);
-		QString nodeClassName = match.captured(3);
-
-		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toUtf8().constData());
-		QString nodeSetName = (nodeClass? nodeClass->getBase()->getNodeSet()->getName().c_str() : "");
-		QString mappedLink = QString("[")
-							 .append(nodeClassDisplayTitle)
-							 .append("](../")
-							 .append(nodeSetName)
-							 .append("/")
-							 .append(nodeClassName)
-							 .append(".html)");
-
-		filteredText.replace(match.capturedStart(), match.capturedLength(), mappedLink);
-		startPos = (match.capturedStart() + mappedLink.length());
-		match = vuoNodeLink.match(filteredText, startPos);
-	}
-
-	// Map node set links.
-	startPos = 0;
-	match = vuoNodeSetLink.match(filteredText, startPos);
-	while (match.hasMatch()) {
-		QString nodeSetDisplayTitle = match.captured(1);
-		QString nodeSetName = match.captured(3);
-
-		QString mappedLink = QString("[")
-							 .append(nodeSetDisplayTitle)
-							 .append("](../")
-							 .append(nodeSetName)
-							 .append("/index.html)");
-
-		filteredText.replace(match.capturedStart(), match.capturedLength(), mappedLink);
-		startPos = (match.capturedStart() + mappedLink.length());
-		match = vuoNodeSetLink.match(filteredText, startPos);
-	}
-
-	return filteredText.toUtf8().constData();
-}
 
 /**
  * Filters out internal vuo-node:// and vuo-nodeset:// links within the provided @c markdownText,

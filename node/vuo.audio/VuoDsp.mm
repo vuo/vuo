@@ -235,6 +235,7 @@ static void VuoDsp_showFrequencies(int frameCount, VuoAudioBinAverageType mode, 
 					VuoDsp_showFrequencies(frames, frequencyMode, lowerFrequency, upperFrequency, i + 1);
 			}
 			*count = numBuckets;
+			break;
 		}
 	}
 

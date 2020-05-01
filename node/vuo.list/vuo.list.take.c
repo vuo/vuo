@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Take from List",
 					 "keywords" : [ "pop", "remove", "delete", "extract", "truncate", "trim", "sublist", "cut" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node" : {
 						  "exampleCompositions" : [ "ShiftSquares.vuo" ]
 					 }
@@ -29,6 +29,7 @@ void nodeEvent
 {
 	if (!list)
 	{
+		*removedItem = VuoGenericType1_makeFromJson(NULL);
 		*modifiedList = VuoListCreate_VuoGenericType1();
 		return;
 	}

@@ -1026,6 +1026,8 @@ static inline VuoReal grad4dPerlin(int hash, VuoReal x, VuoReal y, VuoReal z, Vu
 			b=z;
 			c=w;
 			break;     // Y,Z,W
+		default:
+			break;
 	}
 
 	return ((h&4)==0 ? -a:a) + ((h&2)==0 ? -b:b) + ((h&1)==0 ? -c:c);

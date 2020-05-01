@@ -621,11 +621,6 @@ private slots:
 			nodeClasses << "vuo.time.fireProntolistically";
 			QTest::newRow("Wrong node class name") << "WrongNodeClassName.vuo" << nodeClasses << "";
 		}
-		{
-			QStringList nodeClasses;
-			nodeClasses << "vuo.scene.union" << "vuo.scene.render.image.stereo2";
-			QTest::newRow("Pro nodes in CE") << "ProNodes.vuo" << nodeClasses << "Pro nodes";
-		}
 	}
 	void testMissingNodeClasses()
 	{

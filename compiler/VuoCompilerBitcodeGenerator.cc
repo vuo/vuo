@@ -3073,10 +3073,13 @@ void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Funct
 	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
-	vector<VuoPort *> inputPorts = node->getBase()->getInputPorts();
-	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
+	for (auto inputPort : node->getBase()->getInputPorts())
 	{
-		VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>((*i)->getCompiler());
+		// If the published output port is for internal use only, do nothing.
+		if (inputPort == graph->getGatherPortOnPublishedOutputNode())
+			continue;
+
+		VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(inputPort->getCompiler());
 
 		BasicBlock *telemetryBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
 		BasicBlock *noTelemetryBlock = BasicBlock::Create(module->getContext(), "", function, NULL);

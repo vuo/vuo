@@ -233,7 +233,8 @@ private:
 		VuoDirectedAcyclicGraph *compositionDependencyGraph;  ///< A partial dependency graph, containing all subcompositions (loaded or not) and the node classes that are their direct dependencies.
 		VuoModuleCompilationQueue *moduleCompilationQueue;  ///< Ensures that successive versions of source files are compiled in the right order.
 
-		void updateModulesAtSearchPath(const string &path, bool shouldCleanModuleCache=true);
+		void updateModulesAtSearchPath(const string &path);
+		void updateModuleAtSearchPath(const string &moduleSearchPath, const string &moduleRelativePath);
 		void updateSourceFilesAtSearchPath(const string &path);
 		void startWatchingModuleSearchPath(const string &moduleSearchPath);
 		VuoCompilerModule * loadModule(ModuleInfo *moduleInfo);
@@ -285,7 +286,8 @@ private:
 		void addSearchPathsToSharedEnvironment(void);
 		void stopWatchingModuleSearchPaths(void);
 		void fileChanged(const string &moduleSearchPath);
-		void moduleSearchPathContentsChanged(const string &moduleSearchPath, const string &moduleAddedOrModifiedPath = "", const string &moduleAddedOrModifiedSourceCode = "", std::function<void(void)> moduleLoadedCallback = nullptr, VuoCompiler *compiler = nullptr, VuoCompilerIssues *issues = nullptr);
+		void moduleSearchPathContentsChanged(const string &moduleSearchPath);
+		void moduleFileChanged(const string &modulePath, const string &moduleSourceCode, std::function<void(void)> moduleLoadedCallback, VuoCompiler *compiler, VuoCompilerIssues *issues = nullptr);
 		void notifyCompilers(const set<VuoCompilerModule *> &modulesAdded, const set<pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified, const set<VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues, bool oldModulesInvalidated = true);
 		set<VuoCompilerModule *> loadCompiledModules(const set<string> &moduleKeys, const map<string, string> &sourceCodeForModule);
 		set<dispatch_group_t> loadSpecializedModules(const set<string> &moduleKeys, VuoCompiler *compiler, dispatch_queue_t llvmQueue);

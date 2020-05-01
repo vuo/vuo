@@ -54,10 +54,10 @@ public:
 	VuoPortClass * getRefreshPortClass(void);
 	void setRefreshPortClass(VuoPortClass * refreshPortClass);
 
-	vector<VuoPortClass *> getInputPortClasses(void);
+	vector<VuoPortClass *> &getInputPortClasses(void);
 	void setInputPortClasses(vector<VuoPortClass *> inputPortClasses);
 
-	vector<VuoPortClass *> getOutputPortClasses(void);
+	vector<VuoPortClass *> &getOutputPortClasses(void);
 	void setOutputPortClasses(vector<VuoPortClass *> outputPortClasses);
 
 	void print(void);

@@ -71,9 +71,11 @@ void nodeInstanceEvent(
 		return;
 	}
 
-	if (VuoListGetCount_VuoGenericType1(positions) < 2)
+	if (VuoListGetCount_VuoGenericType1(positions) < 3)
 	{
 		*object = NULL;
+		VuoRelease((*context)->positions);
+		(*context)->positions = NULL;
 		return;
 	}
 

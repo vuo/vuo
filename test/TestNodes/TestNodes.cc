@@ -101,9 +101,6 @@ public:
 	TestNodes()
 	{
 		compiler = initCompiler();
-#if VUO_PRO
-		compiler->load_Pro(true);
-#endif
 
 		set<string> customModuleDirs;
 		customModuleDirs.insert( VuoFileUtilities::getUserModulesPath() );

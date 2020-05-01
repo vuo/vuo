@@ -8,7 +8,8 @@ target_sources(TestCompositions
 )
 target_link_libraries(TestCompositions
 	PRIVATE
-	TestCompositionExecution
+		VuoRenderer
+		TestCompositionExecution
 )
 
 VuoCompileNodes(

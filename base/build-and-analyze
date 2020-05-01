@@ -23,6 +23,7 @@ $skipRegexes = array(
 	'@-x (objective-)?c(\+\+)?-header@', // Don't need to analyze precompiled headers.
 	'@csgjs\.c@', // Not our code.
 	'@miniz\.c@', // Not our code.
+	'@VuoBase64\.cc@',  // Not our code.
 	'@VuoBeatDetektor\.cc@',  // Not our code.
 	'@VuoIoReturn\.c@',  // Nothing interesting.
 	'@VuoOsStatus\.c@',  // Nothing interesting.
@@ -87,6 +88,7 @@ exit(0);
 
 		echo "\toclint:\n";
 		$oclintCommand = "oclint \
+			-disable-rule AssignIvarOutsideAccessors \
 			-disable-rule AvoidPrivateStaticMembers \
 			-disable-rule BitwiseOperatorInConditional \
 			-disable-rule CollapsibleIfStatements \
@@ -119,6 +121,7 @@ exit(0);
 			2>&1 \
 			| egrep -v -e \"^$\" \
 					   -e \"unused local variable.*VuoDeferScopeVar\" \
+					   -e \"unused local variable.*guard\" \
 					   -e \"unused local variable.*lock\" \
 					   -e \"^oclint: error: violations exceed threshold$\" \
 					   -e \"^P1=.+ P2=.+ P3=\" \
@@ -129,6 +132,7 @@ exit(0);
 					   -e \"^Summary: \" \
 					   -e \"^\[OCLint .+\]$\" \
 					   -e 'VuoCompiler.cc.*DEAD_STORE' \
+					   -e 'VuoMacFFGL.mm:.*: missing break in switch statement' \
 					   -e 'VuoSceneRenderer.cc:.*: constant if expression' \
 					   -e 'variable .__dso_handle. has internal linkage but is not defined' \
 					   -e '^/Applications/Xcode\.app/' \

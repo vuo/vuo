@@ -2376,6 +2376,9 @@ void VuoRunner::listen()
 								   });
 					break;
 				}
+				default:
+					VUserLog("Error: Unknown telemetry message type: %d", type);
+					break;
 			}
 		}
 		else if (! listenCanceled)	// Either the 1-second timeout elapsed, or we got a stop-listening message from ZMQSelfSend

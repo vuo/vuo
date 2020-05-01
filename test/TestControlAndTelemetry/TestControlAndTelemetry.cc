@@ -2043,6 +2043,75 @@ private slots:
 		delegate.runComposition(compiler);
 	}
 
+private:
+
+	class TestNoTelemetryForInternalUsePortsRunnerDelegate : public TestRunnerDelegate
+	{
+	private:
+		VuoRunner *runner;
+		vector<string> publishedOutputPortsSeen;
+
+	public:
+		TestNoTelemetryForInternalUsePortsRunnerDelegate()
+		{
+			runner = NULL;
+		}
+
+		~TestNoTelemetryForInternalUsePortsRunnerDelegate()
+		{
+			delete runner;
+		}
+
+		void runComposition(VuoCompiler *compiler)
+		{
+			string compositionPath = getCompositionPath("UnconnectedTriggerAndPublishedPorts.vuo");
+
+			bool isTriggerConnectedToGatherPort = false;
+			string compositionString = VuoFileUtilities::readFileToString(compositionPath);
+			VuoCompilerComposition *composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, compiler);
+			VuoCompilerGraph graph(composition, compiler);
+			for (VuoCompilerTriggerPort *trigger : graph.getTriggerPorts())
+				if (trigger->getBase()->getClass()->getName() == "started")
+					for (VuoCompilerCable *outCable : graph.getOutgoingCables(trigger))
+						if (outCable->getBase()->getToPort() == graph.getGatherPortOnPublishedOutputNode())
+							isTriggerConnectedToGatherPort = true;
+			QVERIFY(isTriggerConnectedToGatherPort);  // Make sure the composition actually makes use of an internal-use-only published port.
+
+			runner = createRunnerInNewProcess(compiler, compositionPath);
+			runner->setDelegate(this);
+
+			runner->start();
+			VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("start");
+			runner->firePublishedInputPortEvent(inPort);
+			sleep(1);
+			runner->firePublishedInputPortEvent(inPort);
+			runner->waitUntilStopped();
+
+			for (auto name : publishedOutputPortsSeen)
+				QCOMPARE(QString::fromStdString(name), QString("testOutput"));
+		}
+
+		void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary)
+		{
+			publishedOutputPortsSeen.push_back(port->getName());
+
+			if (publishedOutputPortsSeen.size() > 1)
+			{
+				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+								   runner->stop();
+							   });
+			}
+		}
+	};
+
+private slots:
+
+	void testNoTelemetryForInternalUsePorts()
+	{
+		TestNoTelemetryForInternalUsePortsRunnerDelegate delegate;
+		delegate.runComposition(compiler);
+	}
+
 	void testEventlessTransmission()
 	{
 		string compositionPath = TestCompositionExecution::getCompositionPath("CutList.vuo");

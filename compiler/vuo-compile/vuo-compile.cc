@@ -136,7 +136,15 @@ int main (int argc, char * const argv[])
 						case 'v':
 							isVerbose = true;
 							break;
+						default:
+							VUserLog("Error: Unknown option '%c'.", ret);
+							break;
 					}
+					break;
+
+				default:
+					VUserLog("Error: Unknown option %d.", optionIndex);
+					break;
 			}
 
 			optionIndex = -1;
@@ -155,10 +163,6 @@ int main (int argc, char * const argv[])
 
 		for (vector<char *>::iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)
 			compiler.addHeaderSearchPath(*i);
-
-#if VUO_PRO
-		compiler.load_Pro(true);
-#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);

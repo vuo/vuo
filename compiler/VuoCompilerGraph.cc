@@ -1906,6 +1906,7 @@ void VuoCompilerGraph::checkForInfiniteFeedback(VuoCompilerIssues *issues)
 			}
 		}
 
+		auto exceptionIssues = new VuoCompilerIssues;
 		for (size_t i = 0; i < coalescedNodesInLoops.size(); ++i)
 		{
 			VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling composition", "",
@@ -1914,10 +1915,12 @@ void VuoCompilerGraph::checkForInfiniteFeedback(VuoCompilerIssues *issues)
 			issue.setHelpPath("errors-warnings-and-other-issues.html");
 			issue.setNodes(coalescedNodesInLoops[i]);
 			issue.setCables(coalescedCablesInLoops[i]);
-			issues->append(issue);
+			exceptionIssues->append(issue);
+			if (issues)
+				issues->append(issue);
 		}
 
-		throw VuoCompilerException(issues, false);
+		throw VuoCompilerException(exceptionIssues, true);
 	}
 }
 
@@ -1932,7 +1935,7 @@ void VuoCompilerGraph::checkForInfiniteFeedback(VuoCompilerIssues *issues)
  */
 void VuoCompilerGraph::checkForDeadlockedFeedback(VuoCompilerIssues *issues)
 {
-	bool foundIssue = false;
+	auto exceptionIssues = new VuoCompilerIssues;
 	for (VuoCompilerTriggerPort *trigger : triggers)
 	{
 		// For each node, find all nodes downstream of it.
@@ -2018,13 +2021,14 @@ void VuoCompilerGraph::checkForDeadlockedFeedback(VuoCompilerIssues *issues)
 			issue.setHelpPath("errors-warnings-and-other-issues.html");
 			issue.setNodes(nodesInLoop);
 			issue.setCables(cablesInLoop);
-			issues->append(issue);
-			foundIssue = true;
+			exceptionIssues->append(issue);
+			if (issues)
+				issues->append(issue);
 		}
 	}
 
-	if (foundIssue)
-		throw VuoCompilerException(issues, false);
+	if (!exceptionIssues->isEmpty())
+		throw VuoCompilerException(exceptionIssues, true);
 }
 
 /**

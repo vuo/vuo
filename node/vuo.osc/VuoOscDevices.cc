@@ -151,6 +151,22 @@ void VuoOsc_clientCallback(CFNetServiceRef service, CFStreamError *error, void *
 	}
 
 	VuoRelease(name);
+
+
+	// Now that we've got the service's IP address and port, we can cancel the resolver.
+
+	CFNetServiceUnscheduleFromRunLoop(service, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
+
+	CFNetServiceClientContext context;
+	context.version = 0;
+	context.info = NULL;
+	context.retain = NULL;
+	context.release = NULL;
+	context.copyDescription = NULL;
+	if (!CFNetServiceSetClient(service, NULL, &context))
+		VUserLog("Error: Failed to clear the client callback.");
+
+	CFNetServiceCancel(service);
 }
 
 /**
@@ -240,19 +256,6 @@ void VuoOsc_deviceCallback(CFNetServiceBrowserRef browser, CFOptionFlags flags, 
 					  });
 
 		VuoRelease(name);
-
-		CFNetServiceUnscheduleFromRunLoop(service, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
-
-		CFNetServiceClientContext context;
-		context.version = 0;
-		context.info = NULL;
-		context.retain = NULL;
-		context.release = NULL;
-		context.copyDescription = NULL;
-		if (!CFNetServiceSetClient(service, NULL, &context))
-			VUserLog("Error: Failed to clear the client callback.");
-
-		CFNetServiceCancel(service);
 	}
 }
 

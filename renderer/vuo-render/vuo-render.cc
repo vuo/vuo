@@ -115,14 +115,13 @@ int main (int argc, char * argv[])
 				case 7:	 // --background
 					backgroundTransparent = strcmp(optarg, "opaque") != 0;
 					break;
+				default:
+					VUserLog("Error: Unknown option %d.", optionIndex);
+					break;
 			}
 		}
 
 		hasInputFile = (optind < argc) && ! doPrintHelp;
-
-#if VUO_PRO
-		compiler.load_Pro(true);
-#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);

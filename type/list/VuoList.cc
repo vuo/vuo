@@ -62,6 +62,9 @@ void VuoListDestroy_ELEMENT_TYPE(void *list);
 
 LIST_TYPE LIST_TYPE_makeFromJson(json_object * js)
 {
+	if (!js)
+		return nullptr;
+
 	LIST_TYPE list = VuoListCreate_ELEMENT_TYPE();
 
 	if (json_object_get_type(js) == json_type_array)
@@ -80,6 +83,9 @@ LIST_TYPE LIST_TYPE_makeFromJson(json_object * js)
 
 json_object * LIST_TYPE_getJson(const LIST_TYPE value)
 {
+	if (!value)
+		return nullptr;
+
 	json_object *listObject = json_object_new_array();
 
 	unsigned long itemCount = VuoListGetCount_ELEMENT_TYPE(value);
@@ -112,9 +118,6 @@ struct json_object * LIST_TYPE_getInterprocessJson(const LIST_TYPE value)
 
 char * LIST_TYPE_getSummary(const LIST_TYPE value)
 {
-	if (!value)
-		return strdup("Empty list");
-
 	const int maxItems = 20;
 	const int maxCharacters = 400;
 

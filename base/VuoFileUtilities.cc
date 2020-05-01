@@ -7,11 +7,15 @@
  * For more information, see https://vuo.org/license.
  */
 
+#include <CommonCrypto/CommonDigest.h>
 #include <dirent.h>
 #include <spawn.h>
+#include <sstream>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <copyfile.h>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <mach-o/dyld.h>
 #include <sys/time.h>
@@ -792,6 +796,40 @@ void VuoFileUtilities::copyDirectory(string fromPath, string toPath)
 			copyDirectory(sourceFile, targetFile);
 		}
 	}
+}
+
+/**
+ * Returns the SHA-256 hash of the file at `path` as a string of hex digits.
+ *
+ * @throw VuoException
+ */
+string VuoFileUtilities::calculateFileSHA256(const string &path)
+{
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd < 0)
+		throw VuoException("Error: Couldn't open \"" + path + "\": " + strerror(errno));
+	VuoDefer(^{ close(fd); });
+
+    struct stat stat;
+    if (fstat(fd, &stat) != 0)
+        throw VuoException("Error: Couldn't fstat \"" + path + "\": " + strerror(errno));
+
+	// Instead of reading the file into a string and calling `VuoStringUtilities::calculateSHA256`,
+	// use `mmap` so the OS can efficiently read parts of the file at a time (reducing memory required).
+	void *data = mmap(nullptr, stat.st_size, PROT_READ, MAP_PRIVATE | MAP_NOCACHE, fd, 0);
+	if (data == MAP_FAILED)
+		throw VuoException("Error: Couldn't mmap \"" + path + "\": " + strerror(errno));
+	VuoDefer(^{ munmap(data, stat.st_size); });
+
+	unsigned char hash[CC_SHA256_DIGEST_LENGTH];
+	if (!CC_SHA256(data, stat.st_size, hash))
+		throw VuoException("Error: CC_SHA256 failed on file \"" + path + "\"");
+
+	ostringstream oss;
+	oss << setfill('0') << hex;
+	for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; ++i)
+		oss << setw(2) << (int)hash[i];
+	return oss.str();
 }
 
 /**

@@ -887,7 +887,7 @@ void VuoMouseStatus_use(void)
 					case NSOtherMouseUp:                                VuoMouseStatus_middleButton = false; break;
 					case NSRightMouseDown:  if (!VuoMouse_isResizing()) VuoMouseStatus_rightButton  = true;  break;
 					case NSRightMouseUp:                                VuoMouseStatus_rightButton  = false; break;
-					default: ;
+					default: break;
 				}
 
 				return event;

@@ -112,6 +112,7 @@ public:
 	static void moveFileToTrash(string filePath);
 	static void copyFile(string fromPath, string toPath, bool preserveMetadata = false);
 	static void copyDirectory(string fromPath, string toPath);
+	static string calculateFileSHA256(const string &path);
 	static unsigned long getFileLastModifiedInSeconds(string path);
 	static unsigned long getSecondsSinceFileLastAccessed(string path);
 	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>(), bool shouldSearchRecursively = false);

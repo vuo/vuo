@@ -26,6 +26,7 @@ class VuoErrorPopover;
 class VuoInputEditorManager;
 class VuoMainWindow;
 class VuoModuleManager;
+class VuoNodeAndPortIdentifierCache;
 class VuoPortPopover;
 class VuoProtocol;
 
@@ -52,6 +53,7 @@ public:
 	explicit VuoEditorComposition(VuoMainWindow *window, VuoComposition *baseComposition);
 	~VuoEditorComposition();
 	void setCompiler(VuoCompiler *compiler);
+	VuoCompiler *getCompiler();
 	void setModuleManager(VuoModuleManager *moduleManager);
 	VuoModuleManager * getModuleManager(void);
 	void setColor(bool isDark);
@@ -95,13 +97,13 @@ public:
 	void repaintFeedbackErrorMarks();
 	void setIgnoreApplicationStateChangeEvents(bool ignore);
 	json_object * getPortValueInRunningComposition(VuoPort *port);
-	string getIdentifierForStaticPort(VuoPort *staticPort, VuoNode *parentNode=NULL);
+	static string getIdentifierForStaticPort(VuoPort *staticPort, VuoNode *parentNode=NULL);
 	VuoPort * getPortWithStaticIdentifier(string portID);
 	void updateInternalPortConstant(string portID, string newValue, bool updateInRunningComposition);
 	void updatePublishedPortConstant(string portName, string newValue, bool updateInRunningComposition);
 	void updatePortConstant(VuoCompilerPort *port, string newValue, bool updateInRunningComposition=true);
 	void updateGenericPortTypes(void);
-	void createReplacementsToUnspecializePort(VuoPort *port, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
+	void createReplacementsToUnspecializePort(VuoPort *port, bool shouldOutputNodesToReplace, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
 	void run(string compositionSnapshot);
 	void stop(void);
 	bool isRunning(void);
@@ -112,7 +114,6 @@ public:
 	void updateInternalPortConstantInRunningComposition(VuoCompilerInputEventPort *port, string constant);
 	void updateInternalPortConstantInSubcompositionInstances(string subcompositionPath, string portIdentifier, string constant);
 	void updatePublishedInputPortConstantInRunningComposition(VuoPublishedPort *port, string constant);
-	void populateNodeAndPortIdentifierMappings();
 	VuoRendererPublishedPort * publishInternalPort(VuoPort *port, bool forceEventOnlyPublication, string name="", VuoType *type=NULL, bool attemptMerge=false, bool *mergePerformed=NULL);
 	VuoCable * createPublishedCable(VuoPort *externalPort, VuoPort *internalPort, bool forceEventOnlyPublication);
 	void addActiveProtocol(VuoProtocol *protocol, bool useUndoStack);
@@ -129,8 +130,8 @@ public:
 	void leftMousePressEventAtNearbyItem(QGraphicsItem *nearbyItem, QGraphicsSceneMouseEvent *event);
 	static VuoNode * getUnderlyingParentNodeForPort(VuoPort *runningPort, VuoEditorComposition *composition);
 	QGraphicsItem * findNearbyPort(QPointF scenePos, bool limitPortCollisionRange=true);
-	VuoRendererColors::HighlightType getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection);
-	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination);
+	VuoRendererColors::HighlightType getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types);
+	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoCompilerType *> &types);
 	bool selectBridgingSolution(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, VuoRendererPort **portToSpecialize, string &specializedTypeName, string &typecastToInsert);
 	QList<QAction *> getCompatibleTypesForMenu(VuoRendererPort *genericPort, set<string> compatibleTypesInIsolation, set<string> compatibleTypesInContext, bool limitToNodeSet, string nodeSetName="", QMenu *menu=NULL);
 	void addTypeActionsToMenu(QList<QAction *> actionList, QMenu *menu);
@@ -270,7 +271,6 @@ protected:
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
 
 private:
-	void registerNodeID(VuoNode *node);
 	void setPortConstantToValue(VuoRendererPort *port, string value);
 	void setCustomConstantsForNewNode(VuoRendererNode *newNode);
 	void openSelectedEditableNodes();
@@ -388,9 +388,7 @@ private:
 	VuoRendererCable *cableWithYankInitiated;
 	bool menuSelectionInProgress;
 	QGraphicsItem *previousNearbyItem;
-	map<string, VuoNode *> nodeWithGraphvizIdentifier;
-	map<string, VuoPort *> portWithStaticIdentifier;
-	map<VuoPort *, string> staticIdentifierForPort;
+	VuoNodeAndPortIdentifierCache *identifierCache;
 	bool dragStickinessDisabled;
 	bool ignoreApplicationStateChangeEvents;
 	bool showEventsMode;
@@ -414,10 +412,10 @@ private:
 	void updateHoverHighlighting(QPointF scenePos, bool disablePortHoverHighlighting=false);
 	void highlightEligibleEndpointsForCable(VuoCable *cable);
 	void highlightInternalPortsConnectableToPort(VuoRendererPort *port, VuoRendererCable *cable);
-	void updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection);
+	void updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types);
 	void updateEligibilityHighlightingForNode(VuoRendererNode *node);
 	bool selectBridgingSolutionFromOptions(vector<string> suitableTypecasts, map<string, VuoRendererPort *> portToSpecializeForTypecast, map<string, string> specializedTypeNameForTypecast, string &selectedTypecast);
-	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoRendererPort *> &portToSpecializeForTypecast, map<string, string> &specializedTypeNameForTypecast);
+	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoRendererPort *> &portToSpecializeForTypecast, map<string, string> &specializedTypeNameForTypecast, map<string, VuoCompilerType *> &types);
 	bool promptForBridgingSelectionFromOptions(vector<string> suitableTypecasts, map<string, VuoRendererPort *> portToSpecializeForTypecast, map<string, string> specializedTypeNameForTypecast, string &selectedTypecast);
 	QString getDisplayTextForSpecializationOption(VuoRendererPort *portToSpecialize, string specializedTypeName);
 	bool hasFeedbackErrors(void);

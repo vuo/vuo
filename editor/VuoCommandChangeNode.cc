@@ -11,6 +11,7 @@
 #include "VuoCommandRemove.hh"
 #include "VuoCommandChangeNode.hh"
 
+#include "VuoCompilerCable.hh"
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoEditor.hh"
@@ -142,6 +143,9 @@ void VuoCommandChangeNode::swapNodes()
 											updatedPortForOriginalPort[originalFromPortForCable[*i] ],
 											updatedPortForOriginalPort[originalToPortForCable[*i] ],
 											composition);
+
+			if (!cableCarriedData[*i] && (*i)->getRenderer()->effectivelyCarriesData() && (*i)->hasCompiler())
+				(*i)->getCompiler()->setAlwaysEventOnly(true);
 		}
 
 		for (set<VuoCable *>::iterator i = incomingCables.begin(); i != incomingCables.end(); ++i)
@@ -150,6 +154,9 @@ void VuoCommandChangeNode::swapNodes()
 											updatedPortForOriginalPort[originalFromPortForCable[*i] ],
 											updatedPortForOriginalPort[originalToPortForCable[*i] ],
 											composition);
+
+			if (!cableCarriedData[*i] && (*i)->getRenderer()->effectivelyCarriesData() && (*i)->hasCompiler())
+				(*i)->getCompiler()->setAlwaysEventOnly(true);
 		}
 
 		// Re-publish published ports.
@@ -221,7 +228,10 @@ void VuoCommandChangeNode::createAllMappings()
 			}
 
 			else
+			{
 				this->incomingCables.insert(cable);
+				cableCarriedData[cable] = cable->getRenderer()->effectivelyCarriesData();
+			}
 		}
 
 		// Also inventory any typecasts attached to the old node, to be attached to the new node instead.
@@ -250,6 +260,7 @@ void VuoCommandChangeNode::createAllMappings()
 					this->incomingCablesForTypecast[typecastNode].insert(cable);
 					originalFromPortForCable[cable] = cable->getFromPort();
 					originalToPortForCable[cable] = cable->getToPort();
+					cableCarriedData[cable] = cable->getRenderer()->effectivelyCarriesData();
 				}
 			}
 
@@ -273,7 +284,10 @@ void VuoCommandChangeNode::createAllMappings()
 			}
 
 			else
+			{
 				this->outgoingCables.insert(cable);
+				cableCarriedData[cable] = cable->getRenderer()->effectivelyCarriesData();
+			}
 		}
 	}
 

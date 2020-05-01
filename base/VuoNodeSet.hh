@@ -21,6 +21,7 @@ class VuoNodeSet
 {
 public:
 	static VuoNodeSet * createNodeSetForModule(VuoFileUtilities::File *moduleFile);
+	string getArchivePath(void);
 	string getName(void);
 	string getDescription(void);
 	string getDescriptionForModule(VuoModule *module);

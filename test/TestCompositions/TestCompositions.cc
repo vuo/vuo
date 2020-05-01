@@ -12,6 +12,7 @@
 
 #include "TestCompositionExecution.hh"
 #include "PortConfiguration.hh"
+#include "VuoRendererCommon.hh"
 
 /**
  * A runner delegate that executes a composition with a sequence of PortConfiguration objects.
@@ -144,9 +145,6 @@ private slots:
 	void initTestCase()
 	{
 		compiler = initCompiler();
-#if VUO_PRO
-		compiler->load_Pro(true);
-#endif
 	}
 
 	void cleanupTestCase()
@@ -243,5 +241,12 @@ private slots:
 
 };
 
-QTEST_APPLESS_MAIN(TestCompositions)
+int main(int argc, char *argv[])
+{
+	qInstallMessageHandler(VuoRendererCommon::messageHandler);
+	TestCompositions tc;
+	QTEST_SET_MAIN_SOURCE_PATH
+	return QTest::qExec(&tc, argc, argv);
+}
+
 #include "TestCompositions.moc"

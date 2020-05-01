@@ -7,8 +7,11 @@
  * For more information, see https://vuo.org/license.
  */
 
+#include <iomanip>
 #include <sstream>
+#include <CommonCrypto/CommonDigest.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include "VuoException.hh"
 #include "VuoStringUtilities.hh"
 
 extern "C" {
@@ -566,3 +569,21 @@ string VuoStringUtilities::makeRandomHash(int length)
 
 const std::locale VuoStringUtilities::locale;
 const std::collate<char> &VuoStringUtilities::collate = std::use_facet<std::collate<char> >(VuoStringUtilities::locale);
+
+/**
+ * Returns the SHA-256 hash of the string `s`, as a string of hex digits.
+ *
+ * @throw VuoException
+ */
+string VuoStringUtilities::calculateSHA256(const string &s)
+{
+	unsigned char hash[CC_SHA256_DIGEST_LENGTH];
+	if (!CC_SHA256(s.c_str(), s.length(), hash))
+		throw VuoException("Error: CC_SHA256 failed.");
+
+	ostringstream oss;
+	oss << setfill('0') << hex;
+	for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; ++i)
+		oss << setw(2) << (int)hash[i];
+	return oss.str();
+}

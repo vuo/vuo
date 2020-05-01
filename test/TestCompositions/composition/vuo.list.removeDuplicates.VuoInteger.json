@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"list", "inputPortValues":{"list":[       ]}, "outputPortValues":{"uniqueList":[   ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ]}, "outputPortValues":{"uniqueList":null }},
 	{"firingPort":"list", "inputPortValues":{"list":[1      ]}, "outputPortValues":{"uniqueList":[1  ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2    ]}, "outputPortValues":{"uniqueList":[1,2]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,2  ]}, "outputPortValues":{"uniqueList":[1,2]}},
@@ -17,5 +17,6 @@
 	{"firingPort":"list", "inputPortValues":{"list":[2,2,1,1]}, "outputPortValues":{"uniqueList":[2,1]}},
 
 	// Ensure an empty input list actually clears the output list (rather than doing nothing).
-	{"firingPort":"list", "inputPortValues":{"list":[       ]}, "outputPortValues":{"uniqueList":[   ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null     }, "outputPortValues":{"uniqueList":null }},
+	{"firingPort":"list", "inputPortValues":{"list":[       ]}, "outputPortValues":{"uniqueList":null }},
 ]}

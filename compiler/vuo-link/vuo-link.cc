@@ -101,6 +101,9 @@ int main (int argc, char * const argv[])
 					isVerbose = true;
 					compiler.setVerbose(true);
 					break;
+				default:
+					VUserLog("Error: Unknown option %d.", optionIndex);
+					break;
 			}
 		}
 
@@ -111,10 +114,6 @@ int main (int argc, char * const argv[])
 
 		for (vector<char *>::iterator i = frameworkSearchPaths.begin(); i != frameworkSearchPaths.end(); ++i)
 			compiler.addFrameworkSearchPath(*i);
-
-#if VUO_PRO
-		compiler.load_Pro(true);
-#endif
 
 		if (doPrintHelp)
 			printHelp(argv[0]);

@@ -129,7 +129,8 @@ void nodeInstanceEvent
 		VuoInputData(VuoText) cameraName,
 		VuoInputData(VuoMultisample, {"default":"4"}) multisampling,
 		VuoInputData(VuoWindowDescription) setWindowDescription,
-		VuoInputEvent({"eventBlocking":"none", "data":"setWindowDescription"}) setWindowDescriptionEvent
+		VuoInputEvent({"eventBlocking":"none", "data":"setWindowDescription"}) setWindowDescriptionEvent,
+		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
 )
 {
 	(*context)->multisampling = multisampling;

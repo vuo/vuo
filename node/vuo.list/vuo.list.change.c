@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Change Item in List",
 					  "keywords" : [ "replace", "place", "insert", "substitute", "modify" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node" : {
 						  "exampleCompositions" : [ "ReplaceColorsInGradient.vuo" ]
 					  }
@@ -27,6 +27,16 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) modifiedList
 )
 {
-	*modifiedList = VuoListCopy_VuoGenericType1(list);
+	if (!list && !expandListIfNeeded)
+	{
+		*modifiedList = NULL;
+		return;
+	}
+
+	if (list)
+		*modifiedList = VuoListCopy_VuoGenericType1(list);
+	else
+		*modifiedList = VuoListCreate_VuoGenericType1();
+
 	VuoListSetValue_VuoGenericType1(*modifiedList, newItem, MAX(position, 0), expandListIfNeeded);
 }

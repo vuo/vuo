@@ -49,6 +49,7 @@
 #include "VuoInputEditorManager.hh"
 #include "VuoSubcompositionMessageRouter.hh"
 #include "VuoEditorUtilities.hh"
+#include "VuoNodeAndPortIdentifierCache.hh"
 
 #ifdef __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
@@ -258,7 +259,8 @@ VuoEditorComposition::VuoEditorComposition(VuoMainWindow *window, VuoComposition
 		setPopoversHideOnDeactivate(false);
 	});
 
-	populateNodeAndPortIdentifierMappings();
+	identifierCache = new VuoNodeAndPortIdentifierCache;
+	identifierCache->addCompositionComponentsToCache(getBase());
 }
 
 /**
@@ -267,6 +269,14 @@ VuoEditorComposition::VuoEditorComposition(VuoMainWindow *window, VuoComposition
 void VuoEditorComposition::setCompiler(VuoCompiler *compiler)
 {
 	this->compiler = compiler;
+}
+
+/**
+ * Returns the compiler instance being used by this composition.
+ */
+VuoCompiler *VuoEditorComposition::getCompiler()
+{
+	return compiler;
 }
 
 /**
@@ -417,7 +427,7 @@ void VuoEditorComposition::setCustomConstantsForNewNode(VuoRendererNode *newNode
 void VuoEditorComposition::addNode(VuoNode *n, bool nodeShouldBeRendered, bool nodeShouldBeGivenUniqueIdentifier)
 {
 	VuoRendererComposition::addNode(n, nodeShouldBeRendered, nodeShouldBeGivenUniqueIdentifier);
-	registerNodeID(n);
+	identifierCache->addNodeToCache(n);
 }
 
 /**
@@ -585,7 +595,7 @@ void VuoEditorComposition::replaceNode(VuoRendererNode *oldNode, VuoNode *newNod
 	removeNode(oldNode);
 	addNode(newNode, true, false);
 
-	registerNodeID(newNode);
+	identifierCache->addNodeToCache(newNode);
 }
 
 /**
@@ -653,7 +663,7 @@ QList<QGraphicsItem *>  VuoEditorComposition::createAndConnectInputAttachments(V
 	{
 		VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(component);
 		if (rn && !createButDoNotAdd)
-			registerNodeID(rn->getBase());
+			identifierCache->addNodeToCache(rn->getBase());
 	}
 
 	return addedComponents;
@@ -665,6 +675,8 @@ QList<QGraphicsItem *>  VuoEditorComposition::createAndConnectInputAttachments(V
  */
 void VuoEditorComposition::modifyComponents(void (^modify)(void))
 {
+	identifierCache->clearCache();
+
 	// Record the IDs of the currently selected components so that the selection status
 	// of the corresponding items may be restored after the composition is reset.
 	set<string> selectedNodeIDs;
@@ -723,7 +735,7 @@ void VuoEditorComposition::modifyComponents(void (^modify)(void))
 
 	// Re-establish mappings between the stored composition components and the running
 	// composition components, if applicable.
-	populateNodeAndPortIdentifierMappings();
+	identifierCache->addCompositionComponentsToCache(getBase());
 
 	// Close popovers for ports no longer present in the composition.
 	disableStrandedPortPopovers();
@@ -792,6 +804,8 @@ void VuoEditorComposition::deleteSelectedNodes(string commandDescription)
  */
 void VuoEditorComposition::clear()
 {
+	identifierCache->clearCache();
+
 	uncollapseTypecastNodes();
 
 	foreach (VuoCable *cable, getBase()->getCables())
@@ -815,10 +829,6 @@ void VuoEditorComposition::clear()
 		removeComment(comment->getRenderer());
 
 	getBase()->getCompiler()->clearGraphvizCommentIdentifierHistory();
-
-	nodeWithGraphvizIdentifier.clear();
-	portWithStaticIdentifier.clear();
-	staticIdentifierForPort.clear();
 }
 
 /**
@@ -1008,11 +1018,14 @@ void VuoEditorComposition::refireTriggerPortEvent()
  */
 VuoPort * VuoEditorComposition::getTriggerPortToRefire()
 {
-	if (triggerPortToRefire.empty() ||
-			(portWithStaticIdentifier.find(triggerPortToRefire) == portWithStaticIdentifier.end()))
-		return NULL;
+	if (triggerPortToRefire.empty())
+		return nullptr;
 
-	return portWithStaticIdentifier[triggerPortToRefire];
+	VuoPort *triggerPort = nullptr;
+	identifierCache->doForPortWithIdentifier(triggerPortToRefire, [&triggerPort](VuoPort *port) {
+		triggerPort = port;
+	});
+	return triggerPort;
 }
 
 /**
@@ -1095,43 +1108,21 @@ void VuoEditorComposition::unspecializePortType()
  * Outputs the composition components that would need to be modified in order to unspecialize the given port.
  *
  * @param portToUnspecialize The port to unspecialize.
+ * @param shouldOutputNodesToReplace If true, `nodesToReplace` will be populated.
  * @param nodesToReplace The nodes that would need to be replaced, and the names of the less-specialized node classes
  *			that would replace them.
  * @param cablesToDelete The cables (including published) that would need to be removed because they would become invalid,
  *			having a generic port on one end and a non-generic port on the other end.
  */
-void VuoEditorComposition::createReplacementsToUnspecializePort(VuoPort *portToUnspecialize, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete)
+void VuoEditorComposition::createReplacementsToUnspecializePort(VuoPort *portToUnspecialize, bool shouldOutputNodesToReplace, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete)
 {
-	// Be able to look up the node and cables for a port.
-	map<VuoPort *, VuoNode *> nodeForPort;
-	map<VuoPort *, set<VuoCable *> > cablesForPort;
-	set<VuoNode *> nodes = getBase()->getNodes();
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-	{
-		VuoNode *node = *i;
-		vector<VuoPort *> inputPorts = node->getInputPorts();
-		vector<VuoPort *> outputPorts = node->getOutputPorts();
-		vector<VuoPort *> ports;
-		ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
-		ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
-
-		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
-		{
-			VuoPort *port = *j;
-
-			nodeForPort[port] = node;
-			vector<VuoCable *> cables = port->getConnectedCables(true);
-			cablesForPort[port].insert(cables.begin(), cables.end());
-		}
-	}
-
 	// Find the ports that will share the same generic type as portToUnspecialize, and organize them by node.
 	set<VuoPort *> connectedPotentiallyGenericPorts = getBase()->getCompiler()->getCorrelatedGenericPorts(portToUnspecialize->getRenderer()->getUnderlyingParentNode()->getBase(),
 																										  portToUnspecialize, true);
 	map<VuoNode *, set<VuoPort *> > portsToUnspecializeForNode;
 	for (VuoPort *connectedPort : connectedPotentiallyGenericPorts)
 	{
-		VuoNode *node = nodeForPort[connectedPort];
+		VuoNode *node = connectedPort->getRenderer()->getUnderlyingParentNode()->getBase();
 
 		// @todo: Don't just exclude ports that aren't currently revertible, also exclude ports that are only
 		// within the current network by way of ports that aren't currently revertible.
@@ -1144,24 +1135,24 @@ void VuoEditorComposition::createReplacementsToUnspecializePort(VuoPort *portToU
 		VuoNode *node = i->first;
 		set<VuoPort *> ports = i->second;
 
-		// Create the unspecialized node class name for each node to unspecialize.
-		set<VuoPortClass *> portClasses;
-		for (set<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
-			portClasses.insert((*j)->getClass());
-		VuoCompilerSpecializedNodeClass *nodeClass = static_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
-		string unspecializedNodeClassName = nodeClass->createUnspecializedNodeClassName(portClasses);
-		nodesToReplace[node] = unspecializedNodeClassName;
+		if (shouldOutputNodesToReplace)
+		{
+			// Create the unspecialized node class name for each node to unspecialize.
+			set<VuoPortClass *> portClasses;
+			for (set<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+				portClasses.insert((*j)->getClass());
+			VuoCompilerSpecializedNodeClass *nodeClass = static_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+			string unspecializedNodeClassName = nodeClass->createUnspecializedNodeClassName(portClasses);
+			nodesToReplace[node] = unspecializedNodeClassName;
+		}
 
 		// Identify the cables that will become invalid (data-carrying cable with generic port at one end, non-generic port at the other end)
 		// when the node is unspecialized.
 		for (set<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
 		{
 			VuoPort *port = *j;
-			set<VuoCable *> connectedCables = cablesForPort[port];
-			for (set<VuoCable *>::iterator k = connectedCables.begin(); k != connectedCables.end(); ++k)
+			for (VuoCable *cable : port->getConnectedCables(true))
 			{
-				VuoCable *cable = *k;
-
 				bool areEndsCompatible = false;
 
 				if (!cable->getRenderer()->effectivelyCarriesData())
@@ -1172,7 +1163,7 @@ void VuoEditorComposition::createReplacementsToUnspecializePort(VuoPort *portToU
 					VuoPort *portOnOtherEnd = (cable->getFromPort() == port ? cable->getToPort() : cable->getFromPort());
 					if (portOnOtherEnd && isPortCurrentlyRevertible(portOnOtherEnd->getRenderer()))
 					{
-						VuoNode *nodeOnOtherEnd = nodeForPort[portOnOtherEnd];
+						VuoNode *nodeOnOtherEnd = portOnOtherEnd->getRenderer()->getUnderlyingParentNode()->getBase();
 						VuoCompilerNodeClass *nodeClassOnOtherEnd = nodeOnOtherEnd->getNodeClass()->getCompiler();
 						VuoCompilerSpecializedNodeClass *specializedNodeClassOnOtherEnd = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClassOnOtherEnd);
 						if (specializedNodeClassOnOtherEnd)
@@ -1210,7 +1201,7 @@ void VuoEditorComposition::fireTriggerPortEvent(VuoPort *port)
 
 		getBase()->getCompiler()->setManuallyFirableInputPort(nullptr, nullptr);
 
-		runningTriggerPortIdentifier = staticIdentifierForPort[port];
+		runningTriggerPortIdentifier = identifierCache->getIdentifierForPort(port);
 		isTriggerPort = true;
 	}
 	else if (port->hasRenderer() && port->getRenderer()->getInput())
@@ -2838,6 +2829,8 @@ void VuoEditorComposition::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
  */
 void VuoEditorComposition::updateHoverHighlighting(QPointF scenePos, bool disablePortHoverHighlighting)
 {
+	auto types = compiler->getTypes();
+
 	// Detect cable and port hover events ourselves, since we need to account
 	// for their extended hover ranges.
 	QGraphicsItem *item = cableInProgress? findNearbyPort(scenePos, false) : findNearbyComponent(scenePos);
@@ -2934,7 +2927,7 @@ void VuoEditorComposition::updateHoverHighlighting(QPointF scenePos, bool disabl
 				if (typecastParentPort)
 					updatedPort = typecastParentPort;
 
-				updateEligibilityHighlightingForPort(updatedPort, fixedPort, p.second);
+				updateEligibilityHighlightingForPort(updatedPort, fixedPort, p.second, types);
 
 				VuoRendererNode *potentialDrawer = updatedPort->getUnderlyingParentNode();
 				updateEligibilityHighlightingForNode(potentialDrawer);
@@ -3419,7 +3412,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			{
 				map<VuoNode *, string> nodesToReplace;
 				set<VuoCable *> cablesToDelete;
-				createReplacementsToUnspecializePort(port->getBase(), nodesToReplace, cablesToDelete);
+				createReplacementsToUnspecializePort(port->getBase(), false, nodesToReplace, cablesToDelete);
 				if (cablesToDelete.size() >= 1)
 				{
 					// @todo https://b33p.net/kosada/node/8895 : Note that this specialization will break connections.
@@ -4422,7 +4415,7 @@ QRectF VuoEditorComposition::internalSelectedItemsChildrenBoundingRect() const
  */
 void VuoEditorComposition::updateInternalPortConstant(string portID, string newValue, bool updateInRunningComposition)
 {
-	VuoPort *port = portWithStaticIdentifier[portID];
+	VuoPort *port = getPortWithStaticIdentifier(portID);
 	if (!port)
 		return;
 
@@ -4940,11 +4933,11 @@ void VuoEditorComposition::updateCompositionsThatContainThisSubcomposition(strin
  */
 void VuoEditorComposition::syncInternalPortConstantInRunningComposition(string runningPortID)
 {
-	VuoPort *port = portWithStaticIdentifier[runningPortID];
-	if (!(port && port->hasCompiler() && port->hasRenderer()))
-		return;
-
-	string constant = port->getRenderer()->getConstantAsString();
+	string constant;
+	identifierCache->doForPortWithIdentifier(runningPortID, [&constant](VuoPort *port) {
+		if (port->hasCompiler() && port->hasRenderer())
+			constant = port->getRenderer()->getConstantAsString();
+	});
 
 	// Live-update the top-level composition, which may be either the composition itself or a supercomposition.
 	void (^updateRunningComposition)(VuoEditorComposition *, string) = ^void (VuoEditorComposition *topLevelComposition, string thisCompositionIdentifier)
@@ -4991,10 +4984,9 @@ void VuoEditorComposition::syncPublishedPortConstantInRunningComposition(string 
  */
 void VuoEditorComposition::updateInternalPortConstantInRunningComposition(VuoCompilerInputEventPort *port, string constant)
 {
-	map<VuoPort *, string>::iterator i = staticIdentifierForPort.find(port->getBase());
-	if (i == staticIdentifierForPort.end())
+	string runningPortIdentifier = identifierCache->getIdentifierForPort(port->getBase());
+	if (runningPortIdentifier.empty())
 		return;
-	string runningPortIdentifier = i->second;
 
 	// Live-update the top-level composition, which may be either the composition itself or a supercomposition.
 	void (^updateRunningComposition)(VuoEditorComposition *, string) = ^void (VuoEditorComposition *topLevelComposition, string thisCompositionIdentifier)
@@ -5818,9 +5810,7 @@ void VuoEditorComposition::addPublishedPort(VuoPublishedPort *publishedPort, boo
 {
 	VuoRendererComposition::addPublishedPort(publishedPort, isPublishedInput, compiler);
 
-	string staticPortIdentifier = getIdentifierForStaticPort(publishedPort);
-	portWithStaticIdentifier[staticPortIdentifier] = publishedPort;
-	staticIdentifierForPort[publishedPort] = staticPortIdentifier;
+	identifierCache->addPublishedPortToCache(publishedPort);
 
 	if (shouldUpdateUi)
 		emit publishedPortModified();
@@ -5858,9 +5848,7 @@ void VuoEditorComposition::setPublishedPortName(VuoRendererPublishedPort *publis
 
 	VuoRendererComposition::setPublishedPortName(publishedPort, name, compiler);
 
-	string staticPortIdentifier = getIdentifierForStaticPort(publishedPort->getBase());
-	portWithStaticIdentifier[staticPortIdentifier] = publishedPort->getBase();
-	staticIdentifierForPort[publishedPort->getBase()] = staticPortIdentifier;
+	identifierCache->addPublishedPortToCache( static_cast<VuoPublishedPort *>(publishedPort->getBase()) );
 
 	emit publishedPortModified();
 }
@@ -5897,6 +5885,8 @@ void VuoEditorComposition::highlightEligibleEndpointsForCable(VuoCable *cable)
  */
 void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPort *port, VuoRendererCable *cable)
 {
+	auto types = compiler->getTypes();
+
 	QList<QGraphicsItem *> compositionComponents = items();
 	for (QList<QGraphicsItem *>::iterator i = compositionComponents.begin(); i != compositionComponents.end(); ++i)
 	{
@@ -5907,12 +5897,12 @@ void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPo
 			// Check for eligible internal input ports.
 			vector<VuoPort *> inputPorts = rn->getBase()->getInputPorts();
 			for(vector<VuoPort *>::iterator inputPort = inputPorts.begin(); inputPort != inputPorts.end(); ++inputPort)
-				updateEligibilityHighlightingForPort((*inputPort)->getRenderer(), port, !cable->effectivelyCarriesData());
+				updateEligibilityHighlightingForPort((*inputPort)->getRenderer(), port, !cable->effectivelyCarriesData(), types);
 
 			// Check for eligible internal output ports.
 			vector<VuoPort *> outputPorts = rn->getBase()->getOutputPorts();
 			for(vector<VuoPort *>::iterator outputPort = outputPorts.begin(); outputPort != outputPorts.end(); ++outputPort)
-				updateEligibilityHighlightingForPort((*outputPort)->getRenderer(), port, !cable->effectivelyCarriesData());
+				updateEligibilityHighlightingForPort((*outputPort)->getRenderer(), port, !cable->effectivelyCarriesData(), types);
 		}
 
 		// Fade out cables that aren't relevant to the current cable drag.
@@ -5929,7 +5919,8 @@ void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPo
 
 			VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(otherCablePort? otherCablePort->getRenderer() : NULL,
 																						   port,
-																						   !cable->effectivelyCarriesData());
+																						   !cable->effectivelyCarriesData(),
+																						   types);
 
 			// Don't apply extra highlighting to compatible, already-connected cables.
 			if (highlight == VuoRendererColors::standardHighlight)
@@ -5952,14 +5943,15 @@ void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPo
  */
 void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight,
 																VuoRendererPort *fixedPort,
-																bool eventOnlyConnection)
+																bool eventOnlyConnection,
+																map<string, VuoCompilerType *> &types)
 {
 	QGraphicsItem::CacheMode normalCacheMode = portToHighlight->cacheMode();
 	portToHighlight->setCacheMode(QGraphicsItem::NoCache);
 
 	portToHighlight->updateGeometry();
 
-	VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(portToHighlight, fixedPort, eventOnlyConnection);
+	VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(portToHighlight, fixedPort, eventOnlyConnection, types);
 
 	portToHighlight->setEligibilityHighlight(highlight);
 	VuoRendererTypecastPort *typecastPortToHighlight = dynamic_cast<VuoRendererTypecastPort *>(portToHighlight);
@@ -5969,7 +5961,7 @@ void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort 
 	portToHighlight->setCacheMode(normalCacheMode);
 
 	if (typecastPortToHighlight)
-		updateEligibilityHighlightingForPort(typecastPortToHighlight->getChildPort(), fixedPort, eventOnlyConnection);
+		updateEligibilityHighlightingForPort(typecastPortToHighlight->getChildPort(), fixedPort, eventOnlyConnection, types);
 }
 
 /**
@@ -5980,8 +5972,9 @@ void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort 
  * @param fixedPort The port already selected for connection, and against which eligibility is to be checked.
  * @param eventOnlyConnection If true, determines eligibility as if the ports will be connected with a cable
  * that is event-only regardless of the data-carrying status of the ports.
+ * @param types All loaded types (@ref VuoCompiler::getTypes).
  */
-VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection)
+VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types)
 {
 	// Determine whether the port endpoints are internal canvas ports or external published sidebar ports.
 	VuoRendererPublishedPort *fixedExternalPublishedPort = dynamic_cast<VuoRendererPublishedPort *>(fixedPort);
@@ -6019,7 +6012,7 @@ VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightin
 	VuoRendererColors::HighlightType highlight;
 	if (directConnectionPossible)
 		highlight = VuoRendererColors::standardHighlight;
-	else if (!findBridgingSolutions(fromPort, toPort, forwardConnection).empty())
+	else if (!findBridgingSolutions(fromPort, toPort, forwardConnection, types).empty())
 		highlight = VuoRendererColors::subtleHighlight;
 	else if (fixedPort == portToHighlight)
 		highlight = VuoRendererColors::noHighlight;
@@ -6110,7 +6103,7 @@ bool VuoEditorComposition::portCanBeUnspecializedNondestructively(VuoPort *portT
 {
 	map<VuoNode *, string> nodesToReplace;
 	set<VuoCable *> cablesToDelete;
-	createReplacementsToUnspecializePort(portToUnspecialize, nodesToReplace, cablesToDelete);
+	createReplacementsToUnspecializePort(portToUnspecialize, false, nodesToReplace, cablesToDelete);
 
 	// Check whether unspecialization would disconnect any existing cables
 	// (other than the cable that would normally be displaced by the new cable connection).
@@ -6361,7 +6354,8 @@ bool VuoEditorComposition::selectBridgingSolution(VuoRendererPort *fromPort,
 	map<string, VuoRendererPort *> portToSpecializeForTypecast;
 	map<string, string> specializedTypeNameForTypecast;
 
-	vector<string> candidateTypecasts = findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast);
+	auto types = compiler->getTypes();
+	vector<string> candidateTypecasts = findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast, types);
 	bool solutionSelected = selectBridgingSolutionFromOptions(candidateTypecasts, portToSpecializeForTypecast, specializedTypeNameForTypecast, typecastToInsert);
 
 	if (!solutionSelected)
@@ -6469,6 +6463,7 @@ bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fr
  *                              (as in a forward cable drag) as opposed to the fromPort
  *                              (as in a backward cable drag), which may be the tie-breaking factor
  *                              in deciding which port to attempt to specialize.
+ * @param types All loaded types (@ref VuoCompiler::getTypes).
  *
  * Returns a vector containing the names of all loaded typecast classes that, in combination
  * with potential respecialization of the @c fromPort or @c toPort, are capable of bridging
@@ -6478,11 +6473,12 @@ bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fr
  */
 vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *fromPort,
 														   VuoRendererPort *toPort,
-														   bool toPortIsDragDestination)
+														   bool toPortIsDragDestination,
+														   map<string, VuoCompilerType *> &types)
 {
 	map<string, VuoRendererPort *> portToSpecializeForTypecast;
 	map<string, string> specializedTypeNameForTypecast;
-	return findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast);
+	return findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast, types);
 }
 
 /**
@@ -6498,7 +6494,8 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 														   VuoRendererPort *toPort,
 														   bool toPortIsDragDestination,
 														   map<string, VuoRendererPort *> &portToSpecializeForTypecast,
-														   map<string, string> &specializedTypeNameForTypecast)
+														   map<string, string> &specializedTypeNameForTypecast,
+														   map<string, VuoCompilerType *> &types)
 {
 	// If `limitCombinations` is `true`, first considers solutions that involve typeconversion
 	// or specialization, but not both; if no such solution exists, returns solutions that involve
@@ -6647,7 +6644,9 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 
 	foreach (string compatibleTypeName, compatibleTypes)
 	{
-		VuoCompilerType *compatibleSpecializedType = compiler->getType(compatibleTypeName);
+		VuoCompilerType *compatibleSpecializedType = types[compatibleTypeName];
+		if (!compatibleSpecializedType)
+			compatibleSpecializedType = compiler->getType(compatibleTypeName);
 		VuoType *candidateFromType = specializeToPort? currentFromDataType : compatibleSpecializedType->getBase();
 		VuoType *candidateToType = specializeToPort? compatibleSpecializedType->getBase() : currentToDataType;
 
@@ -6867,7 +6866,7 @@ json_object * VuoEditorComposition::getPortValueInRunningComposition(VuoPort *po
 	if (! port->getRenderer()->getDataType())
 		return portValue;
 
-	string runningPortIdentifier = staticIdentifierForPort[port];
+	string runningPortIdentifier = identifierCache->getIdentifierForPort(port);
 	bool isInput = port->getRenderer()->getInput();
 
 	void (^getPortValue)(VuoEditorComposition *, string) = ^void (VuoEditorComposition *topLevelComposition, string thisCompositionIdentifier)
@@ -6936,7 +6935,11 @@ string VuoEditorComposition::getIdentifierForStaticPort(VuoPort *staticPort, Vuo
  */
 VuoPort * VuoEditorComposition::getPortWithStaticIdentifier(string portID)
 {
-	return portWithStaticIdentifier[portID];
+	VuoPort *port = nullptr;
+	identifierCache->doForPortWithIdentifier(portID, [&port](VuoPort *p) {
+		port = p;
+	});
+	return port;
 }
 
 /**
@@ -6999,7 +7002,7 @@ VuoPortPopover * VuoEditorComposition::getActivePopoverForPort(string portID)
  */
 void VuoEditorComposition::enableInactivePopoverForPort(VuoRendererPort *rp)
 {
-	string portID = staticIdentifierForPort[rp->getBase()];
+	string portID = identifierCache->getIdentifierForPort(rp->getBase());
 	bool popoverJustClosedAtLastEvent = portsWithPopoversClosedAtLastEvent.find(portID) != portsWithPopoversClosedAtLastEvent.end();
 	if (!popoverJustClosedAtLastEvent)
 		enablePopoverForPort(rp);
@@ -7014,7 +7017,7 @@ void VuoEditorComposition::enablePopoverForPort(VuoRendererPort *rp)
 		return;
 
 	VuoPort *port = rp->getBase();
-	string portID = staticIdentifierForPort[port];
+	string portID = identifierCache->getIdentifierForPort(port);
 
 	VUserLog("%s:      Open   popover for %s",
 		window->getWindowTitleWithoutPlaceholder().toUtf8().data(),
@@ -7107,11 +7110,13 @@ void VuoEditorComposition::disablePopoverForPort(string portID)
 		delete popover;
 	}
 
-	VuoPort *port = portWithStaticIdentifier[portID];
-	if (!port)
-		return;
+	bool isInput = false;
+	bool foundPort = identifierCache->doForPortWithIdentifier(portID, [&isInput](VuoPort *port) {
+		isInput = port->getRenderer()->getInput();
+	});
 
-	bool isInput = port->getRenderer()->getInput();
+	if (! foundPort)
+		return;
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{  // Get off of activePortPopoversQueue.
 		static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->applyToLinkedTopLevelComposition(this, ^void (VuoEditorComposition *topLevelComposition, string thisCompositionIdentifier)
@@ -7172,8 +7177,18 @@ void VuoEditorComposition::disablePortPopovers(VuoRendererNode *node)
 		for (map<string, VuoPortPopover *>::iterator i = popoversToDisable.begin(); i != popoversToDisable.end(); ++i)
 		{
 			string portID = i->first;
-			VuoPort *port = portWithStaticIdentifier[portID];
-			if ((! node) || (port && port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node)))
+			bool shouldDisable = false;
+
+			if (! node)
+				shouldDisable = true;
+			else
+			{
+				identifierCache->doForPortWithIdentifier(portID, [&shouldDisable, node](VuoPort *port) {
+					shouldDisable = port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node);
+				});
+			}
+
+			if (shouldDisable)
 				disablePopoverForPort(portID);
 		}
 	});
@@ -7189,8 +7204,9 @@ void VuoEditorComposition::disableStrandedPortPopovers()
 		for (map<string, VuoPortPopover *>::iterator i = popoversToDisable.begin(); i != popoversToDisable.end(); ++i)
 		{
 			string portID = i->first;
-			VuoPort *port = portWithStaticIdentifier[portID];
-			if (!port)
+
+			bool foundPort = identifierCache->doForPortWithIdentifier(portID, [&foundPort](VuoPort *port) {});
+			if (! foundPort)
 				disablePopoverForPort(portID);
 		}
 	});
@@ -7210,8 +7226,18 @@ void VuoEditorComposition::disableNondetachedPortPopovers(VuoRendererNode *node,
 		for (map<string, VuoPortPopover *>::iterator i = popoversToDisable.begin(); i != popoversToDisable.end(); ++i)
 		{
 			string portID = i->first;
-			VuoPort *port = portWithStaticIdentifier[portID];
-			if ((! node) || (port && port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node)))
+			bool shouldDisable = false;
+
+			if (! node)
+				shouldDisable = true;
+			else
+			{
+				identifierCache->doForPortWithIdentifier(portID, [&shouldDisable, node](VuoPort *port) {
+					shouldDisable = port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node);
+				});
+			}
+
+			if (shouldDisable)
 			{
 				VuoPortPopover *popover = getActivePopoverForPort(portID);
 				if (! (popover && popover->getDetached()))
@@ -7287,10 +7313,19 @@ void VuoEditorComposition::updatePortPopovers(VuoRendererNode *node)
 		for (map<string, VuoPortPopover *>::iterator i = activePortPopovers.begin(); i != activePortPopovers.end(); ++i)
 		{
 			string portID = i->first;
-			VuoPort *port = portWithStaticIdentifier[portID];
 			VuoPortPopover *popover = i->second;
+			bool shouldUpdate = false;
 
-			if ((! node) || (port && port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node)))
+			if (! node)
+				shouldUpdate = true;
+			else
+			{
+				identifierCache->doForPortWithIdentifier(portID, [&shouldUpdate, node](VuoPort *port) {
+					shouldUpdate = port->hasRenderer() && (port->getRenderer()->getUnderlyingParentNode() == node);
+				});
+			}
+
+			if (shouldUpdate)
 				QMetaObject::invokeMethod(popover, "updateTextAndResize", Qt::QueuedConnection);
 		}
 	});
@@ -7311,11 +7346,15 @@ void VuoEditorComposition::updateDataInPortPopoverFromRunningTopLevelComposition
 																				 string popoverCompositionIdentifier,
 																				 string portID)
 {
-	VuoPort *port = popoverComposition->portWithStaticIdentifier[portID];
-	if (! port)
+	bool isInput;
+	bool foundPort = popoverComposition->identifierCache->doForPortWithIdentifier(portID, [&isInput](VuoPort *port) {
+		isInput = port->getRenderer()->getInput();
+	});
+
+	if (! foundPort)
 		return;
 
-	string portSummary = (port->getRenderer()->getInput() ?
+	string portSummary = (isInput ?
 							  runner->subscribeToInputPortTelemetry(popoverCompositionIdentifier, portID) :
 							  runner->subscribeToOutputPortTelemetry(popoverCompositionIdentifier, portID));
 
@@ -7383,7 +7422,6 @@ void VuoEditorComposition::receivedTelemetryOutputPortUpdated(string composition
 	void (^updatePortDisplay)(VuoEditorComposition *) = ^void (VuoEditorComposition *matchingComposition)
 	{
 		dispatch_sync(matchingComposition->activePortPopoversQueue, ^{
-			VuoPort *port = matchingComposition->portWithStaticIdentifier[portIdentifier];
 			VuoPortPopover *popover = matchingComposition->getActivePopoverForPort(portIdentifier);
 
 			if (popover)
@@ -7395,16 +7433,18 @@ void VuoEditorComposition::receivedTelemetryOutputPortUpdated(string composition
 				else if (sentData)
 					QMetaObject::invokeMethod(popover, "updateCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, dataSummary.c_str()));
 			}
+		});
 
-			if (matchingComposition->showEventsMode && sentEvent)
-			{
-				if (port && dynamic_cast<VuoCompilerTriggerPort *>(port->getCompiler()) && port->hasRenderer())
+		if (matchingComposition->showEventsMode && sentEvent)
+		{
+			matchingComposition->identifierCache->doForPortWithIdentifier(portIdentifier, [matchingComposition](VuoPort *port) {
+				if (dynamic_cast<VuoCompilerTriggerPort *>(port->getCompiler()) && port->hasRenderer())
 				{
 					port->getRenderer()->setFiredEvent();
 					matchingComposition->animatePort(port->getRenderer());
 				}
-			}
-		});
+			});
+		}
 	};
 	static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->applyToLinkedCompositionWithIdentifier(this, compositionIdentifier, updatePortDisplay);
 }
@@ -7444,13 +7484,9 @@ void VuoEditorComposition::receivedTelemetryNodeExecutionStarted(string composit
 			dispatch_async(this->runCompositionQueue, ^{
 				if (this->isRunningThreadUnsafe())
 				{
-					map<string, VuoNode *>::iterator i = matchingComposition->nodeWithGraphvizIdentifier.find(nodeIdentifier);
-					if (i != nodeWithGraphvizIdentifier.end())
-					{
-						VuoNode *nodeInBaseComposition = i->second;
-						VuoRendererNode *rn = nodeInBaseComposition->getRenderer();
-						rn->setExecutionBegun();
-					}
+					matchingComposition->identifierCache->doForNodeWithIdentifier(nodeIdentifier, [](VuoNode *node) {
+						node->getRenderer()->setExecutionBegun();
+					});
 				}
 			});
 		}
@@ -7471,15 +7507,11 @@ void VuoEditorComposition::receivedTelemetryNodeExecutionFinished(string composi
 			dispatch_async(this->runCompositionQueue, ^{
 				if (this->isRunningThreadUnsafe())
 				{
-					map<string, VuoNode *>::iterator i = matchingComposition->nodeWithGraphvizIdentifier.find(nodeIdentifier);
-					if (i != nodeWithGraphvizIdentifier.end())
-					{
-						VuoNode *nodeInBaseComposition = i->second;
-						VuoRendererNode *rn = nodeInBaseComposition->getRenderer();
-						rn->setExecutionEnded();
-					}
+					matchingComposition->identifierCache->doForNodeWithIdentifier(nodeIdentifier, [](VuoNode *node) {
+						node->getRenderer()->setExecutionEnded();
+					});
 				}
-			});
+		   });
 		}
 	};
 	static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->applyToLinkedCompositionWithIdentifier(this, compositionIdentifier, updateNodeDisplay);
@@ -7723,57 +7755,6 @@ void VuoEditorComposition::setIgnoreApplicationStateChangeEvents(bool ignore)
 void VuoEditorComposition::setPopoverEventsEnabled(bool enable)
 {
 	this->popoverEventsEnabled = enable;
-}
-
-/**
-* Populates the mappings between nodes and ports in this composition and their
-* stored and running identifiers.
-*/
-void VuoEditorComposition::populateNodeAndPortIdentifierMappings()
-{
-	nodeWithGraphvizIdentifier.clear();
-	portWithStaticIdentifier.clear();
-	staticIdentifierForPort.clear();
-
-	foreach (VuoNode *node, getBase()->getNodes())
-		registerNodeID(node);
-
-	foreach (VuoPublishedPort *publishedPort, getBase()->getPublishedInputPorts())
-	{
-		string staticPortIdentifier = getIdentifierForStaticPort(publishedPort);
-		portWithStaticIdentifier[staticPortIdentifier] = publishedPort;
-		staticIdentifierForPort[publishedPort] = staticPortIdentifier;
-	}
-
-	foreach (VuoPort *publishedPort, getBase()->getPublishedOutputPorts())
-	{
-		string staticPortIdentifier = getIdentifierForStaticPort(publishedPort);
-		portWithStaticIdentifier[staticPortIdentifier] = publishedPort;
-		staticIdentifierForPort[publishedPort] = staticPortIdentifier;
-	}
-}
-
-/**
-* Records the mappings between the input node and its ports and their stored identifiers.
-*/
-void VuoEditorComposition::registerNodeID(VuoNode *node)
-{
-	if (node && node->hasCompiler())
-		nodeWithGraphvizIdentifier[node->getCompiler()->getGraphvizIdentifier()] = node;
-
-	foreach (VuoPort *port, node->getInputPorts())
-	{
-		string staticPortIdentifier = getIdentifierForStaticPort(port, node);
-		portWithStaticIdentifier[staticPortIdentifier] = port;
-		staticIdentifierForPort[port] = staticPortIdentifier;
-	}
-
-	foreach (VuoPort *port, node->getOutputPorts())
-	{
-		string staticPortIdentifier = getIdentifierForStaticPort(port, node);
-		portWithStaticIdentifier[staticPortIdentifier] = port;
-		staticIdentifierForPort[port] = staticPortIdentifier;
-	}
 }
 
 /**
@@ -8160,6 +8141,8 @@ VuoEditorComposition::~VuoEditorComposition()
 
 	preparedAnimations.clear();
 	animationForTimeline.clear();
+
+	delete identifierCache;
 
 	moduleManager->deleteWhenReady();  // deletes compiler
 }

@@ -37,5 +37,6 @@
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6,7,8], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2,5,6]}},
 
 	// Ensure an empty input list actually clears the output list (rather than doing nothing).
+	{"firingPort":"list", "inputPortValues":{"list":null,              "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[       ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[               ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[       ]}},
 ]}

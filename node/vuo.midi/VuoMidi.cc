@@ -192,8 +192,7 @@ VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_getSummary(md), error.what());
-		if (midiout)
-			delete midiout;
+		delete midiout;
 		return NULL;
 	}
 
@@ -368,8 +367,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_getSummary(md), error.what());
-		if (midiin)
-			delete midiin;
+		delete midiin;
 		return NULL;
 	}
 

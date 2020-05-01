@@ -60,7 +60,10 @@ char * VuoWindowDescription_getSummary(const VuoWindowDescription value)
  */
 VuoWindowDescription VuoWindowDescription_copy(const VuoWindowDescription value)
 {
-	return (VuoWindowDescription)VuoListCopy_VuoWindowProperty((VuoList_VuoWindowProperty)value);
+	if (value)
+		return (VuoWindowDescription)VuoListCopy_VuoWindowProperty((VuoList_VuoWindowProperty)value);
+
+	return VuoListCreate_VuoWindowProperty();
 }
 
 /**

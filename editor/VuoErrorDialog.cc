@@ -11,12 +11,19 @@
 
 #include "VuoEditorUtilities.hh"
 #include "VuoRendererFonts.hh"
+#include "VuoStringUtilities.hh"
 
 /**
  * Displays a modal dialog.
+ *
+ * `summary` and `details` may be formatted using Markdown.
+ *
+ * `disclosureDetails` should be plaintext (no Markdown or HTML).
  */
 void VuoErrorDialog::show(QWidget *parent, QString summary, QString details, QString disclosureDetails)
 {
+	VUserLog("Error: %s — %s — %s", summary.toUtf8().data(), details.toUtf8().data(), disclosureDetails.toUtf8().data());
+
 	VuoRendererFonts *fonts = VuoRendererFonts::getSharedFonts();
 
 	QMessageBox messageBox(parent);
@@ -24,11 +31,12 @@ void VuoErrorDialog::show(QWidget *parent, QString summary, QString details, QSt
 	messageBox.setWindowModality(Qt::WindowModal);
 	messageBox.setFont(fonts->dialogHeadingFont());
 	messageBox.setTextFormat(Qt::RichText);
-	messageBox.setText(summary);
+	messageBox.setText(QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(summary.toStdString())));
 
 	// Capitalize, so VuoCompiler exceptions (which typically start with a lowercase letter) look better.
 	details[0] = details[0].toUpper();
-	messageBox.setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style><p>" + details + "</p>");
+	messageBox.setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style>"
+		+ QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(details.toStdString())));
 
 	messageBox.setDetailedText(disclosureDetails);
 	messageBox.setStandardButtons(QMessageBox::Ok);

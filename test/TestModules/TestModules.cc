@@ -122,9 +122,6 @@ public:
 	TestModules()
 	{
 		compiler = new VuoCompiler();
-#if VUO_PRO
-		compiler->load_Pro(true);
-#endif
 
 		loadSchema("schema/VuoType.jsonschema",          VuoType);
 		loadSchema("schema/VuoLibrary.jsonschema",       VuoLibrary);

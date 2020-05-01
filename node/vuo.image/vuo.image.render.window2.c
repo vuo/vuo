@@ -128,7 +128,8 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoWindowDescription) setWindowDescription,
-		VuoInputEvent({"eventBlocking":"none","data":"setWindowDescription"}) setWindowDescriptionEvent
+		VuoInputEvent({"eventBlocking":"none","data":"setWindowDescription"}) setWindowDescriptionEvent,
+		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
 )
 {
 	if (setWindowDescriptionEvent)

@@ -32,6 +32,14 @@ VuoNodeSet * VuoNodeSet::createNodeSetForModule(VuoFileUtilities::File *moduleFi
 }
 
 /**
+ * Returns the POSIX path to this node set's archive file.
+ */
+string VuoNodeSet::getArchivePath()
+{
+    return archivePath;
+}
+
+/**
  * Returns a name for this node set, based on the node set archive file name.
  */
 string VuoNodeSet::getName(void)

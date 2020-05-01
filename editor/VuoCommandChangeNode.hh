@@ -55,6 +55,7 @@ private:
 	map<pair<VuoPort *, VuoPublishedPort *>, bool> publishedConnectionCarriedData;
 	map<VuoCable *, VuoPort *> originalFromPortForCable;
 	map<VuoCable *, VuoPort *> originalToPortForCable;
+	map<VuoCable *, bool> cableCarriedData;
 	map<VuoPort *, string> constantValueForOriginalPort;
 
 	void createAllMappings();

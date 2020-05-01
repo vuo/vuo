@@ -797,7 +797,7 @@ void VuoCompiler::Environment::removeExpatriateSourceFile(const string &sourcePa
  *
  * @threadQueue{environmentQueue}
  */
-void VuoCompiler::Environment::updateModulesAtSearchPath(const string &path, bool shouldCleanModuleCache)
+void VuoCompiler::Environment::updateModulesAtSearchPath(const string &path)
 {
 	if (moduleFilesAtSearchPath.find(path) != moduleFilesAtSearchPath.end())
 		return;
@@ -820,7 +820,7 @@ void VuoCompiler::Environment::updateModulesAtSearchPath(const string &path, boo
 		fileForModuleKey[m->getModuleKey()] = m;
 	}
 
-	if (shouldCleanModuleCache && path == getCompiledModuleCachePath())
+	if (path == getCompiledModuleCachePath())
 	{
 		for (map<string, ModuleInfo *>::iterator i = fileForModuleKey.begin(); i != fileForModuleKey.end(); )
 		{
@@ -838,6 +838,32 @@ void VuoCompiler::Environment::updateModulesAtSearchPath(const string &path, boo
 	}
 
 	moduleFilesAtSearchPath[path] = fileForModuleKey;
+}
+
+/**
+ * Adds a single module to the list of all node classes, types, and library modules in the folder at @a moduleSearchPath.
+ *
+ * @threadQueue{environmentQueue}
+ */
+void VuoCompiler::Environment::updateModuleAtSearchPath(const string &moduleSearchPath, const string &moduleRelativePath)
+{
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(moduleRelativePath, dir, file, ext);
+
+	set<string> moduleExtensions;
+	moduleExtensions.insert(ext);
+	set<string> archiveExtensions;
+	archiveExtensions.insert("vuonode");
+
+	set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(moduleSearchPath, moduleExtensions, archiveExtensions);
+
+	for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
+	{
+		VuoFileUtilities::File *moduleFile = *i;
+
+		ModuleInfo *m = new ModuleInfo(this, moduleSearchPath, moduleFile, false, false);
+		moduleFilesAtSearchPath[moduleSearchPath][m->getModuleKey()] = m;
+	}
 }
 
 /**
@@ -1144,13 +1170,10 @@ void VuoCompiler::Environment::fileChanged(const string &moduleSearchPath)
  *
  * @threadQueue{moduleSearchPathContentsChangedQueue}
  */
-void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &moduleSearchPath, const string &moduleAddedOrModifiedPath,
-															   const string &moduleAddedOrModifiedSourceCode,
-															   std::function<void(void)> moduleLoadedCallback,
-															   VuoCompiler *compiler, VuoCompilerIssues *issues)
+void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &moduleSearchPath)
 {
 	//VLog("                 E=%p -- %s", this, moduleSearchPath.c_str());
-	VuoCompiler *compilerForLoading = (compiler ? compiler : new VuoCompiler(moduleSearchPath + "/unused"));
+	VuoCompiler *compilerForLoading = new VuoCompiler(moduleSearchPath + "/unused");
 
 	__block set<string> modulesAdded;
 	__block set<string> modulesModifed;
@@ -1191,10 +1214,12 @@ void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &mod
 						  sourceFilesAtSearchPath.erase(cf);
 					  }
 
-					  // Compare the old and new file records to see what has changed.
+					  // Rebuild the file records based on the directory contents.
 
-					  updateModulesAtSearchPath(moduleSearchPath, moduleAddedOrModifiedPath.empty());
+					  updateModulesAtSearchPath(moduleSearchPath);
 					  updateSourceFilesAtSearchPath(moduleSearchPath);
+
+					  // Compare the old and new file records to see what has changed.
 
 					  mf = moduleFilesAtSearchPath.find(moduleSearchPath);
 					  if (mf != moduleFilesAtSearchPath.end())
@@ -1206,8 +1231,7 @@ void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &mod
 							  map<string, ModuleInfo *>::iterator o = oldModules.find(moduleKey);
 							  if (o != oldModules.end())
 							  {
-								  if (n->second->isNewerThan(o->second) ||
-									  (n->second->getFile() && ! n->second->getFile()->isInArchive() && VuoFileUtilities::arePathsEqual(n->second->getFile()->path(), moduleAddedOrModifiedPath)))
+								  if (n->second->isNewerThan(o->second))
 								  {
 									  modulesModifed.insert(moduleKey);
 								  }
@@ -1218,10 +1242,6 @@ void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &mod
 
 								  delete o->second;
 								  oldModules.erase(o);
-							  }
-							  else if (VuoFileUtilities::arePathsEqual(moduleSearchPath, getOverriddenCompiledModuleCachePath()))
-							  {
-								  modulesModifed.insert(moduleKey);
 							  }
 							  else
 							  {
@@ -1274,11 +1294,83 @@ void VuoCompiler::Environment::moduleSearchPathContentsChanged(const string &mod
 
 					  compilerForLoading->loadModulesAndSources(modulesAdded, modulesModifed, modulesRemoved,
 																compositionsAdded, compositionsModifed, compositionsRemoved,
-																false, false, this, issues, moduleLoadedCallback, moduleAddedOrModifiedSourceCode);
+																false, false, this, nullptr, nullptr, "");
 				  });
 
-	if (! compiler)
-		delete compilerForLoading;
+	delete compilerForLoading;
+}
+
+/**
+ * Callback for when a single file has been added, modified, or removed from one of the module search paths.
+ *
+ * Unlike @ref VuoCompiler::Environment::moduleSearchPathContentsChanged, this function only updates the
+ * record for the one file. It does not check for other changed files in the directory.
+ */
+void VuoCompiler::Environment::moduleFileChanged(const string &modulePath, const string &moduleSourceCode,
+												 std::function<void(void)> moduleLoadedCallback,
+												 VuoCompiler *compiler, VuoCompilerIssues *issues)
+{
+	//VLog("                 E=%p -- %s", this, modulePath.c_str());
+	dispatch_sync(environmentQueue, ^{
+
+					  string moduleDir, moduleKey, ext;
+					  VuoFileUtilities::splitPath(modulePath, moduleDir, moduleKey, ext);
+					  VuoFileUtilities::canonicalizePath(moduleDir);
+
+					  // Remove the old file record from the environment.
+
+					  bool foundOldModule = false;
+					  auto moduleSearchPathIter = moduleFilesAtSearchPath.find(moduleDir);
+					  if (moduleSearchPathIter != moduleFilesAtSearchPath.end())
+					  {
+						  auto moduleIter = moduleSearchPathIter->second.find(moduleKey);
+						  if (moduleIter != moduleSearchPathIter->second.end())
+						  {
+							  delete moduleIter->second;
+							  moduleSearchPathIter->second.erase(moduleIter);
+							  foundOldModule = true;
+						  }
+					  }
+
+					  // Update the file record for the module by re-checking the file.
+
+					  updateModuleAtSearchPath(moduleDir, moduleKey + "." + ext);
+
+					  // Compare the old and new file records to see how the module has changed.
+
+					  bool foundNewModule = false;
+					  moduleSearchPathIter = moduleFilesAtSearchPath.find(moduleDir);
+					  if (moduleSearchPathIter != moduleFilesAtSearchPath.end())
+					  {
+						  auto moduleIter = moduleSearchPathIter->second.find(moduleKey);
+						  if (moduleIter != moduleSearchPathIter->second.end())
+						  {
+							  foundNewModule = true;
+						  }
+					  }
+
+					  set<string> modulesAdded;
+					  set<string> modulesModified;
+					  set<string> modulesRemoved;
+
+					  if ((foundOldModule || VuoFileUtilities::arePathsEqual(moduleDir, getOverriddenCompiledModuleCachePath())) && foundNewModule)
+					  {
+						  modulesModified.insert(moduleKey);
+					  }
+					  else if (! foundOldModule && foundNewModule)
+					  {
+						  modulesAdded.insert(moduleKey);
+					  }
+					  else if (foundOldModule && ! foundNewModule)
+					  {
+						  modulesRemoved.insert(moduleKey);
+					  }
+
+					  compiler->loadModulesAndSources(modulesAdded, modulesModified, modulesRemoved,
+													  set<string>(), set<string>(), set<string>(),
+													  false, false, this, issues, moduleLoadedCallback, moduleSourceCode);
+				  });
+
 }
 
 /**
@@ -1595,7 +1687,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 							issues->setFilePathIfEmpty(queueItem->sourcePath);
 						}
 
-						moduleSearchPathContentsChanged(queueItem->cachedModulesPath, queueItem->compiledModulePath, queueItem->sourceCode, moduleLoadedCallback, compiler, issues);
+						moduleFileChanged(queueItem->compiledModulePath, queueItem->sourceCode, moduleLoadedCallback, compiler, issues);
 					}
 					else
 						moduleLoadedCallback();
@@ -1605,7 +1697,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 					try
 					{
 						compiler->compileModule(queueItem->sourcePath, queueItem->compiledModulePath, vector<string>());
-						moduleSearchPathContentsChanged(queueItem->cachedModulesPath, queueItem->compiledModulePath, queueItem->sourceCode, moduleLoadedCallback, compiler);
+						moduleFileChanged(queueItem->compiledModulePath, queueItem->sourceCode, moduleLoadedCallback, compiler, nullptr);
 					}
 					catch (VuoCompilerException &e)
 					{
@@ -2548,6 +2640,7 @@ void VuoCompiler::reset(void)
 {
 	dispatch_group_wait(moduleSourceCompilersExist, DISPATCH_TIME_FOREVER);
 
+	dispatch_sync(environmentQueue, ^{
 	for (vector< vector<Environment *> >::iterator i = sharedEnvironments.begin(); i != sharedEnvironments.end(); ++i)
 	{
 		(*i)[0]->stopWatchingModuleSearchPaths();
@@ -2571,6 +2664,7 @@ void VuoCompiler::reset(void)
 	allCompilers.clear();
 	sharedEnvironments.clear();
 	environmentsForCompositionFamily.clear();
+	});
 }
 
 /**
@@ -2876,9 +2970,9 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 														 std::function<void(void)> moduleLoadedCallback, const string &moduleAddedOrModifiedSourceCode)
 {
 	//VLog("C=%p E=%p -- %lu %lu %lu  %lu %lu %lu  %i %i", this, currentEnvironment,
-		 //modulesAddedKeys.size(), modulesModifiedKeys.size(), modulesRemovedKeys.size(),
-		 //sourcesAddedKeys.size(), sourcesModifiedKeys.size(), sourcesRemovedKeys.size(),
-		 //willLoadAllModules, shouldRecompileSourcesIfUnchanged);
+	     //modulesAddedKeys.size(), modulesModifiedKeys.size(), modulesRemovedKeys.size(),
+	     //sourcesAddedKeys.size(), sourcesModifiedKeys.size(), sourcesRemovedKeys.size(),
+	     //willLoadAllModules, shouldRecompileSourcesIfUnchanged);
 	//if (modulesAddedKeys.size() == 1) VLog("    %s", modulesAddedKeys.begin()->c_str());
 	//if (modulesModifiedKeys.size() == 1) VLog("    %s", modulesModifiedKeys.begin()->c_str());
 	//if (modulesRemovedKeys.size() == 1) VLog("    %s", modulesRemovedKeys.begin()->c_str());
@@ -3175,17 +3269,48 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 			actualModulesAdded[env].insert(actualModulesLoaded.begin(), actualModulesLoaded.end());
 			modulesToLoad.erase(env);
 
-			set<string> actualModulesLoadedKeys;
 			for (set<VuoCompilerModule *>::iterator j = actualModulesLoaded.begin(); j != actualModulesLoaded.end(); ++j)
 			{
 				set<string> dependencies = (*j)->getDependencies();
 				dependenciesToLoad.insert(dependencies.begin(), dependencies.end());
 				potentialSpecializedDependencies[genEnv].insert(dependencies.begin(), dependencies.end());
-				actualModulesLoadedKeys.insert((*j)->getPseudoBase()->getModuleKey());
 			}
 
-			if (!env->isBuiltIn() && !actualModulesLoadedKeys.empty())
-				VUserLog("Loaded into %s environment: %s", env->getName().c_str(), VuoStringUtilities::join(actualModulesLoadedKeys, ", ").c_str());
+			if (!env->isBuiltIn() && !actualModulesLoaded.empty())
+			{
+				map<string, string> actualFilesAndHashesLoaded;
+				for (auto module : actualModulesLoaded)
+				{
+					string path, hash;
+					if (module->getPseudoBase()->getNodeSet())
+						path = module->getPseudoBase()->getNodeSet()->getArchivePath();
+					else
+					{
+						auto cnc = dynamic_cast<VuoCompilerNodeClass *>(module);
+						if (cnc && !cnc->getSourcePath().empty())
+						{
+							path = cnc->getSourcePath();
+							if (!cnc->getSourceCode().empty())
+								// Use the latest source code, if it's been modified without saving.
+								hash = VuoStringUtilities::calculateSHA256(cnc->getSourceCode());
+						}
+						else
+							path = module->getModulePath();
+					}
+
+					if (hash.empty())
+						try
+						{
+							hash = VuoFileUtilities::calculateFileSHA256(path);
+						}
+						catch (VuoException &e) {}
+
+					actualFilesAndHashesLoaded[path] = hash;
+				}
+
+				for (pair<string, string> item : actualFilesAndHashesLoaded)
+					VUserLog("Loaded into %s environment:  [%8.8s] %s", env->getName().c_str(), item.second.c_str(), item.first.c_str());
+			}
 		}
 
 		for (vector< vector<Environment *> >::iterator i = environments.begin(); i != environments.end(); ++i)
@@ -3858,11 +3983,18 @@ Module * VuoCompiler::compileCompositionToModule(VuoCompilerComposition *composi
 	if (telemetry == "console")
 		generator->setDebugMode(true);
 
-	__block Module *module;
+	__block Module *module = nullptr;
 	dispatch_sync(llvmQueue, ^{
-					  module = generator->generateBitcode();
-					  setTargetForModule(module, target);
-				  });
+		try
+		{
+			module = generator->generateBitcode();
+			setTargetForModule(module, target);
+		}
+		catch (VuoCompilerException &e)
+		{
+			issues->append(e.getIssues());
+		}
+	});
 
 	delete generator;
 
@@ -3884,6 +4016,8 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 {
 	string moduleKey = getModuleKeyForPath(outputPath);
 	Module *module = compileCompositionToModule(composition, moduleKey, isTopLevelComposition, issues);
+	if (!module)
+		throw VuoCompilerException(issues, false);
 
 	dispatch_sync(llvmQueue, ^{
 					  writeModuleToBitcode(module, outputPath);
@@ -3977,11 +4111,7 @@ void VuoCompiler::compileSubcompositionString(const string &compositionString, c
 		issues->setFilePathIfEmpty(inputPathForIssues);
 	}
 
-	string outputDir, file, ext;
-	VuoFileUtilities::splitPath(outputPath, outputDir, file, ext);
-	VuoFileUtilities::canonicalizePath(outputDir);
-
-	environment->moduleSearchPathContentsChanged(outputDir, outputPath, compositionString, moduleLoadedCallback, this, issues);
+	environment->moduleFileChanged(outputPath, compositionString, moduleLoadedCallback, this, issues);
 }
 
 /**

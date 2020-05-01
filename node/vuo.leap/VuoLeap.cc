@@ -74,7 +74,6 @@ static VuoLeapTouchZone VuoLeap_vuoLeapTouchZoneFromLeapTouchZone(Leap::Pointabl
 		case Leap::Pointable::ZONE_HOVERING:
 			return VuoLeapTouchZone_Hovering;
 
-		default:
 		case Leap::Pointable::ZONE_NONE:
 			return VuoLeapTouchZone_None;
 	}

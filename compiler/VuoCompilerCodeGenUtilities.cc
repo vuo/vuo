@@ -9,6 +9,8 @@
 
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerConstantStringCache.hh"
+#include "VuoCompilerException.hh"
+#include "VuoCompilerIssue.hh"
 #include "VuoCompilerPort.hh"
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoCompilerType.hh"
@@ -5028,6 +5030,7 @@ Value * VuoCompilerCodeGenUtilities::unlowerArgument(VuoCompilerType *unloweredV
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
  * @return The first converted argument, to be passed to the first (and possibly only) function parameter corresponding to @a argument. May be the same as @a argument.
+ * @throw VuoCompilerException `argument` couldn't be converted to the function's parameter type.
  */
 Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argument, Function *function, int parameterIndex,
 																	Value **secondArgument, Module *module, BasicBlock *block)
@@ -5047,6 +5050,7 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
  * @return The first converted argument, to be passed to the first (and possibly only) function parameter corresponding to @a argument. May be the same as @a argument.
+ * @throw VuoCompilerException `argument` couldn't be converted to the function's parameter type.
  */
 Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argument, FunctionType *functionType, int parameterIndex, bool isPassedByValue,
 																	Value **secondArgument, Module *module, BasicBlock *block)
@@ -5172,11 +5176,14 @@ Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argum
 	{
 		string s;
 		raw_string_ostream oss(s);
-		oss << "functionType : "; functionType->print(oss);        oss << '\n';
-		oss << "argumentType : "; argument->getType()->print(oss); oss << '\n';
-		oss << "parameterType: "; parameterType->print(oss);
-		VUserLog("Warning: Couldn't convert an argument to the type of parameter %d:\n%s", parameterIndex, oss.str().c_str());
-		return nullptr;
+		oss << "Couldn't convert argument type `";
+		argument->getType()->print(oss);
+		oss << "` to parameter type `";
+		parameterType->print(oss);
+		oss << "` for function:  \n\n    ";
+		functionType->print(oss);
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling composition", "", "Unsupported composition layout", oss.str());
+		throw VuoCompilerException(issue);
 	}
 
 	return argument;

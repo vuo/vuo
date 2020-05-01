@@ -96,6 +96,9 @@ int main(int argc, char *argv[])
 			case 7:  // --template
 				doOpenTemplate = optarg;
 				break;
+			default:
+				VUserLog("Error: Unknown option %d.", optionIndex);
+				break;
 		}
 	}
 

@@ -65,6 +65,7 @@ add_library(VuoEditor STATIC
 	VuoMetadataEditor.cc
 	VuoMetadataEditor.ui
 	VuoModuleManager.cc
+	VuoNodeAndPortIdentifierCache.cc
 	VuoNodeClassList.cc
 	VuoNodeClassListItemDelegate.cc
 	VuoNodeClassListItemHighlighter.cc

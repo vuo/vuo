@@ -95,7 +95,13 @@ char * VuoWindowReference_getSummary(const VuoWindowReference value)
 	if (value == 0)
 		return strdup("No window");
 
-	return VuoText_format("window ID %p", value);
+	__block const char *title;
+	VuoApp_executeOnMainThread(^{
+		VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
+		title = window.title.UTF8String;
+	});
+
+	return VuoText_format("Title: “%s”", title);
 }
 
 /**

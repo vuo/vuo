@@ -15,9 +15,11 @@ VuoCompileNodes(
 	node-TestCompilingAndLinking/vuo.test.triggerCarryingPoint4d.c
 	node-TestCompilingAndLinking/vuo.test.triggerCarryingReal.c
 )
-add_dependencies(TestCompilingAndLinking TestCompilingAndLinking.nodes)
-
 VuoCompileTypes(
 	node-TestCompilingAndLinking/VuoTestFloat.c
 )
-add_dependencies(TestCompilingAndLinking TestCompilingAndLinking.types)
+add_dependencies(TestCompilingAndLinking
+	VuoEditorApp
+	TestCompilingAndLinking.nodes
+	TestCompilingAndLinking.types
+)

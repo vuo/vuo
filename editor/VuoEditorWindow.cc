@@ -2296,7 +2296,7 @@ VuoRendererNode * VuoEditorWindow::unspecializePortNetwork(VuoRendererPort *port
 	// Retrieve the set of networked nodes to be reverted and resulting cables to be disconnected.
 	map<VuoNode *, string> nodesToReplace;
 	set<VuoCable *> cablesToDelete;
-	composition->createReplacementsToUnspecializePort(port->getBase(), nodesToReplace, cablesToDelete);
+	composition->createReplacementsToUnspecializePort(port->getBase(), false, nodesToReplace, cablesToDelete);
 
 	// Disconnect the necessary cables.
 	QList<QGraphicsItem *> rendererCablesToDelete;
@@ -2315,7 +2315,7 @@ VuoRendererNode * VuoEditorWindow::unspecializePortNetwork(VuoRendererPort *port
 	// to replace, since nodes may have been added (in the case of collapsed drawers) or removed
 	// (in the case of collapsed typecasts) as a result of the cable deletions just performed.
 	nodesToReplace.clear();
-	composition->createReplacementsToUnspecializePort(port->getBase(), nodesToReplace, cablesToDelete);
+	composition->createReplacementsToUnspecializePort(port->getBase(), true, nodesToReplace, cablesToDelete);
 
 	map<VuoRendererNode *, VuoRendererNode *> nodesToUnspecialize;
 
@@ -5708,6 +5708,11 @@ void VuoEditorWindow::insertSubcompositionAtPos(QPointF targetScenePos)
 
 	string subcompositionContent = "digraph G {}";
 	VuoEditorWindow *subcompositionWindow = static_cast<VuoEditor *>(qApp)->newCompositionWithContent(subcompositionContent);
+	if (!subcompositionWindow)
+	{
+		VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
+		return;
+	}
 	subcompositionWindow->setIncludeInRecentFileMenu(false);
 	subcompositionWindow->showPublishedPortSidebars();
 	subcompositionWindow->setAsActiveWindow();

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Items from List",
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "SelectLayerFromList.vuo" ]
 					 }
@@ -25,8 +25,11 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) items
 )
 {
-	if(!positions)
+	if (VuoListGetCount_VuoInteger(positions) == 0)
+	{
+		*items = NULL;
 		return;
+	}
 
 	*items = VuoListCreate_VuoGenericType1();
 

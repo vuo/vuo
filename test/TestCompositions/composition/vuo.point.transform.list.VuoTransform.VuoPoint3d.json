@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"transform","inputPortValues":{"transform":"identity",                                                               "points":[]       },"outputPortValues":{"transformedPoints":[]                   }},
+	{"firingPort":"transform","inputPortValues":{"transform":"identity",                                                               "points":[]       },"outputPortValues":{"transformedPoints":null                 }},
 	{"firingPort":"transform","inputPortValues":{"transform":"identity",                                                               "points":[[1,2,3]]},"outputPortValues":{"transformedPoints":[{"x":1,"y":2,"z":3}]}},
 	{"firingPort":"transform","inputPortValues":{"transform":{"eulerRotation":[0,0,1.570796327],"translation":[0,0,0],"scale":[1,1,1]},"points":[[1,0,0]]},"outputPortValues":{"transformedPoints":[{"x":0,"y":1,"z":0}]}},
 ]}

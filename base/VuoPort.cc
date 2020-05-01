@@ -43,10 +43,13 @@ VuoPortClass * VuoPort::getClass(void)
  */
 vector<VuoCable *> VuoPort::getConnectedCables(bool includePublishedCables)
 {
+	if (includePublishedCables)
+		return connectedCables;
+
 	vector<VuoCable *> targetCables;
 	for (vector<VuoCable *>::iterator cable = connectedCables.begin(); cable != connectedCables.end(); ++cable)
 	{
-		if (includePublishedCables || (! (*cable)->isPublished()))
+		if (! (*cable)->isPublished())
 			targetCables.push_back(*cable);
 	}
 

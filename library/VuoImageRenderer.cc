@@ -162,7 +162,8 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 		glViewport(0, 0, pixelsWide, pixelsHigh);
 
 		// Create a new GL Texture Object.
-		GLenum textureFormat = VuoShader_isOpaque(shader) ? GL_BGR : GL_BGRA;
+		bool shaderOpaque = VuoShader_isOpaque(shader);
+		GLenum textureFormat = shaderOpaque ? GL_BGR : GL_BGRA;
 		GLuint textureTarget = (outputToIOSurface || outputToGlTextureRectangle) ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
 		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(textureFormat, imageColorDepth);
 		if (outputInternalFormat)
@@ -184,8 +185,11 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
 //		VLog("glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, %s, %d, 0);", VuoGl_stringForConstant(textureTarget), outputTexture);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, outputTexture, 0);
 
-		glClearColor(0,0,0,0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (!shaderOpaque)
+		{
+			glClearColor(0,0,0,0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
 
 		// Execute the shader.
 		{

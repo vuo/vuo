@@ -287,6 +287,8 @@ void VuoPublishedPortSidebar::appendPublishedPortToList(VuoPublishedPort *port, 
  */
 void VuoPublishedPortSidebar::highlightEligibleDropLocations(VuoRendererPort *internalFixedPort, bool eventOnlyConnection)
 {
+	auto types = composition->getCompiler()->getTypes();
+
 	int numPorts = ui->publishedPortList->count();
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
@@ -297,7 +299,7 @@ void VuoPublishedPortSidebar::highlightEligibleDropLocations(VuoRendererPort *in
 		publishedPortToHighlight->setCacheMode(QGraphicsItem::NoCache);
 		publishedPortToHighlight->updateGeometry();
 
-		VuoRendererColors::HighlightType highlight = composition->getEligibilityHighlightingForPort(publishedPortToHighlight, internalFixedPort, eventOnlyConnection);
+		VuoRendererColors::HighlightType highlight = composition->getEligibilityHighlightingForPort(publishedPortToHighlight, internalFixedPort, eventOnlyConnection, types);
 		publishedPortToHighlight->setEligibilityHighlight(highlight);
 
 		publishedPortToHighlight->setCacheMode(normalCacheMode);

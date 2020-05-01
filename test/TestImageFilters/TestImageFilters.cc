@@ -129,6 +129,7 @@ private slots:
 
 			// Ensure the output image is non-null.
 			json_object *out = runner->getPublishedOutputPortValue(outputImagePort);
+			QEXPECT_FAIL("vuo.image.combine.stereo", "Combining stereo images requires both images, but we only set one of them.", Abort);
 			QVERIFY(out);
 			VuoImage outputImage = VuoImage_makeFromJson(out);
 			QVERIFY(outputImage);

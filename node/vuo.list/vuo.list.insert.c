@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Insert in List",
 					 "keywords" : [ "push", "append", "prepend", "insert", "combine", "place", "middle", "add" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						 "exampleCompositions": [ "InsertSquare.vuo" ]
 					 }
@@ -26,6 +26,9 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) modifiedList
 )
 {
-	*modifiedList = VuoListCopy_VuoGenericType1(list);
+	if (list)
+		*modifiedList = VuoListCopy_VuoGenericType1(list);
+	else
+		*modifiedList = VuoListCreate_VuoGenericType1();
 	VuoListInsertValue_VuoGenericType1(*modifiedList, item, MAX(position, 0));
 }

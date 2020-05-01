@@ -277,7 +277,7 @@ void VuoNodeClass::setRefreshPortClass(VuoPortClass * refreshPortClass)
  * with the exception that the refresh port is always present (even if not specified in the node class
  * implementation's event function) and is always first.
  */
-vector<VuoPortClass *> VuoNodeClass::getInputPortClasses(void)
+vector<VuoPortClass *> &VuoNodeClass::getInputPortClasses(void)
 {
 	return inputPortClasses;
 }
@@ -295,7 +295,7 @@ void VuoNodeClass::setInputPortClasses(vector<VuoPortClass *> inputPortClasses)
  *
  * The port classes are listed in the order defined in the node class implementation's event function.
  */
-vector<VuoPortClass *> VuoNodeClass::getOutputPortClasses(void)
+vector<VuoPortClass *> &VuoNodeClass::getOutputPortClasses(void)
 {
 	return outputPortClasses;
 }

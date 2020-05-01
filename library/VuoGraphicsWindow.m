@@ -357,7 +357,15 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		VDebugLog("%s", VuoWindowProperty_getSummary(property));
 
 		if (property.type == VuoWindowProperty_Title)
+		{
 			self.title = property.title ? [NSString stringWithUTF8String:property.title] : @"";
+			if (_updatedWindow)
+			{
+				VuoRenderedLayers rl = VuoRenderedLayers_makeEmpty();
+				VuoRenderedLayers_setWindow(rl, VuoWindowReference_make(self));
+				_updatedWindow(rl);
+			}
+		}
 		else if (property.type == VuoWindowProperty_FullScreen)
 		{
 			NSScreen *requestedScreen = VuoScreen_getNSScreen(property.screen);

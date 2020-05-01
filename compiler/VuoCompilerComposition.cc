@@ -307,8 +307,9 @@ void VuoCompilerComposition::checkForMissingNodeClasses(VuoCompilerIssues *issue
 		issue.setNodes(missingNodes);
 		issue.setHint(hint);
 		issue.setLink(linkUrl, linkText);
-		issues->append(issue);
-		throw VuoCompilerException(issues, false);
+		if (issues)
+			issues->append(issue);
+		throw VuoCompilerException(issue);
 	}
 }
 
@@ -342,6 +343,7 @@ void VuoCompilerComposition::checkForMissingTypes(VuoCompilerIssues *issues)
 
 	if (! missingTypes.empty())
 	{
+		auto exceptionIssues = new VuoCompilerIssues;
 		for (auto i : missingTypes)
 		{
 			vector<string> nodeClassNames(i.second.begin(), i.second.end());
@@ -353,10 +355,12 @@ void VuoCompilerComposition::checkForMissingTypes(VuoCompilerIssues *issues)
 
 			VuoCompilerIssue issue(VuoCompilerIssue::Error, "opening composition", "", summary, details);
 			issue.setHint(hint);
-			issues->append(issue);
+			exceptionIssues->append(issue);
+			if (issues)
+				issues->append(issue);
 		}
 
-		throw VuoCompilerException(issues, false);
+		throw VuoCompilerException(exceptionIssues, true);
 	}
 }
 

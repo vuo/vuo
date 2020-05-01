@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration":{
-	"empty"                   :{"firingPort":"controlPoints", "inputPortValues":{"controlPoints":[     ], "tweenPointCount":1, "tension": 0, "continuity": 0, "bias": 0}, "outputPortValues":{"splinePoints":[       ]}},
+	"empty"                   :{"firingPort":"controlPoints", "inputPortValues":{"controlPoints":[     ], "tweenPointCount":1, "tension": 0, "continuity": 0, "bias": 0}, "outputPortValues":{"splinePoints":null     }},
 	"1 point: passthru"       :{"firingPort":"controlPoints", "inputPortValues":{"controlPoints":[0    ], "tweenPointCount":1, "tension": 0, "continuity": 0, "bias": 0}, "outputPortValues":{"splinePoints":[0      ]}},
 	"2 points: passthru"      :{"firingPort":"controlPoints", "inputPortValues":{"controlPoints":[0,1  ], "tweenPointCount":1, "tension": 0, "continuity": 0, "bias": 0}, "outputPortValues":{"splinePoints":[0, 1   ]}},
 	"3 points: passthru"      :{"firingPort":"controlPoints", "inputPortValues":{"controlPoints":[0,1,2], "tweenPointCount":1, "tension": 0, "continuity": 0, "bias": 0}, "outputPortValues":{"splinePoints":[0, 1, 2]}},

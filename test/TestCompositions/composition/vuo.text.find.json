@@ -8,12 +8,12 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":null}, "outputPortValues": {"occurrences":[]     }},
-	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
-	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":null}, "outputPortValues": {"occurrences":[]     }},
-	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":null}, "outputPortValues": {"occurrences":null   }},
+	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":""  }, "outputPortValues": {"occurrences":null   }},
+	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":null}, "outputPortValues": {"occurrences":null   }},
+	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":""  }, "outputPortValues": {"occurrences":null   }},
 
-	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":""  }, "outputPortValues": {"occurrences":null   }},
 	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":"1" }, "outputPortValues": {"occurrences":[]     }},
 
 	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":"a" }, "outputPortValues": {"occurrences":[1]    }},

@@ -163,7 +163,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 								   "Missing source code",
 								   "%module uses generic types, but its source code isn't included in its node set. "
 								   "If you are the author of this node, see the API documentation section \"Generic port types\" "
-								   "under \"Developing a node class\" (https://api.vuo.org/latest/group__DevelopingNodeClasses.html). "
+								   "under \"Developing a node class\" (https://api.vuo.org/latest/group___developing_node_classes.html). "
 								   "Otherwise, contact the author of this node.");
 			issue.setModule(genericNodeClass->getBase());
 			throw VuoCompilerException(issue);
@@ -701,32 +701,23 @@ map<string, string> VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPort
  */
 VuoType * VuoCompilerSpecializedNodeClass::getOriginalPortType(VuoPortClass *portClass)
 {
-	vector<VuoPortClass *> specializedPortClasses;
+	int i = 0;
+	for (auto specializedPortClass : getBase()->getInputPortClasses())
 	{
-		vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
-		vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
-		specializedPortClasses.insert(specializedPortClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
-		specializedPortClasses.insert(specializedPortClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+		if (specializedPortClass == portClass)
+			return static_cast<VuoCompilerPortClass *>(genericNodeClass->getBase()->getInputPortClasses()[i]->getCompiler())->getDataVuoType();
+		++i;
 	}
 
-	vector<VuoPortClass *> genericPortClasses;
+	i = 0;
+	for (auto specializedPortClass : getBase()->getOutputPortClasses())
 	{
-		vector<VuoPortClass *> inputPortClasses = genericNodeClass->getBase()->getInputPortClasses();
-		vector<VuoPortClass *> outputPortClasses = genericNodeClass->getBase()->getOutputPortClasses();
-		genericPortClasses.insert(genericPortClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
-		genericPortClasses.insert(genericPortClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+		if (specializedPortClass == portClass)
+			return static_cast<VuoCompilerPortClass *>(genericNodeClass->getBase()->getOutputPortClasses()[i]->getCompiler())->getDataVuoType();
+		++i;
 	}
 
-	for (int i = 0; i < specializedPortClasses.size(); ++i)
-	{
-		if (specializedPortClasses[i] == portClass)
-		{
-			VuoCompilerPortClass *compilerPortClass = static_cast<VuoCompilerPortClass *>(genericPortClasses[i]->getCompiler());
-			return compilerPortClass->getDataVuoType();
-		}
-	}
-
-	return NULL;
+	return nullptr;
 }
 
 /**

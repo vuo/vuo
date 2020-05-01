@@ -51,6 +51,7 @@ private:
 	vector<QGraphicsItem *> searchResults;
 	int currentResultIndex;
 	QLabel *resultCount;
+	QString noResultsText;
 	vector<QGraphicsItem *> getCurrentSearchResults(const QString &searchText);
 	vector<QGraphicsItem *> findDeprecatedNodes();
 	vector<QGraphicsItem *> findSubcompositionNodes();
