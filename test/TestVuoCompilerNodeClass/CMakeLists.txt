@@ -6,3 +6,4 @@ target_link_libraries(TestVuoCompilerNodeClass
 	PRIVATE
 	TestVuoCompiler
 )
+add_dependencies(TestVuoCompilerNodeClass VuoEditorApp)

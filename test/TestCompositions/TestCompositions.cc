@@ -83,7 +83,7 @@ public:
 	 */
 	void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary)
 	{
-		if (! sentData || isStopping)
+		if (isStopping)
 			return;
 
 		dispatch_semaphore_wait(portConfigurationsSemaphore, DISPATCH_TIME_FOREVER);

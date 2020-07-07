@@ -130,17 +130,6 @@ target_link_libraries(VuoEditor
 	${PROJECT_BINARY_DIR}/library/VuoImageResize.o
 )
 
-
-# `VUO_NOMINAL_REVISION` is the revision at which cmake was first run in this build folder
-# (i.e., when it started from an empty cache).
-# This value is cached because the revision changes frequently,
-# and when the revision changes that causes the editor to rebuild (because its COMPILE_DEFINITIONS change),
-# which takes a while.
-if (NOT DEFINED CACHE{VUO_NOMINAL_REVISION})
-	set(VUO_NOMINAL_REVISION ${VUO_REVISION} CACHE INTERNAL "")
-endif()
-set_property(SOURCE VuoEditorAboutBox.cc APPEND PROPERTY COMPILE_DEFINITIONS "VUO_REVISION=\"r${VUO_NOMINAL_REVISION}\"")
-
 if (VuoPro)
 	include(pro/pro.cmake)
 endif()

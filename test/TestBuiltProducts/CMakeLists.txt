@@ -16,5 +16,4 @@ add_dependencies(TestBuiltProducts
 	vuo-debug
 	vuo-export
 	vuo-link
-	vuo-render
 )

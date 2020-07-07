@@ -536,7 +536,7 @@ function (VuoCompileCompositions target)
 endfunction()
 
 
-# Renders a PNG and PDF of the specified nodes or compositions using `vuo-render`.
+# Renders a PNG and PDF of the specified nodes or compositions using `vuo-export source`.
 function (VuoRender target)
 	set(nodes ${ARGN})
 
@@ -553,10 +553,10 @@ function (VuoRender target)
 		set(nodePNG "${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}.png")
 		set(nodePDF "${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}.pdf")
 		add_custom_command(
-			DEPENDS vuo-render
+			DEPENDS vuo-export
 			COMMENT "Rendering ${nodeName}"
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-render --output-format=pdf --output ${nodePDF} ${node}
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-render --output-format=png --output ${nodePNG} ${node}
+			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-export source --format=pdf --output ${nodePDF} ${node}
+			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-export source --format=png --output ${nodePNG} ${node}
 			COMMAND pngquant ${nodePNG}
 			COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}-fs8.png ${nodePNG}
 			OUTPUT ${nodePDF} ${nodePNG}

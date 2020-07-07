@@ -2,7 +2,7 @@
  * @file
  * Vuo Image Transition driver.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
@@ -24,7 +24,7 @@ GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<re
 GetDragValues2 [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="-255,-15"];
 GetFirstItemInList2 [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="240,240"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="585,-30" fillcolor="cyan"];
-GetWindowDimensions [type="vuo.window.get.dimensions2" version="2.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r|<isFullscreen>isFullscreen\r" pos="-705,450"];
+GetWindowDimensions2 [type="vuo.window.get.dimensions3" version="3.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<unit>unit\l|<topLeft>topLeft\r|<bottomRight>bottomRight\r|<width>width\r|<height>height\r|<aspectRatio>aspectRatio\r" pos="-720,480" _unit="\"vuo\""];
 HoldValue [type="vuo.data.hold2.VuoLayer" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-855,255"];
 HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="720,-45" fillcolor="cyan"];
 HoldValue3 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="720,45" fillcolor="cyan"];
@@ -84,9 +84,9 @@ GetDragValues:urls -> GetFirstItemInList2:list;
 GetFirstItemInList2:firstItem -> SelectOutput:in;
 GetImage:image -> HoldValue2:value;
 GetImage:image -> IsImagePopulated:image;
-GetWindowDimensions:height -> MakeTextLayer3:text [event=true];
-GetWindowDimensions:height -> MakeTextLayer:text [event=true];
-GetWindowDimensions:height -> Subtract:a;
+GetWindowDimensions2:height -> MakeTextLayer3:text [event=true];
+GetWindowDimensions2:height -> MakeTextLayer:text [event=true];
+GetWindowDimensions2:height -> Subtract:a;
 HoldValue2:heldValue -> PublishedOutputs:startImage;
 HoldValue3:heldValue -> PublishedOutputs:endImage;
 HoldValue4:heldValue -> IsPointWithinLayer2:layer;
@@ -116,7 +116,7 @@ ReceiveFileDrags:dragEntered -> Switch:turnOn;
 ReceiveFileDrags:dragExited -> Switch:turnOff;
 ReceiveFileDrags:dragMovedTo -> GetDragValues2:drag;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
-RenderLayersToWindow:updatedWindow -> GetWindowDimensions:window [style=invis];
+RenderLayersToWindow:updatedWindow -> GetWindowDimensions2:window [style=invis];
 RenderLayersToWindow:updatedWindow -> IsPointWithinLayer2:window [style=invis];
 RenderLayersToWindow:updatedWindow -> IsPointWithinLayer:window [style=invis];
 RenderLayersToWindow:updatedWindow -> ReceiveFileDrags:window [style=invis];

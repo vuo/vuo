@@ -14,11 +14,14 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Integer",
-					 "description" : "A signed 64-bit integer.",
-					 "keywords" : [ "number", "signed" ],
-					 "version" : "1.0.0"
-				 });
+	"title": "Integer",
+	"description": "A signed 64-bit integer.",
+	"keywords": [ "number", "signed" ],
+	"version": "1.0.0",
+	"dependencies": [
+		"VuoList_VuoInteger",
+	],
+});
 #endif
 /// @}
 
@@ -70,21 +73,23 @@ char * VuoInteger_getSummary(const VuoInteger value)
 }
 
 /**
- * Returns the minimum of an array of terms, or 0 if the array is empty.
+ * Returns the minimum of a list of terms, or 0 if the array is empty.
  */
-VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition)
+VuoInteger VuoInteger_minList(VuoList_VuoInteger values, VuoInteger *outputPosition)
 {
-	if (termsCount == 0)
+	unsigned long count = VuoListGetCount_VuoInteger(values);
+	if (count == 0)
 	{
 		*outputPosition = 0;
 		return 0;
 	}
 
+	VuoInteger *integers = VuoListGetData_VuoInteger(values);
 	VuoInteger min = LONG_MAX;
-	for (unsigned long i = 0; i < termsCount; ++i)
-		if (terms[i] < min)
+	for (unsigned long i = 0; i < count; ++i)
+		if (integers[i] < min)
 		{
-			min = terms[i];
+			min = integers[i];
 			*outputPosition = i + 1;
 		}
 
@@ -92,25 +97,43 @@ VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount, VuoIntege
 }
 
 /**
- * Returns the maximum of an array of terms, or 0 if the array is empty.
+ * Returns the maximum of a list of terms, or 0 if the array is empty.
  */
-VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition)
+VuoInteger VuoInteger_maxList(VuoList_VuoInteger values, VuoInteger *outputPosition)
 {
-	if (termsCount == 0)
+	unsigned long count = VuoListGetCount_VuoInteger(values);
+	if (count == 0)
 	{
 		*outputPosition = 0;
 		return 0;
 	}
 
+	VuoInteger *integers = VuoListGetData_VuoInteger(values);
 	VuoInteger max = LONG_MIN;
-	for (unsigned long i = 0; i < termsCount; ++i)
-		if (terms[i] > max)
+	for (unsigned long i = 0; i < count; ++i)
+		if (integers[i] > max)
 		{
-			max = terms[i];
+			max = integers[i];
 			*outputPosition = i + 1;
 		}
 
 	return max;
+}
+
+/**
+ * Returns the average of the values in the list, or 0 if the list is empty.
+ */
+VuoInteger VuoInteger_average(VuoList_VuoInteger values)
+{
+	VuoInteger count = VuoListGetCount_VuoInteger(values);
+	if (count == 0)
+		return 0;
+
+	VuoInteger sum = 0;
+	for (VuoInteger i = 1; i <= count; ++i)
+		sum += VuoListGetValue_VuoInteger(values, i);
+
+	return sum/count;
 }
 
 /**
@@ -289,9 +312,37 @@ bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2)
 }
 
 /**
+ * Returns true if the two values are equal within `tolerance`.
+ */
+bool VuoInteger_areEqualListWithinTolerance(VuoList_VuoInteger values, VuoInteger tolerance)
+{
+	unsigned long count = VuoListGetCount_VuoInteger(values);
+	if (count <= 1)
+		return true;
+
+	VuoInteger *integers = VuoListGetData_VuoInteger(values);
+	VuoInteger min, max;
+	min = max = integers[0];
+	for (unsigned long i = 1; i < count; ++i)
+	{
+		min = MIN(min, integers[i]);
+		max = MAX(max, integers[i]);
+	}
+	return (max - min) <= tolerance;
+}
+
+/**
  * Returns true if a < b.
  */
 bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b)
 {
 	return a < b;
+}
+
+/**
+ * Returns true if `value` is between `minimum` and `maximum`.
+ */
+bool VuoInteger_isWithinRange(VuoInteger value, VuoInteger minimum, VuoInteger maximum)
+{
+    return minimum <= value && value <= maximum;
 }

@@ -23,32 +23,6 @@ VuoModuleMetadata({
 					  }
 				  });
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-
-static VuoInteger VuoInteger_make1(void)
-{
-	return 1;
-}
-static VuoReal VuoReal_make1(void)
-{
-	return 1;
-}
-static VuoPoint2d VuoPoint2d_make1(void)
-{
-	return (VuoPoint2d){1,1};
-}
-static VuoPoint3d VuoPoint3d_make1(void)
-{
-	return (VuoPoint3d){1,1,1};
-}
-static VuoPoint4d VuoPoint4d_make1(void)
-{
-	return (VuoPoint4d){1,1,1,1};
-}
-
-#pragma clang diagnostic pop
-
 void nodeEvent
 (
 		VuoInputData(VuoList_VuoGenericType1) list1,
@@ -66,13 +40,13 @@ void nodeEvent
 		if (list1Count)
 			v1 = VuoListGetValue_VuoGenericType1(list1, i);
 		else
-			v1 = VuoGenericType1_make1();
+			v1 = 1;
 
 		VuoGenericType1 v2;
 		if (list2Count)
 			v2 = VuoListGetValue_VuoGenericType1(list2, i);
 		else
-			v2 = VuoGenericType1_make1();
+			v2 = 1;
 
 		VuoGenericType1 product = VuoGenericType1_scale(v1, v2);
 		VuoListAppendValue_VuoGenericType1(*productList, product);

@@ -31,6 +31,7 @@ The Scale Factor is used by nodes that convert between pixels and points:
       - [Make Cartoon Image](vuo-node://vuo.image.toon)
       - [Outline Image](vuo-node://vuo.image.outline)
       - [Sharpen Image](vuo-node://vuo.image.sharpen)
+      - [Skeletonize Image](vuo-node://vuo.image.skeletonize)
    - [Render Image to Window](vuo-node://vuo.image.render.window2):
 
 Image filter nodes give their output image the same scale factor as the input image.

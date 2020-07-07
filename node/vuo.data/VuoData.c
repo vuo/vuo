@@ -94,7 +94,7 @@ bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB)
 char *VuoData_getSummary(const VuoData value)
 {
 	if (value.data)
-		return VuoText_format("%lld bytes of data", value.size);
+		return VuoText_format("%lld byte%s of data", value.size, value.size == 1 ? "" : "s");
 	else
 		return strdup("no data");
 }

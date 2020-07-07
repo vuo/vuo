@@ -10,28 +10,28 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Keep Average",
-					  "keywords" : [ "mix", "combine", "mean", "midpoint", "middle",
-						  "Kalman filter",
-						  "store", "retain", "hold", "sample", "preserve"
-					  ],
-					  "version" : "1.0.1",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
-						  }
-					  },
-					  "node": {
-						  "exampleCompositions" : [ "AverageRandomPoints.vuo" ]
-					  }
-				  });
-
+    "title": "Keep Average",
+    "keywords": [
+        "mix", "combine", "mean", "midpoint", "middle",
+        "Kalman filter",
+        "store", "retain", "hold", "sample", "preserve",
+    ],
+    "version": "1.1.0",
+    "genericTypes": {
+        "VuoGenericType1": {
+            "defaultType": "VuoReal",
+            "compatibleTypes" : [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+        },
+    },
+    "node": {
+        "exampleCompositions": [ "AverageRandomPoints.vuo" ],
+    },
+});
 
 struct nodeInstanceData
 {
 	unsigned long valueCount;
-	VuoReal average;
+	VuoGenericType1 average;
 };
 
 struct nodeInstanceData *nodeInstanceInit(void)
@@ -59,6 +59,8 @@ void nodeInstanceEvent
 	else
 	{
 		++(*state)->valueCount;
-		*average = (*state)->average = ((*state)->average * ((*state)->valueCount - 1.) + value) / (*state)->valueCount;
+		VuoGenericType1 countMinusOne = (*state)->valueCount - 1;
+		VuoGenericType1 count = (*state)->valueCount;
+		*average = (*state)->average = ((*state)->average * countMinusOne + value) / count;
 	}
 }

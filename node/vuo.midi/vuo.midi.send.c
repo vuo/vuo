@@ -52,22 +52,15 @@ struct nodeInstanceData * nodeInstanceInit
 	return context;
 }
 
-void nodeInstanceEvent
-(
-		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoMidiOutputDevice) device,
-		VuoInputData(VuoMidiNote) sendNote,
-		VuoInputEvent({"eventBlocking":"none","data":"sendNote"}) sendNoteEvent,
-		VuoInputData(VuoMidiController) sendController,
-		VuoInputEvent({"eventBlocking":"none","data":"sendController"}) sendControllerEvent,
-		VuoInputData(VuoMidiPitchBend) sendPitchBend,
-		VuoInputEvent({"eventBlocking":"none","data":"sendPitchBend"}) sendPitchBendEvent
-//		VuoInputData(VuoMidiAftertouch,"") aftertouch,
-//		VuoInputData(VuoMidiCommand,"") command,
-//		VuoInputData(VuoMidiClock,"") clock,
-//		VuoInputData(VuoMidiTimecode,"") timecode,
-//		VuoInputData(VuoMidiSysEx,"") sysEx
-)
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoMidiNote) sendNote,
+	VuoInputEvent({"eventBlocking":"none","data":"sendNote"}) sendNoteEvent,
+	VuoInputData(VuoMidiController) sendController,
+	VuoInputEvent({"eventBlocking":"none","data":"sendController"}) sendControllerEvent,
+	VuoInputData(VuoMidiPitchBend) sendPitchBend,
+	VuoInputEvent({"eventBlocking":"none","data":"sendPitchBend"}) sendPitchBendEvent,
+	VuoInputData(VuoMidiOutputDevice) device)
 {
 	if (! VuoMidiOutputDevice_areEqual(device, (*context)->device))
 		updateDevice(*context, device);

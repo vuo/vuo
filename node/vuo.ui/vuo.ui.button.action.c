@@ -253,7 +253,7 @@ static void renderButton(struct nodeInstanceData *context)
 		}
 		iconRectangle.center = iconContainerRectangle.center;
 
-		VuoLayer iconLayer = VuoLayer_make(VuoText_make(""), context->icon, iconRectangle.center, 0, iconRectangle.size.x, 1);
+		VuoLayer iconLayer = VuoLayer_make(VuoText_make(""), context->icon, iconRectangle.center, 0, iconRectangle.size.x, VuoOrientation_Horizontal, 1);
 		VuoListAppendValue_VuoLayer(layers, iconLayer);
 	}
 

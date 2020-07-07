@@ -4700,7 +4700,7 @@ void VuoEditorComposition::buildComposition(string compositionSnapshot, const se
 
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
 		compiler->compileComposition(runningComposition, compiledCompositionPath, true, issues);
-		compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, runningCompositionLibraries);
+		compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, runningCompositionLibraries.get());
 		delete issues;
 
 		remove(compiledCompositionPath.c_str());
@@ -4770,7 +4770,7 @@ void VuoEditorComposition::run(string compositionSnapshot)
 	dispatch_async(runCompositionQueue, ^{
 		try
 		{
-		   runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		   runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 
 		   buildComposition(compositionSnapshot);
 
@@ -4825,7 +4825,8 @@ void VuoEditorComposition::stop(void)
 					   runner = NULL;
 
 					   linkedCompositionPath = "";
-					   runningCompositionLibraries = NULL;
+
+					   runningCompositionLibraries = nullptr;  // release shared_ptr
 
 					   delete runningComposition;
 					   runningComposition = NULL;
@@ -7362,7 +7363,7 @@ void VuoEditorComposition::updateDataInPortPopoverFromRunningTopLevelComposition
 		VuoPortPopover *popover = popoverComposition->getActivePopoverForPort(portID);
 		if (popover)
 		{
-			QMetaObject::invokeMethod(popover, "updateCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, portSummary.c_str()));
+			QMetaObject::invokeMethod(popover, "updateDataValueImmediately", Qt::QueuedConnection, Q_ARG(QString, portSummary.c_str()));
 			QMetaObject::invokeMethod(popover, "setCompositionRunning", Qt::QueuedConnection, Q_ARG(bool, true), Q_ARG(bool, false));
 		}
 	});
@@ -7397,16 +7398,11 @@ void VuoEditorComposition::receivedTelemetryInputPortUpdated(string compositionI
 	{
 		dispatch_sync(matchingComposition->activePortPopoversQueue, ^{
 			VuoPortPopover *popover = matchingComposition->getActivePopoverForPort(portIdentifier);
-
 			if (popover)
-			{
-			   if (receivedEvent && receivedData)
-				   QMetaObject::invokeMethod(popover, "updateLastEventTimeAndCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, dataSummary.c_str()));
-			   else if (receivedEvent)
-				   QMetaObject::invokeMethod(popover, "updateLastEventTime", Qt::QueuedConnection);
-			   else if (receivedData)
-				   QMetaObject::invokeMethod(popover, "updateCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, dataSummary.c_str()));
-			}
+			   QMetaObject::invokeMethod(popover, "updateLastEventTimeAndDataValue", Qt::QueuedConnection,
+										 Q_ARG(bool, receivedEvent),
+										 Q_ARG(bool, receivedData),
+										 Q_ARG(QString, dataSummary.c_str()));
 		});
 	};
 	static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->applyToLinkedCompositionWithIdentifier(this, compositionIdentifier, updatePortDisplay);
@@ -7423,16 +7419,11 @@ void VuoEditorComposition::receivedTelemetryOutputPortUpdated(string composition
 	{
 		dispatch_sync(matchingComposition->activePortPopoversQueue, ^{
 			VuoPortPopover *popover = matchingComposition->getActivePopoverForPort(portIdentifier);
-
 			if (popover)
-			{
-				if (sentEvent && sentData)
-					QMetaObject::invokeMethod(popover, "updateLastEventTimeAndCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, dataSummary.c_str()));
-				else if (sentEvent)
-					QMetaObject::invokeMethod(popover, "updateLastEventTime", Qt::QueuedConnection);
-				else if (sentData)
-					QMetaObject::invokeMethod(popover, "updateCachedDataValue", Qt::QueuedConnection, Q_ARG(QString, dataSummary.c_str()));
-			}
+				QMetaObject::invokeMethod(popover, "updateLastEventTimeAndDataValue", Qt::QueuedConnection,
+										  Q_ARG(bool, sentEvent),
+										  Q_ARG(bool, sentData),
+										  Q_ARG(QString, dataSummary.c_str()));
 		});
 
 		if (matchingComposition->showEventsMode && sentEvent)
@@ -7929,6 +7920,7 @@ QString VuoEditorComposition::formatNodeSetNameForDisplay(QString nodeSetName)
 	wordsToReformat["bcf2000"] = "BCF2000";
 	wordsToReformat["hid"] = "HID";
 	wordsToReformat["midi"] = "MIDI";
+	wordsToReformat["ndi"] = "NDI";
 	wordsToReformat["osc"] = "OSC";
 	wordsToReformat["rss"] = "RSS";
 	wordsToReformat["ui"] = "UI";

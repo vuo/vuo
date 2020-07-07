@@ -13,13 +13,13 @@
 extern "C" {
 #endif
 
+#include "VuoBlendMode.h"
 #include "VuoImage.h"
-#include "VuoList_VuoImage.h"
 
-typedef void *VuoImageBlend;	///< State data for the image blender.
+typedef void *VuoImageBlend;  ///< State data for the image blender.
 
-VuoImageBlend VuoImageBlend_make(void);
-VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoList_VuoImage images);
+VuoImageBlend VuoImageBlend_make(VuoBlendMode blendMode);
+VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoImage background, VuoImage foreground, VuoReal foregroundOpacity, VuoBoolean replaceOpacity);
 
 #ifdef __cplusplus
 }

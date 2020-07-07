@@ -21,7 +21,7 @@ The diagram below shows the placement of a layer created by [Make Text Layer](vu
 Most of the nodes that create layers input a size, which determines how big the layer is relative to the composite image. For example:
 
    - The [Make Rectangle Layer](vuo-node://vuo.layer.make.rect) node has Width and Height input ports.
-   - The [Make Image Layer (Scaled)](vuo-node://vuo.layer.make.scaled) node has a Width input port. The layer's height is determined by the aspect ratio of the input image.
+   - The [Make Image Layer (Scaled)](vuo-node://vuo.layer.make.scaled) node has a Size input port, to specify the width or height of the layer. (The layer's other dimension is determined by the aspect ratio of the input image.)
    - The [Make Text Layer](vuo-node://vuo.layer.make.text2) node has a Font input port. The layer's width and height are calculated based on the font size and the size of the window or image in which the layer is being rendered.
 
 The layers outputted by these nodes are called **scaled layers** because their size scales with the size of the composite image.

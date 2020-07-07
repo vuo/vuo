@@ -2,6 +2,23 @@ VuoCompileTypes(
 	VuoDmxColorMap.c
 )
 
+VuoCompileLibraries(
+	VuoColorspace.m
+)
+target_include_directories(vuo.color.libraries
+	PRIVATE
+		../vuo.data
+)
+
+VuoCompileGenericNodes(
+	vuo.color.get.icc.c
+	vuo.color.make.icc.c
+)
+target_include_directories(vuo.color.nodes.generic
+	PRIVATE
+		../vuo.data
+)
+
 VuoCompileNodes(
 	vuo.color.average.c
 	vuo.color.blend.c
@@ -15,6 +32,10 @@ VuoCompileNodes(
 	vuo.color.make.hsl.c
 	vuo.color.make.cmyk.c
 	vuo.color.make.rgb.c
+)
+target_include_directories(vuo.color.nodes
+	PRIVATE
+		../vuo.data
 )
 
 VuoNodeSet()

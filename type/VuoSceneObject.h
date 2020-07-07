@@ -18,6 +18,7 @@
 #include "VuoPoint3d.h"
 #include "VuoBlendMode.h"
 #include "VuoFont.h"
+#include "VuoOrientation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,8 +73,8 @@ VuoSceneObject VuoSceneObject_makeGroup(VuoList_VuoSceneObject childObjects, Vuo
 VuoSceneObject VuoSceneObject_makeMesh(VuoMesh mesh, VuoShader shader, VuoTransform transform);
 VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
 VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
-VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
-VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
+VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha);
+VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
 VuoSceneObject VuoSceneObject_makeCube1(VuoTransform transform, VuoShader shader);
 VuoSceneObject VuoSceneObject_makeCube_VuoShader(VuoTransform transform, VuoShader shader);

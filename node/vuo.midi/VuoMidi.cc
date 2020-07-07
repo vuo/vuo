@@ -279,6 +279,9 @@ struct VuoMidiIn_internal
  */
 void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *message, void *userData)
 {
+	if (message->size() == 0)
+		return;
+
 	struct VuoMidiIn_internal *mii = (struct VuoMidiIn_internal *)userData;
 	unsigned char channel = ((*message)[0] & 0x0f) + 1;
 	if (((*message)[0] & 0xf0) == 0x80) // Note Off

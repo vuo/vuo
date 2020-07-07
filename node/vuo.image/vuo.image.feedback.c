@@ -74,6 +74,7 @@ void nodeInstanceEvent
 												   (VuoPoint2d){0,0},
 												   0,
 												   (2.*newImage->pixelsWide)/realizedWidth,
+												   VuoOrientation_Horizontal,
 												   1.);
 	VuoList_VuoLayer newImageLayerList = VuoListCreate_VuoLayer();
 	VuoListAppendValue_VuoLayer(newImageLayerList, newImageLayer);
@@ -85,6 +86,7 @@ void nodeInstanceEvent
 												   (VuoPoint2d){0,0},
 												   0,
 												   (2.*previousFeedbackImage->pixelsWide)/realizedWidth,
+												   VuoOrientation_Horizontal,
 												   1. - pow(1. - feedbackOpacity, 3.));
 	VuoSceneObject_setBlendMode((VuoSceneObject)previousFeedbackLayer, feedbackBlendMode);
 	VuoList_VuoLayer previousFeedbackLayerList = VuoListCreate_VuoLayer();

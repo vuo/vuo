@@ -40,8 +40,8 @@ VuoReal VuoReal_makeFromJson(struct json_object *js);
 struct json_object * VuoReal_getJson(const VuoReal value);
 char * VuoReal_getSummary(const VuoReal value);
 
-VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition);
-VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition);
+VuoReal VuoReal_minList(VuoList_VuoReal values, VuoInteger *outputPosition);
+VuoReal VuoReal_maxList(VuoList_VuoReal values, VuoInteger *outputPosition);
 VuoReal VuoReal_average(VuoList_VuoReal values);
 
 VuoReal VuoReal_wrap(VuoReal value, VuoReal minimum, VuoReal maximum);
@@ -213,7 +213,9 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 /// This type has _areEqual() and _isLessThan() functions.
 #define VuoReal_SUPPORTS_COMPARISON
 bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2);
+bool VuoReal_areEqualListWithinTolerance(VuoList_VuoReal values, VuoReal tolerance);
 bool VuoReal_isLessThan(const VuoReal a, const VuoReal b);
+bool VuoReal_isWithinRange(VuoReal value, VuoReal minimum, VuoReal maximum);
 
 /**
  * @}

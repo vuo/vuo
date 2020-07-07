@@ -8,30 +8,11 @@
  */
 
 {"portConfiguration" : [
-	{	"firingPort" : "refresh",
-		"inputPortValues" : {"value": 2},
-		"outputPortValues" : {"min" : 2}
-	},
-	{	"firingPort" : "refresh",
-		"inputPortValues" : {"value":42},
-		"outputPortValues" : {"min" : 2}
-	},
-	{	"firingPort" : "refresh",
-		"inputPortValues" : {"value": 1},
-		"outputPortValues" : {"min" : 1}
-	},
+	{"firingPort":"value", "inputPortValues":{"value": 2}, "outputPortValues":{"min":2}},
+	{"firingPort":"value", "inputPortValues":{"value":42}, "outputPortValues":{"min":2}},
+	{"firingPort":"value", "inputPortValues":{"value": 1}, "outputPortValues":{"min":1}},
 
-	/* Reset */
-	{	"firingPort" : "reset",
-		"inputPortValues" : {"value": 2, "resetEvent": true},
-		"outputPortValues" : {"min" : 2}
-	},
-	{	"firingPort" : "refresh",
-		"inputPortValues" : {"value":42, "resetEvent": false},
-		"outputPortValues" : {"min" : 2}
-	},
-	{	"firingPort" : "refresh",
-		"inputPortValues" : {"value": 1},
-		"outputPortValues" : {"min" : 1}
-	},
+	{"firingPort":"reset", "inputPortValues":{"value": 2}, "outputPortValues":{"min":2}},
+	{"firingPort":"value", "inputPortValues":{"value":42}, "outputPortValues":{"min":2}},
+	{"firingPort":"value", "inputPortValues":{"value": 1}, "outputPortValues":{"min":1}},
 ]}

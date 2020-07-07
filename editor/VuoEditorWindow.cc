@@ -535,7 +535,7 @@ VuoEditorWindow::VuoEditorWindow(QString documentIdentifier, QString composition
 	connect(editor, &VuoEditor::globalNodeLibraryStateChanged, this, &VuoEditorWindow::conformToGlobalNodeLibraryVisibility);
 
 	// Dynamically resize the sceneRect to accommodate current canvas items.
-	connect(composition, &VuoEditorComposition::changed, this, &VuoEditorWindow::updateSceneRect);
+	connect(composition, &VuoEditorComposition::changed, this, &VuoEditorWindow::ensureSceneRectContainsRegion);
 
 	// Update relevant menu items when there is a change to the set of currently selected composition components.
 	connect(composition, &VuoEditorComposition::selectionChanged, this, &VuoEditorWindow::updateSelectedComponentMenuItems);
@@ -829,13 +829,9 @@ void VuoEditorWindow::showUpdateHelpDialog()
 void VuoEditorWindow::updateUI()
 {
 	updateSelectedComponentMenuItems();
-
-	if (toolbar)
-		toolbar->update(composition->getShowEventsMode(), ui->graphicsView->transform().isIdentity(), isZoomedToFit);
+	updateToolbarElementUI();
 
 	ui->paste->setEnabled(!VuoEditor::getClipboardText().isEmpty());
-	ui->zoom11->setEnabled(! ui->graphicsView->transform().isIdentity());
-	ui->zoomToFit->setEnabled(! isZoomedToFit);
 	ui->compositionInformation->setEnabled(true);
 
 	if (toolbar && toolbar->isStopInProgress())
@@ -905,8 +901,6 @@ void VuoEditorWindow::updateUI()
 	updateProtocolsMenu(menuProtocols);
 	updateProtocolsMenu(inputPortSidebar->getProtocolsContextMenu());
 	updateProtocolsMenu(outputPortSidebar->getProtocolsContextMenu());
-
-	ui->showEvents->setText(composition->getShowEventsMode() ? tr("Hide Events") : tr("Show Events"));
 
 	if (nl)
 	{
@@ -982,6 +976,20 @@ void VuoEditorWindow::updateUI()
 	}
 
 	updateCursor();
+}
+
+/**
+ * Updates the UI elements (e.g., enables/disables buttons) in the toolbar, and all
+ * synced menu items, based on the application's state.
+ */
+void VuoEditorWindow::updateToolbarElementUI()
+{
+	if (toolbar)
+		toolbar->update(composition->getShowEventsMode(), ui->graphicsView->transform().isIdentity(), isZoomedToFit);
+
+	ui->zoom11->setEnabled(! ui->graphicsView->transform().isIdentity());
+	ui->zoomToFit->setEnabled(! isZoomedToFit);
+	ui->showEvents->setText(composition->getShowEventsMode() ? tr("Hide Events") : tr("Show Events"));
 }
 
 /**
@@ -2205,6 +2213,15 @@ VuoRendererNode * VuoEditorWindow::specializePortNetwork(VuoRendererPort *port, 
 				if (i != nodesToSpecialize.end())
 				{
 					VuoRendererNode *specializedNode = i->second;
+					if (!specializedNode)
+					{
+						VuoCompilerIssue issue(VuoCompilerIssue::Error, "specializing node", "",
+											   tr("Couldn't specialize node '%1' to type '%2'.")
+												   .arg(QString::fromStdString(originalNetworkedNode->getBase()->getTitle()),
+														QString::fromStdString(specializedTypeName)).toStdString(),
+											   tr("The node might have failed to compile.  Check the console log for details.").toStdString());
+						throw VuoCompilerException(issue);
+					}
 					VuoPort *networkedPortInSpecializedNode = (networkedPort->getRenderer()->getInput()? specializedNode->getBase()->getInputPortWithName(networkedPort->getClass()->getName()) :
 																										 specializedNode->getBase()->getOutputPortWithName(networkedPort->getClass()->getName()));
 
@@ -2227,7 +2244,7 @@ VuoRendererNode * VuoEditorWindow::specializePortNetwork(VuoRendererPort *port, 
 	}
 	catch (VuoCompilerException &e)
 	{
-		VuoErrorDialog::show(NULL, tr("Can't set data type"), e.what());
+		VuoErrorDialog::show(this, tr("Can't set data type"), e.what());
 	}
 
 	if (encapsulateInMacro)
@@ -3554,7 +3571,7 @@ void VuoEditorWindow::on_zoomIn_triggered()
 		ui->graphicsView->centerOn(selectedItemsRect.center());
 
 	isZoomedToFit = false;
-	updateUI();
+	updateToolbarElementUI();
 }
 
 /**
@@ -3564,7 +3581,7 @@ void VuoEditorWindow::on_zoomOut_triggered()
 {
 	ui->graphicsView->scale(1/zoomRate,1/zoomRate);
 	isZoomedToFit = false;
-	updateUI();
+	updateToolbarElementUI();
 }
 
 /**
@@ -3572,9 +3589,22 @@ void VuoEditorWindow::on_zoomOut_triggered()
  */
 void VuoEditorWindow::on_zoom11_triggered()
 {
+	bool zoomingIn = (ui->graphicsView->transform().m11() <= 1.0);
 	ui->graphicsView->setTransform(QTransform());
+
+	if (zoomingIn)
+	{
+		// Try to keep selected components visible.
+		QRectF selectedItemsRect;
+		foreach (QGraphicsItem *selectedComponent, composition->selectedItems())
+			selectedItemsRect |= selectedComponent->sceneBoundingRect();
+
+		if (!selectedItemsRect.isNull())
+			ui->graphicsView->centerOn(selectedItemsRect.center());
+	}
+
 	isZoomedToFit = false;
-	updateUI();
+	updateToolbarElementUI();
 }
 
 /**
@@ -3591,7 +3621,7 @@ void VuoEditorWindow::on_zoomToFit_triggered()
 	ui->graphicsView->fitInView(itemsBoundingRect, Qt::KeepAspectRatio);
 	updateSceneRect();
 	isZoomedToFit = true;
-	updateUI();
+	updateToolbarElementUI();
 }
 
 /**
@@ -3617,11 +3647,8 @@ void VuoEditorWindow::viewportFitReset()
 {
 	isZoomedToFit = false;
 
-	// Instead of calling updateUI(), which is fairly expensive, just update the single affected widget.
-//	updateUI();
-	ui->zoomToFit->setEnabled(! isZoomedToFit);
+	updateToolbarElementUI();
 }
-
 
 void VuoEditorWindow::on_saveComposition_triggered()
 {
@@ -5090,6 +5117,37 @@ bool VuoEditorWindow::containsLikelyVuoComposition(QString text)
 {
 	const QString compositionIndicatorText = "digraph";
 	return (text.toCaseFolded().contains(compositionIndicatorText.toCaseFolded()));
+}
+
+/**
+ * Ensures that the composition's current sceneRect includes the provided @c region.
+ * If it doesn't already, updates it to do so.
+ */
+void VuoEditorWindow::ensureSceneRectContainsRegion(const QList<QRectF> &region)
+{
+	// Autoscroll during cable drags.
+	if (composition->getCableInProgress())
+	{
+		updateSceneRect();
+		return;
+	}
+
+
+	bool regionContained = true;
+	QRectF sceneRect = composition->sceneRect();
+	foreach (QRectF rect, region)
+	{
+		if (!sceneRect.contains(rect))
+		{
+			regionContained = false;
+			break;
+		}
+	}
+
+	if (!regionContained)
+			updateSceneRect();
+
+	return;
 }
 
 /**

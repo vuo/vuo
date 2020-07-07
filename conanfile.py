@@ -7,7 +7,7 @@ class VuoConan(ConanFile):
     generators = 'cmake'
 
     def requirements(self):
-        # Core dependencies, needed on all platforms.
+        self.requires('blackmagic/11.5.1-0@vuo/stable')
         self.requires('curl/7.65.3-0@vuo/stable')
         self.requires('discount/2.2.3a-1@vuo/stable')
         self.requires('ffmpeg/4.2.1-0@vuo/stable')
@@ -17,13 +17,14 @@ class VuoConan(ConanFile):
         self.requires('graphviz/2.28.0-5@vuo/stable')
         self.requires('jsonc/0.12-3@vuo/stable')
         self.requires('libcsv/3.0.3-4@vuo/stable')
-        self.requires('libfacedetection/0-2@vuo/stable')
+        self.requires('libfacedetection/1-0@vuo/stable')
         self.requires('libfreenect/0.5.6-3@vuo/stable')
         self.requires('libfreenect2/0-6@vuo/stable')
         self.requires('liblqr/0.4.2-4@vuo/stable')
         self.requires('libxml2/2.9.2-3@vuo/stable')
         self.requires('llvm/3.3-6@vuo/stable')
         self.requires('muparser/2.2.5-3@vuo/stable')
+        self.requires('ndi/4.5-1@vuo/stable')
         self.requires('oai/3.2-3@vuo/stable')
         self.requires('openssl/1.1.1c-0@vuo/stable')
         self.requires('oscpack/0-3@vuo/stable')

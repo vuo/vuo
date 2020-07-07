@@ -2,7 +2,7 @@
  * @file
  * Vuo Image Generator driver.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
@@ -13,16 +13,20 @@ digraph G
 {
 AllowChanges [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="495,-165" fillcolor="cyan"];
 AllowChanges3 [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="495,-15" fillcolor="cyan"];
-ChangeWindowSize [type="vuo.window.size2" version="2.0.0" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-330,-90" _width="1024" _height="768" _unit="\"points\""];
+ChangeWindowSize [type="vuo.window.size2" version="2.0.1" label="Change Window Size|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-375,-90" _width="1024" _height="768" _unit="\"points\""];
 FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="105,-345" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 FireOnLiveEditingReload [type="vuo.event.fireOnReload" version="1.0.0" label="Fire on Live-Editing Reload|<refresh>refresh\l|<reloaded>reloaded\r" pos="75,-285" fillcolor="lime" _reloaded_eventThrottling="enqueue"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-510,-120" fillcolor="lime" _started_eventThrottling="enqueue"];
-GetWindowDimensions [type="vuo.window.get.dimensions2" version="2.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r|<isFullscreen>isFullscreen\r" pos="75,-105"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-525,-105" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetWindowDimensions2 [type="vuo.window.get.dimensions3" version="3.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<unit>unit\l|<topLeft>topLeft\r|<bottomRight>bottomRight\r|<width>width\r|<height>height\r|<aspectRatio>aspectRatio\r" pos="45,-105" _unit="\"pixels\""];
 HoldValue [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-90" fillcolor="cyan"];
 HoldValue2 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-165" fillcolor="cyan"];
 HoldValue4 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,60" fillcolor="cyan"];
 HoldValue5 [type="vuo.data.hold2.VuoInteger" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,-15" fillcolor="cyan"];
-RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="-135,-105" fillcolor="magenta" _updatedWindow_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="-180,-105" fillcolor="magenta" _updatedWindow_eventThrottling="enqueue"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="450,-45"];
+Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="450,30"];
+Round3 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="450,105"];
+Round4 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="450,180"];
 SelectLatest [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="675,-15" fillcolor="cyan"];
 SelectLatest2 [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="675,-165" fillcolor="cyan"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage_type="VuoImage"];
@@ -36,17 +40,21 @@ FireOnDisplayRefresh:requestedFrame -> HoldValue5:update;
 FireOnDisplayRefresh:requestedFrame -> PublishedOutputs:time;
 FireOnLiveEditingReload:reloaded -> HoldValue4:update;
 FireOnLiveEditingReload:reloaded -> HoldValue:update;
-FireOnStart:started -> ChangeWindowSize:refresh;
-GetWindowDimensions:pixelsHigh -> HoldValue4:value;
-GetWindowDimensions:pixelsHigh -> HoldValue5:value;
-GetWindowDimensions:pixelsWide -> HoldValue2:value;
-GetWindowDimensions:pixelsWide -> HoldValue:value;
+FireOnStart:started -> ChangeWindowSize:windowDescription;
+GetWindowDimensions2:height -> Round3:real;
+GetWindowDimensions2:height -> Round4:real;
+GetWindowDimensions2:width -> Round2:real;
+GetWindowDimensions2:width -> Round:real;
 HoldValue2:heldValue -> AllowChanges:value;
 HoldValue4:heldValue -> SelectLatest:option2;
 HoldValue5:heldValue -> AllowChanges3:value;
 HoldValue:heldValue -> SelectLatest2:option2;
 PublishedInputs:outputImage -> RenderImageToWindow:image;
-RenderImageToWindow:updatedWindow -> GetWindowDimensions:window;
+RenderImageToWindow:updatedWindow -> GetWindowDimensions2:window;
+Round2:rounded -> HoldValue:value;
+Round3:rounded -> HoldValue5:value;
+Round4:rounded -> HoldValue4:value;
+Round:rounded -> HoldValue2:value;
 SelectLatest2:latest -> PublishedOutputs:width;
 SelectLatest:latest -> PublishedOutputs:height;
 }

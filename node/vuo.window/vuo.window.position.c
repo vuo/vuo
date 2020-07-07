@@ -23,7 +23,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}}) topLeft,
-		VuoInputData(VuoCoordinateUnit, {"default":"points"}) unit,
+		VuoInputData(VuoCoordinateUnit, {"default":"points","includeValues":["points","pixels"]}) unit,
 		VuoOutputData(VuoWindowProperty) property
 )
 {

@@ -10,19 +10,22 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Multiply",
-					  "keywords" : [ "product", "times", "*", "•", "×", "x", "arithmetic", "calculate" ],
-					  "version" : "2.0.0",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
-						  }
-					  },
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+    "title": "Multiply",
+    "keywords": [
+        "product", "times", "*", "•", "×", "x", "arithmetic", "calculate",
+        "component-wise", "element-wise", "entrywise", "Hadamard product", "Schur product", "array", "vector",
+    ],
+    "version": "2.1.0",
+    "genericTypes": {
+        "VuoGenericType1": {
+            "defaultType": "VuoReal",
+            "compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+        },
+    },
+    "node": {
+        "exampleCompositions": [ ],
+    },
+});
 
 void nodeEvent
 (

@@ -53,7 +53,12 @@ VuoCompileNodes(
 	vuo.video.receive2.c
 	vuo.video.save.c
 	vuo.video.save2.c
+	vuo.video.send.rtmp.c
 	vuo.video.step.c
+)
+target_link_libraries(vuo.video.nodes
+	PUBLIC
+		CONAN_PKG::ffmpeg
 )
 
 VuoNodeSet()

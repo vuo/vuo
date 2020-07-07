@@ -30,7 +30,10 @@ void nodeEvent
 		VuoOutputEvent({"data":"filteredMessage"}) filteredMessageEvent
 )
 {
-	if (!message || !message->address || !address || strcmp(message->address, address))
+	if (!message)
+		return;
+
+	if (!VuoText_compare(message->address, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, address))
 		return;
 
 	*filteredMessage = message;

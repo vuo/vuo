@@ -113,6 +113,38 @@ char * VuoAudioOutputDevice_getSummary(const VuoAudioOutputDevice value)
 }
 
 /**
+ * Returns a compact string representation of @c value.
+ */
+char * VuoAudioOutputDevice_getShortSummary(const VuoAudioOutputDevice value)
+{
+	if (value.id == -1)
+	{
+		if (VuoText_isEmpty(value.modelUid))
+		{
+			if (VuoText_isEmpty(value.name))
+				return strdup("Default");
+			else // have name
+				return strdup(value.name);
+		}
+		else // have model
+		{
+			if (VuoText_isEmpty(value.name))
+				return strdup(value.modelUid);
+			else // have name
+				return strdup(value.name);
+		}
+	}
+	else // have ID
+	{
+		if (VuoText_isEmpty(value.name))
+			return VuoText_format("Device #%lld", value.id);
+		else
+			// An actual detected audio output device (rather than abstract criteria).
+			return strdup(value.name);
+	}
+}
+
+/**
  * Returns true if the two audio output device specifications are identical.
  */
 bool VuoAudioOutputDevice_areEqual(VuoAudioOutputDevice value1, VuoAudioOutputDevice value2)

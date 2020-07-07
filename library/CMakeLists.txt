@@ -7,9 +7,11 @@ VuoCompileLibraries(
 	VuoGraphicsWindow.m
 	VuoGraphicsWindowDelegate.m
 	VuoGraphicsWindowDrag.mm
+	VuoImageAverage.c
 	VuoImageBlend.c
 	VuoImageBlur.c
 	VuoImageConvolve.c
+	VuoImageDilate.c
 	VuoImageGet.cc
 	VuoImageMapColors.c
 	VuoImageRenderer.cc
@@ -194,8 +196,10 @@ target_link_libraries(VuoGlContext
 	${PROJECT_BINARY_DIR}/type/VuoScreen.o
 	${PROJECT_BINARY_DIR}/type/VuoText.o
 	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoInteger.o
+	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoPoint2d.o
 	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoReal.o
 	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoScreen.o
+	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoText.o
 )
 add_dependencies(VuoGlContext
 	vuo.core.types

@@ -180,6 +180,8 @@ void VuoEnableTermination(void);
  */
 bool VuoShouldShowSplashWindow(void);
 
+bool VuoIsPro(void);
+
 bool VuoProcessorSupportsAVX2(void);
 
 /**

@@ -28,6 +28,7 @@
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 static const char *mainThreadChecker = "/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib";  ///< The path to Xcode's libMainThreadChecker.dylib.
 static int compositionReadRunnerWritePipe[2];  ///< A pipe used by the runtime to check if the runner process has ended.
+static bool VuoRunner_isHostVDMX = false;  ///< True if this VuoRunner instance is running inside VDMX.
 
 /**
  * Tells the specified Unix file descriptor
@@ -68,6 +69,9 @@ static void __attribute__((constructor)) VuoRunner_init()
 	// so child processes don't prop open this pipe,
 	// which would prevent Vuo compositions from quitting when the VuoRunner process quits.
 	VuoRunner_closeOnExec(compositionReadRunnerWritePipe[1]);
+
+	if (VuoStringUtilities::makeFromCFString(CFBundleGetIdentifier(CFBundleGetMainBundle())) == "com.vidvox.VDMX5")
+		VuoRunner_isHostVDMX = true;
 }
 
 /**
@@ -93,6 +97,28 @@ static void VuoRunner_configureSocket(void *zmqSocket, int timeoutInSeconds)
 	int linger = 0;  // avoid having zmq_term block if the runner has tried to send a message on a broken connection
 	zmq_setsockopt(zmqSocket, ZMQ_LINGER, &linger, sizeof linger);
 }
+
+/**
+ * Private instance data for VuoRunner.
+ */
+class VuoRunner::Private
+{
+public:
+	Private() :
+		lastWidth(0),
+		lastHeight(0)
+	{
+	}
+
+	once_flag vuoImageFunctionsInitialized;  ///< Ensures we only try to initialize the below functions once.
+	typedef void *(*vuoImageMakeFromJsonWithDimensionsType)(json_object *, unsigned int, unsigned int);  ///< VuoImage_makeFromJsonWithDimensions
+	vuoImageMakeFromJsonWithDimensionsType vuoImageMakeFromJsonWithDimensions;  ///< VuoImage_makeFromJsonWithDimensions
+	typedef json_object *(*vuoImageGetJsonType)(void *);  ///< VuoImage_getJson
+	vuoImageGetJsonType vuoImageGetJson;  ///< VuoImage_getJson
+
+	uint64_t lastWidth;   ///< The most recent image size provided to `setPublishedInputPortValues`.
+	uint64_t lastHeight;  ///< The most recent image size provided to `setPublishedInputPortValues`.
+};
 
 /**
  * Creates a runner that can run a composition in a new process.
@@ -122,8 +148,8 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executableP
  * @param compositionLoaderPath The VuoCompositionLoader executable.
  * @param compositionDylibPath A linked composition dynamic library, produced by @ref VuoCompiler::linkCompositionToCreateDynamicLibraries.
  * @param runningCompositionLibraries Information about libraries referenced by the composition, produced and updated by calls to
- *     @ref VuoCompiler::linkCompositionToCreateDynamicLibraries. The runner takes ownership of this object and will destroy it when
- *     the composition stops.
+ *     @ref VuoCompiler::linkCompositionToCreateDynamicLibraries. The runner takes co-ownership of the `VuoRunningCompositionLibraries`
+ *     object and will release it when the composition stops.
  * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
  * @param continueIfRunnerDies If true, the composition keeps running if the runner process exits without stopping the composition.
  * @param deleteDylibsWhenFinished True if the runner should delete @a compositionDylibPath and the resource dylibs tracked by
@@ -131,7 +157,7 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executableP
  * @version200Changed{Added `runningCompositionLibraries` argument; removed `resourceDylibPath` argument.}
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath,
-																  VuoRunningCompositionLibraries *runningCompositionLibraries,
+																  const std::shared_ptr<VuoRunningCompositionLibraries> &runningCompositionLibraries,
 																  string sourceDir, bool continueIfRunnerDies, bool deleteDylibsWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
@@ -177,6 +203,7 @@ VuoRunner::~VuoRunner(void)
 	dispatch_release(endedListeningSemaphore);
 	dispatch_release(lastFiredEventSemaphore);
 	dispatch_release(delegateQueue);
+	delete p;
 }
 
 /**
@@ -199,6 +226,7 @@ void VuoRunner::setRuntimeChecking(bool runtimeCheckingEnabled)
  */
 VuoRunner::VuoRunner(void)
 {
+	p = new Private;
 	dylibHandle = NULL;
 	dependencyLibraries = NULL;
 	shouldContinueIfRunnerDies = false;
@@ -1113,8 +1141,7 @@ void VuoRunner::stop(void)
 						  }
 					  }
 
-					  delete dependencyLibraries;
-					  dependencyLibraries = NULL;
+					  dependencyLibraries = nullptr;  // release shared_ptr
 
 					  stopped = true;
 					  dispatch_semaphore_signal(stoppedSemaphore);
@@ -1694,6 +1721,24 @@ void VuoRunner::unsubscribeFromAllTelemetry(string compositionIdentifier)
  */
 void VuoRunner::setPublishedInputPortValues(map<Port *, json_object *> portsAndValuesToSet)
 {
+	if (VuoRunner_isHostVDMX)
+		for (auto i : portsAndValuesToSet)
+		{
+			string portName = i.first->getName();
+			if (portName == "width")
+				p->lastWidth = json_object_get_int64(i.second);
+			else if (portName == "height")
+				p->lastHeight = json_object_get_int64(i.second);
+			else if (portName == "image" || portName == "startImage")
+			{
+				json_object *o;
+				if (json_object_object_get_ex(i.second, "pixelsWide", &o))
+					p->lastWidth = json_object_get_int64(o);
+				if (json_object_object_get_ex(i.second, "pixelsHigh", &o))
+					p->lastHeight = json_object_get_int64(o);
+			}
+		}
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1879,7 +1924,47 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 						  stopBecauseLostContact(e.what());
 					  }
 				  });
-	return json_tokener_parse(valueAsString.c_str());
+
+	// https://b33p.net/kosada/node/17535
+	json_object *js = json_tokener_parse(valueAsString.c_str());
+	if (VuoRunner_isHostVDMX && port->getName() == "outputImage")
+	{
+		json_object *o;
+		uint64_t actualWidth = 0;
+		if (json_object_object_get_ex(js, "pixelsWide", &o))
+			actualWidth = json_object_get_int64(o);
+		uint64_t actualHeight = 0;
+		if (json_object_object_get_ex(js, "pixelsHigh", &o))
+			actualHeight = json_object_get_int64(o);
+
+		if (p->lastWidth && p->lastHeight
+			&& (actualWidth != p->lastWidth || actualHeight != p->lastHeight))
+		{
+			call_once(p->vuoImageFunctionsInitialized, [=](){
+				p->vuoImageMakeFromJsonWithDimensions = (Private::vuoImageMakeFromJsonWithDimensionsType)dlsym(RTLD_DEFAULT, "VuoImage_makeFromJsonWithDimensions");
+				if (!p->vuoImageMakeFromJsonWithDimensions)
+				{
+					VUserLog("Error: Couldn't find VuoImage_makeFromJsonWithDimensions.");
+					return;
+				}
+
+				p->vuoImageGetJson = (Private::vuoImageGetJsonType)dlsym(RTLD_DEFAULT, "VuoImage_getJson");
+				if (!p->vuoImageGetJson)
+				{
+					VUserLog("Error: Couldn't find VuoImage_getJson.");
+					return;
+				}
+			});
+
+			if (p->vuoImageMakeFromJsonWithDimensions && p->vuoImageGetJson)
+			{
+				void *vi = p->vuoImageMakeFromJsonWithDimensions(js, p->lastWidth, p->lastHeight);
+				return p->vuoImageGetJson(vi);
+			}
+		}
+	}
+
+	return js;
 }
 
 /**

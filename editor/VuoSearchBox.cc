@@ -305,10 +305,11 @@ vector<QGraphicsItem *> VuoSearchBox::getCurrentSearchResults(const QString &sea
 				if (nodeMatched)
 					break;
 
-				if (port && port->hasRenderer())
+				if (port && port->hasRenderer() && port->getRenderer()->isConstant())
 				{
-					if (port->getRenderer()->isConstant() &&
-						 QString(VuoText_removeHtml(port->getRenderer()->getConstantAsStringToRender().c_str())).contains(searchText, Qt::CaseInsensitive))
+					VuoText constantWithoutHtml = VuoText_removeHtml(port->getRenderer()->getConstantAsStringToRender().c_str());
+					VuoRetain(constantWithoutHtml);
+					if (QString(constantWithoutHtml).contains(searchText, Qt::CaseInsensitive))
 					{
 						if (isCollapsedTypecast && typecastInPort->getRenderer()->getTypecastParentPort()->getRenderedParentNode())
 							searchResults.push_back(typecastInPort->getRenderer()->getTypecastParentPort()->getRenderedParentNode());
@@ -316,6 +317,7 @@ vector<QGraphicsItem *> VuoSearchBox::getCurrentSearchResults(const QString &sea
 							searchResults.push_back(node->getRenderer());
 						nodeMatched = true;
 					}
+					VuoRelease(constantWithoutHtml);
 				}
 			}
 		}

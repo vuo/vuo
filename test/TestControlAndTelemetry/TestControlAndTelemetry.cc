@@ -105,8 +105,8 @@ private:
 	VuoRunner * createRunnerInNewProcessWithDylib(const string &compositionPath)
 	{
 		string compositionLoaderPath, dylibPath, compositionDir;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
-		buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries, compositionDir);
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
+		buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries.get(), compositionDir);
 
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, runningCompositionLibraries, compositionDir, false, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
@@ -153,7 +153,7 @@ private:
 	 * allocated `VuoRunner` for the dylibs.
 	 */
 	VuoRunner * createRunnerForLiveCoding(const string &compositionPath, VuoCompilerComposition *&composition,
-										  VuoRunningCompositionLibraries *runningCompositionLibraries)
+										  std::shared_ptr<VuoRunningCompositionLibraries> &runningCompositionLibraries)
 	{
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -167,7 +167,8 @@ private:
 
 		VuoCompilerIssues issues;
 		compiler->compileComposition(composition, bcPath, true, &issues);
-		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+		runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 		remove(bcPath.c_str());
 
 		return VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, runningCompositionLibraries, dir, false, true);
@@ -420,7 +421,7 @@ private slots:
 		}
 		else if (testNum == 9)  // Error handling: New process, non-existent dylib
 		{
-			VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+			std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(),
 																					  nonExistentFile, runningCompositionLibraries,
 																					  "", false, false);
@@ -460,7 +461,7 @@ private slots:
 
 		string compositionPath = getCompositionPath("WriteTimesToFile.vuo");
 		string exePath, compositionLoaderPath, dylibPath, compositionDir;
-		VuoRunningCompositionLibraries *runningCompositionLibraries[2] = { NULL, NULL };
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries[2] = { nullptr, nullptr };
 
 		if (testNum == 0)  // New process, executable
 		{
@@ -468,9 +469,9 @@ private slots:
 		}
 		else if (testNum == 1)  // New process, dylib
 		{
-			runningCompositionLibraries[0] = new VuoRunningCompositionLibraries();
-			buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries[0], compositionDir);
-			runningCompositionLibraries[1] = new VuoRunningCompositionLibraries(*runningCompositionLibraries[0]);
+			runningCompositionLibraries[0] = std::make_shared<VuoRunningCompositionLibraries>();
+			buildDylibForNewProcess(compositionPath, compositionLoaderPath, dylibPath, runningCompositionLibraries[0].get(), compositionDir);
+			runningCompositionLibraries[1] = std::make_shared<VuoRunningCompositionLibraries>(*runningCompositionLibraries[0].get());
 		}
 		else if (testNum == 2)  // Current process
 		{
@@ -2258,7 +2259,7 @@ private slots:
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries(nullptr);
 
 		// Build and run the composition.
 		{
@@ -2269,7 +2270,7 @@ private slots:
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
@@ -2323,7 +2324,7 @@ private slots:
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries(nullptr);
 
 		// Build and run the composition.
 		{
@@ -2343,7 +2344,7 @@ private slots:
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
@@ -2392,7 +2393,7 @@ private slots:
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries(nullptr);
 
 		// Build and run the composition.
 		{
@@ -2403,7 +2404,7 @@ private slots:
 
 		// Replace the composition with itself.
 		{
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											composition->getGraphvizDeclaration(), nullptr, runner);
 		}
 
@@ -2428,7 +2429,7 @@ private slots:
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 
 		// Build and run an empty composition.
 		{
@@ -2436,7 +2437,7 @@ private slots:
 
 			VuoCompilerIssues issues;
 			compiler->compileComposition(composition, bcPath, true, &issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, runningCompositionLibraries, compositionDir, false, true);
@@ -2455,7 +2456,7 @@ private slots:
 			VuoNode *fireOnStartNode = fireOnStartNodeClass->newNode("FireOnStart1");
 			composition->getBase()->addNode(fireOnStartNode);
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											oldCompositionGraphviz, nullptr, runner);
 		}
 
@@ -2468,7 +2469,7 @@ private slots:
 			VuoNode *displayConsoleWindowNode = displayConsoleWindowNodeClass->newNode("DisplayConsoleWindow1");
 			composition->getBase()->addNode(displayConsoleWindowNode);
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											oldCompositionGraphviz, nullptr, runner);
 		}
 
@@ -2503,7 +2504,7 @@ private slots:
 
 		VuoCompilerComposition *composition = NULL;
 		VuoRunner *runner = NULL;
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries(nullptr);
 		VuoRunner::Port *publishedIncrementOne = NULL;
 		VuoRunner::Port *publishedSum = NULL;
 		string originalCompositionGraphviz;
@@ -2552,7 +2553,7 @@ private slots:
 
 		if (testNum == 0)  // no change
 		{
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2581,7 +2582,7 @@ private slots:
 			QVERIFY(count1NodeCountPort != NULL);
 			cableToModify->setFrom(count1Node, count1NodeCountPort);
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2628,7 +2629,7 @@ private slots:
 																	   makeList1Node->getCompiler(), makeList1NodeItem2Port);
 			composition->getBase()->addCable(count3ToAdd1Cable->getBase());
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2663,7 +2664,7 @@ private slots:
 			makeList2Node->getCompiler()->setGraphvizIdentifier( makeList1Node->getCompiler()->getGraphvizIdentifier() );
 			composition->replaceNode(makeList1Node, makeList2Node);
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2693,7 +2694,7 @@ private slots:
 			VuoCompilerCable *publishedCable = new VuoCompilerCable(NULL, compilerPublishedPort, count1Node->getCompiler(), count1NodeSetPort);
 			composition->getBase()->addCable(publishedCable->getBase());
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:setCount" becomes 100, "Count1:count" becomes 100,
@@ -2726,7 +2727,7 @@ private slots:
 				composition->getBase()->removePublishedOutputPort(i);
 			}
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// Don't test anything here, but below test that the published ports get added back in.
@@ -2742,7 +2743,7 @@ private slots:
 				composition->getBase()->removePublishedInputPort(i);
 			}
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Add1:sum" stays at 10.
@@ -2754,7 +2755,7 @@ private slots:
 			VuoPublishedPort *publishedPort = composition->getBase()->getPublishedInputPortWithName("publishedIncrementOne");
 			publishedPort->getClass()->setName("publishedIncrementOneRenamed");
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2804,7 +2805,7 @@ private slots:
 																		count1Node->getCompiler(), count1NodeIncrementPort);
 			composition->getBase()->addCable(roundToCount1Cable->getBase());
 
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
 											originalCompositionGraphviz, nullptr, runner);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110,
@@ -2822,7 +2823,7 @@ private slots:
 		{
 			VuoCompilerComposition *originalComposition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(originalCompositionGraphviz, compiler);
 
-			replaceCompositionForLiveCoding(compositionPath, originalComposition, runningCompositionLibraries,
+			replaceCompositionForLiveCoding(compositionPath, originalComposition, runningCompositionLibraries.get(),
 											composition->getGraphvizDeclaration(), nullptr, runner);
 
 			delete originalComposition;

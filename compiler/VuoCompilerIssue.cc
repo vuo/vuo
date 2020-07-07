@@ -433,6 +433,14 @@ void VuoCompilerIssues::setFilePathIfEmpty(const string &filePath)
 }
 
 /**
+ * Sets the file for each issue in the list.
+ */
+void VuoCompilerIssues::setFilePath(const string &filePath)
+{
+	for (vector<VuoCompilerIssue>::iterator i = issues.begin(); i != issues.end(); ++i)
+		(*i).setFilePath(filePath);
+}
+/**
  * Adds the issue to the end of the list.
  */
 void VuoCompilerIssues::append(const VuoCompilerIssue &issue)

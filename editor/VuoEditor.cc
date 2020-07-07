@@ -37,6 +37,7 @@
 #include "VuoRendererComposition.hh"
 #include "VuoSubcompositionMessageRouter.hh"
 
+#include <langinfo.h>
 #include <sstream>
 #include <fstream>
 
@@ -93,21 +94,7 @@ VuoEditor::VuoEditor(int &argc, char *argv[])
 	QCoreApplication::setApplicationName("Editor");
 	settings = new QSettings();
 
-
-	// Load translations
-	if (settings->value("translation/enable", true).toBool())
-	{
-		QLocale locale = QLocale::system();
-		QString translationsPath = QString::fromStdString(VuoFileUtilities::getVuoFrameworkPath() + "/../../Resources/Translations");
-		QList<QString> contexts;
-		contexts << "qtbase" << "vuo";
-		foreach (QString context, contexts)
-		{
-			QTranslator *t = new QTranslator();
-			t->load(locale, context, "_", translationsPath, ".qm");
-			installTranslator(t);
-		}
-	}
+	loadTranslations();
 
 	VuoEditorWindow::untitledComposition = QObject::tr("Untitled Composition");
 
@@ -516,6 +503,166 @@ VuoEditor::~VuoEditor()
 	menuBar->deleteLater();
 	delete subcompositionRouter;
 	moduleManager->deleteWhenReady();  // deletes compiler
+}
+
+/**
+ * This is a copy of private method QTranslator::find_translation(), for debugging.
+ */
+QString VuoEditor::qtFindTranslation(const QLocale &locale, const QString &filename, const QString &prefix, const QString &directory, const QString &suffix)
+{
+	QString path;
+	if (QFileInfo(filename).isRelative()) {
+		path = directory;
+		if (!path.isEmpty() && !path.endsWith(QLatin1Char('/')))
+			path += QLatin1Char('/');
+	}
+
+	QFileInfo fi;
+	QString realname;
+	QStringList fuzzyLocales;
+
+	// see http://www.unicode.org/reports/tr35/#LanguageMatching for inspiration
+
+	QStringList languages = locale.uiLanguages();
+	for (int i = languages.size()-1; i >= 0; --i) {
+		QString lang = languages.at(i);
+		QString lowerLang = lang.toLower();
+		if (lang != lowerLang)
+			languages.insert(i+1, lowerLang);
+	}
+
+	// try explicit locales names first
+	foreach (QString localeName, languages) {
+		localeName.replace(QLatin1Char('-'), QLatin1Char('_'));
+
+		realname = path + filename + prefix + localeName + (suffix.isNull() ? QLatin1String(".qm") : suffix);
+		fi.setFile(realname);
+		if (fi.isReadable() && fi.isFile())
+			return realname;
+
+		realname = path + filename + prefix + localeName;
+		fi.setFile(realname);
+		if (fi.isReadable() && fi.isFile())
+			return realname;
+
+		fuzzyLocales.append(localeName);
+	}
+
+	// start guessing
+	foreach (QString localeName, fuzzyLocales) {
+		for (;;) {
+			int rightmost = localeName.lastIndexOf(QLatin1Char('_'));
+			// no truncations? fail
+			if (rightmost <= 0)
+				break;
+			localeName.truncate(rightmost);
+
+			realname = path + filename + prefix + localeName + (suffix.isNull() ? QLatin1String(".qm") : suffix);
+			fi.setFile(realname);
+			if (fi.isReadable() && fi.isFile())
+				return realname;
+
+			realname = path + filename + prefix + localeName;
+			fi.setFile(realname);
+			if (fi.isReadable() && fi.isFile())
+				return realname;
+		}
+	}
+
+	if (!suffix.isNull()) {
+		realname = path + filename + suffix;
+		fi.setFile(realname);
+		if (fi.isReadable() && fi.isFile())
+			return realname;
+	}
+
+	realname = path + filename + prefix;
+	fi.setFile(realname);
+	if (fi.isReadable() && fi.isFile())
+		return realname;
+
+	realname = path + filename;
+	fi.setFile(realname);
+	if (fi.isReadable() && fi.isFile())
+		return realname;
+
+	return QString();
+}
+
+/**
+ * Determines which UI language translation set to load, and loads and installs it.
+ */
+void VuoEditor::loadTranslations()
+{
+	if (settings->value("translation/enable", true).toBool())
+	{
+		QLocale locale = QLocale::system();
+		if (VuoIsDebugEnabled())
+		{
+			VUserLog("C locale:");
+			VUserLog("    NL codeset         : %s", nl_langinfo(CODESET));
+			VUserLog("    LANG               : %s", getenv("LANG"));
+			VUserLog("    LC_ALL             : %s", getenv("LC_ALL"));
+
+			VUserLog("Apple locale:");
+			CFStringRef appleLocale = (CFStringRef)CFPreferencesCopyAppValue(CFSTR("AppleLocale"), kCFPreferencesCurrentApplication);
+			VUserLog("    ISO (pref)         : %s", VuoStringUtilities::makeFromCFString(appleLocale).c_str());
+			CFRelease(appleLocale);
+
+			CFLocaleRef localeCF = CFLocaleCopyCurrent();
+			VUserLog("    ISO (CF)           : %s", VuoStringUtilities::makeFromCFString(CFLocaleGetIdentifier(localeCF)).c_str());
+			CFRelease(localeCF);
+
+			auto logCFArray = ^(const char *label, CFArrayRef array){
+				CFIndex count = CFArrayGetCount(array);
+				vector<string> s;
+				for (CFIndex i = 0; i < count; ++i)
+					s.push_back(VuoStringUtilities::makeFromCFString(CFArrayGetValueAtIndex(array, i)));
+				VUserLog("    %s: %s", label, VuoStringUtilities::join(s, ',').c_str());
+				CFRelease(array);
+			};
+
+			logCFArray("UI languages (pref)", (CFArrayRef)CFPreferencesCopyAppValue(CFSTR("AppleLanguages"), kCFPreferencesCurrentApplication));
+
+			logCFArray("UI languages (CF)  ", CFLocaleCopyPreferredLanguages());
+
+			VUserLog("Qt locale:");
+			VUserLog("    ISO                : %s", locale.name().toUtf8().data());
+			VUserLog("    BCP47              : %s", locale.bcp47Name().toUtf8().data());
+			VUserLog("    country            : %s (%s)", QLocale::countryToString(locale.country()).toUtf8().data(), locale.nativeCountryName().toUtf8().data());
+			VUserLog("    language           : %s (%s)", QLocale::languageToString(locale.language()).toUtf8().data(), locale.nativeLanguageName().toUtf8().data());
+			VUserLog("    UI languages       : %s", locale.uiLanguages().join(',').toUtf8().data());
+			VUserLog("    script             : %s", QLocale::scriptToString(locale.script()).toUtf8().data());
+		}
+
+		QString translationsPath = QDir(QString::fromStdString(VuoFileUtilities::getVuoFrameworkPath() + "/../../Resources/Translations")).canonicalPath();
+		QList<QString> contexts;
+		contexts << "qtbase" << "vuo";
+		QString prefix("_");
+		QString suffix(".qm");
+		foreach (QString context, contexts)
+		{
+			VDebugLog("Context %s:", context.toUtf8().data());
+
+			QTranslator *t = new QTranslator();
+			QString translationFilename = qtFindTranslation(locale, context, prefix, translationsPath, suffix);
+			if (translationFilename.isEmpty())
+			{
+				VDebugLog("    No translation file found.");
+				continue;
+			}
+
+			bool loaded = t->load(locale, context, prefix, translationsPath, suffix);
+			VDebugLog("    Loading    '%s': %s", translationFilename.toUtf8().data(), loaded ? "ok" : "error");
+			if (!loaded)
+				continue;
+
+			bool installed = installTranslator(t);
+			VDebugLog("    Installing '%s': %s", translationFilename.toUtf8().data(), installed ? "ok" : "error");
+		}
+	}
+	else
+		VDebugLog("Disabling translations since preference `translation.enable` is false.");
 }
 
 /**
@@ -2155,8 +2302,8 @@ QString VuoEditor::getVuoManualURL()
 	QString bundledManual = QDir::cleanPath(QApplication::applicationDirPath().append("/../Resources"))
 							.append(QDir::separator())
 							.append("vuo-")
-							.append(VUO_VERSION_STRING)
-							.append("-manual.pdf");
+							.append(VUO_VERSION_AND_BUILD_STRING)
+							.append("--manual.pdf");
 
 	if (QFile(bundledManual).exists())
 		return QString("file://").append(bundledManual);
@@ -2653,10 +2800,10 @@ void VuoEditor::generateNodeClassHtmlPagesForNodeSet(VuoNodeSet *nodeSet, string
 string VuoEditor::removeVuoLinks(string markdownText)
 {
 	QString filteredText(markdownText.c_str());
-	QRegularExpression vuoNodeLink("\\[(.*)\\](\\(vuo-node://(.*)\\))", QRegularExpression::InvertedGreedinessOption);
+	QRegularExpression vuoNodeLink("\\[([^\\]]+)\\](\\(vuo-node://([^\\]]+)\\))");
 	filteredText.replace(vuoNodeLink, "`\\1`");
 
-	QRegularExpression vuoNodeSetLink("\\[(.*)\\](\\(vuo-nodeset://(.*)\\))", QRegularExpression::InvertedGreedinessOption);
+	QRegularExpression vuoNodeSetLink("\\[([^\\]]+)\\](\\(vuo-nodeset://([^\\]]+)\\))");
 	filteredText.replace(vuoNodeSetLink, "`\\1`");
 
 	return filteredText.toUtf8().constData();

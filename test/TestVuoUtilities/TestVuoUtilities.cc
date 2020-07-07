@@ -231,6 +231,8 @@ private slots:
 
 		QString dir(getcwd(nullptr, 0) + QStringLiteral("/aliases-directory"));
 
+		unlink("empty-directory/.gitignore");
+
 		QTest::newRow("Empty directory")                           << "empty-directory"                     << QSet<QString>();
 		QTest::newRow("Plain directory with a single file")        << "aliases-directory/targetDir"         << QSet<QString>({"aliases-directory/targetDir/someFile"});
 		QTest::newRow("Symlink to a directory with a single file") << "aliases-directory/targetDir symlink" << QSet<QString>({"aliases-directory/targetDir symlink/someFile"});
@@ -255,6 +257,8 @@ private slots:
 		QTest::addColumn<QString>("sourcePath");
 		QTest::addColumn<QSet<QString>>("expectedFiles");
 		{
+			unlink("empty-directory/.gitignore");
+
 			QSet<QString> expectedFiles;
 			QTest::newRow("Empty directory")
 				<< "empty-directory"

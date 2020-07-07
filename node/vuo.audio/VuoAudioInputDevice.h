@@ -35,6 +35,7 @@ typedef struct
 VuoAudioInputDevice VuoAudioInputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoAudioInputDevice_getJson(const VuoAudioInputDevice value);
 char * VuoAudioInputDevice_getSummary(const VuoAudioInputDevice value);
+char * VuoAudioInputDevice_getShortSummary(const VuoAudioInputDevice value);
 
 #define VuoAudioInputDevice_SUPPORTS_COMPARISON
 bool VuoAudioInputDevice_areEqual(VuoAudioInputDevice value1, VuoAudioInputDevice value2);

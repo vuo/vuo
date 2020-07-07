@@ -6,7 +6,7 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 			-DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
 			-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
 			-DCONAN_QT_ROOT=${CONAN_QT_ROOT}
-			-DVuo_VERSION=${Vuo_VERSION}
+			-DVUO_VERSION_AND_BUILD=${VUO_VERSION_AND_BUILD}
 			-DVuoFrameworkVersion=${VuoFrameworkVersion}
 			-DVuoPro=${VuoPro}
 			-P ${CMAKE_CURRENT_LIST_FILE}
@@ -20,8 +20,12 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 		COMMAND rm -f
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.customtype.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.brightness.vuonode
+			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.coreImage.vuonode
+			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.metal.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.stateful.countExecutions.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.stateless.vuoize.vuonode
+			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/libExampleImageFilterCoreImage.a
+			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/libExampleImageFilterMetal.a
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/libExampleLanguageInputEditor.dylib
 	)
 	set_tests_properties(TestSDKCleanup PROPERTIES
@@ -44,12 +48,14 @@ else()
 		endif()
 	endfunction()
 
-	set(sdkDir ${PROJECT_BINARY_DIR}/package/vuo-${Vuo_VERSION}-sdk)
+	set(sdkDir ${PROJECT_BINARY_DIR}/package/vuo-${VUO_VERSION_AND_BUILD}--sdk)
 
 	# Ensure that all the node and VuoRunner examples build and run.
 	foreach (example
 		node/customType
-		node/imageFilter
+		node/imageFilterGLSL
+		node/imageFilterCoreImage
+		node/imageFilterMetal
 		node/stateful
 		node/stateless
 		runner/CompileAndRunInCurrentProcess

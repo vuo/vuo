@@ -30,13 +30,24 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(4))) VuoPoint4d;
 
+/// @{ List type.
+typedef const struct VuoList_VuoPoint4d_struct { void *l; } * VuoList_VuoPoint4d;
+#define VuoList_VuoPoint4d_TYPE_DEFINED
+/// @}
+
 VuoPoint4d VuoPoint4d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint4d_getJson(const VuoPoint4d value);
 char * VuoPoint4d_getSummary(const VuoPoint4d value);
 
 #define VuoPoint4d_SUPPORTS_COMPARISON
 bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2);
+bool VuoPoint4d_areEqualListWithinTolerance(VuoList_VuoPoint4d values, VuoPoint4d tolerance);
 bool VuoPoint4d_isLessThan(const VuoPoint4d a, const VuoPoint4d b);
+bool VuoPoint4d_isWithinRange(VuoPoint4d value, VuoPoint4d minimum, VuoPoint4d maximum);
+
+VuoPoint4d VuoPoint4d_minList(VuoList_VuoPoint4d values, VuoInteger *outputPosition);
+VuoPoint4d VuoPoint4d_maxList(VuoList_VuoPoint4d values, VuoInteger *outputPosition);
+VuoPoint4d VuoPoint4d_average(VuoList_VuoPoint4d values);
 
 VuoPoint4d VuoPoint4d_random(const VuoPoint4d minimum, const VuoPoint4d maximum);
 VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d minimum, const VuoPoint4d maximum);
@@ -236,6 +247,32 @@ static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b) __attribute_
 static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b)
 {
 	return sqrtf((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z) + (a.w-b.w)*(a.w-b.w));
+}
+
+/**
+ * Returns component-wise min.
+ */
+static inline VuoPoint4d VuoPoint4d_min(const VuoPoint4d l, const VuoPoint4d r) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_min(const VuoPoint4d l, const VuoPoint4d r)
+{
+	return (VuoPoint4d){
+		fminf(l.x, r.x),
+		fminf(l.y, r.y),
+		fminf(l.z, r.z),
+		fminf(l.w, r.w)};
+}
+
+/**
+ * Returns component-wise max.
+ */
+static inline VuoPoint4d VuoPoint4d_max(const VuoPoint4d l, const VuoPoint4d r) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_max(const VuoPoint4d l, const VuoPoint4d r)
+{
+	return (VuoPoint4d){
+		fmaxf(l.x, r.x),
+		fmaxf(l.y, r.y),
+		fmaxf(l.z, r.z),
+		fmaxf(l.w, r.w)};
 }
 
 /**

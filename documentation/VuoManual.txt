@@ -203,6 +203,8 @@ Now that you've perused the [Quick Start](#quick-start) and [Tracing through a c
 
 The user manual (this document) provides the most detailed documentation of the concepts underlying Vuo and of Vuo's user interface. You may choose to read it all the way through, or you may refer to it when you have questions about a specific topic.
 
+In Vuo's Help menu, you can use the search box to find topics within this manual.
+
 Terms used in this manual are defined in the glossary at the end.
 
 A high-contrast version of the manual is available on our [release notes page](https://vuo.org/release).
@@ -1124,7 +1126,25 @@ To retrieve data from an XML or JSON web service, you can use the \vuoNodeClass{
 ## Adding nodes to the canvas by dropping files
 <abstract>Drag and drop media files onto the canvas</abstract>
 
-Dragging and dropping an audio, video, image, scene, or projection mesh file onto the canvas will create a node with that file as input. For example, when you drag an image onto the canvas, Vuo will create a \vuoNode{Fetch Image} node with the file path entered in the \vuoPort{URL} input port. The default will be the file's relative path. To enter an absolute path, hold down the option key when dragging the file on the canvas.
+For many types of files, dragging and dropping the file onto the canvas will create a node with that file as input. (If more than one node matches the file type, you'll be presented with a menu to choose which node.)
+
+| Type of file | Node created |
+|--------------|--------------|
+| image        | \vuoNode{Fetch Image} |
+| audio        | \vuoNode{Play Audio File} |
+| video        | \vuoNode{Play Movie} or \vuoNode{Decode Movie Image} |
+| 3D model     | \vuoNode{Fetch Scene} |
+| projection mesh | \vuoNode{Warp Image with Projection Mesh} |
+| plain text   | \vuoNode{Fetch Data} |
+| JSON         | \vuoNode{Fetch JSON Tree} |
+| XML          | \vuoNode{Fetch XML Tree} |
+| CSV or TSV   | \vuoNode{Fetch Table} |
+| RSS or RDF   | \vuoNode{Fetch RSS Items} |
+| ICC profile  | \vuoNode{Fetch Data} |
+| application  | \vuoNode{Launch App} |
+| folder       | \vuoNode{List Files} |
+
+By default, the node's \vuoPort{URL} input port value will be filled in with the file's relative path. To get an absolute path instead, hold down the option key when dropping the file onto the canvas.
 
 
 ## Creating a node
@@ -2165,16 +2185,26 @@ You can search by node title, node class name, and a variety of keywords:
 
 | Type of search | Example search phrase | Example search results |
 |----------------|-----------------------|------------------------|
+| Keyword | *trigonometry* | \vuoNode{Calculate Sine}, |
+|         |                | \vuoNode{Calculate Cosine}, |
+|         |                | and others |
 | Node title | *radial blur* | \vuoNode{Blur Image Radially} |
 | Node class name | *vuo.mouse* | \vuoNode{Receive Mouse Moves} (\vuoNodeClass{vuo.mouse.move2}), |
 |                 |             | \vuoNode{Receive Mouse Buttons} (\vuoNodeClass{vuo.mouse.button2}), |
 |                 |             | and others |
-| Port name | *month* | \vuoNode{Get Date-Time Values}, |
-|           |         | \vuoNode{Make Date-Time}, |
+| Port name | *month* | \vuoNode{Make Date-Time}, |
+|           |         | \vuoNode{Get Date-Time Values}, |
 |           |         | and others |
-| Keyword | *trigonometry* | \vuoNode{Calculate Sine}, |
-|         |                | \vuoNode{Calculate Cosine}, |
-|         |                | and others |
+| Input port name | *in:month* | \vuoNode{Make Date-Time} and |
+|                 |            | \vuoNode{Make Relative Date-Time} |
+| Output port name | *out:month* | \vuoNode{Get Date-Time Values} and |
+|                  |             | \vuoNode{Get Relative Date-Time Values} |
+| Input port type | *in:videoframe* | \vuoNode{Save Frames to Movie}, |
+|                 |                 | \vuoNode{Get Frame Values (Video)}, |
+|                 |                 | and others |
+| Output port type | *out:point3d* | \vuoNode{Curve}, |
+|                  |               | \vuoNode{Scale}, |
+|                  |               | and others |
 | Nodes with triggers | *trigger*, | Nodes that have one or more trigger ports |
 |                     | *fire*, or | |
 |                     | *bang*     | |
@@ -2192,7 +2222,7 @@ You can search by node title, node class name, and a variety of keywords:
 |                 | *source:.fs*, or   | |
 |                 | *source:.c*        | |
 
-The search finds all nodes that match on the title *or* class name *or* keyword. For example, if you search for *filter*, the results include \vuoNode{Filter Skeleton} (which has *filter* in the title and class name), \vuoNode{Allow First Event} (which has *filter* as a keyword), and \vuoNode{Adjust Image Filters} (which is an image filter). If you wanted to narrow the search to nodes like the last one, you could search for *image filter*.
+The search finds all nodes that match on the title *or* class name *or* keyword. For example, if you search for *filter*, the results include \vuoNode{Filter Skeleton} (which has *filter* in the title and class name), \vuoNode{Allow First Event} (which has *filter* as a keyword), and \vuoNode{Adjust Image Colors} (which is an image filter). If you wanted to narrow the search to nodes like the last one, you could search for *image filter*.
 
 If the search doesn't find a node that you expect to see:
 
@@ -2315,6 +2345,8 @@ A composition's published ports are displayed in sidebars, which you can show an
 
 You can publish any input or output port in a composition. Do this by right-clicking on the port and selecting \menu{Publish Port} from the context menu. Alternatively, drag a cable from the port to the \menu{Publish} well that appears in the sidebar when you start dragging. You can unpublish the port by right-clicking on the port again and selecting \menu{Delete Port}.
 
+You can create a published port without immediately connecting it to a port inside the composition by clicking on the New Port button in the sidebar. This pops up a menu for you to choose the data type of the published port. Once the published port has been created, you can drag a cable from it and connect the cable to any compatible port within the composition.
+
 In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Port…}. You can reorder published ports (except those that are part of a protocol) by dragging the name of a published port up or down in the sidebar.
 
 For published ports with numerical data types (integers, real numbers, 2D points, 3D points, and 4D points), you can modify the behavior of their input editors by right-clicking on the published port in the sidebar and selecting \menu{Edit Details…}. The Suggested Min and Suggested Max determine the range of values provided by the input editor's slider or spinbox (arrow buttons). The Suggested Step controls the amount by which each click on a spinbox button increments or decrements the value.
@@ -2401,6 +2433,29 @@ There are several ways to edit a subcomposition after it has already been instal
 ### Uninstalling a subcomposition
 
 To remove an installed subcomposition, right-click on the subcomposition node within the Node Library and select the \menu{Show in Finder} context menu item. Locate the `.vuo` file matching the name of your subcomposition and remove it from the folder.
+
+## Changing the editor's appearance
+<abstract>Options in the View menu</abstract>
+
+In the View menu are several settings to make the editor more comfortable to use depending on your lighting conditions, screen size, and personal taste.
+
+### Dark mode
+
+\menu{View > Dark Interface} toggles between a light and a dark color scheme for the editor. The dark interface is only available in Vuo Pro.
+
+### Transparency
+
+\menu{View > Canvas Transparency} switches between three levels of transparency for the editor. With transparency enabled, other windows behind the editor are visible. This makes it possible to view a composition and its graphics output at the same time when both are fullscreen.
+
+### Grid points and lines
+
+\menu{View > Grid > Lines} / \menu{Points} show grid markings on the canvas.
+
+\menu{View > Grid > Snap} toggles the "snap to grid" setting. When you position a node on the canvas with Snap enabled, the position is constrained so it's easier to align the node with others precisely.
+
+### Toolbar labels
+
+\menu{View > Show/Hide Toolbar Labels} toggles between the regular toolbar with labels on the buttons and a compact toolbar without labels. The compact toolbar is only available in Vuo Pro.
 
 \newpage
 
@@ -2529,7 +2584,7 @@ A Vuo composition (.vuo file) is actually a text file based on the [Graphviz DOT
    - Install the package file (double-click on it in Finder)
    - Open the `/Library/Developer/Vuo` folder
 
-Do not separate the command-line binaries (`vuo-compile`, `vuo-debug`, `vuo-link`, `vuo-render`) from the Framework (`Vuo.framework`) — in order for the command-line binaries to work, they must be in the same folder as the Framework.
+Do not separate the command-line binaries (`vuo-compile`, `vuo-debug`, `vuo-link`) from the Framework (`Vuo.framework`) — in order for the command-line binaries to work, they must be in the same folder as the Framework.
 
 Next, add the command-line binaries to your `PATH` so you can easily run them from any folder.
 
@@ -2544,24 +2599,6 @@ Next, add the command-line binaries to your `PATH` so you can easily run them fr
 <abstract>Information about the command-line tools</abstract>
 
 To see the command-line options available, you can run each command-line tool with the `--help` flag. 
-
-
-## Rendering a composition on the command line
-<abstract>Creating a picture of your composition's nodes and cables</abstract>
-
-Using the `vuo-render` command, you can render a picture of your composition:
-
-\begin{lstlisting}[language=bash,caption=Rendering a composition]
-vuo-render --output-format=pdf --output RenderTextLayer.pdf RenderTextLayer.vuo
-\end{lstlisting}
-
-`vuo-render` can output either raster (PNG) or vector (PDF or SVG) files.  The command `vuo-render --help` provides a complete list of parameters.
-
-Since composition files are in DOT format, you can also render them without Vuo styling using Graphviz: 
-
-\begin{lstlisting}[language=bash,caption=Rendering a Vuo composition using Graphviz]
-dot -Grankdir=LR -Nshape=Mrecord -Nstyle=filled -Tpng -oRenderTextLayer.png RenderTextLayer.vuo
-\end{lstlisting}
 
 
 ## Building a composition on the command line
@@ -2603,9 +2640,9 @@ vuo-debug ./RenderTextLayer
 
 
 ## Exporting a composition on the command line
-<abstract>Turn a composition into a movie or an application</abstract>
+<abstract>Turn a composition into a movie, an app, or a plugin</abstract>
 
-Using the `vuo-export` command, you can turn a composition into a movie or an application:
+Using the `vuo-export` command, you can turn a composition into a movie, an app, or a plugin:
 
 \begin{lstlisting}[language=bash,caption=Exporting a Vuo composition to a movie]
 vuo-export movie --output GenerateCheckerboardImage.mov GenerateCheckerboardImage.vuo
@@ -2618,6 +2655,26 @@ vuo-export macos --output RenderTextLayer.app RenderTextLayer.vuo
 If you run into trouble exporting a composition, you can get more information by running `vuo-export` with the `--verbose` flag. 
 
 This command is equivalent to the \menu{File > Export > Mac App…} menu item in the Vuo editor. See the section [Exporting an application](#exporting-an-application) for more information.
+
+
+## Printing the composition source code
+<abstract>Creating a picture of your composition's nodes, cables, and comments</abstract>
+
+Using the `vuo-export source` command, you can create a picture of your composition:
+
+\begin{lstlisting}[language=bash,caption=Rendering a composition]
+vuo-export source --format=pdf --output RenderTextLayer.pdf RenderTextLayer.vuo
+\end{lstlisting}
+
+This can be useful for making tutorials and documentation, and for working on Vuo's visual design.
+
+`vuo-export source` can output either raster (PNG) or vector (PDF or SVG) files.  You can create a PDF, then open it in macOS Preview.app and print it.  The command `vuo-export --help` provides a complete list of parameters.
+
+Since composition files are in DOT format, you can also render them without Vuo styling using Graphviz:
+
+\begin{lstlisting}[language=bash,caption=Rendering a Vuo composition using Graphviz]
+dot -Grankdir=LR -Nshape=Mrecord -Nstyle=filled -Tpng -oRenderTextLayer.png RenderTextLayer.vuo
+\end{lstlisting}
 
 
 # Common patterns - "How do I…" {#common-patterns}

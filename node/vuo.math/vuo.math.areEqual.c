@@ -10,44 +10,41 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Are Equal (Number)",
-					  "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "~", "conditional" ],
-					  "version" : "2.0.1",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
-						  }
-					  },
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+    "title": "Are Equal (Math)",
+    "keywords": [
+        "==", "same", "identical", "equivalent", "match", "compare", "conditional",
+        "approximate", "range", "roughly", "~", "≈",
+    ],
+    "version": "2.1.0",
+    "genericTypes": {
+        "VuoGenericType1": {
+            "defaultType": "VuoReal",
+            "compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+        },
+    },
+    "node": {
+        "exampleCompositions": [ ],
+    },
+});
 
-void nodeEvent
-(
-		VuoInputData(VuoList_VuoGenericType1) values,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.00001},"suggestedMin":{"VuoInteger":0, "VuoReal":0.0}}) tolerance,
-		VuoOutputData(VuoBoolean) equal
-)
+void nodeEvent(
+	VuoInputData(VuoList_VuoGenericType1) values,
+	VuoInputData(VuoGenericType1, {
+		"defaults":{
+			"VuoInteger":0,
+			"VuoReal":0.00001,
+			"VuoPoint2d":[0.00001,0.00001],
+			"VuoPoint3d":[0.00001,0.00001,0.00001],
+			"VuoPoint4d":[0.00001,0.00001,0.00001,0.00001],
+		},
+		"suggestedMin":{
+			"VuoInteger":0,
+			"VuoReal":0,
+			"VuoPoint2d":[0,0],
+			"VuoPoint3d":[0,0,0],
+			"VuoPoint4d":[0,0,0,0],
+		}}) tolerance,
+	VuoOutputData(VuoBoolean) equal)
 {
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
-	if (termsCount > 1)
-	{
-		VuoGenericType1 min, max;
-		min = max = VuoListGetValue_VuoGenericType1(values, 1);
-		for (unsigned long i = 2; i <= termsCount; ++i)
-		{
-			VuoGenericType1 term = VuoListGetValue_VuoGenericType1(values, i);
-			if (term < min)
-				min = term;
-			if (term > max)
-				max = term;
-		}
-		*equal = (max - min <= tolerance);
-	}
-	else
-	{
-		*equal = true;
-	}
+	*equal = VuoGenericType1_areEqualListWithinTolerance(values, tolerance);
 }

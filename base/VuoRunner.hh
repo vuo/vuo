@@ -96,7 +96,7 @@ class VuoRunner
 public:
 	class Port;
 	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool continueIfRunnerDies, bool deleteExecutableWhenFinished);
-	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, VuoRunningCompositionLibraries *runningCompositionLibraries, string sourceDir, bool continueIfRunnerDies = false, bool deleteDylibsWhenFinished = false);
+	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, const std::shared_ptr<VuoRunningCompositionLibraries> &runningCompositionLibraries, string sourceDir, bool continueIfRunnerDies = false, bool deleteDylibsWhenFinished = false);
 	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir, bool deleteDylibWhenFinished = false);
 	~VuoRunner(void);
 	void setRuntimeChecking(bool runtimeCheckingEnabled);
@@ -164,7 +164,7 @@ private:
 	string executablePath;  ///< The path to the linked composition executable.
 	string dylibPath;  ///< The path to the linked composition dynamic library.
 	void *dylibHandle;  ///< A handle to the linked composition dynamic library.
-	VuoRunningCompositionLibraries *dependencyLibraries;  ///< Libraries referenced by the composition when running with the option for live coding.
+	std::shared_ptr<VuoRunningCompositionLibraries> dependencyLibraries;  ///< Libraries referenced by the composition when running with the option for live coding.
 	bool shouldContinueIfRunnerDies;  ///< True if the composition should keep running if the runner process ends.
 	bool shouldDeleteBinariesWhenFinished;  ///< True if the composition binary file(s) should be deleted when the runner is finished using them.
 	string sourceDir;  ///< The directory containing the composition's .vuo source file.
@@ -201,6 +201,9 @@ private:
 	vector<Port *> publishedOutputPorts;
 	bool arePublishedInputPortsCached;  ///< True if the list of published input ports has been retrieved and cached.
 	bool arePublishedOutputPortsCached; ///< True if the list of published output ports has been retrieved and cached.
+
+	class Private;
+	Private *p;
 
 	void saturating_semaphore_signal(dispatch_semaphore_t dsema, bool *sent);
 	void saturating_semaphore_wait(dispatch_semaphore_t dsema, bool *sent);

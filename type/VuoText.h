@@ -36,6 +36,11 @@ struct json_object;
  */
 typedef const char * VuoText;
 
+/// @{ List type.
+typedef const struct VuoList_VuoText_struct { void *l; } * VuoList_VuoText;
+#define VuoList_VuoText_TYPE_DEFINED
+/// @}
+
 /**
  * Where to truncate text.
  */
@@ -74,6 +79,7 @@ VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_insert(const VuoText string, int startIndex, const VuoText newText);
 VuoText VuoText_removeAt(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, size_t textsCount);
+VuoText VuoText_appendWithSeparator(VuoList_VuoText texts, VuoText separator, bool includeEmptyParts);
 VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts, size_t *partsCount);
 VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement);
 VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength, VuoTextTruncation where);

@@ -7,3 +7,5 @@ Example:
    - `Value` receives 4. `Max` becomes 4.
    - `Value` receives 1. `Max` stays at 4.
    - `Value` receives -6. `Max` stays at 4.
+
+For point types, this node compares components left-to-right, stopping when a maximum component is found.  For example, (1,0) is considered greater than (0,1).

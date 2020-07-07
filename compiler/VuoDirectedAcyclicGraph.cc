@@ -38,6 +38,8 @@ VuoDirectedAcyclicGraph::~VuoDirectedAcyclicGraph(void)
  */
 void VuoDirectedAcyclicGraph::addVertex(Vertex *vertex)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	edges[vertex];
 }
 
@@ -46,6 +48,8 @@ void VuoDirectedAcyclicGraph::addVertex(Vertex *vertex)
  */
 void VuoDirectedAcyclicGraph::removeVertex(Vertex *vertex)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	for (map< Vertex *, vector<Vertex *> >::iterator i = edges.begin(); i != edges.end(); ++i)
 	{
 		for (vector<Vertex *>::iterator j = i->second.begin(); j != i->second.end(); )
@@ -78,6 +82,8 @@ void VuoDirectedAcyclicGraph::removeVertex(Vertex *vertex)
  */
 VuoDirectedAcyclicGraph::Vertex * VuoDirectedAcyclicGraph::findVertex(const string &key)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	for (map< Vertex *, vector<Vertex *> >::iterator i = edges.begin(); i != edges.end(); ++i)
 		if (i->first->key() == key)
 			return i->first;
@@ -93,6 +99,8 @@ VuoDirectedAcyclicGraph::Vertex * VuoDirectedAcyclicGraph::findVertex(const stri
  */
 void VuoDirectedAcyclicGraph::addEdge(Vertex *fromVertex, Vertex *toVertex)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	if (find(edges[fromVertex].begin(), edges[fromVertex].end(), toVertex) == edges[fromVertex].end())
 	{
 		edges[fromVertex].push_back(toVertex);
@@ -112,6 +120,16 @@ void VuoDirectedAcyclicGraph::addEdge(Vertex *fromVertex, Vertex *toVertex)
  * to return them in topological order.
  */
 vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getDownstreamVertices(Vertex *vertex)
+{
+	std::lock_guard<std::mutex> lock(graphMutex);
+
+	return getDownstreamVerticesInternal(vertex);
+}
+
+/**
+ * Thread-unsafe version of VuoDirectedAcyclicGraph::getDownstreamVertices().
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getDownstreamVerticesInternal(Vertex *vertex)
 {
 	map< Vertex *, vector<Vertex *> >::iterator iter = downstreamVerticesCache.find(vertex);
 	if (iter != downstreamVerticesCache.end())
@@ -133,6 +151,8 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getDownstream
  */
 vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getUpstreamVertices(Vertex *vertex)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	map< Vertex *, vector<Vertex *> >::iterator iter = upstreamVerticesCache.find(vertex);
 	if (iter != upstreamVerticesCache.end())
 		return iter->second;
@@ -160,6 +180,8 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getUpstreamVe
  */
 set<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getCycleVertices(void)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	if (cycleVerticesCacheReady)
 		return cycleVerticesCache;
 
@@ -182,14 +204,24 @@ set<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getCycleVertices
  */
 int VuoDirectedAcyclicGraph::getLongestDownstreamPath(Vertex *vertex)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
+	return getLongestDownstreamPathInternal(vertex);
+}
+
+/**
+ * Thread-unsafe version of @ref VuoDirectedAcyclicGraph::getLongestDownstreamPath().
+ */
+int VuoDirectedAcyclicGraph::getLongestDownstreamPathInternal(Vertex *vertex)
+{
 	auto iter = longestDownstreamPathsCache.find(vertex);
 	if (iter != longestDownstreamPathsCache.end())
 		return iter->second;
 
 	int longest = -1;
-	for (Vertex *v : getDownstreamVertices(vertex))
+	for (Vertex *v : getDownstreamVerticesInternal(vertex))
 	{
-		int curr = getLongestDownstreamPath(v);
+		int curr = getLongestDownstreamPathInternal(v);
 		longest = std::max(longest, curr);
 	}
 
@@ -266,6 +298,8 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getReachableV
  */
 string VuoDirectedAcyclicGraph::toString(bool showVertexPointers)
 {
+	std::lock_guard<std::mutex> lock(graphMutex);
+
 	ostringstream ss;
 
 	for (map< Vertex *, vector<Vertex *> >::iterator i = edges.begin(); i != edges.end(); ++i)

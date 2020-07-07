@@ -45,7 +45,7 @@ VuoLayer VuoLayer_makeGroup2(VuoLayer layer1, VuoLayer layer2, VuoTransform2d tr
 VuoLayer VuoLayer_makeGroup3(VuoLayer layer1, VuoLayer layer2, VuoLayer layer3, VuoTransform2d transform);
 VuoList_VuoLayer VuoLayer_getChildLayers(VuoLayer layer);
 
-VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha);
+VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha);
 VuoLayer VuoLayer_makeWithTransform(VuoText name, VuoImage image, VuoTransform2d transform, VuoReal alpha);
 VuoLayer VuoLayer_makeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance);
 VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize);

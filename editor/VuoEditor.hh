@@ -280,6 +280,9 @@ private:
 	bool uiInitialized;
 	bool reportAbsenceOfUpdates;
 
+	QString qtFindTranslation(const QLocale &locale, const QString &filename, const QString &prefix, const QString &directory, const QString &suffix);
+	void loadTranslations();
+
 	QList<QMainWindow *> windowsRemainingAfterQuitRequested;
 	void reallyQuit();
 

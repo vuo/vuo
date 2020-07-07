@@ -8,3 +8,5 @@ Examples:
 `Position` is the location of the minimum value in the list, with 1 being the first item. If the minimum value appears multiple times in the list, `Position` outputs the first position where it appears.
 
 If there are no values, both `Minimum` and `Position` output 0.
+
+For point types, this node compares components left-to-right, stopping when a minimum component is found.  For example, (0,1) is considered less than (1,0).

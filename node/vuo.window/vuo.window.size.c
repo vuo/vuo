@@ -24,7 +24,7 @@ void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":640}) width,
 		VuoInputData(VuoInteger, {"default":480}) height,
-		VuoInputData(VuoCoordinateUnit, {"default":"points"}) unit,
+		VuoInputData(VuoCoordinateUnit, {"default":"points","includeValues":["points","pixels"]}) unit,
 		VuoOutputData(VuoWindowProperty) property
 )
 {

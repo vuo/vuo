@@ -78,7 +78,7 @@ Launch Qt Creator.
             - Name: `Vuo trunk`
             - Directories: pick your working copy folder
             - File pattern: `*.h,*.hh,*.c,*.cc,*.m,*.mm,*.md,*.glsl,*.vs,*.fs,*.qml,*.ui,*.qrc,*.txt,*.cmake,*.feature,*.php`
-            - Exclusion pattern: `*/.svn/*,*/build/*`
+            - Exclusion pattern: `*/.git/*,*/build/*`
       - In C++, select the File Naming tab:
          - Change Header suffix to "hh"
          - Change Source suffix to "cc"
@@ -114,15 +114,6 @@ Run Vuo Editor:
 
 …or open the `build/bin` folder in Finder and double-click `Vuo.app`.
 
-Optionally, build the Doxygen API documentation and PDF user manual:
-
-    # Build everything.
-    make -j8 VuoDocumentation
-    # Build just the Doxygen.
-    make VuoDoxygen
-    # Build just the US English, Solarized PDF.
-    make -j8 VuoManualPDF_en_solarized
-
 Optionally, build and run the tests:
 
     # Build and run the quick tests (should take just a minute or two to run).
@@ -150,8 +141,6 @@ You can now run the command-line tools:
     bin/vuo-compile --help
     bin/vuo-link --help
     bin/vuo-debug --help
-    bin/vuo-render --help
-    bin/vuo-export --help
 
 ## Developer shortcuts
 Vuo's build system includes some shortcuts to make development more efficient.

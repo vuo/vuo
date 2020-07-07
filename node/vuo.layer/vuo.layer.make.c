@@ -39,7 +39,7 @@ void nodeInstanceEvent
 		VuoOutputData(VuoLayer) layer
 )
 {
-	VuoLayer base = VuoLayer_make(name, image, center, rotation, width, opacity);
+	VuoLayer base = VuoLayer_make(name, image, center, rotation, width, VuoOrientation_Horizontal, opacity);
 	*layer = VuoLayer_setAnchor(base, anchor, -1, -1, -1);
 	VuoLayer_setId(*layer, *id);
 }

@@ -28,7 +28,7 @@ VuoModuleMetadata({
 						"VuoImageResize"
 					],
 					"node": {
-						"exampleCompositions" : [ "RecordMovie.vuo" ],
+						"exampleCompositions" : [ "SaveProcessedMovie.vuo" ],
 					}
 				 });
 
@@ -159,10 +159,18 @@ void nodeInstanceEvent(
 
 	if (saveImageEvent && saveVideoFrame.image)
 	{
+		VuoVideoFrame videoFrame = saveVideoFrame;
+		if (!VuoIsPro() && (videoFrame.image->pixelsWide > 1280 || videoFrame.image->pixelsHigh > 1280))
+		{
+			if (!(*instance)->resizeShaderInitialized)
+				initResizeShader( (*instance) );
+			videoFrame.image = VuoImageResize_resize(videoFrame.image, (*instance)->resize, VuoSizingMode_Proportional, 1280, 1280);
+		}
+
 		if ((*instance)->imageWidth == -1)
 		{
-			(*instance)->imageWidth = saveVideoFrame.image->pixelsWide;
-			(*instance)->imageHeight = saveVideoFrame.image->pixelsHigh;
+			(*instance)->imageWidth = videoFrame.image->pixelsWide;
+			(*instance)->imageHeight = videoFrame.image->pixelsHigh;
 		}
 
 		if (state == VuoAvWriterState_None)
@@ -206,23 +214,23 @@ void nodeInstanceEvent(
 			});
 		}
 
-		VuoRetain(saveVideoFrame.image);
+		VuoRetain(videoFrame.image);
 
 		dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^
 		{
-			if (saveVideoFrame.image->pixelsWide != (*instance)->imageWidth ||
-				saveVideoFrame.image->pixelsHigh != (*instance)->imageHeight)
+			if (videoFrame.image->pixelsWide != (*instance)->imageWidth ||
+				videoFrame.image->pixelsHigh != (*instance)->imageHeight)
 			{
 				if (!(*instance)->resizeShaderInitialized)
 					initResizeShader( (*instance) );
 
-				VuoImage resized = VuoImageResize_resize(saveVideoFrame.image,
+				VuoImage resized = VuoImageResize_resize(videoFrame.image,
 														 (*instance)->resize,
 														 VuoSizingMode_Fit,
 														 (*instance)->imageWidth,
 														 (*instance)->imageHeight);
 				VuoRetain( resized );
-				VuoReal ts =  VuoReal_areEqual(saveVideoFrame.timestamp, VuoVideoFrame_NoTimestamp) ? timestamp - (*instance)->firstEvent : saveVideoFrame.timestamp;
+				VuoReal ts =  VuoReal_areEqual(videoFrame.timestamp, VuoVideoFrame_NoTimestamp) ? timestamp - (*instance)->firstEvent : videoFrame.timestamp;
 				VuoAvWriter_appendImage((*instance)->avWriter, resized, ts, true);
 
 				VuoRelease( resized );
@@ -231,10 +239,10 @@ void nodeInstanceEvent(
 			{
 				// safe to call appendImage all day long - it will only write if the file has been initialized and is currently
 				// recording.
-				VuoReal ts =  VuoReal_areEqual(saveVideoFrame.timestamp, VuoVideoFrame_NoTimestamp) ? timestamp - (*instance)->firstEvent : saveVideoFrame.timestamp;
-				VuoAvWriter_appendImage((*instance)->avWriter, saveVideoFrame.image, ts, true);
+				VuoReal ts =  VuoReal_areEqual(videoFrame.timestamp, VuoVideoFrame_NoTimestamp) ? timestamp - (*instance)->firstEvent : videoFrame.timestamp;
+				VuoAvWriter_appendImage((*instance)->avWriter, videoFrame.image, ts, true);
 			}
-			VuoRelease(saveVideoFrame.image);
+			VuoRelease(videoFrame.image);
 		});
 	}
 

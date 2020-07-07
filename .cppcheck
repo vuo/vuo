@@ -14,7 +14,6 @@ variableScope:type/VuoShaderShaders.h
 // Not our code.
 // List headers here (list source files in Jenkinsfile).
 *:node/vuo.audio/VuoBeatDetektor.hh
-*:node/vuo.blackmagic/blackmagic-decklink-sdk/DeckLinkAPI.h
 *:node/vuo.ui/stb_textedit.h
 
 // Ignore false positive due to OAI's callback API.

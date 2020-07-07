@@ -358,8 +358,8 @@ private:
 	static string getLibraryPath(const string &dependency, vector<string> librarySearchPaths);
 	void useModuleCache(bool shouldUseExistingBuiltInCaches, bool shouldUseExistingOtherCaches);
 	bool findInModuleCache(const string &moduleOrDependency, string &cachePath, bool &isBuiltinCache) VuoWarnUnusedResult;
-	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="");
-	Module * readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs);
+	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="", VuoCompilerIssues *issues = nullptr);
+	Module *readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs, VuoCompilerIssues *issues);
 	static Module * readModuleFromBitcode(VuoFileUtilities::File *inputFile);
 	static Module * readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error);
 	static bool writeModuleToBitcode(Module *module, string outputPath);

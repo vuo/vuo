@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Resize Image if Larger",
 					 "keywords" : [ "size", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
-					 "version" : "1.1.2",
+					 "version" : "1.1.3",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 },

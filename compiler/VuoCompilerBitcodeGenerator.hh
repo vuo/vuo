@@ -119,7 +119,7 @@ private:
 	void generateGetPublishedPortValueFunction(bool input);
 	void generateCompositionSetPublishedInputPortValueFunction(void);
 	void generateSetPublishedInputPortValueFunction(void);
-	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerPort *outputPort, Value *eventValue, Value *dataValue, bool requiresEvent = true, bool shouldSendTelemetry = true);
+	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *outputNode, VuoCompilerPort *outputPort, Value *eventValue, Value *dataValue, bool requiresEvent = true, bool shouldSendTelemetry = true);
 	void generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node, bool requiresEvent = true, bool shouldSendTelemetry = true);
 	void generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node);
 	void generateDataOnlyTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *node, bool shouldWaitForDownstreamNodes, bool shouldUpdateTriggers, bool shouldSendTelemetry);

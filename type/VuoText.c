@@ -27,7 +27,8 @@ VuoModuleMetadata({
 						"VuoInteger",
 						"VuoReal",
 						"VuoTextCase",
-						"VuoList_VuoInteger"
+						"VuoList_VuoInteger",
+						"VuoList_VuoText",
 					 ]
 				 });
 #endif
@@ -731,6 +732,9 @@ VuoText VuoText_substring(const VuoText string, int startIndex, int length)
  */
 VuoText VuoText_append(VuoText *texts, size_t textsCount)
 {
+	if (!textsCount)
+		return NULL;
+
 	CFMutableArrayRef a = CFArrayCreateMutable(kCFAllocatorDefault, textsCount, &kCFTypeArrayCallBacks);
 	for (size_t i = 0; i < textsCount; ++i)
 	{
@@ -750,6 +754,44 @@ VuoText VuoText_append(VuoText *texts, size_t textsCount)
 	CFRelease(s);
 	CFRelease(a);
 	return compositeString;
+}
+
+/**
+ * @ingroup VuoText
+ * Returns a string consisting of the elements in `texts` array concatenated together, with `separator` between them.
+ */
+VuoText VuoText_appendWithSeparator(VuoList_VuoText texts, VuoText separator, bool includeEmptyParts)
+{
+	unsigned long textsCount = VuoListGetCount_VuoText(texts);
+	if (!textsCount)
+		return NULL;
+
+	VuoText *textsArray = (VuoText *)malloc((textsCount * 2 - 1) * sizeof(VuoText));
+	unsigned long outputIndex = 0;
+	bool previousText = false;
+	for (unsigned long inputIndex = 1; inputIndex <= textsCount; ++inputIndex)
+	{
+		VuoText t = VuoListGetValue_VuoText(texts, inputIndex);
+		if (includeEmptyParts)
+		{
+			textsArray[outputIndex++] = t;
+			if (inputIndex < textsCount)
+				textsArray[outputIndex++] = separator;
+		}
+		else if (VuoText_isPopulated(t))
+		{
+			if (previousText && inputIndex <= textsCount)
+				textsArray[outputIndex++] = separator;
+			textsArray[outputIndex++] = t;
+			previousText = true;
+		}
+	}
+
+	VuoText compositeText = VuoText_append(textsArray, outputIndex);
+
+	free(textsArray);
+
+	return compositeText;
 }
 
 /**

@@ -41,6 +41,8 @@ VuoCoordinateUnit VuoCoordinateUnit_makeFromJson(json_object *js)
 
 	if (strcmp(valueAsString, "pixels") == 0)
 		value = VuoCoordinateUnit_Pixels;
+	else if (strcmp(valueAsString, "vuo") == 0)
+		value = VuoCoordinateUnit_VuoCoordinates;
 
 	return value;
 }
@@ -54,6 +56,8 @@ json_object *VuoCoordinateUnit_getJson(const VuoCoordinateUnit value)
 
 	if (value == VuoCoordinateUnit_Pixels)
 		valueAsString = "pixels";
+	else if (value == VuoCoordinateUnit_VuoCoordinates)
+		valueAsString = "vuo";
 
 	return json_object_new_string(valueAsString);
 }
@@ -66,6 +70,7 @@ VuoList_VuoCoordinateUnit VuoCoordinateUnit_getAllowedValues(void)
 	VuoList_VuoCoordinateUnit l = VuoListCreate_VuoCoordinateUnit();
 	VuoListAppendValue_VuoCoordinateUnit(l, VuoCoordinateUnit_Points);
 	VuoListAppendValue_VuoCoordinateUnit(l, VuoCoordinateUnit_Pixels);
+	VuoListAppendValue_VuoCoordinateUnit(l, VuoCoordinateUnit_VuoCoordinates);
 	return l;
 }
 
@@ -78,6 +83,8 @@ char *VuoCoordinateUnit_getSummary(const VuoCoordinateUnit value)
 
 	if (value == VuoCoordinateUnit_Pixels)
 		valueAsString = "Pixels";
+	else if (value == VuoCoordinateUnit_VuoCoordinates)
+		valueAsString = "Vuo Coordinates";
 
 	return strdup(valueAsString);
 }

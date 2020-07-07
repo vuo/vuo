@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.scale node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	// See vuo.math.scale.VuoReal.json for more detailed tests.
+
+    {"firingPort":"value", "inputPortValues":{"value":[0,  0,   0,  0  ],"start":[0,0,0,0],"end":[1,1,1,1],"limitToRange":false,"scaledStart":[0,0,0,0],"scaledEnd":[100,100,100,100]}, "outputPortValues":{"scaledValue":{"x":  0,"y": 0,"z":  0,"w": 0}}},
+    {"firingPort":"value", "inputPortValues":{"value":[0.5,0.1,-0.1,0.2],"start":[0,0,0,0],"end":[1,1,1,1],"limitToRange":false,"scaledStart":[0,0,0,0],"scaledEnd":[100,100,100,100]}, "outputPortValues":{"scaledValue":{"x": 50,"y":10,"z":-10,"w":20}}},
+    {"firingPort":"value", "inputPortValues":{"value":[1.0,0.2,-0.2,0.3],"start":[0,0,0,0],"end":[1,1,1,1],"limitToRange":false,"scaledStart":[0,0,0,0],"scaledEnd":[100,100,100,100]}, "outputPortValues":{"scaledValue":{"x":100,"y":20,"z":-20,"w":30}}},
+]}

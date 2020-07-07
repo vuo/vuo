@@ -7,14 +7,20 @@ target_link_libraries(vuo.data.types
 )
 
 VuoCompileGenericNodes(
+	vuo.data.append.c
 	vuo.data.areEqual.c
+	vuo.data.becameGreaterThan.c
+	vuo.data.becameLessThan.c
+	vuo.data.cut.c
 	vuo.data.fetch.c
+	vuo.data.get.c
 	vuo.data.hold.c
 	vuo.data.hold2.c
 	vuo.data.hold.list.c
 	vuo.data.hold.list2.c
 	vuo.data.isGreaterThan.c
 	vuo.data.isLessThan.c
+	vuo.data.make.c
 	vuo.data.populated.c
 	vuo.data.record.c
 	vuo.data.save.c

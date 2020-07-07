@@ -99,6 +99,7 @@ bool VuoImage_isLessThan(const VuoImage a, const VuoImage b);
 
 bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const unsigned char tolerance);
 bool VuoImage_isEmpty(const VuoImage image);
+bool VuoImage_isBlackOrTransparent(const VuoImage image, const unsigned char tolerance);
 bool VuoImage_isPopulated(const VuoImage image);
 
 VuoRectangle VuoImage_getRectangle(const VuoImage image);
@@ -108,7 +109,7 @@ VuoImage VuoImage_makeFromJson(struct json_object * js);
 VuoImage VuoImage_makeFromJsonWithDimensions(struct json_object *js, unsigned int requestedPixelsWide, unsigned int requestedPixelsHigh) VuoWarnUnusedResult;
 GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *js, GLuint (^provider)(unsigned int pixelsWide, unsigned int pixelsHigh), unsigned int *outputPixelsWide, unsigned int *outputPixelsHigh, void *outputIOSurface) VuoWarnUnusedResult;
 bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, GLuint textureName, unsigned int pixelsWide, unsigned int pixelsHigh, void *outputIOSurface) VuoWarnUnusedResult;
-bool VuoImage_resolveInterprocessJsonOntoFramebuffer(struct json_object *js, VuoGlContext context, bool flip) VuoWarnUnusedResult;
+bool VuoImage_resolveInterprocessJsonOntoFramebuffer(struct json_object *js, VuoGlContext context, bool flip, bool stretch) VuoWarnUnusedResult;
 struct json_object * VuoImage_getJson(const VuoImage value);
 
 /// This type has a _getInterprocessJson() function.

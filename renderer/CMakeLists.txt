@@ -53,9 +53,7 @@ if (VuoPro)
 endif()
 VuoPCH(VuoRenderer LLVMQt)
 
-add_subdirectory(vuo-render)
-
-# Make the Qt frameworks available to vuo-export and vuo-render's relative RPATHs.
+# Make the Qt frameworks available to vuo-export's relative RPATHs.
 file(COPY
 		${CONAN_QT_ROOT}/lib/QtCore.framework
 		${CONAN_QT_ROOT}/lib/QtGui.framework

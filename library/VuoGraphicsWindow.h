@@ -79,4 +79,6 @@ extern dispatch_semaphore_t VuoGraphicsWindow_fullScreenTransitionSemaphore;
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
 - (void)unlockAspectRatio;
 
+- (void)scheduleResize:(NSSize)newSize;
+
 @end

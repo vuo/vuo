@@ -541,7 +541,14 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, VuoGlTexturePoolAllocation a
 			CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, internalformat, width, height, format, VuoGlTexture_getType(format), (IOSurfaceRef)ioSurfaceRef, 0);
 			if (err != kCGLNoError)
 			{
-				VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+				char *internalFormatString = VuoGl_stringForConstant(internalformat);
+				char *formatString = VuoGl_stringForConstant(format);
+				char *typeString = VuoGl_stringForConstant(VuoGlTexture_getType(format));
+				VUserLog("Error in CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_ARB, %s, %hu, %hu, %s, %s, iosurface, 0): %s",
+						 internalFormatString, width, height, formatString, typeString, CGLErrorString(err));
+				free(internalFormatString);
+				free(formatString);
+				free(typeString);
 				VGL();
 				return false;
 			}

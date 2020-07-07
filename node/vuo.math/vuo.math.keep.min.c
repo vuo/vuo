@@ -11,22 +11,22 @@
 #include <stdlib.h>
 
 VuoModuleMetadata({
-					  "title" : "Keep Minimum",
-					  "keywords" : [
-						  "less", "least", "small", "few", "low", "<", "bottom", "lower", "limit", "bound", "range",
-						  "store", "retain", "hold", "sample", "preserve"
-					  ],
-					  "version" : "1.0.1",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
-						  }
-					  },
-					  "node": {
-						  "exampleCompositions" : [ "SpreadBars.vuo" ],
-					  }
-				  });
+    "title": "Keep Minimum",
+    "keywords": [
+        "less", "least", "small", "few", "low", "<", "bottom", "lower", "limit", "bound", "range",
+        "store", "retain", "hold", "sample", "preserve",
+    ],
+    "version": "1.1.0",
+    "genericTypes": {
+        "VuoGenericType1": {
+            "defaultType": "VuoReal",
+            "compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+        },
+    },
+    "node": {
+        "exampleCompositions": [ "SpreadBars.vuo" ],
+    },
+});
 
 
 struct nodeInstanceData
@@ -43,14 +43,12 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	return state;
 }
 
-void nodeInstanceEvent
-(
-		VuoInstanceData(struct nodeInstanceData *) state,
-		VuoInputData(VuoGenericType1) value,
-		VuoInputEvent({"data":"value", "hasPortAction":true}) valueEvent,
-		VuoInputEvent({"eventBlocking":"none"}) reset,
-		VuoOutputData(VuoGenericType1) min
-)
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData *) state,
+	VuoInputData(VuoGenericType1) value,
+	VuoInputEvent({"data":"value", "hasPortAction":true}) valueEvent,
+	VuoInputEvent({"eventBlocking":"none"}) reset,
+	VuoOutputData(VuoGenericType1) min)
 {
 	if (!(*state)->minSet || reset)
 	{
@@ -58,7 +56,7 @@ void nodeInstanceEvent
 		(*state)->minSet = true;
 	}
 
-	if (value < (*state)->min)
+	if (VuoGenericType1_isLessThan(value, (*state)->min))
 		(*state)->min = value;
 
 	*min = (*state)->min;

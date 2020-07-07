@@ -30,13 +30,24 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(2))) VuoPoint2d;
 
+/// @{ List type.
+typedef const struct VuoList_VuoPoint2d_struct { void *l; } * VuoList_VuoPoint2d;
+#define VuoList_VuoPoint2d_TYPE_DEFINED
+/// @}
+
 VuoPoint2d VuoPoint2d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint2d_getJson(const VuoPoint2d value);
 char * VuoPoint2d_getSummary(const VuoPoint2d value);
 
 #define VuoPoint2d_SUPPORTS_COMPARISON
 bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2);
+bool VuoPoint2d_areEqualListWithinTolerance(VuoList_VuoPoint2d values, VuoPoint2d tolerance);
 bool VuoPoint2d_isLessThan(const VuoPoint2d a, const VuoPoint2d b);
+bool VuoPoint2d_isWithinRange(VuoPoint2d value, VuoPoint2d minimum, VuoPoint2d maximum);
+
+VuoPoint2d VuoPoint2d_minList(VuoList_VuoPoint2d values, VuoInteger *outputPosition);
+VuoPoint2d VuoPoint2d_maxList(VuoList_VuoPoint2d values, VuoInteger *outputPosition);
+VuoPoint2d VuoPoint2d_average(VuoList_VuoPoint2d values);
 
 VuoPoint2d VuoPoint2d_random(const VuoPoint2d minimum, const VuoPoint2d maximum);
 VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d minimum, const VuoPoint2d maximum);
@@ -174,6 +185,28 @@ static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b) __attribute_
 static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b)
 {
 	return sqrtf( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) );
+}
+
+/**
+ * Returns component-wise min.
+ */
+static inline VuoPoint2d VuoPoint2d_min(const VuoPoint2d l, const VuoPoint2d r) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_min(const VuoPoint2d l, const VuoPoint2d r)
+{
+	return (VuoPoint2d){
+		fminf(l.x, r.x),
+		fminf(l.y, r.y)};
+}
+
+/**
+ * Returns component-wise max.
+ */
+static inline VuoPoint2d VuoPoint2d_max(const VuoPoint2d l, const VuoPoint2d r) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_max(const VuoPoint2d l, const VuoPoint2d r)
+{
+	return (VuoPoint2d){
+		fmaxf(l.x, r.x),
+		fmaxf(l.y, r.y)};
 }
 
 /**

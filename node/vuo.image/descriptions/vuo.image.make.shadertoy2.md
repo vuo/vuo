@@ -29,6 +29,8 @@ This node only supports shaders that have a single Image tab. It doesn't support
 
 This node only supports images (textures) as `Channel` inputs. It doesn't support audio or other types of inputs.
 
+This node uses GLSL 1.20.  Features that were added in later versions of GLSL, such as `switch` statements, may not be supported.
+
 ### Shadertoy uniforms
 
    - `vec3 iResolution` — The output image size, in pixels.

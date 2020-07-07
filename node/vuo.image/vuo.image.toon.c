@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						 "comic", "illustration", "hand-drawn", "sketch", "airbrush", "line art", "stroke", "contour",
 						 "filter"
 					 ],
-					 "version" : "1.1.0",
+					 "version" : "1.1.1",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }

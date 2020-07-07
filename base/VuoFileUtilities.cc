@@ -759,6 +759,8 @@ void VuoFileUtilities::copyFile(string fromPath, string toPath, bool preserveMet
 
 	if (ret)
 		throw VuoException(string("Couldn't copy ") + fromPath + " to " + toPath + ": " + e);
+
+	VDebugLog("%s -> %s", fromPath.c_str(), toPath.c_str());
 }
 
 /**
@@ -780,6 +782,8 @@ void VuoFileUtilities::copyDirectory(string fromPath, string toPath)
 		linkDestination[len] = 0;  // "readlink does not append a NUL character to buf."
 		if (symlink(linkDestination, toPath.c_str()) == -1)
 			throw VuoException(string("Couldn't copy symlink \"") + fromPath + "\" to \"" + toPath + "\": " + strerror(errno));
+
+		VDebugLog("%s -> %s (symlink)", fromPath.c_str(), toPath.c_str());
 	}
 
 	else if (!dirExists(fromPath))
@@ -787,6 +791,7 @@ void VuoFileUtilities::copyDirectory(string fromPath, string toPath)
 
 	else
 	{
+		VDebugLog("%s ::", fromPath.c_str());
 		auto files = findAllFilesInDirectory(fromPath);
 		makeDir(toPath);
 		for (auto file : files)

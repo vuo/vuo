@@ -87,6 +87,7 @@ public:
 	string getLongDescription(bool htmlFormatted);
 	string getHint(bool htmlFormatted);
 	void setFilePathIfEmpty(const string &filePath);
+	void setFilePath(const string &filePath);
 	void append(const VuoCompilerIssue &issue);
 	void append(VuoCompilerIssues *otherIssues);
 	bool isEmpty(void);

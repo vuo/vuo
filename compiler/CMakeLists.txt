@@ -11,6 +11,7 @@ add_library(VuoCompiler STATIC
 	VuoCompilerConstantStringCache.cc
 	VuoCompilerData.cc
 	VuoCompilerDataClass.cc
+	VuoCompilerDiagnosticConsumer.cc
 	VuoCompilerDriver.cc
 	VuoCompilerEventPort.cc
 	VuoCompilerEventPortClass.cc

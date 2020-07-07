@@ -44,7 +44,6 @@ brew 'pycodestyle'
 brew 'python'
 brew "python@2"
 brew 'shellcheck'
-brew "svn"
 brew 'tidy-html5'
 brew 'translate-toolkit'
 brew 'xmlstarlet'
@@ -58,6 +57,3 @@ brew "pdfsizeopt", args: ["HEAD"]
 
 tap "smokris/getwindowid"
 brew "getwindowid"
-
-tap "smokris/svn-xattr"
-brew "svn-xattr"

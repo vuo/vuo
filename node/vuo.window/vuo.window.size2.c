@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Change Window Size",
 					 "keywords" : [ "width", "height", "dimensions", "properties", "settings" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node" : {
 						  "exampleCompositions" : [ "ShowPrimaryAndSecondaryWindow.vuo" ]
 					 }
@@ -24,7 +24,7 @@ void nodeEvent
 		VuoInputData(VuoWindowDescription) windowDescription,
 		VuoInputData(VuoInteger, {"default":640}) width,
 		VuoInputData(VuoInteger, {"default":480}) height,
-		VuoInputData(VuoCoordinateUnit, {"default":"points"}) unit,
+		VuoInputData(VuoCoordinateUnit, {"default":"points","includeValues":["points","pixels"]}) unit,
 		VuoOutputData(VuoWindowDescription) changedWindowDescription
 )
 {

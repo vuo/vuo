@@ -3,7 +3,7 @@
  * Draws a rectangle over each face detected in the dropped image.
  *
  * @createdInVuoVersion 2.0.0
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -15,7 +15,7 @@ AppendLists [type="vuo.list.append.VuoLayer" version="1.0.0" label="Append Lists
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="1035,750"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="1035,765"];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="390,270"];
-FindFacesInImage [type="vuo.image.findFaces" version="1.0.0" label="Find Faces in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<quality>quality\l|<rectangles>rectangles\r" pos="540,450" fillcolor="orange" _minimumConfidence="0.69999999999999996" _quality="0.80000000000000004"];
+FindFacesInImage [type="vuo.image.findFaces" version="1.1.0" label="Find Faces in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<quality>quality\l|<rectangles>rectangles\r|<landmarks>landmarks\r" pos="525,450" fillcolor="orange" _minimumConfidence="0.69999999999999996" _quality="0.80000000000000004"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="540,105" fillcolor="lime" _started_eventThrottling="enqueue"];
 GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="120,255"];
 GetFirstItemInList [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="720,300"];

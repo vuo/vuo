@@ -11,7 +11,7 @@
 #include "VuoWindowDescription.h"
 
 VuoModuleMetadata({
-					 "title" : "Change Screen",
+					 "title" : "Change Window Screen",
 					 "keywords" : [ "windowed", "fullscreen", "status", "move", "display", "properties", "settings" ],
 					 "version" : "2.0.0",
 					 "node": {

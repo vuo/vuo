@@ -1,0 +1,184 @@
+---
+PreCommit:
+    ALL:
+        problem_on_unmodified_line: ignore
+        on_warn: fail
+        quiet: true
+
+    AuthorEmail:
+        enabled: true
+    AuthorName:
+        enabled: true
+    BrokenSymlinks:
+        enabled: true
+        exclude:
+            - test/TestVuoUtilities/symlinks-directory/b/*
+    CaseConflicts:
+        enabled: true
+    Codespell:
+        enabled: true
+        description: 'Check spelling'
+        required_executable: codespell
+        flags:
+            - --check-hidden
+            - --check-filenames
+            - --builtin
+            - clear,rare,informal,code,names,en-GB_to_en-US
+        exclude:
+            - translation/*_de.ts
+            - translation/*_es.ts
+            - translation/*_fr.ts
+        install_command: 'brew install codespell'
+    Cppcheck:
+        enabled: true
+        description: 'Run cppcheck'
+        required_executable: cppcheck
+        flags:
+            - --platform=unix64
+            - --enable=information,warning,style,performance,portability
+            - --std=c11
+            - --std=c++11
+            - --library=qt
+            - --library=posix
+            - --library=std
+            - --suppressions-list=.cppcheck
+            - --template=cppcheck1
+            - -Inode
+            - -Itype
+            - -Ilibrary
+            - -Ibuild/base/config
+            - -Ibuild/type/list
+            - -UVuoLocal
+            - --max-configs=1
+        install_command: 'brew install cppcheck'
+        include:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.h'
+            - '**/*.hh'
+            - '**/*.m'
+            - '**/*.mm'
+    EndOfFile:
+        enabled: true
+        description: 'Check linebreaks at end of file'
+        exclude:
+            - documentation/VuoManual.txt  # Intentionally has an extra linebreak to separate the contributors abstract from the list.
+    ExecutePermissions:
+        enabled: true
+        exclude:
+            - '**/*.php'
+            - '**/*.pl'
+            - '**/*.sh'
+            - base/build-and-analyze
+            - compiler/binary/install_name_tool
+            - framework/vuo-run
+            - node/vuo.blackmagic/generateVideoModes
+    FixMe:
+        enabled: true
+        keywords:
+            - CFShow
+            - NOCOMMIT
+            - NSLog
+            - VL()
+            - VLog
+            - VuoHeap_addTrace
+            - console.log
+            - qDebug
+        exclude:
+            - '**/*.t2d'
+    ForbiddenBranches:
+        enabled: true
+        branch_patterns: ['main']
+    ImageOptim:
+        enabled: true
+        exclude:
+            - 'test/**/*.jpg'
+            - 'test/**/*.png'
+    InvisibleUnicode:
+        enabled: true
+        description: 'Check for invisible Unicode characters'
+    LineEndings:
+        enabled: true
+        exclude:
+            - '**/*.3ds'
+            - '**/*.afdesign'
+            - '**/*.ai'
+            - '**/*.bmp'
+            - '**/*.gif'
+            - '**/*.icns'
+            - '**/*.jpg'
+            - '**/*.mov'
+            - '**/*.mp3'
+            - '**/*.pdf'
+            - '**/*.png'
+            - '**/*.pptx'
+            - '**/*.pxi'
+            - '**/*.tga'
+            - '**/*.tiff'
+            - '**/*.ttf'
+            - base/miniz.c
+            - compiler/binary/install_name_tool
+            - compiler/binary/libunwind.a
+            - framework/shaders/GPUNoiseLib.glsl
+            - license/*.txt
+            - node/vuo.leap/Leap/libLeap.dylib
+            - node/vuo.syphon/Syphon/Syphon.framework/Syphon
+            - node/vuo.syphon/Syphon/Syphon.framework/Versions/A/Resources/English.lproj/InfoPlist.strings
+            - node/vuo.syphon/Syphon/Syphon.framework/Versions/A/Syphon
+            - node/vuo.video/HapInAVFoundation.framework/HapInAVFoundation
+            - node/vuo.video/HapInAVFoundation.framework/Versions/A/Frameworks/libsnappy.dylib
+            - node/vuo.video/HapInAVFoundation.framework/Versions/A/Frameworks/libsquish.dylib
+            - node/vuo.video/HapInAVFoundation.framework/Versions/A/HapInAVFoundation
+            - package/vuo.keychain
+            - renderer/font/*.txt
+            - test/TestCompositions/composition/*.rss
+            - test/TestShaderFile/shaders/**/*.fs
+            - test/TestVuoUtilities/aliases-directory/targetDir alias
+            - test/TestVuoUtilities/aliases-directory/targetFile alias
+            - test/TestVuoUtilities/symlinks-directory/b/*
+    Mdl:
+        enabled: true
+        flags: ['--json', '-s.mdlstyle.rb']
+        include:
+            - '**/*.md'
+            - '**/*.txt'
+        exclude:
+            - '**/CMakeLists.txt'
+    MergeConflicts:
+        enabled: true
+    MidLineTabs:
+        enabled: true
+        description: 'Check for mid-line tabs'
+    PhpLint:
+        enabled: true
+    Pylint:
+        enabled: true
+    ShellCheck:
+        enabled: true
+    TrailingWhitespace:
+        enabled: true
+    XmlLint:
+        enabled: true
+    YamlLint:
+        enabled: true
+
+CommitMsg:
+    ALL:
+        on_warn: fail
+        quiet: true
+
+    CapitalizedSubject:
+        enabled: true
+    EmptyMessage:
+        enabled: true
+    MessageFormat:
+        enabled: true
+        pattern: '\A[^\n]*\[#[0-9]+\]'
+        expected_pattern_message: 'Please include a b33p.net issue number (e.g., "[#42]") in the first line of the commit message.'
+        sample_message: 'When zoomed to fit, continue to zoom-to-fit when resizing the window. [#16085]'
+    SingleLineSubject:
+        enabled: true
+    TextWidth:
+        enabled: false
+    TrailingPeriod:
+        enabled: false

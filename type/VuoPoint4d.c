@@ -15,15 +15,16 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "4D Point",
-					 "description" : "A floating-point 4-dimensional Cartesian spatial location.",
-					 "keywords" : [ "coordinate" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						"VuoReal",
-						"VuoText"
-					 ]
-				 });
+    "title": "4D Point",
+    "description": "A floating-point 4-dimensional Cartesian spatial location.",
+    "keywords": [ "coordinate" ],
+    "version": "1.0.0",
+    "dependencies": [
+        "VuoList_VuoPoint4d",
+        "VuoReal",
+        "VuoText",
+    ],
+});
 #endif
 /// @}
 
@@ -92,7 +93,7 @@ VuoPoint4d VuoPoint4d_makeFromJson(json_object * js)
 }
 
 /**
- * @ingroup VuoPoint2d
+ * @ingroup VuoPoint4d
  * Encodes @c value as a JSON object.
  */
 json_object * VuoPoint4d_getJson(const VuoPoint4d value)
@@ -135,6 +136,30 @@ bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2)
 }
 
 /**
+ * Returns true if the two values are equal within component-wise `tolerance`.
+ */
+bool VuoPoint4d_areEqualListWithinTolerance(VuoList_VuoPoint4d values, VuoPoint4d tolerance)
+{
+	unsigned long count = VuoListGetCount_VuoPoint4d(values);
+	if (count <= 1)
+		return true;
+
+	VuoPoint4d *points = VuoListGetData_VuoPoint4d(values);
+	VuoPoint4d min, max;
+	min = max = points[0];
+	for (unsigned long i = 1; i < count; ++i)
+	{
+		min = VuoPoint4d_min(min, points[i]);
+		max = VuoPoint4d_max(max, points[i]);
+	}
+	VuoPoint4d diff = max - min;
+	return diff.x <= tolerance.x
+		&& diff.y <= tolerance.y
+		&& diff.z <= tolerance.z
+		&& diff.w <= tolerance.w;
+}
+
+/**
  * Compares `a` to `b` primarily by `x`-value, secondarily by `y`-value,
  * tertiarily by `z`-value, and finally by `w`-value,
  * returning true if `a` is less than `b`.
@@ -148,6 +173,82 @@ bool VuoPoint4d_isLessThan(const VuoPoint4d a, const VuoPoint4d b)
 	VuoType_returnInequality(VuoReal, a.z, b.z);
 	VuoType_returnInequality(VuoReal, a.w, b.w);
 	return false;
+}
+
+/**
+ * Returns true if each component of `value` is between `minimum` and `maximum`.
+ */
+bool VuoPoint4d_isWithinRange(VuoPoint4d value, VuoPoint4d minimum, VuoPoint4d maximum)
+{
+	return minimum.x <= value.x && value.x <= maximum.x
+		&& minimum.y <= value.y && value.y <= maximum.y
+		&& minimum.z <= value.z && value.z <= maximum.z
+		&& minimum.w <= value.w && value.w <= maximum.w;
+}
+
+/**
+ * Returns the minimum of a list of terms, or 0 if the array is empty.
+ */
+VuoPoint4d VuoPoint4d_minList(VuoList_VuoPoint4d values, VuoInteger *outputPosition)
+{
+	unsigned long count = VuoListGetCount_VuoPoint4d(values);
+	if (count == 0)
+	{
+		*outputPosition = 0;
+		return 0;
+	}
+
+	VuoPoint4d *points = VuoListGetData_VuoPoint4d(values);
+	VuoPoint4d min = FLT_MAX;
+	for (unsigned long i = 0; i < count; ++i)
+		if (VuoPoint4d_isLessThan(points[i], min))
+		{
+			min = points[i];
+			*outputPosition = i + 1;
+		}
+
+	return min;
+}
+
+/**
+ * Returns the maximum of a list of terms, or 0 if the array is empty.
+ */
+VuoPoint4d VuoPoint4d_maxList(VuoList_VuoPoint4d values, VuoInteger *outputPosition)
+{
+	unsigned long count = VuoListGetCount_VuoPoint4d(values);
+	if (count == 0)
+	{
+		*outputPosition = 0;
+		return 0;
+	}
+
+	VuoPoint4d *points = VuoListGetData_VuoPoint4d(values);
+	VuoPoint4d max = -FLT_MAX;
+	for (unsigned long i = 0; i < count; ++i)
+		if (VuoPoint4d_isLessThan(max, points[i]))
+		{
+			max = points[i];
+			*outputPosition = i + 1;
+		}
+
+	return max;
+}
+
+/**
+ * Returns the average of the values in the list, or 0 if the list is empty.
+ */
+VuoPoint4d VuoPoint4d_average(VuoList_VuoPoint4d values)
+{
+	VuoInteger count = VuoListGetCount_VuoPoint4d(values);
+	if (count == 0)
+		return 0;
+
+	VuoPoint4d sum = 0;
+	for (VuoInteger i = 1; i <= count; ++i)
+		sum += VuoListGetValue_VuoPoint4d(values, i);
+
+	VuoPoint4d divisor = count;
+	return sum / divisor;
 }
 
 /**

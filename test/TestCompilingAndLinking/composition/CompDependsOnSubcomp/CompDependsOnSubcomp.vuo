@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="45,120" _requestedFrame_eventThrottling="drop"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="479,131"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="525,120" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Subcomp [type="test.subcomp" version="" label="Subcomp|<refresh>refresh\l|<Text>Text\l|<Layer>Layer\r" pos="330,120"];
+SummarizeValue [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="420,225"];
+
+FireOnDisplayRefresh:requestedFrame -> SummarizeValue:value;
+MakeList:list -> RenderLayersToWindow:layers;
+Subcomp:Layer -> MakeList:1;
+SummarizeValue:summary -> Subcomp:Text;
+}

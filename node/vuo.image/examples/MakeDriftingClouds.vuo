@@ -2,7 +2,7 @@
  * @file
  * Displays a sky of drifting clouds.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -26,13 +26,12 @@ MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refr
 MakeNoiseImage [type="vuo.image.make.noise" version="1.2.0" label="Make Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<time>time\l|<scale>scale\l|<type>type\l|<grid>grid\l|<tile>tile\l|<range>range\l|<rangeMode>rangeMode\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<height>height\l|<image>image\r" pos="165,90" _colorA="\{\"r\":0.41893643140792847,\"g\":0.42803081870079041,\"b\":0.59031051397323608,\"a\":1\}" _colorB="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _time="0" _scale="0.40000000000000002" _type="\"gradient\"" _grid="\"triangular\"" _tile="false" _range="\{\"minimum\":0,\"maximum\":0.80000000000000004\}" _rangeMode="\"clamp\"" _levels="5" _roughness="0.5" _spacing="2.0"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-75,285"];
 Multiply2 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-75,345"];
-ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="1005,90" _sizingMode="\"fill\""];
 Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="255,390"];
 Round2 [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="255,405"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedStep="32" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedStep="32"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-AdjustImageColors:adjustedImage -> ResizeImage:image;
+AdjustImageColors:adjustedImage -> PublishedOutputs:outputImage;
 ChangeSpeed2:changedTime -> ConvertRealTo2DPoint4:x;
 ChangeSpeed3:changedTime -> ConvertRealTo2DPoint3:x;
 ChangeSpeed:changedTime -> ConvertRealTo2DPoint2:x;
@@ -49,13 +48,10 @@ MakeNoiseImage:image -> FrostImage:image;
 Multiply2:product -> Round2:real;
 Multiply:product -> Round:real;
 PublishedInputs:height -> ConvertIntegerToRealNumber2:integer;
-PublishedInputs:height -> ResizeImage:height;
 PublishedInputs:time -> ChangeSpeed2:time;
 PublishedInputs:time -> ChangeSpeed3:time;
 PublishedInputs:time -> ChangeSpeed:time;
 PublishedInputs:width -> ConvertIntegerToRealNumber:integer;
-PublishedInputs:width -> ResizeImage:width;
-ResizeImage:resizedImage -> PublishedOutputs:outputImage;
 Round2:rounded -> MakeNoiseImage:height;
 Round:rounded -> MakeNoiseImage:width;
 }

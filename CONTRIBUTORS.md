@@ -193,7 +193,7 @@ Thanks to our contributors!
    - [liblqr](https://github.com/carlobaldassi/liblqr)
    - [libusb](http://libusb.info)
    - [libxml2](http://xmlsoft.org/)
-   - [muParser](http://beltoforion.de/article.php?a=muparser)
+   - [muParser](https://github.com/beltoforion/muparser/)
    - [nginx](http://nginx.org/)
    - [oscpack](http://www.rossbencina.com/code/oscpack)
    - [pngquant](http://pngquant.org/)

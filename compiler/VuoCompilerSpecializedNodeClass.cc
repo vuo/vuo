@@ -823,7 +823,7 @@ string VuoCompilerSpecializedNodeClass::createFullySpecializedNodeClassName(VuoN
 	map<string, string> backingForGeneric = getBackingTypeNamesFromPorts(nodeToBack);
 
 	vector<string> nodeClassNameParts = VuoStringUtilities::split(getBase()->getClassName(), '.');
-	for (int i = 3; i < nodeClassNameParts.size(); ++i)
+	for (int i = 1; i < nodeClassNameParts.size(); ++i)
 	{
 		map<string, string>::iterator backingIter = backingForGeneric.find( VuoType::extractInnermostTypeName(nodeClassNameParts[i]) );
 		if (backingIter != backingForGeneric.end())

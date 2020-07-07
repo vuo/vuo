@@ -607,16 +607,25 @@ void VuoCodeWindow::relinquishSourcePath(void)
 	delete shaderFile;
 	shaderFile = nullptr;
 
+	wrapperComposition->getModuleManager()->cancelCallbackForNodeClass(getNodeClassName());
+
 	string oldSourcePath = windowFilePath().toStdString();
 	if (! oldSourcePath.empty())
 	{
 		compiler->uninstallNodeClassAtCompositionLocalScope(oldSourcePath);
 
+		for (VuoNode *oldNode : wrapperComposition->getBase()->getNodes())
+		{
+			if (oldNode->getNodeClass()->getClassName() == getNodeClassName())
+			{
+				VuoNode *replacementNode = wrapperComposition->createNodeWithMissingImplementation(oldNode->getNodeClass(), oldNode);
+				wrapperComposition->updateNodeImplementationInPlace(oldNode->getRenderer(), replacementNode);
+			}
+		}
+
 		if (isNewUnsavedDocument())
 			VuoFileUtilities::deleteFile(oldSourcePath);
 	}
-
-	wrapperComposition->getModuleManager()->cancelCallbackForNodeClass(getNodeClassName());
 }
 
 /**

@@ -253,17 +253,29 @@ VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d c
  *
  * @threadAnyGL
  */
-VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha)
+VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha)
 {
 	if (!image)
 		return nullptr;
+
+	float width, height;
+	if (fixed == VuoOrientation_Horizontal)
+	{
+		width = size;
+		height = image->pixelsHigh * size / image->pixelsWide;
+	}
+	else
+	{
+		width = image->pixelsWide * size / image->pixelsHigh;
+		height = size;
+	}
 
 	VuoSceneObject object = VuoSceneObject_makeQuad(
 				VuoShader_makeUnlitImageShader(image, alpha),
 				center,
 				rotation,
 				width,
-				image->pixelsHigh * width/image->pixelsWide
+				height
 			);
 
 	return object;
@@ -274,17 +286,29 @@ VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPo
  *
  * @threadAnyGL
  */
-VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess)
+VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha, VuoColor highlightColor, VuoReal shininess)
 {
 	if (!image)
 		return nullptr;
+
+	float width, height;
+	if (fixed == VuoOrientation_Horizontal)
+	{
+		width = size;
+		height = image->pixelsHigh * size / image->pixelsWide;
+	}
+	else
+	{
+		width = image->pixelsWide * size / image->pixelsHigh;
+		height = size;
+	}
 
 	return VuoSceneObject_makeQuadWithNormals(
 				VuoShader_makeLitImageShader(image, alpha, highlightColor, shininess),
 				center,
 				rotation,
 				width,
-				image->pixelsHigh * width/image->pixelsWide
+				height
 			);
 }
 

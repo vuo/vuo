@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Receive MIDI Events",
 					 "keywords" : [ "note", "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "2.1.1",
+					 "version" : "2.1.2",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],

@@ -33,6 +33,7 @@ VuoModuleMetadata({
 @synthesize textFont;
 @synthesize editCopyMenuItem;
 @synthesize editSelectAllMenuItem;
+@synthesize editClearMenuItem;
 
 /**
  * Creates a window containing a text view.
@@ -192,6 +193,11 @@ VuoModuleMetadata({
 	[self.editSelectAllMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
 	[editMenu addItem:self.editSelectAllMenuItem];
 
+	// "Edit > Clear"
+	self.editClearMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Clear" action:@selector(clear) keyEquivalent:@"k"] autorelease];
+	[self.editClearMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[editMenu addItem:self.editClearMenuItem];
+
 	NSMenuItem *editMenuItem = [[NSMenuItem new] autorelease];
 	[editMenuItem setSubmenu:editMenu];
 
@@ -279,6 +285,14 @@ VuoModuleMetadata({
 
 	if (autoscroll)
 		[textView scrollRangeToVisible:NSMakeRange([[textView string] length], 0)];
+}
+
+/**
+ * Removes the text in the window.
+ */
+- (void)clear
+{
+    [textView.textStorage deleteCharactersInRange:NSMakeRange(0, textView.textStorage.length)];
 }
 
 /**

@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Used to generate the example image shown in this node's description.
+ *
+ * @copyright Copyright © 2012–2019 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="585,465" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1004,641"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="810,465" _color="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="810,645" _text="\"Hello\\nWorld!\"" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":288,\"underline\":false,\"color\":\{\"r\":0.9999992847442627,\"g\":0.99997442960739136,\"b\":0.99999129772186279,\"a\":1\},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1470,630" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="1065,630" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1485,765" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
+SkeletonizeImage [type="vuo.image.skeletonize" version="1.0.0" label="Skeletonize Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<iterations>iterations\l|<skeletonizedImage>skeletonizedImage\r" pos="1290,630" _radius="1" _iterations="10"];
+
+FireOnStart2:started -> MakeRectangleLayer:color;
+FireOnStart2:started -> MakeTextLayer:text;
+MakeList:list -> RenderLayersToImage:layers;
+MakeRectangleLayer:layer -> MakeList:1;
+MakeTextLayer:layer -> MakeList:2;
+RenderLayersToImage:image -> SkeletonizeImage:image;
+SkeletonizeImage:skeletonizedImage -> RenderImageToWindow:image;
+SkeletonizeImage:skeletonizedImage -> SaveImage:saveImage;
+}

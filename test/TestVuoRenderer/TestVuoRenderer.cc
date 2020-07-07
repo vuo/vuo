@@ -182,7 +182,7 @@ private slots:
 												(VuoCompilerPort *)writePort->getCompiler()))->getBase();
 		composition->addCable(cable);
 
-		int expectedNumInputPorts = 2;
+		int expectedNumInputPorts = 3;
 		QCOMPARE(write->getInputPorts().size(), (size_t)expectedNumInputPorts);
 		QCOMPARE(write->getRenderer()->getInputPorts().size(), (size_t)expectedNumInputPorts);
 

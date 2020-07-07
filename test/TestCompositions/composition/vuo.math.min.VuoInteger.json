@@ -7,37 +7,9 @@
  * For more information, see https://vuo.org/license.
  */
 
-{"portConfiguration" : [
-	{
-		"firingPort" : "refresh",
-		"inputPortValues" : {
-			"values" : [ ]
-		},
-		"outputPortValues" : {
-			"min" : 0,
-			"position" : 0,
-		}
-	},
-
-	{
-		"firingPort" : "refresh",
-		"inputPortValues" : {
-			"values" : [ 1 ]
-		},
-		"outputPortValues" : {
-			"min" : 1,
-			"position" : 1,
-		}
-	},
-
-	{
-		"firingPort" : "refresh",
-		"inputPortValues" : {
-			"values" : [ 1, -2 ]
-		},
-		"outputPortValues" : {
-			"min" : -2,
-			"position" : 2,
-		}
-	},
-]}
+{"portConfiguration": {
+	"null":       {"firingPort":"values", "inputPortValues":{"values":null  }, "outputPortValues":{"min": 0,"position":0}},
+	"one":        {"firingPort":"values", "inputPortValues":{"values":[1   ]}, "outputPortValues":{"min": 1,"position":1}},
+	"two first":  {"firingPort":"values", "inputPortValues":{"values":[1, 2]}, "outputPortValues":{"min": 1,"position":1}},
+	"two second": {"firingPort":"values", "inputPortValues":{"values":[1,-2]}, "outputPortValues":{"min":-2,"position":2}},
+}}

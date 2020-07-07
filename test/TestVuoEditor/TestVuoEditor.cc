@@ -14,6 +14,9 @@
 #include <QQuickWindow>
 #include <QtNetwork/QNetworkReply>
 #include "VuoEditor.hh"
+#include "VuoEditorUtilities.hh"
+#include "VuoExampleMenu.hh"
+#include "VuoCodeWindow.hh"
 #include "VuoModuleManager.hh"
 #include "VuoSearchBox.hh"
 #include <sstream>
@@ -71,6 +74,18 @@ private:
 		}
 
 		composition = window->composition;
+	}
+
+	void waitWithoutBlockingMainThread(float seconds)
+	{
+		for (int i = 0; i < seconds * 1000; ++i)
+		{
+			VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
+			struct timespec t;
+			t.tv_sec = 0;
+			t.tv_nsec = 1000000;
+			nanosleep(&t, nullptr);
+		}
 	}
 
 private slots:
@@ -699,6 +714,61 @@ private slots:
 			remove(string(dirToRemove.toUtf8().data()).c_str());
 	}
 
+	void testSavingNewShader_data()
+	{
+		QTest::addColumn<QString>("protocol");
+
+		QTest::newRow("Image Filter") << "Image Filter";
+		QTest::newRow("Image Generator") << "Image Generator";
+		QTest::newRow("Image Transition") << "Image Transition";
+	}
+	void testSavingNewShader()
+	{
+		QFETCH(QString, protocol);
+
+		initTestCaseWithCompositionFile("");
+
+		// File > New Shader > (protocol)
+		QAction *newShaderAction = nullptr;
+		for (QAction *a : static_cast<VuoEditor *>(qApp)->menuFile->actions())
+		{
+			if (a->menu() && a->text() == "New Shader")
+			{
+				for (QAction *aa : a->menu()->actions())
+				{
+					if (aa->text() == protocol)
+					{
+						newShaderAction = aa;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		QVERIFY(newShaderAction);
+		newShaderAction->trigger();
+
+		// Wait for modules to finish loading
+		waitWithoutBlockingMainThread(0.1);
+
+		// Save file
+		QList<QMainWindow *> openWindows = VuoEditorUtilities::getOpenEditingWindows();
+		QCOMPARE(openWindows.size(), 1);
+		VuoCodeWindow *shaderWindow = dynamic_cast<VuoCodeWindow *>(openWindows.front());
+		QVERIFY(shaderWindow);
+		string saveDir = VuoFileUtilities::makeTmpDir("testSavingNewShader");
+		string savePath = saveDir + "/" + protocol.toStdString() + ".fs";
+		shaderWindow->saveToPath(QString::fromStdString(savePath));
+		QVERIFY(VuoFileUtilities::fileExists(savePath));
+
+		// Wait for modules to finish loading
+		waitWithoutBlockingMainThread(0.1);
+
+		// Clean up
+		VuoFileUtilities::deleteDir(saveDir);
+		delete shaderWindow;
+	}
+
 	void testValidBuildDate_data()
 	{
 		QTest::addColumn< QDate >("editorBuildDate");
@@ -825,6 +895,7 @@ private slots:
 			expectedSelectedNodes.push_back("ListFiles");
 			expectedSelectedNodes.push_back("ProcessList3");
 			expectedSelectedNodes.push_back("ArrangeLayersInGrid");
+			expectedSelectedNodes.push_back("MakeScaledLayer");
 			expectedSelectedNodes.push_back("GetFileURLValues");
 			QTest::newRow("Ensure results are in left-right, top-bottom order") << "RenderedTextInvisibleConstant.vuo" << "fi" << expectedSelectedNodes;
 		}
@@ -965,6 +1036,29 @@ private slots:
 		QCOMPARE(output, expectedOutput);
 	}
 
+	void testRemoveVuoLinks_data()
+	{
+		QTest::addColumn<QString>("markdown");
+		QTest::addColumn<QString>("expectedOutput");
+
+		QTest::newRow("node")       << "[Make HSL Color](vuo-node://vuo.color.make.hsl)"                                                      << "`Make HSL Color`";
+		QTest::newRow("2 nodes")    << "[Make HSL Color](vuo-node://vuo.color.make.hsl) text [Make RGB Color](vuo-node://vuo.color.make.rgb)" << "`Make HSL Color` text `Make RGB Color`";
+		QTest::newRow("nodeset")    << "[vuo.osc](vuo-nodeset://vuo.osc)"                                                                     << "`vuo.osc`";
+		QTest::newRow("2 nodesets") << "[vuo.osc](vuo-nodeset://vuo.osc) text [vuo.audio](vuo-nodeset://vuo.audio)"                           << "`vuo.osc` text `vuo.audio`";
+
+		QTest::newRow("link + node")
+			<< "[sRGB colorspace](https://en.wikipedia.org/wiki/SRGB) text [Make HSL Color](vuo-node://vuo.color.make.hsl)"
+			<< "[sRGB colorspace](https://en.wikipedia.org/wiki/SRGB) text `Make HSL Color`";
+	}
+	void testRemoveVuoLinks()
+	{
+		QFETCH(QString, markdown);
+		QFETCH(QString, expectedOutput);
+
+		QString actualOutput = QString::fromStdString(VuoEditor::removeVuoLinks(markdown.toStdString()));
+		QCOMPARE(actualOutput, expectedOutput);
+	}
+
 	/**
 	 * Returns the indentation depth of the specified action.
 	 * 0 = not indented (normal).
@@ -1085,6 +1179,7 @@ private slots:
 		allowedMenuPaths.insert("File > Move to User Library");
 		allowedMenuPaths.insert("Run > Hide Events");
 		allowedMenuPaths.insert("View > Show/Hide Published Ports");
+		allowedMenuPaths.insert("View > Show/Hide Toolbar Labels");
 
 		// VuoCompositionLoader/VuoApp menu items:
 		allowedMenuPaths.insert("File > Start Recording");
@@ -1152,6 +1247,44 @@ private slots:
 		QBENCHMARK {
 			composition->initiateCableDrag(rp, nullptr, &e);
 		}
+	}
+
+	void testProExampleCompositions_data()
+	{
+		QTest::addColumn<QString>("compositionFile");
+
+		map<string, VuoNodeSet *> nodeSets = compiler->getNodeSets();
+		for (map<string, VuoNodeSet *>::iterator i = nodeSets.begin(); i != nodeSets.end(); ++i)
+		{
+			vector<string> examples = i->second->getExampleCompositionFileNames();
+			for (vector<string>::iterator j = examples.begin(); j != examples.end(); ++j)
+				QTest::newRow((i->second->getName() + ":" + *j).c_str()) << ("../../node/" + i->second->getName() + "/examples/" + *j).c_str();
+		}
+	}
+	/**
+	 * Verifies that example compositions containing Pro nodes, and _only_ example compositions containing Pro nodes,
+	 * are designated as Pro in the menu.
+	 */
+	void testProExampleCompositions()
+	{
+		QFETCH(QString, compositionFile);
+
+		QString filename = QFileInfo(compositionFile).fileName();
+		bool compositionListedAsPro = static_cast<VuoEditor *>(qApp)->menuOpenExample->isCompositionPro(filename);
+
+		VuoCompilerGraphvizParser *graphParser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionFile.toStdString(), compiler);
+		bool foundProNode = false;
+		foreach (VuoNode *node, graphParser->getNodes())
+			if (node->getNodeClass()->isPro())
+			{
+				foundProNode = true;
+				QVERIFY2(compositionListedAsPro, QString("Example composition '%1' contains Pro node '%2', but isn't listed as a Pro example composition.")
+					.arg(filename.toUtf8().data(), node->getNodeClass()->getClassName().c_str()).toUtf8().data());
+			}
+
+		if (compositionListedAsPro && !foundProNode)
+			QFAIL(QString("Example composition '%1' is listed as a Pro example composition, but doesn't contain any Pro nodes.")
+				.arg(filename).toUtf8().data());
 	}
 
 };

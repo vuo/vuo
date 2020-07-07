@@ -56,14 +56,15 @@ VuoLayer VuoLayer_makeEmpty(void)
  * @param image The image shown on the layer.
  * @param center The center of the layer, in Vuo Coordinates.
  * @param rotation The layer's angle, in degrees.
- * @param width The width of the layer, in Vuo Coordinates.
+ * @param size The width or height of the layer, in Vuo Coordinates.
+ * @param fixed Whether `size` specifies width or height.
  * @param alpha The opacity of the layer, 0–1.
  */
-VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha)
+VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal size, VuoOrientation fixed, VuoReal alpha)
 {
 	VuoPoint3d center3d = VuoPoint3d_make(center.x, center.y, 0);
 	VuoPoint3d rotation3d = VuoPoint3d_make(0, 0, rotation);
-	VuoSceneObject so = VuoSceneObject_makeImage(image, center3d, rotation3d, width, alpha);
+	VuoSceneObject so = VuoSceneObject_makeImage(image, center3d, rotation3d, size, fixed, alpha);
 	VuoSceneObject_setName(so, name);
 	return (VuoLayer)so;
 }
@@ -81,7 +82,7 @@ VuoLayer VuoLayer_makeWithTransform(VuoText name, VuoImage image, VuoTransform2d
 	VuoPoint3d center3d = VuoPoint3d_make(transform.translation.x, transform.translation.y, 0);
 	// VuoSceneObject_makeImage wants rotation in degrees
 	VuoPoint3d rotation3d = VuoPoint3d_make(0, 0, transform.rotation * 57.295779513f);
-	VuoSceneObject so = VuoSceneObject_makeImage(image, center3d, rotation3d, 2, alpha);
+	VuoSceneObject so = VuoSceneObject_makeImage(image, center3d, rotation3d, 2, VuoOrientation_Horizontal, alpha);
 	VuoSceneObject_setScale(so, (VuoPoint3d){transform.scale.x, transform.scale.y, 1});
 	VuoSceneObject_setName(so, name);
 	return (VuoLayer)so;
@@ -100,7 +101,7 @@ VuoLayer VuoLayer_makeWithTransform(VuoText name, VuoImage image, VuoTransform2d
  */
 VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize)
 {
-	VuoLayer l = VuoLayer_make(name,image,center,0,0,alpha);
+	VuoLayer l = VuoLayer_make(name, image, center, 0, 0, VuoOrientation_Horizontal, alpha);
 	VuoSceneObject_setRealSize((VuoSceneObject)l, true);
 	VuoSceneObject_setPreservePhysicalSize((VuoSceneObject)l, preservePhysicalSize);
 	return l;
@@ -139,7 +140,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 	VuoPoint3d center3d = VuoPoint3d_make(0,0,0);
 	VuoPoint3d layerCenter3d = VuoTransform_transformPoint(matrix, center3d);
 	VuoPoint2d layerCenter = VuoPoint2d_make(layerCenter3d.x, layerCenter3d.y);
-	VuoLayer layer = VuoLayer_make(name, image, layerCenter, rotation, width, alpha);
+	VuoLayer layer = VuoLayer_make(name, image, layerCenter, rotation, width, VuoOrientation_Horizontal, alpha);
 	VuoSceneObject_setRealSize((VuoSceneObject)layer, isRealSize);
 	VuoSceneObject_setPreservePhysicalSize((VuoSceneObject)layer, preservePhysicalSize);
 
@@ -161,7 +162,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 	VuoPoint3d shadowCenter3d = VuoTransform_transformPoint(matrix, shadowOffset3d);
 	VuoPoint2d shadowCenter = VuoPoint2d_make(shadowCenter3d.x, shadowCenter3d.y);
 	VuoReal shadowWidth = width * blurredImage->pixelsWide/image->pixelsWide;
-	VuoLayer shadow = VuoLayer_make(NULL, blurredImage, shadowCenter, rotation, shadowWidth, alpha);
+	VuoLayer shadow = VuoLayer_make(NULL, blurredImage, shadowCenter, rotation, shadowWidth, VuoOrientation_Horizontal, alpha);
 	VuoSceneObject_setRealSize((VuoSceneObject)shadow, isRealSize);
 	VuoSceneObject_setPreservePhysicalSize((VuoSceneObject)shadow, preservePhysicalSize);
 

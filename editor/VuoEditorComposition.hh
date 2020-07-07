@@ -360,7 +360,7 @@ private:
 	dispatch_queue_t activePortPopoversQueue;  ///< @ref runCompositionQueue and VuoSubcompositionRouter functions should not be called from this queue.
 	bool stopRequested;
 	string linkedCompositionPath;
-	VuoRunningCompositionLibraries *runningCompositionLibraries;
+	std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries;
 	QAction *contextMenuDeleteSelected;
 	QAction *contextMenuHideSelectedCables;
 	QAction *contextMenuRenameSelected;

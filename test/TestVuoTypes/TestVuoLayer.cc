@@ -63,8 +63,8 @@ private slots:
 
 		{
 			VuoList_VuoLayer childLayers = VuoListCreate_VuoLayer();
-			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_make(VuoText_make("child1"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make(-1,0), 0, 1, 1));
-			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_make(VuoText_make("child2"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make( 0,1), 0, 1, 1));
+			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_make(VuoText_make("child1"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make(-1,0), 0, 1, VuoOrientation_Horizontal, 1));
+			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_make(VuoText_make("child2"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make( 0,1), 0, 1, VuoOrientation_Horizontal, 1));
 
 			VuoLayer parent = VuoLayer_makeGroup(childLayers, VuoTransform2d_makeIdentity());
 			QTest::newRow("two scaled layers")	<< parent

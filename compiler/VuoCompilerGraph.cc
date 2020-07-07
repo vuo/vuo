@@ -242,7 +242,7 @@ void VuoCompilerGraph::initializeInstance(VuoCompilerComposition *composition, s
 	{
 		VuoNode *toNode = composition->getManuallyFirableInputNode();
 		VuoPort *toPort = composition->getManuallyFirableInputPort();
-		if (toNode && toPort)
+		if (toNode && toPort && toNode->hasCompiler() && toPort->hasCompiler())
 		{
 			VuoCompilerCable *spinOffCable = new VuoCompilerCable(manuallyFirableTriggerNode, manuallyFirableTrigger,
 																  toNode->getCompiler(), static_cast<VuoCompilerPort *>(toPort->getCompiler()), false);

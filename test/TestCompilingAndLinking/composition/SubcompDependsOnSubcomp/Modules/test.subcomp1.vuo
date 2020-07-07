@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="705,180"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="672,206"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="465,135" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1" _height="1" _sharpness="1.0" _opacity="1.0"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="450,315" _color="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="0.10000000000000001" _height="1" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Rotation>Rotation\r|<Transform>Transform\r" _Rotation_type="VuoReal" _Rotation_suggestedMin="-180" _Rotation_suggestedMax="180" _Rotation_suggestedStep="15.0" _Rotation="0.0" _Transform_type="VuoTransform2d"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Layer>Layer\l" _Layer_type="VuoLayer"];
+
+CombineLayers2:layer -> PublishedOutputs:Layer;
+MakeList3:list -> CombineLayers2:layers;
+MakeOvalLayer:layer -> MakeList3:1;
+MakeRectangleLayer:layer -> MakeList3:2;
+PublishedInputs:Rotation -> MakeOvalLayer:color [event=true];
+PublishedInputs:Rotation -> MakeRectangleLayer:rotation;
+PublishedInputs:Transform -> CombineLayers2:transform;
+}

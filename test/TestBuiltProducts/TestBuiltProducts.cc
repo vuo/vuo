@@ -63,7 +63,6 @@ private:
 		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-debug");
 		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-export");
 		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-link");
-		allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-render");
 		// No need to check vuo-compile since we don't distribute it.
 		// allFilePaths.insert(string(BINARY_DIR) + "/bin/vuo-compile");
 

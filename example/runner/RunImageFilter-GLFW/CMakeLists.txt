@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+project(RunImageFilterGLFW)
 
 find_package(glfw3 REQUIRED)
 
-set(CMAKE_FRAMEWORK_PATH ../../../framework)
+set(CMAKE_FRAMEWORK_PATH
+	../../../framework
+	../../../build/lib
+)
 find_library(VUO_FRAMEWORK Vuo)
 
 function (buildVariant target)

@@ -10,28 +10,26 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Find Minimum",
-					  "keywords" : [ "less", "least", "small", "few", "low", "<", "bottom", "lower", "limit", "bound", "range" ],
-					  "version" : "2.1.0",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
-						  }
-					  },
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Find Minimum",
+	"keywords": [
+		"less", "least", "small", "few", "low", "<", "bottom", "lower", "limit", "bound", "range",
+	],
+	"version": "2.2.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"defaultType": "VuoReal",
+			"compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+		},
+	},
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
-void nodeEvent
-(
-		VuoInputData(VuoList_VuoGenericType1) values,
-		VuoOutputData(VuoGenericType1, {"name":"Minimum"}) min,
-		VuoOutputData(VuoInteger) position
-)
+void nodeEvent(
+	VuoInputData(VuoList_VuoGenericType1) values,
+	VuoOutputData(VuoGenericType1, {"name":"Minimum"}) min,
+	VuoOutputData(VuoInteger) position)
 {
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
-	VuoGenericType1 *termsArray = VuoListGetData_VuoGenericType1(values);
-	*min = VuoGenericType1_min(termsArray, termsCount, position);
+	*min = VuoGenericType1_minList(values, position);
 }

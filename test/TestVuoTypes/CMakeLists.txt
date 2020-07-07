@@ -37,6 +37,11 @@ foreach (type ${types})
 	add_dependencies(Test${type} VuoEditorApp)
 endforeach()
 
+target_link_libraries(TestVuoColor
+	PRIVATE
+		"-framework AppKit"
+		vuo.color.libraries
+)
 target_link_libraries(TestVuoUiTheme
 	PRIVATE
 	vuo.ui.libraries

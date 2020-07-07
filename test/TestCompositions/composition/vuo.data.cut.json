@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Expected outputs for the vuo.data.cut node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"null":                    {"firingPort":"data", "inputPortValues":{"data":null,       "startByte": 1, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+	"empty":                   {"firingPort":"data", "inputPortValues":{"data":"",         "startByte": 1, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+	"data: first char":        {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 1, "byteCount":1}, "outputPortValues":{"partialData":"aA=="    }},
+	"data: mid":               {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 2, "byteCount":3}, "outputPortValues":{"partialData":"ZWxs"    }},
+	"data: mid clamped to end":{"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 2, "byteCount":9}, "outputPortValues":{"partialData":"ZWxsbw=="}},
+	"data: last char":         {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 5, "byteCount":1}, "outputPortValues":{"partialData":"bw=="    }},
+	"data: past end":          {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 9, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+	"data: before beginning":  {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte": 0, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+	"data: before beginning2": {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte":-1, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+	"data: before beginning3": {"firingPort":"data", "inputPortValues":{"data":"aGVsbG8=", "startByte":-1, "byteCount":5}, "outputPortValues":{"partialData":"aGVs"    }},
+	"null again":              {"firingPort":"data", "inputPortValues":{"data":null,       "startByte": 1, "byteCount":1}, "outputPortValues":{"partialData":null      }},
+}}

@@ -129,15 +129,19 @@ private slots:
 
 			// Ensure the output image is non-null.
 			json_object *out = runner->getPublishedOutputPortValue(outputImagePort);
-			QEXPECT_FAIL("vuo.image.combine.stereo", "Combining stereo images requires both images, but we only set one of them.", Abort);
+			QEXPECT_FAIL("vuo.image.combine.stereo", "Combining stereo images requires both images, but we only set one of them.", Continue);
+			QEXPECT_FAIL("vuo.image.project.dome", "Requires a mesh.", Continue);
 			QVERIFY(out);
-			VuoImage outputImage = VuoImage_makeFromJson(out);
-			QVERIFY(outputImage);
-			VuoLocal(outputImage);
+			if (out)
+			{
+				VuoImage outputImage = VuoImage_makeFromJson(out);
+				QVERIFY(outputImage);
+				VuoLocal(outputImage);
 
-			// Ensure the output image has the same scale factor as the input image.
-			QEXPECT_FAIL("vuo.image.feedback", "Feedback always has scaleFactor 1.", Continue);
-			QCOMPARE(outputImage->scaleFactor, greenImage->scaleFactor);
+				// Ensure the output image has the same scale factor as the input image.
+				QEXPECT_FAIL("vuo.image.feedback", "Feedback always has scaleFactor 1.", Continue);
+				QCOMPARE(outputImage->scaleFactor, greenImage->scaleFactor);
+			}
 		}
 
 		{

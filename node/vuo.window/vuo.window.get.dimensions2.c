@@ -14,6 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "width", "height", "size" ],
 					 "version" : "2.0.0",
 					 "node" : {
+						  "isDeprecated" : true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });

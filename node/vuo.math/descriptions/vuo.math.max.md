@@ -8,3 +8,5 @@ Examples:
 `Position` is the location of the maximum value in the list, with 1 being the first item. If the maximum value appears multiple times in the list, `Position` outputs the first position where it appears.
 
 If there are no values, both `Maximum` and `Position` output 0.
+
+For point types, this node compares components left-to-right, stopping when a maximum component is found.  For example, (1,0) is considered greater than (0,1).

@@ -34,6 +34,6 @@ void nodeInstanceEvent
 		VuoOutputData(VuoLayer) layer
 )
 {
-	*layer = VuoLayer_make(NULL, image, VuoPoint2d_make(0,0), 0, 2, 1);
+	*layer = VuoLayer_make(NULL, image, VuoPoint2d_make(0,0), 0, 2, VuoOrientation_Horizontal, 1);
 	VuoLayer_setId(*layer, *id);
 }

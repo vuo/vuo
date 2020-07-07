@@ -10,7 +10,7 @@
 
 digraph G
 {
-ChangeFullscreenStatus [type="vuo.window.fullscreen2" version="2.0.0" label="Change Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="270,420" fillcolor="orange" _screen="\{\"type\":\"active\"\}"];
+ChangeFullscreenStatus [type="vuo.window.fullscreen2" version="2.0.0" label="Change Window Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="270,420" fillcolor="orange" _screen="\{\"type\":\"active\"\}"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,285" fillcolor="lime" _started_eventThrottling="enqueue"];
 MakeList12 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="503,251" fillcolor="blue"];
 MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="285,45" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];

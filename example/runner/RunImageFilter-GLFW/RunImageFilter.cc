@@ -292,7 +292,7 @@ int main(void)
 
 		// Display the GL Texture onscreen
 #ifdef RUNIMAGEFILTER_USE_INTERPROCESS_TO_FRAMEBUFFER
-		if (!VuoImage_resolveInterprocessJsonOntoFramebuffer(o, cgl_ctx, false))
+		if (!VuoImage_resolveInterprocessJsonOntoFramebuffer(o, cgl_ctx, false, true))
 		{
 			fprintf(stderr, "error: couldn't resolve the composition's output image.\n");
 			json_object_put(o);

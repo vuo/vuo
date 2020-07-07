@@ -23,7 +23,7 @@ if (VUO_ANALYZE)
 				-e 'Number of rules'
 				-e 'CMakeLists.txt:.*: typography.symbols.curly_quotes'
 				-e 'could not find any possible bashisms in bash script'
-				-e '\.svn/'
+				-e '\.git/'
 				-e 'alias:.*invalid UTF-8 code'
 				-e 'Remarks:'
 				-e 'cmdline disabled check:'

@@ -17,6 +17,7 @@
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerComposition.hh"
+#include "VuoCompilerDiagnosticConsumer.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerGenericType.hh"
 #include "VuoCompilerGraph.hh"
@@ -2512,7 +2513,8 @@ void VuoCompiler::applyToAllEnvironments(void (^doForEnvironment)(Environment *e
  *
  * @param compositionPath If this compiler will be compiling a composition and its path is already known,
  *     pass the path so the compiler can locate composition-local modules. If the path is not yet known,
- *     it can be set later with @ref setCompositionPath. If not compiling a composition, pass an empty string.
+ *     it can be set later with @ref setCompositionPath or @ref compileComposition. If not compiling a composition,
+ *     pass an empty string.
  * @version200Changed{Added `compositionPath` argument.}
  */
 VuoCompiler::VuoCompiler(const string &compositionPath)
@@ -3937,20 +3939,20 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	};
 	applyToInstalledEnvironments(envGetHeaderSearchPaths);
 
+	auto issues = new VuoCompilerIssues;
 	__block Module *module;
 	dispatch_sync(llvmQueue, ^{
-					  module = readModuleFromC(preprocessedInputPath, headerSearchPaths, extraArgs);
+					  module = readModuleFromC(preprocessedInputPath, headerSearchPaths, extraArgs, issues);
 				  });
 	string moduleKey = getModuleKeyForPath(inputPath);
 	if (! tmpPreprocessedInputDir.empty())
-		remove(tmpPreprocessedInputDir.c_str());
-	if (! module)
 	{
-		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling module", inputPath,
-							   "", "%moduleKey couldn't be compiled as a node class, type, or library. Check the macOS Console for details.");
-		issue.setModuleKey(moduleKey);
-		throw VuoCompilerException(issue);
+		remove(tmpPreprocessedInputDir.c_str());
+		issues->setFilePath(inputPath);
 	}
+	if (! module)
+		throw VuoCompilerException(issues, true);
+	delete issues;
 
 	dispatch_sync(llvmQueue, ^{
 					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module, "");
@@ -4027,7 +4029,9 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 /**
  * Compiles a composition, read from file, to LLVM bitcode.
  *
- * @param inputPath The .vuo file containing the composition.
+ * @param inputPath The .vuo file containing the composition. If you haven't already specified the
+ *     composition path in the constructor or @ref setCompositionPath, then @a inputPath will be used
+ *     to locate composition-local modules.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  * @param isTopLevelComposition True if the composition is top-level, false if it's a subcomposition.
  * @param issues Issues encountered while compiling the composition are appended to this.
@@ -4040,6 +4044,9 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
 	VDebugLog("Compiling '%s'…", inputPath.c_str());
 	if (isVerbose)
 		print();
+
+	if (getCompositionLocalPath().empty())
+		setCompositionPath(inputPath);
 
 	if (!VuoFileUtilities::fileContainsReadableData(inputPath))
 	{
@@ -4056,6 +4063,8 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
 	catch (VuoCompilerException &e)
 	{
 		e.getIssues()->setFilePathIfEmpty(inputPath);
+		if (!issues)
+			VUserLog("%s", e.getIssues()->getLongDescription(false).c_str());
 		throw;
 	}
 
@@ -4952,7 +4961,7 @@ void VuoCompiler::setLoadAllModules(bool shouldLoadAllModules)
  * @param rPath The @c -rpath argument to be passed to clang. If empty, the folder containing the Vuo framework on the build system will be used.
  * @throw VuoCompilerException clang or ld failed to link the given dependencies.
  */
-void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath)
+void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath, VuoCompilerIssues *issues)
 {
 	VDebugLog("Linking '%s'…", outputPath.c_str());
 	// https://stackoverflow.com/questions/11657529/how-to-generate-an-executable-from-an-llvmmodule
@@ -4978,11 +4987,18 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 	// llvm-3.1/llvm/tools/clang/tools/driver/driver.cpp
 
-	llvm::sys::Path clangPath = getClangPath();
+	// Invoke clang as `clang++` so it includes the C++ standard libraries.
+	llvm::sys::Path clangPath(getClangPath().str() + "++");
 
 	vector<const char *> args;
 	vector<char *> argsToFree;
 	args.push_back(clangPath.c_str());
+
+	{
+		char *outputPathZ = strdup(("-o" + outputPath).c_str());
+		args.push_back(outputPathZ);
+		argsToFree.push_back(outputPathZ);
+	}
 
 	args.push_back(compositeModulePath.c_str());
 
@@ -5090,15 +5106,10 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back("-stdlib=libc++");
 
 	// Allow clang to print meaningful error messages.
+	auto diagnosticConsumer = new VuoCompilerDiagnosticConsumer(issues);
 	clang::DiagnosticOptions *diagOptions = new clang::DiagnosticOptions();
-	clang::TextDiagnosticPrinter *diagClient = new clang::TextDiagnosticPrinter(llvm::errs(), diagOptions);
-	diagClient->setPrefix(clangPath.str());
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
-	clang::DiagnosticsEngine Diags(DiagID, diagOptions, diagClient);
-
-	clang::driver::Driver TheDriver(args[0], "x86_64-apple-macosx10.10.0", outputPath, Diags);
-
-	TheDriver.CCCIsCXX = true;  // clang++ instead of clang
+	clang::DiagnosticsEngine Diags(DiagID, diagOptions, diagnosticConsumer);
 
 	if (isVerbose)
 	{
@@ -5108,16 +5119,26 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 		VUserLog("\t%s", s.str().c_str());
 	}
 
-	OwningPtr<clang::driver::Compilation> C(TheDriver.BuildCompilation(args));
+	// Redirect linker output to a file, so we can feed it through VuoLog.
+	string stdoutFile = VuoFileUtilities::makeTmpFile("vuo-linker-output", "txt");
+	const llvm::sys::Path stdoutPath(stdoutFile);
+	const llvm::sys::Path *redirects[] = {
+		nullptr,      // stdin
+		&stdoutPath,  // stdout
+		&stdoutPath,  // stderr
+	};
 
-	int Res = 0;
-	if (C)
-	{
-		SmallVector<std::pair<int, const clang::driver::Command *>, 4> FailingCommands;
-		double t0 = VuoLogGetTime();
-		Res = TheDriver.ExecuteCompilation(*C, FailingCommands);
-		VDebugLog("\tLinking     took %5.2fs", VuoLogGetTime() - t0);
-	}
+	// ExecuteAndWait's args needs to be null-terminated.
+	const char **argsz = (const char **)malloc(sizeof(char *) * args.size() + 1);
+	for (int i = 0; i < args.size(); ++i)
+		argsz[i] = args[i];
+	argsz[args.size()] = nullptr;
+
+	string errMsg;
+	bool executionFailed;
+	double t0 = VuoLogGetTime();
+	int ret = llvm::sys::Program::ExecuteAndWait(llvm::sys::Path(args[0]), argsz, nullptr, redirects, 0, 0, &errMsg, &executionFailed);
+
 	for (auto i : argsToFree)
 		free(i);
 
@@ -5130,33 +5151,29 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 		// https://b33p.net/kosada/node/14152
 		chmod(outputPath.c_str(), 0755);
 
-	if (Res != 0)
+	if (ret != 0)
 	{
-		__block vector<string> thirdPartyNodeClasses;
-		dispatch_sync(environmentQueue, ^{
-			for (size_t i = 1; i < environments.size(); ++i)
-			{
-				map<string, VuoCompilerNodeClass *> envNodeClasses = environments[i].at(0)->getNodeClasses();
-				for (map<string, VuoCompilerNodeClass *>::iterator j = envNodeClasses.begin(); j != envNodeClasses.end(); ++j)
-					thirdPartyNodeClasses.push_back(j->first);
-			}
-		});
-
-		string details = "One or more nodes in this composition can't be used by this version of Vuo. ";
-		if (! thirdPartyNodeClasses.empty())
+		string details;
+		if (!errMsg.empty())
 		{
-			details += "Make sure you're using the latest version of all the extra Vuo nodes you've installed:\n";
-			sort(thirdPartyNodeClasses.begin(), thirdPartyNodeClasses.end());
-			for (vector<string>::iterator i = thirdPartyNodeClasses.begin(); i != thirdPartyNodeClasses.end(); ++i)
-				details += " • " + *i + "\n";
+			VUserLog("%s", errMsg.c_str());
+			details += "\n" + errMsg + "\n";
 		}
-		details += "Check the macOS Console for more information about the problem.";
+		string stdoutFileContents = VuoFileUtilities::readFileToString(stdoutFile);
+		if (!stdoutFileContents.empty())
+		{
+			VUserLog("%s", stdoutFileContents.c_str());
+			details += "\n" + stdoutFileContents + "\n";
+		}
+		VuoFileUtilities::deleteFile(stdoutFile);
 
 		VuoCompilerIssue issue(VuoCompilerIssue::Error, "linking", outputPath,
 							   "Node broken or outdated", details);
 		throw VuoCompilerException(issue);
 	}
-	VDebugLog("Done.");
+
+	VuoFileUtilities::deleteFile(stdoutFile);
+	VDebugLog("\tLinking     took %5.2fs", VuoLogGetTime() - t0);
 }
 
 /**
@@ -5164,7 +5181,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
  *
  * @threadQueue{llvmQueue}
  */
-Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs)
+Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs, VuoCompilerIssues *issues)
 {
 	// llvm-3.1/llvm/tools/clang/examples/clang-interpreter/main.cpp
 
@@ -5200,17 +5217,18 @@ Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &he
 	for (vector<string>::const_iterator i = extraArgs.begin(); i != extraArgs.end(); ++i)
 		args.push_back(i->c_str());
 
+	auto diagnosticConsumer = new VuoCompilerDiagnosticConsumer(issues);
 	clang::DiagnosticOptions * diagOptions = new clang::DiagnosticOptions();
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
-	clang::DiagnosticsEngine Diags(DiagID, diagOptions);
+	clang::DiagnosticsEngine *diags = new clang::DiagnosticsEngine(DiagID, diagOptions, diagnosticConsumer);
 
 	OwningPtr<clang::CompilerInvocation> CI(new clang::CompilerInvocation);
-	clang::CompilerInvocation::CreateFromArgs(*CI, &args[0], &args[0] + args.size(), Diags);
+	clang::CompilerInvocation::CreateFromArgs(*CI, &args[0], &args[0] + args.size(), *diags);
 
 	clang::CompilerInstance Clang;
 	Clang.setInvocation(CI.take());
 
-	Clang.createDiagnostics();
+	Clang.setDiagnostics(diags);
 	if (!Clang.hasDiagnostics())
 		return NULL;
 

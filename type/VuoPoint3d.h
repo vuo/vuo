@@ -30,6 +30,11 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(3))) VuoPoint3d;
 
+/// @{ List type.
+typedef const struct VuoList_VuoPoint3d_struct { void *l; } * VuoList_VuoPoint3d;
+#define VuoList_VuoPoint3d_TYPE_DEFINED
+/// @}
+
 /**
  *	Defines a bounding box.
  */
@@ -45,7 +50,13 @@ char * VuoPoint3d_getSummary(const VuoPoint3d value);
 
 #define VuoPoint3d_SUPPORTS_COMPARISON
 bool VuoPoint3d_areEqual(const VuoPoint3d value1, const VuoPoint3d value2);
+bool VuoPoint3d_areEqualListWithinTolerance(VuoList_VuoPoint3d values, VuoPoint3d tolerance);
 bool VuoPoint3d_isLessThan(const VuoPoint3d a, const VuoPoint3d b);
+bool VuoPoint3d_isWithinRange(VuoPoint3d value, VuoPoint3d minimum, VuoPoint3d maximum);
+
+VuoPoint3d VuoPoint3d_minList(VuoList_VuoPoint3d values, VuoInteger *outputPosition);
+VuoPoint3d VuoPoint3d_maxList(VuoList_VuoPoint3d values, VuoInteger *outputPosition);
+VuoPoint3d VuoPoint3d_average(VuoList_VuoPoint3d values);
 
 VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum);
 VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum);

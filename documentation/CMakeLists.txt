@@ -85,7 +85,7 @@ endif()
 configure_file(Doxyfile.in Doxyfile)
 add_custom_command(
 	DEPENDS
-		VuoEditor # for VuoNodeClassFrequencyMap.hh
+		${CMAKE_BINARY_DIR}/editor/VuoNodeClassFrequencyMap.hh
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/documentation
 	COMMAND /usr/local/bin/doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		2>&1

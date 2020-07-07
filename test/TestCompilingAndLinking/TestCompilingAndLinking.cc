@@ -214,6 +214,59 @@ private slots:
 		remove(linkedCompositionPath.c_str());
 	}
 
+	void testCompilingAndLinkingWithLocalModules_data()
+	{
+		QTest::addColumn<QString>("compositionPath");
+		QTest::addColumn<QString>("whenToSetPath");
+		QTest::addColumn<bool>("isTopLevelComposition");
+
+		// Top-level composition depends on subcomposition
+		{
+			QString compositionPath = QDir(getCompositionDir().filePath("CompDependsOnSubcomp")).filePath("CompDependsOnSubcomp.vuo");
+			QTest::newRow("top-level composition: VuoCompiler") << compositionPath << "VuoCompiler" << true;
+			QTest::newRow("top-level composition: setCompositionPath") << compositionPath << "setCompositionPath" << true;
+			QTest::newRow("top-level composition: compileComposition") << compositionPath << "compileComposition" << true;
+		}
+
+		// Subcomposition depends on another subcomposition
+		{
+			QString compositionPath = QDir(QDir(getCompositionDir().filePath("SubcompDependsOnSubcomp")).filePath("Modules")).filePath("test.subcomp2.vuo");
+			QTest::newRow("subcomposition: VuoCompiler") << compositionPath << "VuoCompiler" << false;
+			QTest::newRow("subcomposition: setCompositionPath") << compositionPath << "setCompositionPath" << false;
+			QTest::newRow("subcomposition: compileComposition") << compositionPath << "compileComposition" << false;
+		}
+	}
+	void testCompilingAndLinkingWithLocalModules()
+	{
+		QFETCH(QString, compositionPath);
+		QFETCH(QString, whenToSetPath);
+		QFETCH(bool, isTopLevelComposition);
+
+		delete compiler;
+
+		if (whenToSetPath.toStdString() == "VuoCompiler")
+			compiler = new VuoCompiler(compositionPath.toStdString());
+		else
+			compiler = new VuoCompiler();
+
+		if (whenToSetPath.toStdString() == "setCompositionPath")
+			compiler->setCompositionPath(compositionPath.toStdString());
+
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath.toStdString(), dir, file, ext);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "");
+
+		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->compileComposition(compositionPath.toStdString(), compiledCompositionPath, isTopLevelComposition, issues);
+		delete issues;
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
+
+		remove(compiledCompositionPath.c_str());
+		remove(linkedCompositionPath.c_str());
+	}
+
 	void testCompilingPerformance_data()
 	{
 		QTest::addColumn< QString >("compositionName");

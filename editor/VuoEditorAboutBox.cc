@@ -22,10 +22,18 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	// Introductory text
 	QString buildDate = __DATE__;
-	QString versionNumber = VUO_VERSION_STRING;
-	QString revisionNumber = VUO_REVISION;
+
+	QString versionAndBuild = VUO_VERSION_AND_BUILD_STRING;
+	QRegularExpressionMatch match = QRegularExpression("\\d+\\.\\d+\\.\\d+").match(versionAndBuild);
+	QString versionNumber = match.captured(0);
+	QString versionSuffix = versionAndBuild.mid(match.capturedEnd());
+	if (!versionSuffix.isEmpty())
+		versionSuffix = "<span style=\"font-size:20pt; color:rgba(0,0,0,.35)\">" + versionSuffix + "</span>";
+
+	QString commitHash = VUO_GIT_COMMIT;
+	if (!commitHash.isEmpty())
+		commitHash = QString(" (revision ") + VUO_GIT_COMMIT + ")";
 
 	QString missionMarkdown = tr(
 		"**Create memorable interactive experiences — without coding.**\n"
@@ -40,18 +48,19 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 	QString missionHTML = QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(missionMarkdown.toStdString()));
 
 	QString descriptiveText = \
-			QString("<html>%4<body>"
+			QString("<html>%3<body>"
 					"<p><span style=\"font-size:28pt;\">Vuo</span>"
-						"<span style=\"font-size:20pt;\"> %1</span><br>"
-						"<span style=\"font-size:12pt; color:rgba(0,0,0,.5)\">" + tr("Built on %2 (%3)") + "<br>"
-						"Copyright © 2012–2020 Kosada Incorporated</span></p>%5"
+						"<span style=\"font-size:20pt;\"> %1</span>%5<br>"
+						"<span style=\"font-size:12pt; color:rgba(0,0,0,.5)\">" + tr("Built on %2") + "<br>"
+						"Copyright © 2012–2020 Kosada Incorporated</span></p>%4"
 					"</body></html>").
 			arg(
 				versionNumber,
-				buildDate,
-				revisionNumber,
+				buildDate + commitHash,
 				htmlHead,
-				missionHTML);
+				missionHTML,
+				versionSuffix
+			);
 
 	// Text style
 	contributorFont = ui->textEdit->font();

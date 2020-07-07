@@ -37,6 +37,7 @@ void VuoWindowText_enableTriggers
 );
 void VuoWindowText_disableTriggers(VuoWindowText w);
 void VuoWindowText_appendLine(VuoWindowText w, const char *text);
+void VuoWindowText_clear(VuoWindowText w);
 void VuoWindowText_close(VuoWindowText w);
 
 VuoWindowOpenGl VuoWindowOpenGl_make

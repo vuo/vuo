@@ -52,9 +52,16 @@ VuoExampleMenu::VuoExampleMenu(QWidget *parent, VuoCompiler *compiler) :
 
 	// Example compositions to be marked as containing pro nodes for non-pro users
 	this->proExampleCompositionsAndNodeSets["CompareStereoTypes.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["HighlightEyesInVideo.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["MarkFacesInImage.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["MoveSeagullsCloserTogether.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["ObscureFacesInVideo.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["RemovePartsOfPhoto.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["WarpImageForFisheyeProjection.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["DisplayNDIVideo.vuo"] = "vuo.ndi";
+	this->proExampleCompositionsAndNodeSets["SendLiveVideoWithNewsfeed.vuo"] = "vuo.ndi";
+	this->proExampleCompositionsAndNodeSets["SendNDICheckerboard.vuo"] = "vuo.ndi";
+	this->proExampleCompositionsAndNodeSets["SendNDICheckerboardAndMetadata.vuo"] = "vuo.ndi";
 	this->proExampleCompositionsAndNodeSets["BounceStereoSphere.vuo"] = "vuo.scene";
 	this->proExampleCompositionsAndNodeSets["MoveThroughTubeWithFisheye.vuo"] = "vuo.scene";
 	this->proExampleCompositionsAndNodeSets["OperateOn3DObjects.vuo"] = "vuo.scene";
@@ -267,6 +274,10 @@ QString VuoExampleMenu::selectRandomExample()
 	bool pickedRandomExample = false;
 	while (! pickedRandomExample)
 	{
+		// Workaround for bug https://b33p.net/kosada/node/17611
+		// @todo: Use QRandomGenerator, available in Qt 5.10+
+		qrand();
+
 		int randomNodeSetIndex = qrand() % sortedNodeSets.size();
 		VuoNodeSet *randomNodeSet = sortedNodeSets.at(randomNodeSetIndex);
 		vector<string> randomNodeSetExampleNames = randomNodeSet->getExampleCompositionFileNames();

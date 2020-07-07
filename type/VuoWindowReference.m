@@ -18,24 +18,26 @@
 #include "VuoWindowReference.h"
 #include "VuoGraphicsWindow.h"
 #include "VuoGraphicsWindowDrag.h"
+#include "VuoScreenCommon.h"
 #include "VuoText.h"
 #include "VuoApp.h"
 
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					  "title" : "Window",
-					  "version" : "1.0.0",
-					  "dependencies" : [
-						"VuoApp",
-						"VuoGraphicsWindow",
-						"VuoGraphicsWindowDrag",
-						"VuoInteger",
-						"VuoReal",
-						"VuoText",
-						"AppKit.framework"
-					  ]
-				 });
+    "title": "Window",
+    "version": "1.0.0",
+    "dependencies": [
+        "VuoApp",
+        "VuoGraphicsWindow",
+        "VuoGraphicsWindowDrag",
+        "VuoInteger",
+        "VuoReal",
+        "VuoScreenCommon",
+        "VuoText",
+        "AppKit.framework",
+    ],
+});
 #endif
 /// @}
 
@@ -116,6 +118,24 @@ VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
 }
 
 /**
+ * Returns the position of the top-left of the window's content area, in screen points.
+ *
+ * @threadAny
+ */
+VuoPoint2d VuoWindowReference_getPosition(const VuoWindowReference value)
+{
+	__block VuoPoint2d position;
+	VuoApp_executeOnMainThread(^{
+		VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
+		NSRect contentRect = [window contentRectForFrameRect:window.frame];
+		NSRect mainScreenRect = ((NSScreen *)NSScreen.screens[0]).frame;
+		position.x = contentRect.origin.x;
+		position.y = mainScreenRect.size.height - contentRect.size.height - contentRect.origin.y;
+	});
+	return position;
+}
+
+/**
  * Returns the window's current content size in pixels.
  *
  * On Retina displays, this function returns the physical number of pixels (device/backing resolution, not logical resolution).
@@ -150,6 +170,15 @@ bool VuoWindowReference_isFullscreen(const VuoWindowReference value)
 {
 	VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
 	return window.isFullScreen;
+}
+
+/**
+ * Returns the screen the window is currently on.
+ */
+VuoScreen VuoWindowReference_getScreen(const VuoWindowReference value)
+{
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
+	return VuoScreen_makeFromNSScreen(window.screen);
 }
 
 /**

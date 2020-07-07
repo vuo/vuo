@@ -73,11 +73,11 @@
     </message>
     <message numerus="yes">
         <location line="+17"/>
-        <source>second(s) ago</source>
+        <source>%1 second(s) ago</source>
         <extracomment>Appears in port popovers. Refers to the time since the most recent event passed through this port.</extracomment>
         <translation>
-            <numerusform>second ago</numerusform>
-            <numerusform>seconds ago</numerusform>
+            <numerusform>%1 second ago</numerusform>
+            <numerusform>%1 seconds ago</numerusform>
         </translation>
     </message>
     <message numerus="yes">

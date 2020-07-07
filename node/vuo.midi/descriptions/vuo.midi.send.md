@@ -4,7 +4,7 @@ This node can be used to control synthesizers, sequencers, and other musical sof
 
 This node does not make sound on its own. It requires MIDI hardware or software.
 
-   - `Device` — The device to send to. If no device is given, then the first available MIDI output device is used.
    - `Send Note` — When this port receives an event, the note message is sent to the device.
    - `Send Controller` — When this port receives an event, the controller message is sent to the device.
    - `Send Pitch Bend` — When this port receives an event, the pitch bend message is sent to the device.
+   - `Device` — The device to send to. If no device is given, then the first available MIDI output device is used.

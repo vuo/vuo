@@ -15,7 +15,7 @@ VuoModuleMetadata({
 						 "projector",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert" ],
-					 "version" : "3.0.0",
+					 "version" : "3.1.0",
 					 "node": {
 						 "exampleCompositions" : [ ]
 					 }
@@ -32,12 +32,13 @@ void nodeEvent
 								  "suggestedMin":{"x":-180,"y":-180,"z":-180},
 								  "suggestedMax":{"x":180,"y":180,"z":180},
 								  "suggestedStep":{"x":15.0,"y":15.0,"z":15.0}}) rotation,
-		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoReal, {"name":"Size", "default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoOrientation, {"default":"horizontal"}) fixed,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) opacity,
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
 		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
 		VuoOutputData(VuoSceneObject) object
 )
 {
-	*object = VuoSceneObject_makeLitImage(image, center, rotation, width, opacity, highlightColor, shininess);
+	*object = VuoSceneObject_makeLitImage(image, center, rotation, width, fixed, opacity, highlightColor, shininess);
 }

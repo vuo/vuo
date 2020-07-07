@@ -9,24 +9,38 @@
 
 #include "node.h"
 
-VuoModuleMetadata({
-					 "title" : "Get CMYK Color Value",
-					 "keywords" : [ "red", "green", "blue", "alpha", "cyan",
-						"magenta", "key", "black", "yellow", "channel", "tone",
-						"chroma"
-					 ],
-					 "version" : "1.0.0"
-				 });
+#include "VuoColorspace.h"
 
-void nodeEvent
-(
-		VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":1}}) color,
-		VuoOutputData(VuoReal) cyan,
-		VuoOutputData(VuoReal) magenta,
-		VuoOutputData(VuoReal) yellow,
-		VuoOutputData(VuoReal) black,
-		VuoOutputData(VuoReal) alpha
-)
+VuoModuleMetadata({
+    "title": "Get CMYK Color Values",
+    "keywords": [
+        "red", "green", "blue",
+        "CMYKA",
+        "alpha", "transparent", "opacity",
+        "channel", "tone", "chroma",
+        "key", // The K in CMYK.
+        "color space",
+    ],
+    "version": "1.1.0",
+    "node": {
+        "exampleCompositions": [ ],
+    },
+    "dependencies" : [
+        "VuoColorspace",
+    ],
+});
+
+void nodeEvent(
+	VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":1}}) color,
+	VuoInputData(VuoInteger, {"menuItems":[
+		{"value":0, "name":"Linear"},
+		{"value":1, "name":"Apple"},
+	], "default":0}) colorspace,
+	VuoOutputData(VuoReal) cyan,
+	VuoOutputData(VuoReal) magenta,
+	VuoOutputData(VuoReal) yellow,
+	VuoOutputData(VuoReal) black,
+	VuoOutputData(VuoReal) alpha)
 {
-	VuoColor_getCMYKA(color, cyan, magenta, yellow, black, alpha);
+	VuoColorspace_getCMYKA(color, colorspace, cyan, magenta, yellow, black, alpha);
 }

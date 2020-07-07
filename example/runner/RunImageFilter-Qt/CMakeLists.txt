@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14...3.17 FATAL_ERROR)
+project(RunImageFilterQt)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(CMAKE_FRAMEWORK_PATH ../../../framework)
+set(CMAKE_FRAMEWORK_PATH
+	../../../framework
+	../../../build/lib
+)
 find_library(VUO_FRAMEWORK Vuo)
 
 set(CMAKE_AUTOMOC ON)

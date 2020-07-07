@@ -436,7 +436,7 @@ void VuoShader_setMayChangeOutputPrimitiveCount(VuoShader shader, const VuoMesh_
 }
 
 /**
- * See @ref VuoShader::isTransparent.
+ * See `VuoShader::isTransparent`.
  *
  * @threadAny
  * @version200New

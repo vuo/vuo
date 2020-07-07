@@ -40,6 +40,7 @@ execute_process(
 			VuoDurationType:0
 			VuoEdgeBlend:0
 			VuoExtrapolationMode:0
+			VuoFace:0
 			VuoFileType:0
 			VuoFont:2
 			VuoAnchor:0
@@ -170,6 +171,7 @@ target_include_directories(vuo.core.list.types
 	../../node/vuo.midi
 	../../node/vuo.mouse
 	../../node/vuo.motion
+	../../node/vuo.ndi
 	../../node/vuo.video
 	../../node/vuo.noise
 	../../node/vuo.osc

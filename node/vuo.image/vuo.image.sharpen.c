@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						  "filter",
 						  "unsharp mask", "USM", "high-pass filter", "edge", "detail", "enhance",
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "dependencies" : [
 						  "VuoImageBlur",
 						  "VuoImageRenderer",

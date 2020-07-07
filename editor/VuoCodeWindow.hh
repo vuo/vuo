@@ -142,4 +142,5 @@ private:
 	bool closing;
 
 	friend VuoCodeGutter;
+	friend class TestVuoEditor;
 };

@@ -48,6 +48,7 @@ VuoPortPopover::VuoPortPopover(VuoPort *port, VuoEditorComposition *composition,
 	this->composition = composition;
 	this->cachedDataValue = noDisplayableDataValue;
 	this->timeOfLastEvent = noDisplayableEventTime;
+	this->timeOfLastUpdate = noDisplayableEventTime;
 	this->eventCount = 0;
 	this->droppedEventCount = 0;
 	this->isDetached = false;
@@ -117,10 +118,12 @@ VuoPortPopover::~VuoPortPopover()
 }
 
 /**
- * Stores a string representation of the most recent data value known to
- * be associated with the port.
+ * Displays the new data value in the popover immediately, without waiting for the popover
+ * to refresh on its regular schedule.
+ *
+ * @param value A string representation of the port's data value.
  */
-void VuoPortPopover::updateCachedDataValue(QString value)
+void VuoPortPopover::updateDataValueImmediately(QString value)
 {
 	dispatch_sync(popoverTextQueue, ^{
 					  mostRecentImage.clear();
@@ -131,44 +134,37 @@ void VuoPortPopover::updateCachedDataValue(QString value)
 }
 
 /**
- * Updates the time of the last known event associated with the port.
+ * Displays the new event time (if any) and data value (if any) the next time the popover's
+ * contents are refreshed.
+ *
+ * If this function is called again before then, only the event time and data value from the
+ * later call are displayed.
+ *
+ * @param event True if the popover's last event time should be updated.
+ * @param data True if the popover's data value should be updated.
+ * @param value A string representation of the port's data value.
  */
-void VuoPortPopover::updateLastEventTime()
+void VuoPortPopover::updateLastEventTimeAndDataValue(bool event, bool data, QString value)
 {
 	dispatch_sync(popoverTextQueue, ^{
-					  qint64 timeBefore = this->timeOfLastEvent;
+					  qint64 timeBefore = this->timeOfLastUpdate;
 					  qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-					  this->timeOfLastEvent = timeNow;
-					  this->eventHistory.enqueue(timeNow);
-					  while (this->eventHistory.size() > eventHistoryMaxSize)
-						this->eventHistory.dequeue();
+					  this->timeOfLastUpdate = timeNow;
 
-					  ++eventCount;
-
-					  if (timeBefore + minTextUpdateInterval < timeNow)
+					  if (event)
 					  {
-						  this->updateTextThreadUnsafe(true);
-						  resetRefreshTextInterval();
+						  this->timeOfLastEvent = timeNow;
+						  this->eventHistory.enqueue(timeNow);
+						  while (this->eventHistory.size() > eventHistoryMaxSize)
+							  this->eventHistory.dequeue();
+
+						  ++eventCount;
 					  }
-				  });
-}
 
-/**
- * Updates both the time of the last known event and the last data
- * value associated with the port.
- */
-void VuoPortPopover::updateLastEventTimeAndCachedDataValue(QString value)
-{
-	dispatch_sync(popoverTextQueue, ^{
-					  qint64 timeBefore = this->timeOfLastEvent;
-					  qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
-					  this->timeOfLastEvent = timeNow;
-					  this->eventHistory.enqueue(timeNow);
-					  while (this->eventHistory.size() > eventHistoryMaxSize)
-						this->eventHistory.dequeue();
-
-					  ++eventCount;
-					  this->cachedDataValue = value.toUtf8().constData();
+					  if (data)
+					  {
+						  this->cachedDataValue = value.toUtf8().constData();
+					  }
 
 					  if (timeBefore + minTextUpdateInterval < timeNow)
 					  {
@@ -206,6 +202,7 @@ void VuoPortPopover::setCompositionRunning(bool running, bool resetDataValue)
 							this->cachedDataValue = noDataValueObserved;
 
 						  this->timeOfLastEvent = noEventObserved;
+						  this->timeOfLastUpdate = noEventObserved;
 
 						  while (!eventHistory.isEmpty())
 							eventHistory.dequeue();
@@ -326,14 +323,14 @@ QString VuoPortPopover::generateImageCode()
 void VuoPortPopover::updateTextAndResizeThreadUnsafe()
 {
 	// Exponentially increase the timeout interval of the popover
-	// refresh timer as time passes since the most recent event.
-	double secondsSinceLastEvent = (QDateTime::currentMSecsSinceEpoch() - this->timeOfLastEvent)/1000.;
-	int updatedTextRefreshInterval = (secondsSinceLastEvent <= 1? 0.1 :
-					(secondsSinceLastEvent < 20?   1 :
-					(secondsSinceLastEvent < 40?   2 :
-					(secondsSinceLastEvent < 120?  6 :
-					(secondsSinceLastEvent < 180?  9 :
-					(secondsSinceLastEvent < 600? 30 :
+	// refresh timer as time passes since the most recent event or data.
+	double secondsSinceLastUpdate = (QDateTime::currentMSecsSinceEpoch() - this->timeOfLastUpdate)/1000.;
+	int updatedTextRefreshInterval = (secondsSinceLastUpdate <= 1? 0.1 :
+					(secondsSinceLastUpdate < 20?   1 :
+					(secondsSinceLastUpdate < 40?   2 :
+					(secondsSinceLastUpdate < 120?  6 :
+					(secondsSinceLastUpdate < 180?  9 :
+					(secondsSinceLastUpdate < 600? 30 :
 												  INT_MAX/1000))))))*1000;
 
 	if (updatedTextRefreshInterval != refreshTextTimer->interval())
@@ -433,14 +430,10 @@ QString VuoPortPopover::generatePortPopoverText(bool includeEventIndicator)
 			double secondsSinceLastEvent = (timeNow - timeOfLastEventSnapshot)/1000.;
 			int roundedSecondsSinceLastEvent = (int)(secondsSinceLastEvent + 0.5);
 
-			//: Appears in port popovers.
-			//: Refers to the time since the most recent event passed through this port.
-			const QString timeUnit = " " + tr("second(s) ago", "", roundedSecondsSinceLastEvent);
-
 			lastEventTime = secondsSinceLastEvent <= 1
 				? tr("just now")
 				: (secondsSinceLastEvent < 20
-					? QLocale::system().toString(roundedSecondsSinceLastEvent).append(timeUnit)
+					? tr("%1 second(s) ago", "", roundedSecondsSinceLastEvent).arg(roundedSecondsSinceLastEvent)
 					: (secondsSinceLastEvent < 40
 						? tr("about half a minute ago")
 						: (secondsSinceLastEvent < 120

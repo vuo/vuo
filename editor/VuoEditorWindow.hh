@@ -197,6 +197,7 @@ private slots:
 	void resetUndoStackMacros();
 	void updateSelectedComponentMenuItems();
 	void updateSceneRect();
+	void ensureSceneRectContainsRegion(const QList<QRectF> &region);
 	void updateRubberBandSelectionMode(QRect rubberBandRect, QPointF fromScenePoint, QPointF toScenePoint);
 
 	void setPortConstant(VuoRendererPort *port, string value);
@@ -318,6 +319,7 @@ private:
 	string installSubcomposition(string parentCompositionPath);
 	bool ensureThisParentCompositionSaved();
 	string sanitizeSubcompositionName(string name);
+	void updateToolbarElementUI();
 	void populateProtocolsMenu(QMenu *m);
 	void updateProtocolsMenu(QMenu *m);
 	void toggleActiveStatusForProtocol(VuoProtocol *protocol);

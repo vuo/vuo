@@ -123,6 +123,19 @@ void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 }
 
 /**
+ * Removes the text in the window.
+ *
+ * @threadAny
+ */
+void VuoWindowText_clear(VuoWindowText vw)
+{
+	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
+	VuoApp_executeOnMainThread(^{
+		[window clear];
+	});
+}
+
+/**
  * Closes the window.
  *
  * @threadNoMain

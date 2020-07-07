@@ -1,0 +1,59 @@
+/**
+ * @file
+ * @brief Highlight Eyes in Video
+ * Darkens the background surrounding the human eyes detected in the camera image.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent2 [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="540,600" _reset_manuallyFirable];
+ApplyMask [type="vuo.image.apply.mask" version="1.1.2" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<maskedImage>maskedImage\r" pos="900,495"];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="660,900"];
+CombineLayers2 [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1125,555"];
+ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="315,270"];
+CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="150,495" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1.5" _height="1.5"];
+FindFacesInImage [type="vuo.image.findFaces" version="1.1.0" label="Find Faces in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<quality>quality\l|<rectangles>rectangles\r|<landmarks>landmarks\r" pos="135,735" fillcolor="orange" _minimumConfidence="0.5" _quality="0.25"];
+GetFaceLandmarks [type="vuo.image.get.face" version="1.0.0" label="Get Face Landmarks|<refresh>refresh\l|<landmarks>landmarks\l|<face>face\r|<leftEye>leftEye\r|<rightEye>rightEye\r|<nose>nose\r|<mouthLeftEdge>mouthLeftEdge\r|<mouthRightEdge>mouthRightEdge\r" pos="255,915" fillcolor="orange"];
+GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="840,810"];
+MakeList10 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="974,746"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="627,911"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="465,900" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.20000000000000001" _height="0.10000000000000001" _sharpness="0.5" _opacity="1.0"];
+MakeOvalLayer2 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="465,1065" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.20000000000000001" _height="0.10000000000000001" _sharpness="0.5" _opacity="1.0"];
+MakeRectangleLayer3 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="720,600" _color="\{\"r\":0.40000000596046448,\"g\":0.40000000596046448,\"b\":0.40000000596046448,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2" _sharpness="1" _roundness="0" _opacity="1.0"];
+ProcessList [type="vuo.list.process.VuoFace.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="405,750" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="-135,495" fillcolor="lime" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1065,495" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="1035,735" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SpinOffValue [type="vuo.event.spinOffValue.VuoImage" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="-30,735" fillcolor="lime" _spunOff_eventThrottling="drop"];
+
+AllowFirstEvent2:firstEvent -> MakeRectangleLayer3:color;
+ApplyMask:maskedImage -> RenderImageToWindow:image;
+CombineLayers2:combinedLayer -> MakeList10:2;
+CombineLayers:combinedLayer -> ProcessList:processedItem;
+ConvertFrameToImage3:image -> CropImage:image;
+CropImage:croppedImage -> ApplyMask:image;
+CropImage:croppedImage -> GetImageSize:image;
+CropImage:croppedImage -> SpinOffValue:value;
+FindFacesInImage:landmarks -> AllowFirstEvent2:event;
+FindFacesInImage:landmarks -> ProcessList:fire;
+GetFaceLandmarks:leftEye -> MakeOvalLayer:center;
+GetFaceLandmarks:rightEye -> MakeOvalLayer2:center;
+GetImageSize:height -> RenderLayersToImage:height;
+GetImageSize:width -> RenderLayersToImage:width;
+MakeList10:list -> RenderLayersToImage:layers;
+MakeList2:list -> CombineLayers:layers;
+MakeOvalLayer2:layer -> MakeList2:2;
+MakeOvalLayer:layer -> MakeList2:1;
+MakeRectangleLayer3:layer -> MakeList10:1;
+ProcessList:processItem -> GetFaceLandmarks:landmarks;
+ProcessList:processedList -> CombineLayers2:layers;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage3:frame;
+RenderLayersToImage:image -> ApplyMask:mask;
+SpinOffValue:spunOff -> FindFacesInImage:image;
+}

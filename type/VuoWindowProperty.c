@@ -44,7 +44,7 @@ VuoModuleMetadata({
  */
 VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 {
-	VuoWindowProperty value = { -1, NULL, false, {-1, -1, -1, NULL, false, {0,0}, 0, 0, 0, 0}, -1, 0, 0, 0, 0, 0, false, -1, {{"", ""}, {0,0}, false, -1, {0,0}, 0, 0} };
+	VuoWindowProperty value = { -1, VuoCoordinateUnit_Points, { NULL } };
 
 	json_object *o = NULL;
 
@@ -110,6 +110,12 @@ VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 		value.interaction = VuoInteraction_makeFromJson(o);
 		return value;
 	}
+	else if (json_object_object_get_ex(js, "level", &o))
+	{
+		value.type = VuoWindowProperty_Level;
+		value.level = VuoInteger_makeFromJson(o);
+		return value;
+	}
 
 	return value;
 }
@@ -150,8 +156,25 @@ json_object * VuoWindowProperty_getJson(const VuoWindowProperty value)
 		json_object_object_add(js, "cursor", VuoCursor_getJson(value.cursor));
 	else if (value.type == VuoWindowProperty_Interaction)
 		json_object_object_add(js, "interaction", VuoInteraction_getJson(value.interaction));
+	else if (value.type == VuoWindowProperty_Level)
+		json_object_object_add(js, "level", VuoInteger_getJson(value.level));
 
 	return js;
+}
+
+/**
+ * Returns a string describing `level`.
+ */
+const char *VuoWindowLevel_getLabel(VuoWindowLevel level)
+{
+	if (level == VuoWindowLevel_Background)
+		return "Background";
+	else if (level == VuoWindowLevel_Normal)
+		return "Normal";
+	else if (level == VuoWindowLevel_Floating)
+		return "Floating";
+
+	return "Unknown";
 }
 
 /**
@@ -199,6 +222,8 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 	}
 	else if (value.type == VuoWindowProperty_Interaction)
 		return VuoInteraction_getSummary(value.interaction);
+	else if (value.type == VuoWindowProperty_Level)
+		return VuoText_format("Change Window Level: %s", VuoWindowLevel_getLabel(value.level));
 
 	return strdup("Unknown window property");
 }

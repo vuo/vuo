@@ -94,7 +94,7 @@ void nodeInstanceEvent
 		aspect = fmax( (image->pixelsWide/(float)width), (image->pixelsHigh/(float)height) ) * 2;
 	}
 
-	VuoSceneObject rootSceneObject = (VuoSceneObject)VuoLayer_make(VuoText_make("Rotated Image"), image, (VuoPoint2d){0,0}, rotation, aspect, 1.);
+	VuoSceneObject rootSceneObject = (VuoSceneObject)VuoLayer_make(VuoText_make("Rotated Image"), image, (VuoPoint2d){0,0}, rotation, aspect, VuoOrientation_Horizontal, 1.);
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);

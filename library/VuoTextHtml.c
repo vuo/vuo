@@ -101,6 +101,7 @@ VuoText VuoText_removeHtml(VuoText text)
 			{
 				xmlUnlinkNode(xpathObject->nodesetval->nodeTab[i]);
 				xmlFree(xpathObject->nodesetval->nodeTab[i]);
+				xpathObject->nodesetval->nodeTab[i] = NULL;
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-Nodes for working with movie files and with live video from cameras.
+Nodes for working with movie files, with live video from cameras, and streaming video.
 
 ### Video basics
 

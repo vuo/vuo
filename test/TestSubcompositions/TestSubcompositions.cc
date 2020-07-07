@@ -1003,7 +1003,7 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 
 		VuoCompilerComposition *composition = nullptr;
 		VuoRunner *runner = nullptr;
@@ -1020,7 +1020,7 @@ private slots:
 			delete parser;
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
@@ -1057,7 +1057,7 @@ private slots:
 			composition->getBase()->addCable(outputCable->getBase());
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
@@ -1085,7 +1085,7 @@ private slots:
 			composition->getBase()->addCable(outputCable->getBase());
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
@@ -1118,7 +1118,7 @@ private slots:
 			composition->getBase()->addCable(outputCable->getBase());
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
@@ -1161,7 +1161,7 @@ private slots:
 			composition->getBase()->addCable(outputCable->getBase());
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
@@ -1185,7 +1185,7 @@ private slots:
 			composition->getBase()->addCable(otherOutputCable->getBase());
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			diffInfo = new VuoCompilerCompositionDiff();
@@ -1275,7 +1275,7 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 
 		VuoCompilerComposition *composition = nullptr;
 		VuoRunner *runner = nullptr;
@@ -1292,7 +1292,7 @@ private slots:
 			delete parser;
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
@@ -1330,7 +1330,7 @@ private slots:
 		// Build the modified composition and replace the running composition with it.
 		{
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			VuoCompilerCompositionDiff *diffInfo = new VuoCompilerCompositionDiff();
@@ -1355,7 +1355,7 @@ private slots:
 			runningCompositionLibraries->enqueueLibraryContainingDependencyToUnload(nodeClassName);
 
 			compiler->compileComposition(composition2, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition2, compiler);
@@ -1461,7 +1461,7 @@ private slots:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-		VuoRunningCompositionLibraries *runningCompositionLibraries = new VuoRunningCompositionLibraries();
+		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
 		VuoCompilerCompositionDiff *diffInfo = nullptr;
 
 		VuoCompilerComposition *composition = nullptr;
@@ -1479,7 +1479,7 @@ private slots:
 			delete parser;
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath,
@@ -1591,7 +1591,7 @@ private slots:
 			runningCompositionLibraries->enqueueLibraryContainingDependencyToUnload(nodeClassName);
 
 			compiler->compileComposition(composition, bcPath, true, issues);
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries);
+			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
 
 			string compositionDiff = diffInfo->diff(oldCompositionGraphviz, composition, compiler);

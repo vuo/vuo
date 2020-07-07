@@ -10,19 +10,25 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Average",
-					 "keywords" : [ "mix", "combine", "mean", "midpoint", "middle" ],
-					 "version" : "1.0.0",
-					 "node" : {
-						  "exampleCompositions" : [ "FollowMidpoint.vuo" ]
-					 }
-				 });
+	"title": "Average",
+	"keywords": [
+		"mix", "combine", "mean", "midpoint", "middle",
+	],
+	"version": "2.0.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"defaultType": "VuoReal",
+			"compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+		},
+	},
+	"node": {
+		"exampleCompositions": [ "FollowMidpoint.vuo" ],
+	},
+});
 
-void nodeEvent
-(
-		VuoInputData(VuoList_VuoReal) values,
-		VuoOutputData(VuoReal) averageValue
-)
+void nodeEvent(
+	VuoInputData(VuoList_VuoGenericType1) values,
+	VuoOutputData(VuoGenericType1) averageValue)
 {
-	*averageValue = VuoReal_average(values);
+	*averageValue = VuoGenericType1_average(values);
 }

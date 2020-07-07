@@ -265,6 +265,19 @@ void VuoThermalState(void)
 }
 
 /**
+ * Log sleep/wake state changes, for debugging.
+ */
+void VuoSleepWake(void)
+{
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceWillSleepNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system is going to sleep.");
+	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system is waking up.");
+	}];
+}
+
+/**
  * Disable "App Nap" since even if our timers are set to `DISPATCH_TIMER_STRICT`,
  * the OS still prevents the process from running smoothly while taking a nap.
  * https://b33p.net/kosada/node/12685
@@ -280,4 +293,5 @@ void VuoEventLoop_disableAppNap(void)
 	[activityToken retain];
 
 	VuoThermalState();
+	VuoSleepWake();
 }

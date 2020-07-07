@@ -6,5 +6,6 @@ The image used to create this layer may be resized in the composite image. If re
    - `Anchor` — The point within the layer that should be fixed at `Position`.
    - `Position` — The point within the composite image where the layer should be placed, in Vuo Coordinates.
    - `Rotation` — The image's rotation counterclockwise, in degrees.
-   - `Width` — The image's width, in Vuo Coordinates. Its height is determined by the image's aspect ratio.
+   - `Size` — The layer's width or height, in Vuo Coordinates.  (See the `Fixed` port, below.)
+   - `Fixed` — Whether the `Size` specifies the layer's width or height.  The other dimension is determined by the image's aspect ratio.
    - `Opacity` — The image's opacity, from 0 (fully transparent) to 1 (fully opaque).

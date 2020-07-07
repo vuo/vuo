@@ -8,16 +8,20 @@
  */
 
 #include "node.h"
+#include "VuoColorspace.h"
 #include "VuoDmxColorMap.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert DMX to Color List",
-					 "keywords" : [ "artnet", "art net", "art-net", "fixture", "lamp", "lighting", "rgbaw", "rgbw", "wwcw", "ww/cw" ],
-					 "version" : "1.0.1",
-					 "node": {
-						  "exampleCompositions" : [ ]
-					 }
-				 });
+	"title": "Convert DMX to Color List",
+	"keywords": [ "artnet", "art net", "art-net", "fixture", "lamp", "lighting", "rgbaw", "rgbw", "wwcw", "ww/cw" ],
+	"version": "1.0.1",
+	"node": {
+		"exampleCompositions": [ ]
+	},
+	"dependencies" : [
+		"VuoColorspace",
+	],
+});
 
 void nodeEvent
 (
@@ -80,11 +84,11 @@ void nodeEvent
 		}
 	else if (colorMap == VuoDmxColorMap_CMY)
 		for (VuoInteger i = 1; i <= (channelCount/3)*3; i += 3)
-			VuoListAppendValue_VuoColor(*colors, VuoColor_makeWithCMYKA(
+			VuoListAppendValue_VuoColor(*colors, VuoColorspace_makeCMYKAColor(
 											VuoReal_clamp(((double)VuoListGetValue_VuoInteger(dmx, i  )) / 255., 0, 1),
 											VuoReal_clamp(((double)VuoListGetValue_VuoInteger(dmx, i+1)) / 255., 0, 1),
 											VuoReal_clamp(((double)VuoListGetValue_VuoInteger(dmx, i+2)) / 255., 0, 1),
-											0,1));
+											0, 1, 0));
 	else if (colorMap == VuoDmxColorMap_HSL)
 		for (VuoInteger i = 1; i <= (channelCount/3)*3; i += 3)
 			VuoListAppendValue_VuoColor(*colors, VuoColor_makeWithHSLA(

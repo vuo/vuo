@@ -580,14 +580,18 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	{
 		const char *currentWorkingDir = VuoGetWorkingDirectory();
 
-		bool compositionIsExportedApp = false;
-
-		// If the current working directory is "/", assume that we are working with an exported app;
-		// resolve loaded resources relative to the app bundle's "Resources" directory, and
-		// resolve saved resources relative to the user's Desktop.
+		// - When macOS LaunchServices launches an app, it sets the current working directory to root.
+		// - When macOS ScreenSaverEngine launches a plugin, it sets the current working directory to
+		//   `~/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data`.
+		bool compositionIsExportedAppOrPlugin = false;
 		char *absolutePath;
-		if (!strcmp(currentWorkingDir, "/"))
+		if (strcmp(currentWorkingDir, "/") == 0
+		 || strstr(currentWorkingDir, "/Library/Containers/"))
 		{
+			// If we're running as an exported app or plugin,
+			// resolve loaded resources relative to the app bundle's "Resources" directory, and
+			// resolve saved resources relative to the user's Desktop.
+
 			// Get the exported executable path.
 			char rawExecutablePath[PATH_MAX+1];
 			uint32_t size = sizeof(rawExecutablePath);
@@ -614,7 +618,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			// If it does, proceed under the assumption that we are.
 			if (access(cleanedResourcesPath, 0) == 0)
 			{
-				compositionIsExportedApp = true;
+				compositionIsExportedAppOrPlugin = true;
 
 				if (flags & VuoUrlNormalize_forSaving)
 				{
@@ -638,7 +642,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		}
 
 		// If we are not working with an exported app, resolve resources relative to the current working directory.
-		if (!compositionIsExportedApp)
+		if (!compositionIsExportedAppOrPlugin)
 		{
 			size_t mallocSize = strlen(currentWorkingDir) + strlen("/") + strlen(trimmedUrl) + 1;
 			absolutePath = (char *)malloc(mallocSize);

@@ -29,6 +29,7 @@ typedef enum
 {
 	VuoCoordinateUnit_Points,
 	VuoCoordinateUnit_Pixels,
+	VuoCoordinateUnit_VuoCoordinates,
 } VuoCoordinateUnit;
 
 VuoCoordinateUnit VuoCoordinateUnit_makeFromJson(struct json_object *js);

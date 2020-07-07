@@ -24,6 +24,8 @@
 
 extern "C" {
 #include "VuoAnchor.h"
+#include "VuoAudioInputDevice.h"
+#include "VuoAudioOutputDevice.h"
 #include "VuoImage.h"
 #include "VuoIntegerRange.h"
 #include "VuoRange.h"
@@ -1526,6 +1528,21 @@ string VuoRendererPort::getConstantAsTruncatedStringToRender(void) const
 }
 
 /**
+ * If the port's data type is equal to the specified `type`,
+ * creates an object from the port's current value,
+ * then returns the output of `VuoType_getShortSummary()`.
+ */
+#define RETURN_SHORT_SUMMARY(type)                                           \
+    if (getDataType()->getModuleKey() == #type)                              \
+    {                                                                        \
+        type value = type ## _makeFromString(getConstantAsString().c_str()); \
+        type ## _retain(value);                                              \
+        string s = stringAndFree(type ## _getShortSummary(value));           \
+        type ## _release(value);                                             \
+        return s;                                                            \
+    }
+
+/**
  * Returns the untruncated string representation of this port's constant data value as it should be rendered
  * in a port tooltip, or an empty string if it has no currently assigned constant data value.
  */
@@ -1541,8 +1558,14 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		if (dynamic_cast<VuoGenericType *>(getDataType()))
 			return "";
 
+		string typeName = getDataType()->getModuleKey();
+
 		// Don't display constant input values for list ports.
-		if (VuoType::isListTypeName(getDataType()->getModuleKey()))
+		if (VuoType::isListTypeName(typeName))
+			return "";
+
+		// Don't display constant input values for types that don't have input editors.
+		if (typeName == "VuoData")
 			return "";
 
 		if (getDataType()->getModuleKey()=="VuoColor")
@@ -1936,40 +1959,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return outputString;
 		}
-		if (getDataType()->getModuleKey()=="VuoAudioInputDevice")
-		{
-			json_object *js = json_tokener_parse(getConstantAsString().c_str());
-			json_object *o = NULL;
-
-			const char *name = NULL;
-			if (json_object_object_get_ex(js, "name", &o))
-				name = json_object_get_string(o);
-
-			string outputString = "Default";
-			if (name && strlen(name))
-				outputString = name;
-
-			json_object_put(js);
-
-			return outputString;
-		}
-		if (getDataType()->getModuleKey()=="VuoAudioOutputDevice")
-		{
-			json_object *js = json_tokener_parse(getConstantAsString().c_str());
-			json_object *o = NULL;
-
-			const char *name = NULL;
-			if (json_object_object_get_ex(js, "name", &o))
-				name = json_object_get_string(o);
-
-			string outputString = "Default";
-			if (name && strlen(name))
-				outputString = name;
-
-			json_object_put(js);
-
-			return outputString;
-		}
+		RETURN_SHORT_SUMMARY(VuoAudioInputDevice);
+		RETURN_SHORT_SUMMARY(VuoAudioOutputDevice);
 		if (getDataType()->getModuleKey()=="VuoHidDevice")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -2162,6 +2153,20 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			VuoRectangle value = VuoRectangle_makeFromString(getConstantAsString().c_str());
 			return stringAndFree(VuoRectangle_getSummary(value));
 		}
+		if (getDataType()->getModuleKey() == "VuoNdiSource")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o, *o2;
+			if (json_object_object_get_ex(js, "name", &o))
+				return json_object_get_string(o);
+			else if (json_object_object_get_ex(js, "ipAddress", &o)
+				  && json_object_object_get_ex(js, "port", &o2))
+				return format("%s:%lld", json_object_get_string(o), json_object_get_int(o2));
+			else if (json_object_object_get_ex(js, "ipAddress", &o))
+				return json_object_get_string(o);
+			else
+				return "First";
+		}
 	}
 
 	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape and optionally capitalize it.
@@ -2170,6 +2175,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	{
 		string textWithoutQuotes = json_object_get_string(js);
 		json_object_put(js);
+
+		// Show linebreaks as a glyph (rather than causing the following text to move to the next line, which gets cut off).
+		VuoStringUtilities::replaceAll(textWithoutQuotes, "\n", "⏎");
 
 		string type;
 		if (getDataType())

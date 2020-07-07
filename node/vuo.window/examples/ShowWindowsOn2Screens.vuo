@@ -11,8 +11,8 @@
 
 digraph G
 {
-ChangeFullscreenStatus [type="vuo.window.fullscreen2" version="2.0.0" label="Change Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="705,600" fillcolor="orange" _fullscreen="true"];
-ChangeFullscreenStatus2 [type="vuo.window.fullscreen2" version="2.0.0" label="Change Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="705,225" fillcolor="orange" _fullscreen="true"];
+ChangeFullscreenStatus [type="vuo.window.fullscreen2" version="2.0.0" label="Change Window Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="705,600" fillcolor="orange" _fullscreen="true"];
+ChangeFullscreenStatus2 [type="vuo.window.fullscreen2" version="2.0.0" label="Change Window Screen|<refresh>refresh\l|<windowDescription>windowDescription\l|<fullscreen>fullscreen\l|<screen>screen\l|<changedWindowDescription>changedWindowDescription\r" pos="705,225" fillcolor="orange" _fullscreen="true"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="210,330" fillcolor="lime" _started_eventThrottling="enqueue"];
 GetItemFromList [type="vuo.list.get.VuoScreen" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="450,615" _which="2"];
 GetItemFromList2 [type="vuo.list.get.VuoScreen" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="450,240" _which="1"];

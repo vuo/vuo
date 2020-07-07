@@ -220,6 +220,8 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 	}
 
 	VDebugLog("Received %zu bytes.", buffer.size);
+	if (buffer.size == 0 || !buffer.memory)
+		return false;
 
 	// Convert non-UTF-8 charsets to UTF-8.
 	char *contentType = NULL;

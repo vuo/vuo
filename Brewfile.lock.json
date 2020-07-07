@@ -614,7 +614,6 @@
           }
         }
       },
-      "svn": null,
       "tidy-html5": {
         "version": "5.6.0",
         "bottle": {
@@ -743,10 +742,6 @@
       "getwindowid": {
         "version": "1.1",
         "bottle": false
-      },
-      "svn-xattr": {
-        "version": "1.1",
-        "bottle": false
       }
     },
     "cask": {
@@ -766,9 +761,6 @@
       },
       "smokris/getwindowid": {
         "revision": "641bc205a20aec9a7f3f9978bbcd126240005bc1"
-      },
-      "smokris/svn-xattr": {
-        "revision": "1655bf68a9daa310b6b06ad5f443e1cdc646249a"
       }
     }
   },

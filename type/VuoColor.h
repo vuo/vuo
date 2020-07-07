@@ -95,9 +95,6 @@ VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosi
 void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoReal *a);
 VuoReal VuoColor_getLightness(VuoColor color);
 
-VuoColor VuoColor_makeWithCMYKA(VuoReal c, VuoReal m, VuoReal y, VuoReal k, VuoReal a);
-void VuoColor_getCMYKA(VuoColor color, VuoReal *c, VuoReal *m, VuoReal *y, VuoReal *k, VuoReal *a);
-
 VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha);
 
 VuoColor VuoColor_average(VuoList_VuoColor colors);

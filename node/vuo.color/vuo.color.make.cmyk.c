@@ -9,21 +9,38 @@
 
 #include "node.h"
 
-VuoModuleMetadata({
-					 "title" : "Make CMYK Color",
-					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma", "cyan", "magenta", "yellow", "key", "black" ],
-					 "version" : "1.0.0"
-				 });
+#include "VuoColorspace.h"
 
-void nodeEvent
-(
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) cyan,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) magenta,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) yellow,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) black,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) alpha,
-		VuoOutputData(VuoColor) color
-)
+VuoModuleMetadata({
+	"title": "Make CMYK Color",
+	"keywords":[
+		"red", "green", "blue",
+		"CMYKA",
+		"alpha", "transparent", "opacity",
+		"channel", "tone", "chroma",
+		"key", // The K in CMYK.
+		"color space",
+	],
+	"version": "1.1.0",
+	"node": {
+		"exampleCompositions": [ ],
+	},
+	"dependencies" : [
+		"VuoColorspace",
+	],
+});
+
+void nodeEvent(
+	VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) cyan,
+	VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) magenta,
+	VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) yellow,
+	VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) black,
+	VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) alpha,
+	VuoInputData(VuoInteger, {"menuItems":[
+		{"value":0, "name":"Linear"},
+		{"value":1, "name":"Apple"},
+	], "default":0}) colorspace,
+	VuoOutputData(VuoColor) color)
 {
-	*color = VuoColor_makeWithCMYKA(cyan, magenta, yellow, black, alpha);
+	*color = VuoColorspace_makeCMYKAColor(cyan, magenta, yellow, black, alpha, colorspace);
 }

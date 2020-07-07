@@ -346,6 +346,9 @@ private slots:
 			set<string> expectedCompatibleTypes;
 			expectedCompatibleTypes.insert("VuoInteger");
 			expectedCompatibleTypes.insert("VuoReal");
+			expectedCompatibleTypes.insert("VuoPoint2d");
+			expectedCompatibleTypes.insert("VuoPoint3d");
+			expectedCompatibleTypes.insert("VuoPoint4d");
 			QTest::newRow("Generic singleton compatible with numeric") << "vuo.math.max" << "max" << "VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
 		}
 
@@ -353,6 +356,9 @@ private slots:
 			set<string> expectedCompatibleTypes;
 			expectedCompatibleTypes.insert("VuoList_VuoInteger");
 			expectedCompatibleTypes.insert("VuoList_VuoReal");
+			expectedCompatibleTypes.insert("VuoList_VuoPoint2d");
+			expectedCompatibleTypes.insert("VuoList_VuoPoint3d");
+			expectedCompatibleTypes.insert("VuoList_VuoPoint4d");
 			QTest::newRow("Generic list compatible with numeric") << "vuo.math.max" << "values" << "VuoList_VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
 		}
 	}

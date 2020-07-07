@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Expected outputs for the vuo.color.make.icc node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+// sRGB to sRGB shouldn't change.
+"sRGB to sRGB too few"              : {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[         ]}, "outputPortValues":{"color":[0,0,0    ]}},
+"sRGB to sRGB too few 2"            : {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[1        ]}, "outputPortValues":{"color":[1,0,0    ]}},
+"sRGB to sRGB too many"             : {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[1,1,1,1,1]}, "outputPortValues":{"color":[1,1,1    ]}},
+"sRGB to sRGB black"                : {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[0,0,0,1  ]}, "outputPortValues":{"color":[0,0,0    ]}},
+"sRGB to sRGB white"                : {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[1,1,1,1  ]}, "outputPortValues":{"color":[1,1,1    ]}},
+"sRGB to sRGB white semitransparent": {"firingPort":"colorspace", "inputPortValues":{"colorspace":0,"components":[1,1,1,0.5]}, "outputPortValues":{"color":[1,1,1,0.5]}},
+
+"sRGB to Lab black"                 : {"firingPort":"colorspace", "inputPortValues":{"colorspace":4,"components":[ 0      ,-0.5    ,-0.5    ,1  ]}, "outputPortValues":{"color":[0,0,0    ]}},
+"sRGB to Lab white"                 : {"firingPort":"colorspace", "inputPortValues":{"colorspace":4,"components":[99.99882,-0.48128,-0.51725,1  ]}, "outputPortValues":{"color":[1,1,1    ]}},
+"sRGB to Lab white semitransparent" : {"firingPort":"colorspace", "inputPortValues":{"colorspace":4,"components":[99.99882,-0.48128,-0.51725,0.5]}, "outputPortValues":{"color":[1,1,1,0.5]}},
+}}

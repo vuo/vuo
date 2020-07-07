@@ -141,7 +141,7 @@ bool VuoFileFormat_isSupportedTableFile(const char *path)
  */
 bool VuoFileFormat_isSupportedDataFile(const char *path)
 {
-	const char *formats[] = {"txt"};
+	const char *formats[] = {"icc", "txt"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }

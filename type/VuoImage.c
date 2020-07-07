@@ -814,6 +814,28 @@ bool VuoImage_isEmpty(const VuoImage image)
 /**
  * - If the image is null, returns false.
  * - If either image dimension is 0, returns false.
+ * - If all pixels are black (whether transparent or opaque), returns true.
+ * - Otherwise returns false.
+ */
+bool VuoImage_isBlackOrTransparent(const VuoImage image, const unsigned char tolerance)
+{
+	if (!image || image->pixelsWide == 0 || image->pixelsHigh == 0)
+		return false;
+
+	const unsigned char *pixels = VuoImage_getBuffer(image, GL_LUMINANCE);
+	bool foundNonBlackPixel = false;
+	for (unsigned int p = 0; p < image->pixelsWide * image->pixelsHigh; ++p)
+		if (pixels[p] > tolerance)
+		{
+			foundNonBlackPixel = true;
+			break;
+		}
+	return !foundNonBlackPixel;
+}
+
+/**
+ * - If the image is null, returns false.
+ * - If either image dimension is 0, returns false.
  * - Otherwise returns true.
  */
 bool VuoImage_isPopulated(const VuoImage image)
@@ -1101,7 +1123,7 @@ GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *
 	return textureRect;
 }
 
-static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef surf, VuoGlContext context, GLsizei pixelsWide, GLsizei pixelsHigh, bool flip);
+static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef surf, VuoGlContext context, GLsizei pixelsWide, GLsizei pixelsHigh, bool flip, bool stretch);
 
 /**
  * Decodes the JSON object `js` onto a host-provided OpenGL texture's `GL_TEXTURE_RECTANGLE_ARB` target.
@@ -1171,7 +1193,7 @@ bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, 
 
 			glViewport(0, 0, pixelsWide, pixelsHigh);
 
-			success = VuoImage_resolveInterprocessJsonOntoFramebufferInternal(*surf, cgl_ctx, inputPixelsWide, inputPixelsHigh, false);
+			success = VuoImage_resolveInterprocessJsonOntoFramebufferInternal(*surf, cgl_ctx, inputPixelsWide, inputPixelsHigh, false, true);
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_ARB, 0, 0);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1206,11 +1228,14 @@ bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, 
  * @param context A CGLContextObj.  This must be part of the same share group
  *                as the context passed to @ref VuoGlContext_setGlobalRootContext.
  * @param flip If true, the image is flipped upside-down when rendering to the framebuffer.
+ * @param stretch How to fit the image to the framebuffer.
+ *                If false, the image is drawn 1:1 without scaling/stretching, and the edges are clamped.
+ *                If true, the image is stretched to fit the framebuffer's viewport.
  *
  * @threadAnyGL
  * @version200New
  */
-bool VuoImage_resolveInterprocessJsonOntoFramebuffer(json_object *js, VuoGlContext context, bool flip)
+bool VuoImage_resolveInterprocessJsonOntoFramebuffer(json_object *js, VuoGlContext context, bool flip, bool stretch)
 {
 	json_object *o;
 	if (!json_object_object_get_ex(js, "pixelsWide", &o))
@@ -1231,7 +1256,7 @@ bool VuoImage_resolveInterprocessJsonOntoFramebuffer(json_object *js, VuoGlConte
 		return false;
 	}
 
-	bool ret = VuoImage_resolveInterprocessJsonOntoFramebufferInternal(surf, context, pixelsWide, pixelsHigh, flip);
+	bool ret = VuoImage_resolveInterprocessJsonOntoFramebufferInternal(surf, context, pixelsWide, pixelsHigh, flip, stretch);
 
 	VuoIoSurfacePool_signal(surf);
 	CFRelease(surf);
@@ -1267,7 +1292,7 @@ dispatch_once_t VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init = 0
 /**
  * Helper for VuoImage_resolveInterprocessJsonOntoFramebuffer.
  */
-static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef surf, VuoGlContext context, GLsizei pixelsWide, GLsizei pixelsHigh, bool flip)
+static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef surf, VuoGlContext context, GLsizei pixelsWide, GLsizei pixelsHigh, bool flip, bool stretch)
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)context;
 
@@ -1399,15 +1424,20 @@ static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef
 
 	glUseProgram(program);
 
-	// Center the image in the viewport.
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-//	VLog("Resolving %dx%d image onto a %dx%d viewport.", pixelsWide, pixelsHigh, viewport[2], viewport[3]);
-	glUniform4f(receiveTextureOffsetAndSizeUniform,
-				((float)pixelsWide - viewport[2]) / 2,
-				flip ? viewport[3] : 0,
-				viewport[2],
-				viewport[3] * (flip ? -1 : 1));
+	if (stretch)
+		glUniform4f(receiveTextureOffsetAndSizeUniform, 0, flip ? pixelsHigh : 0, pixelsWide, pixelsHigh * (flip ? -1 : 1));
+	else
+	{
+		// Center the image in the viewport.
+		GLint viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+//		VLog("Resolving %dx%d image onto a %dx%d viewport.", pixelsWide, pixelsHigh, viewport[2], viewport[3]);
+		glUniform4f(receiveTextureOffsetAndSizeUniform,
+					((float)pixelsWide - viewport[2]) / 2,
+					flip ? viewport[3] : 0,
+					viewport[2],
+					viewport[3] * (flip ? -1 : 1));
+	}
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 

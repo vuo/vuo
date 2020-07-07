@@ -31,12 +31,18 @@ struct json_object;
  */
 typedef int64_t VuoInteger;
 
+/// List type.
+typedef const struct VuoList_VuoInteger_struct { void *l; } * VuoList_VuoInteger;
+/// List type.
+#define VuoList_VuoInteger_TYPE_DEFINED
+
 VuoInteger VuoInteger_makeFromJson(struct json_object * js);
 struct json_object * VuoInteger_getJson(const VuoInteger value);
 char * VuoInteger_getSummary(const VuoInteger value);
 
-VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition);
-VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount, VuoInteger *outputPosition);
+VuoInteger VuoInteger_minList(VuoList_VuoInteger values, VuoInteger *outputPosition);
+VuoInteger VuoInteger_maxList(VuoList_VuoInteger values, VuoInteger *outputPosition);
+VuoInteger VuoInteger_average(VuoList_VuoInteger values);
 
 VuoInteger VuoInteger_wrap(VuoInteger value, VuoInteger minimum, VuoInteger maximum);
 
@@ -88,6 +94,17 @@ static inline VuoInteger VuoInteger_scale(VuoInteger a, VuoInteger b)
 }
 
 /**
+ * @c a/b
+ *
+ * Provided for generic type equivalence with VuoPoints.
+ */
+static inline VuoInteger VuoInteger_divide(VuoInteger a, VuoInteger b) __attribute__((const));
+static inline VuoInteger VuoInteger_divide(VuoInteger a, VuoInteger b)
+{
+    return a/b;
+}
+
+/**
  * If the value is zero, returns 1.  Otherwise returns the value.
  */
 static inline VuoInteger VuoInteger_makeNonzero(VuoInteger a) __attribute__((const));
@@ -110,7 +127,9 @@ static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInt
 /// This type has _areEqual() and _isLessThan() functions.
 #define VuoInteger_SUPPORTS_COMPARISON
 bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2);
+bool VuoInteger_areEqualListWithinTolerance(VuoList_VuoInteger values, VuoInteger tolerance);
 bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b);
+bool VuoInteger_isWithinRange(VuoInteger value, VuoInteger minimum, VuoInteger maximum);
 
 #ifndef MIN
 /**

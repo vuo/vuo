@@ -76,13 +76,11 @@ void nodeInstanceTriggerUpdate
 		updateDevice(*context, device);
 }
 
-void nodeInstanceEvent
-(
-		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoSerialDevice) device,
-		VuoInputData(VuoData) sendData,
-		VuoInputEvent({"eventBlocking":"none", "data":"sendData"}) sendDataEvent
-)
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoData) sendData,
+	VuoInputEvent({"eventBlocking":"none", "data":"sendData"}) sendDataEvent,
+	VuoInputData(VuoSerialDevice) device)
 {
 	if (!(*context)->s || !VuoSerialDevice_areEqual(device, (*context)->device))
 		updateDevice(*context, device);

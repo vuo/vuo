@@ -6,3 +6,4 @@ target_link_libraries(TestModules
 	PRIVATE
 	CONAN_PKG::wjelement
 )
+add_dependencies(TestModules VuoEditorApp)

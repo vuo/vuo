@@ -58,13 +58,11 @@ struct nodeInstanceData * nodeInstanceInit
 	return context;
 }
 
-void nodeInstanceEvent
-(
-		VuoInputData(VuoText) serverName,
-		VuoInputData(VuoImage) sendImage,
-		VuoInputEvent({"eventBlocking":"none","data":"sendImage"}) sendImageEvent,
-		VuoInstanceData(struct nodeInstanceData *) context
-)
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoImage) sendImage,
+	VuoInputEvent({"eventBlocking":"none","data":"sendImage"}) sendImageEvent,
+	VuoInputData(VuoText) serverName)
 {
 	if (! VuoText_areEqual(serverName, (*context)->serverName))
 		updateServer(*context, serverName);

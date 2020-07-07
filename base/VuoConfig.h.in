@@ -1,6 +1,7 @@
 #define VUO_VERSION                   @Vuo_VERSION@
 #define VUO_VERSION_STRING           "@Vuo_VERSION@"
 #define VUO_VERSION_AND_BUILD_STRING "@VUO_VERSION_AND_BUILD@"
+#define VUO_GIT_COMMIT               "@VUO_GIT_COMMIT@"
 #define VUO_FRAMEWORK_VERSION_STRING "@VuoFrameworkVersion@"
 
 #define VUO_SOURCE_DIR               "@PROJECT_SOURCE_DIR@"

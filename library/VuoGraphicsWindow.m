@@ -61,6 +61,10 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 @property(retain) id<NSWindowDelegate> privateDelegate;  ///< Maintain our own reference-counted delegate (since NSWindow's delegate property is a weak reference).
 @property bool constrainToScreen;  ///< Allow compositions to programmatically make the window size greater than or equal to the screen.
 @property(retain) NSScreen *shouldGoFullscreen;  ///< If non-NULL, specifies the screen on which the window should go fullscreen after completing the previous exit-fullscreen transition.
+
+@property bool leftMouseDown;    ///< Whether the left mouse button is currently pressed (causing window resizing to be deferred).
+@property id mouseMonitor;       ///< Updates `leftMouseDown`.
+@property NSSize pendingResize;  ///< If nonzero, the size (in points) the window's content area should change to, once the window drag has concluded.
 @end
 
 @implementation VuoGraphicsWindow
@@ -126,6 +130,22 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		[v release];
 
 		_contentRectCached = l.frame;
+
+		_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseDownMask|NSLeftMouseUpMask handler:^(NSEvent *event) {
+			if (event.type == NSLeftMouseDown)
+				_leftMouseDown = true;
+			else if (event.type == NSLeftMouseUp)
+			{
+				_leftMouseDown = false;
+				if (!NSEqualSizes(_pendingResize, NSZeroSize))
+				{
+					VDebugLog("The window drag has concluded; performing the deferred resize.");
+					self.contentSize = _pendingResize;
+					_pendingResize = NSZeroSize;
+				}
+			}
+			return event;
+		}];
 	}
 
 	return self;
@@ -477,6 +497,15 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 			_cursor = property.cursor;
 			[self invalidateCursorRectsForView:self.contentView];
 		}
+		else if (property.type == VuoWindowProperty_Level)
+		{
+			if (property.level == VuoWindowLevel_Background)
+				self.level = CGWindowLevelForKey(kCGBackstopMenuLevelKey);
+			else if (property.level == VuoWindowLevel_Normal)
+				self.level = CGWindowLevelForKey(kCGNormalWindowLevelKey);
+			else if (property.level == VuoWindowLevel_Floating)
+				self.level = CGWindowLevelForKey(kCGFloatingWindowLevelKey);
+		}
 	}
 }
 
@@ -804,6 +833,25 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 }
 
 /**
+ * Resizes the window's content area to `newSize` (in points)
+ * when it's safe to do so.
+ */
+- (void)scheduleResize:(NSSize)newSize
+{
+	VDebugLog("Requested to resize to %gx%g points.",newSize.width,newSize.height);
+	if (_leftMouseDown)
+	{
+		VDebugLog("    The window is being dragged; deferring the resize.");
+		_pendingResize = newSize;
+	}
+	else
+	{
+		VDebugLog("    The window is not being dragged; resizing now.");
+		self.contentSize = newSize;
+	}
+}
+
+/**
  * Starts or stops recording a movie of the currently-selected window.
  *
  * @threadMain
@@ -921,6 +969,8 @@ done:
  */
 - (void)dealloc
 {
+	[NSEvent removeMonitor:_mouseMonitor];
+
 	// https://b33p.net/kosada/node/12123
 	// Cocoa leaks the contentView unless we force it to resign firstResponder status.
 	[self makeFirstResponder:nil];

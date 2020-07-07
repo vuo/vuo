@@ -194,5 +194,7 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode 
 	VuoShader_setUniform_VuoPoint2d( shader, "scale", scale );
 	VuoShader_setUniform_VuoPoint2d( shader, "offset", offset );
 
+	VuoShader_setTransparent(shader, sizingMode == VuoSizingMode_Fit);
+
 	return VuoImageRenderer_render(shader, width, height, VuoImage_getColorDepth(image));
 }

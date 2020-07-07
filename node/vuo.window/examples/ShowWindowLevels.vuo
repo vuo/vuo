@@ -1,0 +1,67 @@
+/**
+ * @file
+ * @brief Show Window Levels
+ * Demonstrates the Normal, Background, and Floating window levels.
+ *
+ * First close or minimize or hide all the other windows on your screen, then run this composition.  Click each window to focus it, and watch how the "Floating" window always stays on top, and how the "Background" window always stays behind the other windows.
+ *
+ * @lastSavedInVuoVersion 2.1.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeWindowLevel2 [type="vuo.window.level" version="1.0.0" label="Change Window Level|<refresh>refresh\l|<windowDescription>windowDescription\l|<level>level\l|<changedWindowDescription>changedWindowDescription\r" pos="225,135" fillcolor="orange" _level="0"];
+ChangeWindowLevel3 [type="vuo.window.level" version="1.0.0" label="Change Window Level|<refresh>refresh\l|<windowDescription>windowDescription\l|<level>level\l|<changedWindowDescription>changedWindowDescription\r" pos="225,345" fillcolor="orange" _level="10"];
+ChangeWindowLevel4 [type="vuo.window.level" version="1.0.0" label="Change Window Level|<refresh>refresh\l|<windowDescription>windowDescription\l|<level>level\l|<changedWindowDescription>changedWindowDescription\r" pos="210,780" fillcolor="orange" _level="20"];
+ChangeWindowLevel5 [type="vuo.window.level" version="1.0.0" label="Change Window Level|<refresh>refresh\l|<windowDescription>windowDescription\l|<level>level\l|<changedWindowDescription>changedWindowDescription\r" pos="225,570" fillcolor="orange" _level="10"];
+ChangeWindowPosition [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-255,135" _topLeft="\{\"x\":600,\"y\":0\}" _unit="\"points\""];
+ChangeWindowPosition2 [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-255,345" _topLeft="\{\"x\":600,\"y\":300\}" _unit="\"points\""];
+ChangeWindowPosition3 [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-255,570" _topLeft="\{\"x\":600,\"y\":0\}" _unit="\"points\""];
+ChangeWindowPosition4 [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="-255,780" _topLeft="\{\"x\":1050,\"y\":0\}" _unit="\"points\""];
+ChangeWindowTitle [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="0,135" _title="\"Background\""];
+ChangeWindowTitle2 [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="0,345" _title="\"Normal 1\""];
+ChangeWindowTitle3 [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="0,570" _title="\"Normal 2\""];
+ChangeWindowTitle4 [type="vuo.window.title2" version="2.0.0" label="Change Window Title|<refresh>refresh\l|<windowDescription>windowDescription\l|<title>title\l|<changedWindowDescription>changedWindowDescription\r" pos="0,780" _title="\"Floating\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-525,45" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="225,45" _color="\{\"r\":0,\"g\":0.50196081399917603,\"b\":1,\"a\":1\}" _width="600" _height="600"];
+MakeColorImage2 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="225,255" _color="\{\"r\":0,\"g\":1,\"b\":0,\"a\":1\}" _width="600" _height="150"];
+MakeColorImage3 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="225,690" _color="\{\"r\":1,\"g\":0,\"b\":1,\"a\":1\}" _width="150" _height="600"];
+MakeColorImage4 [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="225,480" _color="\{\"r\":1,\"g\":0.80000001192092896,\"b\":0.40000000596046448,\"a\":1\}" _width="150" _height="600"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="435,45" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderImageToWindow2 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="435,255" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderImageToWindow3 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="435,690" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+RenderImageToWindow4 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="435,480" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+
+Comment [type="vuo.comment" label="\"\"" pos="-330,0" width="950" height="194" fillcolor="blue"];
+Comment2 [type="vuo.comment" label="\"\"" pos="-330,210" width="947" height="202" fillcolor="green"];
+Comment3 [type="vuo.comment" label="\"\"" pos="-330,420" width="947" height="205" fillcolor="orange"];
+Comment4 [type="vuo.comment" label="\"\"" pos="-330,645" width="951" height="201" fillcolor="magenta"];
+
+ChangeWindowLevel2:changedWindowDescription -> RenderImageToWindow:setWindowDescription;
+ChangeWindowLevel3:changedWindowDescription -> RenderImageToWindow2:setWindowDescription;
+ChangeWindowLevel4:changedWindowDescription -> RenderImageToWindow3:setWindowDescription;
+ChangeWindowLevel5:changedWindowDescription -> RenderImageToWindow4:setWindowDescription;
+ChangeWindowPosition2:changedWindowDescription -> ChangeWindowTitle2:windowDescription;
+ChangeWindowPosition3:changedWindowDescription -> ChangeWindowTitle3:windowDescription;
+ChangeWindowPosition4:changedWindowDescription -> ChangeWindowTitle4:windowDescription;
+ChangeWindowPosition:changedWindowDescription -> ChangeWindowTitle:windowDescription;
+ChangeWindowTitle2:changedWindowDescription -> ChangeWindowLevel3:windowDescription;
+ChangeWindowTitle3:changedWindowDescription -> ChangeWindowLevel5:windowDescription;
+ChangeWindowTitle4:changedWindowDescription -> ChangeWindowLevel4:windowDescription;
+ChangeWindowTitle:changedWindowDescription -> ChangeWindowLevel2:windowDescription;
+FireOnStart:started -> ChangeWindowPosition2:windowDescription [style=invis];
+FireOnStart:started -> ChangeWindowPosition3:windowDescription [style=invis];
+FireOnStart:started -> ChangeWindowPosition4:windowDescription [style=invis];
+FireOnStart:started -> ChangeWindowPosition:windowDescription [style=invis];
+FireOnStart:started -> MakeColorImage2:color [style=invis];
+FireOnStart:started -> MakeColorImage3:color [style=invis];
+FireOnStart:started -> MakeColorImage4:color [style=invis];
+FireOnStart:started -> MakeColorImage:color [style=invis];
+MakeColorImage2:image -> RenderImageToWindow2:image;
+MakeColorImage3:image -> RenderImageToWindow3:image;
+MakeColorImage4:image -> RenderImageToWindow4:image;
+MakeColorImage:image -> RenderImageToWindow:image;
+}

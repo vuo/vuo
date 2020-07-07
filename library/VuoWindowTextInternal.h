@@ -32,11 +32,13 @@
 @property(retain) NSFont *textFont;  ///< The font used inside the text view.
 @property(retain) NSMenuItem *editCopyMenuItem;	///< The "Edit > Copy" menu item.
 @property(retain) NSMenuItem *editSelectAllMenuItem;	///< The "Edit > Select All" menu item.
+@property(retain) NSMenuItem *editClearMenuItem;  ///< The "Edit > Clear" menu item.
 
 - (void)enableTriggersWithTypedLine:(void (*)(VuoText))typedLine
 						  typedWord:(void (*)(VuoText))typedWord
 					 typedCharacter:(void (*)(VuoText))typedCharacter;
 - (void)disableTriggers;
 - (void)appendLine:(const char *)text;
+- (void)clear;
 
 @end

@@ -19,7 +19,7 @@ The **UDP port** is a number that represents the connection between the OSC send
 
 Each OSC **message** contains an address and, optionally, one or more data values. 
 
-The **address** is a piece of text beginning with `/`. Often, it looks like a file path or part of a URL, for example `/1/fader`. It may be used to describe how the data values should be interpreted, for example as positions of a fader control. 
+The **address** is a piece of text beginning with `/`. Often, it looks like a file path or part of a URL, for example `/1/fader`. It may be used to describe how the data values should be interpreted, for example as positions of a fader control.  When using the [Filter Address](vuo-node://vuo.osc.filter.address) node, Vuo supports case-sensitive wildcard matching.
 
 Each **data value** is a simple piece of information (integer, real, boolean, or text). For example, a data value of 0.3 accompanying the address `/1/fader` could indicate that a fader control has been set to position 0.3. 
 

@@ -10,6 +10,7 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoColor.h"
+#include "VuoColorspace.h"
 #include "VuoList_VuoColor.h"
 }
 
@@ -136,12 +137,12 @@ private slots:
 
 		// Test converting CMYKA to RGBA.
 		VuoColor colorFromRGBA  = VuoColor_makeWithRGBA(r, g, b, a);
-		VuoColor colorFromCMYKA = VuoColor_makeWithCMYKA(c, m, y, k, a);
+		VuoColor colorFromCMYKA = VuoColorspace_makeCMYKAColor(c, m, y, k, a, 0);
 		QVERIFY2(VuoColor_areEqual(colorFromRGBA,colorFromCMYKA), QString("%1 != %2").arg(VuoColor_getHex(colorFromRGBA,true)).arg(VuoColor_getHex(colorFromCMYKA,true)).toUtf8().constData());
 
 		// Test convereting RGBA to CMYKA.
 		VuoReal cActual, yActual, mActual, kActual, aActual;
-		VuoColor_getCMYKA(colorFromRGBA, &cActual, &mActual, &yActual, &kActual, &aActual);
+		VuoColorspace_getCMYKA(colorFromRGBA, 0, &cActual, &mActual, &yActual, &kActual, &aActual);
 		QVERIFY2(VuoReal_areEqual(c,cActual), QString("%1 != %2").arg(c).arg(cActual).toUtf8().constData());
 		QVERIFY2(VuoReal_areEqual(m,mActual), QString("%1 != %2").arg(m).arg(mActual).toUtf8().constData());
 		QVERIFY2(VuoReal_areEqual(y,yActual), QString("%1 != %2").arg(y).arg(yActual).toUtf8().constData());

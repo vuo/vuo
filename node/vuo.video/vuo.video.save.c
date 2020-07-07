@@ -157,10 +157,18 @@ void nodeInstanceEvent(
 
 	if (saveImageEvent && saveImage)
 	{
+		VuoImage image = saveImage;
+		if (!VuoIsPro() && (image->pixelsWide > 1280 || image->pixelsHigh > 1280))
+		{
+			if (!(*instance)->resizeShaderInitialized)
+				initResizeShader( (*instance) );
+			image = VuoImageResize_resize(image, (*instance)->resize, VuoSizingMode_Proportional, 1280, 1280);
+		}
+
 		if ((*instance)->imageWidth == -1)
 		{
-			(*instance)->imageWidth = saveImage->pixelsWide;
-			(*instance)->imageHeight = saveImage->pixelsHigh;
+			(*instance)->imageWidth = image->pixelsWide;
+			(*instance)->imageHeight = image->pixelsHigh;
 		}
 
 		if (state == VuoAvWriterState_None)
@@ -201,14 +209,14 @@ void nodeInstanceEvent(
 			});
 		}
 
-		VuoRetain(saveImage);
+		VuoRetain(image);
 		dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
-			if (saveImage->pixelsWide != (*instance)->imageWidth || saveImage->pixelsHigh != (*instance)->imageHeight)
+			if (image->pixelsWide != (*instance)->imageWidth || image->pixelsHigh != (*instance)->imageHeight)
 			{
 				if (!(*instance)->resizeShaderInitialized)
 					initResizeShader( (*instance) );
 
-				VuoImage resized = VuoImageResize_resize(saveImage,
+				VuoImage resized = VuoImageResize_resize(image,
 														 (*instance)->resize,
 														 VuoSizingMode_Fit,
 														 (*instance)->imageWidth,
@@ -221,9 +229,9 @@ void nodeInstanceEvent(
 			{
 				// safe to call appendImage all day long - it will only write if the file has been initialized and is currently
 				// recording.
-				VuoAvWriter_appendImage((*instance)->avWriter, saveImage, received - (*instance)->firstEvent, false);
+				VuoAvWriter_appendImage((*instance)->avWriter, image, received - (*instance)->firstEvent, false);
 			}
-			VuoRelease(saveImage);
+			VuoRelease(image);
 		});
 	}
 

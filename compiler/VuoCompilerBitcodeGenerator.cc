@@ -1238,7 +1238,7 @@ void VuoCompilerBitcodeGenerator::generateNodeInstanceTriggerUpdateFunction(void
 
 	bool hasClaimedNodesDownstreamOfPublishedInputNode = (triggerWaitNodes.size() > 2);
 	generateSetInputDataFromNodeFunctionArguments(function, block, compositionStateValue, indexOfParameter, map<VuoPort *, size_t>(),
-												  ! hasClaimedNodesDownstreamOfPublishedInputNode, true, false);
+												  ! hasClaimedNodesDownstreamOfPublishedInputNode, true, true);
 
 	generateSignalForNodes(module, block, compositionStateValue, triggerWaitNodes);
 
@@ -2823,7 +2823,8 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
  * and send telemetry indicating that these output and input ports have been updated.
  */
 void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock,
-																	 Value *compositionStateValue, VuoCompilerPort *outputPort,
+																	 Value *compositionStateValue,
+																	 VuoCompilerNode *outputNode, VuoCompilerPort *outputPort,
 																	 Value *eventValue, Value *dataValue,
 																	 bool requiresEvent, bool shouldSendTelemetry)
 {
@@ -2893,13 +2894,16 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 			currentBlock = sendOutputBlock;
 		}
 
-		Value *sentDataValue = new LoadInst(sentDataVariable, "", false, currentBlock);
-		Value *dataSummaryValue = new LoadInst(dataSummaryVariable, "", false, currentBlock);
+		if (shouldSendTelemetry && outputNode != graph->getPublishedInputNode())
+		{
+			Value *sentDataValue = new LoadInst(sentDataVariable, "", false, currentBlock);
+			Value *dataSummaryValue = new LoadInst(dataSummaryVariable, "", false, currentBlock);
 
-		Constant *outputPortIdentifierValue = constantStrings.get(module, outputPort->getIdentifier());
+			Constant *outputPortIdentifierValue = constantStrings.get(module, outputPort->getIdentifier());
 
-		VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(module, currentBlock, compositionStateValue, outputPortIdentifierValue,
-																	transmittedEventValue, sentDataValue, dataSummaryValue);
+			VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(module, currentBlock, compositionStateValue, outputPortIdentifierValue,
+																		transmittedEventValue, sentDataValue, dataSummaryValue);
+		}
 	}
 
 	// If the output port should transmit an event...
@@ -2934,7 +2938,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 
 		cable->generateTransmission(module, transmissionBlock, inputNodeContextValue, inputPortContextValue, transmittedDataValue, requiresEvent);
 
-		if (shouldSendTelemetry)
+		if (shouldSendTelemetry && inputNode != graph->getPublishedInputNode())
 		{
 			// char *inputDataSummary = NULL;
 			AllocaInst *inputDataSummaryVariable = new AllocaInst(pointerToCharType, "inputDataSummary", transmissionBlock);
@@ -3049,7 +3053,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *functio
 									  outputEventPort->generateLoadData(module, telemetryBlock, nodeContextValue, portContextValue) :
 									  NULL);
 		generateTransmissionFromOutputPort(function, telemetryBlock, compositionStateValue,
-										   outputEventPort, outputEventValue, outputDataValue, requiresEvent, shouldSendTelemetry);
+										   node, outputEventPort, outputEventValue, outputDataValue, requiresEvent, shouldSendTelemetry);
 
 		if (requiresEvent)
 		{
@@ -3165,8 +3169,7 @@ void VuoCompilerBitcodeGenerator::generateDataOnlyTransmissionFromNode(Function 
 			generateNodeExecution(function, currentBlock, compositionStateValue, visitedNode, false);
 
 			// Transmit data through the node's outgoing cables, and send telemetry for port updates if needed.
-			bool shouldSendTelemetryForNode = (shouldSendTelemetry && visitedNode != graph->getPublishedInputNode());
-			generateTransmissionFromNode(function, currentBlock, compositionStateValue, nodeContextValue, visitedNode, false, shouldSendTelemetryForNode);
+			generateTransmissionFromNode(function, currentBlock, compositionStateValue, nodeContextValue, visitedNode, false, shouldSendTelemetry);
 
 			// Reset the node's event inputs and outputs.
 			VuoCompilerCodeGenUtilities::generateResetNodeContextEvents(module, currentBlock, nodeContextValue);
@@ -3964,7 +3967,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 		Value *triggerDataValue = trigger->generateDataValueUpdate(module, triggerBlock, function, triggerNodeContextValue);
 
 		// Transmit events and data (if any) out of the trigger port, and send telemetry for port updates.
-		generateTransmissionFromOutputPort(function, triggerBlock, compositionStateValue, trigger, NULL, triggerDataValue);
+		generateTransmissionFromOutputPort(function, triggerBlock, compositionStateValue, triggerNode, trigger, NULL, triggerDataValue);
 	}
 
 	// If the trigger node isn't downstream of the trigger, signal the trigger node's semaphore.

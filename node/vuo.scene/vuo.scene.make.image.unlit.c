@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "quad", "rectangle", "plane", "4-gon", "4gon", "billboard", "sprite", "square",
 						 "projector",
 						 "self illumination" ],
-					 "version" : "2.0.0",
+					 "version" : "2.1.0",
 					 "node": {
 						 "exampleCompositions" : []
 					 }
@@ -31,10 +31,11 @@ void nodeEvent
 								  "suggestedMin":{"x":-180,"y":-180,"z":-180},
 								  "suggestedMax":{"x":180,"y":180,"z":180},
 								  "suggestedStep":{"x":15.0,"y":15.0,"z":15.0}}) rotation,
-		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoReal, {"name":"Size", "default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoOrientation, {"default":"horizontal"}) fixed,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) opacity,
 		VuoOutputData(VuoSceneObject) object
 )
 {
-	*object = VuoSceneObject_makeImage(image, center, rotation, width, opacity);
+	*object = VuoSceneObject_makeImage(image, center, rotation, width, fixed, opacity);
 }

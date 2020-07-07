@@ -19,6 +19,8 @@
 
 #include "VuoInteger.h"
 #include "VuoReal.h"
+#include "VuoPoint2d.h"
+#include "VuoScreen.h"
 
 /**
  * A unique ID for a window being displayed by the composition.
@@ -37,9 +39,11 @@ struct json_object * VuoWindowReference_getInterprocessJson(const VuoWindowRefer
 char * VuoWindowReference_getSummary(const VuoWindowReference value);
 
 VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value);
+VuoPoint2d VuoWindowReference_getPosition(const VuoWindowReference value);
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor);
 bool VuoWindowReference_isFocused(const VuoWindowReference value);
 bool VuoWindowReference_isFullscreen(const VuoWindowReference value);
+VuoScreen VuoWindowReference_getScreen(const VuoWindowReference value);
 
 /// @{
 /**

@@ -206,6 +206,21 @@ bool VuoShouldShowSplashWindow(void)
 	return vuoShouldShowSplashWindow();
 }
 
+bool VuoIsPro(void)
+{
+	static bool proEnabledResult = false;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		bool *proEnabled = (bool *) dlsym(RTLD_SELF, "VuoProEnabled");
+		if (!proEnabled)
+			proEnabled = (bool *) dlsym(RTLD_DEFAULT, "VuoProEnabled");
+		if (!proEnabled)
+			return;
+		proEnabledResult = *proEnabled;
+	});
+	return proEnabledResult;
+}
+
 /**
  * Returns true if the current (runtime) processor supports Intel AVX2.
  */

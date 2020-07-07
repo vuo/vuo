@@ -14,15 +14,16 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "2D Point",
-					 "description" : "A floating-point 2-dimensional Cartesian spatial location.",
-					 "keywords" : [ "coordinate" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						"VuoReal",
-						"VuoText"
-					 ]
-				 });
+    "title": "2D Point",
+    "description": "A floating-point 2-dimensional Cartesian spatial location.",
+    "keywords": [ "coordinate" ],
+    "version": "1.0.0",
+    "dependencies": [
+        "VuoList_VuoPoint2d",
+        "VuoReal",
+        "VuoText",
+    ],
+});
 #endif
 /// @}
 
@@ -110,6 +111,28 @@ bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2)
 }
 
 /**
+ * Returns true if the two values are equal within component-wise `tolerance`.
+ */
+bool VuoPoint2d_areEqualListWithinTolerance(VuoList_VuoPoint2d values, VuoPoint2d tolerance)
+{
+	unsigned long count = VuoListGetCount_VuoPoint2d(values);
+	if (count <= 1)
+		return true;
+
+	VuoPoint2d *points = VuoListGetData_VuoPoint2d(values);
+	VuoPoint2d min, max;
+	min = max = points[0];
+	for (unsigned long i = 1; i < count; ++i)
+	{
+		min = VuoPoint2d_min(min, points[i]);
+		max = VuoPoint2d_max(max, points[i]);
+	}
+	VuoPoint2d diff = max - min;
+	return diff.x <= tolerance.x
+		&& diff.y <= tolerance.y;
+}
+
+/**
  * Compares `a` to `b` primarily by `x`-value and secondarily by `y`-value,
  * returning true if `a` is less than `b`.
  *
@@ -120,6 +143,80 @@ bool VuoPoint2d_isLessThan(const VuoPoint2d a, const VuoPoint2d b)
 	VuoType_returnInequality(VuoReal, a.x, b.x);
 	VuoType_returnInequality(VuoReal, a.y, b.y);
 	return false;
+}
+
+/**
+ * Returns true if each component of `value` is between `minimum` and `maximum`.
+ */
+bool VuoPoint2d_isWithinRange(VuoPoint2d value, VuoPoint2d minimum, VuoPoint2d maximum)
+{
+	return minimum.x <= value.x && value.x <= maximum.x
+		&& minimum.y <= value.y && value.y <= maximum.y;
+}
+
+/**
+ * Returns the minimum of a list of terms, or 0 if the array is empty.
+ */
+VuoPoint2d VuoPoint2d_minList(VuoList_VuoPoint2d values, VuoInteger *outputPosition)
+{
+	unsigned long count = VuoListGetCount_VuoPoint2d(values);
+	if (count == 0)
+	{
+		*outputPosition = 0;
+		return 0;
+	}
+
+	VuoPoint2d *points = VuoListGetData_VuoPoint2d(values);
+	VuoPoint2d min = FLT_MAX;
+	for (unsigned long i = 0; i < count; ++i)
+		if (VuoPoint2d_isLessThan(points[i], min))
+		{
+			min = points[i];
+			*outputPosition = i + 1;
+		}
+
+	return min;
+}
+
+/**
+ * Returns the maximum of a list of terms, or 0 if the array is empty.
+ */
+VuoPoint2d VuoPoint2d_maxList(VuoList_VuoPoint2d values, VuoInteger *outputPosition)
+{
+	unsigned long count = VuoListGetCount_VuoPoint2d(values);
+	if (count == 0)
+	{
+		*outputPosition = 0;
+		return 0;
+	}
+
+	VuoPoint2d *points = VuoListGetData_VuoPoint2d(values);
+	VuoPoint2d max = -FLT_MAX;
+	for (unsigned long i = 0; i < count; ++i)
+		if (VuoPoint2d_isLessThan(max, points[i]))
+		{
+			max = points[i];
+			*outputPosition = i + 1;
+		}
+
+	return max;
+}
+
+/**
+ * Returns the average of the values in the list, or 0 if the list is empty.
+ */
+VuoPoint2d VuoPoint2d_average(VuoList_VuoPoint2d values)
+{
+	VuoInteger count = VuoListGetCount_VuoPoint2d(values);
+	if (count == 0)
+		return 0;
+
+	VuoPoint2d sum = 0;
+	for (VuoInteger i = 1; i <= count; ++i)
+		sum += VuoListGetValue_VuoPoint2d(values, i);
+
+	VuoPoint2d divisor = count;
+	return sum / divisor;
 }
 
 /**

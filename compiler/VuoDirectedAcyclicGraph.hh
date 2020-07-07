@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <mutex>
+
 /**
  * A directed acyclic graph (DAG) data structure with informative error reporting for cycles.
  */
@@ -42,6 +44,8 @@ public:
 	string toString(bool showVertexAddresses=false);
 
 private:
+	vector<Vertex *> getDownstreamVerticesInternal(Vertex *vertex);
+	int getLongestDownstreamPathInternal(Vertex *vertex);
 	static vector<Vertex *> getReachableVertices(Vertex *vertex, const map< Vertex *, vector<Vertex *> > &edges, set<Vertex *> &cycleVertices);
 
 	map< Vertex *, vector<Vertex *> > edges;  ///< Adjacency list. Every vertex has a key in this map, even if it doesn't have any outgoing edges.
@@ -50,6 +54,7 @@ private:
 	bool cycleVerticesCacheReady;
 	set<Vertex *> cycleVerticesCache;
 	map< Vertex *, int > longestDownstreamPathsCache;
+	std::mutex graphMutex;  ///< Synchronizes access to the graph data structures.
 
 	friend class VuoDirectedAcyclicNetwork;
 };

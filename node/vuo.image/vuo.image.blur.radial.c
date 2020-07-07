@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						  "motion", "transverse", "zoom", "circular", "spin", "roll", "burst", "streak",
 						  "variable", "depth of field", "DOF",
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "dependencies" : [
 						  "VuoImageBlur"
 					  ],

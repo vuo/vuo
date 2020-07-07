@@ -9,6 +9,7 @@ target_link_libraries(vuo.image.libraries
 VuoCompileTypes(
 	VuoBlurShape.c
 	VuoColorSample.c
+	VuoFace.c
 	VuoHorizontalReflection.c
 	VuoImageFormat.c
 	VuoImageNoise.c
@@ -57,6 +58,7 @@ VuoCompileNodes(
 	vuo.image.frost.c
 	vuo.image.sample.color.c
 	vuo.image.get.cube.c
+	vuo.image.get.face.c
 	vuo.image.get.height.c
 	vuo.image.get.size.c
 	vuo.image.get.width.c

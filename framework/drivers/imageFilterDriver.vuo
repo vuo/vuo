@@ -2,7 +2,7 @@
  * @file
  * Vuo Image Filter driver.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
@@ -20,7 +20,7 @@ GetDragValues [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<re
 GetDragValues2 [type="vuo.ui.get.drag" version="1.0.0" label="Get Drag Values|<refresh>refresh\l|<drag>drag\l|<position>position\r|<urls>urls\r" pos="-360,345"];
 GetFirstItemInList [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,495"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="375,-45" fillcolor="cyan"];
-GetWindowDimensions [type="vuo.window.get.dimensions2" version="2.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r|<isFullscreen>isFullscreen\r" pos="-240,525"];
+GetWindowDimensions2 [type="vuo.window.get.dimensions3" version="3.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<unit>unit\l|<topLeft>topLeft\r|<bottomRight>bottomRight\r|<width>width\r|<height>height\r|<aspectRatio>aspectRatio\r" pos="-240,600" _unit="\"vuo\""];
 HoldValue [type="vuo.data.hold2.VuoLayer" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-330,420"];
 HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="510,-60" fillcolor="cyan"];
 IsImagePopulated [type="vuo.image.populated" version="1.0.0" label="Is Image Populated|<refresh>refresh\l|<image>image\l|<populated>populated\r" pos="945,495"];
@@ -55,8 +55,8 @@ GetDragValues:urls -> GetFirstItemInList:list;
 GetFirstItemInList:firstItem -> SelectLatest2:option2;
 GetImage:image -> HoldValue2:value;
 GetImage:image -> IsImagePopulated:image;
-GetWindowDimensions:height -> MakeTextLayer:text [event=true];
-GetWindowDimensions:height -> Subtract:a;
+GetWindowDimensions2:height -> MakeTextLayer:text [event=true];
+GetWindowDimensions2:height -> Subtract:a;
 HoldValue2:heldValue -> PublishedOutputs:image;
 HoldValue:heldValue -> IsPointWithinLayer:layer;
 IsImagePopulated:populated -> Negate2:value;
@@ -75,7 +75,7 @@ ReceiveFileDrags:dragCompleted -> Switch:turnOff;
 ReceiveFileDrags:dragEntered -> Switch:turnOn;
 ReceiveFileDrags:dragExited -> Switch:turnOff;
 ReceiveFileDrags:dragMovedTo -> GetDragValues2:drag;
-RenderLayersToWindow:updatedWindow -> GetWindowDimensions:window [style=invis];
+RenderLayersToWindow:updatedWindow -> GetWindowDimensions2:window [style=invis];
 RenderLayersToWindow:updatedWindow -> IsPointWithinLayer:window [style=invis];
 RenderLayersToWindow:updatedWindow -> ReceiveFileDrags:window;
 SelectInput:out -> MakeRectangleLayer:opacity;

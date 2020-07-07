@@ -1,0 +1,57 @@
+/**
+ * @file
+ * @brief Save Processed Movie
+ * Reads a movie file, applies an image filter to each frame, and saves the frames to another movie file.
+ *
+ * Uses the [Step Movie Frame](vuo-node://vuo.video.step) and [Save Frames to Movie](vuo-node://vuo.video.save2) nodes to ensure that frames are processed one at a time (rather than possibly building up a backlog of frames like [Play Movie](vuo-node://vuo.video.play) with its output ports set to Enqueue would do).
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="780,570"];
+AreEqual [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="600,570" _tolerance="0.20000000000000001"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="930,570"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-120,420" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetFrameValues [type="vuo.video.get.videoframe" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<videoFrame>videoFrame\l|<image>image\r|<timestamp>timestamp\r" pos="375,405"];
+GetMovieInfo [type="vuo.video.info" version="2.0.2" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="390,585"];
+IsGreaterThan2 [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="585,645"];
+MakeList [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="747,581"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="546,581"];
+MakeList3 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="584,401" _1="\{\"r\":0.0039215688593685627,\"g\":0.012878614477813244,\"b\":0.039841305464506149,\"a\":1\}" _2="\{\"r\":0.29803922772407532,\"g\":0.37807279825210571,\"b\":0.60000002384185791,\"a\":1\}" _3="\{\"r\":1,\"g\":0.9826657772064209,\"b\":0.93208211660385132,\"a\":1\}"];
+MakeVideoFrame [type="vuo.video.make.videoframe" version="1.0.0" label="Make Video Frame|<refresh>refresh\l|<image>image\l|<timestamp>timestamp\l|<videoFrame>videoFrame\r" pos="855,405"];
+MapImageColors [type="vuo.image.color.map" version="1.0.0" label="Map Image Colors|<refresh>refresh\l|<image>image\l|<colors>colors\l|<filterOpacity>filterOpacity\l|<mappedImage>mappedImage\r" pos="630,375" _filterOpacity="1"];
+SaveFramesToMovie [type="vuo.video.save2" version="2.0.0" label="Save Frames to Movie|<refresh>refresh\l|<url>url\l|<saveVideoFrame>saveVideoFrame\l|<saveAudioFrame>saveAudioFrame\l|<finalize>finalize\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<finalized>finalized\r" pos="1170,390" fillcolor="orange" _url="\"~\\/Desktop\\/ProcessedMovie.mov\"" _overwriteUrl="true" _format="\{\"imageEncoding\":\"h264\",\"imageQuality\":1,\"audioEncoding\":\"LinearPCM\",\"audioQuality\":1\}" _finalized_eventThrottling="enqueue"];
+ShareValue [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="30,450" _value="\"chess.mov\""];
+SpinOffEvent [type="vuo.event.spinOffEvent2" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<fire>fire\l|<spunOff>spunOff\r" pos="15,330" fillcolor="lime" _spunOff_eventThrottling="enqueue"];
+StepMovieFrame [type="vuo.video.step" version="1.0.0" label="Step Movie Frame|<refresh>refresh\l|<next>next\l|<previous>previous\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<videoFrame>videoFrame\r" pos="195,405" fillcolor="orange" _setTime="0" _loop="\"none\""];
+StopComposition [type="vuo.app.stopComposition" version="1.0.0" label="Stop Composition|<refresh>refresh\l|<stop>stop\l" pos="1095,570"];
+
+Comment [type="vuo.comment" label="\"Stop the composition at the end of the movie\"" pos="375,510" width="870" height="180"];
+Comment2 [type="vuo.comment" label="\"Apply an image filter\"" pos="570,300" width="219" height="157"];
+
+AreAllTrue:allTrue -> BecameTrue:value;
+AreEqual:equal -> MakeList:1;
+BecameTrue:becameTrue -> StopComposition:stop;
+FireOnStart:started -> ShareValue:value;
+GetFrameValues:image -> MapImageColors:image;
+GetFrameValues:timestamp -> MakeList2:1;
+GetFrameValues:timestamp -> MakeVideoFrame:timestamp;
+GetMovieInfo:duration -> IsGreaterThan2:a;
+GetMovieInfo:duration -> MakeList2:2;
+IsGreaterThan2:greaterThan -> MakeList:2;
+MakeList2:list -> AreEqual:values;
+MakeList3:list -> MapImageColors:colors;
+MakeList:list -> AreAllTrue:values;
+MakeVideoFrame:videoFrame -> SaveFramesToMovie:saveVideoFrame;
+MakeVideoFrame:videoFrame -> SpinOffEvent:fire;
+MapImageColors:mappedImage -> MakeVideoFrame:image;
+ShareValue:sameValue -> GetMovieInfo:url;
+ShareValue:sameValue -> StepMovieFrame:next;
+ShareValue:sameValue -> StepMovieFrame:url;
+SpinOffEvent:spunOff -> StepMovieFrame:next;
+StepMovieFrame:videoFrame -> GetFrameValues:videoFrame;
+}

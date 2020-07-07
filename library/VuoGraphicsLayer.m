@@ -318,10 +318,8 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 	if (backingScaleFactor != _window.backingScaleFactorCached)
 	{
 		VDebugLog("backingScaleFactor changed from %g to %g", _window.backingScaleFactorCached, backingScaleFactor);
-		// Get the window's current size in pixels.
-		NSRect contentRect = [_window contentRectForFrameRect:_window.frame];
-		NSSize oldContentRectPixelSize = NSMakeSize(contentRect.size.width  * _window.backingScaleFactorCached,
-													contentRect.size.height * _window.backingScaleFactorCached);
+		float oldBackingScaleFactor = _window.backingScaleFactorCached;
+		NSSize contentSize = [_window contentRectForFrameRect:_window.frame].size;
 
 		_window.backingScaleFactorCached = backingScaleFactor;
 		self.contentsScale = backingScaleFactor;
@@ -330,20 +328,16 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 
 		if (_window.maintainsPixelSizeWhenBackingChanges)
 		{
-			// Resize the window to maintain its pixel size.
-
-			NSSize newContentRectPointSize = NSMakeSize(oldContentRectPixelSize.width  / _window.backingScaleFactorCached,
-														oldContentRectPixelSize.height / _window.backingScaleFactorCached);
-
-			NSRect contentRect = [_window contentRectForFrameRect:_window.frame];
-
-			// Adjust the y position by the change in height, so that the window appears to be anchored in its top-left corner
-			// (instead of its bottom-left corner as the system does by default).
-			contentRect.origin.y += contentRect.size.height - newContentRectPointSize.height;
-
-			contentRect.size = newContentRectPointSize;
-			[_window setFrame:[_window frameRectForContentRect:contentRect] display:YES animate:NO];
+			float backingScaleRatio = oldBackingScaleFactor / backingScaleFactor;
+			[_window scheduleResize:NSMakeSize(contentSize.width  * backingScaleRatio,
+											   contentSize.height * backingScaleRatio)];
 		}
+
+		// _updateBackingCallback destroys and recreates the VuoSceneRenderer;
+		// ensure the new one knows its size.
+		NSSize newContentSize = [_window contentRectForFrameRect:_window.frame].size;
+		_resizeCallback(_userData, newContentSize.width  * _window.backingScaleFactorCached,
+								   newContentSize.height * _window.backingScaleFactorCached);
 	}
 }
 
@@ -432,7 +426,7 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 			CGLError err = CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, GL_RGB, ioSurfaceWidth, ioSurfaceHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, VuoIoSurfacePool_getIOSurfaceRef(_ioSurface), 0);
 			if(err != kCGLNoError)
 			{
-				VUserLog("Error in CGLTexImageIOSurface2D() 2: %s", CGLErrorString(err));
+				VUserLog("Error in CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, GL_RGB, %zu, %zu, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, %d, 0) 2: %s", ioSurfaceWidth, ioSurfaceHeight, VuoIoSurfacePool_getId(_ioSurface), CGLErrorString(err));
 				return;
 			}
 

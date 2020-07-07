@@ -10,6 +10,9 @@ VuoCompileNodes(
 	vuo.window.fullscreen2.c
 	vuo.window.get.dimensions.c
 	vuo.window.get.dimensions2.c
+	vuo.window.get.dimensions3.c
+	vuo.window.get.screen.c
+	vuo.window.level.c
 	vuo.window.position.c
 	vuo.window.position2.c
 	vuo.window.resizable.c

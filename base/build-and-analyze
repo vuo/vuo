@@ -31,7 +31,7 @@ $skipRegexes = array(
 	'@VuoUrlParser\.c@', // Not our code.
 	'@VuoUsbVendor\.c@',  // Nothing interesting.
 	'@shared_mutex.cpp@', // Not our code.
-	'@-o (VuoCompositionLoader|vuo-compile|vuo-render|vuo-link|vuo-export|vuo-debug|libVuoInputEditor.*\.dylib|Vuo(Runner)?.framework/Versions/.*?/Vuo(Runner)?|Vuo.app/Contents/MacOS/Vuo) @', // Just linking.
+	'@-o (VuoCompositionLoader|vuo-compile|vuo-link|vuo-export|vuo-debug|libVuoInputEditor.*\.dylib|Vuo(Runner)?.framework/Versions/.*?/Vuo(Runner)?|Vuo.app/Contents/MacOS/Vuo) @', // Just linking.
 	'@-o Vuo.+\.o Vuo.+\.bc@', // Don't bother checking .bc -> .o conversions.
 	'@mocs?_.+\.cpp@',
 	'@qrc_.+\.cpp@',

@@ -319,7 +319,7 @@ VuoImage VuoShader_getUniform_VuoImage(VuoShader shader, const char *uniformIden
 }
 
 /**
- * Returns the first-added `VuoImage` uniform value,
+ * Returns the first-added, non-NULL `VuoImage` uniform value,
  * or NULL if there are no image uniforms.
  */
 VuoImage VuoShader_getFirstImage(VuoShader shader)
@@ -330,8 +330,11 @@ VuoImage VuoShader_getFirstImage(VuoShader shader)
 		if (strcmp(shader->uniforms[i].type, "VuoImage") == 0)
 		{
 			VuoImage image = shader->uniforms[i].value.image;
-			dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
-			return image;
+			if (image)
+			{
+				dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
+				return image;
+			}
 		}
 
 	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);

@@ -61,6 +61,7 @@ VuoCompileTypes(
 target_include_directories(vuo.core.types
 	PRIVATE
 	../base
+	../node/vuo.data
 	../node/vuo.image
 	../node/vuo.time
 	../node/vuo.ui

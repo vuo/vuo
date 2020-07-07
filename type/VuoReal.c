@@ -85,21 +85,23 @@ char * VuoReal_getSummary(const VuoReal value)
 }
 
 /**
- * Returns the minimum of an array of terms, or 0 if the array is empty.
+ * Returns the minimum of a list of terms, or 0 if the array is empty.
  */
-VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition)
+VuoReal VuoReal_minList(VuoList_VuoReal values, VuoInteger *outputPosition)
 {
-	if (termsCount == 0)
+	unsigned long count = VuoListGetCount_VuoReal(values);
+	if (count == 0)
 	{
 		*outputPosition = 0;
 		return 0;
 	}
 
+	VuoReal *reals = VuoListGetData_VuoReal(values);
 	VuoReal min = DBL_MAX;
-	for (unsigned long i = 0; i < termsCount; ++i)
-		if (terms[i] < min)
+	for (unsigned long i = 0; i < count; ++i)
+		if (reals[i] < min)
 		{
-			min = terms[i];
+			min = reals[i];
 			*outputPosition = i + 1;
 		}
 
@@ -107,21 +109,23 @@ VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount, VuoInteger *output
 }
 
 /**
- * Returns the maximum of an array of terms, or 0 if the array is empty.
+ * Returns the maximum of a list of terms, or 0 if the array is empty.
  */
-VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition)
+VuoReal VuoReal_maxList(VuoList_VuoReal values, VuoInteger *outputPosition)
 {
-	if (termsCount == 0)
+	unsigned long count = VuoListGetCount_VuoReal(values);
+	if (count == 0)
 	{
 		*outputPosition = 0;
 		return 0;
 	}
 
+	VuoReal *reals = VuoListGetData_VuoReal(values);
 	VuoReal max = -DBL_MAX;
-	for (unsigned long i = 0; i < termsCount; ++i)
-		if (terms[i] > max)
+	for (unsigned long i = 0; i < count; ++i)
+		if (reals[i] > max)
 		{
-			max = terms[i];
+			max = reals[i];
 			*outputPosition = i + 1;
 		}
 
@@ -201,9 +205,37 @@ bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
 }
 
 /**
+ * Returns true if the two values are equal within `tolerance`.
+ */
+bool VuoReal_areEqualListWithinTolerance(VuoList_VuoReal values, VuoReal tolerance)
+{
+	unsigned long count = VuoListGetCount_VuoReal(values);
+	if (count <= 1)
+		return true;
+
+	VuoReal *reals = VuoListGetData_VuoReal(values);
+	VuoReal min, max;
+	min = max = reals[0];
+	for (unsigned long i = 1; i < count; ++i)
+	{
+		min = MIN(min, reals[i]);
+		max = MAX(max, reals[i]);
+	}
+	return (max - min) <= tolerance;
+}
+
+/**
  * Returns true if a < b.
  */
 bool VuoReal_isLessThan(const VuoReal a, const VuoReal b)
 {
 	return a < b;
+}
+
+/**
+ * Returns true if `value` is between `minimum` and `maximum`.
+ */
+bool VuoReal_isWithinRange(VuoReal value, VuoReal minimum, VuoReal maximum)
+{
+    return minimum <= value && value <= maximum;
 }

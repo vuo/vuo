@@ -46,37 +46,63 @@ typedef enum
 	VuoWindowProperty_AspectRatioReset,
 	VuoWindowProperty_Resizable,
 	VuoWindowProperty_Cursor,
-	VuoWindowProperty_Interaction
+	VuoWindowProperty_Interaction,
+	VuoWindowProperty_Level,
 } VuoWindowPropertyType;
 
 /**
- * A window setting, such as its title, or whether it is full-screen.
+ * The type of window property.
  *
  * @version200Changed{Added `VuoWindowProperty_Interaction`.}
+ */
+typedef enum
+{
+	VuoWindowLevel_Background,
+	VuoWindowLevel_Normal,
+	VuoWindowLevel_Floating,
+} VuoWindowLevel;
+
+/**
+ * A window setting, such as its title, or whether it is full-screen.
  */
 typedef struct
 {
 	VuoWindowPropertyType type;
 
-	VuoText title;
+	VuoCoordinateUnit unit;  ///< Points or Pixels only.
 
-	VuoBoolean fullScreen;
-	VuoScreen screen;
+	union
+	{
+		VuoText title;
 
-	VuoCoordinateUnit unit;
-	VuoInteger left;
-	VuoInteger top;
+		struct
+		{
+			VuoBoolean fullScreen;
+			VuoScreen screen;
+		};
 
-	VuoInteger width;
-	VuoInteger height;
+		struct
+		{
+			VuoInteger left;
+			VuoInteger top;
+		};
 
-	VuoReal aspectRatio;
+		struct
+		{
+			VuoInteger width;
+			VuoInteger height;
+		};
 
-	VuoBoolean resizable;
+		VuoReal aspectRatio;
 
-	VuoCursor cursor;
+		VuoBoolean resizable;
 
-	VuoInteraction interaction;
+		VuoCursor cursor;
+
+		VuoInteraction interaction;
+
+		VuoWindowLevel level;
+	};
 } VuoWindowProperty;
 
 VuoWindowProperty VuoWindowProperty_makeFromJson(struct json_object * js);
@@ -98,5 +124,3 @@ void VuoWindowProperty_release(VuoWindowProperty value);
 /**
  * @}
  */
-
-

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.17 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.0.3 LANGUAGES NONE)
+project(Vuo VERSION 2.1.0 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -32,21 +32,30 @@ if (PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 
-# Version/revision ===========================================================
-set(buildId "$ENV{BUILD_ID}")
-if (NOT buildId)
-	get_filename_component(DIRNAME "${PROJECT_SOURCE_DIR}" NAME)
-	set(VUO_VERSION_AND_BUILD "${Vuo_VERSION}.${DIRNAME}")
+# Cache and package version identifier =======================================
+set(VUO_VERSION_AND_BUILD "${Vuo_VERSION}")
+# `VUO_VERSION_AND_BUILD` affects `VuoFileUtilities::getCachePath`;
+# changing it causes the entire project to rebuild.
+# Use the `GIT_BRANCH` environment variable (set by Jenkins)
+# instead of `git rev-parse --abbrev-ref HEAD`, so the entire project
+# doesn't rebuild every time we switch branches during local development.
+if (NOT "$ENV{GIT_BRANCH}" STREQUAL "" AND NOT "$ENV{GIT_BRANCH}" STREQUAL "main")
+	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.$ENV{GIT_BRANCH}")
+endif()
+if ("$ENV{BUILD_ID}" STREQUAL "")
+	# For local builds, include the hostname to help distinguish them
+	# from official Jenkins builds.
+	cmake_host_system_information(RESULT hostname QUERY HOSTNAME)
+	string(REGEX REPLACE "\\..*$" "" hostname "${hostname}")
+	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.${hostname}")
 else()
-	set(VUO_VERSION_AND_BUILD "${Vuo_VERSION}.${buildId}")
+	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.$ENV{BUILD_ID}")
 endif()
-
-set(VUO_REVISION "$ENV{SVN_REVISION}")
-if (NOT VUO_REVISION)
-	execute_process(COMMAND /usr/local/bin/svnversion -n ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE VUO_REVISION)
-endif()
-if (buildId)
-	set(VUO_REVISION "${VUO_REVISION}, build ${buildId}")
+message(STATUS "Vuo build: ${VUO_VERSION_AND_BUILD}")
+if (NOT "$ENV{GIT_COMMIT}" STREQUAL "")
+	set(VUO_GIT_COMMIT "$ENV{GIT_COMMIT}")
+	string(SUBSTRING "${VUO_GIT_COMMIT}" 0 7 VUO_GIT_COMMIT)
+	message(STATUS "Vuo commit: ${VUO_GIT_COMMIT}")
 endif()
 
 

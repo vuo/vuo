@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.max node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"null":       {"firingPort":"values", "inputPortValues":{"values":null                          }, "outputPortValues":{"max":{"x":0,  "y":0,  "z":0.0},"position":0}},
+	"one":        {"firingPort":"values", "inputPortValues":{"values":[[0.1,0.2,0.3]               ]}, "outputPortValues":{"max":{"x":0.1,"y":0.2,"z":0.3},"position":1}},
+	"two first":  {"firingPort":"values", "inputPortValues":{"values":[[0.1,0.2,0.3],[-0.2,0.1,0.2]]}, "outputPortValues":{"max":{"x":0.1,"y":0.2,"z":0.3},"position":1}},
+	"two second": {"firingPort":"values", "inputPortValues":{"values":[[0.1,0.2,0.3],[ 0.2,0.1,0.2]]}, "outputPortValues":{"max":{"x":0.2,"y":0.1,"z":0.2},"position":2}},
+}}

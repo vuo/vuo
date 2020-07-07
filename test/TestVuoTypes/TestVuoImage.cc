@@ -838,7 +838,7 @@ private slots:
 			glViewport(0, 0, 640, 480);
 
 			VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init = 0;
-			QVERIFY(VuoImage_resolveInterprocessJsonOntoFramebuffer(js, cgl_ctx, false));
+			QVERIFY(VuoImage_resolveInterprocessJsonOntoFramebuffer(js, cgl_ctx, false, true));
 
 			unsigned char imageBuffer[4];
 			glReadPixels(0, 0, 1, 1, GL_BGRA, GL_UNSIGNED_BYTE, imageBuffer);

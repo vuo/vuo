@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Expected outputs for the vuo.data.becameGreaterThan node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":{
+	"equal":                {"firingPort":"a", "inputPortValues":{"a":0,"b":0}},
+	"became less":          {"firingPort":"a", "inputPortValues":{"a":0,"b":1}},
+	"became greater":       {"firingPort":"a", "inputPortValues":{"a":2,"b":1}, "outputPortValues":{"becameGreaterThan":null}},
+	"still greater":        {"firingPort":"a", "inputPortValues":{"a":3,"b":1}},
+	"became less again":    {"firingPort":"a", "inputPortValues":{"a":3,"b":4}},
+	"became greater again": {"firingPort":"a", "inputPortValues":{"a":5,"b":4}, "outputPortValues":{"becameGreaterThan":null}},
+}}

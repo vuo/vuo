@@ -16,7 +16,7 @@
 			"separator": ""
 		},
 		"outputPortValues": {
-			"compositeText": ""
+			"compositeText": null
 		}
 	},
 	{
@@ -26,7 +26,7 @@
 			"separator": "foo"
 		},
 		"outputPortValues": {
-			"compositeText": ""
+			"compositeText": null
 		}
 	},
 
@@ -71,6 +71,41 @@
 		},
 		"outputPortValues": {
 			"compositeText": "foo — bar — baz"
+		}
+	},
+
+	/* Optionally omit empty parts. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"texts": [ "", "" ],
+			"separator": ",",
+			"includeEmptyParts": false,
+		},
+		"outputPortValues": {
+			"compositeText": null
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"texts": [ "", "", "", "baz", "quux" ],
+			"separator": ",",
+			"includeEmptyParts": false,
+		},
+		"outputPortValues": {
+			"compositeText": "baz,quux"
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"texts": [ "", "bar", "", "baz", "" ],
+			"separator": ",",
+			"includeEmptyParts": false,
+		},
+		"outputPortValues": {
+			"compositeText": "bar,baz"
 		}
 	},
 ]}

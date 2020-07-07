@@ -38,9 +38,8 @@ public slots:
 	void setWindowLevelAndVisibility(bool top);
 	void setCompositionRunning(bool running, bool resetDataValue=true);
 	void updateTextAndResize();
-	void updateCachedDataValue(QString value);
-	void updateLastEventTime();
-	void updateLastEventTimeAndCachedDataValue(QString value);
+	void updateDataValueImmediately(QString value);
+	void updateLastEventTimeAndDataValue(bool event, bool data, QString value);
 	void incrementDroppedEventCount();
 
 protected:
@@ -69,7 +68,8 @@ private:
 	string portID;
 	VuoEditorComposition *composition;
 	string cachedDataValue;
-	qint64 timeOfLastEvent;
+	qint64 timeOfLastEvent;  ///< Displayed in popover.
+	qint64 timeOfLastUpdate;  ///< Used to determine how often the popover's contents refresh.
 	bool compositionRunning;
 	QQueue<qint64> eventHistory;
 	unsigned int eventCount;

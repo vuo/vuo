@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.0.2
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FilterByAddress [type="vuo.osc.filter.address" version="1.0.1" label="Filter by Address|<refresh>refresh\l|<message>message\l|<address>address\l|<filteredMessage>filteredMessage\r" pos="210,150"];
+HoldValue [type="vuo.data.hold2.VuoBoolean" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,240"];
+HoldValue2 [type="vuo.data.hold2.VuoBoolean" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="360,165" _value="true"];
+SelectLatest [type="vuo.select.latest.2.VuoBoolean" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="495,165"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<message>message\r|<filter>filter\r" _message_type="VuoOscMessage" _filter_type="VuoText" _filter="\"\\/example\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<matched>matched\l" _matched_type="VuoBoolean"];
+
+FilterByAddress:filteredMessage -> HoldValue2:update;
+HoldValue2:heldValue -> SelectLatest:option1;
+HoldValue:heldValue -> SelectLatest:option2;
+PublishedInputs:filter -> FilterByAddress:address;
+PublishedInputs:message -> FilterByAddress:message;
+PublishedInputs:message -> HoldValue:update;
+SelectLatest:latest -> PublishedOutputs:matched;
+}

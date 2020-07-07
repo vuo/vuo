@@ -11,9 +11,11 @@
 
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerConstantStringCache.hh"
+#include "VuoCompilerException.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerInstanceData.hh"
+#include "VuoCompilerIssue.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerOutputEventPort.hh"
@@ -223,6 +225,7 @@ Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block
  * @param function The function in which to generate code.
  * @param currentBlock The block in which to generate code.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock,
 												Value *compositionStateValue)
@@ -316,6 +319,7 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
@@ -341,6 +345,7 @@ void VuoCompilerNode::generateInitFunctionCall(Module *module, BasicBlock *block
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
@@ -361,6 +366,7 @@ void VuoCompilerNode::generateFiniFunctionCall(Module *module, BasicBlock *block
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
@@ -378,6 +384,7 @@ void VuoCompilerNode::generateCallbackStartFunctionCall(Module *module, BasicBlo
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
@@ -395,6 +402,7 @@ void VuoCompilerNode::generateCallbackUpdateFunctionCall(Module *module, BasicBl
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
+ * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
 void VuoCompilerNode::generateCallbackStopFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
@@ -414,6 +422,8 @@ void VuoCompilerNode::generateCallbackStopFunctionCall(Module *module, BasicBloc
  * @param block The block in which to generate code.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
  * @param nodeContextValue This node's context.
+ * @throw VuoCompilerException One of the arguments could not be generated, possibly due to a bug in the compiler
+ *     or the node class. (At least throwing an exception prevents a crash / loss of unsaved changes.)
  */
 CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block,
 												 Value *compositionStateValue, Value *nodeContextValue,
@@ -591,6 +601,26 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 	}
 
 	VuoCompilerCodeGenUtilities::generateAddCompositionStateToThreadLocalStorage(module, block, compositionStateValue);
+
+	{
+		int i = 0;
+		for (auto arg : args)
+		{
+			if (!arg)
+			{
+				string s;
+				raw_string_ostream type(s);
+				functionDst->getFunctionType()->getParamType(i)->print(type);
+				ostringstream argIndex;
+				argIndex << i;
+				string details = "When trying to generate a call to function " + functionDst->getName().str() +
+								 ", argument " + argIndex.str() + " (" + type.str() + ") was missing.";
+				VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling composition", "", "", details);
+				throw VuoCompilerException(issue);
+			}
+			++i;
+		}
+	}
 
 	// Call the node class's function.
 	CallInst *call = CallInst::Create(functionDst, args, "", block);

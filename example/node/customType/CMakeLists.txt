@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14...3.17 FATAL_ERROR)
+project(CustomType)
 
 set(CMAKE_FRAMEWORK_PATH ../../../framework)
 find_library(VUO_FRAMEWORK Vuo)

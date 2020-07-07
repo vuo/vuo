@@ -27,7 +27,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
-						"exampleCompositions" : [ "StepMovie.vuo" ]
+						"exampleCompositions" : [ "StepMovie.vuo", "SaveProcessedMovie.vuo" ]
 					  },
 					  "dependencies" : [
 						"VuoVideo",
