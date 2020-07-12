@@ -89,8 +89,11 @@ add_custom_command(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/documentation
 	COMMAND /usr/local/bin/doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		2>&1
-		# New warning in Doxygen 1.8.16; seems to be harmless.
-		| (grep -v "warning: multiple use of page label .Changes_2_0_0" || true)
+		# New warnings in Doxygen 1.8.16 and 1.8.18; seem to be harmless.
+		| (grep -v
+			-e "warning: multiple use of page label .Changes_2_0_0"
+			-e "warning: unexpected token TK_COMMAND_BS as the argument of _internalref"
+			|| true)
 	OUTPUT doxygen/index.html
 )
 add_custom_target(VuoDoxygen DEPENDS doxygen/index.html)

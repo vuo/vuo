@@ -5104,6 +5104,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 	args.push_back("-std=c++11");
 	args.push_back("-stdlib=libc++");
+	args.push_back("-mmacosx-version-min=10.10");
 
 	// Allow clang to print meaningful error messages.
 	auto diagnosticConsumer = new VuoCompilerDiagnosticConsumer(issues);
