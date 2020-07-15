@@ -98,6 +98,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [mradcliffe](https://vuo.org/user/28)
    - [mrray](https://vuo.org/user/807)
    - [mutable](https://vuo.org/user/874)
+   - [Nicolas Berger](https://vuo.org/user/2011950)
    - [p8guitar](https://vuo.org/user/3067)
    - [pbourke](https://vuo.org/user/2025)
    - [Pianomatic](https://vuo.org/user/851)
