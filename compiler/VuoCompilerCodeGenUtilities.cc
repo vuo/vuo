@@ -8,7 +8,7 @@
  */
 
 #include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerConstantStringCache.hh"
+#include "VuoCompilerConstantsCache.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoCompilerPort.hh"
@@ -1093,31 +1093,6 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeContextInstanceDataVariable(
 }
 
 /**
- * Generates code that gets the `semaphore` field of a NodeContext.
- *
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @param nodeContextValue A value of type `NodeContext *`.
- * @return The value of the field.
- */
-Value * VuoCompilerCodeGenUtilities::generateGetNodeContextSemaphore(Module *module, BasicBlock *block, Value *nodeContextValue)
-{
-	const char *functionName = "vuoGetNodeContextSemaphore";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		StructType *nodeContextType = getNodeContextType(module);
-		PointerType *pointerToNodeContext = PointerType::get(nodeContextType, 0);
-		Type *dispatchSemaphoreType = nodeContextType->getElementType(3);
-
-		FunctionType *functionType = FunctionType::get(dispatchSemaphoreType, pointerToNodeContext, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-
-	return CallInst::Create(function, nodeContextValue, "", block);
-}
-
-/**
  * Generates code that gets the `claimingEventId` field of a NodeContext.
  *
  * @param module The module in which to generate code.
@@ -1480,33 +1455,6 @@ Value * VuoCompilerCodeGenUtilities::generateGetDataForPort(Module *module, Basi
 }
 
 /**
- * Generates code that retrives the `semaphore` field in a node's context, given the identifier of a port on the node.
- */
-Value * VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(Module *module, BasicBlock *block,
-																	 Value *compositionStateValue, Value *portIdentifierValue)
-{
-	const char *functionName = "vuoGetNodeSemaphoreForPort";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		Type *dispatchSemaphoreType = getDispatchSemaphoreType(module);
-
-		vector<Type *> params;
-		params.push_back(compositionStateValue->getType());
-		params.push_back(pointerToCharType);
-
-		FunctionType *functionType = FunctionType::get(dispatchSemaphoreType, params, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-
-	vector<Value *> args;
-	args.push_back(compositionStateValue);
-	args.push_back(portIdentifierValue);
-	return CallInst::Create(function, args, "", block);
-}
-
-/**
  * Generates code that retrieves the index (in VuoCompilerBitcodeGenerator::orderedNodes) of a node, given the identifier of a port on the node.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(Module *module, BasicBlock *block,
@@ -1800,6 +1748,152 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(Module *mo
 }
 
 /**
+ * Generates a call to `vuoLockNodes()`.
+ */
+void VuoCompilerCodeGenUtilities::generateLockNodes(Module *module, BasicBlock *&block,
+													Value *compositionStateValue, const vector<size_t> &nodeIndices, Value *eventIdValue,
+													VuoCompilerConstantsCache *constantsCache)
+{
+	string functionName = "vuoLockNodes";
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		StructType *compositionStateType = getCompositionStateType(module);
+		PointerType *pointerToCompositionState = PointerType::get(compositionStateType, 0);
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+		PointerType *pointerToUnsignedLong = PointerType::get(unsignedLongType, 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+		params.push_back(pointerToUnsignedLong);
+		params.push_back(unsignedLongType);
+		params.push_back(unsignedLongType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	Constant *nodeCountValue = ConstantInt::get(module->getContext(), APInt(64, nodeIndices.size()));
+	Constant *nodeIndicesValue = constantsCache->get(nodeIndices);
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIndicesValue);
+	args.push_back(nodeCountValue);
+	args.push_back(eventIdValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoLockNode()`.
+ */
+void VuoCompilerCodeGenUtilities::generateLockNode(Module *module, BasicBlock *&block,
+												   Value *compositionStateValue, size_t nodeIndex, Value *eventIdValue)
+{
+	Constant *nodeIndexValue = ConstantInt::get(module->getContext(), APInt(64, nodeIndex));
+	generateLockNode(module, block, compositionStateValue, nodeIndexValue, eventIdValue);
+}
+
+/**
+ * Generates a call to `vuoLockNode()`.
+ */
+void VuoCompilerCodeGenUtilities::generateLockNode(Module *module, BasicBlock *&block,
+													  Value *compositionStateValue, Value *nodeIndexValue, Value *eventIdValue)
+{
+	string functionName = "vuoLockNode";
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		StructType *compositionStateType = getCompositionStateType(module);
+		PointerType *pointerToCompositionState = PointerType::get(compositionStateType, 0);
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+		params.push_back(unsignedLongType);
+		params.push_back(unsignedLongType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIndexValue);
+	args.push_back(eventIdValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoUnlockNodes()`.
+ */
+void VuoCompilerCodeGenUtilities::generateUnlockNodes(Module *module, BasicBlock *block,
+													  Value *compositionStateValue, const vector<size_t> &nodeIndices,
+													  VuoCompilerConstantsCache *constantsCache)
+{
+	string functionName = "vuoUnlockNodes";
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		StructType *compositionStateType = getCompositionStateType(module);
+		PointerType *pointerToCompositionState = PointerType::get(compositionStateType, 0);
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+		PointerType *pointerToUnsignedLong = PointerType::get(unsignedLongType, 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+		params.push_back(pointerToUnsignedLong);
+		params.push_back(unsignedLongType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	Constant *nodeCountValue = ConstantInt::get(module->getContext(), APInt(64, nodeIndices.size()));
+	Constant *nodeIndicesValue = constantsCache->get(nodeIndices);
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIndicesValue);
+	args.push_back(nodeCountValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoUnlockNode()`.
+ */
+void VuoCompilerCodeGenUtilities::generateUnlockNode(Module *module, BasicBlock *block,
+													 Value *compositionStateValue, size_t nodeIndex)
+{
+	Constant *nodeIndexValue = ConstantInt::get(module->getContext(), APInt(64, nodeIndex));
+	generateUnlockNode(module, block, compositionStateValue, nodeIndexValue);
+}
+
+/**
+ * Generates a call to `vuoUnlockNode()`.
+ */
+void VuoCompilerCodeGenUtilities::generateUnlockNode(Module *module, BasicBlock *block,
+													 Value *compositionStateValue, Value *nodeIndexValue)
+{
+	string functionName = "vuoUnlockNode";
+	Function *function = module->getFunction(functionName.c_str());
+	if (! function)
+	{
+		StructType *compositionStateType = getCompositionStateType(module);
+		PointerType *pointerToCompositionState = PointerType::get(compositionStateType, 0);
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+		params.push_back(unsignedLongType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIndexValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
  * Generates code that sets the array element at the given index.
  */
 void VuoCompilerCodeGenUtilities::generateSetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex, Value *value)
@@ -1942,6 +2036,37 @@ Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantArrayOfStrings(
 }
 
 /**
+ * Generates a global array-of-unsigned-longs variable.
+ *
+ * @param module The module in which to generate code.
+ * @param values The values to be placed in the array.
+ * @param globalVariableName The name to give to the global variable.
+ * @return The address of the array.
+ */
+Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantArrayOfUnsignedLongs(Module *module, const vector<unsigned long> &values, string globalVariableName)
+{
+	vector<Constant *> arrayElements;
+	for (unsigned long value : values)
+	{
+		Constant *valueConstant = ConstantInt::get(module->getContext(), APInt(64, value));
+		arrayElements.push_back(valueConstant);
+	}
+
+	ArrayType *arrayType = ArrayType::get(IntegerType::get(module->getContext(), 64), arrayElements.size());
+	GlobalVariable *global = new GlobalVariable(*module, arrayType, false, GlobalValue::ExternalLinkage, 0, globalVariableName);
+	Constant *arrayConstant = ConstantArray::get(arrayType, arrayElements);
+	global->setInitializer(arrayConstant);
+
+	ConstantInt *zeroi64Constant = ConstantInt::get(module->getContext(), APInt(64, 0));
+	vector<Constant *> pointerIndices;
+	pointerIndices.push_back(zeroi64Constant);
+	pointerIndices.push_back(zeroi64Constant);
+	Constant *pointer = ConstantExpr::getGetElementPtr(global, pointerIndices);
+
+	return pointer;
+}
+
+/**
  * Generates a series of if-else statements for testing if an input string is equal to any of a
  * set of constant strings, and executing the corresponding block of code if it is.
  *
@@ -1963,12 +2088,12 @@ Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantArrayOfStrings(
  * @param inputStringValue The string to compare in each if-statement.
  * @param blocksForString For each key string, the first block and last block to execute if the input string matches that string.
  *		The caller is responsible for branching (directly or indirectly) from the first to the last block.
- * @param constantStrings The cache of LLVM constants used to generate string values.
+ * @param constantsCache The cache of LLVM constants used to generate string values.
  */
 void VuoCompilerCodeGenUtilities::generateStringMatchingCode(Module *module, Function *function,
 															 BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputStringValue,
 															 map<string, pair<BasicBlock *, BasicBlock *> > blocksForString,
-															 VuoCompilerConstantStringCache &constantStrings)
+															 VuoCompilerConstantsCache *constantsCache)
 {
 	Function *strcmpFunction = getStrcmpFunction(module);
 	BasicBlock *currentBlock = initialBlock;
@@ -1979,7 +2104,7 @@ void VuoCompilerCodeGenUtilities::generateStringMatchingCode(Module *module, Fun
 		BasicBlock *firstTrueBlock = i->second.first;
 		BasicBlock *lastTrueBlock = i->second.second;
 
-		Constant *currentStringValue = constantStrings.get(module, currentString);
+		Constant *currentStringValue = constantsCache->get(currentString);
 
 		vector<Value *> strcmpArgs;
 		strcmpArgs.push_back(inputStringValue);
@@ -2054,11 +2179,11 @@ void VuoCompilerCodeGenUtilities::generateIndexMatchingCode(Module *module, Func
  * @param block The block in which to generate code.
  * @param formatString The format string to be passed to @c snprintf.
  * @param replacementValues The replacement values to be passed to @c snprintf.
- * @param constantStrings The cache of LLVM constants used to generate string values.
+ * @param constantsCache The cache of LLVM constants used to generate string values.
  * @return A value containing the address of the composite string.
  */
 Value * VuoCompilerCodeGenUtilities::generateFormattedString(Module *module, BasicBlock *block, string formatString, vector<Value *> replacementValues,
-															 VuoCompilerConstantStringCache &constantStrings)
+															 VuoCompilerConstantsCache *constantsCache)
 {
 	Function *snprintfFunction = getSnprintfFunction(module);
 
@@ -2069,7 +2194,7 @@ Value * VuoCompilerCodeGenUtilities::generateFormattedString(Module *module, Bas
 	ConstantInt *oneValue64 = ConstantInt::get(module->getContext(), APInt(64, 1));
 
 	// int bufferLength = snprintf(NULL, 0, format, ...) + 1;
-	Constant *formatStringValue = constantStrings.get(module, formatString);
+	Constant *formatStringValue = constantsCache->get(formatString);
 	vector<Value *> snprintfArgs;
 	snprintfArgs.push_back(nullValue);
 	snprintfArgs.push_back(zeroValue64);
@@ -2099,17 +2224,17 @@ Value * VuoCompilerCodeGenUtilities::generateFormattedString(Module *module, Bas
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
  * @param stringsToConcatenate The strings to concatenate. Each element should be a value of type pointer-to-char.
- * @param constantStrings The cache of LLVM constants used to generate string values.
+ * @param constantsCache The cache of LLVM constants used to generate string values.
  * @return A value containing the address of the composite string.
  */
 Value * VuoCompilerCodeGenUtilities::generateStringConcatenation(Module *module, BasicBlock *block, vector<Value *> stringsToConcatenate,
-																 VuoCompilerConstantStringCache &constantStrings)
+																 VuoCompilerConstantsCache *constantsCache)
 {
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 	if (stringsToConcatenate.empty())
 	{
-		return constantStrings.get(module, "");
+		return constantsCache->get("");
 	}
 	else if (stringsToConcatenate.size() == 2)
 	{
@@ -2263,11 +2388,11 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCast(Module *module, BasicBlock
  * @param annotation The annotation to be associated with the value.
  * @param fileName The name of the file for the module (or an empty string if no file).
  * @param lineNumber The line number in the file for the module (or 0 if no file).
- * @param constantStrings The cache of LLVM constants used to generate string values.
+ * @param constantsCache The cache of LLVM constants used to generate string values.
  */
 void VuoCompilerCodeGenUtilities::generateAnnotation(Module *module, BasicBlock *block, Value *value,
 													 string annotation, string fileName, unsigned int lineNumber,
-													 VuoCompilerConstantStringCache &constantStrings)
+													 VuoCompilerConstantsCache *constantsCache)
 {
 	// Set variable names expected by VuoCompilerBitcodeParser::getAnnotatedArguments().
 	string valueName = value->getName();
@@ -2288,7 +2413,7 @@ void VuoCompilerCodeGenUtilities::generateAnnotation(Module *module, BasicBlock 
 	Constant *annotationPointer = generatePointerToConstantString(module, annotation, annotationVariableName);
 	annotateFunctionArgs.push_back(annotationPointer);
 
-	Constant *fileNamePointer = constantStrings.get(module, fileName);
+	Constant *fileNamePointer = constantsCache->get(fileName);
 	annotateFunctionArgs.push_back(fileNamePointer);
 
 	ConstantInt *lineNumberValue = ConstantInt::get(module->getContext(), APInt(32, lineNumber));
@@ -2581,13 +2706,13 @@ void VuoCompilerCodeGenUtilities::generateNullCheck(Module *module, Function *fu
  * Generates code that creates a string representation of the given value.
  */
 Value * VuoCompilerCodeGenUtilities::generateSerialization(Module *module, BasicBlock *block, Value *valueToSerialize,
-														   VuoCompilerConstantStringCache &constantStrings)
+														   VuoCompilerConstantsCache *constantsCache)
 {
 	if (valueToSerialize->getType()->isPointerTy())
 	{
 		vector<Value *> replacementValues;
 		replacementValues.push_back(valueToSerialize);
-		return generateFormattedString(module, block, "%lx", replacementValues, constantStrings);
+		return generateFormattedString(module, block, "%lx", replacementValues, constantsCache);
 	}
 	else
 	{
@@ -2602,12 +2727,12 @@ Value * VuoCompilerCodeGenUtilities::generateSerialization(Module *module, Basic
  * and stores it in the destination variable.
  */
 void VuoCompilerCodeGenUtilities::generateUnserialization(Module *module, BasicBlock *block, Value *stringToUnserialize, Value *destinationVariable,
-														  VuoCompilerConstantStringCache &constantStrings)
+														  VuoCompilerConstantsCache *constantsCache)
 {
 	if (destinationVariable->getType()->isPointerTy())
 	{
 		// sscanf(stringToUnserialize, "%lx", destinationPointer);
-		Value *formatString = constantStrings.get(module, "%lx");
+		Value *formatString = constantsCache->get("%lx");
 		Function *sscanfFunction = getSscanfFunction(module);
 		vector<Value *> sscanfArgs;
 		sscanfArgs.push_back(stringToUnserialize);
@@ -2866,7 +2991,7 @@ void VuoCompilerCodeGenUtilities::generateSendEventDropped(Module *module, Basic
  */
 ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier,
 																				  Value *compositionStateValue,
-																				  VuoCompilerConstantStringCache &constantStrings)
+																				  VuoCompilerConstantsCache *constantsCache)
 {
 	const char *functionName = "vuoShouldSendPortDataTelemetry";
 	Function *shouldSendTelemetryFunction = module->getFunction(functionName);
@@ -2882,7 +3007,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryCompariso
 		shouldSendTelemetryFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
-	Constant *portIdentifierValue = constantStrings.get(module, portIdentifier);
+	Constant *portIdentifierValue = constantsCache->get(portIdentifier);
 
 	vector<Value *> args;
 	args.push_back(compositionStateValue);
@@ -2900,7 +3025,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryCompariso
 void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier,
 																			Value *compositionStateValue,
 																			BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock,
-																			VuoCompilerConstantStringCache &constantStrings,
+																			VuoCompilerConstantsCache *constantsCache,
 																			Value *&replacementJsonValue)
 {
 	Type *boolType = IntegerType::get(module->getContext(), 64);
@@ -2921,7 +3046,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
 		calledFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
-	Value *nodeIdentifierValue = constantStrings.get(module, nodeIdentifier);
+	Value *nodeIdentifierValue = constantsCache->get(nodeIdentifier);
 
 	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, "", initialBlock);
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
@@ -2948,7 +3073,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
 ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier,
 																				Value *compositionStateValue,
 																				BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock,
-																				VuoCompilerConstantStringCache &constantStrings,
+																				VuoCompilerConstantsCache *constantsCache,
 																				Value *&replacementJsonValue)
 {
 	Type *boolType = IntegerType::get(module->getContext(), 64);
@@ -2969,7 +3094,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(
 		calledFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
-	Value *nodeIdentifierValue = constantStrings.get(module, nodeIdentifier);
+	Value *nodeIdentifierValue = constantsCache->get(nodeIdentifier);
 
 	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, "", initialBlock);
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
@@ -4204,58 +4329,58 @@ Function * VuoCompilerCodeGenUtilities::getNodeInstanceInitFunction(Module *modu
 																	Type *instanceDataType,
 																	const vector<VuoPort *> &modelInputPorts,
 																	map<VuoPort *, size_t> &indexOfParameter,
-																	VuoCompilerConstantStringCache &constantStrings)
+																	VuoCompilerConstantsCache *constantsCache)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
 	return getNodeFunction(module, moduleKey, "nodeInstanceInit", isSubcomposition, false, true, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceFiniFunction(Module *module, string moduleKey,
 																	Type *instanceDataType,
-																	VuoCompilerConstantStringCache &constantStrings)
+																	VuoCompilerConstantsCache *constantsCache)
 {
 	map<VuoPort *, size_t> indexOfParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
 	return getNodeFunction(module, moduleKey, "nodeInstanceFini", true, true, false, false, instanceDataType, vector<VuoPort *>(), vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStartFunction(Module *module, string moduleKey,
 																			Type *instanceDataType,
 																			const vector<VuoPort *> &modelInputPorts,
 																			map<VuoPort *, size_t> &indexOfParameter,
-																			VuoCompilerConstantStringCache &constantStrings)
+																			VuoCompilerConstantsCache *constantsCache)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
 	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStart", true, true, false, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(),  map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerStopFunction(Module *module, string moduleKey,
 																		   Type *instanceDataType,
-																		   VuoCompilerConstantStringCache &constantStrings)
+																		   VuoCompilerConstantsCache *constantsCache)
 {
 	map<VuoPort *, size_t> indexOfParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
 	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerStop", true, true, false, false, instanceDataType, vector<VuoPort *>(), vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeInstanceTriggerUpdateFunction(Module *module, string moduleKey,
 																			 Type *instanceDataType,
 																			 const vector<VuoPort *> &modelInputPorts,
 																			 map<VuoPort *, size_t> &indexOfParameter,
-																			 VuoCompilerConstantStringCache &constantStrings)
+																			 VuoCompilerConstantsCache *constantsCache)
 {
 	map<VuoPort *, size_t> indexOfEventParameter;
 	return getNodeFunction(module, moduleKey, "nodeInstanceTriggerUpdate", true, true, false, false, instanceDataType, modelInputPorts, vector<VuoPort *>(),
 						   map<VuoPort *, json_object *>(), map<VuoPort *, string>(), map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeEventFunction(Module *module, string moduleKey, bool isSubcomposition, bool isStateful,
@@ -4268,12 +4393,12 @@ Function * VuoCompilerCodeGenUtilities::getNodeEventFunction(Module *module, str
 															 const map<VuoPort *, VuoPortClass::EventBlocking> &eventBlockingForInputPorts,
 															 map<VuoPort *, size_t> &indexOfParameter,
 															 map<VuoPort *, size_t> &indexOfEventParameter,
-															 VuoCompilerConstantStringCache &constantStrings)
+															 VuoCompilerConstantsCache *constantsCache)
 {
 	string functionName = (isStateful ? "nodeInstanceEvent" : "nodeEvent");
 	return getNodeFunction(module, moduleKey, functionName, isSubcomposition, isStateful, false, true, instanceDataType, modelInputPorts, modelOutputPorts,
 						   detailsForPorts, displayNamesForPorts, defaultValuesForInputPorts, eventBlockingForInputPorts,
-						   indexOfParameter, indexOfEventParameter, constantStrings);
+						   indexOfParameter, indexOfEventParameter, constantsCache);
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string moduleKey, string functionName,
@@ -4287,7 +4412,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 														const map<VuoPort *, VuoPortClass::EventBlocking> &eventBlockingForInputPorts,
 														map<VuoPort *, size_t> &indexOfParameter,
 														map<VuoPort *, size_t> &indexOfEventParameter,
-														VuoCompilerConstantStringCache &constantStrings)
+														VuoCompilerConstantsCache *constantsCache)
 {
 	if (! moduleKey.empty())
 		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
@@ -4436,7 +4561,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 			string argName = "instanceData";
 			arg->setName(argName);
 			argNamesUsed.insert(argName);
-			generateAnnotation(module, block, arg, "vuoInstanceData", "", 0, constantStrings);
+			generateAnnotation(module, block, arg, "vuoInstanceData", "", 0, constantsCache);
 		}
 
 		argNamesUsed.insert("refresh");
@@ -4483,8 +4608,8 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 				if (type)
 				{
-					generateAnnotation(module, block, arg, "vuoInputData", "", 0, constantStrings);
-					generateAnnotation(module, block, arg, "vuoType:" + type->getModuleKey(), "", 0, constantStrings);
+					generateAnnotation(module, block, arg, "vuoInputData", "", 0, constantsCache);
+					generateAnnotation(module, block, arg, "vuoType:" + type->getModuleKey(), "", 0, constantsCache);
 
 					map<VuoPort *, string>::const_iterator defaultValueIter = defaultValuesForInputPorts.find(modelInputPort);
 					if (defaultValueIter != defaultValuesForInputPorts.end())
@@ -4504,7 +4629,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 						string eventArgName = VuoStringUtilities::formUniqueIdentifier(argNamesUsed, preferredEventArgName);
 						eventArg->setName(eventArgName);
 
-						generateAnnotation(module, block, eventArg, "vuoInputEvent", "", 0, constantStrings);
+						generateAnnotation(module, block, eventArg, "vuoInputEvent", "", 0, constantsCache);
 
 						json_object *eventDetails = json_object_new_object();
 						json_object_object_add(eventDetails, "data", json_object_new_string(argName.c_str()));
@@ -4512,12 +4637,12 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 							json_object_object_add(eventDetails, "eventBlocking", json_object_new_string(eventBlockingStr.c_str()));
 						string eventDetailsStr = json_object_to_json_string_ext(eventDetails, JSON_C_TO_STRING_PLAIN);
 						json_object_put(eventDetails);
-						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantStrings);
+						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantsCache);
 					}
 				}
 				else if (hasEventArgs)
 				{
-					generateAnnotation(module, block, arg, "vuoInputEvent", "", 0, constantStrings);
+					generateAnnotation(module, block, arg, "vuoInputEvent", "", 0, constantsCache);
 
 					if (hasNonDefaultEventBlocking)
 						json_object_object_add(details, "eventBlocking", json_object_new_string(eventBlockingStr.c_str()));
@@ -4525,7 +4650,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 				string detailsStr = json_object_to_json_string_ext(details, JSON_C_TO_STRING_PLAIN);
 				json_object_put(details);
-				generateAnnotation(module, block, arg, "vuoDetails:" + detailsStr, "", 0, constantStrings);
+				generateAnnotation(module, block, arg, "vuoDetails:" + detailsStr, "", 0, constantsCache);
 			}
 		}
 
@@ -4554,20 +4679,20 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 				json_object_object_add(details, "name", json_object_new_string(displayNameIter->second.c_str()));
 			string detailsStr = json_object_to_json_string_ext(details, JSON_C_TO_STRING_PLAIN);
 			json_object_put(details);
-			generateAnnotation(module, block, arg, "vuoDetails:" + detailsStr, "", 0, constantStrings);
+			generateAnnotation(module, block, arg, "vuoDetails:" + detailsStr, "", 0, constantsCache);
 
 			VuoType *type = static_cast<VuoCompilerPort *>( modelOutputPort->getCompiler() )->getDataVuoType();
 			if (modelOutputPort->getClass()->getPortType() == VuoPortClass::triggerPort)
 			{
-				generateAnnotation(module, block, arg, "vuoOutputTrigger:" + argName, "", 0, constantStrings);
-				generateAnnotation(module, block, arg, "vuoType:" + (type ? type->getModuleKey() : "void"), "", 0, constantStrings);
+				generateAnnotation(module, block, arg, "vuoOutputTrigger:" + argName, "", 0, constantsCache);
+				generateAnnotation(module, block, arg, "vuoType:" + (type ? type->getModuleKey() : "void"), "", 0, constantsCache);
 			}
 			else
 			{
 				if (type)
 				{
-					generateAnnotation(module, block, arg, "vuoOutputData", "", 0, constantStrings);
-					generateAnnotation(module, block, arg, "vuoType:" + type->getModuleKey(), "", 0, constantStrings);
+					generateAnnotation(module, block, arg, "vuoOutputData", "", 0, constantsCache);
+					generateAnnotation(module, block, arg, "vuoType:" + type->getModuleKey(), "", 0, constantsCache);
 
 					if (hasEventArgs)
 					{
@@ -4577,18 +4702,18 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 						string eventArgName = VuoStringUtilities::formUniqueIdentifier(argNamesUsed, preferredEventArgName);
 						eventArg->setName(eventArgName);
 
-						generateAnnotation(module, block, eventArg, "vuoOutputEvent", "", 0, constantStrings);
+						generateAnnotation(module, block, eventArg, "vuoOutputEvent", "", 0, constantsCache);
 
 						json_object *eventDetails = json_object_new_object();
 						json_object_object_add(eventDetails, "data", json_object_new_string(argName.c_str()));
 						string eventDetailsStr = json_object_to_json_string_ext(eventDetails, JSON_C_TO_STRING_PLAIN);
 						json_object_put(eventDetails);
-						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantStrings);
+						generateAnnotation(module, block, eventArg, "vuoDetails:" + eventDetailsStr, "", 0, constantsCache);
 					}
 				}
 				else if (hasEventArgs)
 				{
-					generateAnnotation(module, block, arg, "vuoOutputEvent", "", 0, constantStrings);
+					generateAnnotation(module, block, arg, "vuoOutputEvent", "", 0, constantsCache);
 				}
 			}
 		}
@@ -4652,29 +4777,6 @@ Function * VuoCompilerCodeGenUtilities::getVuoReleaseFunction(Module *module)
 		vector<Type *> functionParams;
 		functionParams.push_back(voidPointerType);	// pointer
 		FunctionType *functionType = FunctionType::get(intType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getWaitForNodeFunction(Module *module, string moduleKey)
-{
-	string functionName = "compositionWaitForNode";
-	if (! moduleKey.empty())
-		functionName = VuoStringUtilities::prefixSymbolName(functionName, moduleKey);
-	Function *function = module->getFunction(functionName.c_str());
-	if (! function)
-	{
-		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
-		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
-		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCompositionState);
-		functionParams.push_back(unsignedLongType);
-		functionParams.push_back(unsignedLongType);
-		functionParams.push_back(boolType);
-		FunctionType *functionType = FunctionType::get(boolType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;

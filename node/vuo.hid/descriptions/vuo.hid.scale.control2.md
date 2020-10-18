@@ -1,4 +1,4 @@
-Only lets a USB HID control pass through if its name matches.
+Only lets a HID control pass through if its name matches.
 
 This node is similar to [Filter Control](vuo-node://vuo.hid.filter.control2), but it also scales the control's value to the real number range you specify.
 

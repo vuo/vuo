@@ -2,9 +2,11 @@
  * @file
  * Uses a feedback loop to add more and more twirls to an image over time.
  *
+ * Image by Andreas Gücklhorn on [Unsplash](https://unsplash.com/photos/mawU2PoJWfU).
+ *
  * @author [jstrecker](https://vuo.org/user/22)
  * @createdInVuoVersion 2.0.0
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.2.0
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -19,7 +21,7 @@ HoldValue3 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<re
 MakeRandomValue [type="vuo.noise.random.VuoPoint2d" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="90,255" _minimum="\{\"x\":-1.,\"y\":-1.\}" _maximum="\{\"x\":1.,\"y\":1.\}"];
 RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="105,-15" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
 SelectLatest [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="120,165"];
-TwirlImage [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="300,210" _angle="90" _radius="0.25"];
+TwirlImage [type="vuo.image.twirl2" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="300,210" _angle="90" _radius="0.25"];
 
 AllowFirstEvent:firstEvent -> FetchImage2:url;
 FetchImage2:image -> SelectLatest:option1;

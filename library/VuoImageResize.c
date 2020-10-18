@@ -133,8 +133,8 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoSizingMode 
 			targetHeight = height;
 		}
 
-		width = targetWidth;
-		height = targetHeight;
+		width = MAX(1, targetWidth);
+		height = MAX(1, targetHeight);
 	}
 
 	float u = width / (float)(image->pixelsWide);

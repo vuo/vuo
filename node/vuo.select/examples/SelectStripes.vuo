@@ -1,0 +1,35 @@
+/**
+ * @file
+ * Switches between horizontal and vertical moving stripes each time the mouse is pressed.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="30,195" _speed="0.25"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="300,225"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.y" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<y>y\l|<point2d>point2d\r" pos="300,405"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-180,195" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+MakeStripeImage [type="vuo.image.make.stripe" version="1.0.0" label="Make Stripe Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<stripeWidth>stripeWidth\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="285,30" _colorA="\{\"r\":0.73821622133255005,\"g\":0.7472648024559021,\"b\":0.7470816969871521,\"a\":1\}" _colorB="\{\"r\":0.20000000298023224,\"g\":0.20000000298023224,\"b\":0.20000000298023224,\"a\":1\}" _stripeWidth="0.25" _sharpness="1" _angle="0." _coverage="0.02" _width="1024" _height="768"];
+MakeStripeImage3 [type="vuo.image.make.stripe" version="1.0.0" label="Make Stripe Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<stripeWidth>stripeWidth\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="285,210" _colorA="\{\"r\":0.73821622133255005,\"g\":0.7472648024559021,\"b\":0.7470816969871521,\"a\":1\}" _colorB="\{\"r\":0.20000000298023224,\"g\":0.20000000298023224,\"b\":0.20000000298023224,\"a\":1\}" _stripeWidth="0.25" _sharpness="1" _angle="90" _coverage="0.02" _width="1024" _height="768"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.1.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<forcePressed>forcePressed\r|<pressureChanged>pressureChanged\r|<released>released\r" pos="15,-135" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _forcePressed_eventThrottling="enqueue" _pressureChanged_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="690,15" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+SelectInput6 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="510,15" fillcolor="orange"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="285,-135"];
+
+ChangeSpeed:changedTime -> ConvertRealTo2DPoint2:y;
+ChangeSpeed:changedTime -> ConvertRealTo2DPoint:x;
+ConvertRealTo2DPoint2:point2d -> MakeStripeImage3:center;
+ConvertRealTo2DPoint:point2d -> MakeStripeImage:center;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+MakeStripeImage3:image -> SelectInput6:trueOption;
+MakeStripeImage:image -> SelectInput6:falseOption;
+ReceiveMouseButtons:pressed -> Toggle:toggle;
+RenderImageToWindow:updatedWindow -> ReceiveMouseButtons:window [style=invis];
+SelectInput6:out -> RenderImageToWindow:image;
+Toggle:value -> SelectInput6:which;
+}

@@ -106,7 +106,8 @@ static NSDictionary *getCurrentAttributes(void)
 	NSFont *oldFont = [NSFont userFontOfSize:12];
 	NSFont *newFont = [fm convertFont:oldFont];
 
-	currentFontName = [newFont fontName];
+	[currentFontName release];
+	currentFontName = [[newFont fontName] retain];
 	currentPointSize = [newFont pointSize];
 
 	currentEditor->currentFontChanged(getCurrentVuoFont());
@@ -237,15 +238,16 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	// Preset the font panel with the port's original font.
 	{
 		VuoFont originalVuoFont = VuoFont_makeFromJson(originalValue);
+		[currentFontName release];
 		if (originalVuoFont.fontName)
 		{
-			currentFontName = [NSString stringWithUTF8String:originalVuoFont.fontName];
+			currentFontName = [[NSString stringWithUTF8String:originalVuoFont.fontName] retain];
 			currentPointSize = originalVuoFont.pointSize;
 		}
 		else
 		{
 			NSFont *originalFont = [NSFont userFontOfSize:12];
-			currentFontName = [originalFont fontName];
+			currentFontName = [[originalFont fontName] retain];
 			currentPointSize = [originalFont pointSize];
 		}
 

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "reflect", "mirror", "flip", "rotate", "linear", "affine", "wrap", "copy", "filter" ],
 					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "TileMovie.vuo" ]
+						  "exampleCompositions" : [ "TileImage.vuo" ]
 					  }
 				 });
 

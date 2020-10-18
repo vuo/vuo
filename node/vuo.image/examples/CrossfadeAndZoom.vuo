@@ -1,0 +1,51 @@
+/**
+ * @file
+ * @brief Crossfade and Zoom
+ * Fades out and zooms out one image, while fading in and zooming in another image.
+ *
+ * Images by Pexels on [Pixabay](https://pixabay.com/en/beach-surfing-wave-ocean-outdoors-1836366/) and Marat Gilyadzinov on [Unsplash](https://unsplash.com/photos/MYadhrkenNg).
+ *
+ * @lastSavedInVuoVersion 2.1.2
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="-315,210" _startPosition="1" _endPosition="0" _duration="1." _curve="\"quadratic\"" _easing="\"in\"" _loop="\"none\"" _phase="0.0"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="-315,375" _startPosition="0" _endPosition="1" _duration="1" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"none\"" _phase="0.0"];
+GetImageHeight [type="vuo.image.get.height" version="1.0.0" label="Get Image Height|<refresh>refresh\l|<image>image\l|<height>height\r" pos="480,285"];
+GetImageWidth [type="vuo.image.get.width" version="1.0.0" label="Get Image Width|<refresh>refresh\l|<image>image\l|<width>width\r" pos="480,270"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="30,150" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _fixed="\"horizontal\""];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="30,315" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _fixed="\"horizontal\""];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="259,161" fillcolor="blue"];
+MakeList3 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-168,386" _2="2"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-168,221" _2="2"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.1.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-135,375"];
+Multiply2 [type="vuo.math.multiply.VuoReal" version="2.1.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-135,210"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="390,150" fillcolor="blue" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<progress>progress\r|<startImage>startImage\r|<endImage>endImage\r" _time_type="VuoReal" _progress_type="VuoReal" _startImage_type="VuoImage" _endImage_type="VuoImage"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+Curve2:value -> MakeImageLayer2:opacity;
+Curve2:value -> MakeList3:1;
+Curve:value -> MakeImageLayer:opacity;
+Curve:value -> MakeList4:1;
+GetImageHeight:height -> RenderLayersToImage:height;
+GetImageWidth:width -> RenderLayersToImage:width;
+MakeImageLayer2:layer -> MakeList:2;
+MakeImageLayer:layer -> MakeList:1;
+MakeList3:list -> Multiply:values;
+MakeList4:list -> Multiply2:values;
+MakeList:list -> RenderLayersToImage:layers;
+Multiply2:product -> MakeImageLayer:width;
+Multiply:product -> MakeImageLayer2:width;
+PublishedInputs:endImage -> MakeImageLayer2:image;
+PublishedInputs:progress -> Curve2:time;
+PublishedInputs:progress -> Curve:time;
+PublishedInputs:startImage -> GetImageHeight:image;
+PublishedInputs:startImage -> GetImageWidth:image;
+PublishedInputs:startImage -> MakeImageLayer:image;
+RenderLayersToImage:image -> PublishedOutputs:outputImage;
+}

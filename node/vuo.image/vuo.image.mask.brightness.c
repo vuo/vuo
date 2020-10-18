@@ -24,7 +24,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "2.1.0",
 					  "node": {
-						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
+						  "exampleCompositions" : [ "MaskImageByBrightness.vuo" ]
 					  }
 				 });
 

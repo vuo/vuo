@@ -148,20 +148,12 @@ VuoCompilerTargetSet VuoCompilerModule::parseTargetSet(json_object *o, string ke
 }
 
 /**
- * Parses a Mac OS version from a string.
+ * Parses a macOS version from a string.
  *
- * If the string doesn't represent a Mac OS version, returns @c VuoCompilerTargetSet::MacVersion_Any.
+ * If the string doesn't represent a macOS version, returns @c VuoCompilerTargetSet::MacVersion_Any.
  */
 VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string version)
 {
-	if (version == "10.7")
-		return VuoCompilerTargetSet::MacVersion_10_7;
-	if (version == "10.8")
-		return VuoCompilerTargetSet::MacVersion_10_8;
-	if (version == "10.9")
-		return VuoCompilerTargetSet::MacVersion_10_9;
-	if (version == "10.10")
-		return VuoCompilerTargetSet::MacVersion_10_10;
 	if (version == "10.11")
 		return VuoCompilerTargetSet::MacVersion_10_11;
 	if (version == "10.12")
@@ -172,6 +164,8 @@ VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string versi
 		return VuoCompilerTargetSet::MacVersion_10_14;
 	if (version == "10.15")
 		return VuoCompilerTargetSet::MacVersion_10_15;
+	if (version == "11.0")
+		return VuoCompilerTargetSet::MacVersion_11_0;
 
 	return VuoCompilerTargetSet::MacVersion_Any;
 }

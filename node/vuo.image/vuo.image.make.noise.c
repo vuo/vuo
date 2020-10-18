@@ -25,8 +25,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.2.0",
 					  "node": {
-						  "exampleCompositions" : [ "ShowNoiseImage.vuo", "CompareNoiseTypes.vuo",
-									    "CompareNoiseRangeModes.vuo" ]
+						  "exampleCompositions" : [ "ShowNoiseImage.vuo", "CompareNoiseTypes.vuo", "CompareNoiseRangeModes.vuo", "CrossfadeWithBlobMask.vuo" ],
 					  }
 				 });
 

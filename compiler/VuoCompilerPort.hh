@@ -11,7 +11,7 @@
 
 #include "VuoCompilerNodeArgument.hh"
 
-class VuoCompilerConstantStringCache;
+class VuoCompilerConstantsCache;
 class VuoPort;
 class VuoType;
 
@@ -29,7 +29,7 @@ public:
 	virtual string getIdentifier(void);
 	void setIndexInPortContexts(int indexInPortContexts);
 	int getIndexInPortContexts(void);
-	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
+	void setConstantsCache(VuoCompilerConstantsCache *constantsCache);
 	Value * getDataVariable(Module *module, BasicBlock *block, Value *nodeContextValue);
 	Value * generateGetPortContext(Module *module, BasicBlock *block, Value *nodeContextValue);
 
@@ -41,7 +41,7 @@ public:
 protected:
 	VuoCompilerPort(VuoPort * basePort);
 
-	VuoCompilerConstantStringCache *constantStrings;  ///< Cache used to generate constant string values.
+	VuoCompilerConstantsCache *constantsCache;  ///< Cache used to generate constant string values.
 
 private:
 	VuoType *dataType;

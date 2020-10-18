@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Displays a mirrored image.
+ *
+ * Image by Nicman on [Pixabay](https://pixabay.com/en/hummingbird-bird-trochilidae-flying-2139279/).
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="765,840" _url="\"Hummingbird.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="480,840" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1185,660" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.5\}" _rotation="0.0" _width="0.25" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList3 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1461,806" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1185,840" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="0.750000" _fixed="\"horizontal\"" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1185,1020" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="0.750000" _fixed="\"horizontal\"" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1200,300" _text="\"Mirrored horizontally\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":-0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1200,480" _text="\"Mirrored vertically\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":-0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MirrorImage [type="vuo.image.mirror" version="1.0.1" label="Mirror Image|<refresh>refresh\l|<image>image\l|<horizontalReflection>horizontalReflection\l|<verticalReflection>verticalReflection\l|<reflectedImage>reflectedImage\r" pos="960,840" fillcolor="orange" _horizontalReflection="\"left\"" _verticalReflection="\"none\""];
+MirrorImage2 [type="vuo.image.mirror" version="1.0.1" label="Mirror Image|<refresh>refresh\l|<image>image\l|<horizontalReflection>horizontalReflection\l|<verticalReflection>verticalReflection\l|<reflectedImage>reflectedImage\r" pos="960,1020" fillcolor="orange" _horizontalReflection="\"none\"" _verticalReflection="\"top\""];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1515,795" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+FetchImage:image -> MakeImageLayer:image;
+FetchImage:image -> MirrorImage2:image;
+FetchImage:image -> MirrorImage:image;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> MakeTextLayer2:center;
+FireOnStart:started -> MakeTextLayer:center;
+MakeImageLayer:layer -> MakeList3:3;
+MakeList3:list -> RenderLayersToWindow:layers;
+MakeScaledLayer2:layer -> MakeList3:5;
+MakeScaledLayer:layer -> MakeList3:4;
+MakeTextLayer2:layer -> MakeList3:2;
+MakeTextLayer:layer -> MakeList3:1;
+MirrorImage2:reflectedImage -> MakeScaledLayer2:image;
+MirrorImage:reflectedImage -> MakeScaledLayer:image;
+}

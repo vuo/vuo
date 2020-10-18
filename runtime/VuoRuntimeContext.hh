@@ -33,7 +33,8 @@ struct NodeContext
 	struct PortContext **portContexts;  ///< An array of contexts for input and output ports, or null if this node is a subcomposition.
 	unsigned long portContextCount;  ///< The number of elements in `portContexts`.
 	void *instanceData;  ///< A pointer to the node's instance data, or null if this node is stateless.
-	dispatch_semaphore_t semaphore;  ///< A semaphore to wait on while a node's event function is executing.
+	void *nodeMutex;  ///< A `std::mutex` that synchronizes access to @ref claimingEventId.
+	void *nodeConditionVariable;  ///< A `std::condition_variable` that notifies threads waiting on @ref nodeMutex.
 	unsigned long claimingEventId;  ///< The ID of the event that currently has exclusive claim on the node.
 	dispatch_group_t executingGroup;  ///< A dispatch group used by the subcomposition's event function to wait for nodes to finish executing.
 	void *executingEventIds;  ///< A `vector<unsigned long>` containing the ID of the event that most recently came in through the composition's published inputs and any events spun off from it.
@@ -61,7 +62,6 @@ void vuoSetNodeContextClaimingEventId(struct NodeContext *nodeContext, unsigned 
 void vuoSetNodeContextOutputEvent(struct NodeContext *nodeContext, size_t index, bool event);
 struct PortContext * vuoGetNodeContextPortContext(struct NodeContext *nodeContext, size_t index);
 void * vuoGetNodeContextInstanceData(struct NodeContext *nodeContext);
-dispatch_semaphore_t vuoGetNodeContextSemaphore(struct NodeContext *nodeContext);
 unsigned long vuoGetNodeContextClaimingEventId(struct NodeContext *nodeContext);
 dispatch_group_t vuoGetNodeContextExecutingGroup(struct NodeContext *nodeContext);
 bool vuoGetNodeContextOutputEvent(struct NodeContext *nodeContext, size_t index);

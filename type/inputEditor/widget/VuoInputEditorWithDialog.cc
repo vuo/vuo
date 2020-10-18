@@ -40,6 +40,10 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 	dialogPointer = &dialog;
 	setUpDialog(dialog, originalValue, details);
 
+	// Workaround for the window background being opaque black on macOS 10.12 and prior.
+	// https://b33p.net/kosada/vuo/vuo/-/merge_requests/5#note_2117211
+	dialog.setFixedSize(dialog.layout() ? dialog.layout()->sizeHint() : dialog.sizeHint());
+
 	// Move children to account for margins if no autolayout is used.
 	QMargins margin = dialog.getPopoverContentsMargins();
 

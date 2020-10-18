@@ -26,7 +26,7 @@ GetTransformTranslation [type="vuo.transform.get.translation" version="1.0.0" la
 ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-225,240" fillcolor="orange" _receivedFrame_eventThrottling="drop"];
 RenderImageToWindow2 [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1215,315" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
 Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="915,450" _start="-1.000000" _end="1.000000" _scaledStart="-180.000000" _scaledEnd="180.000000" _limitToRange="false"];
-TwirlImage [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="1065,315"];
+TwirlImage [type="vuo.image.twirl2" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="1065,315"];
 
 AllowFirstEvent:firstEvent -> FetchImage:url;
 Convert3DPointTo2DPoint:xy -> TwirlImage:center;

@@ -2,7 +2,7 @@
  * @file
  * Displays an up-to-date list of the unique HID control names received from a connected HID keyboard.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.0.3
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -10,29 +10,26 @@
 
 digraph G
 {
-AddToList [type="vuo.list.add.VuoText" version="1.0.0" label="Add to List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="495,510" _position="\"end\""];
+AddToList [type="vuo.list.add.VuoText" version="1.0.1" label="Add to List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="495,510" _position="\"end\""];
 ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1125,510" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="2.0" _columns="1" _height="1" _rows="20"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="75,255" _started_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="960,330" _started_eventThrottling="enqueue"];
 GetControlValues [type="vuo.hid.get.control" version="1.0.0" label="Get Control Values|<refresh>refresh\l|<control>control\l|<name>name\r|<value>value\r|<minimum>minimum\r|<maximum>maximum\r" pos="300,405" fillcolor="orange"];
 HoldList [type="vuo.data.hold.list2.VuoText" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="570,405"];
-MakeHIDFromName [type="vuo.hid.make.name" version="1.0.0" label="Make HID from Name|<refresh>refresh\l|<name>name\l|<device>device\r" pos="120,330" fillcolor="orange" _name="\"Keyboard\""];
 MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1469,506"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="825,615" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":28,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
-MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,255" _text="\"Begin typing.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":28,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1125,360" _text="\"Begin typing.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":28,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
 ProcessList [type="vuo.list.process.VuoText.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="825,510" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-ReceiveHIDControls [type="vuo.hid.receive" version="1.0.0" label="Receive HID Controls|<refresh>refresh\l|<device>device\l|<exclusive>exclusive\l|<receivedControl>receivedControl\r" pos="105,405" fillcolor="orange" _exclusive="false" _receivedControl_eventThrottling="enqueue"];
+ReceiveHIDControls [type="vuo.hid.receive" version="1.0.0" label="Receive HID Controls|<refresh>refresh\l|<device>device\l|<exclusive>exclusive\l|<receivedControl>receivedControl\r" pos="105,405" fillcolor="orange" _device="\{\"matchType\":\"usage\",\"usagePage\":1,\"usage\":6\}" _exclusive="false" _receivedControl_eventThrottling="enqueue"];
 RemoveDuplicates [type="vuo.list.removeDuplicates.VuoText" version="1.0.0" label="Remove Duplicates|<refresh>refresh\l|<list>list\l|<uniqueList>uniqueList\r" pos="630,510" fillcolor="orange"];
 RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1515,495" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 SelectLatest [type="vuo.select.latest.2.VuoLayer" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1335,495"];
 
 AddToList:modifiedList -> RemoveDuplicates:list;
 ArrangeLayersInGrid:griddedLayer -> SelectLatest:option2;
-FireOnStart:started -> MakeHIDFromName:name;
 FireOnStart:started -> MakeTextLayer2:text;
 GetControlValues:name -> AddToList:item;
 GetControlValues:name -> HoldList:update;
 HoldList:heldValue -> AddToList:list;
-MakeHIDFromName:device -> ReceiveHIDControls:device;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeTextLayer2:layer -> SelectLatest:option1;
 MakeTextLayer:layer -> ProcessList:processedItem;

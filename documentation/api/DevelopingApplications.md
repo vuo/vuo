@@ -1,6 +1,6 @@
 @addtogroup DevelopingApplications
 
-If you're developing an application, library, or other project, your code can build and run Vuo compositions. One way is by invoking the Vuo command-line tools (see the [Vuo Manual](https://vuo.org/manual.pdf)), but you can also interact with Vuo programmatically through its API.
+If you're developing an application, library, or other project, your code can build and run Vuo compositions. One way is by invoking the Vuo command-line tools (see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml)), but you can also interact with Vuo programmatically through its API.
 
 To learn how to develop an application that uses Vuo, see: 
 

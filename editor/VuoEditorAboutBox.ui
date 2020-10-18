@@ -25,17 +25,17 @@
    <widget class="QLabel" name="iconLabel">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>32</y>
-      <width>201</width>
-      <height>201</height>
+      <x>20</x>
+      <y>22</y>
+      <width>221</width>
+      <height>221</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap resource="VuoEditorApp/VuoEditorApp.qrc">:/Icons/vuo@2x.png</pixmap>
+     <pixmap resource="VuoEditorApp/VuoEditorApp.qrc">:/Icons/vuo.svg</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>

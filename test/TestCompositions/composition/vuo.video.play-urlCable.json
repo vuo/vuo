@@ -8,5 +8,5 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"URL", "inputPortValues":{"URL":"../../../node/vuo.video/examples/crawling.mov"}, "outputPortValues":{"FrameCount":300}},
+	{"firingPort":"URL", "inputPortValues":{"URL":"../../../node/vuo.video/examples/Kalimba.mov"}, "outputPortValues":{"FrameCount":300}},
 ]}

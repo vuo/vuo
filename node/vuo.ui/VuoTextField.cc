@@ -25,9 +25,9 @@ VuoModuleMetadata({
 /**
  * Create a new text field instance.
  */
-VuoTextField VuoTextField_make(VuoInteger numLines)
+VuoTextField VuoTextField_make(VuoInteger numLines, void *context)
 {
-	VuoTextFieldInternal* textField = new VuoTextFieldInternal(numLines);
+	VuoTextFieldInternal* textField = new VuoTextFieldInternal(numLines, context);
 	VuoRegister(textField, VuoTextField_free);
 	return static_cast<VuoTextField>(textField);
 }
@@ -97,15 +97,6 @@ void VuoTextField_setLayerWidth(VuoTextField textFieldPtr, VuoReal width)
 }
 
 /**
- * Set the cursor color.
- */
-void VuoTextField_setCursorColor(VuoTextField textFieldPtr, VuoColor color)
-{
-	VuoTextFieldInternal* textField = static_cast<VuoTextFieldInternal*>(textFieldPtr);
-	textField->SetCursorColor(color);
-}
-
-/**
  * Set the anchor for this layer.
  */
 void VuoTextField_setLayerAnchor(VuoTextField textFieldPtr, VuoAnchor anchor)
@@ -145,7 +136,7 @@ void VuoTextField_setPlaceholderText(VuoTextField textFieldPtr, VuoText placehol
  * Sets an optional function callback to be invoked when OnTypedCharacterEvent is fired.
  * Callback should returns true if input is valid, false otherwise.
  */
-void VuoTextField_setValidateCharInputCallback(VuoTextField textFieldPtr, bool (*validateCharInputCallback)(const VuoText current, uint32_t append))
+void VuoTextField_setValidateCharInputCallback(VuoTextField textFieldPtr, bool (*validateCharInputCallback)(const VuoText current, uint32_t newChar, uint16_t position))
 {
 	VuoTextFieldInternal* textField = static_cast<VuoTextFieldInternal*>(textFieldPtr);
 	textField->SetValidateCharInputCallback(validateCharInputCallback);
@@ -155,10 +146,19 @@ void VuoTextField_setValidateCharInputCallback(VuoTextField textFieldPtr, bool (
  * Optional function callback to be invoked when text field loses focus.  Use this to validate user input and (if necessary) change it.
  * Returns true if the text has been modified (in which case modifiedText should contain the new text).
  */
-void VuoTextField_setValidateTextInputCallback(VuoTextField textFieldPtr, bool (*validateTextInputCallback)(const VuoText current, VuoText* modifiedText))
+void VuoTextField_setValidateTextInputCallback(VuoTextField textFieldPtr, bool (*validateTextInputCallback)(void *context, const VuoText current, VuoText* modifiedText))
 {
 	VuoTextFieldInternal* textField = static_cast<VuoTextFieldInternal*>(textFieldPtr);
 	textField->SetValidateTextInputCallback(validateTextInputCallback);
+}
+
+/**
+ * Sets the callback to be invoked when the text editing session ends (by clicking outside the field, or pressing return, enter, tab, or esc).
+ */
+void VuoTextField_setSessionEndedCallback(VuoTextField textFieldPtr, VuoTextFieldSessionEndedCallbackType sessionEndedCallback)
+{
+	VuoTextFieldInternal *textField = static_cast<VuoTextFieldInternal *>(textFieldPtr);
+	textField->setSessionEndedCallback(sessionEndedCallback);
 }
 
 /**

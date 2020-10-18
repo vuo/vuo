@@ -51,7 +51,6 @@ private:
 	map<unsigned long, map<unsigned long, NodeContext *> > nodeContextForIndex;  ///< A registry of all NodeContext values in the running composition, indexed by hashed composition identifier and node index.
 	map<unsigned long, string> compositionIdentifierForHash;  ///< The composition identifier for each hash registered in `nodeContextForIndex`.
 	map<string, map<string, void *> > dataForPort;  ///< The `data` field in the port's context, indexed by composition and port identifier.
-	map<string, map<string, dispatch_semaphore_t> > nodeSemaphoreForPort;  ///< The `semaphore` field in the node's context, indexed by composition and port identifier.
 	map<string, map<string, unsigned long> > nodeIndexForPort;  ///< The index for a node, indexed by composition and port identifier.
 	map<string, map<string, unsigned long> > typeIndexForPort;  ///< The index for the port's type, indexed by composition and port identifier.
 
@@ -81,7 +80,7 @@ private:
 
 	template<typename T>
 	static bool findCachedInfoForPort(const map<string, map<string, T> > &cachedInfoForPort, const string &compositionIdentifier, const string &portIdentifier, typename map<string, T>::const_iterator &foundIter);
-	void addPortIdentifier(const char *compositionIdentifier, const string &portIdentifier, void *data, dispatch_semaphore_t nodeSemaphore, unsigned long nodeIndex, unsigned long typeIndex);
+	void addPortIdentifier(const char *compositionIdentifier, const string &portIdentifier, void *data, unsigned long nodeIndex, unsigned long typeIndex);
 	void removePortIdentifier(const char *compositionIdentifier, const string &portIdentifier);
 	void relocatePortIdentifier(const char *compositionIdentifier, const string &portIdentifier);
 	void carryOverPortIdentifier(const char *oldCompositionIdentifier, const char *newCompositionIdentifier, const string &portIdentifier, unsigned long nodeIndex, unsigned long typeIndex);
@@ -119,7 +118,6 @@ public:
 	NodeContext * getNodeContext(const char *compositionIdentifier, unsigned long nodeIndex);
 	NodeContext * getCompositionContext(const char *compositionIdentifier);
 	void * getDataForPort(const char *compositionIdentifier, const char *portIdentifier);
-	dispatch_semaphore_t getNodeSemaphoreForPort(const char *compositionIdentifier, const char *portIdentifier);
 	unsigned long getNodeIndexForPort(const char *compositionIdentifier, const char *portIdentifier);
 	unsigned long getTypeIndexForPort(const char *compositionIdentifier, const char *portIdentifier);
 
@@ -145,7 +143,6 @@ void vuoAddPortMetadata(VuoCompositionState *compositionState, const char *portI
 NodeContext * vuoGetNodeContext(VuoCompositionState *compositionState, unsigned long nodeIndex);
 NodeContext * vuoGetCompositionContext(VuoCompositionState *compositionState);
 void * vuoGetDataForPort(VuoCompositionState *compositionState, const char *portIdentifier);
-dispatch_semaphore_t vuoGetNodeSemaphoreForPort(VuoCompositionState *compositionState, const char *portIdentifier);
 unsigned long vuoGetNodeIndexForPort(VuoCompositionState *compositionState, const char *portIdentifier);
 unsigned long vuoGetTypeIndexForPort(VuoCompositionState *compositionState, const char *portIdentifier);
 void vuoInitContextForTopLevelComposition(VuoCompositionState *compositionState, bool hasInstanceData, unsigned long publishedOutputPortCount);

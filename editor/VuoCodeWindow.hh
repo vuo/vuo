@@ -20,6 +20,7 @@ class VuoDocumentationSidebar;
 class VuoEditorComposition;
 class VuoEditorWindowToolbar;
 class VuoInputEditorManager;
+class VuoInputEditorSession;
 class VuoMetadataEditor;
 class VuoPublishedPortSidebar;
 class VuoRecentFileMenu;
@@ -134,6 +135,7 @@ private:
 	VuoCompiler *compiler;
 	VuoShaderFile *shaderFile;
 	VuoInputEditorManager *inputEditorManager;
+	VuoInputEditorSession *inputEditorSession;
 	VuoMetadataEditor *metadataEditor;
 
 	bool includeInRecentFileMenu;  ///< True if this file should be added to the "File > Open Recent" list when saved.

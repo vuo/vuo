@@ -191,7 +191,6 @@ public slots:
 	void deleteSelectedCompositionComponents();
 	void deleteSelectedCompositionComponents(string commandDescription);
 	void togglePortPublicationStatus();
-	void tintSelectedItems(int tintColor);
 	void selectAllCompositionComponents();
 	void selectAllComments();
 	void deselectAllCompositionComponents();
@@ -326,7 +325,6 @@ private slots:
 	void unhideConnectedCables();
 	void fireTriggerPortEvent();
 	void setPortConstant();
-	void setTriggerThrottling(int eventThrottling);
 	void specializeGenericPortType();
 	void unspecializePortType();
 	void addInputPort();
@@ -403,7 +401,6 @@ private:
 	set<string> portsWithPopoversClosedAtLastEvent;
 
 	bool isPortCurrentlyRevertible(VuoRendererPort *port);
-	void addActionToMenuAndMapper(QMenu *menu, QSignalMapper *mapper, QString name, int index);
 	void mousePressEventNonLeftButton(QGraphicsSceneMouseEvent *event);
 	void correctForCancelledDuplication(QGraphicsSceneMouseEvent *event);
 	void initiateCableDrag(VuoRendererPort *currentPort, VuoRendererCable *cableYankedDirectly, QGraphicsSceneMouseEvent *event);

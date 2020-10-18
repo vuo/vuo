@@ -3925,12 +3925,16 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 		extraArgs.push_back(*i);
 	}
 
-	string macosxSdkFolder = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/";
-	if (VuoFileUtilities::fileExists(macosxSdkFolder + "MacOSX10.10.sdk"))
+
+	// When compiling on a development workstation or Jenkins, use Xcode's macOS SDK, since it includes headers.
+	// When compiling on an end-user system, no SDK is needed.
+	string buildTimeMacOSSDKFolder = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+	if (VuoFileUtilities::fileExists(buildTimeMacOSSDKFolder))
 	{
 		extraArgs.push_back("-isysroot");
-		extraArgs.push_back(macosxSdkFolder + "MacOSX10.10.sdk");
+		extraArgs.push_back(buildTimeMacOSSDKFolder);
 	}
+
 
 	__block vector<string> headerSearchPaths;
 	void (^envGetHeaderSearchPaths)(Environment *) = ^void (Environment *env) {
@@ -4727,7 +4731,11 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies, Optimization 
 					string dependencyPath = getLibraryPath(dependency, librarySearchPaths);
 					if (! dependencyPath.empty())
 						externalLibraries.insert(dependencyPath);
-					else
+
+					// On macOS 11, libc.dylib and libobjc.dylib are not present,
+					// but we can still link since Vuo.framework includes the TBDs.
+					else if (dependency != "c"
+						  && dependency != "objc")
 						VUserLog("Warning: Could not locate dependency '%s'.", dependency.c_str());
 				}
 			}
@@ -5077,6 +5085,21 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 		args.push_back("-nostartfiles");
 		args.push_back(crt1Path.c_str());
 	}
+
+
+	// When linking on a development workstation or Jenkins or an end-user system,
+	// use the partial macOS SDK bundled in Vuo.framework, since it includes all the TBDs we need.
+	string frameworkMacOSSDKFolder = getVuoFrameworkPath() + "/SDKs/MacOSX10.11.sdk";
+	if (!VuoFileUtilities::fileExists(frameworkMacOSSDKFolder))
+		throw VuoException("Couldn't find the macOS SDK.");
+
+	args.push_back("-Xlinker");
+	args.push_back("-syslibroot");
+	args.push_back("-Xlinker");
+	char *frameworkMacOSSDKFolderZ = strdup(frameworkMacOSSDKFolder.c_str());
+	args.push_back(frameworkMacOSSDKFolderZ);
+	argsToFree.push_back(frameworkMacOSSDKFolderZ);
+
 
 	// Linker option necessary for compatibility with our bundled version of ld64:
 	args.push_back("-Xlinker");
@@ -5946,7 +5969,7 @@ string VuoCompiler::getModuleKeyForPath(string path)
 
 		// Convert each part to lowerCamelCase.
 		for (string &part : nodeClassNameParts)
-			part = VuoStringUtilities::convertToCamelCase(part, false, true, true);
+			part = VuoStringUtilities::convertToCamelCase(part, false, true, false);
 
 		// If the node class name has only one part, add a prefix.
 		if (nodeClassNameParts.size() == 1)

@@ -10,6 +10,7 @@
 #include "VuoRuntimeContext.hh"
 #include "VuoEventLoop.h"
 #include <mutex>
+#include <condition_variable>
 
 /**
  * Creates a port context, initializing its fields to default values.
@@ -44,7 +45,8 @@ struct NodeContext * vuoCreateNodeContext(bool hasInstanceData, bool isCompositi
 	struct NodeContext *nodeContext = (struct NodeContext *)malloc(sizeof(struct NodeContext));
 	nodeContext->portContexts = NULL;
 	nodeContext->portContextCount = 0;
-	nodeContext->semaphore = dispatch_semaphore_create(1);
+	nodeContext->nodeMutex = new std::mutex();
+	nodeContext->nodeConditionVariable = new std::condition_variable();
 	nodeContext->claimingEventId = 0;
 
 	if (isComposition)
@@ -98,8 +100,8 @@ void vuoFreeNodeContext(struct NodeContext *nodeContext)
 
 	free(nodeContext->portContexts);
 	free(nodeContext->instanceData);
-	if (nodeContext->semaphore)
-		dispatch_release(nodeContext->semaphore);
+	delete static_cast<std::mutex *>(nodeContext->nodeMutex);
+	delete static_cast<std::condition_variable *>(nodeContext->nodeConditionVariable);
 	delete static_cast< vector<unsigned long> *>(nodeContext->executingEventIds);
 	if (nodeContext->executingGroup)
 		dispatch_release(nodeContext->executingGroup);
@@ -228,14 +230,6 @@ struct PortContext * vuoGetNodeContextPortContext(struct NodeContext *nodeContex
 void * vuoGetNodeContextInstanceData(struct NodeContext *nodeContext)
 {
 	return nodeContext->instanceData;
-}
-
-/**
- * Gets the node context's semaphore field.
- */
-dispatch_semaphore_t vuoGetNodeContextSemaphore(struct NodeContext *nodeContext)
-{
-	return nodeContext->semaphore;
 }
 
 /**

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "mirror", "rotate", "reverse", "invert", ],
 					  "version" : "1.1.2",
 					  "node": {
-						  "exampleCompositions" : [ "FlipMovie.vuo" ]
+						  "exampleCompositions" : []
 					  }
 				 });
 

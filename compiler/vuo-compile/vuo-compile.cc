@@ -247,8 +247,12 @@ int main (int argc, char * const argv[])
 
 	vector<VuoCompilerIssue> issueList = issues->getList();
 	for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i)
-		fprintf(stderr, "%s: %s: %s\n\n", hasInputFile ? (inputPath == "-" ? "stdin" : inputPath.c_str()) : argv[0],
-				(*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning", (*i).getShortDescription(false).c_str());
+		fprintf(stderr, "%s: %s: %s\n",
+			!i->getFilePath().empty()
+				? i->getFilePath().c_str()
+				: (hasInputFile ? (inputPath == "-" ? "stdin" : inputPath.c_str()) : argv[0]),
+			(*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning",
+			(*i).getShortDescription(false).c_str());
 
 	delete issues;
 

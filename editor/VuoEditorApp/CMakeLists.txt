@@ -88,10 +88,9 @@ add_custom_command(
 		--exclude Headers
 		${CONAN_LIB_DIRS_QT}/QtCore.framework
 		${CONAN_LIB_DIRS_QT}/QtGui.framework
-		${CONAN_LIB_DIRS_QT}/QtLabsTemplates.framework
 		${CONAN_LIB_DIRS_QT}/QtMacExtras.framework
 		${CONAN_LIB_DIRS_QT}/QtMultimedia.framework
-		${CONAN_LIB_DIRS_QT}/QtMultimediaQuick_p.framework
+		${CONAN_LIB_DIRS_QT}/QtMultimediaQuick.framework
 		${CONAN_LIB_DIRS_QT}/QtMultimediaWidgets.framework
 		${CONAN_LIB_DIRS_QT}/QtNetwork.framework
 		${CONAN_LIB_DIRS_QT}/QtOpenGL.framework
@@ -110,6 +109,7 @@ add_custom_command(
 		--include libqgif.dylib
 		--include libqsvg.dylib
 		--include libqavfmediaplayer.dylib
+		--include libqmacstyle.dylib
 		--exclude audio
 		--exclude bearer
 		--exclude designer
@@ -126,7 +126,6 @@ add_custom_command(
 		--exclude Qt/labs/folderlistmodel
 		--exclude QtAudioEngine
 		--exclude QtQml
-		--exclude QtQuick/Controls
 		--exclude QtQuick/Dialogs
 		--exclude QtQuick/Extras
 		--exclude QtQuick/LocalStorage

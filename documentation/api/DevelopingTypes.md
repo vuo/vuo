@@ -115,7 +115,7 @@ Before you can install your port type, you need to use the Vuo Compiler to compi
 
 If you're using the example project for creating a port type, then you can just build the project (Build > Build All).
 
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
+Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
 
 
 ## Packaging a port type
@@ -129,7 +129,7 @@ Otherwise, you need to zip the port type files into a node set, following the in
 
 ## Installing a port type
 
-The final step is to place your node set in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
+The final step is to place your node set in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
 
 If you're using the example project for creating a port type, then when you build the project, the node set is automatically placed in `~/Library/Application Support/Vuo/Modules/`.
 

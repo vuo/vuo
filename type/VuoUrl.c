@@ -521,6 +521,25 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			}
 		}
 
+		if ((flags & VuoUrlNormalize_forLaunching) && strncmp(filePath, "/Applications/", 14) == 0)
+		{
+			// If the app doesn't exist at `/Applications`, check `/System/Applications`.
+			if (access(filePath, 0) != 0)
+			{
+				const char *systemPrefix = "/System";
+				size_t systemPrefixLen = strlen(systemPrefix);
+				size_t filePathLen = strlen(filePath);
+				size_t mallocSize = systemPrefixLen + filePathLen + 1;
+				char *systemPath = (char *)malloc(mallocSize);
+				strlcpy(systemPath, systemPrefix, mallocSize);
+				strlcat(systemPath, filePath, mallocSize);
+				if (access(systemPath, 0) == 0)
+					filePath = systemPath;
+				else
+					free(systemPath);
+			}
+		}
+
 		char *realPath = realpath(filePath, NULL);
 		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
 		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : filePath);
@@ -650,6 +669,69 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			strlcat(absolutePath, "/", mallocSize);
 			strlcat(absolutePath, trimmedUrl, mallocSize);
 		}
+
+		// If we're looking for an app, and it isn't found in the exported app or current working directory,
+		// try the standard applications folders.
+		if ((flags & VuoUrlNormalize_forLaunching) && access(absolutePath, 0) != 0)
+		{
+			// Check `~/Applications`.
+			{
+				char *homeDir = getenv("HOME");
+				const char *applicationsPrefix = "/Applications/";
+				size_t homeDirLen = strlen(homeDir);
+				size_t applicationsPrefixLen = strlen(applicationsPrefix);
+				size_t trimmedUrlLen = strlen(trimmedUrl);
+				size_t mallocSize = homeDirLen + applicationsPrefixLen + trimmedUrlLen + 1;
+				char *path = (char *)malloc(mallocSize);
+				strlcpy(path, homeDir, mallocSize);
+				strlcat(path, applicationsPrefix, mallocSize);
+				strlcat(path, trimmedUrl, mallocSize);
+				if (access(path, 0) == 0)
+				{
+					free(absolutePath);
+					absolutePath = path;
+				}
+				else
+					free(path);
+			}
+
+			// Check `/Applications`.
+			{
+				const char *applicationsPrefix = "/Applications/";
+				size_t applicationsPrefixLen = strlen(applicationsPrefix);
+				size_t trimmedUrlLen = strlen(trimmedUrl);
+				size_t mallocSize = applicationsPrefixLen + trimmedUrlLen + 1;
+				char *path = (char *)malloc(mallocSize);
+				strlcpy(path, applicationsPrefix, mallocSize);
+				strlcat(path, trimmedUrl, mallocSize);
+				if (access(path, 0) == 0)
+				{
+					free(absolutePath);
+					absolutePath = path;
+				}
+				else
+					free(path);
+			}
+
+			// Check `/System/Applications`.
+			{
+				const char *applicationsPrefix = "/System/Applications/";
+				size_t applicationsPrefixLen = strlen(applicationsPrefix);
+				size_t trimmedUrlLen = strlen(trimmedUrl);
+				size_t mallocSize = applicationsPrefixLen + trimmedUrlLen + 1;
+				char *path = (char *)malloc(mallocSize);
+				strlcpy(path, applicationsPrefix, mallocSize);
+				strlcat(path, trimmedUrl, mallocSize);
+				if (access(path, 0) == 0)
+				{
+					free(absolutePath);
+					absolutePath = path;
+				}
+				else
+					free(path);
+			}
+		}
+
 
 		char *realPath = realpath(absolutePath, NULL);
 		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
@@ -844,4 +926,3 @@ VuoUrl VuoUrl_appendFileExtension(const char *filename, struct json_object *vali
 
 	return text;
 }
-

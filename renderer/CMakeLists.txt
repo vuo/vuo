@@ -37,6 +37,7 @@ target_include_directories(VuoRenderer
 		../compiler
 		../library
 		../node/vuo.audio
+		../node/vuo.file
 		../type
 		../type/list
 )
@@ -47,6 +48,7 @@ target_link_libraries(VuoRenderer
 	CONAN_PKG::jsonc
 	CONAN_PKG::libxml2
 	${PROJECT_BINARY_DIR}/library/VuoTextHtml.o
+	${PROJECT_BINARY_DIR}/node/vuo.file/VuoFileType.o
 )
 if (VuoPro)
 	include(pro/pro.cmake)

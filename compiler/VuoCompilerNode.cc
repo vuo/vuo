@@ -10,7 +10,7 @@
 #include <sstream>
 
 #include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerConstantStringCache.hh"
+#include "VuoCompilerConstantsCache.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPort.hh"
@@ -43,7 +43,7 @@ VuoCompilerNode::VuoCompilerNode(VuoNode *baseNode)
 
 	graphvizIdentifier = getGraphvizIdentifierPrefix();
 
-	constantStrings = NULL;
+	constantsCache = NULL;
 	indexInOrderedNodes = ULONG_MAX - 1;
 }
 
@@ -66,9 +66,9 @@ size_t VuoCompilerNode::getIndexInOrderedNodes(void)
 /**
  * Sets the cache used to generate constant string values. This must be called before generating bitcode.
  */
-void VuoCompilerNode::setConstantStringCache(VuoCompilerConstantStringCache *constantStrings)
+void VuoCompilerNode::setConstantsCache(VuoCompilerConstantsCache *constantsCache)
 {
-	this->constantStrings = constantStrings;
+	this->constantsCache = constantsCache;
 
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
 	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
@@ -78,7 +78,7 @@ void VuoCompilerNode::setConstantStringCache(VuoCompilerConstantStringCache *con
 	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
 	{
 		VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
-		port->setConstantStringCache(constantStrings);
+		port->setConstantsCache(constantsCache);
 	}
 }
 
@@ -87,7 +87,7 @@ void VuoCompilerNode::setConstantStringCache(VuoCompilerConstantStringCache *con
  */
 Value * VuoCompilerNode::generateIdentifierValue(Module *module)
 {
-	return constantStrings->get(module, getIdentifier());
+	return constantsCache->get(getIdentifier());
 }
 
 /**
@@ -100,8 +100,8 @@ Value * VuoCompilerNode::generateSubcompositionIdentifierValue(Module *module, B
 {
 	vector<Value *> identifierParts;
 	identifierParts.push_back(compositionIdentifierValue);
-	identifierParts.push_back(constantStrings->get(module, "/" + getIdentifier()));
-	return VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, identifierParts, *constantStrings);
+	identifierParts.push_back(constantsCache->get("/" + getIdentifier()));
+	return VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, identifierParts, constantsCache);
 }
 
 /**
@@ -139,8 +139,8 @@ void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Val
 	{
 		VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
 
-		Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-		Value *portNameValue = constantStrings->get(module, port->getBase()->getClass()->getName());
+		Value *portIdentifierValue = constantsCache->get(port->getIdentifier());
+		Value *portNameValue = constantsCache->get(port->getBase()->getClass()->getName());
 
 		size_t typeIndex;
 		string initialValue;
@@ -159,7 +159,7 @@ void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Val
 			typeIndex = orderedTypes.size();
 		}
 
-		Value *initialValueValue = constantStrings->get(module, initialValue);
+		Value *initialValueValue = constantsCache->get(initialValue);
 
 		VuoCompilerCodeGenUtilities::generateAddPortMetadata(module, block, compositionStateValue, portIdentifierValue,
 															 portNameValue, typeIndex, initialValueValue);

@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Crops and enlarges an area of an image.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="990,975" fillcolor="orange" _width="0.500000" _height="0.500000"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="750,795" _url="\"Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="495,630" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1380,975" _center="\{\"x\":0.5,\"y\":0\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList3 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1596,791" fillcolor="blue"];
+MakeScaledLayer3 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="975,795" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":0\}" _rotation="0.000000" _width="0.80000000000000004" _fixed="\"horizontal\"" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="990,585" _text="\"Hover over the image to see an enlarged area.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.5\}" _rotation="0" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="495,990" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1650,780" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage2 [type="vuo.image.resize" version="1.1.3" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="1185,975" fillcolor="orange" _sizingMode="\"fit\"" _width="640" _height="640"];
+Scale [type="vuo.math.scale.VuoPoint2d" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="750,990" _start="\{\"x\":-0.89999997615814209,\"y\":-0.30000001192092896\}" _end="\{\"x\":-0.10000000149011612,\"y\":0.30000001192092896\}" _scaledStart="\{\"x\":-1,\"y\":-0.75\}" _scaledEnd="\{\"x\":1,\"y\":0.75\}" _limitToRange="false"];
+
+CropImage:croppedImage -> ResizeImage2:image;
+FetchImage:image -> CropImage:image;
+FetchImage:image -> MakeScaledLayer3:image;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> MakeTextLayer:center;
+MakeLayer:layer -> MakeList3:3;
+MakeList3:list -> RenderLayersToWindow:layers;
+MakeScaledLayer3:layer -> MakeList3:2;
+MakeTextLayer:layer -> MakeList3:1;
+ReceiveMouseMoves:movedTo -> Scale:value;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseMoves:window [style=invis];
+ResizeImage2:resizedImage -> MakeLayer:image;
+Scale:scaledValue -> CropImage:center;
+}

@@ -138,15 +138,18 @@
  */
 - (void)drawRect:(NSRect)dirtyRect
 {
-	NSColor *color = [NSColor colorWithCalibratedWhite:1 alpha:(_isDark ? .2 : 1)];
-	[color setFill];
-
+	NSColor *color = [NSColor colorWithCalibratedWhite:0 alpha:(_isDark ? .1 : .06)];
+	[color setStroke];
+	[NSBezierPath setDefaultLineWidth:1];
 	NSRect rect = [self bounds];
-	rect.origin.y += 1;
-	rect.size.width -= 2;
-	rect.size.height -= 1;
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:5.0 yRadius:5.0];
-	[path fill];
+
+	// Draw a line between each icon, with a 2 pixel margin above/below the icon extents.
+	float top = 3;
+	float bottom = NSHeight(rect) - 2;
+	float right = NSWidth(rect);
+	int buttonCount = _isCodeEditor ? 3 : 4;
+	for (int i = 1; i < buttonCount; ++i)
+		[NSBezierPath strokeLineFromPoint:NSMakePoint(round(right * (float)i/buttonCount) - 2.5, top) toPoint:NSMakePoint(round(right * (float)i/buttonCount) - 2.5, bottom)];
 
 	[[self cell] drawInteriorWithFrame:dirtyRect inView:self];
 }
@@ -271,6 +274,8 @@
 	}
 
 	[offImage release];
+
+	[self display];
 }
 
 /**
@@ -286,14 +291,17 @@
  */
 - (void)drawRect:(NSRect)dirtyRect
 {
-	NSColor *color = [NSColor colorWithCalibratedWhite:1 alpha:(_isDark ? .2 : 1)];
-	[color setFill];
+	if (button.state)
+	{
+		NSColor *color = [NSColor colorWithCalibratedWhite:1 alpha:(_isDark ? .2 : 1)];
+		[color setFill];
 
-	NSRect rect = [button frame];
-	rect.origin.y -= 1;
-	rect.size.height -= 1;
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:5.0 yRadius:5.0];
-	[path fill];
+		NSRect rect = [button frame];
+		rect.origin.y -= 1;
+		rect.size.height -= 1;
+		NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:5.0 yRadius:5.0];
+		[path fill];
+	}
 
 	[super drawRect:dirtyRect];
 }
@@ -309,15 +317,18 @@
 @end
 
 /**
- * On macOS 10.13, positions the sheet beneath the toolbar.
- * (On previous versions of macOS, this happened automatically,
- * but have to set titlebarAppearsTransparent on 10.13,
- * which causes sheets to incorrectly appear at the top of the window frame.)
+ * Positions the sheet directly beneath the titlebar/toolbar.
  */
 NSRect windowWillPositionSheetUsingRect(id self, SEL _cmd, NSWindow *window, NSWindow *sheet, NSRect rect)
 {
-	float titleAndToolbarHeight = window.frame.size.height - [window contentRectForFrameRect:window.frame].size.height;
-	rect.origin.y -= titleAndToolbarHeight;
+	rect.origin.y += ((NSApplication *)NSApp).mainMenu.menuBarHeight;
+
+	if (! [NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
+	{
+		float titleAndToolbarHeight = window.frame.size.height - [window contentRectForFrameRect:window.frame].size.height;
+		rect.origin.y -= titleAndToolbarHeight;
+	}
+
 	return rect;
 }
 
@@ -441,11 +452,10 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 	toolBar->attachToWindow(window->windowHandle());
 
 
-	if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion == 13)
-		class_addMethod(nsWindow.delegate.class,
-						@selector(window:willPositionSheet:usingRect:),
-						(IMP)windowWillPositionSheetUsingRect,
-						"{CGRect={CGPoint=dd}{CGSize=dd}}@:@@{CGRect={CGPoint=dd}{CGSize=dd}}");
+	class_addMethod(nsWindow.delegate.class,
+					@selector(window:willPositionSheet:usingRect:),
+					(IMP)windowWillPositionSheetUsingRect,
+					"{CGRect={CGPoint=dd}{CGSize=dd}}@:@@{CGRect={CGPoint=dd}{CGSize=dd}}");
 }
 
 /**
@@ -497,9 +507,7 @@ void VuoEditorWindowToolbar::update(bool eventsShown, bool zoomedToActualSize, b
 	if (toolbarEventsItem)
 	{
 		NSToolbarItem *eventsItem = toolbarEventsItem->nativeToolBarItem();
-		[eventsItem setLabel:(eventsShown
-			? [NSString stringWithUTF8String:VuoEditor::tr("Hide Events").toUtf8().data()]
-			: [NSString stringWithUTF8String:VuoEditor::tr("Show Events").toUtf8().data()])];
+		[eventsItem setLabel:[NSString stringWithUTF8String:VuoEditor::tr("Show Events").toUtf8().data()]];
 		VuoEditorEventsButton *eventsButton = (VuoEditorEventsButton *)[eventsItem view];
 		[eventsButton setState:eventsShown];
 	}
@@ -663,7 +671,7 @@ void VuoEditorWindowToolbar::updateColor(bool isDark)
 		// Enabling Core Animation seems to avoid that Cocoa bug.
 		((NSView *)nsWindow.contentView).wantsLayer = YES;
 
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 12)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,12,0}])
 		{
 			// "A window with titlebarAppearsTransparent is normally opted-out of automatic window tabbing."
 			// - https://developer.apple.com/library/archive/releasenotes/AppKit/RN-AppKit/index.html

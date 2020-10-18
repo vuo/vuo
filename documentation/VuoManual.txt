@@ -465,9 +465,9 @@ The other exception is for nodes whose input ports have thick lines along their 
 
 \vuoImage{0.45}{wallsdoors.pdf}
 
-The composition below, Select Movie (\menu{File > Open Example > Select}), demonstrates one way that event doors can be useful. This composition displays one of two movies at a time, switching between them each time the mouse is pressed. The doors on the \vuoNode{Select Input} node's \vuoPort{False Option} and \vuoPort{True Option} input ports allow the node to let the stream of events and video frames from one movie through while blocking the stream from the other movie.
+The composition below, Select Stripes (\menu{File > Open Example > Select}), demonstrates one way that event doors can be useful. This composition displays one of two animations at a time, switching between them each time the mouse is pressed. The doors on the \vuoNode{Select Input} node's \vuoPort{False Option} and \vuoPort{True Option} input ports allow the node to let the stream of events and images from one animation through while blocking the stream from the other animation.
 
-\vuoCompositionImage{SelectMovie}
+\vuoCompositionImage{SelectStripes}
 
 If you're not sure if a node is letting events through or blocking them, you can enable Show Events or look at Port Popovers to see where events are flowing.
 
@@ -734,7 +734,7 @@ The event would only circle the loop 10 times, so it's not "infinite". Neverthel
 
 In most cases, an event needs to travel through all of the cables leading up to a node before it can reach the node itself. (The one exception is the node that starts and ends a feedback loop, since it has some cables leading into the feedback loop and some coming back around the loop.) A problem can arise if the nodes and cables in a composition are connected in a way that makes it impossible for an event to travel through all the cables leading up to a node before reaching the node itself. This problem is called a \term{deadlocked feedback loop}. If your composition has one, Vuo will tell you so and won't allow your composition to run. 
 
-\vuoScreenshot{deadlockedfeedback}
+\vuoScreenshot{DeadlockedFeedbackLoop}
 
 This composition is an example of a deadlocked feedback loop. Because the top \vuoNode{Hold Value} node could receive an event from the \vuoNode{Fire on Start} node through the cable from the bottom \vuoNode{Hold Value} node, the top \vuoNode{Hold Value} node needs to execute after the bottom one. But because the bottom \vuoNode{Hold Value} node could receive an event from the \vuoNode{Fire on Start} node through the cable from the top \vuoNode{Hold Value} node, the bottom \vuoNode{Hold Value} node needs to execute after the top one. Since each \vuoNode{Hold Value} node needs to execute after the other one, it's impossible for an event to travel through the composition. To fix a deadlocked feedback loop, you need to remove some of the nodes or cables involved. 
 
@@ -1238,11 +1238,11 @@ To turn these nodes and cables into a subcomposition, select them, then right-cl
 
 This extracts the selected part of the composition into a new window, where you're asked to pick a name for the subcomposition.
 
-\vuoScreenshot{MakeHemisphere-title}
+\vuoScreenshot{me.makeHemisphere-title}
 
 Having named the subcomposition, you now have two windows: one with the subcomposition and one with the original composition, in which the selected part has been replaced with a subcomposition node.
 
-\vuoScreenshot{MakeHemisphere}
+\vuoScreenshot{me.makeHemisphere}
 
 \vuoScreenshot{DisplayRotatingHemispheres-oneSubcomp}
 
@@ -1336,7 +1336,7 @@ To illustrate, here's a composition that uses a subcomposition node called \vuoN
 
 \vuoScreenshot{DrawTailBehindMouse-fixedLength}
 
-\vuoScreenshot{ConnectRecentPoints}
+\vuoScreenshot{me.connectRecentPoints}
 
 When an event hits the \vuoPort{Add Point} input port of the \vuoNode{Connect Recent Points} node (in the first composition above), it travels into the subcomposition (second composition above) through the \vuoPort{AddPoint} published input port. The event hits the \vuoNode{Enqueue} node and travels onward through the subcomposition.
 
@@ -1356,7 +1356,7 @@ If an event reaches a published output port of a subcomposition, it travels out 
 
 If an event into a subcomposition node reaches multiple published output ports of the subcomposition, it travels out of all of the corresponding output ports of the subcomposition node simultaneously. For example, in the subcomposition below, even though the \vuoNode{Calculate} nodes can execute concurrently and may not output their values at exactly the same time, the \vuoNode{Convert Cartesian To Polar} subcomposition node always outputs the event from its \vuoPort{R} and \vuoPort{Theta} ports simultaneously.
 
-\vuoScreenshot{ConvertCartesianToPolar}
+\vuoScreenshot{me.convertCartesianToPolar}
 
 If an event that comes in through a subcomposition's published input ports doesn't reach any of the subcomposition's published output ports (because of wall or door ports within the subcomposition), then the event doesn't come of out any of the subcomposition node's output ports. The subcomposition node blocks the event.
 
@@ -1376,7 +1376,7 @@ The subcomposition below *does not* fire events from its published output port. 
 
 \vuoScreenshot{DisplayLogo}
 
-\vuoScreenshot{MakeFancyLogo}
+\vuoScreenshot{me.makeFancyLogo}
 
 ### Constant input port values
 
@@ -1388,19 +1388,19 @@ In the example below, the \vuoNode{Generate Checkerboard Image} subcomposition's
 
 \vuoScreenshot{RenderCheckerboardImage}
 
-\vuoScreenshot{GenerateCheckerboardImage}
+\vuoScreenshot{me.generateCheckerboardImage}
 
 It's important to realize that the data travels only through the cable from the published input port to the next node, no farther. With the below variation on \vuoNode{Generate Checkerboard Image}, the subcomposition no longer outputs an image of size specified by \vuoPort{width} and \vuoPort{height}. Why? Because the constant values 1920 and 1080 only flow as far as the \vuoNode{Multiply} node's input ports. They don't cause the \vuoNode{Multiply} node to execute and pass its data along to the \vuoNode{Make Checkerboard Image} node.
 
-\vuoScreenshot{GenerateCheckerboardImageHalfSize-constantsBlocked}
+\vuoScreenshot{me.generateCheckerboardImageHalfSize-constantsBlocked}
 
 To fix the composition above, you could add an event cable from the \vuoPort{time} published input port to each of the \vuoNode{Multiply} nodes. This would ensure that the \vuoNode{Multiply} nodes provide the halved width and height to \vuoNode{Make Checkerboard Image} whenever \vuoNode{Make Checkerboard Image} needs them, even if \vuoPort{width} and \vuoPort{height} have constant values.
 
-\vuoScreenshot{GenerateCheckerboardImageHalfSize-constantsFlow}
+\vuoScreenshot{me.generateCheckerboardImageHalfSize-constantsFlow}
 
 As long as the published input port connects directly to the node's input port, you can use a constant value to control a node that fires events. In the example below, editing the subcomposition node's \vuoPort{Seconds} input port would affect the firing rate of the \vuoNode{Fire Periodically} node inside of it.
 
-\vuoScreenshot{Tick}
+\vuoScreenshot{me.tick}
 
 
 # Making compositions fit a mold with protocols
@@ -1974,7 +1974,7 @@ The examples below focus on how ISF source code translates to Vuo node character
 
 \begin{lstlisting}[language=C,caption=Input and output ports are added automatically.]
 /*{
-	"LABEL":"Make Red Image"
+   "LABEL":"Make Red Image"
 }*/
 
 void main()
@@ -1988,9 +1988,9 @@ void main()
 
 \begin{lstlisting}[language=C,caption=Input and output ports are specified in the ISF code.]
 /*{
-	"ISFVSN":"2.0",
-	"TYPE":"IMAGE",
-	"LABEL":"Make Opaque Color Image",
+   "ISFVSN":"2.0",
+   "TYPE":"IMAGE",
+   "LABEL":"Make Opaque Color Image",
    "INPUTS":[
       {
          "NAME":"fill",
@@ -2027,7 +2027,7 @@ void main()
 
 \begin{lstlisting}[language=C,caption=An input port with suggested minimum and maximum values.]
 /*{
-	"LABEL":"Replace Red Channel",
+   "LABEL":"Replace Red Channel",
    "INPUTS":[
       {
          "NAME":"inputImage",
@@ -2054,7 +2054,7 @@ void main()
 
 \begin{lstlisting}[language=C,caption=A menu input port.]
 /*{
-	"LABEL":"Blend Image Components",
+   "LABEL":"Blend Image Components",
    "INPUTS":[
       {
          "NAME":"image1",
@@ -2077,7 +2077,8 @@ void main()
 {
    vec4 color1 = IMG_THIS_NORM_PIXEL(image1);
    vec4 color2 = IMG_THIS_NORM_PIXEL(image2);
-   gl_FragColor = (1-blendType) * min(color1, color2) + blendType * max(color1, color2);
+   gl_FragColor = (1 - blendType) * min(color1, color2)
+                  + blendType * max(color1, color2);
 }
 \end{lstlisting}
 
@@ -2578,17 +2579,16 @@ A Vuo composition (.vuo file) is actually a text file based on the [Graphviz DOT
 
 ## Installing the Vuo SDK
 
-   - Go to [https://vuo.org/user](https://vuo.org/user) and log in to your account
-   - Click the \menu{Download} tab
-   - Under the \menu{Vuo SDK} section, download the Vuo SDK
+   - On vuo.org, select [Get Vuo > Additional downloads](https://vuo.org/releases)
+   - Under the section for the most recent version, download the SDK package (`vuo-VUO_VERSION-sdk.pkg`)
    - Install the package file (double-click on it in Finder)
    - Open the `/Library/Developer/Vuo` folder
+      - You can move the `/Library/Developer/Vuo` folder, but in order for the command-line binaries (`vuo-compile`, `vuo-debug`, `vuo-export`, `vuo-link`) to work, they must be in the same folder as the Framework (`Vuo.framework`) and `resources` folder.
+   - Next, add the command-line binaries to your `PATH` so you can easily run them from any folder.  In Terminal, run this command if you're using the ZSH shell (default in macOS 10.15 and later):
 
-Do not separate the command-line binaries (`vuo-compile`, `vuo-debug`, `vuo-link`) from the Framework (`Vuo.framework`) — in order for the command-line binaries to work, they must be in the same folder as the Framework.
+\code{echo \doublequote{}export PATH=\textbackslash\$PATH:/Library/Developer/Vuo/framework\doublequote\ \textgreater\textgreater\ \textasciitilde/.zprofile}
 
-Next, add the command-line binaries to your `PATH` so you can easily run them from any folder.
-
-   - In Terminal, run this command:
+   - or if you're using the BASH shell (default in macOS 10.14 and earlier):
 
 \code{echo \doublequote{}export PATH=\textbackslash\$PATH:/Library/Developer/Vuo/framework\doublequote\ \textgreater\textgreater\ \textasciitilde/.bash\textunderscore{}profile}
 

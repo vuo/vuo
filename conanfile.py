@@ -28,7 +28,7 @@ class VuoConan(ConanFile):
         self.requires('oai/3.2-3@vuo/stable')
         self.requires('openssl/1.1.1c-0@vuo/stable')
         self.requires('oscpack/0-3@vuo/stable')
-        self.requires('qt/5.6.3-13@vuo/stable')
+        self.requires('qt/5.11.3-1@vuo/stable')
         self.requires('rtaudio/4.1.2-3@vuo/stable')
         self.requires('rtmidi/2.0.1-3@vuo/stable')
         self.requires('wjelement/1.3-1@vuo/stable')
@@ -37,9 +37,10 @@ class VuoConan(ConanFile):
         self.requires('zxing/0-3@vuo/stable')
 
         if platform.system() == 'Darwin':
-            self.requires('ld64/242-3@vuo/stable')
+            self.requires('ld64/253.3-0@vuo/stable')
             self.requires('cctools/921-1@vuo/stable')
-            self.requires('csu/79-1@vuo/stable')
+            self.requires('csu/85-1@vuo/stable')
+            self.requires('macos-sdk/10.11-0@vuo/stable')
 
         elif platform.system() == 'Linux':
             # These are system libraries on macOS, but they aren't provided by the system on Linux.
@@ -82,13 +83,16 @@ class VuoConan(ConanFile):
             'Linguist.app/Contents/MacOS/Linguist',
             'lrelease',
             'lupdate',
+            'qmlcachegen',
             'qmleasing',
             'qmlimportscanner',
             'qmllint',
+            'qmlmin',
             'qmlplugindump',
-            'qmlprofiler',
             'qmlscene',
             'qmltestrunner',
+            'qtattributionsscanner',
+            'qvkgen',
             'uic',
         ]:
             for l in [

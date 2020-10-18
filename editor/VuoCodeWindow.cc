@@ -120,6 +120,7 @@ VuoCodeWindow::VuoCodeWindow(const string &sourcePath)
 
 	inputEditorManager = new VuoInputEditorManager();
 	wrapperComposition->setInputEditorManager(inputEditorManager);
+	inputEditorSession = nullptr;
 	connect(inputPortSidebar, &VuoPublishedPortSidebar::visibilityChanged, this, &VuoCodeWindow::updateInputPortSidebarMenuItem);
 	connect(inputPortSidebar, &VuoPublishedPortSidebar::inputEditorRequested, this, &VuoCodeWindow::showPublishedInputEditor);
 	connect(inputPortSidebar, SIGNAL(publishedPortDetailsChangeRequested(VuoRendererPublishedPort *, json_object *)), this, SLOT(changePublishedPortDetails(VuoRendererPublishedPort *, json_object *)));
@@ -490,6 +491,16 @@ void VuoCodeWindow::closeEvent(QCloseEvent *event)
 	if (closing)
 	{
 		event->accept();
+		return;
+	}
+
+	// If an input editor or popup menu is open, ignore the user's click on the shader window's red X, since it leads to a crash.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/17844
+	if (inputEditorSession
+	 || wrapperComposition->getMenuSelectionInProgress()
+	 || inputPortSidebar->getMenuSelectionInProgress())
+	{
+		event->ignore();
 		return;
 	}
 
@@ -1133,7 +1144,7 @@ void VuoCodeWindow::updateDocumentationSidebarMenuItem()
  */
 void VuoCodeWindow::showPublishedInputEditor(VuoRendererPort *port)
 {
-	VuoInputEditorSession *inputEditorSession = new VuoInputEditorSession(inputEditorManager, wrapperComposition, inputPortSidebar, this);
+	inputEditorSession = new VuoInputEditorSession(inputEditorManager, wrapperComposition, inputPortSidebar, this);
 	map<VuoRendererPort *, pair<string, string> > originalAndFinalValueForPort = inputEditorSession->execute(port, true);
 
 	delete inputEditorSession;

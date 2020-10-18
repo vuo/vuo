@@ -52,6 +52,7 @@ enum VuoUrlNormalizeFlags {
 	VuoUrlNormalize_default           = 0x0, ///< Standard normalization (none of the below flags set).
 	VuoUrlNormalize_forSaving         = 0x1, ///< For exported apps: if set, relative file paths will be resolved to Desktop instead of the app resources folder.
 	VuoUrlNormalize_assumeHttp        = 0x2, ///< If the URL doesn't have an explicit scheme: if unset, the `file` scheme is added.  If set, the `http` scheme is added.
+	VuoUrlNormalize_forLaunching      = 0x4, ///< If the URL is absolute and begins with `/Applications`, searches that path first, then searches `/System/Applications` (for macOS 10.15+).  If the URL is relative, searches `~/Applications` followed by the aforementioned 2 folders.
 };
 VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags);
 

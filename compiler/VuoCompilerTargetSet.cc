@@ -21,7 +21,7 @@ VuoCompilerTargetSet::VuoCompilerTargetSet(void)
 }
 
 /**
- * Restricts the target set to Mac OS versions of @a min or above.
+ * Restricts the target set to macOS versions of @a min or above.
  */
 void VuoCompilerTargetSet::setMinMacVersion(enum MacVersion min)
 {
@@ -38,20 +38,17 @@ string VuoCompilerTargetSet::getMinMacVersionString()
 	switch (macVersionRange.first)
 	{
 		case MacVersion_Any:   return "";
-		case MacVersion_10_7:  return "10.7";
-		case MacVersion_10_8:  return "10.8";
-		case MacVersion_10_9:  return "10.9";
-		case MacVersion_10_10: return "10.10";
 		case MacVersion_10_11: return "10.11";
 		case MacVersion_10_12: return "10.12";
 		case MacVersion_10_13: return "10.13";
 		case MacVersion_10_14: return "10.14";
 		case MacVersion_10_15: return "10.15";
+		case MacVersion_11_0:  return "11.0";
 	}
 }
 
 /**
- * Restricts the target set to Mac OS versions of @a max or below.
+ * Restricts the target set to macOS versions of @a max or below.
  */
 void VuoCompilerTargetSet::setMaxMacVersion(enum MacVersion max)
 {
@@ -59,13 +56,24 @@ void VuoCompilerTargetSet::setMaxMacVersion(enum MacVersion max)
 }
 
 /**
- * Restricts the target set to the current (runtime) Mac OS version.
+ * Restricts the target set to the current (runtime) macOS version.
  */
 void VuoCompilerTargetSet::restrictToCurrentOperatingSystemVersion(void)
 {
-	MacVersion macVersion = (MacVersion)(MacVersion_10_7 + (VuoFileUtilitiesCocoa_getOSVersionMinor() - 7));
-	macVersionRange.first = macVersion;
-	macVersionRange.second = macVersion;
+	int major = VuoFileUtilitiesCocoa_getOSVersionMajor();
+	int minor = VuoFileUtilitiesCocoa_getOSVersionMinor();
+	if (major == 10 && minor == 11)
+		macVersionRange.first = macVersionRange.second = MacVersion_10_11;
+	else if (major == 10 && minor == 12)
+		macVersionRange.first = macVersionRange.second = MacVersion_10_12;
+	else if (major == 10 && minor == 13)
+		macVersionRange.first = macVersionRange.second = MacVersion_10_13;
+	else if (major == 10 && minor == 14)
+		macVersionRange.first = macVersionRange.second = MacVersion_10_14;
+	else if (major == 10 && minor == 15)
+		macVersionRange.first = macVersionRange.second = MacVersion_10_15;
+	else if ((major == 10 && minor == 16) || (major == 11 && minor == 0))
+		macVersionRange.first = macVersionRange.second = MacVersion_11_0;
 }
 
 /**
@@ -117,14 +125,6 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 	{
 		case MacVersion_Any:
 			return "macOS (all versions)";
-		case MacVersion_10_7:
-			return "OS X 10.7";
-		case MacVersion_10_8:
-			return "OS X 10.8";
-		case MacVersion_10_9:
-			return "OS X 10.9";
-		case MacVersion_10_10:
-			return "OS X 10.10";
 		case MacVersion_10_11:
 			return "OS X 10.11";
 		case MacVersion_10_12:
@@ -135,5 +135,7 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 			return "macOS 10.14";
 		case MacVersion_10_15:
 			return "macOS 10.15";
+		case MacVersion_11_0:
+			return "macOS 11.0";
 	}
 }

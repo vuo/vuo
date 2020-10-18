@@ -22,7 +22,7 @@ VuoModuleMetadata({
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
-						  "exampleCompositions" : [ "UnscrambleImage.vuo" ]
+						  "exampleCompositions": [ "UnscrambleImage.vuo", "CrossfadeWithMovingTiles.vuo" ],
 					 }
 				 });
 

@@ -25,8 +25,8 @@ private:
 	static VuoModuleCompiler *newModuleCompiler(const string &moduleKey, VuoFileUtilities::File *sourceFile);
 	VuoIsfModuleCompiler(const string &moduleKey, VuoFileUtilities::File *sourceFile);
 	void generateMetadata(Module *module);
-	void generateNodeInstanceInitFunction(Module *module, VuoCompilerConstantStringCache &constantStrings, map<string, VuoCompilerType *> vuoTypes);
-	void generateNodeInstanceEventFunction(Module *module, VuoCompilerConstantStringCache &constantStrings, map<string, VuoCompilerType *> vuoTypes);
+	void generateNodeInstanceInitFunction(Module *module, VuoCompilerConstantsCache *constantsCache, map<string, VuoCompilerType *> vuoTypes);
+	void generateNodeInstanceEventFunction(Module *module, VuoCompilerConstantsCache *constantsCache, map<string, VuoCompilerType *> vuoTypes);
 
 	string moduleKey;
 	VuoShaderFile *shaderFile;

@@ -32,7 +32,7 @@ typedef struct _VuoImageTextData
 	VuoRectangle transformedBounds;   ///< The axis-aligned bounding box of all text, after applying `verticalScale` and `rotation`.
 	VuoPoint2d transformedCorners[4]; ///< The text's 4 transformed rectangular corners, in pixels.
 	unsigned int lineCount;           ///< The number of lines text was split into for rendering.
-	unsigned int* lineCounts;         ///< The number of characters for each line.
+	unsigned int* lineCounts;         ///< The number of characters (codepoints, not bytes) for each line.  Includes (if present in source text) trailing whitespace (regardless of the `includeTrailingWhiteSpace` argument to some functions below) and trailing newline.
 	VuoRectangle* lineBounds;         ///< Bounding rect of each line of text.
 	VuoReal *lineWidthsExcludingTrailingWhitespace; ///< Same as lineBounds.size.x, but without trailing whitespace or transformation.
 	VuoReal *lineXOrigins;                          ///< Same as lineBounds.origin.x, but without the transformation.

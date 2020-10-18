@@ -11,6 +11,7 @@
 
 class VuoCompositionDiff;
 class VuoNodeRegistry;
+class VuoNodeSynchronization;
 class VuoThreadManager;
 class VuoRuntimeCommunicator;
 class VuoRuntimeState;
@@ -48,6 +49,7 @@ public:
 	VuoNodeRegistry *nodeRegistry;
 	VuoRuntimeCommunicator *communicator;
 	VuoThreadManager *threadManager;
+	VuoNodeSynchronization *nodeSynchronization;
 	/// @}
 
 	VuoRuntimeState *runtimeState;  ///< Reference to the parent VuoRuntimeState.

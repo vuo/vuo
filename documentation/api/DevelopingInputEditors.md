@@ -46,7 +46,7 @@ Typically, you'll want to do this by building the input editor with a CMake proj
 
 ## Installing an input editor
 
-Since the Vuo editor looks for input editor plugins in `~/Library/Application Support/Vuo/Modules/` and `/Library/Application Support/Vuo/Modules/`, you need to place your built input editor in one of these folders. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
+Since the Vuo editor looks for input editor plugins in `~/Library/Application Support/Vuo/Modules/` and `/Library/Application Support/Vuo/Modules/`, you need to place your built input editor in one of these folders. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
 
 If you're using the example project, then when you build the project, the compiled port type is automatically placed in `~/Library/Application Support/Vuo/Modules/`.
 

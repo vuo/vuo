@@ -11,16 +11,18 @@
 #include "VuoHid.h"
 
 VuoModuleMetadata({
-					  "title" : "List HIDs",
-					  "keywords" : [ "USB" ],
-					  "version" : "1.0.0",
-					  "dependencies" : [
-						  "VuoHidDevices"
-					  ],
-					  "node" : {
-						  "exampleCompositions" : [ "MoveDotsWithTwoMice.vuo" ]
-					  }
-				  });
+	"title": "List HIDs",
+	"keywords": [
+		"USB", "Bluetooth",
+	],
+	"version": "1.0.0",
+	"dependencies": [
+		"VuoHidDevices"
+	],
+	"node": {
+		"exampleCompositions": [ "MoveDotsWithTwoMice.vuo" ],
+	}
+});
 
 void *nodeInstanceInit()
 {

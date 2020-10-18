@@ -496,47 +496,33 @@ static void stb_textedit_move_to_last(STB_TEXTEDIT_STRING *str, STB_TexteditStat
 
 #ifdef STB_TEXTEDIT_IS_SEPARATOR
 
-// Is the character at this index white space
-static int is_white_space(STB_TEXTEDIT_STRING *_str, int _idx)
+static int is_word_boundary( STB_TEXTEDIT_STRING *str, int idx )
 {
-	if(_idx < 0 || _idx > STB_TEXTEDIT_STRINGLEN(_str))
-		return 1;
-	return VuoTextEdit_isWhiteSpace(STB_TEXTEDIT_GETCHAR(_str, _idx));
-}
-
-// Is the character at this index a separator or white space
-static int is_separator(STB_TEXTEDIT_STRING *_str, int _idx)
-{
-	if(_idx < 0 || _idx > STB_TEXTEDIT_STRINGLEN(_str))
-		return 1;
-	return VuoTextEdit_isSeparator(STB_TEXTEDIT_GETCHAR(_str, _idx));
+	return idx > 0 ? (STB_TEXTEDIT_IS_SPACE( STB_TEXTEDIT_GETCHAR(str,idx-1) ) && !STB_TEXTEDIT_IS_SPACE( STB_TEXTEDIT_GETCHAR(str, idx) ) ) : 1;
 }
 
 static int stb_textedit_move_to_word_previous( STB_TEXTEDIT_STRING *_str, STB_TexteditState *_state )
 {
 	int c = _state->cursor - 1;
 
-	if( is_white_space(_str, c) )
-		while(c >= 0 && is_white_space(_str, c - 1)) { --c; }
-	else if( is_separator(_str, c) )
-		while(c >= 0 && !is_white_space(_str, c -1) && is_separator(_str, c - 1)) { --c; }
-	else
-		while ( c >= 0 && !is_separator( _str, c - 1) ) { --c; }
+	while( c >= 0 && !is_word_boundary( _str, c ) )
+		--c;
 
 	return MAX(0, c);
+}
+
+static int is_word_boundary_right( STB_TEXTEDIT_STRING *str, int idx )
+{
+	const int len = STB_TEXTEDIT_STRINGLEN(str);
+	return idx < len ? (STB_TEXTEDIT_IS_SPACE( STB_TEXTEDIT_GETCHAR(str,idx) ) && !STB_TEXTEDIT_IS_SPACE( STB_TEXTEDIT_GETCHAR(str, idx-1) ) ) : 1;
 }
 
 static int stb_textedit_move_to_word_next( STB_TEXTEDIT_STRING *_str, STB_TexteditState *_state )
 {
 	const int len = STB_TEXTEDIT_STRINGLEN(_str);
-	int c = _state->cursor;
-
-	if(is_white_space(_str, c))
-		do { ++c; } while(c <= len && is_white_space(_str, c));
-	else if(is_separator(_str, c))
-		do { ++c; } while(c <= len && !is_white_space(_str, c) && is_separator(_str, c));
-	else
-		do { ++c; } while(c <= len && !is_separator(_str, c));
+	int c = _state->cursor + 1;
+	while ( c < len && !is_word_boundary_right( _str, c ) )
+		++c;
 
 	return c;
 }
@@ -812,8 +798,13 @@ retry:
 		int i, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
 
 		if (state->line_count < 2) {
+#ifdef __APPLE__
+			// on macOS, up&down in single-line behave like home&end
+			key = STB_TEXTEDIT_K_TEXTEND | (key & STB_TEXTEDIT_K_SHIFT);
+#else
 			// on windows, up&down in single-line behave like left&right
 			key = STB_TEXTEDIT_K_RIGHT | (key & STB_TEXTEDIT_K_SHIFT);
+#endif
 			goto retry;
 		}
 
@@ -865,8 +856,13 @@ retry:
 		int i, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
 
 		if (state->line_count < 2) {
+#ifdef __APPLE__
+			// on macOS, up&down in single-line behave like home&end
+			key = STB_TEXTEDIT_K_TEXTSTART | (key & STB_TEXTEDIT_K_SHIFT);
+#else
 			// on windows, up&down become left&right
 			key = STB_TEXTEDIT_K_LEFT | (key & STB_TEXTEDIT_K_SHIFT);
+#endif
 			goto retry;
 		}
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.17 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.1.2 LANGUAGES NONE)
+project(Vuo VERSION 2.2.0 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -107,7 +107,7 @@ list(REMOVE_ITEM CONAN_LIBS_LLVM
 enable_testing()
 
 set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
 if (NOT EXISTS ${CMAKE_OSX_SYSROOT})
 	message(FATAL_ERROR "\nPlease install ${CMAKE_OSX_SYSROOT}")
 endif()

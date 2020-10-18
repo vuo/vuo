@@ -63,6 +63,7 @@ static void VuoVideoCapture_enableTethering()
 			if (hasProperty)
 			{
 				UInt32 yes = 1;
+				// This call sometimes blocks the main thread for about 5 seconds (!).
 				OSStatus ret = CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &property, 0, NULL, sizeof(yes), &yes);
 				if (ret != kCMIOHardwareNoError)
 				{

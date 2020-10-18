@@ -53,71 +53,92 @@ VuoModuleMetadata({
 class VuoUiThemeTextFieldRounded : public VuoUiThemeTextField
 {
 private:
-	VuoFont labelFont;
-	VuoFont placeholderFont;
-	VuoAnchor labelPosition;
-	VuoPoint2d labelPadding;
-	VuoColor color;
-	VuoColor hoveredColor;
-	VuoColor pressedColor;
+	VuoFont font;
+	VuoAnchor textAnchor;
+	VuoPoint2d textPadding;
+	VuoColor textColor;
+	VuoColor textColorHovered;
+	VuoColor textColorActive;
+	VuoColor backgroundColor;
+	VuoColor backgroundColorHovered;
+	VuoColor backgroundColorActive;
 	VuoColor borderColor;
+	VuoColor borderColorHovered;
+	VuoColor borderColorActive;
 	VuoReal borderThickness;
+	VuoColor cursorColor;
+	VuoColor selectionColor;
 	VuoReal cornerRoundness;
 
 public:
 	static std::string type; ///< The subtype's class name.
 
 	/**
-	 * Creates a rounded button theme from JSON.
+	 * Creates a rounded text field theme from JSON.
 	 */
 	static VuoSerializable *makeFromJson(json_object *js)
 	{
 		return new VuoUiThemeTextFieldRounded(
-			VuoJson_getObjectValue(VuoFont,    js, "labelFont",       (VuoFont){NULL, 18, false, VuoColor_makeWithRGBA(0,0,0,1), VuoHorizontalAlignment_Left, 1, 1}),
-			VuoJson_getObjectValue(VuoFont,    js, "placeholderFont", (VuoFont){NULL, 18, false, VuoColor_makeWithRGBA(0, 0, 0, 0.25), VuoHorizontalAlignment_Left, 1, 1}),
-			VuoJson_getObjectValue(VuoAnchor,  js, "labelPosition",   VuoAnchor_make(VuoHorizontalAlignment_Left, VuoVerticalAlignment_Center)),
-			VuoJson_getObjectValue(VuoPoint2d, js, "labelPadding",    (VuoPoint2d){0.05, 0.05}),
-			VuoJson_getObjectValue(VuoColor,   js, "color",           (VuoColor){.95, .95, .95, 1}),
-			VuoJson_getObjectValue(VuoColor,   js, "hoveredColor",    (VuoColor){.41,.51,.61,1}),
-			VuoJson_getObjectValue(VuoColor,   js, "pressedColor",    (VuoColor){.35,.45,.55,1}),
-			VuoJson_getObjectValue(VuoColor,   js, "borderColor",     (VuoColor){.3,.4,.5,1}),
-			VuoJson_getObjectValue(VuoReal,    js, "borderThickness", .2),
-			VuoJson_getObjectValue(VuoReal,    js, "cornerRoundness", .2));
+			VuoJson_getObjectValue(VuoFont,    js, "font",                   (VuoFont){VuoText_make("Avenir-Medium"), 24, false, (VuoColor){1,1,1,1}, VuoHorizontalAlignment_Left, 1, 1}),
+			VuoJson_getObjectValue(VuoAnchor,  js, "textAnchor",             VuoAnchor_make(VuoHorizontalAlignment_Left, VuoVerticalAlignment_Top)),
+			VuoJson_getObjectValue(VuoPoint2d, js, "textPadding",            (VuoPoint2d){0.02, 0.01}),
+			VuoJson_getObjectValue(VuoColor,   js, "textColor",              (VuoColor){0, 0, 0, 0.7}),
+			VuoJson_getObjectValue(VuoColor,   js, "textColorHovered",       (VuoColor){0, 0, 0, 0.8}),
+			VuoJson_getObjectValue(VuoColor,   js, "textColorActive",        (VuoColor){0, 0, 0, 1}),
+			VuoJson_getObjectValue(VuoColor,   js, "backgroundColor",        (VuoColor){1, 1, 1, 0.5}),
+			VuoJson_getObjectValue(VuoColor,   js, "backgroundColorHovered", (VuoColor){1, 1, 1, 0.6}),
+			VuoJson_getObjectValue(VuoColor,   js, "backgroundColorActive",  (VuoColor){1, 1, 1, 1}),
+			VuoJson_getObjectValue(VuoColor,   js, "borderColor",            (VuoColor){.46, .46, .46, 1}),
+			VuoJson_getObjectValue(VuoColor,   js, "borderColorHovered",     (VuoColor){.46, .48, .49, 1}),
+			VuoJson_getObjectValue(VuoColor,   js, "borderColorActive",      (VuoColor){.46, .48, 1,   1}),
+			VuoJson_getObjectValue(VuoReal,    js, "borderThickness",        .005),
+			VuoJson_getObjectValue(VuoColor,   js, "cursorColor",            (VuoColor){0, 0, 0, 1}),
+			VuoJson_getObjectValue(VuoColor,   js, "selectionColor",         (VuoColor){.7,  .84, 1,   1}),
+			VuoJson_getObjectValue(VuoReal,    js, "cornerRoundness",        .5));
 	}
 
 	/**
-	 * Creates a theme for button widgets, with the rounded style.
+	 * Creates a theme for text field widgets, with the rounded style.
 	 */
-	VuoUiThemeTextFieldRounded(
-		VuoFont _labelFont,
-		VuoFont _placeholderFont,
-		VuoAnchor _labelPosition,
-		VuoPoint2d _labelPadding,
-		VuoColor _color,
-		VuoColor _hoveredColor,
-		VuoColor _pressedColor,
-		VuoColor _borderColor,
-		VuoReal _borderThickness,
-		VuoReal _cornerRoundness)
+	VuoUiThemeTextFieldRounded(VuoFont _font,
+							   VuoAnchor _textAnchor,
+							   VuoPoint2d _textPadding,
+							   VuoColor _textColor,
+							   VuoColor _textColorHovered,
+							   VuoColor _textColorActive,
+							   VuoColor _backgroundColor,
+							   VuoColor _backgroundColorHovered,
+							   VuoColor _backgroundColorActive,
+							   VuoColor _borderColor,
+							   VuoColor _borderColorHovered,
+							   VuoColor _borderColorActive,
+							   VuoReal _borderThickness,
+							   VuoColor _cursorColor,
+							   VuoColor _selectionColor,
+							   VuoReal _cornerRoundness)
 	{
-		labelFont = _labelFont;
-		VuoFont_retain(labelFont);
-		placeholderFont = _placeholderFont;
-		VuoFont_retain(placeholderFont);
-		labelPosition = _labelPosition;
-		labelPadding = _labelPadding;
-		color = _color;
-		hoveredColor = _hoveredColor;
-		pressedColor = _pressedColor;
+		font = _font;
+		VuoFont_retain(font);
+		textAnchor = _textAnchor;
+		textPadding = _textPadding;
+		textColor = _textColor;
+		textColorHovered = _textColorHovered;
+		textColorActive = _textColorActive;
+		backgroundColor = _backgroundColor;
+		backgroundColorHovered = _backgroundColorHovered;
+		backgroundColorActive = _backgroundColorActive;
 		borderColor = _borderColor;
+		borderColorHovered = _borderColorHovered;
+		borderColorActive = _borderColorActive;
 		borderThickness = _borderThickness;
+		cursorColor = _cursorColor;
+		selectionColor = _selectionColor;
 		cornerRoundness = _cornerRoundness;
 	}
 
 	~VuoUiThemeTextFieldRounded()
 	{
-		VuoFont_release(labelFont);
-		VuoFont_release(placeholderFont);
+		VuoFont_release(font);
 	}
 
 	/**
@@ -126,15 +147,21 @@ public:
 	json_object *getJson()
 	{
 		json_object *json = VuoSerializable::getJson();
-		json_object_object_add(json, "labelFont", VuoFont_getJson(labelFont));
-		json_object_object_add(json, "placeholderFont", VuoFont_getJson(placeholderFont));
-		json_object_object_add(json, "labelPosition", VuoAnchor_getJson(labelPosition));
-		json_object_object_add(json, "labelPadding", VuoPoint2d_getJson(labelPadding));
-		json_object_object_add(json, "color", VuoColor_getJson(color));
-		json_object_object_add(json, "hoveredColor", VuoColor_getJson(hoveredColor));
-		json_object_object_add(json, "pressedColor", VuoColor_getJson(pressedColor));
+		json_object_object_add(json, "font", VuoFont_getJson(font));
+		json_object_object_add(json, "textAnchor", VuoAnchor_getJson(textAnchor));
+		json_object_object_add(json, "textPadding", VuoPoint2d_getJson(textPadding));
+		json_object_object_add(json, "textColor", VuoColor_getJson(textColor));
+		json_object_object_add(json, "textColorHovered", VuoColor_getJson(textColorHovered));
+		json_object_object_add(json, "textColorActive", VuoColor_getJson(textColorActive));
+		json_object_object_add(json, "backgroundColor", VuoColor_getJson(backgroundColor));
+		json_object_object_add(json, "backgroundColorHovered", VuoColor_getJson(backgroundColorHovered));
+		json_object_object_add(json, "backgroundColorActive", VuoColor_getJson(backgroundColorActive));
 		json_object_object_add(json, "borderColor", VuoColor_getJson(borderColor));
+		json_object_object_add(json, "borderColorHovered", VuoColor_getJson(borderColorHovered));
+		json_object_object_add(json, "borderColorActive", VuoColor_getJson(borderColorActive));
 		json_object_object_add(json, "borderThickness", VuoReal_getJson(borderThickness));
+		json_object_object_add(json, "cursorColor", VuoColor_getJson(cursorColor));
+		json_object_object_add(json, "selectionColor", VuoColor_getJson(selectionColor));
 		json_object_object_add(json, "cornerRoundness", VuoReal_getJson(cornerRoundness));
 		return json;
 	}
@@ -153,15 +180,21 @@ public:
 	bool operator==(const VuoSerializable &that)
 	{
 		VuoSerializableEquals(VuoUiThemeTextFieldRounded);
-		return VuoFont_areEqual(labelFont, thatSpecialized->labelFont)
-			&& VuoFont_areEqual(placeholderFont, thatSpecialized->placeholderFont)
-			&& VuoAnchor_areEqual(labelPosition, thatSpecialized->labelPosition)
-			&& VuoPoint2d_areEqual(labelPadding, thatSpecialized->labelPadding)
-			&& VuoColor_areEqual(color, thatSpecialized->color)
-			&& VuoColor_areEqual(hoveredColor, thatSpecialized->hoveredColor)
-			&& VuoColor_areEqual(pressedColor, thatSpecialized->pressedColor)
+		return VuoFont_areEqual(font, thatSpecialized->font)
+			&& VuoAnchor_areEqual(textAnchor, thatSpecialized->textAnchor)
+			&& VuoPoint2d_areEqual(textPadding, thatSpecialized->textPadding)
+			&& VuoColor_areEqual(textColor, thatSpecialized->textColor)
+			&& VuoColor_areEqual(textColorHovered, thatSpecialized->textColorHovered)
+			&& VuoColor_areEqual(textColorActive, thatSpecialized->textColorActive)
+			&& VuoColor_areEqual(backgroundColor, thatSpecialized->backgroundColor)
+			&& VuoColor_areEqual(backgroundColorHovered, thatSpecialized->backgroundColorHovered)
+			&& VuoColor_areEqual(backgroundColorActive, thatSpecialized->backgroundColorActive)
 			&& VuoColor_areEqual(borderColor, thatSpecialized->borderColor)
+			&& VuoColor_areEqual(borderColorHovered, thatSpecialized->borderColorHovered)
+			&& VuoColor_areEqual(borderColorActive, thatSpecialized->borderColorActive)
 			&& VuoReal_areEqual(borderThickness, thatSpecialized->borderThickness)
+			&& VuoColor_areEqual(cursorColor, thatSpecialized->cursorColor)
+			&& VuoColor_areEqual(selectionColor, thatSpecialized->selectionColor)
 			&& VuoReal_areEqual(cornerRoundness, thatSpecialized->cornerRoundness);
 	}
 
@@ -171,27 +204,32 @@ public:
 	bool operator<(const VuoSerializable &that)
 	{
 		VuoSerializableLessThan(VuoUiThemeTextFieldRounded);
-		VuoType_returnInequality(VuoFont,    labelFont,       thatSpecialized->labelFont);
-		VuoType_returnInequality(VuoFont,    placeholderFont, thatSpecialized->placeholderFont);
-		VuoType_returnInequality(VuoAnchor,  labelPosition,   thatSpecialized->labelPosition);
-		VuoType_returnInequality(VuoPoint2d, labelPadding,    thatSpecialized->labelPadding);
-		VuoType_returnInequality(VuoColor,   color,           thatSpecialized->color);
-		VuoType_returnInequality(VuoColor,   hoveredColor,    thatSpecialized->hoveredColor);
-		VuoType_returnInequality(VuoColor,   pressedColor,    thatSpecialized->pressedColor);
-		VuoType_returnInequality(VuoColor,   borderColor,     thatSpecialized->borderColor);
-		VuoType_returnInequality(VuoReal,    borderThickness, thatSpecialized->borderThickness);
-		VuoType_returnInequality(VuoReal,    cornerRoundness, thatSpecialized->cornerRoundness);
+		VuoType_returnInequality(VuoFont,    font,                   thatSpecialized->font);
+		VuoType_returnInequality(VuoAnchor,  textAnchor,             thatSpecialized->textAnchor);
+		VuoType_returnInequality(VuoPoint2d, textPadding,            thatSpecialized->textPadding);
+		VuoType_returnInequality(VuoColor,   textColor,              thatSpecialized->textColor);
+		VuoType_returnInequality(VuoColor,   textColorHovered,       thatSpecialized->textColorHovered);
+		VuoType_returnInequality(VuoColor,   textColorActive,        thatSpecialized->textColorActive);
+		VuoType_returnInequality(VuoColor,   backgroundColor,        thatSpecialized->backgroundColor);
+		VuoType_returnInequality(VuoColor,   backgroundColorHovered, thatSpecialized->backgroundColorHovered);
+		VuoType_returnInequality(VuoColor,   backgroundColorActive,  thatSpecialized->backgroundColorActive);
+		VuoType_returnInequality(VuoColor,   borderColor,            thatSpecialized->borderColor);
+		VuoType_returnInequality(VuoColor,   borderColorHovered,     thatSpecialized->borderColorHovered);
+		VuoType_returnInequality(VuoColor,   borderColorActive,      thatSpecialized->borderColorActive);
+		VuoType_returnInequality(VuoReal,    borderThickness,        thatSpecialized->borderThickness);
+		VuoType_returnInequality(VuoColor,   cursorColor,            thatSpecialized->cursorColor);
+		VuoType_returnInequality(VuoColor,   selectionColor,         thatSpecialized->selectionColor);
+		VuoType_returnInequality(VuoReal,    cornerRoundness,        thatSpecialized->cornerRoundness);
 		return false;
 	}
 
 	/**
-	 * Creates a layer tree representing a button with the specified theme and parameters.
+	 * Creates a layer tree representing a text field with the specified theme and parameters.
 	 *	@c cursorIndex, @c selectionStart, and @c selectionEnd are all 0 indexed.
 	 */
 	VuoLayer render(VuoPoint2d screenSize,
 					VuoReal screenBackingScaleFactor,
-					VuoColor cursorColor,
-					VuoText label,
+					VuoText text,
 					VuoText placeholderText,
 					int numLines,
 					int cursorIndex,
@@ -212,11 +250,11 @@ public:
 		VuoRetain(highlights);
 		VuoLayer textCursor = nullptr;
 
-		bool hasLabel = VuoText_length(label) > 0;
+		bool hasText = VuoText_length(text) > 0;
 		bool hasPlaceholder = VuoText_length(placeholderText) > 0;
 		VuoText labelText;
-		if(hasLabel)
-			labelText = label;
+		if (hasText)
+			labelText = text;
 		else if(isFocused || !hasPlaceholder)
 			labelText = VuoText_make("");
 		else
@@ -228,28 +266,51 @@ public:
 
 		VuoPoint2d textSize = VuoPoint2d_make(0,0);
 
-		VuoFont& font = ((hasLabel || isFocused) ? labelFont : placeholderFont);
-		VuoImageTextData textData = VuoImage_getTextImageData(labelText, font, screenBackingScaleFactor, 1, 0, false);
+		VuoFont f = font;
+		if (isFocused)
+			f.color = (VuoColor){f.color.r * textColorActive.r,
+								 f.color.g * textColorActive.g,
+								 f.color.b * textColorActive.b,
+								 f.color.a * textColorActive.a};
+		else if (isHovered)
+			f.color = (VuoColor){f.color.r * textColorHovered.r,
+								 f.color.g * textColorHovered.g,
+								 f.color.b * textColorHovered.b,
+								 f.color.a * textColorHovered.a};
+		else
+			f.color = (VuoColor){f.color.r * textColor.r,
+								 f.color.g * textColor.g,
+								 f.color.b * textColor.b,
+								 f.color.a * textColor.a};
+
+		if (!hasText)
+			f.color.a *= .25;
+
+		VuoImageTextData textData = VuoImage_getTextImageData(labelText, f, screenBackingScaleFactor, 1, 0, true);
 
 		if(textData)
 		{
-			textData->billboardAnchor = labelPosition;
+			textData->billboardAnchor = textAnchor;
 			VuoImageTextData_convertToVuoCoordinates(textData, screenSize.x, screenBackingScaleFactor);
 
 			textSize.x = textData->width;
 			textSize.y = textData->height;
 
-			// actualWidth = fmax(width, textData->width);
+			// Expand the text field width, if needed, to accommodate long text.
+			// (Scrolling would be preferable, but would take much longer to implement.)
+			actualWidth = fmax(width, textData->width);
+
 			actualHeight = textData->lineHeight * numLines;
 
-			VuoSceneObject text = VuoSceneText_make(labelText, font, true, INFINITY, labelPosition);
+			VuoSceneObject text = VuoSceneText_make(labelText, f, true, INFINITY, textAnchor);
 			textLayer = (VuoLayer)text;
 			VuoSceneObject_setName((VuoSceneObject)textLayer, VuoText_make("Text"));
 		}
 		else
 		{
-			VuoReal lineHeight = VuoImageText_getLineHeight(font, screenSize.x, screenBackingScaleFactor);
+			VuoReal lineHeight = VuoImageText_getLineHeight(f, screenSize.x, screenBackingScaleFactor);
 			actualHeight = lineHeight * numLines;
+			textSize.y = lineHeight;
 		}
 
 #if THEME_DEBUG
@@ -284,8 +345,8 @@ public:
 		// if the text isn't placeholder, also render the cursor and selection (if any)
 		if(isFocused)
 		{
-			VuoPoint2d cursorSize = VuoImageText_getTextSize("|", font, screenSize, screenBackingScaleFactor, false);
-			cursorSize.x *= .15f;
+			VuoPoint2d cursorSize = VuoImageText_getTextSize("|", f, screenSize, screenBackingScaleFactor, false);
+			cursorSize.x *= .5f;
 
 			VuoPoint2d cursorPosition;
 
@@ -306,10 +367,14 @@ public:
 				cursorSize.x,
 				cursorSize.y);
 
+			int textLength = VuoText_length(text);
+			selectionStart = MIN(selectionStart, textLength);
+			selectionEnd   = MIN(selectionEnd,   textLength);
+
 			int start = (selectionStart == selectionEnd ? cursorIndex : MIN(selectionStart, selectionEnd));
 			int length = (selectionStart == selectionEnd ? 0 : (MAX(selectionStart, selectionEnd) - start));
 
-			if(hasLabel && length > 0)
+			if (hasText && length > 0)
 			{
 				unsigned int lineCount = 0;
 				VuoRectangle* highlightRects = VuoImageTextData_getRectsForHighlight(textData, start, length, &lineCount);
@@ -319,7 +384,7 @@ public:
 					VuoListAppendValue_VuoLayer(
 						highlights,
 						VuoLayer_makeColor(VuoText_make(VuoText_format("Text Highlight %i", i)),
-							VuoColor_makeWithRGBA(borderColor.r, borderColor.g, borderColor.b, .6),
+							selectionColor,
 							highlightRects[i].center,
 							0,
 							highlightRects[i].size.x,
@@ -332,28 +397,32 @@ public:
 
 		*imageTextData = textData;
 
-		actualWidth += labelPadding.x;
-		actualHeight += labelPadding.y;
+		actualWidth  += textPadding.x * 2;
+		actualHeight += textPadding.y * 2;
 
-		float border = borderThickness * fmin(actualWidth, actualHeight);
+		actualWidth  += borderThickness * 2;
+		actualHeight += borderThickness * 2;
 
-		VuoLayer backgroundLayer = VuoLayer_makeRoundedRectangle(	VuoText_make("Button Background"),
-																	color,
+		float outerCornerRoundness = cornerRoundness / numLines;
+		float innerCornerRoundness = (actualHeight - borderThickness * 2 - (actualHeight * (1 - outerCornerRoundness))) / (actualHeight - borderThickness * 2);
+
+		VuoLayer backgroundLayer = VuoLayer_makeRoundedRectangle(   VuoText_make("Text Field Background"),
+																	isFocused ? backgroundColorActive : (isHovered ? backgroundColorHovered : backgroundColor),
 																	VuoPoint2d_make(0,0),
 																	0,
-																	actualWidth - border,
-																	actualHeight - border,
+																	actualWidth  - borderThickness * 2,
+																	actualHeight - borderThickness * 2,
 																	1,
-																	cornerRoundness);
+																	innerCornerRoundness);
 
-		VuoLayer borderLayer = VuoLayer_makeRoundedRectangle(	VuoText_make("Button Border"),
-																borderColor,
+		VuoLayer borderLayer = VuoLayer_makeRoundedRectangle(   VuoText_make("Text Field Border"),
+																isFocused ? borderColorActive : (isHovered ? borderColorHovered : borderColor),
 																VuoPoint2d_make(0,0),
 																0,
 																actualWidth,
 																actualHeight,
 																1,
-																cornerRoundness);
+																outerCornerRoundness);
 
 		VuoPoint3d offset = VuoPoint3d_make(0,0,0);
 		VuoPoint3d textOffset = VuoPoint3d_make(0,0,0);
@@ -371,21 +440,20 @@ public:
 		VuoSceneObject_translate((VuoSceneObject)backgroundLayer, offset);
 		VuoSceneObject_translate((VuoSceneObject)borderLayer, offset);
 
-		if(hasLabel || hasPlaceholder)
 		{
 			VuoSceneObject_translate((VuoSceneObject)textLayer, offset);
 			for(auto& highlight : *((std::vector<VuoLayer> *) highlights))
 				VuoSceneObject_translate((VuoSceneObject)highlight, offset);
 			VuoSceneObject_translate((VuoSceneObject)textCursor, offset);
 
-			VuoHorizontalAlignment h = VuoAnchor_getHorizontal(labelPosition);
-			VuoVerticalAlignment v = VuoAnchor_getVertical(labelPosition);
+			VuoHorizontalAlignment h = VuoAnchor_getHorizontal(textAnchor);
+			VuoVerticalAlignment v = VuoAnchor_getVertical(textAnchor);
 
 			if(h != VuoHorizontalAlignment_Center)
-				textOffset.x = ((actualWidth - labelPadding.x) * .5) * (h == VuoHorizontalAlignment_Left ? -1 : 1);
+				textOffset.x = ((actualWidth - textPadding.x * 2) * .5) * (h == VuoHorizontalAlignment_Left ? -1 : 1);
 
 			if(v != VuoVerticalAlignment_Center)
-				textOffset.y = ((actualHeight - labelPadding.y) * .5) * (v == VuoVerticalAlignment_Bottom ? -1 : 1);
+				textOffset.y = ((actualHeight - textPadding.y * 2) * .5) * (v == VuoVerticalAlignment_Bottom ? -1 : 1);
 
 			VuoSceneObject_translate((VuoSceneObject)textLayer, textOffset);
 
@@ -420,11 +488,11 @@ public:
 		}
 #endif
 
-		if(hasLabel || hasPlaceholder)
+		if (hasText || hasPlaceholder)
 		{
-			VuoListAppendValue_VuoLayer(layers, textLayer);
 			for(unsigned int i = 0; i < VuoListGetCount_VuoLayer(highlights); i++)
 				VuoListAppendValue_VuoLayer(layers, VuoListGetValue_VuoLayer(highlights, i+1));
+			VuoListAppendValue_VuoLayer(layers, textLayer);
 			VuoListAppendValue_VuoLayer(layers, textCursor);
 		}
 
@@ -439,27 +507,37 @@ VuoSerializableRegister(VuoUiThemeTextFieldRounded);	///< Register with base cla
 /**
  * Creates a theme for text/number field widgets, with the rounded style.
  */
-VuoUiTheme VuoUiTheme_makeTextFieldRounded(
-	VuoFont labelFont,
-	VuoFont placeholderFont,
-	VuoAnchor labelAnchor,
-	VuoPoint2d labelPadding,
-	VuoColor color,
-	VuoColor hoveredColor,
-	VuoColor pressedColor,
-	VuoColor borderColor,
-	VuoReal borderThickness,
-	VuoReal cornerRoundness)
+VuoUiTheme VuoUiTheme_makeTextFieldRounded(VuoFont font,
+										   VuoAnchor textAnchor,
+										   VuoPoint2d textPadding,
+										   VuoColor textColor,
+										   VuoColor textColorHovered,
+										   VuoColor textColorActive,
+										   VuoColor backgroundColor,
+										   VuoColor backgroundColorHovered,
+										   VuoColor backgroundColorActive,
+										   VuoColor borderColor,
+										   VuoColor borderColorHovered,
+										   VuoColor borderColorActive,
+										   VuoReal borderThickness,
+										   VuoColor cursorColor,
+										   VuoColor selectionColor,
+										   VuoReal cornerRoundness)
 {
-	return reinterpret_cast<VuoUiTheme>(new VuoUiThemeTextFieldRounded(
-		labelFont,
-		placeholderFont,
-		labelAnchor,
-		labelPadding,
-		color,
-		hoveredColor,
-		pressedColor,
-		borderColor,
-		borderThickness,
-		cornerRoundness));
+	return reinterpret_cast<VuoUiTheme>(new VuoUiThemeTextFieldRounded(font,
+																	   textAnchor,
+																	   textPadding,
+																	   textColor,
+																	   textColorHovered,
+																	   textColorActive,
+																	   backgroundColor,
+																	   backgroundColorHovered,
+																	   backgroundColorActive,
+																	   borderColor,
+																	   borderColorHovered,
+																	   borderColorActive,
+																	   borderThickness,
+																	   cursorColor,
+																	   selectionColor,
+																	   cornerRoundness));
 }

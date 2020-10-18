@@ -17,6 +17,8 @@
 
 #include <OpenGL/CGLMacro.h>
 
+//#define TEST
+
 VuoModuleMetadata({
 	"title": "Receive Kinect v2 Images",
 	"keywords": [
@@ -29,7 +31,6 @@ VuoModuleMetadata({
 		"usb",
 	],
 	"node": {
-		"isDeprecated": true,  // Temporary, for testing.
 		"exampleCompositions": [ ],
 	},
 });
@@ -69,7 +70,7 @@ public:
 			 frame->timestamp / 8000., frame->sequence, frame->width, frame->height, frame->bytes_per_pixel, type, frame->format,
 			 frame->exposure, frame->gain, frame->gamma, frame->status);
 
-		if (type == libfreenect2::Frame::Color && type == libfreenect2::Frame::Depth && type == libfreenect2::Frame::Ir)
+		if (type != libfreenect2::Frame::Color && type != libfreenect2::Frame::Depth && type != libfreenect2::Frame::Ir)
 		{
 			VUserLog("Error: Unknown libfreenect2 frame type %d", type);
 			return false;
@@ -77,30 +78,80 @@ public:
 
 		GLuint glFormat;
 		VuoImageColorDepth depth;
-		unsigned int bytesPerPixel;
+		unsigned char *pixels = nullptr;
 		if (frame->format == libfreenect2::Frame::Float)
 		{
-			glFormat = GL_LUMINANCE;
-			depth = VuoImageColorDepth_32;
-			bytesPerPixel = 4;
+			float *frameData = (float *)frame->data;
+
+			if (type == libfreenect2::Frame::Depth)
+			{
+				glFormat = GL_LUMINANCE_ALPHA;
+				depth = VuoImageColorDepth_32;
+				float *pixels2 = (float *)malloc(frame->width * frame->height * sizeof(float) * 2);
+				for (unsigned int y = 0; y < frame->height; ++y)
+					for (unsigned int x = 0; x < frame->width; ++x)
+					{
+						// Flip the image vertically, because Kinect provides it right-side-up, and OpenGL expects it flipped.
+						float f = frameData[y * frame->width + x];
+						float a;
+
+						// libfreenect2 says "Non-positive, NaN, and infinity are invalid or missing data".
+						if (f <= 0 || isnan(f) || isinf(f))
+							f = a = 0;
+						else
+						{
+							// Invert the intensities, because Kinect provides low=near, but people expect high=near.
+							// https://b33p.net/kosada/node/15796
+							// libfreenect2 says it provides depth data in millimeters;
+							// https://pterneas.com/2014/02/08/kinect-for-windows-version-2-overview/ says the range is up to about 4.5m;
+							// other sources such as
+							// https://social.msdn.microsoft.com/Forums/en-US/c95d3e40-6ed6-47a1-a206-5ff26c889c29/kinect-v2-maximum-range
+							// say up to 8m; scale that to 0..1.
+							f = 1. - f / 8000;
+							a = 1;
+						}
+
+						pixels2[(frame->height - y - 1) * frame->width * 2 + x * 2    ] = f;
+						pixels2[(frame->height - y - 1) * frame->width * 2 + x * 2 + 1] = a;
+					}
+				pixels = (unsigned char *)pixels2;
+			}
+			else if (type == libfreenect2::Frame::Ir)
+			{
+				glFormat = GL_LUMINANCE;
+				depth = VuoImageColorDepth_32;
+				float *pixels2 = (float *)malloc(frame->width * frame->height * sizeof(float));
+				for (unsigned int y = 0; y < frame->height; ++y)
+					for (unsigned int x = 0; x < frame->width; ++x)
+						// Flip the image vertically, because Kinect provides it right-side-up, and OpenGL expects it flipped.
+						// Scale the Kinect's range 0..65535 to standard OpenGL normalized range.
+						pixels2[(frame->height - y - 1) * frame->width + x] = frameData[y * frame->width + x] / 65535;
+				pixels = (unsigned char *)pixels2;
+			}
+			else
+			{
+				VUserLog("Error: Unknown libfreenect2 float frame type %d", type);
+				return false;
+			}
 		}
-		else if (frame->format == libfreenect2::Frame::BGRX)
+		else if (frame->format == libfreenect2::Frame::BGRX
+			  || frame->format == libfreenect2::Frame::RGBX)
 		{
-			glFormat = GL_BGR;
+			glFormat = frame->format == libfreenect2::Frame::BGRX ? GL_BGR : GL_RGB;
 			depth = VuoImageColorDepth_8;
-			bytesPerPixel = 4;
-		}
-		else if (frame->format == libfreenect2::Frame::RGBX)
-		{
-			glFormat = GL_RGB;
-			depth = VuoImageColorDepth_8;
-			bytesPerPixel = 4;
-		}
-		else if (frame->format == libfreenect2::Frame::Gray)
-		{
-			glFormat = GL_LUMINANCE;
-			depth = VuoImageColorDepth_8;
-			bytesPerPixel = 1;
+
+			pixels = (unsigned char *)malloc(frame->width * frame->height * 3);
+			for (unsigned int y = 0; y < frame->height; ++y)
+				for (unsigned int x = 0; x < frame->width; ++x)
+				{
+					// Flip the image vertically, because Kinect provides it right-side-up, and OpenGL expects it flipped.
+					// Pack BGRX/RGBX (4 bytes per pixel) into BGR/RGB (3 bytes per pixel) as OpenGL prefers.
+					unsigned char *in  = &frame->data[y * frame->width * 4 + x * 4];
+					unsigned char *out = &pixels[(frame->height - y - 1) * frame->width * 3 + x * 3];
+					out[0] = in[0];
+					out[1] = in[1];
+					out[2] = in[2];
+				}
 		}
 		else
 		{
@@ -112,13 +163,29 @@ public:
 		{
 			std::ostringstream oss;
 			for (int i = 0; i < 32; ++i)
-				oss << std::hex << std::setw(2) << std::setfill('0') << (int)frame->data[i];
-			VDebugLog("    %s", oss.str().c_str());
+				oss << std::hex << std::setw(2) << std::setfill('0') << (int)(frame->data[i]) << " ";
+			VUserLog("    raw      (char) : %s", oss.str().c_str());
+
+			std::ostringstream oss2;
+			for (int i = 0; i < 32; ++i)
+				oss2 << ((float *)frame->data)[i] << " ";
+			VUserLog("    raw      (float): %s", oss2.str().c_str());
+
+			std::ostringstream oss3;
+			for (int i = 0; i < 32; ++i)
+				oss3 << std::hex << std::setw(2) << std::setfill('0') << (int)(pixels[i]) << " ";
+			VUserLog("    converted (char) : %s", oss3.str().c_str());
+
+			std::ostringstream oss4;
+			for (int i = 0; i < 32; ++i)
+				oss4 << ((float *)pixels)[i] << " ";
+			VUserLog("    converted (float): %s", oss4.str().c_str());
 		}
 
-		VuoImage image = VuoImage_makeFromBufferWithStride(frame->data, glFormat, frame->width, frame->height, bytesPerPixel * frame->width, depth, ^(void *){
-			delete frame;
+		VuoImage image = VuoImage_makeFromBuffer(pixels, glFormat, frame->width, frame->height, depth, ^(void *){
+			free(pixels);
 		});
+		delete frame;
 
 		dispatch_sync(context->triggerQueue, ^{
 			if (type == libfreenect2::Frame::Color && context->receivedColorImage)
@@ -165,33 +232,25 @@ extern "C" struct nodeInstanceData *nodeInstanceInit(void)
 		return context;
 	}
 
-#if 1
 	context->device = context->freenect->openDefaultDevice(context->pipeline);
-#else
-	{
-		std::vector<std::string> frame_filenames;
-		frame_filenames.push_back("1_00000.depth");
-		frame_filenames.push_back("2_00001.depth");
-		frame_filenames.push_back("3_00002.depth");
-		frame_filenames.push_back("4_00003.depth");
-		auto fr = new libfreenect2::Freenect2Replay;
-		context->device = fr->openDevice(frame_filenames, context->pipeline);
-	}
-#endif
 
+#ifndef TEST
 	if (!context->device)
 	{
 		VUserLog("Error: Couldn't open the device.");
 		return context;
 	}
+#endif
 
 	context->listener = new VuoKinect4W2ReceiveListener;
 	context->listener->context = context;
 
+#ifndef TEST
 	context->device->setColorFrameListener(context->listener);
 	context->device->setIrAndDepthFrameListener(context->listener);
 
 	context->device->start();
+#endif
 
 	return context;
 }
@@ -210,8 +269,35 @@ extern "C" void nodeInstanceTriggerStart(
 }
 
 extern "C" void nodeInstanceEvent(
+#ifdef TEST
+	VuoInputEvent() test,
+#endif
 	VuoInstanceData(struct nodeInstanceData *) context)
 {
+#ifdef TEST
+	auto depthFrame = new libfreenect2::Frame(512, 424, 4);
+	depthFrame->format = libfreenect2::Frame::Float;
+	for (int i = 0; i < depthFrame->width * depthFrame->height; ++i)
+		((float *)depthFrame->data)[i] = 4000;
+	(*context)->listener->onNewFrame(libfreenect2::Frame::Depth, depthFrame);
+
+	auto irFrame = new libfreenect2::Frame(512, 424, 4);
+	irFrame->format = libfreenect2::Frame::Float;
+	for (int i = 0; i < irFrame->width * irFrame->height; ++i)
+		((float *)irFrame->data)[i] = 32767;
+	(*context)->listener->onNewFrame(libfreenect2::Frame::Ir, irFrame);
+
+	auto colorFrame = new libfreenect2::Frame(1920, 1080, 4);
+	colorFrame->format = libfreenect2::Frame::BGRX;
+	for (int i = 0; i < colorFrame->width * colorFrame->height; ++i)
+	{
+		colorFrame->data[i * 4    ] = 255;
+		colorFrame->data[i * 4 + 1] = 0;
+		colorFrame->data[i * 4 + 2] = 0;
+		colorFrame->data[i * 4 + 3] = 0;
+	}
+	(*context)->listener->onNewFrame(libfreenect2::Frame::Color, colorFrame);
+#endif
 }
 
 extern "C" void nodeInstanceTriggerStop(
@@ -226,15 +312,20 @@ extern "C" void nodeInstanceTriggerStop(
 
 extern "C" void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) context)
 {
-	dispatch_release((*context)->triggerQueue);
-
+#ifndef TEST
 	if ((*context)->device)
 	{
 		(*context)->device->stop();
 		(*context)->device->close();
-		delete (*context)->device;
 	}
+#endif
 
-	delete (*context)->freenect;
 	delete (*context)->listener;
+#ifndef TEST
+	delete (*context)->device;
+#endif
+	delete (*context)->freenect;
+
+	dispatch_sync((*context)->triggerQueue, ^{});
+	dispatch_release((*context)->triggerQueue);
 }

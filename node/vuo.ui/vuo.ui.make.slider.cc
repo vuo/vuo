@@ -71,7 +71,7 @@ extern "C" struct nodeInstanceData *nodeInstanceInit(
 extern "C" void nodeInstanceEvent(
 	VuoInstanceData(struct nodeInstanceData *) instance,
 	VuoInputData(VuoRenderedLayers) window,
-	VuoInputEvent({"eventBlocking":"wall", "data":"window"}) windowEvent,
+	VuoInputEvent({"data":"window"}) windowEvent,
 	VuoInputData(VuoText, {"default":"Slider"}) label,
 	VuoInputEvent({"data":"label"}) labelEvent,
 	VuoInputData(VuoReal, {"default":0}) setValue,

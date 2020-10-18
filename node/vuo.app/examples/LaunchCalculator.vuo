@@ -2,7 +2,7 @@
  * @file
  * This composition launches an external application.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.1.2
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -11,11 +11,11 @@
 digraph G
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-45,75" fillcolor="lime" _started_eventThrottling="enqueue"];
-LaunchApp [type="vuo.app.launch" version="1.1.0" label="Launch App|<refresh>refresh\l|<url>url\l|<activate>activate\l" pos="510,255" fillcolor="orange" _url="\"\\/Applications\\/Calculator.app\"" _activate="true"];
-MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="449,86"];
+LaunchApp [type="vuo.app.launch" version="1.1.0" label="Launch App|<refresh>refresh\l|<url>url\l|<activate>activate\l" pos="510,255" fillcolor="orange" _url="\"Calculator.app\"" _activate="true"];
+MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="441,86"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="285,75" _text="\"Press any key to launch Calculator.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
 ReceiveKeyboardButtons [type="vuo.keyboard.button2" version="2.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="165,255" fillcolor="lime" _key="\"any\"" _modifierKey="\"none\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="495,75" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="495,75" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
 FireOnStart:started -> MakeTextLayer:text;
 MakeList8:list -> RenderLayersToWindow:layers;

@@ -283,9 +283,12 @@ QString VuoPortPopover::generateImageCode()
 	 || image->pixelsHigh > maxImageHeight)
 	{
 		VuoImage resizedImage = VuoImageResize_resize(image, imageResize, VuoSizingMode_Proportional, maxImageWidth, maxImageHeight);
-		VuoRetain(resizedImage);
-		VuoRelease(image);
-		image = resizedImage;
+		if (resizedImage)
+		{
+			VuoRetain(resizedImage);
+			VuoRelease(image);
+			image = resizedImage;
+		}
 	}
 
 	const unsigned char *buffer = VuoImage_getBuffer(image, GL_RGBA);

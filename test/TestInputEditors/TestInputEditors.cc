@@ -109,6 +109,7 @@ private slots:
 	{
 		QList<QDir> pluginDirectories{ QString(BINARY_DIR) + "/lib" };
 		iem = new VuoInputEditorManager(pluginDirectories);
+		iem->waitForInitiailization();
 	}
 
 	/**

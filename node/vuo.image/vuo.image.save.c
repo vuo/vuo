@@ -65,7 +65,7 @@ void nodeEvent
 		VuoOutputEvent() done
 )
 {
-	if(!saveImageEvent || saveImage == NULL)
+	if (!saveImageEvent || saveImage == NULL || VuoText_isEmpty(url))
 		return;
 
 	struct json_object *validExtensions = VuoImageFormat_getValidFileExtensions(format);

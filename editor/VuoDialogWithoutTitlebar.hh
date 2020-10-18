@@ -18,5 +18,7 @@ class VuoDialogWithoutTitlebar : public QDialog
 	Q_OBJECT
 public:
 	explicit VuoDialogWithoutTitlebar(QWidget *parent = 0);
-	void showEvent(QShowEvent *event);
+
+private:
+	bool event(QEvent *event);
 };

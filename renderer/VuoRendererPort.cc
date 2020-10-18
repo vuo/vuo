@@ -33,6 +33,8 @@ extern "C" {
 #include "VuoTransform.h"
 #include "VuoUrl.h"
 #include "VuoSpeechVoice.h"
+
+char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage);
 }
 
 #pragma clang diagnostic push
@@ -1973,6 +1975,21 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 				// Trim off the parenthetical vendor/class.
 				outputString = outputString.section(" (", 0, 0);
+			}
+			else if (json_object_object_get_ex(js, "matchType", &o))
+			{
+				const char *matchType = json_object_get_string(o);
+				if (strcmp(matchType, "usage") == 0)
+				{
+					int usagePage = 0;
+					if (json_object_object_get_ex(js, "usagePage", &o))
+						usagePage = json_object_get_int(o);
+					int usage = 0;
+					if (json_object_object_get_ex(js, "usage", &o))
+						usage = json_object_get_int(o);
+					json_object_put(js);
+					return stringAndFree(VuoHid_getUsageText(usagePage, usage));
+				}
 			}
 			json_object_put(js);
 

@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isDeprecated": true,
-						  "exampleCompositions" : [ "vuo-example://vuo.image/RotateMovie.vuo" ]
+						  "exampleCompositions" : [ "vuo-example://vuo.image/RotateImage.vuo" ]
 					  }
 				  });
 

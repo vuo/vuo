@@ -33,7 +33,7 @@ et gagner des points de vote !</translation>
     <message>
         <location filename="../editor/VuoEditorApp/qml/welcome/Activate.qml" line="+17"/>
         <source>&lt;a href=&apos;%1&apos;&gt;Click here&lt;/a&gt; to open the activation page&lt;br&gt;in your web browser.</source>
-        <translation>&lt;a href=&apos;%1&apos;&gt;Cliquez ici&lt;/a&gt; pour ouvrir la page d&apos;activation dans votre navigateur internet.</translation>
+        <translation>&lt;a href=&apos;%1&apos;&gt;Cliquez ici&lt;/a&gt; pour ouvrir la page d&apos;activation dans votre navigateur web.</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -43,7 +43,7 @@ et gagner des points de vote !</translation>
     <message>
         <location line="+9"/>
         <source>Paste the activation code from the web browser here</source>
-        <translation>Collez ici le code d&apos;activation venant du navigateur web</translation>
+        <translation>Collez ici le code d&apos;activation venant du navigateur web.</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1671,13 +1671,13 @@ Plus d&apos;informations à %1.</translation>
     </message>
     <message>
         <location line="+8"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+5089"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+5097"/>
         <source>Package as Subcomposition</source>
         <translation>Regrouper en sous-composition</translation>
     </message>
     <message>
         <location line="+8"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-5623"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-5631"/>
         <source>Change To</source>
         <translation>Modifier en</translation>
     </message>
@@ -1725,7 +1725,7 @@ Plus d&apos;informations à %1.</translation>
     </message>
     <message>
         <location filename="../editor/VuoCommandSetPortConstant.cc" line="+23"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+2956"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+2964"/>
         <source>Set Port Constant</source>
         <translation>Définir une constante du port</translation>
     </message>
@@ -1747,7 +1747,7 @@ Plus d&apos;informations à %1.</translation>
         <translation>Définir la régulation</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-5245"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-5253"/>
         <source>&amp;Quit</source>
         <translation>&amp;Quitter</translation>
     </message>
@@ -1791,7 +1791,7 @@ Plus d&apos;informations à %1.</translation>
         <location filename="../editor/VuoEditorWindow.cc" line="+78"/>
         <location line="+3379"/>
         <location line="+655"/>
-        <location line="+799"/>
+        <location line="+807"/>
         <source>Save As…</source>
         <translation>Enregistrer sous…</translation>
     </message>
@@ -1802,7 +1802,7 @@ Plus d&apos;informations à %1.</translation>
         <translation>Vidéo...</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-4735"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-4743"/>
         <source>Hide Events</source>
         <translation>Masquer les évènements</translation>
     </message>
@@ -2199,7 +2199,7 @@ the Vuo Community Edition splash screen upon launch.</source>
     <message>
         <location line="+3"/>
         <source>The node might have failed to compile.  Check the console log for details.</source>
-        <translation>La compilation du nœud a peut-être échoué. Consultez la console pour plus de détails.</translation>
+        <translation>La compilation du nœud a peut-être échoué. Consultez le rapport de la console pour plus de détails.</translation>
     </message>
 </context>
 <context>

@@ -34,7 +34,7 @@ void VuoAppLaunch_launch(VuoText rawUrl, bool activate)
 	if (VuoText_isEmpty(rawUrl))
 		return;
 
-	VuoUrl normalizedUrl = VuoUrl_normalize(rawUrl, VuoUrlNormalize_default);
+	VuoUrl normalizedUrl = VuoUrl_normalize(rawUrl, VuoUrlNormalize_forLaunching);
 	NSString *urlAsString = [[NSString alloc] initWithUTF8String:normalizedUrl];
 	NSURL *url = [[NSURL alloc] initWithString:urlAsString];
 	[urlAsString release];

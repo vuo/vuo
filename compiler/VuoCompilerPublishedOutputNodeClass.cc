@@ -10,7 +10,7 @@
 #include "VuoCompilerPublishedOutputNodeClass.hh"
 #include "VuoCompiler.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
-#include "VuoCompilerConstantStringCache.hh"
+#include "VuoCompilerConstantsCache.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
@@ -114,13 +114,13 @@ VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClassWithImplementati
 
 	map<VuoPort *, size_t> indexOfDataParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
-	VuoCompilerConstantStringCache constantStrings;
+	VuoCompilerConstantsCache constantsCache(module);
 
 	Function *eventFunction = VuoCompilerCodeGenUtilities::getNodeEventFunction(module, "", false, false,
 																				nullptr, modelInputPorts, vector<VuoPort *>(),
 																				map<VuoPort *, json_object *>(), map<VuoPort *, string>(),
 																				map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-																				indexOfDataParameter, indexOfEventParameter, constantStrings);
+																				indexOfDataParameter, indexOfEventParameter, &constantsCache);
 
 	BasicBlock *block = &(eventFunction->getEntryBlock());
 	ReturnInst::Create(module->getContext(), block);

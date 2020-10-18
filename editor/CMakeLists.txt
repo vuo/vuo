@@ -102,8 +102,6 @@ target_include_directories(VuoEditor
 
 	PRIVATE
 		${PROJECT_BINARY_DIR}/type/list
-		../library
-		../type
 
 		# For VuoNodeClassFrequencyMap.hh
 		${CMAKE_CURRENT_BINARY_DIR}

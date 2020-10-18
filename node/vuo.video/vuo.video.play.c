@@ -34,7 +34,7 @@ VuoModuleMetadata({
 					"node": {
 					"exampleCompositions" : [
 						"PlayMovie.vuo",
-						"PlayMoviesAndCameraOnCube.vuo",
+						"PlayMovieAndCameraOnCube.vuo",
 						"PlayMoviesInFolder.vuo",
 						"PlayMovieWithSound.vuo"
 						]

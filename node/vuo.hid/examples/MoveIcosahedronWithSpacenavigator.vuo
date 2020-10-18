@@ -1,7 +1,7 @@
 /**
  * @file
  * @brief Move Icosahedron with SpaceNavigator
- * Shows how to control an object using the [SpaceNavigator](http://www.3dconnexion.com/products/spacemouse/spacenavigator.html) 3D mouse.
+ * Shows how to control an object using the [3Dconnexion SpaceNavigator](http://www.3dconnexion.com/) 3D mouse.
  *
  * @lastSavedInVuoVersion 2.0.0
  * @copyright Copyright © 2012–2020 Kosada Incorporated.

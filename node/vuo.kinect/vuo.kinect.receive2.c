@@ -24,7 +24,7 @@ VuoModuleMetadata({
 						  "usb"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "DisplayKinectImages.vuo", "RideRollercoaster.vuo" ]
+						  "exampleCompositions" : [ "DisplayKinectImages.vuo" ]
 					  }
 				 });
 

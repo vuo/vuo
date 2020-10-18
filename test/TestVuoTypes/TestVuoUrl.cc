@@ -186,6 +186,47 @@ private slots:
 		VuoRelease(normalizedUrl);
 	}
 
+	void testNormalizeForLaunching_data()
+	{
+		QTest::addColumn<QString>("url");
+		QTest::addColumn<QString>("expectedNormalizedUrl");
+
+		QString fileScheme = "file:";
+		QString basePath = getcwd(NULL,0);
+		QString baseUrl = fileScheme + basePath;
+
+		// An app that's in the read-only `/System` partition on macOS 10.15+.
+		QString expectedCalculatorUrl = "file:/System/Applications/Calculator.app";
+		if (QSysInfo::productVersion() < "10.15")
+			expectedCalculatorUrl = "file:/Applications/Calculator.app";
+
+		// An app that's in a subfolder of the read-only `/System` partition on macOS 10.15+.
+		QString expectedConsoleUrl = "file:/System/Applications/Utilities/Console.app";
+		if (QSysInfo::productVersion() < "10.15")
+			expectedConsoleUrl = "file:/Applications/Utilities/Console.app";
+
+		//                                           url                                           expectedNormalizedUrl
+		QTest::newRow("empty string")             << ""                                         << baseUrl;
+		QTest::newRow("nonexistent relative")     << "Nonexistent.app"                          << baseUrl + "/Nonexistent.app";
+		QTest::newRow("nonexistent absolute")     << "/Applications/Nonexistent.app"            << "file:/Applications/Nonexistent.app";
+		QTest::newRow("nonexistent absolute URL") << "file:/Applications/Nonexistent.app"       << "file:/Applications/Nonexistent.app";
+		QTest::newRow("calculator relative")      << "Calculator.app"                           << expectedCalculatorUrl;
+		QTest::newRow("calculator absolute")      << "/Applications/Calculator.app"             << expectedCalculatorUrl;
+		QTest::newRow("calculator absolute URL")  << "file:/Applications/Calculator.app"        << expectedCalculatorUrl;
+		QTest::newRow("console relative")         << "Utilities/Console.app"                    << expectedConsoleUrl;
+		QTest::newRow("console absolute")         << "/Applications/Utilities/Console.app"      << expectedConsoleUrl;
+		QTest::newRow("console absolute URL")     << "file:/Applications/Utilities/Console.app" << expectedConsoleUrl;
+	}
+	void testNormalizeForLaunching()
+	{
+		QFETCH(QString, url);
+		QFETCH(QString, expectedNormalizedUrl);
+
+		VuoUrl normalizedUrl = VuoUrl_normalize(VuoText_make(url.toUtf8().data()), VuoUrlNormalize_forLaunching);
+		VuoLocal(normalizedUrl);
+		QCOMPARE(normalizedUrl, expectedNormalizedUrl.toUtf8().data());
+	}
+
 	void testParts_data()
 	{
 		QTest::addColumn<QString>("url");

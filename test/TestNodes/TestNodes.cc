@@ -34,14 +34,7 @@ private:
 	{
 		VuoCompilerTargetSet currentTarget;
 		currentTarget.restrictToCurrentOperatingSystemVersion();
-		VuoCompilerTargetSet compatibleTargets = module->getCompatibleTargets();
-
-		/// @todo https://b33p.net/kosada/node/6309
-		VuoNodeSet *nodeSet = module->getPseudoBase()->getNodeSet();
-		if (nodeSet && nodeSet->getName() == "vuo.leap")
-			compatibleTargets.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_7);
-
-		return compatibleTargets.isCompatibleWithAllOf(currentTarget);
+		return module->getCompatibleTargets().isCompatibleWithAllOf(currentTarget);
 	}
 
 	void makeBuiltInNodeClasses(void)
@@ -208,13 +201,6 @@ private slots:
 			VuoCompilerNodeClass *nodeClass = *i;
 			string nodeClassName = nodeClass->getBase()->getClassName();
 
-			if (nodeClassName == "vuo.app.stopComposition")
-				continue;
-
-			// https://b33p.net/kosada/node/12090
-			if (nodeClassName == "vuo.video.receive")
-				continue;
-
 			// Test each node class in its original (possibly generic) form.
 			QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
 
@@ -316,6 +302,17 @@ private slots:
 			if (!hasTriggerOutput)
 				QFAIL("This node doesn't have any input ports (aside from the now-hidden Refresh port).");
 		}
+
+		if (nodeClassName == "vuo.app.stopComposition")
+			QSKIP("Not testing events on this node since it stops the composition.");
+
+		if (nodeClassName == "vuo.ui.open"
+		 || nodeClassName == "vuo.ui.save")
+			QSKIP("Not testing events on this node since it blocks on user input.");
+
+		// https://b33p.net/kosada/node/12090
+		if (nodeClassName == "vuo.video.receive")
+			QSKIP("Not testing events on this node since it sporadically fails.");
 
 		string composition = wrapNodeInComposition(nodeClass, compiler);
 

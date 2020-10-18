@@ -1,0 +1,84 @@
+/**
+ * @file
+ * Used to generate the image shown in this node set's description.
+ *
+ * @copyright Copyright © 2012–2019 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+ArrangeLayersInColumn2 [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="435,1140" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":-0.5,\"y\":0\}" _spacing="0.01"];
+ArrangeLayersInRow [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="435,75" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.5,\"y\":0\}" _spacing="0.01"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="300,-120" _started_eventThrottling="enqueue"];
+MakeActionButton2 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="135,-45" _label="\"Action Button\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeActionButton3 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="135,1035" _label="\"Action Button\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="726,71" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="366,86"];
+MakeList3 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="363,1151"];
+MakeMaterialTheme [type="vuo.ui.make.theme.material" version="1.0.0" label="Make Material Theme|<refresh>refresh\l|<color>color\l|<colorVariant>colorVariant\l|<emphasis>emphasis\l|<labelFont>labelFont\l|<theme>theme\r" pos="-165,240" _color="0" _colorVariant="6" _emphasis="2" _labelFont="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":14\}"];
+MakeNumberField [type="vuo.ui.make.number" version="1.0.0" label="Make Number Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<maximumDecimalPlaces>maximumDecimalPlaces\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,690" _setValue="Infinity" _placeholderText="\"Click to enter a number\"" _maximumDecimalPlaces="2" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeNumberField2 [type="vuo.ui.make.number" version="1.0.0" label="Make Number Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<maximumDecimalPlaces>maximumDecimalPlaces\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,1755" _setValue="Infinity" _placeholderText="\"Click to enter a number\"" _maximumDecimalPlaces="2" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="450,-105" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":0\}" _rotation="0" _width="1" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="435,960" _color="\{\"r\":0.094666972756385803,\"g\":0.13685816526412964,\"b\":0.18832685053348541,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":0\}" _rotation="0.0" _width="1" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeSlider [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="135,210" _label="\"\"" _setValue="0" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0,\"y\":0\}" _trackLength="0.5" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+MakeSlider2 [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="135,1275" _label="\"\"" _setValue="0" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0,\"y\":0\}" _trackLength="0.5" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue"];
+MakeTextArea [type="vuo.ui.make.textarea" version="1.0.0" label="Make Text Area|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<lines>lines\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,525" _placeholderText="\"Click to enter text\"" _lines="4" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeTextArea2 [type="vuo.ui.make.textarea" version="1.0.0" label="Make Text Area|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<lines>lines\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,1590" _placeholderText="\"Click to enter text\"" _lines="4" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeTextField2 [type="vuo.ui.make.text" version="1.0.0" label="Make Text Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,375" _placeholderText="\"Click to enter text\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeTextField3 [type="vuo.ui.make.text" version="1.0.0" label="Make Text Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="135,1440" _placeholderText="\"Click to enter text\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="135,855" _text="\"\\nMaterial theme\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="135,1920" _text="\"\\nRounded theme\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeToggleButton [type="vuo.ui.make.toggle" version="1.0.0" label="Make Toggle Button|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r|<turnedOn>turnedOn\r|<turnedOff>turnedOff\r" pos="135,75" _label="\"Toggle Button\"" _setValue="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue" _turnedOn_eventThrottling="enqueue" _turnedOff_eventThrottling="enqueue"];
+MakeToggleButton2 [type="vuo.ui.make.toggle" version="1.0.0" label="Make Toggle Button|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r|<turnedOn>turnedOn\r|<turnedOff>turnedOff\r" pos="135,1140" _label="\"Toggle Button\"" _setValue="false" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":0.0\}" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue" _turnedOn_eventThrottling="enqueue" _turnedOff_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="780,60" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue [type="vuo.data.share.VuoRenderedLayers" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-120,75" fillcolor="blue"];
+
+ArrangeLayersInColumn2:arrangedLayer -> MakeList:4;
+ArrangeLayersInRow:arrangedLayer -> MakeList:2;
+FireOnStart:started -> MakeMaterialTheme:color;
+FireOnStart:started -> MakeRectangleLayer2:color;
+FireOnStart:started -> MakeRectangleLayer:color;
+FireOnStart:started -> MakeTextLayer2:text;
+FireOnStart:started -> MakeTextLayer:text;
+MakeActionButton2:updatedLayer -> MakeList2:1;
+MakeActionButton3:updatedLayer -> MakeList3:1;
+MakeList2:list -> ArrangeLayersInRow:layers;
+MakeList3:list -> ArrangeLayersInColumn2:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeMaterialTheme:theme -> MakeActionButton2:theme;
+MakeMaterialTheme:theme -> MakeNumberField:theme;
+MakeMaterialTheme:theme -> MakeSlider:theme;
+MakeMaterialTheme:theme -> MakeTextArea:theme;
+MakeMaterialTheme:theme -> MakeTextField2:theme;
+MakeMaterialTheme:theme -> MakeToggleButton:theme;
+MakeNumberField2:updatedLayer -> MakeList3:6;
+MakeNumberField:updatedLayer -> MakeList2:6;
+MakeRectangleLayer2:layer -> MakeList:3;
+MakeRectangleLayer:layer -> MakeList:1;
+MakeSlider2:updatedLayer -> MakeList3:3;
+MakeSlider:updatedLayer -> MakeList2:3;
+MakeTextArea2:updatedLayer -> MakeList3:5;
+MakeTextArea:updatedLayer -> MakeList2:5;
+MakeTextField2:updatedLayer -> MakeList2:4;
+MakeTextField3:updatedLayer -> MakeList3:4;
+MakeTextLayer2:layer -> MakeList:6;
+MakeTextLayer:layer -> MakeList:5;
+MakeToggleButton2:updatedLayer -> MakeList3:2;
+MakeToggleButton:updatedLayer -> MakeList2:2;
+RenderLayersToWindow:updatedWindow -> ShareValue:value [style=invis];
+ShareValue:sameValue -> ArrangeLayersInRow:renderedLayers;
+ShareValue:sameValue -> MakeActionButton2:window;
+ShareValue:sameValue -> MakeActionButton3:window;
+ShareValue:sameValue -> MakeNumberField2:renderedLayers;
+ShareValue:sameValue -> MakeNumberField:renderedLayers;
+ShareValue:sameValue -> MakeSlider2:window;
+ShareValue:sameValue -> MakeSlider:window;
+ShareValue:sameValue -> MakeTextArea2:renderedLayers;
+ShareValue:sameValue -> MakeTextArea:renderedLayers;
+ShareValue:sameValue -> MakeTextField2:renderedLayers;
+ShareValue:sameValue -> MakeTextField3:renderedLayers;
+ShareValue:sameValue -> MakeToggleButton2:window;
+ShareValue:sameValue -> MakeToggleButton:window;
+}

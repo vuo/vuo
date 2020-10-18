@@ -96,17 +96,22 @@ VuoUiTheme VuoUiTheme_makeToggleRounded(VuoFont labelFont,
 										VuoReal checkboxCornerRoundness,
 										VuoReal marginBetweenCheckboxAndLabel);
 
-VuoUiTheme VuoUiTheme_makeTextFieldRounded(
-	VuoFont labelFont,
-	VuoFont placeholderFont,
-	VuoAnchor labelAnchor,
-	VuoPoint2d labelPadding,
-	VuoColor color,
-	VuoColor hoveredColor,
-	VuoColor pressedColor,
-	VuoColor borderColor,
-	VuoReal borderThickness,
-	VuoReal cornerRoundness);
+VuoUiTheme VuoUiTheme_makeTextFieldRounded(VuoFont font,
+										   VuoAnchor textAnchor,
+										   VuoPoint2d textPadding,
+										   VuoColor textColor,
+										   VuoColor textColorHovered,
+										   VuoColor textColorActive,
+										   VuoColor backgroundColor,
+										   VuoColor backgroundColorHovered,
+										   VuoColor backgroundColorActive,
+										   VuoColor borderColor,
+										   VuoColor borderColorHovered,
+										   VuoColor borderColorActive,
+										   VuoReal borderThickness,
+										   VuoColor cursorColor,
+										   VuoColor selectionColor,
+										   VuoReal cornerRoundness);
 
 VuoUiTheme VuoUiTheme_makeSliderRounded(VuoFont labelFont,
 										VuoColor labelColor,

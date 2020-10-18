@@ -27,7 +27,7 @@ ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse M
 RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="945,135" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 SampleColorFromImage [type="vuo.image.sample.color" version="1.1.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="-285,300" _width="0" _sampleType="\"average\""];
 Subtract3 [type="vuo.math.subtract.VuoPoint2d" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="-225,150" _b="\{\"x\":-0.11999999731779099,\"y\":0.11999999731779099\}"];
-TwirlImage [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="45,-30" _center="\{\"x\":0,\"y\":0\}" _angle="270.000000" _radius="2.000000"];
+TwirlImage [type="vuo.image.twirl2" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="45,-30" _center="\{\"x\":0,\"y\":0\}" _angle="270.000000" _radius="2.000000"];
 
 ChangeMouseCursor:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
 CropImage:croppedImage -> MakeScaledLayer2:image;

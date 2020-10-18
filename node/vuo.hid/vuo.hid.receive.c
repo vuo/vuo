@@ -11,20 +11,19 @@
 #include "VuoHid.h"
 
 VuoModuleMetadata({
-					 "title" : "Receive HID Controls",
-					 "keywords" : [
-						 "read", "open", "listen",
-						 "usb"
-					 ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoHidIo"
-					 ],
-					 "node": {
-						 "exampleCompositions" : [ "MoveDotsWithTwoMice.vuo", "MoveIcosahedronWithSpacenavigator.vuo",
-									   "ListKeypresses.vuo" ],
-					 }
-				 });
+    "title": "Receive HID Controls",
+    "keywords": [
+        "read", "open", "listen",
+        "USB", "Bluetooth",
+    ],
+    "version": "1.0.0",
+    "dependencies": [
+        "VuoHidIo",
+    ],
+    "node": {
+        "exampleCompositions": [ "MoveDotsWithTwoMice.vuo", "MoveIcosahedronWithSpacenavigator.vuo", "ListKeypresses.vuo" ],
+    },
+});
 
 struct nodeInstanceData
 {

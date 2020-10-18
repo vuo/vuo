@@ -17,6 +17,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node" : {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "DisplayControlPanel.vuo" ]
 					  }
 				  });

@@ -238,13 +238,13 @@ Before you can install your node class, you need to use the Vuo Compiler to comp
 
 If you're using the example project for creating a node class, then you can just build the project (Build > Build All).
 
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
+Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
 
 
 
 ## Installing a node class
 
-The final step is to place your compiled node class in the correct folder, so that it will show up in the Vuo editor's Node Library and be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://vuo.org/manual.pdf).
+The final step is to place your compiled node class in the correct folder, so that it will show up in the Vuo editor's Node Library and be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
 
 If you're using the example project for creating a node class, then when you build the project, the compiled node class is automatically placed  in `~/Library/Application Support/Vuo/Modules/`.
 

@@ -15,7 +15,7 @@ FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" labe
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,150" fillcolor="lime" _started_eventThrottling="enqueue"];
 MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="240,150" _text="\"Hello World!\"" _font="\{\"fontName\":\"Helvetica\",\"pointSize\":96.000000,\"underline\":false,\"color\":\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000\}" _wrapWidth="0"];
 RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="600,150" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
-TwirlImage2 [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="465,150" _center="\{\"x\":0,\"y\":0\}" _angle="0.000000" _radius="0.500000"];
+TwirlImage2 [type="vuo.image.twirl2" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="465,150" _center="\{\"x\":0,\"y\":0\}" _angle="0.000000" _radius="0.500000"];
 
 FireOnDisplayRefresh:requestedFrame -> TwirlImage2:angle [event=true];
 FireOnStart:started -> MakeTextImage:text;

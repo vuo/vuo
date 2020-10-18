@@ -8,7 +8,7 @@
  */
 
 
-// https://material.io/design/components/buttons.html#usage
+// https://material.io/components
 
 #include "node.h"
 
@@ -178,6 +178,7 @@ void nodeEvent
 		? black
 		: white;
 
+	// https://material.io/components/buttons
 	VuoListAppendValue_VuoUiTheme(elements, VuoUiTheme_makeButtonRounded(
 		0.25,
 		0.08,
@@ -203,6 +204,7 @@ void nodeEvent
 		0.25
 		));
 
+	// https://material.io/components/selection-controls#checkboxes
 	VuoListAppendValue_VuoUiTheme(elements, VuoUiTheme_makeToggleRounded(
 		labelFont,
 
@@ -243,6 +245,7 @@ void nodeEvent
 		0.02  // Margin between Checkbox and Label:
 		));
 
+	// https://material.io/components/sliders
 	VuoListAppendValue_VuoUiTheme(elements, VuoUiTheme_makeSliderRounded(
 		labelFont,
 
@@ -287,6 +290,32 @@ void nodeEvent
 		clear,
 
 		0.01  // Margin between Track and Label
+		));
+
+	// https://material.io/components/text-fields
+	VuoListAppendValue_VuoUiTheme(elements, VuoUiTheme_makeTextFieldRounded(
+		labelFont,
+		VuoAnchor_make(VuoHorizontalAlignment_Left, VuoVerticalAlignment_Top),
+		(VuoPoint2d){0.02,0.02},
+		black,
+		black,
+		black,
+
+		// Background:
+		white,
+		white,
+		white,
+
+		// Border:
+		grey2,
+		black,
+		color0,
+		0.002,   // border thickness
+
+		color0,  // cursor
+		colorH0, // selection
+
+		0.25     // roundness
 		));
 
 	*theme = VuoUiTheme_makeGroup(elements);

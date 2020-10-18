@@ -1,0 +1,34 @@
+/**
+ * @file
+ * @brief Crossfade with Moving Tiles
+ * Fades from one image to another while randomly moving around parts of each image.
+ *
+ * Images by Pexels on [Pixabay](https://pixabay.com/en/beach-surfing-wave-ocean-outdoors-1836366/) and Marat Gilyadzinov on [Unsplash](https://unsplash.com/photos/MYadhrkenNg).
+ *
+ * @lastSavedInVuoVersion 2.1.2
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.blend" version="1.2.2" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<replaceOpacity>replaceOpacity\l|<blended>blended\r" pos="360,315" fillcolor="blue" _blendMode="\"normal\"" _replaceOpacity="true"];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="345,600"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="360,435" _endPosition="1" _duration="0.5" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
+ScrambleImage2 [type="vuo.image.scramble" version="1.0.0" label="Scramble Image|<refresh>refresh\l|<image>image\l|<squareSize>squareSize\l|<center>center\l|<chaos>chaos\l|<time>time\l|<scrambledImage>scrambledImage\r" pos="525,390" fillcolor="orange" _center="\{\"x\":0.0,\"y\":0.0\}"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<progress>progress\r|<startImage>startImage\r|<endImage>endImage\r|<BlockSize>BlockSize\r|<BlockSpeed>BlockSpeed\r" _time_type="VuoReal" _time_suggestedMin="0" _time_suggestedMax="1" _progress_type="VuoReal" _progress_suggestedMin="0" _progress_suggestedMax="1" _progress_suggestedStep="0.1" _startImage_type="VuoImage" _endImage_type="VuoImage" _BlockSize_type="VuoReal" _BlockSize_suggestedMin="0" _BlockSize_suggestedMax="2" _BlockSize_suggestedStep="0.05" _BlockSize="0.10000000000000001" _BlockSpeed_type="VuoReal" _BlockSpeed_suggestedMin="0" _BlockSpeed_suggestedMax="2" _BlockSpeed="0.5"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+BlendImages:blended -> ScrambleImage2:image;
+ChangeSpeed:changedTime -> ScrambleImage2:time;
+Curve2:value -> ScrambleImage2:chaos;
+PublishedInputs:BlockSize -> ScrambleImage2:squareSize;
+PublishedInputs:BlockSpeed -> ChangeSpeed:speed;
+PublishedInputs:endImage -> BlendImages:foreground;
+PublishedInputs:progress -> BlendImages:foregroundOpacity;
+PublishedInputs:progress -> Curve2:time;
+PublishedInputs:startImage -> BlendImages:background;
+PublishedInputs:time -> ChangeSpeed:time;
+ScrambleImage2:scrambledImage -> PublishedOutputs:outputImage;
+}

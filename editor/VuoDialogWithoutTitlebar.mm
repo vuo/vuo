@@ -23,13 +23,19 @@ VuoDialogWithoutTitlebar::VuoDialogWithoutTitlebar(QWidget *parent) :
 }
 
 /**
- * Makes the dialog visible.
+ * Hides the titlebar (but keeps the close button),
+ * to resemble Xcode's About and Welcome dialogs.
  */
-void VuoDialogWithoutTitlebar::showEvent(QShowEvent *event)
+bool VuoDialogWithoutTitlebar::event(QEvent *event)
 {
-	NSWindow *nsWindow = ((NSView *)winId()).window;
-	nsWindow.titleVisibility = NSWindowTitleHidden;
-	nsWindow.titlebarAppearsTransparent = YES;
-	nsWindow.styleMask |= NSFullSizeContentViewWindowMask;
-	nsWindow.styleMask &= ~NSResizableWindowMask;
+	if (event->type() == QEvent::WinIdChange)
+	{
+		NSWindow *nsWindow = ((NSView *)winId()).window;
+		nsWindow.titleVisibility = NSWindowTitleHidden;
+		nsWindow.titlebarAppearsTransparent = YES;
+		nsWindow.styleMask |= NSFullSizeContentViewWindowMask;
+		nsWindow.styleMask &= ~NSResizableWindowMask;
+	}
+
+	return QDialog::event(event);
 }

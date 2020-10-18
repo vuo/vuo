@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "iterate", "repeat", "multiple", "many", "foreach", "each", "loop", "while", "cycle" ],
 					 "version" : "1.0.1",
 					 "node": {
-						  "exampleCompositions" : [ "DisplayRainbowOvals.vuo", "DisplayMovieFrames.vuo" ],
+						  "exampleCompositions" : [ "DisplayRainbowOvals.vuo", "SuccessivelyPosterizeImage.vuo" ],
 					 }
 				 });
 

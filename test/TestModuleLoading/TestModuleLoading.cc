@@ -801,11 +801,11 @@ private slots:
 		QString initialSourceCode =
 			"digraph G { }";
 		QString overridingSourceCode[] = {
-			"digraph G { FireOnStart [type=\"vuo.event.fireOnStart\" label=\"Fire on Start|<refresh>refresh\\l|<started>started\\r\" }",
-			"digraph G { FirePeriodically [type=\"vuo.time.firePeriodically2\" label=\"Fire Periodically|<refresh>refresh\\l|<seconds>seconds\\l|<fired>fired\\r\" }"
+			"digraph G { FireOnStart [type=\"vuo.event.fireOnStart\" label=\"Fire on Start|<refresh>refresh\\l|<started>started\\r\"]; }",
+			"digraph G { FirePeriodically [type=\"vuo.time.firePeriodically2\" label=\"Fire Periodically|<refresh>refresh\\l|<seconds>seconds\\l|<fired>fired\\r\"]; }"
 		};
 		QString lastOverrideModified =
-			"digraph G { FirePeriodically [type=\"vuo.time.firePeriodically2\" label=\"Fire Periodically|<refresh>refresh\\l|<seconds>seconds\\l|<fired>fired\\r\" _seconds=\"2.0\" }";
+			"digraph G { FirePeriodically [type=\"vuo.time.firePeriodically2\" label=\"Fire Periodically|<refresh>refresh\\l|<seconds>seconds\\l|<fired>fired\\r\" _seconds=\"2.0\"]; }";
 
 		QTest::newRow("save last override") << initialSourceCode << overridingSourceCode[0] << overridingSourceCode[1] << overridingSourceCode[1] << true;
 		QTest::newRow("save last override with input port value modified") << initialSourceCode << overridingSourceCode[0] << overridingSourceCode[1] << lastOverrideModified << false;

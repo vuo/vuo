@@ -8,6 +8,7 @@
  */
 
 #include <getopt.h>
+#include <sys/stat.h>
 
 #define VUO_PCH_QT
 #include "../../vuo.pch"
@@ -24,6 +25,36 @@
 
 int main(int argc, char *argv[])
 {
+	// Qt 5.11 attempts to use threaded rendering.
+	// Disable it since it causes deadlock on macOS 11.
+	// https://bugreports.qt.io/browse/QTBUG-75037
+	// https://bugreports.qt.io/browse/QTBUG-42162
+	// Possibly fixed in Qt 5.12 (https://github.com/qt/qtbase/commit/ee3c66ca917b77f759acea7c6b27d15066f0b814).
+	qputenv("QSG_RENDER_LOOP", "basic");
+
+	// Qt 5.11 places compiled QML files (.qmlc) next to the QML source files,
+	// which breaks the app bundle's code signature.
+	// Making the app bundle's QML folders read-only
+	// causes Qt to place compiled QML files in ~/Library/Caches/Vuo/Editor/qmlcache.
+	// We make the app bundle's QML folders read-only when building the package,
+	// but some archive extractors (e.g. `The Unarchiver.app`) ignore this,
+	// so also ensure it at runtime.
+	// When we update to Qt 5.15 or later, we can use `QML_DISK_CACHE_PATH` instead.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/17918
+	{
+		auto qmlDir = QFileInfo(argv[0]).absoluteDir();
+		qmlDir.cd("../qml");
+		chmod(qmlDir.absolutePath().toUtf8().data(), 0555);
+		QDirIterator qdi(qmlDir, QDirIterator::Subdirectories);
+		while (qdi.hasNext())
+		{
+			QFileInfo f(qdi.next());
+			if (!f.isDir() || f.fileName() == "." || f.fileName() == "..")
+				continue;
+			chmod(f.absoluteFilePath().toUtf8().data(), 0555);
+		}
+	}
+
 	qInstallMessageHandler(VuoRendererCommon::messageHandler);
 
 	Q_INIT_RESOURCE(VuoEditorApp);
@@ -160,7 +191,9 @@ int main(int argc, char *argv[])
 		// If there are any arguments left over after getopt_long(), try to open them.
 		for (int i = optind; i < getoptArgC; ++i)
 		{
-			VuoUrl u = VuoUrl_normalize(getoptArgV[i], VuoUrlNormalize_default);
+			VuoText arg = VuoText_make(getoptArgV[i]);
+			VuoLocal(arg);
+			VuoUrl u = VuoUrl_normalize(arg, VuoUrlNormalize_default);
 			VuoLocal(u);
 			v.openUrl(u);
 		}

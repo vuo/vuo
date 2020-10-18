@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  "VuoImageRenderer",
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "SharpenMovie.vuo" ]
+						  "exampleCompositions" : [ "SharpenImage.vuo" ]
 					  }
 				 });
 

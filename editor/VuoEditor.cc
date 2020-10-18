@@ -43,6 +43,8 @@
 
 #include <Carbon/Carbon.h>
 #include <IOKit/IOKitLib.h>
+#include <dlfcn.h>
+#include <objc/objc-runtime.h>
 
 const QString VuoEditor::recentFileListSettingsKey = "recentFileList";
 const QString VuoEditor::subcompositionPrefixSettingsKey = "subcompositionPrefix";
@@ -88,6 +90,8 @@ string VuoEditor::documentationGenerationDirectory = "";
 VuoEditor::VuoEditor(int &argc, char *argv[])
 	: QApplication(argc,argv)
 {
+	compilerQueue = dispatch_queue_create("org.vuo.editor.compiler", DISPATCH_QUEUE_SERIAL);
+
 	// Load stored application settings.
 	QCoreApplication::setOrganizationName("Vuo");
 	QCoreApplication::setOrganizationDomain("vuo.org");
@@ -1241,6 +1245,8 @@ void VuoEditor::registerOpenDocument(QMainWindow *window)
 {
 	// Not sure if this is necessary, since menus that display currently-open documents already get updated on QMenu::aboutToShow.
 	updateUI();
+
+	// Ensure that the global menu is restored after closing the last window.
 	connect(window, &QMainWindow::destroyed, this, &VuoEditor::updateUI);
 
 	// Keep the list of recent documents synchronized among the "File > Open Recent" menu of each editor window.
@@ -1254,10 +1260,11 @@ void VuoEditor::registerOpenDocument(QMainWindow *window)
  */
 void VuoEditor::newComposition(void)
 {
-	if (!compiler)
+	if (!uiInitialized)
 	{
-		// Wait for the constructor to finish.
-		dispatch_async(dispatch_get_main_queue(), ^{
+		dispatch_async(compilerQueue, ^{
+			dispatch_sync(dispatch_get_main_queue(), ^{
+
 			// Don't bother opening the standard new untitled composition during startup
 			// if another composition has opened in the meantime
 			// (by dropping a composition file on the Vuo.app icon,
@@ -1272,6 +1279,7 @@ void VuoEditor::newComposition(void)
 			QString identifier = assignUntitledDocumentIdentifier();
 			VUserLog("%s:      New empty composition", identifier.toUtf8().data());
 			createEditorWindow(identifier, "", "", NULL);
+			});
 		});
 		return;
 	}
@@ -1630,6 +1638,20 @@ void VuoEditor::updateUI()
 	dockContextMenu->clear();
 	for (QMainWindow *openWindow : VuoEditorUtilities::getOpenEditingWindows())
 		dockContextMenu->addAction(VuoEditorUtilities::getRaiseDocumentActionForWindow(openWindow));
+
+	// Ensure that the global menu is restored after closing the last window.
+	if (openWindows.empty())
+	{
+		id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
+		id currentMainMenu = objc_msgSend(*nsAppGlobal, sel_getUid("mainMenu"), nil);
+		if (menuBar->toNSMenu() != currentMainMenu)
+		{
+			// No windows are open, and the currently-visible main menu isn't the global menu, so we need to explicitly restore the global menu.
+			// QMenuBar::changeEvent calls QMenuBarPrivate::handleReparent, which calls QCocoaMenuBar::handleReparent, which calls QCocoaMenuBar::updateMenuBarImmediately, which calls NSApp::setMainMenu.
+			QEvent e(QEvent::ParentChange);
+			sendEvent(menuBar, &e);
+		}
+	}
 #endif
 
 	// Update the "enabled" status of the canvas transparency menu items.
@@ -2800,10 +2822,10 @@ void VuoEditor::generateNodeClassHtmlPagesForNodeSet(VuoNodeSet *nodeSet, string
 string VuoEditor::removeVuoLinks(string markdownText)
 {
 	QString filteredText(markdownText.c_str());
-	QRegularExpression vuoNodeLink("\\[([^\\]]+)\\](\\(vuo-node://([^\\]]+)\\))");
+	QRegularExpression vuoNodeLink("\\[([^\\]]+)\\](\\(vuo-node://([^)]+)\\))");
 	filteredText.replace(vuoNodeLink, "`\\1`");
 
-	QRegularExpression vuoNodeSetLink("\\[([^\\]]+)\\](\\(vuo-nodeset://([^\\]]+)\\))");
+	QRegularExpression vuoNodeSetLink("\\[([^\\]]+)\\](\\(vuo-nodeset://([^)]+)\\))");
 	filteredText.replace(vuoNodeSetLink, "`\\1`");
 
 	return filteredText.toUtf8().constData();
@@ -3272,6 +3294,23 @@ void VuoEditor::updateColor(bool isDark)
 	settings->setValue(darkInterfaceSettingsKey, isDark);
 
 	VuoRendererColors::setDark(isDark);
+
+	{
+		QFile f(":/Vuo.qss");
+		f.open(QFile::ReadOnly | QFile::Text);
+		QTextStream ts(&f);
+		QString styles = ts.readAll();
+
+		if (isDark)
+		{
+			QFile f(":/pro/VuoDark.qss");
+			f.open(QFile::ReadOnly | QFile::Text);
+			QTextStream ts(&f);
+			styles += ts.readAll();
+		}
+
+		setStyleSheet(styles);
+	}
 }
 
 /**
@@ -3344,7 +3383,12 @@ map<QString, QString> VuoEditor::getExampleCompositionsForProtocol(VuoProtocol *
 	}
 
 	else if (protocol->getId() == VuoProtocol::imageTransition)
+	{
 		modelExampleCompositionsAndNodeSets["BlendImages.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["CrossfadeAndZoom.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["CrossfadeWithBlobMask.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["CrossfadeWithMovingTiles.vuo"] = "vuo.image";
+	}
 
 	return modelExampleCompositionsAndNodeSets;
 }

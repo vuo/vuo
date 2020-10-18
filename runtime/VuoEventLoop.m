@@ -286,9 +286,8 @@ void VuoSleepWake(void)
  */
 void VuoEventLoop_disableAppNap(void)
 {
-	id activityToken = [[NSProcessInfo processInfo] performSelector:@selector(beginActivityWithOptions:reason:)
-		withObject: (id)((0x00FFFFFFULL | (1ULL << 20)) & ~(1ULL << 14)) // NSActivityUserInitiated & ~NSActivitySuddenTerminationDisabled
-		withObject: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];
+	id activityToken = [NSProcessInfo.processInfo beginActivityWithOptions:NSActivityUserInitiated & ~NSActivitySuddenTerminationDisabled
+		reason: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];
 
 	[activityToken retain];
 

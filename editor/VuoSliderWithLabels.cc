@@ -82,7 +82,7 @@ void VuoSliderWithLabels::initialize()
 	}
 
 	setTickPosition(displayTicks? QSlider::TicksBelow : QSlider::NoTicks);
-	setMinimumSize(QSize(0, VuoSliderWithLabels::minimumHeight + (displayTicks? extraVSpaceForTicks : 0)));
+	setMinimumHeight(VuoSliderWithLabels::minimumHeight + (displayTicks? extraVSpaceForTicks : 0));
 }
 
 /**

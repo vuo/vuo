@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "retro", ],
 					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "PosterizeMovie.vuo" ]
+						  "exampleCompositions" : [ "PosterizeImage.vuo" ]
 					  }
 				 });
 

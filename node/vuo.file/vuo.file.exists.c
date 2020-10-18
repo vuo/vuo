@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include "node.h"
-#include "VuoFileType.h"
 #include "VuoUrlFetch.h"
 
 VuoModuleMetadata({

@@ -377,20 +377,6 @@ void * VuoNodeRegistry::getDataForPort(const char *compositionIdentifier, const 
 }
 
 /**
- * Returns the `semaphore` field in a node's context, given the identifier of a port on the node.
- */
-dispatch_semaphore_t VuoNodeRegistry::getNodeSemaphoreForPort(const char *compositionIdentifier, const char *portIdentifier)
-{
-	map<string, dispatch_semaphore_t>::const_iterator foundIter;
-	bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
-	if (found)
-		return foundIter->second;
-
-	VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
-	return NULL;
-}
-
-/**
  * Returns the numerical index for a node, given the identifier of a port on the node.
  */
 unsigned long VuoNodeRegistry::getNodeIndexForPort(const char *compositionIdentifier, const char *portIdentifier)
@@ -422,7 +408,7 @@ unsigned long VuoNodeRegistry::getTypeIndexForPort(const char *compositionIdenti
  * Caches information about the port so it can be efficiently retrieved later.
  */
 void VuoNodeRegistry::addPortIdentifier(const char *compositionIdentifier, const string &portIdentifier,
-										void *data, dispatch_semaphore_t nodeSemaphore, unsigned long nodeIndex, unsigned long typeIndex)
+										void *data, unsigned long nodeIndex, unsigned long typeIndex)
 {
 	map<string, void *>::const_iterator foundIter;
 	bool found = findCachedInfoForPort<void *>(dataForPort, compositionIdentifier, portIdentifier, foundIter);
@@ -430,7 +416,6 @@ void VuoNodeRegistry::addPortIdentifier(const char *compositionIdentifier, const
 		VUserLog("Cache overwritten for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 
 	dataForPort[compositionIdentifier][portIdentifier] = data;
-	nodeSemaphoreForPort[compositionIdentifier][portIdentifier] = nodeSemaphore;
 	nodeIndexForPort[compositionIdentifier][portIdentifier] = nodeIndex;
 	typeIndexForPort[compositionIdentifier][portIdentifier] = typeIndex;
 }
@@ -452,19 +437,6 @@ void VuoNodeRegistry::removePortIdentifier(const char *compositionIdentifier, co
 		}
 		else
 			VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
-	}
-	{
-		map<string, dispatch_semaphore_t>::const_iterator foundIter;
-		bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
-		if (found)
-		{
-			nodeSemaphoreForPort[compositionIdentifier].erase(portIdentifier);
-
-			if (nodeSemaphoreForPort[compositionIdentifier].empty())
-				nodeSemaphoreForPort.erase(compositionIdentifier);
-		}
-		else
-			VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 	{
 		map<string, unsigned long>::const_iterator foundIter;
@@ -508,14 +480,6 @@ void VuoNodeRegistry::relocatePortIdentifier(const char *compositionIdentifier, 
 			VUserLog("Couldn't find data for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
 	}
 	{
-		map<string, dispatch_semaphore_t>::const_iterator foundIter;
-		bool found = findCachedInfoForPort<dispatch_semaphore_t>(nodeSemaphoreForPort, compositionIdentifier, portIdentifier, foundIter);
-		if (found)
-			carriedOverNodeSemaphoreForPort[compositionIdentifier][portIdentifier] = foundIter->second;
-		else
-			VUserLog("Couldn't find node semaphore for port %s", buildCompositionIdentifier(compositionIdentifier, portIdentifier).c_str());
-	}
-	{
 		map<string, unsigned long>::const_iterator foundIter;
 		bool found = findCachedInfoForPort<unsigned long>(nodeIndexForPort, compositionIdentifier, portIdentifier, foundIter);
 		if (found)
@@ -551,7 +515,6 @@ void VuoNodeRegistry::carryOverPortIdentifier(const char *oldCompositionIdentifi
 	}
 
 	dataForPort[newCompositionIdentifier][portIdentifier] = carriedOverDataForPort[oldCompositionIdentifier][portIdentifier];
-	nodeSemaphoreForPort[newCompositionIdentifier][portIdentifier] = carriedOverNodeSemaphoreForPort[oldCompositionIdentifier][portIdentifier];
 	nodeIndexForPort[newCompositionIdentifier][portIdentifier] = nodeIndex;
 	typeIndexForPort[newCompositionIdentifier][portIdentifier] = typeIndex;
 
@@ -584,14 +547,11 @@ void VuoNodeRegistry::removeCarriedOverPortIdentifier(const char *compositionIde
 	}
 
 	carriedOverDataForPort[compositionIdentifier].erase(oldPortIdentifier);
-	carriedOverNodeSemaphoreForPort[compositionIdentifier].erase(oldPortIdentifier);
 	carriedOverNodeIndexForPort[compositionIdentifier].erase(oldPortIdentifier);
 	carriedOverTypeIndexForPort[compositionIdentifier].erase(oldPortIdentifier);
 
 	if (carriedOverDataForPort[compositionIdentifier].empty())
 		carriedOverDataForPort.erase(compositionIdentifier);
-	if (carriedOverNodeSemaphoreForPort[compositionIdentifier].empty())
-		carriedOverNodeSemaphoreForPort.erase(compositionIdentifier);
 	if (carriedOverNodeIndexForPort[compositionIdentifier].empty())
 		carriedOverNodeIndexForPort.erase(compositionIdentifier);
 	if (carriedOverTypeIndexForPort[compositionIdentifier].empty())
@@ -684,14 +644,13 @@ void VuoNodeRegistry::initContextsForCompositionContents(VuoCompositionState *co
 			addNodeContext(compositionIdentifier, nodeIndex, nodeContext);
 
 			// Add the added node's ports to the port cache.
-			dispatch_semaphore_t nodeSemaphore = vuoGetNodeContextSemaphore(nodeContext);
 			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
 			{
 				PortMetadata portMetadata = nodeMetadata.portMetadatas[portIndex];
 				PortContext *portContext = vuoGetNodeContextPortContext(nodeContext, portIndex);
 				void *portData = vuoGetPortContextData(portContext);
 
-				addPortIdentifier(compositionIdentifier, portMetadata.identifier, portData, nodeSemaphore, nodeIndex, portMetadata.typeIndex);
+				addPortIdentifier(compositionIdentifier, portMetadata.identifier, portData, nodeIndex, portMetadata.typeIndex);
 			}
 
 			for (size_t portIndex = 0; portIndex < nodeMetadata.portMetadatas.size(); ++portIndex)
@@ -957,51 +916,54 @@ void VuoNodeRegistry::print(void)
 {
 	const char *indent = "  ";
 
-	printf("=== node metadatas ===\n\n");
+	ostringstream oss;
+	oss << "=== node metadatas ===" << endl << endl;
 	for (map<string, vector<NodeMetadata> >::iterator i = nodeMetadatas.begin(); i != nodeMetadatas.end(); ++i)
 	{
-		printf("%s%s\n", indent, i->first.c_str());
+		oss << indent << i->first << endl;
 		for (size_t j = 0; j < i->second.size(); ++j)
-			printf("%s%s%lu %s, %lu ports\n", indent, indent, j, i->second[j].identifier.c_str(), i->second[j].portMetadatas.size());
+			oss << indent << indent << j << " " << i->second[j].identifier << ", " << i->second[j].portMetadatas.size() << " ports" << endl;
 	}
-	printf("\n");
+	oss << endl;
 
-	printf("=== node contexts ===\n\n");
+	oss << "=== node contexts ===" << endl << endl;
 	for (map<unsigned long, map<unsigned long, NodeContext *> >::iterator i = nodeContextForIndex.begin(); i != nodeContextForIndex.end(); ++i)
 	{
 		string compositionIdentifier = getCompositionIdentifierForHash(i->first);
-		printf("%s%s\n", indent, compositionIdentifier.c_str());
+		oss << indent << compositionIdentifier << endl;
 		for (map<unsigned long, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			printf("%s%s%s %p\n", indent, indent, getNodeIdentifierForIndex(compositionIdentifier.c_str(), j->first).c_str(), j->second);
+			oss << indent << indent << getNodeIdentifierForIndex(compositionIdentifier.c_str(), j->first) << " " << j->second << endl;
 	}
-	printf("\n");
+	oss << endl;
 
-	printf("=== carried-over node contexts ===\n\n");
+	oss << "=== carried-over node contexts ===" << endl << endl;
 	for (map<string, map<string, NodeContext *> >::iterator i = carriedOverNodeContextForIdentifier.begin(); i != carriedOverNodeContextForIdentifier.end(); ++i)
 	{
-		printf("%s%s\n", indent, i->first.c_str());
+		oss << indent << i->first << endl;
 		for (map<string, NodeContext *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+			oss << indent << indent << j->first << " " << j->second << endl;
 	}
-	printf("\n");
+	oss << endl;
 
-	printf("=== cached ports ===\n\n");
+	oss << "=== cached ports ===" << endl << endl;
 	for (map<string, map<string, void *> >::iterator i = dataForPort.begin(); i != dataForPort.end(); ++i)
 	{
-		printf("%s%s\n", indent, i->first.c_str());
+		oss << indent << i->first << endl;
 		for (map<string, void *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+			oss << indent << indent << j->first << " " << j->second << endl;
 	}
-	printf("\n");
+	oss << endl;
 
-	printf("=== carried-over cached ports ===\n\n");
+	oss << "=== carried-over cached ports ===" << endl << endl;
 	for (map<string, map<string, void *> >::iterator i = carriedOverDataForPort.begin(); i != carriedOverDataForPort.end(); ++i)
 	{
-		printf("%s%s\n", indent, i->first.c_str());
+		oss << indent << i->first << endl;
 		for (map<string, void *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			printf("%s%s%s %p\n", indent, indent, j->first.c_str(), j->second);
+			oss << indent << indent << j->first << " " << j->second << endl;
 	}
-	printf("\n");
+	oss << endl;
+
+	VUserLog("\n%s", oss.str().c_str());
 }
 
 extern "C"
@@ -1066,16 +1028,6 @@ void * vuoGetDataForPort(VuoCompositionState *compositionState, const char *port
 	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
 	const char *compositionIdentifier = compositionState->compositionIdentifier;
 	return runtimeState->persistentState->nodeRegistry->getDataForPort(compositionIdentifier, portIdentifier);
-}
-
-/**
- * C wrapper for VuoNodeRegistry::getNodeSemaphoreForPort().
- */
-dispatch_semaphore_t vuoGetNodeSemaphoreForPort(VuoCompositionState *compositionState, const char *portIdentifier)
-{
-	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
-	const char *compositionIdentifier = compositionState->compositionIdentifier;
-	return runtimeState->persistentState->nodeRegistry->getNodeSemaphoreForPort(compositionIdentifier, portIdentifier);
 }
 
 /**

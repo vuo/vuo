@@ -19,9 +19,9 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>402</x>
+     <x>25</x>
      <y>470</y>
-     <width>164</width>
+     <width>541</width>
      <height>32</height>
     </rect>
    </property>
@@ -95,9 +95,6 @@
      <height>411</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true">color: 192,192,192</string>
-   </property>
    <property name="currentIndex">
     <number>2</number>
    </property>
@@ -108,9 +105,9 @@
     <widget class="VuoLineEdit" name="name">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>190</x>
        <y>10</y>
-       <width>351</width>
+       <width>331</width>
        <height>21</height>
       </rect>
      </property>
@@ -120,7 +117,7 @@
       <rect>
        <x>110</x>
        <y>13</y>
-       <width>51</width>
+       <width>71</width>
        <height>16</height>
       </rect>
      </property>
@@ -136,7 +133,7 @@
       <rect>
        <x>10</x>
        <y>110</y>
-       <width>81</width>
+       <width>511</width>
        <height>16</height>
       </rect>
      </property>
@@ -147,7 +144,7 @@
     <widget class="VuoLineEdit" name="version">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>190</x>
        <y>40</y>
        <width>81</width>
        <height>21</height>
@@ -159,7 +156,7 @@
       <rect>
        <x>110</x>
        <y>43</y>
-       <width>51</width>
+       <width>71</width>
        <height>16</height>
       </rect>
      </property>
@@ -174,9 +171,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>150</y>
+       <y>130</y>
        <width>511</width>
-       <height>111</height>
+       <height>101</height>
       </rect>
      </property>
      <property name="acceptRichText">
@@ -245,9 +242,9 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>130</y>
+       <y>240</y>
        <width>511</width>
-       <height>16</height>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
@@ -261,6 +258,12 @@ border: 2px solid #78a9d2;
      <property name="text">
       <string/>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
      <property name="openExternalLinks">
       <bool>true</bool>
      </property>
@@ -269,8 +272,8 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>280</y>
-       <width>81</width>
+       <y>270</y>
+       <width>511</width>
        <height>16</height>
       </rect>
      </property>
@@ -282,9 +285,9 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>300</y>
-       <width>461</width>
-       <height>16</height>
+       <y>345</y>
+       <width>511</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
@@ -298,12 +301,18 @@ border: 2px solid #78a9d2;
      <property name="text">
       <string>Comma-separated list of search terms, for when this composition is installed as a node</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QTextEdit" name="keywords">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>320</y>
+       <y>290</y>
        <width>511</width>
        <height>51</height>
       </rect>
@@ -320,9 +329,9 @@ border: 2px solid #78a9d2;
     <widget class="QTextEdit" name="copyright">
      <property name="geometry">
       <rect>
-       <x>80</x>
+       <x>110</x>
        <y>10</y>
-       <width>441</width>
+       <width>411</width>
        <height>61</height>
       </rect>
      </property>
@@ -348,7 +357,7 @@ border: 2px solid #78a9d2;
       <rect>
        <x>10</x>
        <y>84</y>
-       <width>61</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -364,23 +373,26 @@ border: 2px solid #78a9d2;
       <rect>
        <x>11</x>
        <y>15</y>
-       <width>61</width>
-       <height>16</height>
+       <width>91</width>
+       <height>51</height>
       </rect>
      </property>
      <property name="text">
       <string>Copyright</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QComboBox" name="licenseTitle">
      <property name="geometry">
       <rect>
-       <x>80</x>
+       <x>110</x>
        <y>80</y>
-       <width>441</width>
+       <width>411</width>
        <height>26</height>
       </rect>
      </property>
@@ -390,7 +402,7 @@ border: 2px solid #78a9d2;
       <rect>
        <x>11</x>
        <y>343</y>
-       <width>61</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -404,9 +416,9 @@ border: 2px solid #78a9d2;
     <widget class="QLineEdit" name="licenseLink">
      <property name="geometry">
       <rect>
-       <x>80</x>
+       <x>110</x>
        <y>340</y>
-       <width>441</width>
+       <width>411</width>
        <height>21</height>
       </rect>
      </property>
@@ -421,7 +433,7 @@ border: 2px solid #78a9d2;
       <rect>
        <x>10</x>
        <y>53</y>
-       <width>131</width>
+       <width>171</width>
        <height>16</height>
       </rect>
      </property>
@@ -435,9 +447,9 @@ border: 2px solid #78a9d2;
     <widget class="VuoLineEdit" name="homepageLink">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>190</x>
        <y>10</y>
-       <width>371</width>
+       <width>331</width>
        <height>21</height>
       </rect>
      </property>
@@ -445,9 +457,9 @@ border: 2px solid #78a9d2;
     <widget class="VuoLineEdit" name="documentationLink">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>190</x>
        <y>50</y>
-       <width>371</width>
+       <width>331</width>
        <height>21</height>
       </rect>
      </property>
@@ -457,7 +469,7 @@ border: 2px solid #78a9d2;
       <rect>
        <x>10</x>
        <y>13</y>
-       <width>131</width>
+       <width>171</width>
        <height>16</height>
       </rect>
      </property>
@@ -472,8 +484,8 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>153</y>
-       <width>131</width>
+       <y>170</y>
+       <width>171</width>
        <height>16</height>
       </rect>
      </property>
@@ -487,9 +499,9 @@ border: 2px solid #78a9d2;
     <widget class="VuoLineEdit" name="bundleIdentifier">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>190</x>
        <y>90</y>
-       <width>371</width>
+       <width>331</width>
        <height>21</height>
       </rect>
      </property>
@@ -499,7 +511,7 @@ border: 2px solid #78a9d2;
       <rect>
        <x>10</x>
        <y>93</y>
-       <width>131</width>
+       <width>171</width>
        <height>16</height>
       </rect>
      </property>
@@ -513,9 +525,9 @@ border: 2px solid #78a9d2;
     <widget class="VuoLineEdit" name="fxPlugGroup">
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>150</y>
-       <width>371</width>
+       <x>190</x>
+       <y>167</y>
+       <width>331</width>
        <height>21</height>
       </rect>
      </property>
@@ -523,10 +535,10 @@ border: 2px solid #78a9d2;
     <widget class="QLabel" name="bundleIdentifierDetailsLabel">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>110</y>
-       <width>511</width>
-       <height>21</height>
+       <x>190</x>
+       <y>120</y>
+       <width>331</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
@@ -540,6 +552,9 @@ border: 2px solid #78a9d2;
      <property name="text">
       <string>A unique name for apps and plugins exported from this composition, in reverse-DNS format.</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
@@ -547,10 +562,10 @@ border: 2px solid #78a9d2;
     <widget class="QLabel" name="fxPlugGroupDetailsLabel">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>170</y>
-       <width>401</width>
-       <height>21</height>
+       <x>190</x>
+       <y>197</y>
+       <width>331</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
@@ -564,6 +579,9 @@ border: 2px solid #78a9d2;
      <property name="text">
       <string>The category this composition is listed in, when it's exported as an FxPlug.</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
@@ -572,8 +590,8 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>210</y>
-       <width>81</width>
+       <y>230</y>
+       <width>511</width>
        <height>16</height>
       </rect>
      </property>
@@ -587,7 +605,7 @@ border: 2px solid #78a9d2;
        <x>10</x>
        <y>250</y>
        <width>511</width>
-       <height>51</height>
+       <height>81</height>
       </rect>
      </property>
      <property name="acceptRichText">
@@ -598,9 +616,9 @@ border: 2px solid #78a9d2;
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>230</y>
-       <width>461</width>
-       <height>16</height>
+       <y>340</y>
+       <width>511</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="font">
@@ -613,6 +631,12 @@ border: 2px solid #78a9d2;
      </property>
      <property name="text">
       <string>Comma-separated list of Interactive Shader Format (ISF) categories</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>

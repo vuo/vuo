@@ -68,7 +68,6 @@ public:
 	 */
 	virtual VuoLayer render(	VuoPoint2d screenSize,
 								VuoReal screenBackingScaleFactor,
-								VuoColor cursorColor,
 								VuoText label,
 								VuoText placeholderText,
 								int numLines,

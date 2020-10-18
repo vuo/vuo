@@ -520,12 +520,14 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	Rect qdRect;
 	extern OSStatus GetWindowBounds(WindowRef window, WindowRegionCode regionCode, Rect *globalBounds);
 
-	GetWindowBounds([self windowRef], kWindowStructureRgn, &qdRect);
-
-	return NSMakeRect(qdRect.left,
-					  (float)CGDisplayPixelsHigh(kCGDirectMainDisplay) - qdRect.bottom,
-					  qdRect.right - qdRect.left,
-					  qdRect.bottom - qdRect.top);
+	if (GetWindowBounds(self.windowRef, kWindowStructureRgn, &qdRect) == noErr)
+		return NSMakeRect(qdRect.left,
+						  (float)CGDisplayPixelsHigh(kCGDirectMainDisplay) - qdRect.bottom,
+						  qdRect.right - qdRect.left,
+						  qdRect.bottom - qdRect.top);
+	else
+		// The above GetWindowBounds API seems to always return `paramErr` on macOS 11.
+		return self.frame;
 }
 
 /**

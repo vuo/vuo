@@ -17,7 +17,7 @@ To load a file on the computer running the composition, create a URL from the fi
 
 ### Relative paths
 
-If the file's location doesn't start with `file://` or `/`, then it's treated as a relative path. This is the option you'd typically want when sharing the composition with others. If running the composition on a different computer than it was created on, the file needs to exist in the same location relative to the composition (`.vuo`) file. If running an application exported from the composition, the file needs to exist in the `Contents/Resources` folder inside the application package; see the [Vuo Manual](https://vuo.org/manual.pdf) for details.
+If the file's location doesn't start with `file://` or `/`, then it's treated as a relative path. This is the option you'd typically want when sharing the composition with others. If running the composition on a different computer than it was created on, the file needs to exist in the same location relative to the composition (`.vuo`) file. If running an application exported from the composition, the file needs to exist in the `Contents/Resources` folder inside the application package; see the [Vuo Manual](https://doc.vuo.org/latest/manual/exporting-an-application.xhtml) for details.
 
 If the composition hasn't been saved yet, paths are interpreted relative to the Desktop.
 
@@ -37,4 +37,4 @@ You can embed images and other data directly into a Vuo composition (without req
 
 …it will output a red dot.
 
-To convert a file into a Data URI, you can either use a web-based conversion tool such as [dataurl.net](http://dataurl.net/#dataurlmaker), or launch Terminal.app and enter this command: `echo -n 'data:;base64,' ; base64 <path to image file>` then paste the output into one of Vuo's URL ports.
+To convert a file into a Data URI, you can either use a web-based conversion tool such as [datauri.vuo.org](https://datauri.vuo.org), or launch Terminal.app and enter this command: `echo -n 'data:;base64,' ; base64 <path to image file>` then paste the output into one of Vuo's URL ports.

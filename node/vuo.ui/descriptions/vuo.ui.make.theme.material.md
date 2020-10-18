@@ -6,5 +6,5 @@ Creates a theme based on the [Material Design System](https://material.io/design
       - Low — Colored text only
       - Mid — Colored text with gray outline
       - High — Text with colored background
-      - (Emphasis only affects Action Button widgets, not Toggle Buttons or Sliders.)
+      - (Emphasis only affects Action Button widgets, not Toggle Buttons, Sliders, Text Fields, Text Areas, or Number Fields.)
    - `Label Font` — The font to use for widgets' `Label` text.

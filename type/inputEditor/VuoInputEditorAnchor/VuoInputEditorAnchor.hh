@@ -43,7 +43,6 @@ protected:
 	json_object* getAcceptedValue();
 
 private:
-	QSignalMapper* signalMapper;
 	QPushButton* matrix[9];
 	json_object* currentValue;
 	QIcon* renderIconWithLineSegments(const float* points, const unsigned int length);
@@ -67,7 +66,7 @@ private:
 	};
 
 private slots:
-	void onSetAnchor(int anchor);
+	void onSetAnchor();
 };
 
 #endif

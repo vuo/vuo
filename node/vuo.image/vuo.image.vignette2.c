@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "vintage", ],
 					  "version" : "2.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
+						  "exampleCompositions" : [ "VignetteImage.vuo" ]
 					  }
 				 });
 

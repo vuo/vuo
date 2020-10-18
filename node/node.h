@@ -79,8 +79,8 @@
  *          - "autoSupersedesDefault" (boolean) — For ports with an "auto" value, true if the port should have the "auto" value instead of
  *            the "default" value when the node is instantiated. This is useful if you want the port to start with the "auto"
  *            value but default to the "default" value if the user deselects the "auto" value in the port's input editor.
- *          .
- *       Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
+ *
+ *            Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,{"default":60,"suggestedMin":0,"suggestedMax":127}) noteNumber);}
  *

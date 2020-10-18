@@ -163,7 +163,7 @@ private slots:
 
 		{
 			vector<string> keywords;
-			QTest::newRow("vuo.test.compatibleWith107 does not have keywords") << "vuo.test.compatibleWith107" << keywords;
+			QTest::newRow("vuo.test.compatibleWith1011 does not have keywords") << "vuo.test.compatibleWith1011" << keywords;
 		}
 
 		{
@@ -194,41 +194,41 @@ private slots:
 	{
 		QTest::addColumn< QString >("nodeClass");
 		QTest::addColumn< bool >("shouldBeCompatibleWithAny");
-		QTest::addColumn< bool >("shouldBeCompatibleWith107");
-		QTest::addColumn< bool >("shouldBeCompatibleWith108");
-		QTest::addColumn< bool >("shouldBeCompatibleWith109");
+		QTest::addColumn< bool >("shouldBeCompatibleWith1011");
+		QTest::addColumn< bool >("shouldBeCompatibleWith1012");
+		QTest::addColumn< bool >("shouldBeCompatibleWith1013");
 
 		QTest::newRow("any") << "vuo.math.add.VuoInteger" << true << true << true << true;
-		QTest::newRow("macOS 10.7") << "vuo.test.compatibleWith107" << false << true << false << false;
-		QTest::newRow("macOS 10.7 and 10.8") << "vuo.test.compatibleWith107And108" << false << true << true << false;
-		QTest::newRow("macOS 10.7 and up") << "vuo.test.compatibleWith107AndUp" << false << true << true << true;
+		QTest::newRow("macOS 10.11") << "vuo.test.compatibleWith1011" << false << true << false << false;
+		QTest::newRow("macOS 10.11 and 10.12") << "vuo.test.compatibleWith1011And1012" << false << true << true << false;
+		QTest::newRow("macOS 10.11 and up") << "vuo.test.compatibleWith1011AndUp" << false << true << true << true;
 	}
 	void testCompatibleOperatingSystems()
 	{
 		QFETCH(QString, nodeClass);
 		QFETCH(bool, shouldBeCompatibleWithAny);
-		QFETCH(bool, shouldBeCompatibleWith107);
-		QFETCH(bool, shouldBeCompatibleWith108);
-		QFETCH(bool, shouldBeCompatibleWith109);
+		QFETCH(bool, shouldBeCompatibleWith1011);
+		QFETCH(bool, shouldBeCompatibleWith1012);
+		QFETCH(bool, shouldBeCompatibleWith1013);
 
 		VuoCompilerTargetSet targetAny;
-		VuoCompilerTargetSet target107;
-		target107.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_7);
-		target107.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_7);
-		VuoCompilerTargetSet target108;
-		target108.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_8);
-		target108.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_8);
-		VuoCompilerTargetSet target109;
-		target109.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_9);
-		target109.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_9);
+		VuoCompilerTargetSet target1011;
+		target1011.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_11);
+		target1011.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_11);
+		VuoCompilerTargetSet target1012;
+		target1012.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_12);
+		target1012.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_12);
+		VuoCompilerTargetSet target1013;
+		target1013.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_13);
+		target1013.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_13);
 
 		VuoCompilerNodeClass *cnc = compiler->getNodeClass( qPrintable(nodeClass) );
 		VuoCompilerTargetSet actualTargets = cnc->getCompatibleTargets();
 
 		QCOMPARE(actualTargets.isCompatibleWithAllOf(targetAny), shouldBeCompatibleWithAny);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target107), shouldBeCompatibleWith107);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target108), shouldBeCompatibleWith108);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target109), shouldBeCompatibleWith109);
+		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1011), shouldBeCompatibleWith1011);
+		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1012), shouldBeCompatibleWith1012);
+		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1013), shouldBeCompatibleWith1013);
 	}
 
 	void testModuleKeyForPath_data()
@@ -242,7 +242,7 @@ private slots:
 		QTest::newRow("ISF with double extension") << "me.double.fs.fs" << "me.double";
 		QTest::newRow("ISF with spaces") << "me.Space out Words.vs" << "me.spaceOutWords";
 		QTest::newRow("ISF with no author") << "anonymous.vs" << "isf.anonymous";
-		QTest::newRow("ISF with all of the above") << "Modules/VHS Glitch.fs.fs" << "isf.vhsGlitch";
+		QTest::newRow("ISF with all of the above") << "Modules/VHS Glitch.fs.fs" << "isf.vHSGlitch";
 	}
 	void testModuleKeyForPath()
 	{

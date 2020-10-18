@@ -31,9 +31,6 @@ VuoRender(VuoDocumentationNodesAndCompositions
 	${PROJECT_SOURCE_DIR}/documentation/composition/CountIsGreaterThanToConsole.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/CountIsLessThanToConsole.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/CountScatter.vuo
-	${PROJECT_SOURCE_DIR}/documentation/composition/CountWithFeedback.vuo
-	${PROJECT_SOURCE_DIR}/documentation/composition/CountWithInfiniteFeedback.vuo
-	${PROJECT_SOURCE_DIR}/documentation/composition/DeadlockedFeedbackLoop.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/DetectBarcode.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/DetectCamera.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/DisplayAndTwirlHelloWorldContinuously.vuo
@@ -70,7 +67,7 @@ VuoRender(VuoDocumentationNodesAndCompositions
 	${PROJECT_SOURCE_DIR}/node/vuo.motion/examples/SpringBack.vuo
 	${PROJECT_SOURCE_DIR}/node/vuo.motion/examples/WaveCircle.vuo
 	${PROJECT_SOURCE_DIR}/node/vuo.scene/examples/MoveSpinningSphere.vuo
-	${PROJECT_SOURCE_DIR}/node/vuo.select/examples/SelectMovie.vuo
+	${PROJECT_SOURCE_DIR}/node/vuo.select/examples/SelectStripes.vuo
 	${PROJECT_SOURCE_DIR}/node/vuo.select/examples/ShowArrowPresses.vuo
 	${PROJECT_SOURCE_DIR}/node/vuo.time/examples/AnimateOnSchedule.vuo
 	${PROJECT_SOURCE_DIR}/node/vuo.time/examples/FlashOnMousePress.vuo

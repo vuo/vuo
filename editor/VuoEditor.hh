@@ -191,11 +191,14 @@ private:
 
 	static string documentationGenerationDirectory;
 
+	mutex constructor;
+
 	QNetworkAccessManager *networkManager;
 	VuoEditor::subscriptionLevel userSubscriptionLevel;
 	VuoEditorAboutBox *aboutBox;
 	QSettings* settings;
 	VuoCompiler *compiler;
+	dispatch_queue_t compilerQueue;
 	VuoModuleManager *moduleManager;
 	VuoSubcompositionMessageRouter *subcompositionRouter;
 	map<VuoProtocol *, VuoCompilerDriver *> builtInDriverForProtocol;

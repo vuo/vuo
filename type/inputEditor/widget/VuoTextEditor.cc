@@ -173,7 +173,7 @@ bool VuoTextEditor::eventFilter(QObject *object, QEvent *event)
 	{
 		// Set the tab width, which couldn't be done in setUpDialog() since textEdit->font() wasn't yet ready.
 		QFontMetrics fm(textEdit->font());
-		textEdit->setTabStopWidth(4 * fm.width("W"));
+		textEdit->setTabStopDistance(4 * fm.width("W"));
 
 		// Resize the input editor if needed so that its height fits within the screen.
 		resizeToFitText();

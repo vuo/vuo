@@ -12,7 +12,7 @@
 #include "VuoBaseDetail.hh"
 
 class VuoCompilerEventPort;
-class VuoCompilerConstantStringCache;
+class VuoCompilerConstantsCache;
 class VuoCompilerInstanceData;
 class VuoCompilerNodeArgument;
 class VuoCompilerType;
@@ -27,7 +27,7 @@ class VuoCompilerNode : public VuoBaseDetail<VuoNode>
 private:
 	VuoCompilerInstanceData *instanceData;
 	string graphvizIdentifier;  ///< The identifier that will appear in .vuo (Graphviz dot format) files. Defaults to the suggested Graphviz identifier prefix.
-	VuoCompilerConstantStringCache *constantStrings;
+	VuoCompilerConstantsCache *constantsCache;
 	size_t indexInOrderedNodes;
 
 	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeContextValue,
@@ -39,7 +39,7 @@ public:
 	VuoCompilerNode(VuoNode *baseNode);
 	void setIndexInOrderedNodes(size_t indexInOrderedNodes);
 	size_t getIndexInOrderedNodes(void);
-	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
+	void setConstantsCache(VuoCompilerConstantsCache *constantsCache);
 	Value * generateIdentifierValue(Module *module);
 	Value * generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
 	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionStateValue);

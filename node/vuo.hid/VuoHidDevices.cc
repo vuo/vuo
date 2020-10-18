@@ -85,7 +85,15 @@ void VuoHid_getDeviceDescription(IOHIDDeviceRef device, VuoText *manufacturer, V
 
 	CFStringRef manufacturerCF = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDManufacturerKey));
 	if (manufacturerCF)
+	{
 		*manufacturer = VuoText_makeFromCFString(manufacturerCF);
+		if (strcmp(*manufacturer, "Unknown") == 0)
+		{
+			VuoRetain(*manufacturer);
+			VuoRelease(*manufacturer);
+			*manufacturer = nullptr;
+		}
+	}
 	else
 	{
 		if (*vendorID)

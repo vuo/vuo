@@ -57,7 +57,7 @@ void VuoCodeEditor::setFontSize(int fontSize)
 	QFontMetricsF fontMetrics(font);
 	qreal spaceWidth = fontMetrics.width(' ');
 	qreal tabWidth = spacesPerTab * spaceWidth;
-	setTabStopWidth(ceil(tabWidth));
+	setTabStopDistance(ceil(tabWidth));
 
 	// Align characters to pixels.
 	qreal pitch = (ceil(tabWidth) - tabWidth) / spacesPerTab;

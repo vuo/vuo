@@ -20,6 +20,7 @@ VuoCompileLibraries(
 	VuoCompositionDiff.cc
 	VuoLog.cc
 	VuoNodeRegistry.cc
+	VuoNodeSynchronization.cc
 	VuoRuntimeCommunicator.cc
 	VuoRuntimeContext.cc
 	VuoRuntimePersistentState.cc

@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.1.3",
 					  "node": {
 						  "isDeprecated": true,
-						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
+						  "exampleCompositions" : [ "VignetteImage.vuo" ]
 					  }
 				 });
 

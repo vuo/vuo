@@ -867,10 +867,11 @@ unsigned long VuoFileUtilities::getSecondsSinceFileLastAccessed(string path)
  *
  * If `dirPath` is a symlink or macOS Alias, it is dereferenced.
  *
- * @param dirPath The directory to search in. Only the top level is searched.
+ * @param dirPath The directory to search in.
  * @param archiveExtensions The file extensions for archives to search in. Any archive with one of these extensions
  *		found in the top level of the directory will be searched recursively.
  * @param shouldSearchRecursively If true, the directory will be searched searched recursively.
+ *                                If false, only the top level is searched.
  * @return All files found.
  *
  * @throw VuoException The directory couldn't be read.

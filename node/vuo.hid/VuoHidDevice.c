@@ -15,7 +15,7 @@
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					  "title" : "HID Device",
-					  "description" : "Information about a USB HID device.",
+					  "description" : "Information about a USB or Bluetooth HID device.",
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
@@ -35,6 +35,10 @@ static VuoHidDevice_MatchType VuoHidDevice_MatchType_makeFromJson(json_object *j
 {
 	if (strcmp(json_object_get_string(js), "location") == 0)
 		return VuoHidDevice_MatchLocation;
+	else if (strcmp(json_object_get_string(js), "vendor-product") == 0)
+		return VuoHidDevice_MatchVendorAndProduct;
+	else if (strcmp(json_object_get_string(js), "usage") == 0)
+		return VuoHidDevice_MatchUsage;
 
 	return VuoHidDevice_MatchName;
 }
@@ -46,6 +50,10 @@ static const char *VuoHidDevice_getStringForMatchType(VuoHidDevice_MatchType typ
 {
 	if (type == VuoHidDevice_MatchLocation)
 		return "location";
+	else if (type == VuoHidDevice_MatchVendorAndProduct)
+		return "vendor-product";
+	else if (type == VuoHidDevice_MatchUsage)
+		return "usage";
 
 	return "name";
 }
@@ -171,7 +179,7 @@ bool VuoHidDevice_isLessThan(const VuoHidDevice a, const VuoHidDevice b)
 }
 
 /**
- * If `device` specifies name-matching:
+ * If `device` specifies a `matchType` of name, vendorAndProduct, or usage:
  *
  *    - If a matching HID device is connected, sets `realizedDevice` to a specific, existing device matched by its location, and returns true.
  *    - If no matching HID device is connected, returns false, leaving `realizedDevice` unset.
@@ -181,7 +189,7 @@ bool VuoHidDevice_isLessThan(const VuoHidDevice a, const VuoHidDevice b)
  */
 bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 {
-//	VLog("%s (%08llx) realized=%d",device.name,device.location,device.matchType==VuoHidDevice_MatchLocation);
+	VDebugLog("Matching by %s:  name=%s  location=%08llx  product=%04llx:%04llx  usage=%04llx:%04llx", VuoHidDevice_getStringForMatchType(device.matchType), device.name, device.location, device.vendorID, device.productID, device.usagePage, device.usage);
 
 	// Already have a location; nothing to do.
 	if (device.matchType == VuoHidDevice_MatchLocation)
@@ -197,9 +205,11 @@ bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 		return true;
 	}
 
-	// Otherwise, try to find a matching name.
+	// Otherwise, try to find a matching name, productAndVendor, or usage.
 
-	if (!device.name)
+	if ((device.matchType == VuoHidDevice_MatchName && !device.name)
+	 || (device.matchType == VuoHidDevice_MatchVendorAndProduct && (!device.vendorID || !device.productID))
+	 || (device.matchType == VuoHidDevice_MatchUsage && (!device.usagePage || !device.usage)))
 		return false;
 
 	VuoList_VuoHidDevice devices = VuoHid_getDeviceList();
@@ -217,7 +227,9 @@ bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 	for (unsigned long i = 1; i <= deviceCount; ++i)
 	{
 		VuoHidDevice d = VuoListGetValue_VuoHidDevice(devices, i);
-		if (strstr(d.name, device.name))
+		if ((device.matchType == VuoHidDevice_MatchName && strstr(d.name, device.name))
+		 || (device.matchType == VuoHidDevice_MatchVendorAndProduct && d.vendorID == device.vendorID && d.productID == device.productID)
+		 || (device.matchType == VuoHidDevice_MatchUsage && d.usagePage == device.usagePage && d.usage == device.usage))
 		{
 			realizedDevice->matchType = VuoHidDevice_MatchLocation;
 			realizedDevice->name = VuoText_make(d.name);
@@ -234,11 +246,12 @@ bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 
 	if (found)
 	{
+		VDebugLog("Matched \"%s\".", realizedDevice->name);
 		VuoRelease(devices);
 		return true;
 	}
 
-//	VLog("Warning: Didn't find a HID device matching '%s'.", device.name);
+	VDebugLog("Warning: Didn't find a device matching those criteria.");
 	VuoRelease(devices);
 	return false;
 }

@@ -1,0 +1,43 @@
+/**
+ * @file
+ * @brief Mask Image with Image
+ * Applies an image mask to another image.
+ *
+ * Image by Nicman on [Pixabay](https://pixabay.com/en/hummingbird-bird-trochilidae-flying-2139279/).
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ApplyMask [type="vuo.image.apply.mask" version="1.1.2" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<maskedImage>maskedImage\r" pos="990,1035" fillcolor="orange"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="840,1035" _url="\"Hummingbird.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="510,885" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="840,885" _url="\"BrushMask.png\""];
+MakeList4 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1634,761" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1260,360" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1275,885" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="0.900000" _fixed="\"horizontal\"" _opacity="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1275,1035" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.500000,\"y\":0.000000\}" _rotation="0.000000" _width="0.900000" _fixed="\"horizontal\"" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1290,720" _text="\"The \\\"Apply Mask\\\" node uses a \\ngrayscale mask image like this.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1290,555" _text="\"Where the mask image is bright,\\nthe other image shows through.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.5,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1680,750" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+
+ApplyMask:maskedImage -> MakeScaledLayer2:image;
+FetchImage:image -> ApplyMask:image;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> GetImage:url;
+FireOnStart:started -> MakeRectangleLayer:color;
+FireOnStart:started -> MakeTextLayer2:center;
+FireOnStart:started -> MakeTextLayer:center;
+GetImage:image -> ApplyMask:mask;
+GetImage:image -> MakeScaledLayer:image;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeRectangleLayer:layer -> MakeList4:1;
+MakeScaledLayer2:layer -> MakeList4:5;
+MakeScaledLayer:layer -> MakeList4:4;
+MakeTextLayer2:layer -> MakeList4:2;
+MakeTextLayer:layer -> MakeList4:3;
+}

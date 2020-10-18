@@ -20,9 +20,9 @@ target_link_libraries(TestVuoCompiler
 VuoPCH(TestVuoCompiler QTestVuoFramework)
 
 VuoCompileNodes(
-	node-TestVuoCompiler/vuo.test.compatibleWith107.c
-	node-TestVuoCompiler/vuo.test.compatibleWith107And108.c
-	node-TestVuoCompiler/vuo.test.compatibleWith107AndUp.c
+	node-TestVuoCompiler/vuo.test.compatibleWith1011.c
+	node-TestVuoCompiler/vuo.test.compatibleWith1011And1012.c
+	node-TestVuoCompiler/vuo.test.compatibleWith1011AndUp.c
 	node-TestVuoCompiler/vuo.test.details.c
 	node-TestVuoCompiler/vuo.test.inputDataPortOrder.c
 	node-TestVuoCompiler/vuo.test.keywords.c

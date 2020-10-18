@@ -90,6 +90,7 @@ private:
 
 	bool isInput;
 	bool portTypeMenusPopulated;
+	bool menuSelectionInProgress;
 	set<string> allowedPortTypes;
 
 	bool canListPublishedPortAliasFor(VuoRendererPort *port);
@@ -103,4 +104,3 @@ private:
 #include "pro/VuoPublishedPortSidebar_Pro.hh"
 #endif
 };
-

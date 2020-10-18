@@ -40,6 +40,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoThresholdType, {"default":"rgb"}) channels,
 		VuoInputData(VuoReal, {"default":2, "suggestedMin":0, "suggestedMax":10}) radius,
 		VuoInputData(VuoReal, {"default":1, "suggestedMin":-2, "suggestedMax":2}) intensity,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":0, "suggestedMax":1}) threshold,
 		VuoInputData(VuoDiode, {"default":"bipolar"}) range,
 		VuoOutputData(VuoImage, {"name":"Outlined Image"}) convolvedImage
 )
@@ -55,5 +56,5 @@ void nodeInstanceEvent
 	VuoImage convolutionMatrix = VuoImageConvolve_generateMatrix(VuoImageConvolve_laplacianOfGaussian, width, true, clampedRadius);
 	VuoLocal(convolutionMatrix);
 
-	*convolvedImage = VuoImageConvolve_convolve(*convolve, image, convolutionMatrix, channels, intensity, range);
+	*convolvedImage = VuoImageConvolve_convolve(*convolve, image, convolutionMatrix, channels, intensity, threshold, range);
 }

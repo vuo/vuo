@@ -1,8 +1,8 @@
 /**
  * @file
- * Demonstrates a 2D visual effect using either the built-in camera or a video file. Click the mouse to switch.
+ * Demonstrates a 2D visual effect using the built-in camera.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.2.0
  * @copyright Copyright © 2017 [Luiz Andre](https://vuo.org/user/3195), used with permission.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -10,16 +10,12 @@
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.3.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<vibrance>vibrance\l|<hueShift>hueShift\l|<temperature>temperature\l|<tint>tint\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="30,60" fillcolor="green" _saturation="0" _vibrance="0" _hueShift="0" _temperature="0" _tint="0" _contrast="0.25" _brightness="0.25" _exposure="0" _gamma="1"];
-AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-525,60" fillcolor="lime"];
 BulgeImage2 [type="vuo.image.bulge2" version="2.0.0" label="Bulge Image|<refresh>refresh\l|<image>image\l|<centers>centers\l|<scales>scales\l|<radii>radii\l|<bulgedImage>bulgedImage\r" pos="1440,-450" fillcolor="tangerine"];
-ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="180,330"];
 ConvertFrameToImage4 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="105,375"];
 CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="1020,15" fillcolor="cyan" _center="\{\"x\":0.0,\"y\":0.0\}" _width="0.20000000000000001" _height="2"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="750,-315" fillcolor="tangerine" _startPosition="-2.5" _endPosition="-0.040000000000000001" _duration="3" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
-FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-720,-195" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="315,-270" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 HoldValue [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="1170,-240" fillcolor="tangerine"];
-MakeCartoonImage [type="vuo.image.toon" version="1.0.0" label="Make Cartoon Image|<refresh>refresh\l|<image>image\l|<blurRadius>blurRadius\l|<edgeColor>edgeColor\l|<edgeWidth>edgeWidth\l|<edgeThreshold>edgeThreshold\l|<imageColors>imageColors\l|<showImage>showImage\l|<cartoonImage>cartoonImage\r" pos="210,60" fillcolor="green" _blurRadius="4.0" _edgeColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _edgeWidth="0.20000000000000001" _edgeThreshold="0.2" _imageColors="8" _showImage="true"];
 MakeGradientNoise3 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="705,-435" fillcolor="tangerine" _gradientNoise="\"rectangular\"" _scaledStart="\{\"x\":-1.7000000476837158,\"y\":-1\}" _scaledEnd="\{\"x\":1.,\"y\":1.\}"];
 MakeImageLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1335,-240" fillcolor="tangerine" _center="\{\"x\":0.0020000000949949026,\"y\":0\}" _opacity="1.0" _preservePhysicalSize="false"];
 MakeImageLayer3 [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="1200,15" fillcolor="cyan" _center="\{\"x\":-1,\"y\":0\}" _opacity="1.0" _preservePhysicalSize="false"];
@@ -27,35 +23,26 @@ MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refr
 MakeList2 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1362,-409" fillcolor="tangerine"];
 MakeList3 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1407,-394" fillcolor="tangerine"];
 MakeList4 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1317,-424" fillcolor="tangerine"];
-PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="-285,60" fillcolor="green" _setTime="\"\"" _url="\"\\/System\\/Library\\/Compositions\\/Fish.mov\"" _loop="\"loop\"" _playbackRate="1" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
-ReceiveLiveVideo2 [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="-270,270" fillcolor="lime" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
-ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-270,-60" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveLiveVideo2 [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="315,15" fillcolor="lime" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
 RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1845,0" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
 RenderLayersToImage2 [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="1575,0" fillcolor="yellow" _width="1000" _height="480" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
-ResizeImageIfLarger [type="vuo.image.resize.larger" version="1.1.2" label="Resize Image if Larger|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="15,270" fillcolor="green" _sizingMode="\"fill\"" _width="640" _height="480"];
+ResizeImageIfLarger [type="vuo.image.resize.larger" version="1.1.3" label="Resize Image if Larger|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="600,15" fillcolor="green" _sizingMode="\"fill\"" _width="640" _height="480"];
 Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="975,-285" fillcolor="tangerine" _start="-2.5" _end="-0.040000000000000001" _scaledStart="0.080000000000000002" _scaledEnd="0.10000000000000001" _limitToRange="true"];
-SelectInput [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="705,15" fillcolor="green"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="255,-60" fillcolor="green"];
 
-Comment [type="vuo.comment" label="\"### Select between the live camera or a movie.\<br\>Stylize and brighten the colors in the movie.\"" pos="-375,-150" width="1230" height="507" fillcolor="green"];
+Comment [type="vuo.comment" label="\"### Receive video from the built-in camera.\"" pos="255,-90" width="540" height="186" fillcolor="green"];
 Comment2 [type="vuo.comment" label="\"### Create the mixing-ink effect with a moving center.\"" pos="630,-540" width="1035" height="378" fillcolor="tangerine"];
 Comment3 [type="vuo.comment" label="\"### Take a slice of the image, and place that slice to the left.\"" pos="900,-90" width="480" height="186" fillcolor="cyan"];
-Comment4 [type="vuo.comment" label="\"### Create a wide image canvas.\"" pos="1500,-90" width="285" height="197" fillcolor="yellow"];
+Comment4 [type="vuo.comment" label="\"### Create a wide image canvas.\"" pos="1500,-90" width="285" height="185" fillcolor="yellow"];
 
-AdjustImageColors:adjustedImage -> MakeCartoonImage:image;
-AllowFirstEvent:firstEvent -> PlayMovie:play;
 BulgeImage2:bulgedImage -> HoldValue:value;
-ConvertFrameToImage2:image -> AdjustImageColors:image;
 ConvertFrameToImage4:image -> ResizeImageIfLarger:image;
 CropImage:croppedImage -> MakeImageLayer3:image;
 Curve2:value -> MakeList2:1;
 Curve2:value -> Scale:value;
-FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
 FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 FireOnDisplayRefresh:requestedFrame -> HoldValue:update;
 FireOnDisplayRefresh:requestedFrame -> MakeGradientNoise3:position;
 HoldValue:heldValue -> MakeImageLayer:image;
-MakeCartoonImage:cartoonImage -> SelectInput:falseOption;
 MakeGradientNoise3:value -> MakeList4:1;
 MakeImageLayer3:layer -> MakeList:2;
 MakeImageLayer:layer -> MakeList:1;
@@ -63,14 +50,9 @@ MakeList2:list -> BulgeImage2:scales;
 MakeList3:list -> BulgeImage2:radii;
 MakeList4:list -> BulgeImage2:centers;
 MakeList:list -> RenderLayersToImage2:layers;
-PlayMovie:decodedVideo -> ConvertFrameToImage2:frame;
 ReceiveLiveVideo2:receivedFrame -> ConvertFrameToImage4:frame;
-ReceiveMouseButtons:pressed -> Toggle:toggle;
-RenderImageToWindow:updatedWindow -> ReceiveMouseButtons:window;
 RenderLayersToImage2:image -> BulgeImage2:image;
 RenderLayersToImage2:image -> RenderImageToWindow:image;
-ResizeImageIfLarger:resizedImage -> SelectInput:trueOption;
+ResizeImageIfLarger:resizedImage -> CropImage:image;
 Scale:scaledValue -> MakeList3:1;
-SelectInput:out -> CropImage:image;
-Toggle:value -> SelectInput:which;
 }

@@ -72,7 +72,7 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 
 	const int tabStop = 8;  // 8 characters/tab
 	QFontMetrics licenseFontMetrics(licenseFont);
-	ui->textEdit->setTabStopWidth(tabStop * licenseFontMetrics.width(' '));
+	ui->textEdit->setTabStopDistance(tabStop * licenseFontMetrics.width(' '));
 
 	// Set the introductory text.
 	ui->textLabel->setText(descriptiveText);

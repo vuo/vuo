@@ -238,9 +238,6 @@ static void VuoHid_destroy(VuoHid_internal si)
  */
 VuoHid VuoHid_make(const VuoHidDevice device, const VuoBoolean exclusive)
 {
-	if (!device.name)
-		return NULL;
-
 	VuoHid_internal si = new _VuoHid_internal;
 	VuoRegister(si, (DeallocateFunctionType)VuoHid_destroy);
 

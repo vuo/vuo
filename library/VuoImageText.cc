@@ -277,6 +277,8 @@ static CFArrayRef VuoImageText_createCTLines(
 	CFArrayRef ctLines = CTFrameGetLines(frame);
 	CFRetain(ctLines);
 	CFIndex lineCount = CFArrayGetCount(ctLines);
+	if (text[strlen(text) - 1] == '\n')
+		++lineCount;
 
 	// Get the bounds of each line of text, and union them into bounds for the entire block of text.
 	double ascent = CTFontGetAscent(*ctFont);
@@ -293,13 +295,17 @@ static CFArrayRef VuoImageText_createCTLines(
 
 	for (CFIndex i = 0; i < lineCount; ++i)
 	{
-		CTLineRef ctLine = (CTLineRef) CFArrayGetValueAtIndex(ctLines, i);
-		CFRange stringRange = CTLineGetStringRange(ctLine);
+		// Run through the loop body for the empty trailing newline (if any), adding normal lineheight with zero width.
+		CTLineRef ctLine = nullptr;
+		if (i < CFArrayGetCount(ctLines))
+			ctLine = (CTLineRef) CFArrayGetValueAtIndex(ctLines, i);
+
+		CFRange stringRange = ctLine ? CTLineGetStringRange(ctLine) : CFRangeMake(0,0);
 		lineCounts[i] = stringRange.length;
 
 		// get each individual character offset
 		CGFloat secondaryOffset;
-		CGFloat previousOffset = CTLineGetOffsetForStringIndex(ctLine, stringRange.location, &secondaryOffset );
+		CGFloat previousOffset = ctLine ? CTLineGetOffsetForStringIndex(ctLine, stringRange.location, &secondaryOffset ) : 0;
 
 		for(CFIndex index = stringRange.location; index < stringRange.location + stringRange.length; index++)
 		{
@@ -308,11 +314,11 @@ static CFArrayRef VuoImageText_createCTLines(
 			previousOffset = offset;
 		}
 
-		CGRect lineImageBounds = CTLineGetImageBounds(ctLine, cgContext);
+		CGRect lineImageBounds = ctLine ? CTLineGetImageBounds(ctLine, cgContext) : CGRectZero;
 		double width = CGRectGetWidth(lineImageBounds);
 		textImageData->lineWidthsExcludingTrailingWhitespace[i] = lineImageBounds.size.width;
 		textImageData->lineXOrigins[i] = lineImageBounds.origin.x;
-		if (includeTrailingWhiteSpace)
+		if (includeTrailingWhiteSpace && ctLine)
 			width += CTLineGetTrailingWhitespaceWidth(ctLine);
 		lineBounds[i] = CGRectMake(CGRectGetMinX(lineImageBounds), lineHeight * i - ascent, width, lineHeight);
 
@@ -552,7 +558,7 @@ unsigned int VuoImageTextData_getLineWithCharIndex(VuoImageTextData textData, un
 	// the char index that the starting line begins with
 	unsigned int lineStart = 0;
 
-	while(charIndex >= lineStart + textData->lineCounts[lineIndex])
+	while (lineIndex < textData->lineCount && charIndex >= lineStart + textData->lineCounts[lineIndex])
 	{
 		lineStart += textData->lineCounts[lineIndex];
 		lineIndex++;

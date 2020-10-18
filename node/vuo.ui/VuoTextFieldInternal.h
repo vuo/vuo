@@ -56,7 +56,7 @@ public:
 class VuoTextFieldInternal
 {
 private:
-
+	void *context;                    ///< Caller-provided context.
 	VuoTextFieldState* state;         ///< The current state of this text field.
 	uint64_t id;
 	VuoPoint2d screenSize;            ///< Last known screen size.
@@ -65,15 +65,17 @@ private:
 	VuoReal width;                    ///< Layer width.
 	VuoAnchor anchor;                 ///< Layer anchor.
 	VuoUiTheme theme;                 ///< UI Text Field theme to use when rendering.
-	VuoColor cursorColor;             ///< The color of the text input cursor.
 	VuoInteger lineCount;             ///< The number of lines this text field allows.
 
 	/// Optional function callback to be invoked when OnTypedCharacterEvent is fired.  Returns true if input is valid, false otherwise.
-	bool (*validateCharInput)(const VuoText current, uint32_t append);
+	bool (*validateCharInput)(const VuoText current, uint32_t newChar, uint16_t position);
 
 	/// Optional function callback to be invoked when text field loses focus.  Use this to validate user input and (if necessary) change it.
 	/// Returns true if the text has been modified (in which case @modified should contain the new text).
-	bool (*validateTextInput)(const VuoText current, VuoText* modified);
+	bool (*validateTextInput)(void *context, const VuoText current, VuoText* modified);
+
+	typedef void (*SessionEndedCallbackType)(void *context, VuoText text);
+	SessionEndedCallbackType sessionEndedCallback;
 
 	bool FindTextLayer(const VuoRenderedLayers* renderedLayers, uint64_t id, VuoSceneObject* textLayer, VuoList_VuoSceneObject ancestors) VuoWarnUnusedResult;
 	bool GetTextLocalPosition(const VuoRenderedLayers* renderedLayers, uint64_t id, VuoPoint2d point, VuoPoint2d* inverseTransformedPoint) VuoWarnUnusedResult;
@@ -81,19 +83,19 @@ private:
 
 public:
 
-	VuoTextFieldInternal(VuoInteger numLines);
+	VuoTextFieldInternal(VuoInteger numLines, void *context);
 	~VuoTextFieldInternal();
 
 	void SetLineCount(VuoInteger lines);
 	void SetPosition(VuoPoint2d newPosition);
 	void SetWidth(VuoReal newWidth);
-	void SetCursorColor(VuoColor color);
 	void SetAnchor(VuoAnchor newAnchor);
 	void SetTheme(VuoUiTheme newTheme);
 	void SetText(VuoText text);
 	void SetPlaceholderText(VuoText text);
-	void SetValidateCharInputCallback(bool (*validateCharInputCallback)(const VuoText current, uint32_t append));
-	void SetValidateTextInputCallback(bool (*validateTextInputCallback)(const VuoText current, VuoText* modifiedText));
+	void SetValidateCharInputCallback(bool (*validateCharInputCallback)(const VuoText current, uint32_t newChar, uint16_t position));
+	void SetValidateTextInputCallback(bool (*validateTextInputCallback)(void *context, const VuoText current, VuoText* modifiedText));
+	void setSessionEndedCallback(SessionEndedCallbackType sessionEndedCallback);
 
 	VuoText GetText() const;
 

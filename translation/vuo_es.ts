@@ -2246,7 +2246,7 @@ la pantalla de presentación de Vuo Community Edition al iniciar.</translation>
     <message>
         <location line="+19"/>
         <source>Size</source>
-        <translation>tamaño</translation>
+        <translation>Tamaño</translation>
     </message>
     <message>
         <location line="+7"/>

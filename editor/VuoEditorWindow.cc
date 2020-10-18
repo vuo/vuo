@@ -777,14 +777,6 @@ VuoEditorWindow::~VuoEditorWindow()
 	composition->deleteLater();
 	delete ui;
 
-#ifdef __APPLE__
-	// Ensure a ghost of this window doesn't reappear after switching to another app and back.
-	// https://b33p.net/kosada/node/15322 comment #4
-	id nsView = (id)winId();
-	id nsWindow = objc_msgSend(nsView, sel_getUid("window"));
-	objc_msgSend(nsWindow, sel_getUid("close"));
-#endif
-
 	// Drain the documentation queue, to ensure any pending
 	// node library documentation requests have completed
 	// before QWidget deallocates the node library.
@@ -798,7 +790,7 @@ VuoEditorWindow::~VuoEditorWindow()
  */
 void VuoEditorWindow::showUpdateHelpDialog()
 {
-	if (composition->getBase()->getMetadata()->getLastSavedInVuoVersion().empty())
+	if (composition->getBase()->getMetadata()->getLastSavedInVuoVersion().empty() && !windowFilePath().isEmpty())
 	{
 		bool foundCommunityNode = false;
 		for (VuoNode *node : composition->getBase()->getNodes())
@@ -3679,7 +3671,7 @@ QString VuoEditorWindow::saveCompositionAs()
 {
 	// Don't use QFileDialog::getSaveFileName() here since it doesn't present the window as a Mac OS X sheet --- https://lists.qt-project.org/pipermail/qt4-feedback/2009-February/000518.html
 	QFileDialog d(this, Qt::Sheet);
-//	d.setWindowModality(Qt::WindowModal);	// Causes dialog to jump.
+	//d.setWindowModality(Qt::WindowModal);  // Causes dialog to always return status Rejected.
 
 	if (VuoFileUtilities::fileExists(windowFilePath().toStdString()))
 		d.setDirectory(windowFilePath());
@@ -6423,41 +6415,18 @@ void VuoEditorWindow::updateColor(bool isDark)
 	QString scrollBarColor                 = isDark ? "#505050" : "#dfdfdf";
 	QString dockwidgetTitleBackgroundColor = isDark ? "#919191" : "#efefef";
 
-	QString menuStyle = VUO_QSTRINGIFY(
-		// Sync with VuoCodeWindow::updateColor.
-		// Should parallel VuoDialogForInputEditor::getStyleSheet()'s QComboBox popup menu styles.
-		QMenu {
-			background-color: #404040;
-		}
-		QMenu::item {
-			color: #cfcfcf;
-			padding-left: 22px;
-			padding-right: 36px;
-			height: 21px;
-		}
-		QMenu::item:disabled {
-			color: #707070;
-		}
-		QMenu::item:selected {
-			background-color: #1060d0;
-			color: #ffffff;
-		}
-		QMenu::right-arrow {
-			left: -14px;
-		}
-		QMenu::indicator:checked {
-			image: url(:/Icons/checkmark.svg);
-			width: 11px;
-		}
-		QMenu::indicator:checked,
-		QMenu::icon {
-			margin-left: 6px;
-		}
-		QMenu::icon:checked,
-		QMenu::icon:unchecked {
-			margin-left: 0;
-		}
-	);
+	QFile f(":/Vuo.qss");
+	f.open(QFile::ReadOnly | QFile::Text);
+	QTextStream ts(&f);
+	QString styles = ts.readAll();
+
+	if (isDark)
+	{
+		QFile f(":/pro/VuoDark.qss");
+		f.open(QFile::ReadOnly | QFile::Text);
+		QTextStream ts(&f);
+		styles += ts.readAll();
+	}
 
 	if (doneInitializing)
 		setStyleSheet(VUO_QSTRINGIFY(
@@ -6470,10 +6439,10 @@ void VuoEditorWindow::updateColor(bool isDark)
 						  }
 					  )
 					  .arg(dockwidgetTitleBackgroundColor)
-					  + (isDark ? menuStyle : ""));
+					  + styles);
 
 	if (VuoEditorWindowToolbar::usingOverlayScrollers())
-		ui->graphicsView->setStyleSheet(isDark ? menuStyle : "");
+		ui->graphicsView->setStyleSheet(styles);
 	else
 		ui->graphicsView->setStyleSheet(VUO_QSTRINGIFY(
 											 QScrollBar {
@@ -6499,7 +6468,7 @@ void VuoEditorWindow::updateColor(bool isDark)
 											 )
 										 .arg(backgroundColor)
 										 .arg(scrollBarColor)
-										 + (isDark ? menuStyle : ""));
+										 + styles);
 
 
 	if (doneInitializing)

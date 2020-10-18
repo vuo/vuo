@@ -35,7 +35,8 @@
 #define KEYCODE_CUT 0x18 	///< The keycode to recognize as a "Cut" event.
 #define KEYCODE_ESC 0x1b 	///< The keycode to recognize as a "Escape" event.
 #define KEYCODE_TAB 0x9		///< The keycode to recognize as `Tab`
-#define KEYCODE_RETURN 0xD 	///< The keycode to recognize as `Return`
+#define KEYCODE_RETURN 0xD  ///< The keycode to recognize as `Return` (above right shift key)
+#define KEYCODE_ENTER 0x3   ///< The keycode to recognize as `Enter` (fn-return, or button on the bottom-right of an extended keyboard)
 
 /// The character representing a newline. See also VuoTextEdit_isNewLine.
 static char STB_TEXTEDIT_NEWLINE = '\n';
@@ -45,7 +46,9 @@ static char STB_TEXTEDIT_NEWLINE = '\n';
 #define STB_TEXTEDIT_K_UP              0x0001E                                     ///< Keyboard input to move cursor up
 #define STB_TEXTEDIT_K_DOWN            0x0001F                                     ///< Keyboard input to move cursor down
 #define STB_TEXTEDIT_K_LINESTART       (COMMAND_HI | STB_TEXTEDIT_K_LEFT)          ///< Keyboard input to move cursor to start of line
+#define STB_TEXTEDIT_K_LINESTART2      0x1                                         ///< Keyboard input to move cursor to start of line (home key)
 #define STB_TEXTEDIT_K_LINEEND         (COMMAND_HI | STB_TEXTEDIT_K_RIGHT)         ///< Keyboard input to move cursor to end of line
+#define STB_TEXTEDIT_K_LINEEND2        0x4                                         ///< Keyboard input to move cursor to end of line (end key)
 #define STB_TEXTEDIT_K_TEXTSTART       (COMMAND_HI | STB_TEXTEDIT_K_UP)            ///< Keyboard input to move cursor to start of text
 #define STB_TEXTEDIT_K_TEXTSTART2      (CONTROL_HI | 0x41)                         ///< Keyboard input to move cursor to start of text (Control+A)
 #define STB_TEXTEDIT_K_TEXTEND         (COMMAND_HI | STB_TEXTEDIT_K_DOWN)          ///< Keyboard input to move cursor to end of text
@@ -314,6 +317,9 @@ static void VuoTextEdit_paste(STB_TEXTEDIT_STRING *str, STB_TexteditState *state
  */
 static int stb_text_locate_coord(STB_TexteditState *state, float x, float y)
 {
+	if (!state->textImageData)
+		return 0;
+
 	return VuoImageTextData_getNearestCharToPoint((VuoImageTextData) state->textImageData, VuoPoint2d_make(x, y));
 }
 
@@ -354,13 +360,12 @@ static uint32_t STB_TEXTEDIT_KEYTOTEXT(STB_TEXTEDIT_CHARTYPE key)
 {
 	// fprintf(stderr, "raw: %llu (%llu) hi: %llu  lo: %u\n", key, (OPTION_HI | 0xd), key & VuoModifierKey_Any, (uint32_t) ((key & ~VuoModifierKey_Any) & 0xFFFF));
 
-	// special case - alt+enter inserts new line, alt+tab inserts tab
-	if(key == (OPTION_HI | KEYCODE_RETURN))
-		return STB_TEXTEDIT_NEWLINE;
-	else if(key == (OPTION_HI | KEYCODE_TAB))
-		return '\t';
-
 	uint32_t lo = (uint32_t) (key & 0xFFFF);
+
+	if (lo == KEYCODE_RETURN)
+		return STB_TEXTEDIT_NEWLINE;
+	else if (lo == KEYCODE_TAB)
+		return '\t';
 
 	return lo > 31 && lo < UINT32_MAX ? lo : 0;
 }

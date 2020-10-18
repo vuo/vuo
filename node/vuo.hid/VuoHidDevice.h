@@ -29,20 +29,21 @@ typedef enum
 {
 	VuoHidDevice_MatchName,
 	VuoHidDevice_MatchLocation,
+	VuoHidDevice_MatchVendorAndProduct,
+	VuoHidDevice_MatchUsage,
 } VuoHidDevice_MatchType;
 
 /**
- * Information about a USB HID device.
+ * Information about a USB or Bluetooth HID device.
  */
 typedef struct
 {
 	VuoHidDevice_MatchType matchType;	///< Which field to use for matching a VuoHidDevice structure to an actual device.
 	VuoText name;						///< The device's display name.
-	VuoInteger location;				///< Where the device is connected in the USB topology.  `kIOHIDLocationIDKey << 8 + kUSBInterfaceNumber`
+	VuoInteger location;                ///< Where the device is connected in the system topology.  `kIOHIDLocationIDKey << 8 + kUSBInterfaceNumber`
 
 	VuoList_VuoHidControl controls;		///< All the device's controls.
 
-	// IOHIDManager can't match on kIOHIDLocationIDKey, so we have to match on other criteria, then filter those results by location.
 	VuoInteger vendorID;
 	VuoInteger productID;
 	VuoInteger usagePage;
@@ -72,4 +73,3 @@ void VuoHidDevice_release(VuoHidDevice value);
 /**
  * @}
  */
-

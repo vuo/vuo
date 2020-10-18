@@ -9,11 +9,10 @@
 
 #pragma once
 
-#include "VuoCompilerConstantStringCache.hh"
-
 class VuoCompiler;
 class VuoCompilerChain;
 class VuoCompilerComposition;
+class VuoCompilerConstantsCache;
 class VuoCompilerGraph;
 class VuoCompilerNode;
 class VuoCompilerPort;
@@ -65,7 +64,7 @@ private:
 	Module *module;
 
 	/// The LLVM constants that have been generated so far in the current module.
-	VuoCompilerConstantStringCache constantStrings;
+	VuoCompilerConstantsCache *constantsCache;
 
 	/// The functions called by chain workers to execute each node.
 	map<VuoCompilerNode *, Function *> executionFunctionForNode;
@@ -103,9 +102,8 @@ private:
 	void generateNodeInstanceTriggerStartFunction(void);
 	void generateNodeInstanceTriggerStopFunction(void);
 	void generateNodeInstanceTriggerUpdateFunction(void);
-	Value * generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL, bool shouldBlock = true);
-	void generateCompositionWaitForNodeFunction(void);
-	void generateSignalForNodes(Module *module, BasicBlock *block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes);
+	void generateLockNodes(Module *module, BasicBlock *block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL);
+	void generateUnlockNodes(Module *module, BasicBlock *block, Value *compositionStateValue, vector<VuoCompilerNode *> nodes);
 	void generateCompositionGetPortValueFunction(void);
 	void generateCompositionSetPortValueFunction(void);
 	void generateSetInputPortValueFunction(void);

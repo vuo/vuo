@@ -14,7 +14,7 @@
 const int VuoNodeClassListItemDelegate::humanReadableNameIndex = Qt::UserRole;
 const int VuoNodeClassListItemDelegate::classNameIndex = Qt::UserRole+1;
 const int VuoNodeClassListItemDelegate::nodeClassPointerIndex = Qt::UserRole+2;
-const int VuoNodeClassListItemDelegate::baseTitleFontPt = 12;
+const int VuoNodeClassListItemDelegate::baseTitleFontPt = 13;
 const int VuoNodeClassListItemDelegate::disambiguatingTitleFontPt = 10;
 
 /**
@@ -58,7 +58,7 @@ void VuoNodeClassListItemDelegate::paintTextDocument(QPainter *painter, const QS
 
 	// Center node name vertically within row.
 	int h = /*doc->size().height()*/ baseTitleFontPt * 2;
-	int yAdjusted = r.y() + r.size().height()/2 - h/2;
+	int yAdjusted = r.y() + r.size().height()/2 - h/2 + 1;
 
 	painter->translate(r.x(), yAdjusted);
 	doc->drawContents(painter);
@@ -113,6 +113,7 @@ QTextDocument *VuoNodeClassListItemDelegate::generateTextDocument(const QModelIn
 	to.setWrapMode(QTextOption::NoWrap);
 	QTextDocument *document = new QTextDocument();
 	document->setDefaultTextOption(to);
+	document->setDefaultFont(QFont("PT Sans"));
 
 	// Locate text filter tokens within the node name for highlighting.
 	VuoNodeClassListItemHighlighter *highlighter = new VuoNodeClassListItemHighlighter(document);
@@ -129,7 +130,7 @@ QTextDocument *VuoNodeClassListItemDelegate::generateTextDocument(const QModelIn
 	QString disambiguationSeparator = " ";
 	highlighter->setNodeClassNameStartIndex(humanReadable? humanReadableName.length()+disambiguationSeparator.length():0);
 
-	QString formattedBaseTitle = QString("<span style=\"color:%1; \"font-size:%2pt;\">%3</span>")
+	QString formattedBaseTitle = QString("<span style=\"color:%1; font-size:%2pt;\">%3</span>")
 													.arg(baseTitleFontColor.name())
 													.arg(baseTitleFontPt)
 													.arg(baseTitle);

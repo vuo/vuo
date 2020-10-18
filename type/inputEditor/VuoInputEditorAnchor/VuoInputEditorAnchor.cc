@@ -129,8 +129,6 @@ void VuoInputEditorAnchor::setUpDialog(QDialog &dialog, json_object *originalVal
 	// left center	 	center center	 	right center
 	// left bottom	 	center bottom		right center
 
-	signalMapper = new QSignalMapper(this);
-
 	for(int r = 0; r < 3; r++)
 	{
 		for(int c = 0; c < 3; c++)
@@ -153,25 +151,30 @@ void VuoInputEditorAnchor::setUpDialog(QDialog &dialog, json_object *originalVal
 			matrix[index]->setMinimumWidth(24);
 			matrix[index]->setMinimumHeight(24);
 			if(isDark)
-				matrix[index]->setStyleSheet( "QPushButton:checked { background:#8B8C8C; border:none; outline:none; }" );
+				matrix[index]->setStyleSheet( "QPushButton:checked { background: #8c8c8c; border: none; outline: none; } QPushButton:pressed { background: #9c9c9c; border: none; outline: none; }" );
 			else
-				matrix[index]->setStyleSheet( "QPushButton:checked { background:#909090; border:none; outline:none; }" );
-			connect(matrix[index], &QPushButton::released, signalMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-			signalMapper->setMapping(matrix[index], index) ;
+				matrix[index]->setStyleSheet( "QPushButton:checked { background: #c0c0c0; border: none; outline: none; } QPushButton:pressed { background: #b0b0b0; border: none; outline: none; }" );
+			connect(matrix[index], &QPushButton::released, this, &VuoInputEditorAnchor::onSetAnchor);
 			layout->addWidget(matrix[index], r, c);
 		}
 	}
 
 	matrix[curIndex]->setChecked(true);
 
-	connect(signalMapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &VuoInputEditorAnchor::onSetAnchor);
-
 	dialog.setFocusPolicy(Qt::NoFocus);
 	dialog.setLayout(layout);
 }
 
-void VuoInputEditorAnchor::onSetAnchor(int anchor)
+void VuoInputEditorAnchor::onSetAnchor()
 {
+	int anchor = 0;
+	for (int i = 0; i < 9; ++i)
+		if (matrix[i] == sender())
+		{
+			anchor = i;
+			break;
+		}
+
 	matrix[anchor]->setChecked(true);
 	currentValue = VuoAnchor_getJson(ANCHOR_MAP[anchor]);
 	char* sum = VuoAnchor_getSummary(ANCHOR_MAP[anchor]);

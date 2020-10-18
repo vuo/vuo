@@ -62,8 +62,9 @@ VuoTextFieldState::~VuoTextFieldState()
 /**
  * Initialize a new internal text field object.
  */
-VuoTextFieldInternal::VuoTextFieldInternal(VuoInteger numLines)
+VuoTextFieldInternal::VuoTextFieldInternal(VuoInteger numLines, void *context)
 {
+	this->context = context;
 	state = new VuoTextFieldState(numLines);
 	lineCount = numLines;
 	id = VuoSceneObject_getNextId();
@@ -81,6 +82,7 @@ VuoTextFieldInternal::VuoTextFieldInternal(VuoInteger numLines)
  */
 VuoTextFieldInternal::~VuoTextFieldInternal()
 {
+	VuoRelease(theme);
 	delete state;
 }
 
@@ -92,14 +94,6 @@ void VuoTextFieldInternal::SetLineCount(VuoInteger lines)
 	state->textEditState.line_count = lines;
 	lineCount = lines;
 	SetText(state->text);
-}
-
-/**
- * Set the color of the text cursor.
- */
-void VuoTextFieldInternal::SetCursorColor(VuoColor color)
-{
-	cursorColor = color;
 }
 
 /**
@@ -131,6 +125,9 @@ void VuoTextFieldInternal::SetAnchor(VuoAnchor newAnchor)
  */
 void VuoTextFieldInternal::SetText(VuoText text)
 {
+	if (state->text == text)
+		return;
+
 	if(state->text != NULL)
 		VuoRelease(state->text);
 
@@ -163,6 +160,8 @@ void VuoTextFieldInternal::SetPlaceholderText(VuoText text)
  */
 void VuoTextFieldInternal::SetTheme(VuoUiTheme newTheme)
 {
+	VuoRetain(newTheme);
+	VuoRelease(theme);
 	theme = newTheme;
 }
 
@@ -170,7 +169,7 @@ void VuoTextFieldInternal::SetTheme(VuoUiTheme newTheme)
  * Set an optional function callback to be invoked when OnTypedCharacterEvent is fired.
  * Returns true if input is valid, false otherwise.
  */
-void VuoTextFieldInternal::SetValidateCharInputCallback(bool (*validateCharInputCallback)(const VuoText current, uint32_t append))
+void VuoTextFieldInternal::SetValidateCharInputCallback(bool (*validateCharInputCallback)(const VuoText current, uint32_t newChar, uint16_t position))
 {
 	validateCharInput = validateCharInputCallback;
 }
@@ -179,9 +178,17 @@ void VuoTextFieldInternal::SetValidateCharInputCallback(bool (*validateCharInput
  * Optional function callback to be invoked when text field loses focus.  Use this to validate user input and (if necessary) change it.
  * Returns true if the text has been modified (in which case modifiedText should contain the new text).
  */
-void VuoTextFieldInternal::SetValidateTextInputCallback(bool (*validateTextInputCallback)(const VuoText current, VuoText* modifiedText))
+void VuoTextFieldInternal::SetValidateTextInputCallback(bool (*validateTextInputCallback)(void *context, const VuoText current, VuoText* modifiedText))
 {
 	validateTextInput = validateTextInputCallback;
+}
+
+/**
+ * Sets the callback to be invoked when the text editing session ends (by clicking outside the field, or pressing return, enter, tab, or esc).
+ */
+void VuoTextFieldInternal::setSessionEndedCallback(VuoTextFieldInternal::SessionEndedCallbackType sessionEndedCallback)
+{
+	this->sessionEndedCallback = sessionEndedCallback;
 }
 
 /**
@@ -256,13 +263,12 @@ void VuoTextFieldInternal::OnTypedCharacterEvent(VuoText character, VuoModifierK
 
 	// VLog("char: 0x%x  mod: 0x%x  =  0x%llx", unicode[0], modifiers, VuoTextEdit_combineKeyAndModifier(unicode[0], modifiers));
 
-	if(	utf32_char == KEYCODE_ESC ||
-		(!(modifiers & VuoModifierKey_Option) && (
-				utf32_char == KEYCODE_TAB ||
-				utf32_char == KEYCODE_RETURN
-			)
-		)
-	)
+	// End the editing session when Esc or Enter is pressed,
+	// or when Return or Tab are pressed in a single-line textfield.
+	if (utf32_char == KEYCODE_ESC
+	 || (modifiers == 0 && utf32_char == KEYCODE_ENTER)
+	 || (lineCount <= 1 && utf32_char == KEYCODE_RETURN)
+	 || (lineCount <= 1 && utf32_char == KEYCODE_TAB))
 	{
 		state->isFocused = false;
 		OnLostFocus();
@@ -281,8 +287,9 @@ void VuoTextFieldInternal::OnTypedCharacterEvent(VuoText character, VuoModifierK
 	}
 	else
 	{
-		// if validateCharInput callback is null, char is a control code, or validInput callback return true
-		if(validateCharInput == NULL || utf32_char < 32 || validateCharInput(state->text, utf32_char))
+		// select_start can be greater if placeholder text is present.
+		int cursor = MIN(VuoText_length(state->text), state->textEditState.select_start);
+		if(validateCharInput == NULL || utf32_char < 32 || validateCharInput(state->text, utf32_char, cursor))
 			stb_textedit_key(&state->text, &state->textEditState, VuoTextEdit_combineKeyAndModifier(utf32_char, modifiers));
 	}
 }
@@ -371,7 +378,7 @@ void VuoTextFieldInternal::OnLostFocus()
 	{
 		VuoText modifiedText = NULL;
 
-		if(validateTextInput(state->text, &modifiedText))
+		if(validateTextInput(context, state->text, &modifiedText))
 		{
 			SetText(modifiedText);
 
@@ -382,6 +389,9 @@ void VuoTextFieldInternal::OnLostFocus()
 			}
 		}
 	}
+
+	if (sessionEndedCallback)
+		sessionEndedCallback(context, state->text);
 }
 
 /**
@@ -401,7 +411,6 @@ VuoLayer VuoTextFieldInternal::CreateTextLayer()
 
 	VuoLayer layer = textTheme->render(screenSize,
 												screenBackingScaleFactor,
-												cursorColor,
 												state->text,
 												state->placeholder,
 												lineCount,

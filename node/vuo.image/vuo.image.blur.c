@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  "VuoImageBlur"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "BlurMovie.vuo" ]
+						  "exampleCompositions" : [ "BlurImage.vuo" ]
 					  }
 				 });
 

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "transparency", "alpha", "luma", "brightness", "opacity", "negative", "remove", "cut", "magic", "wand" ],
 					  "version" : "1.1.2",
 					  "node": {
-						  "exampleCompositions" : [ "MaskMovieWithImage.vuo" ]
+						  "exampleCompositions" : [ "MaskImageWithImage.vuo" ]
 					  }
 				 });
 

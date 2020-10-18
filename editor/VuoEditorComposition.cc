@@ -15,6 +15,7 @@
 #include "VuoEditorWindow.hh"
 #include "VuoErrorDialog.hh"
 #include "VuoException.hh"
+#include "VuoFileType.h"
 #include "VuoRendererComment.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoRendererInputListDrawer.hh"
@@ -63,6 +64,7 @@ const qreal VuoEditorComposition::showEventsModeUpdateInterval = 1000/20.; // in
 const int VuoEditorComposition::initialChangeNodeSuggestionCount = 10; // The initial number of suggestions to list in the "Change (Node) To" context menu
 
 Q_DECLARE_METATYPE(VuoRendererNode *)
+Q_DECLARE_METATYPE(VuoRendererPort *)
 
 /**
  * Creates an empty canvas upon which nodes and cables can be rendered.
@@ -149,85 +151,60 @@ VuoEditorComposition::VuoEditorComposition(VuoMainWindow *window, VuoComposition
 	{
 		// Workaround for a bug in Qt 5.1.0-beta1 (https://b33p.net/kosada/node/5096).
 		// For now, this sets up the actions for a menu, rather than setting up the menu itself.
-		QSignalMapper *contextMenuThrottlingMapper = new QSignalMapper(this);
-		connect(contextMenuThrottlingMapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &VuoEditorComposition::setTriggerThrottling);
 
-		QList<QPair<QString, enum VuoPortClass::EventThrottling> > throttlingNamesAndIndices;
-		throttlingNamesAndIndices.append(QPair<QString, enum VuoPortClass::EventThrottling>(tr("Enqueue Events"), VuoPortClass::EventThrottling_Enqueue));
-		throttlingNamesAndIndices.append(QPair<QString, enum VuoPortClass::EventThrottling>(tr("Drop Events"), VuoPortClass::EventThrottling_Drop));
-
-		for (QList<QPair<QString, enum VuoPortClass::EventThrottling> >::iterator i = throttlingNamesAndIndices.begin(); i != throttlingNamesAndIndices.end(); ++i)
-		{
-			QString name = i->first;
-			enum VuoPortClass::EventThrottling index = i->second;
-			QAction *action = new QAction(name, this);
-
+		auto addThrottlingAction = [=](QString label, VuoPortClass::EventThrottling throttling) {
+			QAction *action = new QAction(label, this);
+			connect(action, &QAction::triggered, [=](){
+				emit triggerThrottlingUpdated(action->data().value<VuoRendererPort *>()->getBase(), throttling);
+			});
 			contextMenuThrottlingActions.append(action);
-
-			contextMenuThrottlingMapper->setMapping(action, index);
-			connect(action, &QAction::triggered, contextMenuThrottlingMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-		}
-
-		/*
-		contextMenuThrottling = new VuoMenu(NULL);
-		contextMenuThrottling->setTitle(tr("Set Event Throttling"));
-		QSignalMapper *contextMenuThrottlingMapper = new QSignalMapper(this);
-		connect(contextMenuThrottlingMapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &VuoEditorComposition::setEventThrottling);
-
-		addActionToMenuAndMapper(contextMenuThrottling, contextMenuThrottlingMapper, "Enqueue Events", VuoPortClass::EventThrottling_Enqueue);
-		addActionToMenuAndMapper(contextMenuThrottling, contextMenuThrottlingMapper, "Drop Events", VuoPortClass::EventThrottling_Drop);
-		*/
+		};
+		addThrottlingAction(tr("Enqueue Events"), VuoPortClass::EventThrottling_Enqueue);
+		addThrottlingAction(tr("Drop Events"),    VuoPortClass::EventThrottling_Drop);
 	}
 
 	{
 		// Workaround for a bug in Qt 5.1.0-beta1 (https://b33p.net/kosada/node/5096).
 		// For now, this sets up the actions for a menu, rather than setting up the menu itself.
-		QSignalMapper *contextMenuTintsMapper = new QSignalMapper(this);
-		connect(contextMenuTintsMapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped), this, &VuoEditorComposition::tintSelectedItems);
 
-		QList<QPair<QString, enum VuoNode::TintColor> > tintNamesAndIndices;
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Yellow"), VuoNode::TintYellow));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Tangerine"), VuoNode::TintTangerine));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Orange"), VuoNode::TintOrange));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Magenta"), VuoNode::TintMagenta));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Violet"), VuoNode::TintViolet));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Blue"), VuoNode::TintBlue));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Cyan"), VuoNode::TintCyan));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Green"), VuoNode::TintGreen));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("Lime"), VuoNode::TintLime));
-		tintNamesAndIndices.append(QPair<QString, enum VuoNode::TintColor>(tr("None"), VuoNode::TintNone));
-
-		for (QList<QPair<QString, enum VuoNode::TintColor> >::iterator i = tintNamesAndIndices.begin(); i != tintNamesAndIndices.end(); ++i)
-		{
-			QString name = i->first;
-			enum VuoNode::TintColor index = i->second;
-			QAction *action = new QAction(name, this);
+		auto addTintAction = [=](QString label, VuoNode::TintColor tint) {
+			QAction *action = new QAction(label, this);
+			connect(action, &QAction::triggered, [=](){
+				static_cast<VuoEditorWindow *>(window)->tintSelectedItems(tint);
+			});
 
 			// Add a color swatch to the menu item.
 			{
 				QColor fill(0,0,0,0);
 				// For TintNone, draw a transparent icon, so that menu item's text indent is consistent with the other items.
-				if (index != VuoNode::TintNone)
+				if (tint != VuoNode::TintNone)
 				{
-					VuoRendererColors colors(index);
+					VuoRendererColors colors(tint);
 					fill = colors.nodeFill();
 				}
 
 				QIcon *icon = VuoInputEditorIcon::renderIcon(^(QPainter &p){
-																 p.setPen(Qt::NoPen);
-																 p.setBrush(fill);
-																 // Match distance between text baseline and ascender.
-																 p.drawEllipse(3, 3, 10, 10);
-															 });
+					p.setPen(Qt::NoPen);
+					p.setBrush(fill);
+					// Match distance between text baseline and ascender.
+					p.drawEllipse(3, 3, 10, 10);
+				});
 				action->setIcon(*icon);
 				delete icon;
 			}
 
 			contextMenuTintActions.append(action);
-
-			contextMenuTintsMapper->setMapping(action, index);
-			connect(action, &QAction::triggered, contextMenuTintsMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-		}
+		};
+		addTintAction(tr("Yellow"),    VuoNode::TintYellow);
+		addTintAction(tr("Tangerine"), VuoNode::TintTangerine);
+		addTintAction(tr("Orange"),    VuoNode::TintOrange);
+		addTintAction(tr("Magenta"),   VuoNode::TintMagenta);
+		addTintAction(tr("Violet"),    VuoNode::TintViolet);
+		addTintAction(tr("Blue"),      VuoNode::TintBlue);
+		addTintAction(tr("Cyan"),      VuoNode::TintCyan);
+		addTintAction(tr("Green"),     VuoNode::TintGreen);
+		addTintAction(tr("Lime"),      VuoNode::TintLime);
+		addTintAction(tr("None"),      VuoNode::TintNone);
 	}
 
 	// 'Show Events' mode rendering setup
@@ -1274,17 +1251,6 @@ void VuoEditorComposition::fireTriggerPortEvent(VuoPort *port)
 }
 
 /**
- * Edits the trigger port's event-throttling behavior.
- */
-void VuoEditorComposition::setTriggerThrottling(int eventThrottling)
-{
-	QSignalMapper *signalMapper = (QSignalMapper *)QObject::sender();
-	QAction *sender = (QAction *)signalMapper->mapping(eventThrottling);
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
-	emit triggerThrottlingUpdated(port->getBase(), (enum VuoPortClass::EventThrottling)eventThrottling);
-}
-
-/**
  * Adds an input port to the node associated with the signal
  * that activated this slot.
  */
@@ -1317,15 +1283,6 @@ void VuoEditorComposition::swapNode()
 	VuoRendererNode *node = static_cast<VuoRendererNode *>(nodeAndReplacementType[0].value<void *>());
 	QString newNodeClassName = nodeAndReplacementType[1].toString();
 	emit nodeSwapRequested(node, newNodeClassName.toUtf8().constData());
-}
-
-
-/**
- * Sets the tint color of the selected nodes and comments to @c tintColor.
- */
-void VuoEditorComposition::tintSelectedItems(int tintColor)
-{
-	emit tintSelectedItemsRequested((VuoNode::TintColor)tintColor);
 }
 
 /**
@@ -1593,18 +1550,21 @@ void VuoEditorComposition::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 			bool dragIncludesDroppableFile = false;
 			foreach (QUrl url, urls)
 			{
-				bool isSupportedDragNDropFile = isSupportedImageFile(url.path().toUtf8().constData()) ||
-												isSupportedMovieFile(url.path().toUtf8().constData()) ||
-												isSupportedSceneFile(url.path().toUtf8().constData()) ||
-												isSupportedAudioFile(url.path().toUtf8().constData()) ||
-												isSupportedFeedFile(url.path().toUtf8().constData()) ||
-												isSupportedJsonFile(url.path().toUtf8().constData()) ||
-												isSupportedXmlFile(url.path().toUtf8().constData()) ||
-												isSupportedTableFile(url.path().toUtf8().constData()) ||
-												isSupportedMeshFile(url.path().toUtf8().constData()) ||
-												isSupportedDataFile(url.path().toUtf8().constData()) ||
-												isSupportedAppFile(url.path().toUtf8().constData()) ||
-												isDirectory(url.path().toUtf8().constData());
+				char *urlZ = strdup(url.path().toUtf8().constData());
+				bool isSupportedDragNDropFile =
+					VuoFileType_isFileOfType(urlZ, VuoFileType_Image)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Movie)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Scene)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Audio)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Feed)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_JSON)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_XML)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Table)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Mesh)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_Data)
+				 || VuoFileType_isFileOfType(urlZ, VuoFileType_App)
+				 || isDirectory(urlZ);
+				free(urlZ);
 				if (isSupportedDragNDropFile)
 				{
 					dragIncludesDroppableFile = true;
@@ -1699,36 +1659,39 @@ void VuoEditorComposition::dropEvent(QGraphicsSceneDragDropEvent *event)
 			foreach (QUrl url, urls)
 			{
 				QStringList targetNodeClassNames;
+				char *urlZ = strdup(url.path().toUtf8().constData());
 
-				if (isSupportedImageFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Image))
 					targetNodeClassNames += "vuo.image.fetch";
-				if (isSupportedMovieFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Movie))
 				{
 					if (!getActiveProtocol())
 						targetNodeClassNames += "vuo.video.play";
 
 					targetNodeClassNames += "vuo.video.decodeImage";
 				}
-				if (isSupportedSceneFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Scene))
 					targetNodeClassNames += "vuo.scene.fetch";
-				if (isSupportedAudioFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Audio))
 					targetNodeClassNames += "vuo.audio.file.play";
-				if (isSupportedMeshFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Mesh))
 					targetNodeClassNames += "vuo.image.project.dome";
-				if (isSupportedFeedFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Feed))
 					targetNodeClassNames += "vuo.rss.fetch";
-				if (isSupportedJsonFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_JSON))
 					targetNodeClassNames += "vuo.tree.fetch.json";
-				if (isSupportedXmlFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_XML))
 					targetNodeClassNames += "vuo.tree.fetch.xml";
-				if (isSupportedTableFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Table))
 					targetNodeClassNames += "vuo.table.fetch";
-				if (isSupportedDataFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_Data))
 					targetNodeClassNames += "vuo.data.fetch";
-				if (isSupportedAppFile(url.path().toUtf8().constData()))
+				if (VuoFileType_isFileOfType(urlZ, VuoFileType_App))
 					targetNodeClassNames += "vuo.app.launch";
-				if (isDirectory(url.path().toUtf8().constData()))
+				if (isDirectory(urlZ))
 					targetNodeClassNames += "vuo.file.list";
+
+				free(urlZ);
 
 				QString selectedNodeClassName = "";
 				if (targetNodeClassNames.size() == 1)
@@ -3143,17 +3106,6 @@ void VuoEditorComposition::keyReleaseEvent(QKeyEvent *event)
 }
 
 /**
- * Creates an action called @c name, and associates it with @c mapper at @c index.
- */
-void VuoEditorComposition::addActionToMenuAndMapper(QMenu *menu, QSignalMapper *mapper, QString name, int index)
-{
-	QAction *action = new QAction(name, this);
-	menu->addAction(action);
-	mapper->setMapping(action, index);
-	connect(action, &QAction::triggered, mapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-}
-
-/**
  * Display the context menu for the canvas or for a node, port, cable, or comment.
  */
 void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
@@ -3355,7 +3307,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			foreach (QAction *action, contextMenuThrottlingActions)
 			{
 				contextMenuThrottling->addAction(action);
-				action->setData(qVariantFromValue((void *)port));
+				action->setData(qVariantFromValue(port));
 				action->setCheckable(true);
 				action->setChecked( i++ == port->getBase()->getEventThrottling() );
 			}
@@ -7108,7 +7060,7 @@ void VuoEditorComposition::disablePopoverForPort(string portID)
 	if (popover)
 	{
 		popover->hide();
-		delete popover;
+		popover->deleteLater();
 	}
 
 	bool isInput = false;

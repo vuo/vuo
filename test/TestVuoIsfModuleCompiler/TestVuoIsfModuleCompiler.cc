@@ -227,6 +227,7 @@ private slots:
 	void testNodeInterface_data()
 	{
 		QTest::addColumn<QString>("sourcePath");
+		QTest::addColumn<QString>("expectedClassName");
 		QTest::addColumn<QString>("expectedDefaultTitle");
 		QTest::addColumn<QStringList>("expectedInputPortNames");
 		QTest::addColumn<QStringList>("expectedInputPortDisplayNames");
@@ -263,7 +264,9 @@ private slots:
 			inputDisplayNames << inputDisplayNames_WidthHeight;
 			inputTypes << inputTypes_WidthHeight;
 			inputDefaults << inputDefaults_WidthHeight;
-			QTest::newRow("image generator: no ports specified") << "vuo.test.imageGenerator.noPorts.fs" << "No Ports"
+			QTest::newRow("image generator: no ports specified") << "vuo.test.imageGenerator.noPorts.fs"
+																 << "vuo.test.imageGenerator.noPorts"
+																 << "No Ports"
 																 << inputNames << inputDisplayNames << inputTypes << inputDefaults
 																 << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -277,7 +280,9 @@ private slots:
 			inputTypes << "VuoPoint2d" << "VuoList_VuoColor" << inputTypes_WidthHeight;
 			inputDefaults << "[0.5,0.5]" << "[[0.1,0.2,0.3,0.4],[0.5,0.6,0.7,0.8]]" << inputDefaults_WidthHeight;
 
-			QTest::newRow("image generator: input ports specified") << "vuo.test.imageGenerator.inputPorts.fs" << "Image Generator with Input Ports"
+			QTest::newRow("image generator: input ports specified") << "vuo.test.imageGenerator.inputPorts.fs"
+																	<< "vuo.test.imageGenerator.inputPorts"
+																	<< "Image Generator with Input Ports"
 																	<< inputNames << inputDisplayNames << inputTypes << inputDefaults
 																	<< outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -291,7 +296,9 @@ private slots:
 			inputTypes << "VuoImage" << "VuoBoolean";
 			inputDefaults << "" << "true";
 
-			QTest::newRow("image filter: input ports specified") << "vuo.test.imageFilter.inputPorts.fs" << "Image Filter with Input Ports"
+			QTest::newRow("image filter: input ports specified") << "vuo.test.imageFilter.inputPorts.fs"
+																 << "vuo.test.imageFilter.inputPorts"
+																 << "Image Filter with Input Ports"
 																 << inputNames << inputDisplayNames << inputTypes << inputDefaults
 																 << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -312,7 +319,9 @@ private slots:
 			outputDisplayNames << "The Curled Image";
 			outputTypes << "VuoImage";
 
-			QTest::newRow("image generator: input and output ports specified") << "vuo.test.imageGenerator.InputOutputPorts.fs" << "Image Filter with Input and Output Ports"
+			QTest::newRow("image generator: input and output ports specified") << "vuo.test.imageGenerator.InputOutputPorts.fs"
+																			   << "vuo.test.imageGenerator.inputOutputPorts"
+																			   << "Image Filter with Input and Output Ports"
 																			   << inputNames << inputDisplayNames << inputTypes << inputDefaults
 																			   << outputNames << outputDisplayNames << outputTypes;
 		}
@@ -326,7 +335,9 @@ private slots:
 			inputTypes << "VuoImage" << "VuoImage" << "VuoImage";
 			inputDefaults << "" << "" << "";
 
-			QTest::newRow("image filter: multiple image input ports") << "vuo.test.imageFilter.multipleImageInputs.fs" << "Multiple Image Inputs"
+			QTest::newRow("image filter: multiple image input ports") << "vuo.test.imageFilter.multipleImageInputs.fs"
+																	  << "vuo.test.imageFilter.multipleImageInputs"
+																	  << "Multiple Image Inputs"
 																	  << inputNames << inputDisplayNames << inputTypes << inputDefaults
 																	  << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -340,7 +351,9 @@ private slots:
 			inputTypes << "VuoReal" << inputTypes_WidthHeight;
 			inputDefaults << "0" << inputDefaults_WidthHeight;
 
-			QTest::newRow("image generator: time input port") << "vuo.test.imageGenerator.timeInput.fs" << "Time Input"
+			QTest::newRow("image generator: time input port") << "vuo.test.imageGenerator.timeInput.fs"
+															  << "vuo.test.imageGenerator.timeInput"
+															  << "Time Input"
 															  << inputNames << inputDisplayNames << inputTypes << inputDefaults
 															  << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -354,7 +367,9 @@ private slots:
 			inputTypes << inputTypes_WidthHeight;
 			inputDefaults << inputDefaults_WidthHeight;
 
-			QTest::newRow("image generator: size input port") << "vuo.test.imageGenerator.sizeInput.fs" << "Size Input"
+			QTest::newRow("image generator: size input port") << "vuo.test.imageGenerator.sizeInput.fs"
+															  << "vuo.test.imageGenerator.sizeInput"
+															  << "Size Input"
 															  << inputNames << inputDisplayNames << inputTypes << inputDefaults
 															  << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -368,7 +383,9 @@ private slots:
 			inputTypes << "VuoImage" << inputTypes_WidthHeight;
 			inputDefaults << "" << inputDefaults_WidthHeight;
 
-			QTest::newRow("image filter: size input port") << "vuo.test.imageFilter.sizeInput.fs" << "Size Input"
+			QTest::newRow("image filter: size input port") << "vuo.test.imageFilter.sizeInput.fs"
+														   << "vuo.test.imageFilter.sizeInput"
+														   << "Size Input"
 														   << inputNames << inputDisplayNames << inputTypes << inputDefaults
 														   << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -382,7 +399,9 @@ private slots:
 			inputTypes << "VuoImageColorDepth" << inputTypes_WidthHeight;
 			inputDefaults << "\"8bpc\"" << inputDefaults_WidthHeight;
 
-			QTest::newRow("image generator: color depth input port") << "vuo.test.imageGenerator.colorDepthInput.fs" << "Color Depth Input"
+			QTest::newRow("image generator: color depth input port") << "vuo.test.imageGenerator.colorDepthInput.fs"
+																	 << "vuo.test.imageGenerator.colorDepthInput"
+																	 << "Color Depth Input"
 																	 << inputNames << inputDisplayNames << inputTypes << inputDefaults
 																	 << outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -396,7 +415,9 @@ private slots:
 			inputTypes << "VuoImage" << "VuoImage" << "VuoReal";
 			inputDefaults << "" << "" << "";
 
-			QTest::newRow("image transition: no extra ports specified") << "vuo.test.imageTransition.noExtraPorts.fs" << "No Extra Ports"
+			QTest::newRow("image transition: no extra ports specified") << "vuo.test.imageTransition.noExtraPorts.fs"
+																		<< "vuo.test.imageTransition.noExtraPorts"
+																		<< "No Extra Ports"
 																		<< inputNames << inputDisplayNames << inputTypes << inputDefaults
 																		<< outputNames_Image << outputDisplayNames_Image << outputTypes_Image;
 		}
@@ -404,6 +425,7 @@ private slots:
 	void testNodeInterface()
 	{
 		QFETCH(QString, sourcePath);
+		QFETCH(QString, expectedClassName);
 		QFETCH(QString, expectedDefaultTitle);
 		QFETCH(QStringList, expectedInputPortNames);
 		QFETCH(QStringList, expectedInputPortDisplayNames);
@@ -425,6 +447,7 @@ private slots:
 
 		VuoCompilerNodeClass *nodeClass;
 		loadLlvmModuleAsNodeClass(m, llvmModule, nodeClass);
+		QCOMPARE(QString::fromStdString(nodeClass->getBase()->getClassName()), expectedClassName);
 
 		QCOMPARE(QString::fromStdString(nodeClass->getBase()->getClassName()), QString::fromStdString(m.getModuleKey()));
 		QCOMPARE(QString::fromStdString(nodeClass->getBase()->getDefaultTitle()), expectedDefaultTitle);

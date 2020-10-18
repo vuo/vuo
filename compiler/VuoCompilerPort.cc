@@ -26,7 +26,7 @@ VuoCompilerPort::VuoCompilerPort(VuoPort *basePort)
 {
 	dataType = NULL;
 	indexInPortContexts = -1;
-	constantStrings = NULL;
+	constantsCache = NULL;
 }
 
 /**
@@ -114,9 +114,9 @@ int VuoCompilerPort::getIndexInPortContexts(void)
 /**
  * Sets the cache used to generate constant string values. This must be called before generating bitcode.
  */
-void VuoCompilerPort::setConstantStringCache(VuoCompilerConstantStringCache *constantStrings)
+void VuoCompilerPort::setConstantsCache(VuoCompilerConstantsCache *constantsCache)
 {
-	this->constantStrings = constantStrings;
+	this->constantsCache = constantsCache;
 }
 
 /**

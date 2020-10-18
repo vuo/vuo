@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "reflect", "flip", "rotate", "reverse", "invert", "horizontal", "vertical", "filter" ],
 					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "MirrorMovie.vuo" ]
+						  "exampleCompositions" : [ "MirrorImage.vuo" ]
 					  }
 				 });
 

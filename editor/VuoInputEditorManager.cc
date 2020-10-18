@@ -20,6 +20,8 @@
  */
 VuoInputEditorManager::VuoInputEditorManager(QList<QDir> extraPluginDirectories)
 {
+	initialization.lock();
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 	QList<QDir> pluginDirectories;
 	pluginDirectories += QCoreApplication::applicationDirPath() + "/../Resources/InputEditors";
 	pluginDirectories += QString::fromUtf8(VuoFileUtilities::getSystemModulesPath().c_str());
@@ -38,6 +40,21 @@ VuoInputEditorManager::VuoInputEditorManager(QList<QDir> extraPluginDirectories)
 				plugins[loader.metaData().value("MetaData").toObject().value("type").toString()] = inputEditorFactory;
 			}
 		}
+	}
+		initialization.unlock();
+	});
+}
+
+/**
+ * Waits until all the plugins have finished initializing.
+ */
+void VuoInputEditorManager::waitForInitiailization()
+{
+	while (!initialization.try_lock())
+	{
+		// Allow plugins to execute code on the main thread.
+		QApplication::processEvents();
+		usleep(USEC_PER_SEC/10);
 	}
 }
 

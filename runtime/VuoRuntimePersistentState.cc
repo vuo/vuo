@@ -11,6 +11,7 @@
 
 #include "VuoCompositionDiff.hh"
 #include "VuoNodeRegistry.hh"
+#include "VuoNodeSynchronization.hh"
 #include "VuoRuntimeCommunicator.hh"
 #include "VuoRuntimeState.hh"
 #include "VuoThreadManager.hh"
@@ -34,6 +35,7 @@ VuoRuntimePersistentState::VuoRuntimePersistentState(const char *workingDirector
 	nodeRegistry = new VuoNodeRegistry(this);
 	communicator = new VuoRuntimeCommunicator(this);
 	threadManager = new VuoThreadManager();
+	nodeSynchronization = new VuoNodeSynchronization();
 }
 
 /**
@@ -48,6 +50,7 @@ VuoRuntimePersistentState::~VuoRuntimePersistentState(void)
 	delete nodeRegistry;
 	delete communicator;
 	delete threadManager;
+	delete nodeSynchronization;
 }
 
 /**

@@ -16,20 +16,17 @@ class VuoCompilerTargetSet
 {
 public:
 	/**
-	 * Mac OS versions.
+	 * macOS versions.
 	 */
 	enum MacVersion
 	{
 		MacVersion_Any,
-		MacVersion_10_7,
-		MacVersion_10_8,
-		MacVersion_10_9,
-		MacVersion_10_10,
 		MacVersion_10_11,
 		MacVersion_10_12,
 		MacVersion_10_13,
 		MacVersion_10_14,
 		MacVersion_10_15,
+		MacVersion_11_0,
 	};
 
 	VuoCompilerTargetSet(void);
@@ -47,7 +44,7 @@ public:
 	string toString(void);
 
 private:
-	pair<enum MacVersion, enum MacVersion> macVersionRange;  ///< The minimum and maximum Mac OS version
+	pair<enum MacVersion, enum MacVersion> macVersionRange;  ///< The minimum and maximum macOS version
 
 	string macVersionToString(MacVersion v);
 };

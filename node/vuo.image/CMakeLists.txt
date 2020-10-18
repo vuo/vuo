@@ -21,6 +21,7 @@ VuoCompileTypes(
 )
 
 VuoCompileNodes(
+	vuo.image.analogDistortion.fs
 	vuo.image.apply.mask.c
 	vuo.image.areEqual.c
 	vuo.image.blend.c
@@ -63,6 +64,7 @@ VuoCompileNodes(
 	vuo.image.get.size.c
 	vuo.image.get.width.c
 	vuo.image.halftone.cmyk.c
+	vuo.image.interpretData.c
 	vuo.image.kaleidoscope.c
 	vuo.image.make.checkerboard.c
 	vuo.image.make.checkerboard2.c
@@ -103,17 +105,21 @@ VuoCompileNodes(
 	vuo.image.scramble.c
 	vuo.image.sharpen.c
 	vuo.image.stainedGlass.c
+	vuo.image.streak.fs
+	vuo.image.streak.radial.fs
 	vuo.image.tile.c
 	vuo.image.tileable.c
 	vuo.image.toon.c
 	vuo.image.translate.fs
 	vuo.image.twirl.c
+	vuo.image.twirl2.c
 	vuo.image.vignette.c
 	vuo.image.vignette2.c
 	vuo.image.wrapMode.c
 )
 target_include_directories(vuo.image.nodes
 	PRIVATE
+	../vuo.data
 	../vuo.layer
 	../vuo.noise
 	../vuo.scene

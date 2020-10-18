@@ -24,7 +24,7 @@ VuoModuleMetadata({
 					  "version" : "1.2.0",
 					  "node": {
 						  "isDeprecated": true,
-						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
+						  "exampleCompositions" : [ "MaskImageByBrightness.vuo" ]
 					  }
 				 });
 

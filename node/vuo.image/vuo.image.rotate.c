@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "RotateMovie.vuo" ]
+						 "exampleCompositions" : [ "RotateImage.vuo" ]
 					 }
 				 });
 

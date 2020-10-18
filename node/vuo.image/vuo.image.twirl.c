@@ -19,6 +19,7 @@ VuoModuleMetadata({
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });

@@ -1,0 +1,55 @@
+/**
+ * @file
+ * @brief Convert Fahrenheit to Celsius
+ * Shows a number field into which you can enter a temperature in Fahrenheit, and converts it to Celsius.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="1095,195" _includeEmptyParts="true"];
+AppendTexts2 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="855,270" _includeEmptyParts="true"];
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="420,270" _expression="\{\"expressions\":[\"(f-32)\\/1.8\"],\"inputVariables\":[\"f\"],\"outputVariables\":[\"result\"]\}"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="225,0" fillcolor="lime" _started_eventThrottling="enqueue"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="600,270" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="2" _decimalPlaces="2" _showThousandSeparator="true"];
+IsLessThan [type="vuo.data.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="600,405" _b="-273.14999999999998"];
+MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="195,330"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1161,41" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="195,330" _1="\"f\""];
+MakeList3 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="389,296"];
+MakeList4 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1036,206" _2="\"° Fahrenheit is \""];
+MakeList5 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="796,281" _2="\"° Celsius\""];
+MakeNumberField [type="vuo.ui.make.number" version="1.0.0" label="Make Number Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<maximumDecimalPlaces>maximumDecimalPlaces\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="180,180" fillcolor="orange" _setValue="Infinity" _placeholderText="\"Click to enter a number\"" _maximumDecimalPlaces="2" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0\}" _width="0.5" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="375,30" _text="\"Enter a temperature in Fahrenheit and press return.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.15000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1260,240" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.15000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1215,30" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="855,405" _trueOption="\"less than absolute zero!\""];
+SummarizeValue [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="525,630"];
+
+AppendTexts2:compositeText -> SelectInput:falseOption;
+AppendTexts:compositeText -> MakeTextLayer3:text;
+Calculate:result -> FormatNumber:value;
+Calculate:result -> IsLessThan:a;
+FireOnStart:started -> MakeTextLayer:text;
+FormatNumber:text -> MakeList5:1;
+IsLessThan:lessThan -> SelectInput:which;
+MakeDictionary:dictionary -> Calculate:values;
+MakeList2:list -> MakeDictionary:keys;
+MakeList3:list -> MakeDictionary:values;
+MakeList4:list -> AppendTexts:texts;
+MakeList5:list -> AppendTexts2:texts;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeNumberField:updatedLayer -> MakeList:2;
+MakeNumberField:updatedValue -> MakeList3:1;
+MakeNumberField:updatedValue -> MakeNumberField:setValue [event=true];
+MakeNumberField:updatedValue -> SummarizeValue:value;
+MakeTextLayer3:layer -> MakeList:3;
+MakeTextLayer:layer -> MakeList:1;
+RenderLayersToWindow:updatedWindow -> MakeNumberField:renderedLayers [style=invis];
+SelectInput:out -> MakeList4:3;
+SummarizeValue:summary -> MakeList4:1;
+}

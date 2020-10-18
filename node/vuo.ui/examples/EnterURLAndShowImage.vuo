@@ -1,0 +1,31 @@
+/**
+ * @file
+ * @brief Enter URL and Show Image
+ * Shows a text field that you can paste an image URL into, and downloads and displays that image.
+ *
+ * @createdInVuoVersion 2.2.0
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="645,240"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,270" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="810,240" _anchor="\"center-top\"" _center="\{\"x\":0,\"y\":0.55000001192092896\}" _rotation="0.0" _width="1.8999999999999999" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="981,191" fillcolor="blue"];
+MakeMaterialTheme [type="vuo.ui.make.theme.material" version="1.0.0" label="Make Material Theme|<refresh>refresh\l|<color>color\l|<colorVariant>colorVariant\l|<emphasis>emphasis\l|<labelFont>labelFont\l|<theme>theme\r" pos="195,270" _color="5" _colorVariant="9" _emphasis="0" _labelFont="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":14\}"];
+MakeTextField [type="vuo.ui.make.text" version="1.0.0" label="Make Text Field|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<setValue>setValue\l|<placeholderText>placeholderText\l|<anchor>anchor\l|<position>position\l|<width>width\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<updatedValue>updatedValue\r" pos="435,180" fillcolor="orange" _setValue="\"https:\\/\\/upload.wikimedia.org\\/wikipedia\\/commons\\/thumb\\/b\\/b4\\/Actitis_hypoleucos.jpg\\/1024px-Actitis_hypoleucos.jpg\"" _placeholderText="\"Image URL\"" _anchor="\"center-bottom\"" _position="\{\"x\":0,\"y\":0.60000002384185791\}" _width="1.8999999999999999" _updatedLayer_eventThrottling="enqueue" _updatedValue_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1035,180" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+FetchImage:image -> MakeImageLayer:image;
+FireOnStart:started -> MakeMaterialTheme:color;
+MakeImageLayer:layer -> MakeList:2;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeMaterialTheme:theme -> MakeTextField:theme;
+MakeTextField:updatedLayer -> MakeList:1;
+MakeTextField:updatedValue -> FetchImage:url;
+RenderLayersToWindow:updatedWindow -> MakeTextField:renderedLayers [style=invis];
+}

@@ -7,18 +7,22 @@
  * For more information, see https://vuo.org/license.
  */
 
+#include <asl.h>
+#include <assert.h>
+#include <cxxabi.h>
+#include <dlfcn.h>
 #include <execinfo.h>
+#include <mach/mach_time.h>
+#include <math.h>
+#include <objc/objc-runtime.h>
+#include <regex.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/sysctl.h>
 #include <sys/time.h>
-#include <mach/mach_time.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <asl.h>
-#include <math.h>
-#include <dlfcn.h>
-#include <objc/objc-runtime.h>
-#include <cxxabi.h>
-#include <regex.h>
 
 #ifndef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
 	/// Avoid conflict between Cocoa and LLVM headers.
@@ -252,6 +256,32 @@ int VuoLog_getOSVersionMinor(void)
 	return operatingSystemVersion.minorVersion;
 }
 
+/**
+ * Returns true if the current process is being debugged
+ * (either launched by the debugger, or the debugger attached after the process launched).
+ *
+ * Based on https://developer.apple.com/library/archive/qa/qa1361/_index.html
+ */
+static bool VuoLog_isDebuggerAttached(void)
+{
+	int mib[4];
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PID;
+	mib[3] = getpid();
+
+	struct kinfo_proc info;
+	info.kp_proc.p_flag = 0;
+	size_t size = sizeof(info);
+	if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0))
+	{
+		VUserLog("Warning: Couldn't check debugger status: %s", strerror(errno));
+		return false;
+	}
+
+	return info.kp_proc.p_flag & P_TRACED;
+}
+
 void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
 	va_list args;
@@ -349,7 +379,9 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		static vuoMacOsLogInternalType vuoMacOsLogInternal = NULL;
 		static vuoMacOsLogImplType vuoMacOsLogImpl = NULL;
 		static dispatch_once_t once = 0;
+		static bool debuggerAttached = false;
 		dispatch_once(&once, ^{
+			debuggerAttached = VuoLog_isDebuggerAttached();
 			vuoMacOsLogCreate = (vuoMacOsLogCreateType)dlsym(RTLD_SELF, "os_log_create");
 			if (VuoLog_getOSVersionMinor() == 12) // _os_log_impl doesn't work on macOS 10.12.
 				vuoMacOsLogInternal = (vuoMacOsLogInternalType)dlsym(RTLD_SELF, "_os_log_internal");
@@ -357,7 +389,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 				vuoMacOsLogImpl = (vuoMacOsLogImplType)dlsym(RTLD_SELF, "_os_log_impl");
 		});
 
-		if (vuoMacOsLogCreate)
+		if (!debuggerAttached && vuoMacOsLogCreate)
 		{
 			void *log = vuoMacOsLogCreate("org.vuo", formattedFile);
 
@@ -386,7 +418,7 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 			os_release(log);
 		}
 
-		else // For Mac OS X 10.11 and prior
+		else if (!debuggerAttached) // For Mac OS X 10.11 and prior
 		{
 			aslmsg msg = asl_new(ASL_TYPE_MSG);
 			asl_set(msg, ASL_KEY_READ_UID, "-1");

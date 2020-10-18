@@ -8,7 +8,7 @@ add_library(VuoCompiler STATIC
 	VuoCompilerComment.cc
 	VuoCompilerComposition.cc
 	VuoCompilerCompositionDiff.cc
-	VuoCompilerConstantStringCache.cc
+	VuoCompilerConstantsCache.cc
 	VuoCompilerData.cc
 	VuoCompilerDataClass.cc
 	VuoCompilerDiagnosticConsumer.cc

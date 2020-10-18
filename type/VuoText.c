@@ -520,14 +520,12 @@ bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
 		if (t2empty)
 			return t1empty == t2empty;
 
-		locale_t oldLocale = uselocale(NULL);
 		locale_t locale = newlocale(LC_ALL_MASK, "en_US.UTF-8", NULL);
-		uselocale(locale);
+		locale_t oldLocale = uselocale(locale);
+		if (oldLocale != LC_GLOBAL_LOCALE)
+			freelocale(oldLocale);
 
 		match = fnmatch(text2, text1, 0) != FNM_NOMATCH;
-
-		uselocale(oldLocale);
-		freelocale(locale);
 	}
 
 	else if (comparison.type == VuoTextComparison_MatchesRegEx)

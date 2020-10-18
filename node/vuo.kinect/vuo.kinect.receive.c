@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					  ],
 					  "node": {
 						  "isDeprecated": true,
-						  "exampleCompositions" : [ "DisplayKinectImages.vuo", "RideRollercoaster.vuo" ]
+						  "exampleCompositions" : [ "DisplayKinectImages.vuo" ]
 					  }
 				 });
 

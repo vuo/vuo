@@ -13,6 +13,7 @@
 #include "VuoCompilerNodeClass.hh"
 #include "VuoComposition.hh"
 #include "VuoCompositionMetadata.hh"
+#include "VuoEventLoop.h"
 #include "VuoNodeClass.hh"
 #include "VuoNodeSet.hh"
 #include "VuoEditor.hh"
@@ -271,6 +272,9 @@ void VuoExampleMenu::aboutToShowNodeSetSubmenu()
  */
 QString VuoExampleMenu::selectRandomExample()
 {
+	if (sortedNodeSets.empty())
+		populateMenus();
+
 	bool pickedRandomExample = false;
 	while (! pickedRandomExample)
 	{

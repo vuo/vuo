@@ -17,7 +17,7 @@ MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refr
 MakeTextImage [type="vuo.image.make.text" version="1.1.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<image>image\r" pos="255,165" _text="\"Hello World!\"" _font="\{\"fontName\":\"Helvetica\",\"pointSize\":96.000000,\"underline\":false,\"color\":\{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000\},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000\}" _wrapWidth="0"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="270,285"];
 RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="585,165" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
-TwirlImage2 [type="vuo.image.twirl" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="435,165" _center="\{\"x\":0,\"y\":0\}" _radius="0.500000"];
+TwirlImage2 [type="vuo.image.twirl2" version="2.1.1" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="435,165" _center="\{\"x\":0,\"y\":0\}" _radius="0.500000"];
 
 FireOnDisplayRefresh:requestedFrame -> MakeList4:1;
 FireOnStart:started -> MakeTextImage:text;

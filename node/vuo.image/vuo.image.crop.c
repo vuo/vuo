@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "VuoRectangle",
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
+						  "exampleCompositions" : [ "EnlargeImage.vuo" ]
 					  }
 				 });
 

@@ -97,19 +97,6 @@ protected:
 	void setComponentCaching(QGraphicsItem::CacheMode);
 	void updateGeometryForAllComponents();
 	bool isPortPublished(VuoRendererPort *port);
-
-	// VuoFileFormat wrapper functions
-	static bool isSupportedAudioFile(string path);
-	static bool isSupportedImageFile(string path);
-	static bool isSupportedMeshFile(string path);
-	static bool isSupportedMovieFile(string path);
-	static bool isSupportedSceneFile(string path);
-	static bool isSupportedFeedFile(string path);
-	static bool isSupportedJsonFile(string path);
-	static bool isSupportedXmlFile(string path);
-	static bool isSupportedTableFile(string path);
-	static bool isSupportedDataFile(string path);
-	static bool isSupportedAppFile(string path);
 	static bool isDirectory(string path);
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
@@ -138,4 +125,3 @@ private:
 	bool renderNodeActivity; ///< Should renderings reflect recent node activity (e.g., node executions)?
 	bool renderPortActivity; ///< Should renderings reflect recent port activity (e.g., trigger port firings)?
 };
-

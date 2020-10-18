@@ -972,6 +972,7 @@ private slots:
 		QFETCH(QString, expectedTopNodeClass);
 
 		cleanupTestCase();
+		initTestCase();
 
 		VuoNodeLibrary nodeLibrary(compiler);
 		composition->moduleManager->setNodeLibrary(&nodeLibrary);
@@ -1049,6 +1050,12 @@ private slots:
 		QTest::newRow("link + node")
 			<< "[sRGB colorspace](https://en.wikipedia.org/wiki/SRGB) text [Make HSL Color](vuo-node://vuo.color.make.hsl)"
 			<< "[sRGB colorspace](https://en.wikipedia.org/wiki/SRGB) text `Make HSL Color`";
+
+		QTest::newRow("list of 2 links")
+			<< "   - [Make Action Button Theme (Rounded)](vuo-node://vuo.ui.make.theme.button.rounded)\n"
+			   "   - [Make Toggle Button Theme (Rounded)](vuo-node://vuo.ui.make.theme.toggle.rounded)\n"
+			<< "   - `Make Action Button Theme (Rounded)`\n"
+			   "   - `Make Toggle Button Theme (Rounded)`\n";
 	}
 	void testRemoveVuoLinks()
 	{

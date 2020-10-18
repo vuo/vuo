@@ -137,11 +137,19 @@ void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
 }
 
 /**
+ * Returns the major component of the OS version.
+ */
+int VuoFileUtilitiesCocoa_getOSVersionMajor(void)
+{
+    return NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
+}
+
+/**
  * Returns the minor component of the OS version.
  */
 int VuoFileUtilitiesCocoa_getOSVersionMinor(void)
 {
-	return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
+    return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
 }
 
 /**

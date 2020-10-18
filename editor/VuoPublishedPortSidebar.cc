@@ -36,6 +36,7 @@ VuoPublishedPortSidebar::VuoPublishedPortSidebar(QWidget *parent, VuoEditorCompo
 	this->composition = composition;
 	this->isInput = isInput;
 	this->portTypeMenusPopulated = false;
+	this->menuSelectionInProgress = false;
 
 	setWindowTitle(isInput ? tr("Inputs") : tr("Outputs"));
 	updateActiveProtocol();
@@ -577,6 +578,8 @@ void VuoPublishedPortSidebar::concludePublishedCableDrag(QMouseEvent *event, Vuo
  */
 void VuoPublishedPortSidebar::contextMenuEvent(QContextMenuEvent *event)
 {
+	menuSelectionInProgress = true;
+
 	// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
 	if (isActiveProtocolLabelUnderCursorForEvent(event))
 	{
@@ -589,6 +592,8 @@ void VuoPublishedPortSidebar::contextMenuEvent(QContextMenuEvent *event)
 		contextMenuPortOptions->exec(event->globalPos());
 		contextMenuPortOptions->removeAction(menuAddPort->menuAction());
 	}
+
+	menuSelectionInProgress = false;
 }
 
 /**
@@ -717,7 +722,7 @@ QPoint VuoPublishedPortSidebar::getGlobalPosOfPublishedPort(VuoRendererPublished
  */
 bool VuoPublishedPortSidebar::getMenuSelectionInProgress()
 {
-	return ui->publishedPortList->getMenuSelectionInProgress();
+	return menuSelectionInProgress || ui->publishedPortList->getMenuSelectionInProgress();
 }
 
 /**

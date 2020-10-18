@@ -19,7 +19,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "TileMovie.vuo" ]
+						  "exampleCompositions" : [ "TileImage.vuo" ]
 					  }
 				 });
 

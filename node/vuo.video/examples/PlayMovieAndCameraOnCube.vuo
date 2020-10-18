@@ -1,0 +1,64 @@
+/**
+ * @file
+ * @brief Play Movie and Camera on Cube
+ * Displays a movie, a camera feed, and images on the faces of a spinning cube.
+ *
+ * Movie by Mourad Belouadi on [YouTube](https://youtu.be/FCfNbQUJCjA).
+ *
+ * Images by Marat Gilyadzinov on [Unsplash](https://unsplash.com/photos/MYadhrkenNg) and Nicman on [Pixabay](https://pixabay.com/en/hummingbird-bird-trochilidae-flying-2139279/).
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="555,195" _speed="20"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="630,930"];
+ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="570,465"];
+ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="675,300"];
+CropImage [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="600,555" _center="\{\"x\":0.000000,\"y\":0.000000\}" _width="1" _height="1"];
+CropImage2 [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="600,390" _center="\{\"x\":0.000000,\"y\":0.000000\}" _width="1" _height="1"];
+CropImage3 [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="600,690" _center="\{\"x\":0.000000,\"y\":0.000000\}" _width="1.5" _height="1.5"];
+CropImage4 [type="vuo.image.crop" version="1.1.2" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="600,810" _center="\{\"x\":0.000000,\"y\":0.000000\}" _width="1.5" _height="1.5"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="360,690" _url="\"Hummingbird.jpg\""];
+FetchImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="360,810" _url="\"Jellyfish.jpg\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="330,195" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,390" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeCube2 [type="vuo.scene.make.cube" version="1.1.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<rows>rows\l|<columns>columns\l|<slices>slices\l|<cube>cube\r" pos="1050,375" _rows="2" _columns="2" _slices="2"];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1229,386" fillcolor="blue"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="795,180" _translation="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _scale="\{\"x\":0.700000,\"y\":0.700000,\"z\":0.700000\}"];
+MakeUnlitImageShader2 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="750,690" _opacity="1.000000"];
+MakeUnlitImageShader3 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="750,810" _opacity="1.000000"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="270,390" fillcolor="orange" _setTime="\"\"" _url="\"Kalimba.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="300,555" fillcolor="orange" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1275,375" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShadeWithImage2 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="750,390" _opacity="1.000000"];
+ShadeWithImage4 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Make Unlit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="750,555" _opacity="1.000000"];
+
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint2:y;
+ConvertFrameToImage2:image -> CropImage:image;
+ConvertFrameToImage3:image -> CropImage2:image;
+ConvertRealTo3DPoint2:point3d -> MakeTransform:rotation;
+CropImage2:croppedImage -> ShadeWithImage2:image;
+CropImage3:croppedImage -> MakeUnlitImageShader2:image;
+CropImage4:croppedImage -> MakeUnlitImageShader3:image;
+CropImage:croppedImage -> ShadeWithImage4:image;
+FetchImage2:image -> CropImage4:image;
+FetchImage:image -> CropImage3:image;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+FireOnStart:started -> FetchImage2:url;
+FireOnStart:started -> FetchImage:url;
+FireOnStart:started -> PlayMovie:play;
+MakeCube2:cube -> MakeList3:1;
+MakeList3:list -> RenderSceneToWindow2:objects;
+MakeTransform:transform -> MakeCube2:transform;
+MakeUnlitImageShader2:shader -> MakeCube2:frontShader;
+MakeUnlitImageShader3:shader -> MakeCube2:backShader;
+PlayMovie:decodedVideo -> ConvertFrameToImage3:frame;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage2:frame;
+ShadeWithImage2:shader -> MakeCube2:leftShader;
+ShadeWithImage4:shader -> MakeCube2:rightShader;
+}

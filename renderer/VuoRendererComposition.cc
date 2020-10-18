@@ -7,7 +7,7 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "../node/vuo.file/VuoFileFormat.h"
+#include "VuoFileType.h"
 
 #include "VuoRendererComposition.hh"
 
@@ -1381,7 +1381,7 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir, bool 
 					VDebugLog("Copying \"%s\" (from %s:%s)", url, node->getTitle().c_str(), port->getClass()->getName().c_str());
 					VuoFileUtilities::copyDirectory(sourceFilePath.toStdString(), targetFilePath.toStdString());
 
-					if (isSupportedSceneFile(sourceFilePath.toUtf8().constData()))
+					if (VuoFileType_isFileOfType(sourceFilePath.toUtf8().constData(), VuoFileType_Scene))
 						bundleAuxiliaryFilesForSceneFile(sourceFilePath, targetFilePath);
 				}
 				VuoRelease(url);
@@ -1572,112 +1572,13 @@ void VuoRendererComposition::bundleAuxiliaryFilesForSceneFile(QString sourceFile
 }
 
 /**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported audio file.
- */
-bool VuoRendererComposition::isSupportedAudioFile(string path)
-{
-	return VuoFileFormat_isSupportedAudioFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported image file.
- */
-bool VuoRendererComposition::isSupportedImageFile(string path)
-{
-	return VuoFileFormat_isSupportedImageFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported mesh file.
- */
-bool VuoRendererComposition::isSupportedMeshFile(string path)
-{
-	return VuoFileFormat_isSupportedMeshFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported movie file.
- */
-bool VuoRendererComposition::isSupportedMovieFile(string path)
-{
-	return VuoFileFormat_isSupportedMovieFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported scene file.
- */
-bool VuoRendererComposition::isSupportedSceneFile(string path)
-{
-	return VuoFileFormat_isSupportedSceneFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported feed file.
- */
-bool VuoRendererComposition::isSupportedFeedFile(string path)
-{
-	return VuoFileFormat_isSupportedFeedFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported JSON file.
- */
-bool VuoRendererComposition::isSupportedJsonFile(string path)
-{
-	return VuoFileFormat_isSupportedJsonFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported XML file.
- */
-bool VuoRendererComposition::isSupportedXmlFile(string path)
-{
-	return VuoFileFormat_isSupportedXmlFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported table file.
- */
-bool VuoRendererComposition::isSupportedTableFile(string path)
-{
-	return VuoFileFormat_isSupportedTableFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported data file.
- */
-bool VuoRendererComposition::isSupportedDataFile(string path)
-{
-	return VuoFileFormat_isSupportedDataFile(path.c_str());
-}
-
-/**
- * Returns a boolean indicating whether the file at the provided @c path is
- * a supported app file.
- */
-bool VuoRendererComposition::isSupportedAppFile(string path)
-{
-	return VuoFileFormat_isSupportedAppFile(path.c_str());
-}
-
-/**
  * Returns a boolean indicating whether the provided @c path refers to a directory
  * (excluding OS X app bundles).
  */
 bool VuoRendererComposition::isDirectory(string path)
 {
 	QDir dir(path.c_str());
-	return dir.exists() && !isSupportedAppFile(path);
+	return dir.exists() && !VuoFileType_isFileOfType(path.c_str(), VuoFileType_App);
 }
 
 /**

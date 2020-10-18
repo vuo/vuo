@@ -2619,7 +2619,7 @@ static void VuoSceneObject_dump_internal(const VuoSceneObject sceneObject, unsig
 		return;
 	}
 
-	fprintf(stderr, "%s (%s) ", VuoSceneObject_cStringForType(so->type), VuoTransform_getSummary(so->transform));
+	fprintf(stderr, "%s \"%s\" (%s) ", VuoSceneObject_cStringForType(so->type), so->name ? so->name : "(no name)", VuoTransform_getSummary(so->transform));
 	if (so->type == VuoSceneObjectSubType_Mesh)
 		fprintf(stderr, "%lu vertices, %lu elements, shader '%s' (%p)", VuoSceneObject_getVertexCount(sceneObject), VuoSceneObject_getElementCount(sceneObject), so->shader ? so->shader->name : "", so->shader);
 	fprintf(stderr, "\n");

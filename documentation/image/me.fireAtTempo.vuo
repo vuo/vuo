@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @lastSavedInVuoVersion 2.0.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="180,120" _fired_eventThrottling="drop"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<BeatsPerMinute>BeatsPerMinute\r" _BeatsPerMinute_type="VuoReal" _BeatsPerMinute_suggestedMin="0" _BeatsPerMinute_suggestedStep="0.1" _BeatsPerMinute="1.0"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Fired>Fired\l" _Fired_type="VuoReal"];
+
+FirePeriodically:fired -> PublishedOutputs:Fired;
+PublishedInputs:BeatsPerMinute -> FirePeriodically:seconds;
+}

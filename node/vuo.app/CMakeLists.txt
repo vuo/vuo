@@ -3,6 +3,7 @@ VuoCompileLibraries(
 )
 
 VuoCompileNodes(
+	vuo.app.keepSystemAwake.m
 	vuo.app.launch.c
 	vuo.app.openDocument.c
 	vuo.app.openUrl.c

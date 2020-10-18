@@ -103,15 +103,15 @@ Module * VuoIsfModuleCompiler::compile(std::function<VuoCompilerType *(const str
 	dispatch_sync(llvmQueue, ^{
 
 		module = new Module(moduleKey, getGlobalContext());
-		VuoCompilerConstantStringCache constantStrings;
+		VuoCompilerConstantsCache constantsCache(module);
 
 		if (shaderFile->type() == VuoShaderFile::GLSLImageFilter
 		 || shaderFile->type() == VuoShaderFile::GLSLImageGenerator
 		 || shaderFile->type() == VuoShaderFile::GLSLImageTransition)
 		{
 			generateMetadata(module);
-			generateNodeInstanceInitFunction(module, constantStrings, vuoTypes);
-			generateNodeInstanceEventFunction(module, constantStrings, vuoTypes);
+			generateNodeInstanceInitFunction(module, &constantsCache, vuoTypes);
+			generateNodeInstanceEventFunction(module, &constantsCache, vuoTypes);
 		}
 		else if (shaderFile->type() == VuoShaderFile::GLSLObjectRenderer)
 		{
@@ -139,7 +139,7 @@ void VuoIsfModuleCompiler::generateMetadata(Module *module)
 /**
  * Generates the `nodeInstanceInit` function and constants used by it.
  */
-void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoCompilerConstantStringCache &constantStrings,
+void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoCompilerConstantsCache *constantsCache,
 															map<string, VuoCompilerType *> vuoTypes)
 {
 	Constant *vertexSourceValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, shaderFile->expandedVertexSource(), "vertexSource");
@@ -153,14 +153,14 @@ void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoC
 
 	Function *function = VuoCompilerCodeGenUtilities::getNodeInstanceInitFunction(module, moduleKey, false,
 																				  llvmShaderType, vector<VuoPort *>(),
-																				  indexOfParameterInit, constantStrings);
+																				  indexOfParameterInit, constantsCache);
 
 	BasicBlock *block = &(function->getEntryBlock());
 
 	// VuoShader s = VuoShader_make(sf->name());
 
 	Function *makeFunction = VuoCompilerCodeGenUtilities::getVuoShaderMakeFunction(module);
-	Value *shaderNameValue = constantStrings.get(module, shaderFile->name());
+	Value *shaderNameValue = constantsCache->get(shaderFile->name());
 	Value *shaderValue = CallInst::Create(makeFunction, shaderNameValue, "s", block);
 
 	// VuoShader_addSource(s, VuoMesh_IndividualTriangles, vertexSource, geometrySource, fragmentSource);
@@ -192,7 +192,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoC
 /**
  * Generates the `nodeInstanceEvent` function.
  */
-void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, VuoCompilerConstantStringCache &constantStrings,
+void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, VuoCompilerConstantsCache *constantsCache,
 															 map<string, VuoCompilerType *> vuoTypes)
 {
 	vector<VuoPort *> inputPorts;
@@ -317,7 +317,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 																		   llvmShaderType, inputPorts, outputPorts,
 																		   detailsForPorts, map<VuoPort *, string>(),
 																		   map<VuoPort *, string>(), map<VuoPort *, VuoPortClass::EventBlocking>(),
-																		   indexOfParameter, indexOfEventParameter, constantStrings);
+																		   indexOfParameter, indexOfEventParameter, constantsCache);
 
 	BasicBlock *initialBlock = &(function->getEntryBlock());
 
@@ -453,7 +453,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 		Value *instanceDataValue_setUniform = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(instanceDataValue, setUniformFunction, 0, nullptr, module, setUniformsBlock);
 
 		string portName = (inputPort == timeInputPort ? "TIME" : inputPort->getClass()->getName());
-		Value *portNameValue = constantStrings.get(module, portName);
+		Value *portNameValue = constantsCache->get(portName);
 
 		Value *portDataArg = VuoCompilerCodeGenUtilities::getArgumentAtIndex(function, indexOfParameter[inputPort]);
 		Value *secondPortDataArg = nullptr;

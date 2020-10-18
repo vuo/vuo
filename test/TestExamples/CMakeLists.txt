@@ -10,10 +10,14 @@ if (CMAKE_SYSTEM_VERSION VERSION_LESS 17)
 	)
 endif()
 
-# Skip self-terminating (`vuo.app.stopComposition`) compositions
-# since `runAndScreenshotExample.sh` expects them to run for at least 10 seconds.
 list(REMOVE_ITEM examples
+	# Skip self-terminating (`vuo.app.stopComposition`) compositions
+	# since `runAndScreenshotExample.sh` expects them to run for at least 10 seconds.
 	../../node/vuo.video/examples/SaveProcessedMovie.vuo
+
+	# Skip example ocmpositions that block on user input.
+	../../node/vuo.ui/examples/OpenImage.vuo
+	../../node/vuo.ui/examples/SaveImage.vuo
 )
 
 VuoCompileCompositions(TestExamples ${examples})

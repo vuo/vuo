@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Shows a button.   When you click the button, a file selection window pops up, allowing you to choose an image.  The image you selected is then displayed.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+DisplayOpenWindow [type="vuo.ui.open" version="1.0.0" label="Display \"Open\" Window|<refresh>refresh\l|<show>show\l|<title>title\l|<buttonLabel>buttonLabel\l|<fileType>fileType\l|<defaultURL>defaultURL\l|<selectMultiple>selectMultiple\l|<parentWindow>parentWindow\l|<selectedURLs>selectedURLs\r|<canceled>canceled\r" pos="180,60" fillcolor="orange" _title="\"Please select an image to show.\"" _buttonLabel="\"Open Image\"" _fileType="\"image\"" _defaultURL="\"\\/System\\/Library\\/Desktop Pictures\"" _selectMultiple="false"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="480,60"];
+GetFirstItemInList [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="480,165"];
+MakeActionButton [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="180,-75" _label="\"Open an Image…\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0.5\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="645,60" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1.5" _fixed="\"vertical\"" _opacity="1.0"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="591,-79"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="645,-90" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+DisplayOpenWindow:selectedURLs -> GetFirstItemInList:list;
+FetchImage:image -> MakeImageLayer:image;
+GetFirstItemInList:firstItem -> FetchImage:url;
+MakeActionButton:pressed -> DisplayOpenWindow:show;
+MakeActionButton:updatedLayer -> MakeList:2;
+MakeImageLayer:layer -> MakeList:1;
+MakeList:list -> RenderLayersToWindow:layers;
+RenderLayersToWindow:updatedWindow -> DisplayOpenWindow:parentWindow [style=invis];
+RenderLayersToWindow:updatedWindow -> MakeActionButton:window [style=invis];
+}

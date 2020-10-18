@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Displays posterized versions of an image with increasing numbers of colors.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoInteger" version="2.1.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="255,420"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="600,75" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="1.800000" _columns="3" _height="1.250000" _rows="2"];
+BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="315,75" fillcolor="orange" _fire="6" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-60,375" _url="\"Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-330,75" fillcolor="lime" _started_eventThrottling="enqueue"];
+HoldValue [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="90,360"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="222,431" _2="1"];
+MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="794,86" fillcolor="blue"];
+MakeScaledLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="570,360" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2.000000" _fixed="\"horizontal\"" _opacity="1.000000"];
+PosterizeImage [type="vuo.image.posterize" version="1.0.1" label="Posterize Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<posterizedImage>posterizedImage\r" pos="375,360"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="840,75" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+
+Add:sum -> PosterizeImage:colors;
+ArrangeLayersInGrid:griddedLayer -> MakeList5:1;
+BuildList2:buildItem -> HoldValue:update;
+BuildList2:buildItem -> MakeList:1;
+BuildList2:builtList -> ArrangeLayersInGrid:layers;
+FetchImage:image -> HoldValue:value;
+FireOnStart:started -> BuildList2:fire;
+FireOnStart:started -> FetchImage:url;
+HoldValue:heldValue -> PosterizeImage:image;
+MakeList5:list -> RenderLayersToWindow:layers;
+MakeList:list -> Add:values;
+MakeScaledLayer:layer -> BuildList2:builtItem;
+PosterizeImage:posterizedImage -> MakeScaledLayer:image;
+}

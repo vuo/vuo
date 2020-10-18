@@ -13,6 +13,7 @@ extern "C" {
 #include "VuoShader.h"
 #include "VuoImageGet.h"
 #include "VuoImageRenderer.h"
+#include "VuoImageResize.h"
 #include "VuoImageBlur.h"
 #include "VuoSceneRenderer.h"
 extern dispatch_once_t VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init;
@@ -24,6 +25,7 @@ extern dispatch_once_t VuoImage_resolveInterprocessJsonOntoFramebufferInternal_i
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoColor);
 Q_DECLARE_METATYPE(VuoImage);
+Q_DECLARE_METATYPE(VuoSizingMode);
 
 bool TestVuoImage_freed = false;
 void TestVuoImage_freeCallback(VuoImage imageToFree)
@@ -229,8 +231,11 @@ private slots:
 
 	void testFetchImagePerformance()
 	{
+		VuoText filename = VuoText_make("/Library/Desktop Pictures/Zebras.jpg");
+		VuoLocal(filename);
+
 		QBENCHMARK {
-			VuoImage i = VuoImage_get("/Library/Desktop Pictures/Zebras.jpg");
+			VuoImage i = VuoImage_get(filename);
 			QVERIFY(i);
 			VuoRetain(i);
 			QCOMPARE(i->pixelsWide, 5120UL);
@@ -587,7 +592,10 @@ private slots:
 	}
 	void testFetchImageBMPAlpha()
 	{
-		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoText filename = VuoText_make((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoLocal(filename);
+
+		VuoImage i = VuoImage_get(filename);
 		QVERIFY(i);
 		VuoLocal(i);
 
@@ -641,7 +649,10 @@ private slots:
 	{
 		QFETCH(GLint, glInternalFormat);
 
-		VuoImage i = VuoImage_get((QString("resources/SchaikPngSuite/") + QTest::currentDataTag()).toUtf8().data());
+		VuoText filename = VuoText_make((QString("resources/SchaikPngSuite/") + QTest::currentDataTag()).toUtf8().data());
+		VuoLocal(filename);
+
+		VuoImage i = VuoImage_get(filename);
 		QVERIFY(i);
 		VuoLocal(i);
 
@@ -672,7 +683,10 @@ private slots:
 	{
 		QFETCH(double, expectedScaleFactor);
 
-		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoText filename = VuoText_make((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoLocal(filename);
+
+		VuoImage i = VuoImage_get(filename);
 		QVERIFY(i);
 		VuoLocal(i);
 
@@ -695,7 +709,10 @@ private slots:
 		QFETCH(unsigned long, expectedWidth);
 		QFETCH(unsigned long, expectedHeight);
 
-		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoText filename = VuoText_make((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoLocal(filename);
+
+		VuoImage i = VuoImage_get(filename);
 		QEXPECT_FAIL("17000x17000.png", "Vuo doesn't currently support working with images larger than OpenGL's limit (but it still shouldn't crash).  https://b33p.net/kosada/node/7116", Abort);
 		QVERIFY(i);
 		QCOMPARE(i->pixelsWide, expectedWidth);
@@ -720,7 +737,10 @@ private slots:
 		QFETCH(unsigned long, expectedWidth);
 		QFETCH(unsigned long, expectedHeight);
 
-		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoText filename = VuoText_make((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		VuoLocal(filename);
+
+		VuoImage i = VuoImage_get(filename);
 		QVERIFY(i);
 		QCOMPARE(i->pixelsWide, expectedWidth);
 		QCOMPARE(i->pixelsHigh, expectedHeight);
@@ -744,6 +764,47 @@ private slots:
 		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 0], 255); // B
 		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 1],   0); // G
 		QCOMPARE((int)pixelData[i->pixelsWide * 3 * (i->pixelsHigh - 3) + 2],   0); // R
+	}
+
+	void testResize_data()
+	{
+		QTest::addColumn<int>("initialWidth");
+		QTest::addColumn<int>("initialHeight");
+		QTest::addColumn<VuoSizingMode>("sizingMode");
+		QTest::addColumn<int>("targetWidth");
+		QTest::addColumn<int>("targetHeight");
+		QTest::addColumn<int>("expectedWidth");
+		QTest::addColumn<int>("expectedHeight");
+
+		// See also test/TestCompositions/composition/vuo.image.resize*.json
+
+		QTest::newRow("640x480 proportional to 256x256") << 640 << 480 << VuoSizingMode_Proportional << 256 << 256 << 256 << 192;
+		QTest::newRow("640x1 proportional to 256x256") << 640 << 1 << VuoSizingMode_Proportional << 256 << 256 << 256 << 1;
+	}
+	void testResize()
+	{
+		QFETCH(int, initialWidth);
+		QFETCH(int, initialHeight);
+		QFETCH(VuoSizingMode, sizingMode);
+		QFETCH(int, targetWidth);
+		QFETCH(int, targetHeight);
+		QFETCH(int, expectedWidth);
+		QFETCH(int, expectedHeight);
+
+		VuoImageResize resize = VuoImageResize_make();
+		QVERIFY(resize);
+		VuoLocal(resize);
+
+		VuoImage image = VuoImage_makeColorImage((VuoColor){1,1,1,1}, initialWidth, initialHeight);
+		QVERIFY(image);
+		VuoLocal(image);
+
+		VuoImage resizedImage = VuoImageResize_resize(image, resize, sizingMode, targetWidth, targetHeight);
+		QVERIFY(resizedImage);
+		VuoLocal(resizedImage);
+
+		QCOMPARE(resizedImage->pixelsWide, (unsigned long)expectedWidth);
+		QCOMPARE(resizedImage->pixelsHigh, (unsigned long)expectedHeight);
 	}
 
 	void testMakeFromJsonWithDimensions_data()
@@ -892,6 +953,141 @@ private slots:
 		createAndCheckIOSurface((VuoColor){.4,.6,.5,1.});
 
 		usleep(USEC_PER_SEC);
+	}
+
+	void testImageTextData_data()
+	{
+		QTest::addColumn<QString>("text");
+		QTest::addColumn<bool>("includeTrailingWhitespace");
+		QTest::addColumn<bool>("expectedValid");
+		QTest::addColumn<float>("expectedWidth");
+		QTest::addColumn<float>("expectedHeight");
+		QTest::addColumn<float>("expectedLineHeight");
+		QTest::addColumn<unsigned int>("expectedLineCount");
+		QTest::addColumn<QList<unsigned int>>("expectedLineCounts");
+
+		// expectedLineHeight is less than expectedHeight, since expectedHeight includes 2 pixels of padding for antialiasing.
+
+		//                                                  text                         iTW      valid    width  height   lnHt   lnCt   lineCounts
+		QTest::newRow("empty TW=false")                  << ""                        << false << false <<  0.f <<  0.f <<  0.f << 0U << QList<unsigned int>{ };
+		QTest::newRow("empty TW=true")                   << ""                        << true  << false <<  0.f <<  0.f <<  0.f << 0U << QList<unsigned int>{ };
+		QTest::newRow("whitespace TW=false")             << " "                       << false << true  <<  2.f << 20.f << 18.f << 1U << QList<unsigned int>{ 1U };
+		QTest::newRow("whitespace TW=true")              << " "                       << true  << true  <<  8.f << 20.f << 18.f << 1U << QList<unsigned int>{ 1U };
+
+		QTest::newRow("one line TW=false")               << "some text"               << false << true  << 80.f << 20.f << 18.f << 1U << QList<unsigned int>{ 9U };
+		QTest::newRow("one line TW=true")                << "some text"               << true  << true  << 80.f << 20.f << 18.f << 1U << QList<unsigned int>{ 9U };
+		QTest::newRow("one line unicode")                << "∫ø⩕ε ℸ℮×⨁"              << false << true << 100.f << 20.f << 18.f << 1U << QList<unsigned int>{ 9U };
+		QTest::newRow("one line + whitespace TW=false")  << "some text "              << false << true  << 80.f << 20.f << 18.f << 1U << QList<unsigned int>{ 10U };
+		QTest::newRow("one line + whitespace TW=true")   << "some text "              << true  << true  << 85.f << 20.f << 18.f << 1U << QList<unsigned int>{ 10U };
+
+		QTest::newRow("linebreak TW=false")              << "\n"                      << false << true  <<  2.f << 38.f << 18.f << 2U << QList<unsigned int>{ 1U, 0U };
+		QTest::newRow("linebreak TW=true")               << "\n"                      << true  << true  <<  2.f << 38.f << 18.f << 2U << QList<unsigned int>{ 1U, 0U };
+
+		QTest::newRow("one line + linebreak TW=false")   << "some text\n"             << false << true  << 80.f << 38.f << 18.f << 2U << QList<unsigned int>{ 10U, 0U };
+		QTest::newRow("one line + linebreak TW=true")    << "some text\n"             << true  << true  << 80.f << 38.f << 18.f << 2U << QList<unsigned int>{ 10U, 0U };
+
+		QTest::newRow("two lines TW=false")              << "some text\nsecond line"  << false << true  << 93.f << 38.f << 18.f << 2U << QList<unsigned int>{ 10U, 11U };
+		QTest::newRow("two lines TW=true")               << "some text\nsecond line"  << true  << true  << 93.f << 38.f << 18.f << 2U << QList<unsigned int>{ 10U, 11U };
+		QTest::newRow("two lines + whitespace TW=false") << "some text \nsecond line" << false << true  << 93.f << 38.f << 18.f << 2U << QList<unsigned int>{ 11U, 11U };
+		QTest::newRow("two lines + whitespace TW=true")  << "some text \nsecond line" << true  << true  << 93.f << 38.f << 18.f << 2U << QList<unsigned int>{ 11U, 11U };
+
+		QTest::newRow("two linebreaks TW=false")         << "\n\n"                    << false << true  <<  2.f << 56.f << 18.f << 3U << QList<unsigned int>{ 1U, 1U, 0U };
+		QTest::newRow("two linebreaks TW=true")          << "\n\n"                    << true  << true  <<  2.f << 56.f << 18.f << 3U << QList<unsigned int>{ 1U, 1U, 0U };
+
+		QTest::newRow("three lines TW=false")            << "one\ntwo\nthree"         << false << true  << 43.f << 56.f << 18.f << 3U << QList<unsigned int>{ 4U, 4U, 5U };
+		QTest::newRow("three lines TW=true")             << "one\ntwo\nthree"         << true  << true  << 43.f << 56.f << 18.f << 3U << QList<unsigned int>{ 4U, 4U, 5U };
+	}
+	void testImageTextData()
+	{
+		QFETCH(QString, text);
+		QFETCH(bool, includeTrailingWhitespace);
+		QFETCH(bool, expectedValid);
+		QFETCH(float, expectedWidth);
+		QFETCH(float, expectedHeight);
+		QFETCH(float, expectedLineHeight);
+		QFETCH(unsigned int, expectedLineCount);
+		QFETCH(QList<unsigned int>, expectedLineCounts);
+
+		VuoText textV = VuoText_make(text.toUtf8().data());
+		QVERIFY(textV);
+		VuoLocal(textV);
+
+		VuoImageTextData td = VuoImage_getTextImageData(textV, VuoFont_makeDefault(), 1, 1, 0, includeTrailingWhitespace);
+		QCOMPARE((bool)td, expectedValid);
+		if (!expectedValid)
+			return;
+
+		VuoLocal(td);
+
+		QVERIFY(abs(td->width  - expectedWidth)  < 10);
+		QVERIFY(abs(td->height - expectedHeight) < 10);
+		QCOMPARE(td->lineHeight, expectedLineHeight);
+		QCOMPARE(td->lineCount, expectedLineCount);
+		for (int i = 0; i < td->lineCount; ++i)
+			QCOMPARE(td->lineCounts[i], expectedLineCounts[i]);
+	}
+
+	void testImageTextPosition_data()
+	{
+		QTest::addColumn<QString>("text");
+		QTest::addColumn<int>("charIndex");
+		QTest::addColumn<float>("expectedX");
+		QTest::addColumn<float>("expectedY");
+		QTest::addColumn<int>("expectedLineIndex");
+
+		//                                           text                        index      X         Y      line
+		QTest::newRow("space[0]")                 << " "                      <<     0 <<  -2.5f << -10.f << 0;
+		QTest::newRow("space[1]")                 << " "                      <<     1 <<   2.5f << -10.f << 0;
+		QTest::newRow("one line[0]")              << "some text"              <<     0 << -38.5f << -10.f << 0;
+		QTest::newRow("one line[9]")              << "some text"              <<     9 <<  39.5f << -10.f << 0;
+
+		QTest::newRow("linebreak[0]")             << "\n"                     <<     0 <<   0.0f <<  -1.f << 0;
+		QTest::newRow("linebreak[1]")             << "\n"                     <<     1 <<   0.0f << -19.f << 1;
+
+		QTest::newRow("two lines[0]")             << "some text\nsecond line" <<     0 << -38.5f <<  -1.f << 0;
+		QTest::newRow("two lines[9]")             << "some text\nsecond line" <<     9 <<  39.5f <<  -1.f << 0;
+		QTest::newRow("two lines[10]")            << "some text\nsecond line" <<    10 << -44.9f << -19.f << 1;
+		QTest::newRow("two lines[21]")            << "some text\nsecond line" <<    21 <<  46.2f << -19.f << 1;
+		QTest::newRow("one line + linebreak[0]")  << "some text\n"            <<     0 << -38.5f <<  -1.f << 0;
+		QTest::newRow("one line + linebreak[9]")  << "some text\n"            <<     9 <<  39.5f <<  -1.f << 0;
+		QTest::newRow("one line + linebreak[10]") << "some text\n"            <<    10 <<   0.0f << -19.f << 1;
+
+		QTest::newRow("two linebreaks[0]")        << "\n\n"                   <<     0 <<   0.0f <<   8.f << 0;
+		QTest::newRow("two linebreaks[1]")        << "\n\n"                   <<     1 <<   0.0f << -10.f << 1;
+		QTest::newRow("two linebreaks[2]")        << "\n\n"                   <<     2 <<   0.0f << -28.f << 2;
+
+		QTest::newRow("three linebreaks[0]")      << "\n\n\n"                 <<     0 <<   0.0f <<  17.f << 0;
+		QTest::newRow("three linebreaks[1]")      << "\n\n\n"                 <<     1 <<   0.0f <<  -1.f << 1;
+		QTest::newRow("three linebreaks[2]")      << "\n\n\n"                 <<     2 <<   0.0f << -19.f << 2;
+		QTest::newRow("three linebreaks[3]")      << "\n\n\n"                 <<     3 <<   0.0f << -37.f << 3;
+
+		QTest::newRow("four lines[0]")            << "a\nb\nc\nd"             <<     0 <<  -4.5f <<  17.f << 0;
+		QTest::newRow("four lines[5]")            << "a\nb\nc\nd"             <<     5 <<   5.0f << -19.f << 2;
+		QTest::newRow("four lines[6]")            << "a\nb\nc\nd"             <<     6 <<  -4.2f << -37.f << 3;
+		QTest::newRow("four lines[7]")            << "a\nb\nc\nd"             <<     7 <<   5.8f << -37.f << 3;
+	}
+	void testImageTextPosition()
+	{
+		QFETCH(QString, text);
+		QFETCH(int, charIndex);
+		QFETCH(float, expectedX);
+		QFETCH(float, expectedY);
+		QFETCH(int, expectedLineIndex);
+
+		VuoText textV = VuoText_make(text.toUtf8().data());
+		QVERIFY(textV);
+		VuoLocal(textV);
+
+		VuoImageTextData td = VuoImage_getTextImageData(textV, VuoFont_makeDefault(), 1, 1, 0, true);
+		QVERIFY(td);
+		VuoLocal(td);
+
+		unsigned int lineIndex;
+		VuoPoint2d p = VuoImageTextData_getPositionForCharIndex(td, charIndex, &lineIndex);
+
+		QVERIFY(fabs(p.x - expectedX) < 5);
+		QVERIFY(fabs(p.y - expectedY) < 5);
+		QCOMPARE(lineIndex, (unsigned int)expectedLineIndex);
 	}
 };
 

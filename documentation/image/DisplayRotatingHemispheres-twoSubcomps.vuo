@@ -1,0 +1,40 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @createdInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.1.2
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="210,75"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.z" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<z>z\l|<point3d>point3d\r" pos="405,495"];
+ConvertRealTo3DPoint4 [type="vuo.type.real.point3d.x" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="390,120"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="15,-90" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="315,-105" _translation="\{\"x\":-0.5,\"y\":0,\"z\":0\}" _scale="\{\"x\":0.60000002384185791,\"y\":0.60000002384185791,\"z\":0.60000002384185791\}"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="315,-15" _translation="\{\"x\":0.5,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
+MakeHemisphere [type="me.makeHemisphere" version="" label="Make Hemisphere|<refresh>refresh\l|<Transform>Transform\l|<Material>Material\l|<TransformedObject>TransformedObject\r" pos="525,-15" fillcolor="magenta"];
+MakeHemisphere2 [type="me.makeHemisphere" version="" label="Make Hemisphere|<refresh>refresh\l|<Transform>Transform\l|<Material>Material\l|<TransformedObject>TransformedObject\r" pos="525,60" fillcolor="tangerine"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="704,-4" fillcolor="blue"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="750,-15" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ShareValue [type="vuo.data.share.VuoColor" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,75" _value="\{\"r\":0,\"g\":1,\"b\":0.50196081399917603,\"a\":1\}"];
+
+AllowFirstEvent:firstEvent -> ShareValue:value;
+ConvertRealTo3DPoint4:point3d -> Make3DTransform:rotation;
+ConvertRealTo3DPoint:point3d -> Make3DTransform2:rotation;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo3DPoint4:x;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo3DPoint:z;
+Make3DTransform2:transform -> MakeHemisphere2:Transform;
+Make3DTransform:transform -> MakeHemisphere:Transform;
+MakeHemisphere2:TransformedObject -> MakeList:2;
+MakeHemisphere:TransformedObject -> MakeList:1;
+MakeList:list -> RenderSceneToWindow:objects;
+ShareValue:sameValue -> MakeHemisphere2:Material;
+ShareValue:sameValue -> MakeHemisphere:Material;
+}

@@ -20,7 +20,7 @@ extern "C" {
 typedef void *VuoImageConvolve; ///< State data for the image Convolverer.
 
 VuoImageConvolve VuoImageConvolve_make(void);
-VuoImage VuoImageConvolve_convolve(VuoImageConvolve convolve, VuoImage image, VuoImage convolutionMatrix, VuoThresholdType channels, double intensity, VuoDiode range);
+VuoImage VuoImageConvolve_convolve(VuoImageConvolve convolve, VuoImage image, VuoImage convolutionMatrix, VuoThresholdType channels, double intensity, double threshold, VuoDiode range);
 
 /// A function that can be passed to @ref VuoImageConvolve_generateMatrix.
 typedef double (*VuoImageConvolveFunction)(double x, double y, double param);

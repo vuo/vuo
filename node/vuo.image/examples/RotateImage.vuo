@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Displays a rotated image.
+ *
+ * Image by Nicman on [Pixabay](https://pixabay.com/en/hummingbird-bird-trochilidae-flying-2139279/).
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Convert2DPointToReal3 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="330,540"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="330,330" _decrement="1.000000" _setCount="0.000000"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="135,210" _url="\"Hummingbird.jpg\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,90" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="720,210" _center="\{\"x\":0.000000,\"y\":0.000000\}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="147,341" _2="100"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="929,206" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="540,45" _text="\"Move the mouse up and down to rotate the image.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":24,\"underline\":false,\"color\":\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.1.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="180,330"];
+ReceiveMouseDeltas [type="vuo.mouse.delta2" version="2.0.0" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedBy>movedBy\r" pos="-105,330" fillcolor="orange" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="975,195" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage [type="vuo.image.resize" version="1.1.3" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="315,210" _sizingMode="\"fit\"" _width="640" _height="480"];
+RotateImage [type="vuo.image.rotate" version="1.0.2" label="Rotate Image|<refresh>refresh\l|<image>image\l|<rotation>rotation\l|<expandBounds>expandBounds\l|<rotatedImage>rotatedImage\r" pos="510,210" fillcolor="orange" _expandBounds="true"];
+
+Convert2DPointToReal3:y -> MakeList2:1;
+Count:count -> RotateImage:rotation;
+FetchImage:image -> ResizeImage:image;
+FireOnStart2:started -> FetchImage:url;
+FireOnStart2:started -> MakeTextLayer:center;
+MakeLayer:layer -> MakeList4:2;
+MakeList2:list -> Multiply:values;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList4:1;
+Multiply:product -> Count:increment;
+ReceiveMouseDeltas:movedBy -> Convert2DPointToReal3:xy;
+RenderLayersToWindow:updatedWindow -> ReceiveMouseDeltas:window [style=invis];
+ResizeImage:resizedImage -> RotateImage:image;
+RotateImage:rotatedImage -> MakeLayer:image;
+}

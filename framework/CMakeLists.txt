@@ -219,6 +219,7 @@ file(CREATE_LINK "Versions/Current/Frameworks"    "${frameworkPath}/Frameworks" 
 file(CREATE_LINK "Versions/Current/Headers"       "${frameworkPath}/Headers"       SYMBOLIC)
 file(CREATE_LINK "Versions/Current/Helpers"       "${frameworkPath}/Helpers"       SYMBOLIC)
 file(CREATE_LINK "Versions/Current/Modules"       "${frameworkPath}/Modules"       SYMBOLIC)
+file(CREATE_LINK "Versions/Current/SDKs"          "${frameworkPath}/SDKs"          SYMBOLIC)
 
 file(MAKE_DIRECTORY "${frameworkVersionPath}/Helpers")
 file(CREATE_LINK "clang" "${frameworkVersionPath}/Helpers/clang++" SYMBOLIC)
@@ -507,6 +508,65 @@ add_custom_command(
 )
 add_custom_target(VuoFrameworkMacOSHeaders DEPENDS ${macosHeadersDestination}/AvailabilityMacros.h)
 add_dependencies(VuoFrameworkDylib VuoFrameworkMacOSHeaders)
+
+
+# Copy macOS SDK text-based dylib stubs into Vuo.framework,
+# so we can link on platforms that don't include system dylibs (macOS 11).
+set(macOSSDKDestination "${frameworkVersionPath}/SDKs/MacOSX10.11.sdk")
+add_custom_command(
+	COMMENT "Copying macOS SDK TBDs into Vuo.framework"
+	WORKING_DIRECTORY ${CONAN_MACOS-SDK_ROOT}
+	COMMAND mkdir -p ${macOSSDKDestination}
+	COMMAND rsync
+		--relative
+		--recursive
+		--links
+		--exclude '**/Headers'
+		--exclude '**/Modules'
+		--exclude '*.app'
+		--exclude '*.map'
+		--exclude '*.modulemap'
+		--exclude 'libLLVMContainer.tbd'
+		System/Library/Frameworks/AVFoundation.framework
+		System/Library/Frameworks/Accelerate.framework
+		System/Library/Frameworks/AppKit.framework
+		System/Library/Frameworks/ApplicationServices.framework
+		System/Library/Frameworks/AudioToolbox.framework
+		System/Library/Frameworks/CFNetwork.framework
+		System/Library/Frameworks/Carbon.framework
+		System/Library/Frameworks/CoreAudio.framework
+		System/Library/Frameworks/CoreFoundation.framework
+		System/Library/Frameworks/CoreGraphics.framework
+		System/Library/Frameworks/CoreImage.framework
+		System/Library/Frameworks/CoreMIDI.framework
+		System/Library/Frameworks/CoreMedia.framework
+		System/Library/Frameworks/CoreMediaIO.framework
+		System/Library/Frameworks/CoreServices.framework
+		System/Library/Frameworks/CoreText.framework
+		System/Library/Frameworks/CoreVideo.framework
+		System/Library/Frameworks/Foundation.framework
+		System/Library/Frameworks/IOKit.framework
+		System/Library/Frameworks/IOSurface.framework
+		System/Library/Frameworks/ImageIO.framework
+		System/Library/Frameworks/OpenGL.framework
+		System/Library/Frameworks/Quartz.framework
+		System/Library/Frameworks/QuartzCore.framework
+		System/Library/Frameworks/QuickLook.framework
+		System/Library/Frameworks/WebKit.framework
+		System/Library/PrivateFrameworks/UIFoundation.framework
+		usr/lib/libSystem.tbd
+		usr/lib/libSystem.B.tbd
+		usr/lib/libc++.tbd
+		usr/lib/libc++.1.tbd
+		usr/lib/libextension.tbd
+		usr/lib/libobjc.tbd
+		usr/lib/libobjc.A.tbd
+		usr/lib/system/*.tbd
+		${macOSSDKDestination}
+	OUTPUT ${macOSSDKDestination}/usr/lib/libSystem.tbd
+)
+add_custom_target(VuoFrameworkMacOSSDK DEPENDS ${macOSSDKDestination}/usr/lib/libSystem.tbd)
+add_dependencies(VuoFrameworkDylib VuoFrameworkMacOSSDK)
 
 
 # Copy source-tree and generated headers into Vuo.framework.

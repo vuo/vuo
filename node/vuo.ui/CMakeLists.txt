@@ -41,14 +41,18 @@ VuoCompileNodes(
 #	vuo.ui.make.interaction.c
 	vuo.ui.make.toggle.cc
 	vuo.ui.make.theme.button.rounded.c
+	vuo.ui.make.theme.button.rounded2.c
 	vuo.ui.make.theme.material.c
 	vuo.ui.make.theme.text.rounded.c
 	vuo.ui.make.theme.slider.rounded.c
 	vuo.ui.make.theme.toggle.rounded.c
 	vuo.ui.make.button.cc
+	vuo.ui.open.m
+	vuo.ui.save.m
 )
 target_include_directories(vuo.ui.nodes
 	PRIVATE
+	../vuo.file
 	../vuo.layer
 	../vuo.mouse
 )

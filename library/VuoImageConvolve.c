@@ -139,6 +139,7 @@ VuoImageConvolve VuoImageConvolve_make(void)
 		uniform int convolutionMatrixWidth;
 		uniform int channels;
 		uniform float intensity;
+		uniform float threshold;
 		uniform int range;
 
 		float weight(int x, int y)
@@ -163,6 +164,10 @@ VuoImageConvolve VuoImageConvolve_make(void)
 					color = VuoGlsl_gray(color, channels) * w;
 					colorSum += color;
 				}
+
+			float brightness = VuoGlsl_brightness(colorSum, 0);
+			if (abs(brightness) < threshold)
+				colorSum.rgb = vec3(0.);
 
 			colorSum.rgb *= intensity;
 
@@ -191,7 +196,7 @@ VuoImageConvolve VuoImageConvolve_make(void)
  *
  * `convolutionMatrix` must be square and have odd width/height.
  */
-VuoImage VuoImageConvolve_convolve(VuoImageConvolve convolve, VuoImage image, VuoImage convolutionMatrix, VuoThresholdType channels, double intensity, VuoDiode range)
+VuoImage VuoImageConvolve_convolve(VuoImageConvolve convolve, VuoImage image, VuoImage convolutionMatrix, VuoThresholdType channels, double intensity, double threshold, VuoDiode range)
 {
 	if (!VuoImage_isPopulated(image))
 		return NULL;
@@ -209,6 +214,7 @@ VuoImage VuoImageConvolve_convolve(VuoImageConvolve convolve, VuoImage image, Vu
 	VuoShader_setUniform_VuoInteger(bi->shader, "convolutionMatrixWidth", convolutionMatrix->pixelsWide);
 	VuoShader_setUniform_VuoInteger(bi->shader, "channels",               channels);
 	VuoShader_setUniform_VuoReal   (bi->shader, "intensity",              intensity);
+	VuoShader_setUniform_VuoReal   (bi->shader, "threshold",              threshold);
 	VuoShader_setUniform_VuoInteger(bi->shader, "range",                  range);
 
 	VuoImage convolvedImage = VuoImageRenderer_render(bi->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));

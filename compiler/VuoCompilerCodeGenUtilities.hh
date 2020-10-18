@@ -9,7 +9,7 @@
 
 #pragma once
 
-class VuoCompilerConstantStringCache;
+class VuoCompilerConstantsCache;
 class VuoCompilerType;
 class VuoPort;
 class VuoType;
@@ -51,7 +51,7 @@ private:
 									  const vector<VuoPort *> &modelInputPorts, const vector<VuoPort *> &modelOutputPorts,
 									  const map<VuoPort *, json_object *> &detailsForPorts, const map<VuoPort *, string> &displayNamesForPorts,
 									  const map<VuoPort *, string> &defaultValuesForInputPorts, const map<VuoPort *, VuoPortClass::EventBlocking> &eventBlockingForInputPorts,
-									  map<VuoPort *, size_t> &indexOfParameter, map<VuoPort *, size_t> &indexOfEventParameter, VuoCompilerConstantStringCache &constantStrings);
+									  map<VuoPort *, size_t> &indexOfParameter, map<VuoPort *, size_t> &indexOfEventParameter, VuoCompilerConstantsCache *constantsCache);
 
 	static Function * getVuoRegisterFunction(Module *module);
 	static Function * getVuoRetainFunction(Module *module);
@@ -115,7 +115,6 @@ public:
 	static Value * generateGetNodeContextPortContext(Module *module, BasicBlock *block, Value *nodeContextValue, int index);
 	static Value * generateGetNodeContextInstanceData(Module *module, BasicBlock *block, Value *nodeContextValue, Type *instanceDataType);
 	static Value * generateGetNodeContextInstanceDataVariable(Module *module, BasicBlock *block, Value *nodeContextValue, Type *instanceDataType);
-	static Value * generateGetNodeContextSemaphore(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static Value * generateGetNodeContextClaimingEventId(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static Value * generateGetNodeContextExecutingGroup(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static Value * generateGetNodeContextOutputEvent(Module *module, BasicBlock *block, Value *nodeContextValue, size_t index);
@@ -131,7 +130,6 @@ public:
 	static void generateFreeCompositionState(Module *module, BasicBlock *block, Value *compositionStateValue);
 
 	static Value * generateGetDataForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
-	static Value * generateGetNodeSemaphoreForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
 	static Value * generateGetNodeIndexForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
 	static Value * generateGetTypeIndexForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
 
@@ -142,6 +140,13 @@ public:
 	static void generateReturnThreadsForTriggerWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue);
 	static void generateReturnThreadsForChainWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue, Value *chainIndexValue);
 
+	static void generateLockNodes(Module *module, BasicBlock *&block, Value *compositionStateValue, const vector<size_t> &nodeIndices, Value *eventIdValue, VuoCompilerConstantsCache *constantsCache);
+	static void generateLockNode(Module *module, BasicBlock *&block, Value *compositionStateValue, size_t nodeIndex, Value *eventIdValue);
+	static void generateLockNode(Module *module, BasicBlock *&block, Value *compositionStateValue, Value *nodeIndexValue, Value *eventIdValue);
+	static void generateUnlockNodes(Module *module, BasicBlock *block, Value *compositionStateValue, const vector<size_t> &nodeIndices, VuoCompilerConstantsCache *constantsCache);
+	static void generateUnlockNode(Module *module, BasicBlock *block, Value *compositionStateValue, size_t nodeIndex);
+	static void generateUnlockNode(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIndexValue);
+
 	static void generateSetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex, Value *value);
 	static Value * generateGetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex);
 	static Value * generateGetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, Value *elementIndexValue);
@@ -150,14 +155,15 @@ public:
 	static Value * generatePointerToValue(BasicBlock *block, Value *value);
 	static Constant * generatePointerToConstantString(Module *module, string stringValue, string globalVariableName = "");
 	static Constant * generatePointerToConstantArrayOfStrings(Module *module, vector<string> stringValues, string globalVariableName = "");
-	static void generateStringMatchingCode(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputStringValue, map<string, pair<BasicBlock *, BasicBlock *> > blocksForString, VuoCompilerConstantStringCache &constantStrings);
+	static Constant * generatePointerToConstantArrayOfUnsignedLongs(Module *module, const vector<unsigned long> &values, string globalVariableName = "");
+	static void generateStringMatchingCode(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputStringValue, map<string, pair<BasicBlock *, BasicBlock *> > blocksForString, VuoCompilerConstantsCache *constantsCache);
 	static void generateIndexMatchingCode(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputIndexValue, vector< pair<BasicBlock *, BasicBlock *> > blocksForIndex);
-	static Value * generateFormattedString(Module *module, BasicBlock *block, string formatString, vector<Value *> replacementValues, VuoCompilerConstantStringCache &constantStrings);
-	static Value * generateStringConcatenation(Module *module, BasicBlock *block, vector<Value *> stringsToConcatenate, VuoCompilerConstantStringCache &constantStrings);
+	static Value * generateFormattedString(Module *module, BasicBlock *block, string formatString, vector<Value *> replacementValues, VuoCompilerConstantsCache *constantsCache);
+	static Value * generateStringConcatenation(Module *module, BasicBlock *block, vector<Value *> stringsToConcatenate, VuoCompilerConstantsCache *constantsCache);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, int elementCount);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, Value *elementCountValue);
 	static Value * generateTypeCast(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
-	static void generateAnnotation(Module *module, BasicBlock *block, Value *value, string annotation, string fileName, unsigned int lineNumber, VuoCompilerConstantStringCache &constantStrings);
+	static void generateAnnotation(Module *module, BasicBlock *block, Value *value, string annotation, string fileName, unsigned int lineNumber, VuoCompilerConstantsCache *constantsCache);
 	static void generateModuleMetadata(Module *module, string metadata, string moduleKey);
 	static void generateRegisterCall(Module *module, BasicBlock *block, Value *argument, Function *freeFunction);
 	static void generateRetainCall(Module *module, BasicBlock *block, Value *argument);
@@ -166,8 +172,8 @@ public:
 	static void generateFreeCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateJsonObjectPut(Module *module, BasicBlock *block, Value *jsonObjectValue);
 	static void generateNullCheck(Module *module, Function *function, Value *valueToCheck, BasicBlock *initialBlock, BasicBlock *&nullBlock, BasicBlock *&notNullBlock);
-	static Value * generateSerialization(Module *module, BasicBlock *block, Value *valueToSerialize, VuoCompilerConstantStringCache &constantStrings);
-	static void generateUnserialization(Module *module, BasicBlock *block, Value *stringToUnserialize, Value *destinationVariable, VuoCompilerConstantStringCache &constantStrings);
+	static Value * generateSerialization(Module *module, BasicBlock *block, Value *valueToSerialize, VuoCompilerConstantsCache *constantsCache);
+	static void generateUnserialization(Module *module, BasicBlock *block, Value *stringToUnserialize, Value *destinationVariable, VuoCompilerConstantsCache *constantsCache);
 	static ICmpInst * generateIsPausedComparison(Module *module, BasicBlock *block, Value *compositionStateValue);
 	static void generateSendNodeExecutionStarted(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIdentifierValue);
 	static void generateSendNodeExecutionFinished(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIdentifierValue);
@@ -177,9 +183,9 @@ public:
 	static void generateSendPublishedOutputPortsUpdated(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *sentDataValue, Value *portDataSummaryValue);
 	static void generateSendEventFinished(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue);
 	static void generateSendEventDropped(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
-	static ICmpInst * generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier, Value *compositionStateValue, VuoCompilerConstantStringCache &constantStrings);
-	static void generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
-	static ICmpInst * generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
+	static ICmpInst * generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier, Value *compositionStateValue, VuoCompilerConstantsCache *constantsCache);
+	static void generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantsCache *constantsCache, Value *&replacementJsonValue);
+	static ICmpInst * generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantsCache *constantsCache, Value *&replacementJsonValue);
 	static ConstantInt * generateNoEventIdConstant(Module *module);
 	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionStateValue, size_t nodeIndex);
 	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIndexValue);
@@ -232,17 +238,16 @@ public:
 	static Function * getInstanceFiniFunction(Module *module);
 	static Function * getInstanceTriggerStartFunction(Module *module);
 	static Function * getInstanceTriggerStopFunction(Module *module);
-	static Function * getNodeInstanceInitFunction(Module *module, string moduleKey, bool isSubcomposition, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantStringCache &constantStrings);
-	static Function * getNodeInstanceFiniFunction(Module *module, string moduleKey, Type *instanceDataType, VuoCompilerConstantStringCache &constantStrings);
-	static Function * getNodeInstanceTriggerStartFunction(Module *module, string moduleKey, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantStringCache &constantStrings);
-	static Function * getNodeInstanceTriggerStopFunction(Module *module, string moduleKey, Type *instanceDataType, VuoCompilerConstantStringCache &constantStrings);
-	static Function * getNodeInstanceTriggerUpdateFunction(Module *module, string moduleKey, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantStringCache &constantStrings);
+	static Function * getNodeInstanceInitFunction(Module *module, string moduleKey, bool isSubcomposition, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantsCache *constantsCache);
+	static Function * getNodeInstanceFiniFunction(Module *module, string moduleKey, Type *instanceDataType, VuoCompilerConstantsCache *constantsCache);
+	static Function * getNodeInstanceTriggerStartFunction(Module *module, string moduleKey, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantsCache *constantsCache);
+	static Function * getNodeInstanceTriggerStopFunction(Module *module, string moduleKey, Type *instanceDataType, VuoCompilerConstantsCache *constantsCache);
+	static Function * getNodeInstanceTriggerUpdateFunction(Module *module, string moduleKey, Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, map<VuoPort *, size_t> &indexOfParameter, VuoCompilerConstantsCache *constantsCache);
 	static Function * getNodeEventFunction(Module *module, string moduleKey, bool isSubcomposition, bool isStateful,
 										   Type *instanceDataType, const vector<VuoPort *> &modelInputPorts, const vector<VuoPort *> &modelOutputPorts,
 										   const map<VuoPort *, json_object *> &detailsForPorts, const map<VuoPort *, string> &displayNamesForPorts,
 										   const map<VuoPort *, string> &defaultValuesForInputPorts, const map<VuoPort *, VuoPortClass::EventBlocking> &eventBlockingForInputPorts,
-										   map<VuoPort *, size_t> &indexOfParameter, map<VuoPort *, size_t> &indexOfEventParameter, VuoCompilerConstantStringCache &constantStrings);
-	static Function * getWaitForNodeFunction(Module *module, string moduleKey);
+										   map<VuoPort *, size_t> &indexOfParameter, map<VuoPort *, size_t> &indexOfEventParameter, VuoCompilerConstantsCache *constantsCache);
 	static Function * getCompositionGetPortValueFunction(Module *module);
 	static Function * getSetInputPortValueFunction(Module *module);
 	static Function * getCompositionSetPortValueFunction(Module *module);

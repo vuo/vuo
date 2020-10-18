@@ -27,11 +27,7 @@
  */
 QPixmap VuoEditorUtilities::vuoLogoForDialogs()
 {
-	qreal devicePixelRatio = qApp->primaryScreen()->devicePixelRatio();
-	QPixmap logo(QStringLiteral(":/Icons/vuo.png"));
-	logo = logo.scaledToHeight(64 * devicePixelRatio, Qt::SmoothTransformation);
-	logo.setDevicePixelRatio(devicePixelRatio);
-	return logo;
+    return QIcon(":/Icons/vuo.svg").pixmap(64,64);
 }
 
 /**

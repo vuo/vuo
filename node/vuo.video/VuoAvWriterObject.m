@@ -86,51 +86,51 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 		videoEncoding = AVVideoCodecAppleProRes422;
 	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422HQ)
 	{
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,15,0}])
 			videoEncoding = @"apch"; // AVVideoCodecTypeAppleProRes422HQ
 		else
 		{
-			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 HQ.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			VUserLog("Error: macOS %d.%d doesn't support ProRes 422 HQ.", (int)NSProcessInfo.processInfo.operatingSystemVersion.majorVersion, (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
 	}
 	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422LT)
 	{
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,15,0}])
 			videoEncoding = @"apcs"; // AVVideoCodecTypeAppleProRes422LT
 		else
 		{
-			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 LT.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			VUserLog("Error: macOS %d.%d doesn't support ProRes 422 LT.", (int)NSProcessInfo.processInfo.operatingSystemVersion.majorVersion, (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
 	}
 	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422Proxy)
 	{
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,15,0}])
 			videoEncoding = @"apco"; // AVVideoCodecTypeAppleProRes422Proxy
 		else
 		{
-			VUserLog("Error: macOS 10.%d doesn't support ProRes 422 Proxy.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			VUserLog("Error: macOS %d.%d doesn't support ProRes 422 Proxy.", (int)NSProcessInfo.processInfo.operatingSystemVersion.majorVersion, (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
 	}
 	else if (format.imageEncoding == VuoMovieImageEncoding_HEVC)
 	{
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 13)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,13,0}])
 			videoEncoding = @"hvc1"; // AVVideoCodecTypeHEVC
 		else
 		{
-			VUserLog("Error: macOS 10.%d doesn't support HEVC/h.265.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			VUserLog("Error: macOS %d.%d doesn't support HEVC/h.265.", (int)NSProcessInfo.processInfo.operatingSystemVersion.majorVersion, (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
 	}
 	else if (format.imageEncoding == VuoMovieImageEncoding_HEVCAlpha)
 	{
-		if (NSProcessInfo.processInfo.operatingSystemVersion.minorVersion >= 15)
+		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,15,0}])
 			videoEncoding = @"muxa"; // AVVideoCodecTypeHEVCWithAlpha
 		else
 		{
-			VUserLog("Error: macOS 10.%d doesn't support HEVC/h.265 with alpha channel.", (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
+			VUserLog("Error: macOS %d.%d doesn't support HEVC/h.265 with alpha channel.", (int)NSProcessInfo.processInfo.operatingSystemVersion.majorVersion, (int)NSProcessInfo.processInfo.operatingSystemVersion.minorVersion);
 			return NO;
 		}
 	}

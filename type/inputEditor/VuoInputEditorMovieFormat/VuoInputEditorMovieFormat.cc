@@ -93,6 +93,7 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		string originalMovieImageEncodingAsString = json_object_to_json_string_ext(VuoMovieImageEncoding_getJson(VuoMovieFormat_makeFromJson(originalValue).imageEncoding), JSON_C_TO_STRING_PLAIN);
 		comboBoxImageEncoding = new VuoComboBox(&dialog);
 		comboBoxImageEncoding->setFont(font);
+		comboBoxImageEncoding->resize(220, comboBoxImageEncoding->height());
 		setUpComboBoxForType(comboBoxImageEncoding, "VuoMovieImageEncoding", originalMovieImageEncodingAsString);
 		connect(comboBoxImageEncoding, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &VuoInputEditorMovieFormat::updateQualitySliderEnabledStatusAndEmitValueChanged);
 

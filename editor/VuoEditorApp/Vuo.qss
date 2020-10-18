@@ -1,0 +1,67 @@
+QMenu {
+	background-color: #f0f0f0;
+	border-radius: 7px;
+}
+QMenu::item {
+	color: #202020;
+	margin-left: 5px;
+	margin-right: 5px;
+	padding: 2px 36px 2px 22px;
+	height: 21px;
+}
+QMenu::item:disabled {
+	color: #a0a0a0;
+}
+QMenu::item:selected {
+	background-color: #469cfe;
+	color: #ffffff;
+	border-radius: 4px;
+}
+QMenu::right-arrow {
+	image: url(:/Icons/chevron-black.svg);
+	left: -14px;
+	top: 1px;
+	width: 11px;
+}
+QMenu::right-arrow:selected {
+	image: url(:/Icons/chevron-white.svg);
+	left: -14px;
+	top: 1px;
+	width: 11px;
+}
+QMenu::indicator:checked {
+	image: url(:/Icons/checkmark-black.svg);
+	width: 11px;
+}
+QMenu::indicator:checked:selected {
+	image: url(:/Icons/checkmark.svg);
+}
+QMenu::indicator:checked,
+QMenu::icon {
+	margin-left: 6px;
+}
+QMenu::icon:checked,
+QMenu::icon:unchecked {
+	margin-left: 0;
+}
+QMenu::separator {
+	margin: 5px 21px 5px 27px;
+	height: 1px;
+	background: #c0c0c0;
+}
+
+
+.VuoEditorWindow QTabWidget::pane {
+	color: #bbb;
+	background: #e3e3e3;
+	border: 1px solid #dadada;
+	border-radius: 7px;
+	margin-top: -10px;
+	padding-top: 10px;
+}
+
+
+/* Use a font with fixed-width numerals, so the text doesn't shift when the frame number / percentage changes. */
+QProgressDialog QLabel {
+	font: 14pt "PT Sans";
+}

@@ -1,4 +1,4 @@
-Gives information about a physical control on a USB HID device.
+Gives information about a physical control on a HID.
 
    - `Name` — A description of the control.
    - `Value` — The current or default value.  `Receive HID Controls` outputs current values; `List Devices` outputs default values.
