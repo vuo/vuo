@@ -26,8 +26,7 @@ brew 'mypy'
 brew 'Brew/check-all-the-things.rb'
 brew "Brew/nsiqcppstyle.rb"
 
-# Use pandoc-1.12.0.2 — Vuo's documentation hasn't yet been ported to pandoc-2.x.
-brew "Brew/pandoc.rb", force_bottle: true
+brew 'pandoc'
 
 brew "Brew/pdf-link-checker.rb"
 

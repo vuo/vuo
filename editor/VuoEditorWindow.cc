@@ -5771,27 +5771,31 @@ void VuoEditorWindow::insertSubcompositionAtPos(QPointF targetScenePos)
 	if (!nodeClassName.empty())
 	{
 		VuoModuleManager::CallbackType subcompositionAdded = ^void (void) {
-		composition->getModuleManager()->getNodeLibrary()->highlightNodeClass(nodeClassName);
 
-		VuoRendererNode *subcompositionNode = composition->createNode(nodeClassName.c_str(), "",
-																	  targetScenePos.x(),
-																	  targetScenePos.y());
-		if (!subcompositionNode)
-		{
+			VuoRendererNode *subcompositionNode = composition->createNode(nodeClassName.c_str(), "",
+																		  targetScenePos.x(),
+																		  targetScenePos.y());
+			if (!subcompositionNode)
+			{
+				VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
+				return;
+			}
+
+			static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->linkSubcompositionToNodeInSupercomposition(subcompositionWindow->getComposition(),
+																												  getComposition(),
+																												  subcompositionNode);
+
+			// Add the new node to the composition.
+			QList<QGraphicsItem *> componentsToAdd = QList<QGraphicsItem *>();
+			componentsToAdd.append(subcompositionNode);
+			undoStack->push(new VuoCommandAdd(componentsToAdd, this, "Insert Subcomposition"));
+
 			VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
-			return;
-		}
 
-		static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->linkSubcompositionToNodeInSupercomposition(subcompositionWindow->getComposition(),
-																												getComposition(),
-																												subcompositionNode);
-
-		// Add the new subcomposition node.
-		QList<QGraphicsItem *> componentsToAdd = QList<QGraphicsItem *>();
-		componentsToAdd.append(subcompositionNode);
-		undoStack->push(new VuoCommandAdd(componentsToAdd, this, "Insert Subcomposition"));
-
-			VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
+			// Highlight the new node class in the node library.
+			VuoNodeLibrary *nl = composition->getModuleManager()->getNodeLibrary();
+			if (nl)
+				nl->highlightNodeClass(nodeClassName);
 		};
 
 		// The order of the following two lines matters -- the second callback registered
@@ -5983,7 +5987,6 @@ void VuoEditorWindow::refactorSelectedItems()
 	if (!nodeClassName.empty())
 	{
 		VuoModuleManager::CallbackType subcompositionAdded = ^void (void) {
-		composition->getModuleManager()->getNodeLibrary()->highlightNodeClass(nodeClassName);
 
 		VuoRendererNode *subcompositionNode = composition->createNode(nodeClassName.c_str(), "",
 																	  selectedItemsAvgPos.x(),
@@ -6116,6 +6119,11 @@ void VuoEditorWindow::refactorSelectedItems()
 		composition->collapseTypecastNodes();
 
 			VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
+
+			// Highlight the new node class in the node library.
+			VuoNodeLibrary *nl = composition->getModuleManager()->getNodeLibrary();
+			if (nl)
+				nl->highlightNodeClass(nodeClassName);
 		};
 
 		// The order of the following two lines matters -- the second callback registered

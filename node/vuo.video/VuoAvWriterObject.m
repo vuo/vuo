@@ -173,6 +173,9 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 		};
 	}
 
+	if (videoOutputSettings[AVVideoCompressionPropertiesKey][AVVideoAverageBitRateKey])
+		VUserLog("Asking AV Foundation to encode with average bitrate %0.2g Mbit/sec (%g * %d * %d * 60 * %g).", bitrate / 1024.f / 1024.f, clampedQuality, width, height, fudge);
+
 	self.videoInput = [[[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSettings] autorelease];
 	[videoOutputSettings release];
 	[self.videoInput setExpectsMediaDataInRealTime:YES];

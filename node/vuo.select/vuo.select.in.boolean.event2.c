@@ -1,6 +1,6 @@
 /**
  * @file
- * vuo.select.in.event node implementation.
+ * vuo.select.in.boolean.event2 node implementation.
  *
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -10,26 +10,26 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Select Event Input (2)",
+					 "title" : "Select Event Input (Boolean)",
 					 "keywords" : [ "switch", "multiplexer", "if then else statement", "case", "route", "condition", "control flow",
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door" ],
-					 "version" : "2.0.0",
+					 "version" : "3.0.0",
 					 "node": {
-						  "isDeprecated" : true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1,"suggestedMax":2}) which,
-		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) option1,
-		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) option2,
+		VuoInputData(VuoBoolean, {"default":false}) which,
+		VuoInputEvent({"eventBlocking":"wall","data":"which"}) whichEvent,
+		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) falseOption,
+		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) trueOption,
 		VuoOutputEvent() out
 )
 {
-	if (which <= 1)
-		*out = option1;
+	if (which == false)
+		*out = falseOption;
 	else
-		*out = option2;
+		*out = trueOption;
 }

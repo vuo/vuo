@@ -2351,6 +2351,9 @@ void VuoEditorComposition::concludeCableDrag(QGraphicsSceneMouseEvent *event)
 				VuoRendererNode *uncollapsedTypecast = uncollapseTypecastNode(typecastPort);
 				VuoPort *typecastOutPort = uncollapsedTypecast->getBase()->getOutputPorts()[VuoNodeClass::unreservedOutputPortStartIndex];
 
+				if (portToSpecialize == targetPort)
+					portToSpecialize = adjustedTargetPort;
+
 				targetPort = adjustedTargetPort;
 
 				// If the typecast did not have multiple incoming cables, and the new cable will

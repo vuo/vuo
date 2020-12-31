@@ -13,7 +13,7 @@ digraph G
 {
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-15,75" _seconds="1" _fired_eventThrottling="enqueue"];
 Hold [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="375,30" _initialValue="0"];
-SelectInput [type="vuo.select.in.event.2" version="2.0.0" label="SelectInput|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="180,105" _which="0"];
+SelectInput [type="vuo.select.in.event2.2" version="3.0.0" label="SelectInput|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="180,105" _which="0"];
 Subtract [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="375,210" _b="0"];
 
 FirePeriodically:fired -> SelectInput:refresh;

@@ -88,6 +88,17 @@ private:
 		}
 	}
 
+	VuoNode *getNodeByGraphvizIdentifier(string graphvizIdentifier)
+	{
+		auto nodes = composition->getBase()->getNodes();
+		auto node  = std::find_if(nodes.begin(), nodes.end(), [graphvizIdentifier](VuoNode *i) {
+            return i->getCompiler()->getGraphvizIdentifier() == graphvizIdentifier;
+        });
+		if (node == nodes.end())
+			throw std::runtime_error(QString("Couldn't find node \"%1\".").arg(QString::fromStdString(graphvizIdentifier)).toUtf8().data());
+		return *node;
+	}
+
 private slots:
 	void initTestCase()
 	{
@@ -491,6 +502,47 @@ private slots:
 
 		QVERIFY2(targetFound, "The target typecast was not found.");
 		QCOMPARE(targetCollapsed, collapseExpected);
+	}
+
+	/**
+	 * Connecting a cable from `Decoded Video` to `Value`
+	 * should remove the type converter and leave just a single cable.
+	 * https://b33p.net/kosada/vuo/vuo/-/issues/17371
+	 */
+	void testDisplacingTypeConverter()
+	{
+		cleanupTestCase();
+		initTestCaseWithCompositionFile("DisplaceTypeConverter.vuo");
+
+		// Verify that the composition has a typeconverter
+		// with a cable going into it and a cable going out of it.
+		QVERIFY(getNodeByGraphvizIdentifier("ConvertAudioToFrame"));
+		QCOMPARE(composition->getBase()->getCables().size(), 2);
+
+		// Connect a cable from `Decoded Video` to `Value`.
+		{
+			VuoNode *playMovieNode    = getNodeByGraphvizIdentifier("PlayMovie");
+			VuoPort *decodedVideoPort = playMovieNode->getOutputPortWithName("decodedVideo");
+			QVERIFY(decodedVideoPort);
+			QVERIFY(decodedVideoPort->hasRenderer());
+
+			QGraphicsSceneMouseEvent e;
+			composition->initiateCableDrag(decodedVideoPort->getRenderer(), nullptr, &e);
+
+			VuoNode *shareValueNode = getNodeByGraphvizIdentifier("ShareValue");
+			VuoPort *valuePort      = shareValueNode->getInputPortWithName("value");
+			QVERIFY(valuePort);
+			QVERIFY(valuePort->hasRenderer());
+
+			QGraphicsSceneMouseEvent e2;
+			e2.setScenePos(valuePort->getRenderer()->scenePos());
+			composition->concludeCableDrag(&e2);
+		}
+
+		// Verify that the type converter has been deleted,
+		// and that the composition now has just a single cable from `Decoded Video` to `Value`.
+		QVERIFY_EXCEPTION_THROWN(getNodeByGraphvizIdentifier("ConvertAudioToFrame"), std::runtime_error);
+		QCOMPARE(composition->getBase()->getCables().size(), 1);
 	}
 
 	void testUnspecializeGenericPort_data()
@@ -1299,6 +1351,13 @@ private slots:
 
 int main(int argc, char *argv[])
 {
+	// Qt 5.11 attempts to use threaded rendering.
+	// Disable it since it causes deadlock on macOS 11.
+	// https://bugreports.qt.io/browse/QTBUG-75037
+	// https://bugreports.qt.io/browse/QTBUG-42162
+	// Possibly fixed in Qt 5.12 (https://github.com/qt/qtbase/commit/ee3c66ca917b77f759acea7c6b27d15066f0b814).
+	qputenv("QSG_RENDER_LOOP", "basic");
+
 	// Tell Qt where to find its plugins.
 	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../QtPlugins").c_str()));
 

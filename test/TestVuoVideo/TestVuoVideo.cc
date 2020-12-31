@@ -368,7 +368,7 @@ private slots:
 		if (isNetworkStream(url))
 			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
-		if( url == QString("/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov") )
+		if (url.contains("/french — H.264 — Apple Lossless 5.1.mov"))
 		{
 			// I think this video has a lack of chapters or whatever they're called, which makes seeking really slow.
 			// @todo Look into speeding this scenario up.
@@ -443,13 +443,13 @@ private slots:
 		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 
-		if (url == "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts")
+		if (url.contains("/SD_NTSC_29.97_640x480.ts"))
 			QSKIP("This movie starts at PTS 600");
-		if (url == "/MovieGauntlet/interlaced/interlace_test2.mpeg")
+		if (url.contains("/interlace_test2.mpeg"))
 			QSKIP("This movie starts at PTS 0.5");
-		if (url == "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.webmhd.webm")
+		if (url.contains("/french.webmhd.webm"))
 			QSKIP("This movie starts at PTS 4.125");
-		if (url == "/MovieGauntlet/out-sd.mov")
+		if (url.contains("/out-sd.mov"))
 			QSKIP("This movie starts at PTS 0.083000");
 
 		VuoVideo video = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);

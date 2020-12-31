@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.17 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.2.0 LANGUAGES NONE)
+project(Vuo VERSION 2.2.1 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -106,11 +106,16 @@ list(REMOVE_ITEM CONAN_LIBS_LLVM
 # Compilers ==================================================================
 enable_testing()
 
-set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
-if (NOT EXISTS ${CMAKE_OSX_SYSROOT})
-	message(FATAL_ERROR "\nPlease install ${CMAKE_OSX_SYSROOT}")
+set(macOSSDKVersion 10.10)
+execute_process(COMMAND /usr/local/bin/conan info macos-sdk/${macOSSDKVersion}-0@vuo/stable --paths --json conan_macos_sdk-${macOSSDKVersion}.json OUTPUT_QUIET)
+file(READ ${CMAKE_BINARY_DIR}/conan_macos_sdk-${macOSSDKVersion}.json macOSSDKJSON)
+string(REGEX MATCH "\"package_folder\": \"([^\"]+)\"" UNUSED "${macOSSDKJSON}")
+set(CMAKE_OSX_SYSROOT "${CMAKE_MATCH_1}" CACHE STRING "" FORCE)
+if (NOT IS_DIRECTORY "${CMAKE_OSX_SYSROOT}")
+	message(FATAL_ERROR "\nCouldn't find the ${macOSSDKVersion} SDK (${CMAKE_OSX_SYSROOT}):\n${conanInfoOutput}")
 endif()
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "" FORCE)
 
 include_directories(SYSTEM
 	${CONAN_INCLUDE_DIRS_JSONC}
@@ -164,7 +169,8 @@ set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 set(CMAKE_BUILD_TYPE Release)
 
 # Reduce file size.
-set(CMAKE_SHARED_LINKER_FLAGS "-Xlinker -no_function_starts -Xlinker -dead_strip")
+# Explicitly specify the SDK version, since Xcode 12's linker can't figure it out from the Conan-packaged SDK.
+set(CMAKE_SHARED_LINKER_FLAGS "-Xlinker -no_function_starts -Xlinker -dead_strip -Wl,-sdk_version,${macOSSDKVersion}")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 set(CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
@@ -221,6 +227,7 @@ endfunction()
 
 
 # Qt =========================================================================
+set(_qt5gui_OPENGL_INCLUDE_DIR "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers" CACHE STRING "" FORCE)
 find_package(Qt5 REQUIRED COMPONENTS Widgets Test MacExtras Network PrintSupport Quick LinguistTools Svg)
 
 

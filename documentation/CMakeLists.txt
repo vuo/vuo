@@ -124,13 +124,12 @@ add_custom_command(
 			${language}
 			${PROJECT_SOURCE_DIR}/translation/qtbase_${language}.ts
 			${PROJECT_SOURCE_DIR}/translation/vuo_${language}.ts
-		| /usr/local/Cellar/pandoc/1.12.0.2/bin/pandoc
+		| /usr/local/bin/pandoc
 			--table-of-contents
 			--number-sections
-			--smart
 			--template=${PROJECT_SOURCE_DIR}/documentation/VuoManualTemplate.tex
 			--include-in-header=${PROJECT_SOURCE_DIR}/documentation/VuoManualHeader.tex
-			--from=markdown
+			--from=markdown+smart
 			--to=latex
 			-o -
 			-
@@ -141,7 +140,7 @@ add_custom_command(
 	# so there will be a lot of harmless undefined reference warnings.
 	# xelatex exits with nonzero status even when it succeeds.
 	COMMAND ${xelatex}
-		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references' || true\)
+		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references|Column widths have changed|longtable.*in table .* on input line' || true\)
 
 	# The second xelatex run populates terms and references (including the table of contents).
 	# There shouldn't be any undefined references after the second run.
@@ -262,22 +261,18 @@ add_custom_command(
 	COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/VuoManual.txt ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
-		# Markdown -> JSON
-		| /usr/local/Cellar/pandoc/1.12.0.2/bin/pandoc
-			--smart
-			--from markdown
-			--to json
-			-o -
-			-
-
-		# JSON -> JSON, changing LaTeX commands into Docbook-compatible XML encoded in JSON
-		| ${CMAKE_CURRENT_SOURCE_DIR}/latexToDocbook.php
-
-		# JSON -> Docbook
-		| /usr/local/Cellar/pandoc/1.12.0.2/bin/pandoc
+		# Markdown -> Docbook
+		| /usr/local/bin/pandoc
+			--from markdown+smart
+			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/aside.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/image.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/glossary.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/inline.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/warnUnknown.lua
+			--to docbook4
 			--standalone
-			--from json
-			--to docbook
 			-o -
 			-
 
@@ -343,22 +338,18 @@ add_custom_command(
 	COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/VuoManual.txt ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
-		# Markdown -> JSON
-		| /usr/local/Cellar/pandoc/1.12.0.2/bin/pandoc
-			--smart
-			--from markdown
-			--to json
-			-o -
-			-
-
-		# JSON -> JSON, changing LaTeX commands into Docbook-compatible XML encoded in JSON
-		| ${CMAKE_CURRENT_SOURCE_DIR}/latexToDocbook.php
-
-		# JSON -> Docbook
-		| /usr/local/Cellar/pandoc/1.12.0.2/bin/pandoc
+		# Markdown -> Docbook
+		| /usr/local/bin/pandoc
+			--from markdown+smart
+			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/aside.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/image.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/glossary.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/inline.lua
+			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/warnUnknown.lua
+			--to docbook4
 			--standalone
-			--from json
-			--to docbook
 			-o -
 			-
 

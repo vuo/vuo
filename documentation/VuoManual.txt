@@ -1432,22 +1432,22 @@ The \term{Image Filter} protocol is for compositions that alter an image (or str
 ### Published input ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Required/Optional | Description |
-|------|-----------|-------------------|-------------|
+| Name       | Data type | Required? | Description              |
+| ---------- | --------- | --------- | ------------------------ |
 | \vuoPort{image} | Image | Required | The original image. |
-| \vuoPort{time} | Real | Required | \parbox[t]{0.5\columnwidth}{A number that changes over time, used to control animations or other changing effects.} |
-| \vuoPort{duration} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The length, in seconds, of the clip.} |
-| \vuoPort{framerate} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The framerate of the project, in frames per second.} |
-| \vuoPort{frameNumber} | Integer | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The number of frames since the beginning of the clip, starting at 0.} |
-| \vuoPort{quality} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The rendering quality or level of detail.} |
+| \vuoPort{time} | Real | Required | A number that changes over time, used to control animations or other changing effects. |
+| \vuoPort{duration} | Real | Optional | For FxPlug: The length, in seconds, of the clip. |
+| \vuoPort{framerate} | Real | Optional | For FxPlug: The framerate of the project, in frames per second. |
+| \vuoPort{frameNumber} | Integer | Optional | For FxPlug: The number of frames since the beginning of the clip, starting at 0. |
+| \vuoPort{quality} | Real | Optional | For FxPlug: The rendering quality or level of detail. |
 
 \vuoPort{time} and \vuoPort{quality} are further explained later in this section.
 
 ### Published output ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Description |
-|------|-----------|-------------|
+| Name       | Data type | Description              |
+| ---------- | --------- | ------------------------ |
 | \vuoPort{outputImage} | Image | The altered image. |
 
 ## Image Generator protocol
@@ -1458,28 +1458,28 @@ The \term{Image Generator} protocol is for compositions that create an image (or
 ### Published input ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Required/Optional | Description |
-|------|-----------|-------------------|-------------|
+| Name       | Data type | Required? | Description              |
+| ---------- | --------- | --------- | ------------------------ |
 | \vuoPort{width} | Integer | Required | The requested width of the image, in pixels. |
 | \vuoPort{height} | Integer | Required | The requested height of the image, in pixels. |
-| \vuoPort{time} | Real | Required | \parbox[t]{0.5\columnwidth}{A number that changes over time, used to control animations or other changing effects.} |
-| \vuoPort{offlineRender} | Boolean | Optional | \parbox[t]{0.5\columnwidth}{For movie export: \emph{true} if the composition is being exported to a movie and \emph{false} otherwise.} |
-| \vuoPort{motionBlur} | Integer | Optional | \parbox[t]{0.5\columnwidth}{For movie export: The number of frames rendered per output frame. 1 means motion blur is disabled; 2, 4, 8, 16, 32, or 64 means motion blur is enabled.} |
-| \vuoPort{duration} | Real | Optional | \parbox[t]{0.5\columnwidth}{For movie export and FxPlug: The length, in seconds, of the movie/clip.} |
-| \vuoPort{framerate} | Real | Optional | \parbox[t]{0.5\columnwidth}{For movie export and FxPlug: The framerate of the movie/project, in frames per second.} |
-| \vuoPort{frameNumber} | Integer | Optional | \parbox[t]{0.5\columnwidth}{For movie export and FxPlug: The number of frames since the beginning of the movie/clip, starting at 0.} |
-| \vuoPort{quality} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The rendering quality or level of detail.} |
-| \vuoPort{screen} | Screen | Optional | \parbox[t]{0.5\columnwidth}{For screen savers: Which display the screen saver is running on. (macOS runs a separate instance of the composition on each display.)} |
-| \vuoPort{preview} | Boolean | Optional | \parbox[t]{0.5\columnwidth}{For screen savers: \emph{true} when the screen saver is running in the System Preferences preview thumbnail.} |
+| \vuoPort{time} | Real | Required | A number that changes over time, used to control animations or other changing effects. |
+| \vuoPort{offlineRender} | Boolean | Optional | For movie export: \emph{true} if the composition is being exported to a movie and \emph{false} otherwise. |
+| \vuoPort{motionBlur} | Integer | Optional | For movie export: The number of frames rendered per output frame. 1 means motion blur is disabled; 2, 4, 8, 16, 32, or 64 means motion blur is enabled. |
+| \vuoPort{duration} | Real | Optional | For movie export and FxPlug: The length, in seconds, of the movie/clip. |
+| \vuoPort{framerate} | Real | Optional | For movie export and FxPlug: The framerate of the movie/project, in frames per second. |
+| \vuoPort{frameNumber} | Integer | Optional | For movie export and FxPlug: The number of frames since the beginning of the movie/clip, starting at 0. |
+| \vuoPort{quality} | Real | Optional | For FxPlug: The rendering quality or level of detail. |
+| \vuoPort{screen} | Screen | Optional | For screen savers: Which display the screen saver is running on. (macOS runs a separate instance of the composition on each display.) |
+| \vuoPort{preview} | Boolean | Optional | For screen savers: \emph{true} when the screen saver is running in the System Preferences preview thumbnail. |
 
 \vuoPort{time} and \vuoPort{quality} are further explained later in this section.
 
 ### Published output ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Description |
-|------|-----------|-------------|
-| \vuoPort{outputImage} | Image | \parbox[t]{0.725\columnwidth}{The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports.} |
+| Name       | Data type | Description              |
+| ---------- | --------- | ------------------------ |
+| \vuoPort{outputImage} | Image | The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. |
 
 ## Image Transition protocol
 <abstract>Compositions that transition from one image to another</abstract>
@@ -1491,24 +1491,24 @@ The \term{Image Transition} protocol is for compositions that transition from on
 ### Published input ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Required/Optional | Description |
-|------|-----------|-------------------|-------------|
+| Name       | Data type | Required? | Description              |
+| ---------- | --------- | --------- | ------------------------ |
 | \vuoPort{startImage} | Image | Required | The image to transition from. |
 | \vuoPort{endImage} | Image | Required | The image to transition to. |
-| \vuoPort{progress} | Real | Required | \parbox[t]{0.5\columnwidth}{A number from 0 to 1 for how far the transition has progressed. At 0, the transition is at the beginning, with only \vuoPort{startImage} showing. At 0.5, the transition is halfway through. At 1, the transition is complete, with only \vuoPort{endImage} showing. When previewing the composition in Vuo, the mouse position left to right controls \vuoPort{progress}.} |
-| \vuoPort{time} | Real | Required | \parbox[t]{0.5\columnwidth}{A number that changes over time, used to control animations or other changing effects. \vuoPort{time} is independent of \vuoPort{progress}.} |
-| \vuoPort{duration} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The length, in seconds, of the transition.} |
-| \vuoPort{framerate} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The framerate of the project, in frames per second.} |
-| \vuoPort{frameNumber} | Integer | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The number of frames since the beginning of the transition, starting at 0.} |
-| \vuoPort{quality} | Real | Optional | \parbox[t]{0.5\columnwidth}{For FxPlug: The rendering quality or level of detail.} |
+| \vuoPort{progress} | Real | Required | A number from 0 to 1 for how far the transition has progressed. At 0, the transition is at the beginning, with only \vuoPort{startImage} showing. At 0.5, the transition is halfway through. At 1, the transition is complete, with only \vuoPort{endImage} showing. When previewing the composition in Vuo, the mouse position left to right controls \vuoPort{progress}. |
+| \vuoPort{time} | Real | Required | A number that changes over time, used to control animations or other changing effects. \vuoPort{time} is independent of \vuoPort{progress}. |
+| \vuoPort{duration} | Real | Optional | For FxPlug: The length, in seconds, of the transition. |
+| \vuoPort{framerate} | Real | Optional | For FxPlug: The framerate of the project, in frames per second. |
+| \vuoPort{frameNumber} | Integer | Optional | For FxPlug: The number of frames since the beginning of the transition, starting at 0. |
+| \vuoPort{quality} | Real | Optional | For FxPlug: The rendering quality or level of detail. |
 
 \vuoPort{time} and \vuoPort{quality} are further explained later in this section.
 
 ### Published output ports
 <!-- Keep these descriptions in sync with VuoPublishedPortSidebar::appendPublishedPortToList. -->
 
-| Name | Data type | Description |
-|------|-----------|-------------|
+| Name       | Data type | Description              |
+| ---------- | --------- | ------------------------ |
 | \vuoPort{outputImage} | Image | The resulting image. |
 
 ## Time
@@ -1532,7 +1532,7 @@ In Motion, the \menu{Render > Normal} and \menu{Draft} settings correspond to va
 ## Creating a protocol composition
 <abstract>Creating compositions with protocol published ports</abstract>
 
-\changedInVersion{2.0}{Added the \menu{Export} submenu.}
+\changedInVersion{2.0}{Added the Export submenu.}
 
 To create a composition that conforms to a protocol, choose one of the options under \menu{File > New Composition from Template > Protocol} or \menu{Export}. If you plan to export the composition (to create a movie or screen saver, for example), then your best option is to pick from the \menu{Export} submenu. These menu items automatically add the optional protocol published ports relevant to the chosen export type.
 
@@ -1914,14 +1914,14 @@ The keys and values in the JSON-formatted comment at the beginning of the ISF fi
 
 In most cases, the input and output ports on the Vuo node correspond to the items listed under `INPUTS` and `OUTPUTS` in the ISF file's JSON-formatted comment.
 
-| ISF key | Vuo port characteristic | Notes |
-|---------|-------------------------|-------|
+| ISF key              | Vuo port characteristic | Notes                               |
+| -------------------- | ----------------------- | ----------------------------------- |
 | `NAME` | Internal name | Used when saving a composition to file. |
 | `LABEL` | Display name | Shown on the node. |
 | `TYPE` | Data type | See the next section for details. |
 | `DEFAULT` | Initial/default constant value | For input ports only. |
-| `MIN`, `MAX`, `STEP` | \parbox[t]{0.35\columnwidth}{Suggested minimum, maximum, and step value} | \parbox[t]{0.4\columnwidth}{For input ports only. Used in the input editor.} |
-| `VALUES`, `LABELS` | Menu items | \parbox[t]{0.4\columnwidth}{For integer input ports with a fixed set of options. Used in the input editor.} |
+| `MIN`, `MAX`, `STEP` | Suggested minimum, maximum, and step value | For input ports only. Used in the input editor. |
+| `VALUES`, `LABELS` | Menu items | For integer input ports with a fixed set of options. Used in the input editor. |
 
 If an ISF input has `"TYPE"="size"`, it is turned into two integer input ports on the Vuo node: \vuoPort{Width} and \vuoPort{Height}.
 
@@ -2094,12 +2094,12 @@ Vuo recognizes most fragment shaders that conform to the [ISF 2.0 specification]
 
 Vuo supports these ISF-specific functions:
 
-| Function | Description |
-| ---------|-------------|
-| `vec4 IMG_PIXEL(image, vec2)` | \parbox[t]{0.5\columnwidth}{The color of a pixel in an image, using pixel-based coordinates.} |
-| `vec4 IMG_NORM_PIXEL(image, vec2)` | \parbox[t]{0.5\columnwidth}{The color of a pixel in an image, using normalized coordinates.} |
-| `vec4 IMG_THIS_PIXEL(image)` | \parbox[t]{0.5\columnwidth}{The color of the pixel that the fragment shader is currently executing on.} |
-| `vec4 IMG_THIS_NORM_PIXEL(image)` | \parbox[t]{0.5\columnwidth}{The color of the pixel that the fragment shader is currently executing on.} |
+| Function                           | Description                       |
+| ---------------------------------- | --------------------------------- |
+| `vec4 IMG_PIXEL(image, vec2)` | The color of a pixel in an image, using pixel-based coordinates. |
+| `vec4 IMG_NORM_PIXEL(image, vec2)` | The color of a pixel in an image, using normalized coordinates. |
+| `vec4 IMG_THIS_PIXEL(image)` | The color of the pixel that the fragment shader is currently executing on. |
+| `vec4 IMG_THIS_NORM_PIXEL(image)` | The color of the pixel that the fragment shader is currently executing on. |
 | `vec2 IMG_SIZE(image)` | The size of an image, in pixels. |
 
 Vuo also supports these Vuo-specific functions in ISF code:
@@ -2116,10 +2116,10 @@ Vuo supports these ISF-specific uniforms:
 | --------|-------------|
 | `vec2 RENDERSIZE` | The size of the output image, in pixels. |
 | `float TIME` | The time since the composition started, in seconds. |
-| `float TIMEDELTA` | \parbox[t]{0.65\columnwidth}{The time since the previous frame was rendered, in seconds. For the first frame, this is 0.} |
-| `vec2 isf_FragNormCoord` | \parbox[t]{0.65\columnwidth}{The normalized coordinates of the pixel that the fragment shader is currently executing on.} |
-| `vec4 DATE` | \parbox[t]{0.65\columnwidth}{The current date and time: year, month, day, and seconds since midnight.} |
-| `int FRAMEINDEX` | \parbox[t]{0.65\columnwidth}{0 for the 1st frame, 1 for the 2nd frame, 2 for the 3rd frame, and so on.} |
+| `float TIMEDELTA` | The time since the previous frame was rendered, in seconds. For the first frame, this is 0. |
+| `vec2 isf_FragNormCoord` | The normalized coordinates of the pixel that the fragment shader is currently executing on. |
+| `vec4 DATE` | The current date and time: year, month, day, and seconds since midnight. |
+| `int FRAMEINDEX` | 0 for the 1st frame, 1 for the 2nd frame, 2 for the 3rd frame, and so on. |
 
 ### Unsupported
 
@@ -2509,8 +2509,8 @@ In the keyboard shortcuts below, these symbols represent keys in macOS:
 
 ### Creating and editing compositions
 
-| Shortcut | Definition |
-| ---:| --- |
+| Shortcut | Definition                     |
+| -------: | ------------------------------ |
 | ⌘A | Select all |
 | ⇧⌘A | Select none |
 | ⌘C | Copy |
@@ -2525,24 +2525,24 @@ In the keyboard shortcuts below, these symbols represent keys in macOS:
 | ⌘I | Composition Information |
 | ⌥ Drag near input port | Duplicate the cable connected to the input port. |
 | ⌥ Drag selected components | Duplicate the selected nodes, cables, and comments. |
-| ⌥ while rubberband selecting | \parbox[t]{0.5\columnwidth}{Select all cables within the rubberband area, not just those connected to selected nodes.} |
+| ⌥ while rubberband selecting | Select all cables within the rubberband area, not just those connected to selected nodes. |
 | ⇧ while dragging cable | Change the data-and-event cable being dragged to event-only. |
-| ↑↓←→ | \parbox[t]{0.5\columnwidth}{Move the selected nodes, cables, and comments around on the canvas. Hold ⇧ to move further.} |
+| ↑↓←→ | Move the selected nodes, cables, and comments around on the canvas. Hold ⇧ to move further. |
 | ↵ | Hover over a node title and press ↵ to edit it. |
 | ↵ | Select one or more nodes and press ↵ to edit their titles. |
-| ↵ | \parbox[t]{0.5\columnwidth}{Hover the mouse over a constant value and press ↵ to edit it.  Press ↵ to accept the new value, or ⎋ to go back to the old value.} |
+| ↵ | Hover the mouse over a constant value and press ↵ to edit it.  Press ↵ to accept the new value, or ⎋ to go back to the old value. |
 | ⌥↵ | Open a Text input editor and press ⌥↵ to add a linebreak. |
 
 ### Creating and editing shaders
 
-| Shortcut | Definition |
-| ---:| --- |
+| Shortcut | Definition                     |
+| -------: | ------------------------------ |
 | ⌘5 | Show or hide GLSL/ISF Quick Reference |
 
 ### Running compositions (when the Vuo editor is active)
 
-| Shortcut | Definition |
-| ---:| --- |
+| Shortcut | Definition                     |
+| -------: | ------------------------------ |
 | ⌘. | Stop |
 | ⌘R | Run |
 | ⇧⌘R | Restart |

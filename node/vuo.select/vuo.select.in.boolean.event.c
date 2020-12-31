@@ -15,6 +15,7 @@ VuoModuleMetadata({
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door" ],
 					 "version" : "2.0.0",
 					 "node": {
+						  "isDeprecated" : true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });

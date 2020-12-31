@@ -79,7 +79,11 @@ std::string VuoSerializable::getType() const
 	int status;
 	char *unmangled = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
 	if (status == 0)
-		return unmangled;
+	{
+		std::string unmangledS(unmangled);
+		free(unmangled);
+		return unmangledS;
+	}
 	return "";
 }
 

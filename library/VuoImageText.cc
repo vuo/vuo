@@ -86,11 +86,12 @@ bool operator<(const VuoFontClass &a, const VuoFontClass &b)
  */
 VuoImageTextData VuoImageTextData_make()
 {
-	VuoImageTextData i = (VuoImageTextData) malloc(sizeof(struct _VuoImageTextData));
-	i->lineCounts = NULL;
-	i->lineBounds = NULL;
-	i->lineWidthsExcludingTrailingWhitespace = NULL;
-	i->charAdvance = NULL;
+	VuoImageTextData i                       = (VuoImageTextData)malloc(sizeof(struct _VuoImageTextData));
+	i->lineCounts                            = nullptr;
+	i->lineBounds                            = nullptr;
+	i->lineWidthsExcludingTrailingWhitespace = nullptr;
+	i->lineXOrigins                          = nullptr;
+	i->charAdvance                           = nullptr;
 	VuoRegister(i, VuoImageTextData_free);
 	return i;
 }
@@ -100,11 +101,17 @@ VuoImageTextData VuoImageTextData_make()
  */
 void VuoImageTextData_free(void* data)
 {
-	VuoImageTextData value = (VuoImageTextData) data;
-	if(value->lineCounts) free(value->lineCounts);
-	if(value->lineBounds) free(value->lineBounds);
-	if(value->lineWidthsExcludingTrailingWhitespace) free(value->lineWidthsExcludingTrailingWhitespace);
-	if(value->charAdvance) free(value->charAdvance);
+	VuoImageTextData value = (VuoImageTextData)data;
+	if (value->lineCounts)
+		free(value->lineCounts);
+	if (value->lineBounds)
+		free(value->lineBounds);
+	if (value->lineWidthsExcludingTrailingWhitespace)
+		free(value->lineWidthsExcludingTrailingWhitespace);
+	if (value->lineXOrigins)
+		free(value->lineXOrigins);
+	if (value->charAdvance)
+		free(value->charAdvance);
 	free(value);
 }
 

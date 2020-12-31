@@ -178,23 +178,8 @@ void VuoExampleMenu::populateNodeSetSubmenu(QMenu *nodeSetMenu, VuoNodeSet *node
 	nodeSetMenu->clear();
 
 	vector<string> exampleFileNames = nodeSet->getExampleCompositionFileNames();
-	vector<string> nonUberExampleFileNames;
-
-	// Don't re-list uberexamplecompositions or protocol-associated compositions within the node set submenus.
-	foreach (string example, exampleFileNames)
-	{
-		map<QString, QString>::iterator i = modelExampleCompositionsAndNodeSets.find(example.c_str());
-		map<QString, QString>::iterator j = protocolExampleCompositionsAndNodeSets.find(example.c_str());
-		if (((i == modelExampleCompositionsAndNodeSets.end()) || (i->second != QString::fromStdString(nodeSet->getName()))) &&
-			 ((j == protocolExampleCompositionsAndNodeSets.end()) || (j->second != QString::fromStdString(nodeSet->getName()))))
-			nonUberExampleFileNames.push_back(example);
-	}
-
-	for (vector<string>::iterator j = nonUberExampleFileNames.begin(); j != nonUberExampleFileNames.end(); ++j)
-	{
-		string exampleFileName = *j;
+	foreach (string exampleFileName, exampleFileNames)
 		addMenuItemForExampleComposition(QString::fromStdString(exampleFileName), QString::fromStdString(nodeSet->getName()), nodeSetMenu, parseCustomizedTitles);
-	}
 
 	exampleTitlesAlreadyParsedForSubmenu[nodeSetMenu->title()] = parseCustomizedTitles;
 }

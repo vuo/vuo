@@ -35,6 +35,6 @@ You can embed images and other data directly into a Vuo composition (without req
 
    - `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==`
 
-…it will output a red dot.
+…it will output a red dot.  This works for any `Fetch *` node's URL port.
 
 To convert a file into a Data URI, you can either use a web-based conversion tool such as [datauri.vuo.org](https://datauri.vuo.org), or launch Terminal.app and enter this command: `echo -n 'data:;base64,' ; base64 <path to image file>` then paste the output into one of Vuo's URL ports.

@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "filter", "hold", "block", "prevent", "pass", "once", "single", "start", "initialize", "data" ],
 					  "version" : "1.0.0",
 					  "node" : {
-						  "exampleCompositions" : [ "TakeSnapshotFromLiveVideo.vuo" ]
+						  "exampleCompositions" : [ "StoreCount.vuo" ]
 					  }
 				  });
 

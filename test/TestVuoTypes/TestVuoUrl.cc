@@ -194,6 +194,7 @@ private slots:
 		QString fileScheme = "file:";
 		QString basePath = getcwd(NULL,0);
 		QString baseUrl = fileScheme + basePath;
+		baseUrl.replace("@", "%40");
 
 		// An app that's in the read-only `/System` partition on macOS 10.15+.
 		QString expectedCalculatorUrl = "file:/System/Applications/Calculator.app";

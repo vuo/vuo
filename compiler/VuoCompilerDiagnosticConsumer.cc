@@ -59,7 +59,8 @@ void VuoCompilerDiagnosticConsumer::HandleDiagnostic(clang::DiagnosticsEngine::L
 		 || filename.find("/Vuo.framework/Headers/macos/") != llvm::StringRef::npos
 		 || filename.find("/.conan/data/") != llvm::StringRef::npos
 		 || filename.find("/Applications/Xcode.app/") != llvm::StringRef::npos)
-			return;
+			if (issueType == VuoCompilerIssue::Warning)
+				return;
 
 		llvm::raw_svector_ostream oss(location);
 		loc.print(oss, sourceManager);

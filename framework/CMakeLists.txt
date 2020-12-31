@@ -295,7 +295,7 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/node/vuo.video/HapInAVFoundation.framework
 		${frameworkVersionPath}/Frameworks
 	COMMAND chmod 644 ${frameworkVersionPath}/Frameworks/HapInAVFoundation.framework/Versions/Current/Frameworks/*.dylib
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Frameworks/Syphon.framework/Syphon ${frameworkVersionPath}/Frameworks/Syphon.framework/Syphon
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Frameworks/Syphon.framework/Versions/A/Syphon ${frameworkVersionPath}/Frameworks/Syphon.framework/Versions/A/Syphon
 
 	# HapInAVFoundation.framework is missing the root Frameworks symlink.
 	# Since it references its inner dylibs paths relative to the root of the framework,
@@ -455,6 +455,7 @@ add_custom_command(
 		${conanLibrariesDest}
 	COMMAND chmod 644 ${conanLibrariesDest}
 	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libLeap.dylib ${frameworkVersionPath}/Modules/libLeap.dylib
+		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
 
 	# On OS X 10.10, CoreImage.framework is internal to QuartzCore.framework.
 	# On later versions, CoreImage.framework is its own top-level framework.
@@ -475,35 +476,41 @@ file(COPY ${CONAN_ZEROMQ_ROOT}/include/zmq         DESTINATION "${frameworkVersi
 
 # Copy macOS system headers into Vuo.framework.
 set(macosHeadersDestination "${frameworkVersionPath}/Headers/macos")
+set(rsyncHeaders rsync --recursive --links --perms --include '*.h' --exclude '*')
 add_custom_command(
 	COMMENT "Copying macOS headers into Vuo.framework"
 	COMMAND mkdir -p ${macosHeadersDestination}
 	COMMAND rsync --recursive --links --perms
 		--exclude '*curses*'
-		--exclude 'pthread*'
-		--exclude 'sched*'
+		--exclude '/sched.h'
 		--exclude 'tcl*'
 		--exclude 'tk*'
 		--include '*.h'
 		--include _types
 		--include _pthread
 		--include architecture
+		--include bsm
+		--include device
 		--include dispatch
 		--include i386
 		--include libkern
 		--include mach
+		--include mach_debug
 		--include machine
 		--include os
+		--include pthread
 		--include secure
 		--include sys
+		--include uuid
+		--include xlocale
+		--include xpc
 		--exclude '*'
 		${CMAKE_OSX_SYSROOT}/usr/include/
 		${macosHeadersDestination}
-	COMMAND rsync --recursive --links --perms
-		--include '*.h'
-		--exclude '*'
-		${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/
-		${macosHeadersDestination}/OpenGL
+	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/ ${macosHeadersDestination}/CoreFoundation
+	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/IOKit.framework/Versions/A/Headers/          ${macosHeadersDestination}/IOKit
+	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/IOSurface.framework/Versions/A/Headers/      ${macosHeadersDestination}/IOSurface
+	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/         ${macosHeadersDestination}/OpenGL
 	OUTPUT ${macosHeadersDestination}/AvailabilityMacros.h
 )
 add_custom_target(VuoFrameworkMacOSHeaders DEPENDS ${macosHeadersDestination}/AvailabilityMacros.h)
@@ -548,6 +555,7 @@ add_custom_command(
 		System/Library/Frameworks/IOKit.framework
 		System/Library/Frameworks/IOSurface.framework
 		System/Library/Frameworks/ImageIO.framework
+		System/Library/Frameworks/Metal.framework
 		System/Library/Frameworks/OpenGL.framework
 		System/Library/Frameworks/Quartz.framework
 		System/Library/Frameworks/QuartzCore.framework

@@ -44,6 +44,7 @@ VuoCompileLibraries(
 )
 target_include_directories(vuo.core.libraries
 	PRIVATE
+		${CONAN_INCLUDE_DIRS_CURL}
 		${CONAN_INCLUDE_DIRS_FREEIMAGE}
 		${CONAN_INCLUDE_DIRS_LIBXML2}
 		${CONAN_INCLUDE_DIRS_MUPARSER}

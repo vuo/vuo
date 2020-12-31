@@ -3926,9 +3926,9 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	}
 
 
-	// When compiling on a development workstation or Jenkins, use Xcode's macOS SDK, since it includes headers.
+	// When compiling on a development workstation or Jenkins, use the Conan-packaged macOS SDK, since it includes headers.
 	// When compiling on an end-user system, no SDK is needed.
-	string buildTimeMacOSSDKFolder = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+	string buildTimeMacOSSDKFolder = MACOS_SDK_ROOT;
 	if (VuoFileUtilities::fileExists(buildTimeMacOSSDKFolder))
 	{
 		extraArgs.push_back("-isysroot");

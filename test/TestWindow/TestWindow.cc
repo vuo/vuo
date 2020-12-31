@@ -1484,10 +1484,11 @@ private slots:
 		});
 
 		// Switch back from fullscreen to windowed.
-		// This should fire one updatedWindow event, since the window changed position/size.
+		// This should fire two updatedWindow events, since the window changed position and size.
 		EXPECT_ANY_EVENT(^{
 			sendEscKeystroke();
 		});
+		EXPECT_ANY_EVENT(^{});
 		EXPECT_NO_EVENT(^{});
 
 		runner->stop();
@@ -1554,10 +1555,11 @@ private slots:
 		});
 
 		// Switch back from fullscreen to windowed.
-		// This should fire one updatedWindow event, since the window changed position/size.
+		// This should fire two updatedWindow events, since the window changed position and size.
 		EXPECT_ANY_EVENT(^{
 			sendEscKeystroke();
 		});
+		EXPECT_ANY_EVENT(^{});
 		EXPECT_NO_EVENT(^{});
 
 		runner->stop();
@@ -1624,10 +1626,11 @@ private slots:
 		});
 
 		// Switch back from fullscreen to windowed.
-		// This should fire one updatedWindow event, since the window changed position/size.
+		// This should fire two updatedWindow events, since the window changed position and size.
 		EXPECT_ANY_EVENT(^{
 			sendEscKeystroke();
 		});
+		EXPECT_ANY_EVENT(^{});
 		EXPECT_NO_EVENT(^{});
 
 		runner->stop();

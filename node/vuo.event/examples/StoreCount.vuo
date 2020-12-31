@@ -1,0 +1,52 @@
+/**
+ * @file
+ * @brief Store Count
+ * Displays an increasing value alongside a saved value. When releasing a mouse click, the next value is stored and displayed.
+ *
+ * @lastSavedInVuoVersion 2.2.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstValue [type="vuo.event.allowFirstValue.VuoReal" version="1.0.0" label="Allow First Value|<refresh>refresh\l|<value>value\l|<reset>reset\l|<firstValue>firstValue\r" pos="285,375" fillcolor="orange"];
+AppendTexts [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="570,150" _includeEmptyParts="true"];
+AppendTexts2 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="600,360" _includeEmptyParts="true"];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="1080,255" _horizontalAlignment="\"right\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0\}" _spacing="0"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="75,210" _increment="1.0" _decrement="1.0" _setCount="0.0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-150,270" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-180,195" fillcolor="lime" _seconds="0.69999999999999996" _fired_eventThrottling="drop"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="511,161" _1="\"Live count: \""];
+MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="541,371" _1="\"Snapshot count: \""];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1012,266"];
+MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1281,266" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="825,360" _font="\{\"fontName\":\"Menlo-Regular\",\"pointSize\":72,\"underline\":false,\"color\":\{\"r\":0.99044507741928101,\"g\":0.50222790241241455,\"b\":0.032891403883695602,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _wrapWidth="\"inf\"" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,150" _font="\{\"fontName\":\"Menlo-Regular\",\"pointSize\":72,\"underline\":false,\"color\":\{\"r\":0.13134481012821198,\"g\":0.99967724084854126,\"b\":0.023624084889888763,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _wrapWidth="Infinity" _opacity="1.0"];
+ReceiveMouseButtons2 [type="vuo.mouse.button2" version="2.1.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<forcePressed>forcePressed\r|<pressureChanged>pressureChanged\r|<released>released\r" pos="15,390" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _forcePressed_eventThrottling="enqueue" _pressureChanged_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1335,255" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue2 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="435,765"];
+SummarizeValue3 [type="vuo.data.summarize.VuoReal" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="495,345"];
+
+Comment [type="vuo.comment" label="\"### Show the count live as it increases.\"" pos="390,60" width="555" height="217" fillcolor="green"];
+Comment2 [type="vuo.comment" label="\"### After the mouse is clicked, store and display the next value.\"" pos="-15,300" width="989" height="196" fillcolor="orange"];
+
+AllowFirstValue:firstValue -> SummarizeValue3:value;
+AppendTexts2:compositeText -> MakeTextLayer:text;
+AppendTexts:compositeText -> MakeTextLayer2:text;
+ArrangeLayersInColumn:arrangedLayer -> MakeList4:1;
+Count:count -> AllowFirstValue:value;
+Count:count -> SummarizeValue2:value;
+FireOnStart:started -> Count:setCount;
+FirePeriodically:fired -> Count:increment [event=true];
+MakeList2:list -> AppendTexts2:texts;
+MakeList3:list -> ArrangeLayersInColumn:layers;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList:list -> AppendTexts:texts;
+MakeTextLayer2:layer -> MakeList3:1;
+MakeTextLayer:layer -> MakeList3:2;
+ReceiveMouseButtons2:released -> AllowFirstValue:reset;
+SummarizeValue2:summary -> MakeList:2;
+SummarizeValue3:summary -> MakeList2:2;
+}

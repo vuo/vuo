@@ -226,6 +226,7 @@ VuoEditor::VuoEditor(int &argc, char *argv[])
 	// If operating in documentation-generation mode, generate the node documentation and exit.
 	if (!documentationGenerationDirectory.empty())
 	{
+		menuBar = nullptr;
 		dispatch_async(dispatch_get_main_queue(), ^{
 						   generateAllNodeSetHtmlDocumentation(documentationGenerationDirectory);
 						   quitCleanly();
@@ -504,7 +505,8 @@ VuoEditor::~VuoEditor()
 {
 	dispatch_sync(builtInDriversQueue, ^{});
 
-	menuBar->deleteLater();
+	if (menuBar)
+		menuBar->deleteLater();
 	delete subcompositionRouter;
 	moduleManager->deleteWhenReady();  // deletes compiler
 }
@@ -1000,14 +1002,14 @@ void VuoEditor::populateHelpMenu(QMenu *m)
 	// Share a Composition
 	QAction *shareCompositionAction = new QAction(m);
 	shareCompositionAction->setText(tr("Share a Composition"));
-	shareCompositionAction->setData(QUrl("https://vuo.org/node/add/vuo-composition"));
+	shareCompositionAction->setData(QUrl("https://vuo.org/composition"));
 	connect(shareCompositionAction, &QAction::triggered, this, &VuoEditor::openExternalUrlFromSenderData);
 	m->addAction(shareCompositionAction);
 
 	// Start a Discussion
 	QAction *startDiscussionAction = new QAction(m);
 	startDiscussionAction->setText(tr("Start a Discussion"));
-	startDiscussionAction->setData(QUrl("https://vuo.org/node/add/discussion"));
+	startDiscussionAction->setData(QUrl("https://vuo.org/community/discussion"));
 	connect(startDiscussionAction, &QAction::triggered, this, &VuoEditor::openExternalUrlFromSenderData);
 	m->addAction(startDiscussionAction);
 

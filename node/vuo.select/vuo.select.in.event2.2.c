@@ -1,6 +1,6 @@
 /**
  * @file
- * vuo.select.in.event node implementation.
+ * vuo.select.in.event2.2 node implementation.
  *
  * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -13,9 +13,8 @@ VuoModuleMetadata({
 					 "title" : "Select Event Input (2)",
 					 "keywords" : [ "switch", "multiplexer", "if then else statement", "case", "route", "condition", "control flow",
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door" ],
-					 "version" : "2.0.0",
+					 "version" : "3.0.0",
 					 "node": {
-						  "isDeprecated" : true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });
@@ -23,6 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1,"suggestedMax":2}) which,
+		VuoInputEvent({"eventBlocking":"wall","data":"which"}) whichEvent,
 		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) option1,
 		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) option2,
 		VuoOutputEvent() out

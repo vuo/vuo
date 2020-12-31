@@ -41,6 +41,9 @@ class VuoConan(ConanFile):
             self.requires('cctools/921-1@vuo/stable')
             self.requires('csu/85-1@vuo/stable')
             self.requires('macos-sdk/10.11-0@vuo/stable')
+            # Launch Conan separately to install the older SDK
+            # (since a single conanfile.py can't require multiple versions of the same package).
+            self.run('conan install macos-sdk/10.10-0@vuo/stable')
 
         elif platform.system() == 'Linux':
             # These are system libraries on macOS, but they aren't provided by the system on Linux.

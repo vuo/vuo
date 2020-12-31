@@ -12,7 +12,11 @@
 
 VuoModuleMetadata({
 	"title" : "Get Layer Bounds",
-	"keywords" : [ "box", "aabb", "axis", "collider", "collision", "size", "rectangle" ],
+	"keywords": [
+		"box", "rectangle",
+		"aabb", "axis", "collider", "collision",
+		"size", "dimensions", "measurements", "geometry", "bounding", "boundaries", "length",
+	],
 	"version" : "1.0.0",
 	"node": {
 		"exampleCompositions" : [ "StretchOvalWithBounds.vuo" ]

@@ -18,6 +18,9 @@ VuoCompileGenericNodes(
 )
 
 VuoCompileNodes(
+	vuo.select.in.event2.2.c
+	vuo.select.in.event2.8.c
+	vuo.select.in.boolean.event2.c
 	vuo.select.in.event.2.c
 	vuo.select.in.event.8.c
 	vuo.select.in.boolean.event.c

@@ -201,13 +201,13 @@ private slots:
 		QTest::addColumn< bool >("isInput");
 		QTest::addColumn< VuoPortClass::EventBlocking >("expectedEventBlocking");
 
-		QTest::newRow("event-only door")					<< "vuo.select.in.boolean.event"<< "falseOption"	<< true		<< VuoPortClass::EventBlocking_Door;
-		QTest::newRow("data-and-event door")				<< "vuo.select.in.boolean"		<< "falseOption"	<< true		<< VuoPortClass::EventBlocking_Door;
-		QTest::newRow("data-and-event wall")				<< "vuo.data.hold"				<< "newValue"		<< true		<< VuoPortClass::EventBlocking_Wall;
-		QTest::newRow("data-and-event non-blocking")		<< "vuo.text.countCharacters"	<< "text"		<< true		<< VuoPortClass::EventBlocking_None;
-		QTest::newRow("refresh")							<< "vuo.text.countCharacters"	<< "refresh"	<< true		<< VuoPortClass::EventBlocking_None;
-		QTest::newRow("output port")						<< "vuo.select.in.event.2"		<< "out"		<< false	<< VuoPortClass::EventBlocking_None;
-	}
+		QTest::newRow("event-only door")                    << "vuo.select.in.boolean.event2"<< "falseOption"   << true     << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("data-and-event door")                << "vuo.select.in.boolean"       << "falseOption"   << true     << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("data-and-event wall")                << "vuo.data.hold"               << "newValue"      << true     << VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("data-and-event non-blocking")        << "vuo.text.countCharacters"    << "text"          << true     << VuoPortClass::EventBlocking_None;
+		QTest::newRow("refresh")                            << "vuo.text.countCharacters"    << "refresh"       << true     << VuoPortClass::EventBlocking_None;
+		QTest::newRow("output port")                        << "vuo.select.in.event2.2"      << "out"           << false    << VuoPortClass::EventBlocking_None;
+    }
 	void testPortEventBlocking()
 	{
 		QFETCH(QString, nodeClassName);

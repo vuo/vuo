@@ -113,6 +113,8 @@ void VuoModuleManager::setNodeLibrary(VuoNodeLibrary *nodeLibrary)
 
 /**
  * Returns the node library currently being updated when modules are loaded/unloaded.
+ *
+ * May be null if the node library is detached.
  */
 VuoNodeLibrary * VuoModuleManager::getNodeLibrary()
 {

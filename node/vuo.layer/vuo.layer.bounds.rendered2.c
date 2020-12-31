@@ -13,7 +13,11 @@
 
 VuoModuleMetadata({
 	"title" : "Get Rendered Layer Bounds",
-	"keywords" : [ "box", "aabb", "axis", "collider", "collision", "size", "rectangle" ],
+	"keywords": [
+		"box", "rectangle",
+		"aabb", "axis", "collider", "collision",
+		"size", "dimensions", "measurements", "geometry", "bounding", "boundaries", "length",
+	],
 	"version" : "2.0.0",
 	"node": {
 		"exampleCompositions" : [ ]

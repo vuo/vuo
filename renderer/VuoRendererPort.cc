@@ -1714,10 +1714,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 					{
 						json_object *itemObject = json_object_array_get_idx(expressionsObject, 0);
 						if (json_object_get_type(itemObject) == json_type_string)
-						{
 							expression = json_object_get_string(itemObject);
-							json_object_put(itemObject);
-						}
 					}
 				}
 			}

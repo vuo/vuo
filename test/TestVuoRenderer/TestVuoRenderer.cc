@@ -115,18 +115,18 @@ private slots:
 		QTest::addColumn<QString>("toPort");
 		QTest::addColumn<bool>("expectedCarriesData");
 
-		QTest::newRow("data to data")						<< "vuo.text.cut"			<< "partialText"	<< "vuo.console.window"		<< "writeLine"	<< true;
-		QTest::newRow("data to event")						<< "vuo.text.cut"			<< "partialText"	<< "vuo.select.in.event.2"	<< "option1"		<< false;
-		QTest::newRow("data to refresh")					<< "vuo.text.cut"			<< "partialText"	<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
-		QTest::newRow("event to data")						<< "vuo.select.in.event.2"	<< "out"			<< "vuo.console.window"		<< "writeLine"	<< false;
-		QTest::newRow("event to event")						<< "vuo.select.in.event.2"	<< "out"			<< "vuo.select.in.event.2"	<< "option1"		<< false;
-		QTest::newRow("event to refresh")					<< "vuo.select.in.event.2"	<< "out"			<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
-		QTest::newRow("trigger with data to data")			<< "vuo.console.window"		<< "typedLine"		<< "vuo.console.window"		<< "writeLine"	<< true;
-		QTest::newRow("trigger with data to event")			<< "vuo.console.window"		<< "typedLine"		<< "vuo.select.in.event.2"	<< "option1"		<< false;
-		QTest::newRow("trigger with data to refresh")		<< "vuo.console.window"		<< "typedLine"		<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
-		QTest::newRow("trigger without data to data")		<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.console.window"		<< "writeLine"	<< false;
-		QTest::newRow("trigger without data to event")		<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.select.in.event.2"	<< "option1"		<< false;
-		QTest::newRow("trigger without data to refresh")	<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
+		QTest::newRow("data to data")                       << "vuo.text.cut"           << "partialText"    << "vuo.console.window"     << "writeLine"  << true;
+		QTest::newRow("data to event")                      << "vuo.text.cut"           << "partialText"    << "vuo.select.in.event2.2" << "option1"        << false;
+		QTest::newRow("data to refresh")                    << "vuo.text.cut"           << "partialText"    << "vuo.event.fireOnStart"  << "refresh"        << false;
+		QTest::newRow("event to data")                      << "vuo.select.in.event2.2" << "out"            << "vuo.console.window"     << "writeLine"  << false;
+		QTest::newRow("event to event")                     << "vuo.select.in.event2.2" << "out"            << "vuo.select.in.event2.2" << "option1"        << false;
+		QTest::newRow("event to refresh")                   << "vuo.select.in.event2.2" << "out"            << "vuo.event.fireOnStart"  << "refresh"        << false;
+		QTest::newRow("trigger with data to data")          << "vuo.console.window"     << "typedLine"      << "vuo.console.window"     << "writeLine"  << true;
+		QTest::newRow("trigger with data to event")         << "vuo.console.window"     << "typedLine"      << "vuo.select.in.event2.2" << "option1"        << false;
+		QTest::newRow("trigger with data to refresh")       << "vuo.console.window"     << "typedLine"      << "vuo.event.fireOnStart"  << "refresh"        << false;
+		QTest::newRow("trigger without data to data")       << "vuo.event.fireOnStart"  << "started"        << "vuo.console.window"     << "writeLine"  << false;
+		QTest::newRow("trigger without data to event")      << "vuo.event.fireOnStart"  << "started"        << "vuo.select.in.event2.2" << "option1"        << false;
+		QTest::newRow("trigger without data to refresh")    << "vuo.event.fireOnStart"  << "started"        << "vuo.event.fireOnStart"  << "refresh"        << false;
 	}
 	void testCableCarriesData()
 	{
