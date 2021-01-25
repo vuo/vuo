@@ -146,7 +146,7 @@ Open the port popover for the \vuoNode{Fire on Display Refresh} node's \vuoPort{
 
 Two kinds of information can flow through ports: *data* and *events*.
 
-For the \vuoPort{Refreshed at Time} port, the data is the time — the number of seconds since the composition started running. At the moment the screenshot above was taken, the port popover showed that the data was about 4.05.
+For the \vuoPort{Refreshed at Time} port, the data is the time — the number of seconds since the composition started running. At the moment the screenshot above was taken, the port popover showed that the data was about 12.87.
 
 The port popover also shows that the \vuoPort{Refreshed at Time} port is outputting information at about 60 times per second (the monitor's refresh rate). Every 1/60 second, the port outputs a slightly greater number of seconds — accompanied by a second piece of information called an event.
 
