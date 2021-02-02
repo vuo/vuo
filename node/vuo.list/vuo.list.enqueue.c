@@ -31,7 +31,7 @@ VuoList_VuoGenericType1 nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoList_VuoGenericType1) listInstanceData,
-		VuoInputData(VuoInteger, { "default":10, "suggestedMin":0 }) maxItemCount,
+		VuoInputData(VuoInteger, { "default":10, "suggestedMin":0, "auto":infinity }) maxItemCount,
 		VuoInputEvent({"eventBlocking":"wall","data":"maxItemCount"}) maxItemCountEvent,
 		VuoInputData(VuoGenericType1) addItem,
 		VuoInputEvent({"eventBlocking":"none","data":"addItem"}) addItemEvent,
