@@ -37,10 +37,10 @@ private slots:
 		QTest::newRow("positive string with leading +") << "\"+1\"" << (VuoInteger)1 << false; // …but json-c can handle the leading + when converting JSON strings to numbers.
 		QTest::newRow("negative") << "-1" << (VuoInteger)-1 << true;
 		QTest::newRow("negative string") << "\"-1\"" << (VuoInteger)-1 << false;
-		QTest::newRow("positive max") << "9223372036854775807" << (VuoInteger)9223372036854775807 << true;
+		QTest::newRow("positive max") << "9223372036854775807" << (VuoInteger)9223372036854775807 << false;
 		QTest::newRow("positive max string") << "\"9223372036854775807\"" << (VuoInteger)9223372036854775807 << false;
 		// http://lists.cs.uiuc.edu/pipermail/cfe-dev/2012-February/019751.html
-		QTest::newRow("negative min") << "-9223372036854775808" << (VuoInteger)-9223372036854775807-1 << true;
+		QTest::newRow("negative min") << "-9223372036854775808" << (VuoInteger)-9223372036854775807-1 << false;
 		QTest::newRow("negative min string") << "\"-9223372036854775808\"" << (VuoInteger)-9223372036854775807-1 << false;
 		QTest::newRow("noninteger") << "Otto von Bismarck" << (VuoInteger)0 << false;
 		QTest::newRow("noninteger string") << "\"Otto von Bismarck\"" << (VuoInteger)0 << false;
@@ -54,6 +54,26 @@ private slots:
 		QCOMPARE(VuoInteger_makeFromString(initializer.toUtf8().constData()), value);
 		if (testTypeValueAsString)
 			QCOMPARE(VuoInteger_getString(value), initializer.toUtf8().constData());
+	}
+
+	void testJsonConversion_data()
+	{
+		QTest::addColumn<QString>("json");
+		QTest::addColumn<VuoInteger>("value");
+
+		QTest::newRow("infinity") << "infinity" << LLONG_MAX;
+		QTest::newRow("negative infinity") << "-infinity" << LLONG_MIN;
+	}
+	void testJsonConversion()
+	{
+		QFETCH(QString, json);
+		QFETCH(VuoInteger, value);
+
+		json_object* o = json_tokener_parse( json.toUtf8().constData() );
+		VuoInteger v = VuoInteger_makeFromJson( o );
+		json_object_put(o);
+
+		QCOMPARE(v, value);
 	}
 
 	void testRandom_data()
