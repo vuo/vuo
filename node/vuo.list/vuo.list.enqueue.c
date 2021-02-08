@@ -13,7 +13,7 @@ VuoModuleMetadata({
 					  "title" : "Enqueue",
 					  "keywords" : [ "history", "collect", "hoard", "populate", "slot", "dispense", "append", "accumulate",
 						  "limit", "capacity", "queue", "fifo", "first in first out", "recent", "hold", "store" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions": [ ]
 					  }
