@@ -36,6 +36,10 @@ void nodeInstanceEvent
 		VuoInputData(VuoGenericType1) addItem,
 		VuoInputEvent({"eventBlocking":"none","data":"addItem"}) addItemEvent,
 		VuoInputEvent({"eventBlocking":"none"}) clearList,
+		VuoInputData(VuoInteger, {"menuItems":[
+			{"value":0, "name": "Oldest"},
+			{"value":1, "name": "Newest"}
+		], "default": 0}) discardWhenFull,
 		VuoOutputData(VuoList_VuoGenericType1) list
 )
 {
@@ -47,8 +51,11 @@ void nodeInstanceEvent
 
 	unsigned long clampedMaxItemCount = MAX(0, maxItemCount);
 	unsigned long itemCount = VuoListGetCount_VuoGenericType1(*listInstanceData);
-	for ( ; itemCount > clampedMaxItemCount; --itemCount)
-		VuoListRemoveFirstValue_VuoGenericType1(*listInstanceData);
+		for ( ; itemCount > clampedMaxItemCount; --itemCount)
+			if(discardWhenFull)
+				VuoListRemoveLastValue_VuoGenericType1(*listInstanceData);
+			else
+				VuoListRemoveFirstValue_VuoGenericType1(*listInstanceData);
 
 	*list = VuoListCreate_VuoGenericType1();
 	for (unsigned long i = 1; i <= itemCount; ++i)
