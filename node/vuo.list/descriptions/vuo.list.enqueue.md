@@ -11,3 +11,5 @@ This node stores the most recently added items in a list. The list is "first in,
    - `List` — The list of recent items, in order from oldest to newest.
 
 If an event hits both `Add Item` and `Clear List`, then the list is cleared before the item is added.
+
+Thanks to [Martinus Magneson](https://vuo.org/user/3272) for the idea of the Discard when Full port.
