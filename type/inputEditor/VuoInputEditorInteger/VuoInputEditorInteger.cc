@@ -146,6 +146,9 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
  */
 void VuoInputEditorInteger::setAutoToggled(int state)
 {
+	// Avoid call to onSpinboxUpdate prompted by setSpecialValueText.
+	disconnect(spinbox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorInteger::onSpinboxUpdate);
+
 	if(state == Qt::Unchecked)
 	{
 		spinbox->setSpecialValueText("");
@@ -161,6 +164,8 @@ void VuoInputEditorInteger::setAutoToggled(int state)
 		spinbox->setMinimum(autoValue);
 		spinbox->setMaximum(autoValue);
 	}
+
+	connect(spinbox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged), this, &VuoInputEditorInteger::onSpinboxUpdate);
 
 	spinbox->setValue(current);
 	spinbox->setEnabled(!autoToggle->isChecked());

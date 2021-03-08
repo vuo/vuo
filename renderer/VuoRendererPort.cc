@@ -1641,7 +1641,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			// Case: Port type is a regular VuoInteger
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
-			VuoInteger i = json_object_get_int64(js);
+			VuoInteger i = VuoInteger_makeFromJson(js);
 			json_object_put(js);
 
 			if (getBase()->getClass()->hasCompiler() && !dynamic_cast<VuoPublishedPort *>(getBase()))
@@ -1649,7 +1649,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 				json_object *portDetails = static_cast<VuoCompilerEventPortClass *>(getBase()->getClass()->getCompiler())->getDataClass()->getDetails();
 				json_object *autoObject = NULL;
 				if (json_object_object_get_ex(portDetails, "auto", &autoObject))
-					if (i == json_object_get_int64(autoObject))
+					if (i == VuoInteger_makeFromJson(autoObject))
 						return "Auto";
 			}
 

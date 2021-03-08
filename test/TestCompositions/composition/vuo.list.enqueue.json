@@ -1,0 +1,71 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.enqueue node.
+ *
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"add item to empty list":{
+		"firingPort":"addItem",
+		"inputPortValues":{"maxItemCount":2,"addItem":100},
+		"outputPortValues":{"list":[100]}
+	},
+	"add item to non-full list":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":200},
+		"outputPortValues":{"list":[100,200]}
+	},
+	"add item to full list":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":300},
+		"outputPortValues":{"list":[200,300]}
+	},
+	"increase limit":{
+		"firingPort":"maxItemCount",
+		"inputPortValues":{"maxItemCount":3},
+	},
+	"add item after increasing limit":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":400},
+		"outputPortValues":{"list":[200,300,400]}
+	},
+	"decrease limit below current list size":{
+		"firingPort":"maxItemCount",
+		"inputPortValues":{"maxItemCount":1},
+	},
+	"add item after decreasing limit":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":500},
+		"outputPortValues":{"list":[500]}
+	},
+	"remove limit":{
+		"firingPort":"maxItemCount",
+		"inputPortValues":{"maxItemCount":infinity},
+	},
+	"add item to unlimited list":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":600},
+		"outputPortValues":{"list":[500,600]}
+	},
+	"add another item to unlimited list":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":700},
+		"outputPortValues":{"list":[500,600,700]}
+	},
+	"clear list":{
+		"firingPort":"clearList",
+		"outputPortValues":{"list":[]}
+	},
+	"decrease limit to zero":{
+		"firingPort":"maxItemCount",
+		"inputPortValues":{"maxItemCount":0},
+	},
+	"add item after decreasing limit to zero":{
+		"firingPort":"addItem",
+		"inputPortValues":{"addItem":800},
+		"outputPortValues":{"list":[]}
+	},
+}}

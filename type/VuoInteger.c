@@ -37,6 +37,15 @@ VuoInteger VuoInteger_makeFromJson(json_object * js)
 	json_type t = json_object_get_type(js);
 	if (t == json_type_int)
 		return json_object_get_int64(js);
+	else if (t == json_type_double)
+	{
+		double d = json_object_get_double(js);
+		if (d == -INFINITY)
+			return LLONG_MIN;
+		if (d == INFINITY)
+			return LLONG_MAX;
+		return d;
+	}
 	else
 	{
 		// Use strtold() instead of json_object_get_int64(),
@@ -57,7 +66,12 @@ VuoInteger VuoInteger_makeFromJson(json_object * js)
  */
 json_object * VuoInteger_getJson(const VuoInteger value)
 {
-	return json_object_new_int64(value);
+	if (value == LLONG_MIN)
+		return json_object_new_double(-INFINITY);
+	else if (value == LLONG_MAX)
+		return json_object_new_double(INFINITY);
+	else
+		return json_object_new_int64(value);
 }
 
 /**
