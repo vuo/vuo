@@ -35,11 +35,11 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"none","data":"addItem"}) addItemEvent,
 		VuoInputData(VuoInteger, { "default":10, "suggestedMin":0, "auto":infinity }) maxItemCount,
 		VuoInputEvent({"eventBlocking":"wall","data":"maxItemCount"}) maxItemCountEvent,
-		VuoInputEvent({"eventBlocking":"none"}) clearList,
 		VuoInputData(VuoInteger, {"menuItems":[
 			{"value":0, "name": "Oldest"},
 			{"value":1, "name": "Newest"}
 		], "default": 0}) discardWhenFull,
+		VuoInputEvent({"eventBlocking":"none"}) clearList,
 		VuoOutputData(VuoList_VuoGenericType1) list
 )
 {
