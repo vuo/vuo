@@ -51,8 +51,9 @@ void nodeInstanceEvent
 		VuoListRemoveFirstValue_VuoGenericType1(*listInstanceData);
 
 	*list = VuoListCreate_VuoGenericType1();
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(*listInstanceData);
 	for (unsigned long i = 1; i <= itemCount; ++i)
-		VuoListAppendValue_VuoGenericType1( *list, VuoListGetValue_VuoGenericType1(*listInstanceData, i) );
+		VuoListAppendValue_VuoGenericType1( *list, listCopy[i-1] );
 }
 
 void nodeInstanceFini

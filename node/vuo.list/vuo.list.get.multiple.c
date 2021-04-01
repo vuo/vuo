@@ -32,11 +32,19 @@ void nodeEvent
 	}
 
 	*items = VuoListCreate_VuoGenericType1();
-
+	
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
+	VuoInteger* positionsList = VuoListGetData_VuoInteger(positions);
 	for(int i = 1; i <= VuoListGetCount_VuoInteger(positions); i++)
 	{
-		VuoInteger index = VuoListGetValue_VuoInteger(positions, i);
+		VuoInteger index = positionsList[i - 1];
 		unsigned long indexUnsigned = MAX(0, index);
-		VuoListAppendValue_VuoGenericType1(*items, VuoListGetValue_VuoGenericType1(list, indexUnsigned));
+
+		if(indexUnsigned < 1)
+			VuoListAppendValue_VuoGenericType1(*items, listCopy[0]);
+		else if(indexUnsigned > VuoListGetCount_VuoInteger(list))
+			VuoListAppendValue_VuoGenericType1(*items, listCopy[VuoListGetCount_VuoInteger(list) - 1]);
+		else
+			VuoListAppendValue_VuoGenericType1(*items, listCopy[indexUnsigned - 1]);
 	}
 }

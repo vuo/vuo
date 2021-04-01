@@ -38,6 +38,7 @@ void nodeEvent
 
 	unsigned long picked = 0;
 	unsigned long skipped = 0;
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
 		if (picked < pickCount)
@@ -56,7 +57,6 @@ void nodeEvent
 			}
 		}
 
-		VuoListAppendValue_VuoGenericType1(*pickedItems,
-			VuoListGetValue_VuoGenericType1(list, i));
+		VuoListAppendValue_VuoGenericType1(*pickedItems, listCopy[i-1]);
 	}
 }

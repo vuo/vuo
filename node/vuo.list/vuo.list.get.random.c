@@ -25,5 +25,5 @@ void nodeEvent
 )
 {
 	unsigned long count = VuoListGetCount_VuoGenericType1(list);
-	*randomItem = VuoListGetValue_VuoGenericType1(list, VuoInteger_random(1, count));
+	*randomItem = VuoListGetData_VuoGenericType1(list)[VuoInteger_random(1, count) - 1];
 }

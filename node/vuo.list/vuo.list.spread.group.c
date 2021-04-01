@@ -32,8 +32,13 @@ void nodeEvent
 	unsigned long clampedItemsPerGroup = MAX(0,itemsPerGroup);
 	*outputList = VuoListCreate_VuoGenericType1();
 	unsigned long inputCount = VuoListGetCount_VuoGenericType1(list);
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1;
 	for (unsigned long i = 1; i <= inputCount; i += itemsPerGroup)
 		for (unsigned long j = 0; j < clampedCopies; ++j)
 			for (unsigned long k = 0; k < clampedItemsPerGroup; ++k)
-				VuoListAppendValue_VuoGenericType1(*outputList, VuoListGetValue_VuoGenericType1(list, i + k));
+				if(i + k > inputCount)
+					VuoListAppendValue_VuoGenericType1(*outputList, 0);
+				else
+					VuoListAppendValue_VuoGenericType1(*outputList, listCopy[i - 1 + k]);
+				
 }

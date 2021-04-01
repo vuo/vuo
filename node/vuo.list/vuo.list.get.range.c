@@ -25,8 +25,9 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) items
 )
 {
-	if (VuoListGetCount_VuoIntegerRange(ranges) == 0
-	 || VuoListGetCount_VuoGenericType1(list) == 0)
+	VuoInteger rangeCount = VuoListGetCount_VuoIntegerRange(ranges);
+	VuoInteger listCount = VuoListGetCount_VuoGenericType1(list);
+	if (rangeCount == 0 || listCount == 0)
 	{
 		*items = NULL;
 		return;
@@ -34,14 +35,11 @@ void nodeEvent
 
 	*items = VuoListCreate_VuoGenericType1();
 
-	VuoInteger listCount = VuoListGetCount_VuoGenericType1(list);
-	VuoInteger rangeCount = VuoListGetCount_VuoIntegerRange(ranges);
-
 	for(unsigned long i = 1; i <= rangeCount; ++i)
 	{
 		VuoIntegerRange range = VuoIntegerRange_getOrderedRange(VuoListGetValue_VuoIntegerRange(ranges, i));
 
 		for(VuoInteger n = MAX(range.minimum, 1); n <= MIN(range.maximum, listCount); n++)
-			VuoListAppendValue_VuoGenericType1(*items, VuoListGetValue_VuoGenericType1(list, n));
+			VuoListAppendValue_VuoGenericType1(*items, VuoListGetData_VuoGenericType1(list)[n-1]);
 	}
 }
