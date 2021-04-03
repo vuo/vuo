@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Get Items from List",
-					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices" ],
+					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices", "reorder", "rearrange", "shuffle", "combination" ],
 					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "SelectLayerFromList.vuo" ]

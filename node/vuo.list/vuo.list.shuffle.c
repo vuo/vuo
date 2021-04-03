@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Shuffle List",
-					  "keywords" : [ "random", "pseudorandom", "PRNG", "RNG", "reorder", "sort", "permutation" ],
+					  "keywords" : [ "random", "pseudorandom", "PRNG", "RNG", "reorder", "sort", "permutation", "rearrange", "jumble" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ "ShuffleLetters.vuo" ]
