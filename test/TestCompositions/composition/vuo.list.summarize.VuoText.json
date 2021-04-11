@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.summarize node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"null":            {"firingPort":"list","inputPortValues":{"list":null             }, "outputPortValues":{"summary":null          }},
+	"item":            {"firingPort":"list","inputPortValues":{"list":["hello"        ]}, "outputPortValues":{"summary":"hello"       }},
+	"2 items":         {"firingPort":"list","inputPortValues":{"list":["hello","world"]}, "outputPortValues":{"summary":"hello\n\nworld"}},
+	"null after item": {"firingPort":"list","inputPortValues":{"list":null             }, "outputPortValues":{"summary":null          }},
+}}

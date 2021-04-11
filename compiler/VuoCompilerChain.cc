@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerChain implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -126,11 +126,11 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 		Value *contextValue = function->arg_begin();
 		BitCastInst *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
 
-		Value *compositionStateVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, zeroValue, "", block);
+		Value *compositionStateVariable = GetElementPtrInst::Create(voidPointerType, contextValueAsVoidPointerArray, zeroValue, "", block);
 		Value *compositionStateValue = new LoadInst(compositionStateVariable, "", block);
 		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, compositionStateValue);
 
-		Value *eventIdPtrVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, oneValue, "", block);
+		Value *eventIdPtrVariable = GetElementPtrInst::Create(voidPointerType, contextValueAsVoidPointerArray, oneValue, "", block);
 		Value *eventIdPtrValue = new LoadInst(eventIdPtrVariable, "", block);
 		CallInst::Create(freeFunction, eventIdPtrValue, "", block);
 

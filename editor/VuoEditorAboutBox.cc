@@ -2,7 +2,7 @@
  * @file
  * VuoEditorAboutBox implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -52,7 +52,7 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 					"<p><span style=\"font-size:28pt;\">Vuo</span>"
 						"<span style=\"font-size:20pt;\"> %1</span>%5<br>"
 						"<span style=\"font-size:12pt; color:rgba(0,0,0,.5)\">" + tr("Built on %2") + "<br>"
-						"Copyright © 2012–2020 Kosada Incorporated</span></p>%4"
+						"Copyright © 2012–2021 Kosada Incorporated</span></p>%4"
 					"</body></html>").
 			arg(
 				versionNumber,

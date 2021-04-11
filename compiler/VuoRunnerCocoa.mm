@@ -2,18 +2,16 @@
  * @file
  * VuoCocoa implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
-
-/// Avoid conflict between Cocoa and LLVM headers.
-#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 
 #include "VuoRunnerCocoa.h"
 #include "VuoRunnerCocoa+Conversion.hh"
 
 #include <OpenGL/CGLMacro.h>
+#include "VuoMacOSSDKWorkaround.h"
 #include <QuartzCore/CoreImage.h>
 
 #include <dispatch/dispatch.h>

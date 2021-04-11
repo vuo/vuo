@@ -2,17 +2,19 @@
  * @file
  * VuoLog implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
+#include "VuoMacOSSDKWorkaround.h"
 #include <asl.h>
 #include <assert.h>
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <execinfo.h>
 #include <mach/mach_time.h>
+#include <mach-o/dyld.h>
 #include <math.h>
 #include <objc/objc-runtime.h>
 #include <regex.h>
@@ -24,19 +26,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifndef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
-	/// Avoid conflict between Cocoa and LLVM headers.
-	#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
-#endif
 #include <CoreFoundation/CoreFoundation.h>
 
-#include <AvailabilityMacros.h>
-#if (MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_6) || (MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_7)
-	#include <ApplicationServices/ApplicationServices.h>
-#else
-	#include <CoreGraphics/CoreGraphics.h>
-	#include <CoreText/CoreText.h>
-#endif
+#include <CoreGraphics/CoreGraphics.h>
+#include <CoreText/CoreText.h>
 
 #include "VuoLog.h"
 #include "VuoHeap.h"
@@ -238,49 +231,68 @@ void VuoLog_statusF(const char *file, const unsigned int linenumber, const char 
 }
 
 /**
- * Returns the minor component of the OS version.
+ * Return value of `-[NSProcessInfo operatingSystemVersion]`, from `NSProcessInfo.h`.
  */
-int VuoLog_getOSVersionMinor(void)
+struct NSOperatingSystemVersion
+{
+	long majorVersion;
+	long minorVersion;
+	long patchVersion;
+};
+
+/**
+ * Returns the current operating system version.
+ */
+static NSOperatingSystemVersion VuoLog_getOSVersion(void)
 {
 	Class NSProcessInfoClass = objc_getClass("NSProcessInfo");
-	id processInfo = objc_msgSend((id)NSProcessInfoClass, sel_getUid("processInfo"));
-	struct NSOperatingSystemVersion
-	{
-		long majorVersion;
-		long minorVersion;
-		long patchVersion;
-	};
+	id processInfo = ((id(*)(id, SEL))objc_msgSend)((id)NSProcessInfoClass, sel_getUid("processInfo"));
 	typedef NSOperatingSystemVersion (*operatingSystemVersionType)(id receiver, SEL selector);
+#if __x86_64__
 	operatingSystemVersionType operatingSystemVersionFunc = (operatingSystemVersionType)objc_msgSend_stret;
+#elif __arm64__
+	operatingSystemVersionType operatingSystemVersionFunc = (operatingSystemVersionType)objc_msgSend;
+#endif
 	NSOperatingSystemVersion operatingSystemVersion = operatingSystemVersionFunc(processInfo, sel_getUid("operatingSystemVersion"));
-	return operatingSystemVersion.minorVersion;
+	return operatingSystemVersion;
 }
 
 /**
  * Returns true if the current process is being debugged
- * (either launched by the debugger, or the debugger attached after the process launched).
+ * (either launched by LLDB/Instruments, or the LLDB/Instruments attached after the process launched).
  *
  * Based on https://developer.apple.com/library/archive/qa/qa1361/_index.html
  */
-static bool VuoLog_isDebuggerAttached(void)
+bool VuoLog_isDebuggerAttached(void)
 {
-	int mib[4];
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PID;
-	mib[3] = getpid();
-
-	struct kinfo_proc info;
-	info.kp_proc.p_flag = 0;
-	size_t size = sizeof(info);
-	if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0))
+	// Detect LLDB.
 	{
-		VUserLog("Warning: Couldn't check debugger status: %s", strerror(errno));
-		return false;
+		int mib[4];
+		mib[0] = CTL_KERN;
+		mib[1] = KERN_PROC;
+		mib[2] = KERN_PROC_PID;
+		mib[3] = getpid();
+
+		struct kinfo_proc info;
+		info.kp_proc.p_flag = 0;
+		size_t size         = sizeof(info);
+		if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0) == 0
+		 && info.kp_proc.p_flag & P_TRACED)
+			return true;
 	}
 
-	return info.kp_proc.p_flag & P_TRACED;
+	// Detect Instruments.
+	{
+		uint32_t imageCount = _dyld_image_count();
+		for (uint32_t i = 0; i < imageCount; ++i)
+			if (strstr(_dyld_get_image_name(i), "/DVTInstrumentsFoundation.framework/"))
+				return true;
+	}
+
+	return false;
 }
+
+extern struct mach_header __dso_handle;
 
 void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
@@ -371,7 +383,6 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		// and (2) it relies on Apple-specific complier extensions that aren't available in Clang 3.2.
 		// os_log(OS_LOG_DEFAULT, "...", ...);
 
-		extern struct mach_header __dso_handle;
 		typedef void *(*vuoMacOsLogCreateType)(const char *subsystem, const char *category);
 		typedef void (*vuoMacOsLogInternalType)(void *dso, void *log, uint8_t type, const char *message, ...);
 		typedef void (*vuoMacOsLogImplType)(void *dso, void *log, uint8_t type, const char *format, uint8_t *buf, uint32_t size);
@@ -383,9 +394,13 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		dispatch_once(&once, ^{
 			debuggerAttached = VuoLog_isDebuggerAttached();
 			vuoMacOsLogCreate = (vuoMacOsLogCreateType)dlsym(RTLD_SELF, "os_log_create");
-			if (VuoLog_getOSVersionMinor() == 12) // _os_log_impl doesn't work on macOS 10.12.
+			NSOperatingSystemVersion operatingSystemVersion = VuoLog_getOSVersion();
+			if (operatingSystemVersion.majorVersion == 10 && operatingSystemVersion.minorVersion == 12)
+				// _os_log_impl doesn't work on macOS 10.12.
 				vuoMacOsLogInternal = (vuoMacOsLogInternalType)dlsym(RTLD_SELF, "_os_log_internal");
-			else if (VuoLog_getOSVersionMinor() > 12) // _os_log_internal doesn't work on macOS 10.13+.
+			else if ((operatingSystemVersion.majorVersion == 10 && operatingSystemVersion.minorVersion > 12)
+					 || operatingSystemVersion.majorVersion > 10)
+				// _os_log_internal doesn't work on macOS 10.13+.
 				vuoMacOsLogImpl = (vuoMacOsLogImplType)dlsym(RTLD_SELF, "_os_log_impl");
 		});
 

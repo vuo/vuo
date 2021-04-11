@@ -2,7 +2,7 @@
  * @file
  * vuo.image.crop.pixels node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Crop Image Pixels",
-					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim", "cut", ],
+					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim", "cut", "size", "dimensions" ],
 					  "version" : "1.1.2",
 					  "node" : {
 						  "exampleCompositions" : [ ]

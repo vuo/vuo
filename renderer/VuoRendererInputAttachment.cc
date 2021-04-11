@@ -2,7 +2,7 @@
  * @file
  * VuoRendererInputAttachment implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -116,4 +116,17 @@ VuoNode * VuoRendererInputAttachment::getListNodeConnectedToInputPort(VuoPort *p
 	}
 
 	return NULL;
+}
+
+/**
+ * Returns a boolean indicating whether the attachment should be rendered as if it is selected.
+ * This will be true if either the attachment or its rendered host node has been directly selected.
+ */
+bool VuoRendererInputAttachment::isEffectivelySelected()
+{
+	if (isSelected())
+		return true;
+
+	VuoNode *hostNode = getRenderedHostNode();
+	return hostNode && hostNode->hasRenderer() && hostNode->getRenderer()->isSelected();
 }

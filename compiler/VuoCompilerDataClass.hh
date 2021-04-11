@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerDataClass interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -25,7 +25,7 @@ private:
 protected:
 	struct json_object *details;  ///< Metadata specified in the node class implementation, such as the default value.
 
-	VuoCompilerDataClass(string name, Type *type);
+	explicit VuoCompilerDataClass(string name);
 
 public:
 	/**
@@ -36,7 +36,6 @@ public:
 
 	VuoType * getVuoType(void);
 	void setVuoType(VuoType *vuoType);
-	Type * getType(void);
 	void setDetails(struct json_object *details);
 	json_object * getDetails(void);
 };

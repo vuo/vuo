@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -123,10 +123,17 @@ public:
 	static size_t getAvailableSpaceOnVolumeContainingPath(string path);
 
 	static void focusProcess(pid_t pid, bool force=false);
-	static void executeProcess(vector<string> processAndArgs);
+	static void executeProcess(vector<string> processAndArgs, vector<string> environment = {});
 
 	static bool isCompositionExtension(string extension);
 	static set<string> getCSourceExtensions(void);
 	static bool isCSourceExtension(string extension);
 	static bool isIsfSourceExtension(string extension);
+
+	static string buildModuleCacheDescription(const string &moduleCachePath, bool generated);
+	static string buildModuleCacheIndexPath(const string &moduleCachePath, bool builtIn, bool generated);
+	static string buildModuleCacheDylibPath(const string &moduleCachePath, bool builtIn, bool generated);
+	static string findLatestRevisionOfModuleCacheDylib(const string &moduleCachePath, bool builtIn, bool generated, unsigned long &lastModified);
+	static void deleteOtherRevisionsOfModuleCacheDylib(const string &dylibPath);
+	static bool areDifferentRevisionsOfSameModuleCacheDylib(const string &dylibPath1, const string &dylibPath2);
 };

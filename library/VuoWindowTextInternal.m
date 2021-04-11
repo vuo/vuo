@@ -2,7 +2,7 @@
  * @file
  * VuoWindowTextInternal implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -43,7 +43,7 @@ VuoModuleMetadata({
 - (id)init
 {
 	NSRect frame = NSMakeRect(0, 0, 400, 600);
-	NSUInteger styleMask = NSTitledWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+	NSUInteger styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
 	NSRect contentRect = [NSWindow contentRectForFrameRect:frame styleMask:styleMask];
 
 	if (self = [super initWithContentRect:contentRect
@@ -185,17 +185,17 @@ VuoModuleMetadata({
 
 	// "Edit > Copy"
 	self.editCopyMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Copy" action:@selector(copyText) keyEquivalent:@"c"] autorelease];
-	[self.editCopyMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[self.editCopyMenuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 	[editMenu addItem:self.editCopyMenuItem];
 
 	// "Edit > Select All"
 	self.editSelectAllMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Select All" action:@selector(selectAllText) keyEquivalent:@"a"] autorelease];
-	[self.editSelectAllMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[self.editSelectAllMenuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 	[editMenu addItem:self.editSelectAllMenuItem];
 
 	// "Edit > Clear"
 	self.editClearMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Clear" action:@selector(clear) keyEquivalent:@"k"] autorelease];
-	[self.editClearMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[self.editClearMenuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 	[editMenu addItem:self.editClearMenuItem];
 
 	NSMenuItem *editMenuItem = [[NSMenuItem new] autorelease];
@@ -260,7 +260,7 @@ VuoModuleMetadata({
 - (void)appendLine:(const char *)text
 {
 	// Autoscroll the window only if the viewport was already at the end.
-	BOOL autoscroll = abs(NSMaxY(textView.visibleRect) - NSMaxY(textView.bounds)) < 1;
+	BOOL autoscroll = fabs(NSMaxY(textView.visibleRect) - NSMaxY(textView.bounds)) < 1;
 
 	NSString *line = [[NSString stringWithUTF8String:text] stringByAppendingString:@"\n"];
 	if (!line)

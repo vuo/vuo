@@ -51,21 +51,22 @@ See [How ISF source code translates to a Vuo node](https://doc.vuo.org/latest/ma
 
 ### Functions
 
-    vec4 IMG_PIXEL(image, vec2)
-    vec4 IMG_NORM_PIXEL(image, vec2)
-    vec4 IMG_THIS_PIXEL(image)
-    vec4 IMG_THIS_NORM_PIXEL(image)
-    vec2 IMG_SIZE(image)
+    vec4 IMG_PIXEL(sampler2d, vec2)
+    vec4 IMG_NORM_PIXEL(sampler2d, vec2)
+    vec4 IMG_THIS_PIXEL(sampler2d)
+    vec4 IMG_THIS_NORM_PIXEL(sampler2d)
+    vec2 IMG_SIZE(sampler2d)
     int  LIST_LENGTH(list)
 
 ### Uniforms
 
-    vec2  RENDERSIZE
-    float TIME
-    float TIMEDELTA
-    vec2  isf_FragNormCoord
-    vec4  DATE
-    int   FRAMEINDEX
+    sampler2d inputImage  // `image` input port (Image Filter)
+    float     TIME        // `time` input port
+    float     TIMEDELTA
+    int       FRAMEINDEX
+    vec4      DATE
+    vec2      RENDERSIZE
+    vec2      isf_FragNormCoord
 
 ## Vuo extensions
 

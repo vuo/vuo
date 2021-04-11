@@ -2,7 +2,7 @@
  * @file
  * VuoEditorUtilities implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -290,12 +290,12 @@ QList<QMainWindow *> VuoEditorUtilities::getOpenEditingWindowsStacked()
 
 	std::sort(openWindows.begin(), openWindows.end(), [](const QMainWindow *window1, const QMainWindow *window2) {
 		id nsView1 = (id)window1->winId();
-		id nsWindow1 = objc_msgSend(nsView1, sel_getUid("window"));
-		long orderedIndex1 = (long)objc_msgSend(nsWindow1, sel_getUid("orderedIndex"));
+		id nsWindow1 = ((id (*)(id, SEL))objc_msgSend)(nsView1, sel_getUid("window"));
+		long orderedIndex1 = ((long (*)(id, SEL))objc_msgSend)(nsWindow1, sel_getUid("orderedIndex"));
 
 		id nsView2 = (id)window2->winId();
-		id nsWindow2 = objc_msgSend(nsView2, sel_getUid("window"));
-		long orderedIndex2 = (long)objc_msgSend(nsWindow2, sel_getUid("orderedIndex"));
+		id nsWindow2 = ((id (*)(id, SEL))objc_msgSend)(nsView2, sel_getUid("window"));
+		long orderedIndex2 = ((long (*)(id, SEL))objc_msgSend)(nsWindow2, sel_getUid("orderedIndex"));
 
 		return orderedIndex1 < orderedIndex2;
 	});
@@ -405,7 +405,7 @@ void VuoEditorUtilities::setWindowOpacity(QMainWindow *window, int opacity)
 {
 #ifdef __APPLE__
 	id nsView = (id)window->winId();
-	id nsWindow = objc_msgSend(nsView, sel_getUid("window"));
-	objc_msgSend(nsWindow, sel_getUid("setAlphaValue:"), opacity/255.);
+	id nsWindow = ((id (*)(id, SEL))objc_msgSend)(nsView, sel_getUid("window"));
+	((void (*)(id, SEL, CGFloat))objc_msgSend)(nsWindow, sel_getUid("setAlphaValue:"), opacity/255.);
 	#endif
 }

@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorFont implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,9 +14,7 @@
 #undef slots
 #endif
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
 #include <objc/runtime.h>
 
@@ -44,7 +42,7 @@ VuoInputEditor * VuoInputEditorFontFactory::newInputEditor()
 static VuoFont getCurrentVuoFont(void)
 {
 	// Convert to RGB colorspace (since the color picker might return a grey or CMYK color).
-	currentColor = [[currentColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace] retain];
+	currentColor = [[currentColor colorUsingColorSpace:NSColorSpace.sRGBColorSpace] retain];
 
 	return VuoFont_make(
 					VuoText_make([currentFontName UTF8String]),
@@ -317,7 +315,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[charSpacingControl setMinValue:0];
 		[charSpacingControl setMaxValue:2];
 		[charSpacingControl setDoubleValue:currentCharacterSpacing];
-		[[charSpacingControl cell] setControlSize:NSSmallControlSize];
+		[[charSpacingControl cell] setControlSize:NSControlSizeSmall];
 
 		[charSpacingControl setTarget:accessoryDelegate];
 		[charSpacingControl setAction:@selector(charSpacingChanged:)];
@@ -342,7 +340,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[lineSpacingControl setMinValue:0];
 		[lineSpacingControl setMaxValue:2];
 		[lineSpacingControl setDoubleValue:currentLineSpacing];
-		[[lineSpacingControl cell] setControlSize:NSSmallControlSize];
+		[[lineSpacingControl cell] setControlSize:NSControlSizeSmall];
 
 		[lineSpacingControl setTarget:accessoryDelegate];
 		[lineSpacingControl setAction:@selector(lineSpacingChanged:)];
@@ -358,8 +356,8 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 			NSButton *okButton = [[NSButton alloc] initWithFrame:NSMakeRect(3*buttonWidth+3*buttonSep,0,buttonWidth,buttonHeight)];
 			[okButton setKeyEquivalent:@"\r"];	// Return
 			[okButton setTitle:@"OK"];
-			[okButton setButtonType:NSMomentaryLightButton];
-			[okButton setBezelStyle:NSRoundedBezelStyle];
+			[okButton setButtonType:NSButtonTypeMomentaryLight];
+			[okButton setBezelStyle:NSBezelStyleRounded];
 			[okButton setTarget:delegate];
 			[okButton setAction:@selector(okButtonPressed)];
 			[accessoryView addSubview:okButton];
@@ -369,8 +367,8 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 			NSButton *cancelButton = [[NSButton alloc] initWithFrame:NSMakeRect(2*buttonWidth+3*buttonSep,0,buttonWidth,buttonHeight)];
 			[cancelButton setKeyEquivalent:@"\E"];	// Escape
 			[cancelButton setTitle:@"Cancel"];
-			[cancelButton setButtonType:NSMomentaryLightButton];
-			[cancelButton setBezelStyle:NSRoundedBezelStyle];
+			[cancelButton setButtonType:NSButtonTypeMomentaryLight];
+			[cancelButton setBezelStyle:NSBezelStyleRounded];
 			[cancelButton setTarget:delegate];
 			[cancelButton setAction:@selector(cancelButtonPressed)];
 			[accessoryView addSubview:cancelButton];

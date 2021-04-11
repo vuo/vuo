@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -88,6 +88,8 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (VuoText_isEmpty(url))
 		return false;
 
+	const char *localURL = url;
+	char *urlWithEmptyAuthority = NULL;
 	struct http_parser_url parsedUrl;
 	size_t urlLen = strlen(url);
 	if (http_parser_parse_url(url, urlLen, false, &parsedUrl))
@@ -116,7 +118,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 		// change it to an "empty-authority" URI.
 		else if (strncmp(url, "file:/", 6) == 0 && urlLen > 6 && url[6] != '/')
 		{
-			char *urlWithEmptyAuthority = malloc(urlLen + 2 + 1);
+			urlWithEmptyAuthority = malloc(urlLen + 2 + 1);
 			strcpy(urlWithEmptyAuthority, "file://");
 			strcat(urlWithEmptyAuthority, url + 5);
 			if (http_parser_parse_url(urlWithEmptyAuthority, urlLen + 2, false, &parsedUrl))
@@ -124,7 +126,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 				free(urlWithEmptyAuthority);
 				return false;
 			}
-			free(urlWithEmptyAuthority);
+			localURL = urlWithEmptyAuthority;
 		}
 
 		else
@@ -134,7 +136,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (scheme)
 	{
 		if (parsedUrl.field_set & (1 << UF_SCHEMA))
-			*scheme = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_SCHEMA  ].off, parsedUrl.field_data[UF_SCHEMA  ].len);
+			*scheme = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_SCHEMA  ].off, parsedUrl.field_data[UF_SCHEMA  ].len);
 		else
 			*scheme = NULL;
 	}
@@ -142,7 +144,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (user)
 	{
 		if (parsedUrl.field_set & (1 << UF_USERINFO))
-			*user   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_USERINFO].off, parsedUrl.field_data[UF_USERINFO].len);
+			*user   = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_USERINFO].off, parsedUrl.field_data[UF_USERINFO].len);
 		else
 			*user   = NULL;
 	}
@@ -150,7 +152,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (host)
 	{
 		if (parsedUrl.field_set & (1 << UF_HOST))
-			*host   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_HOST    ].off, parsedUrl.field_data[UF_HOST    ].len);
+			*host   = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_HOST    ].off, parsedUrl.field_data[UF_HOST    ].len);
 		else
 			*host   = NULL;
 	}
@@ -174,7 +176,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (path)
 	{
 		if (parsedUrl.field_set & (1 << UF_PATH))
-			*path     = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_PATH    ].off, parsedUrl.field_data[UF_PATH    ].len);
+			*path     = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_PATH    ].off, parsedUrl.field_data[UF_PATH    ].len);
 		else
 			*path     = NULL;
 	}
@@ -182,7 +184,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (query)
 	{
 		if (parsedUrl.field_set & (1 << UF_QUERY))
-			*query    = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_QUERY   ].off, parsedUrl.field_data[UF_QUERY   ].len);
+			*query    = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_QUERY   ].off, parsedUrl.field_data[UF_QUERY   ].len);
 		else
 			*query    = NULL;
 	}
@@ -190,10 +192,13 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (fragment)
 	{
 		if (parsedUrl.field_set & (1 << UF_FRAGMENT))
-			*fragment = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_FRAGMENT].off, parsedUrl.field_data[UF_FRAGMENT].len);
+			*fragment = VuoText_makeWithMaxLength(localURL + parsedUrl.field_data[UF_FRAGMENT].off, parsedUrl.field_data[UF_FRAGMENT].len);
 		else
 			*fragment = NULL;
 	}
+
+	if (urlWithEmptyAuthority)
+		free(urlWithEmptyAuthority);
 
 	return true;
 }
@@ -880,17 +885,22 @@ bool VuoUrl_isBundle(const VuoUrl url)
 		return false;
 	}
 
-	LSItemInfoRecord outItemInfo;
-	OSStatus ret = LSCopyItemInfoForURL(cfurl, kLSRequestAllFlags, &outItemInfo);
+	CFTypeRef info = NULL;
+	CFErrorRef error = NULL;
+	bool ret = CFURLCopyResourcePropertyForKey(cfurl, kCFURLIsPackageKey, &info, &error);
 	CFRelease(cfurl);
-	if (ret)
+	if (!ret)
 	{
-		char *errorString = VuoOsStatus_getText(ret);
-		VUserLog("Error: Couldn't check '%s': %s", url, errorString);
-		free(errorString);
+		CFStringRef errorCFS = CFErrorCopyDescription(error);
+		CFRelease(error);
+		VuoText errorText = VuoText_makeFromCFString(errorCFS);
+		CFRelease(errorCFS);
+		VuoRetain(errorText);
+		VUserLog("Error: Couldn't check '%s': %s", url, errorText);
+		VuoRelease(errorText);
 		return false;
 	}
-	return outItemInfo.flags & kLSItemInfoIsPackage;
+	return info == kCFBooleanTrue;
 }
 
 /**

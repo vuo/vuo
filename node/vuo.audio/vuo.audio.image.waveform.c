@@ -2,7 +2,7 @@
  * @file
  * vuo.audio.image.waveform node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -38,7 +38,7 @@ void nodeEvent
 	if (!samples.samples)
 		return;
 
-	VuoInteger positiveAmplitude = MAX(fabs(amplitude),1);
+	VuoInteger positiveAmplitude = MAX(labs(amplitude),1);
 
 	VuoInteger pixelsWide = samples.sampleCount;
 	VuoInteger pixelsHigh = positiveAmplitude*2 + 1;

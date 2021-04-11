@@ -6,6 +6,9 @@ VUO_RUN_DIR=$(dirname $0)
 VUO_COMPILE=vuo-compile
 if [ -x 'framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='framework'
+elif [ -x 'bin/vuo-compile' ]; then
+	VUO_FRAMEWORK_PATH='bin'
+	VUO_COMPILE=vuo-compile-for-framework
 elif [ -x '../build/bin/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='../build/bin'
 	VUO_COMPILE=vuo-compile-for-framework
@@ -35,7 +38,7 @@ for argument do
 		;;
 
 		--lldb)
-			LLDB=lldb
+			LLDB="lldb -o run --"
 		;;
 
 		--verbose)

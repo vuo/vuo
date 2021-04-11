@@ -2,7 +2,7 @@
  * @file
  * VuoSyphon implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -69,9 +69,9 @@ VuoList_VuoSyphonServerDescription VuoSyphon_filterServerDescriptions(VuoList_Vu
 
 		if (partialDescription.useWildcard)
 		{
-			if (VuoText_compare(description.serverUUID,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.serverUUID)
-			 && VuoText_compare(description.serverName,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.serverName)
-			 && VuoText_compare(description.applicationName, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, partialDescription.applicationName))
+			if (VuoText_compare(description.serverUUID,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, partialDescription.serverUUID)
+			 && VuoText_compare(description.serverName,      (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, partialDescription.serverName)
+			 && VuoText_compare(description.applicationName, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, partialDescription.applicationName))
 				VuoListAppendValue_VuoSyphonServerDescription(filteredDescriptions, description);
 		}
 		else

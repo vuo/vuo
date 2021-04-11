@@ -2,14 +2,14 @@
  * @file
  * VuoCompilerModule interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#include "VuoCompilerTargetSet.hh"
+#include "VuoCompilerCompatibility.hh"
 
 class VuoCompilerBitcodeParser;
 class VuoModule;
@@ -23,7 +23,7 @@ class VuoCompilerModule
 {
 private:
 	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
-	VuoCompilerTargetSet compatibleTargets;  ///< The set of targets with which this module is compatible.
+	VuoCompilerCompatibility compatibleTargets;  ///< The set of targets with which this module is compatible.
 	bool builtIn;  ///< True if this is one of the modules built-in to Vuo.
 	string modulePath;  ///< The file from which the LLVM module was loaded, if any.
 
@@ -52,12 +52,11 @@ public:
 	static VuoCompilerModule * newModule(const string &moduleKey, Module *module, const string &modulePath);
 	virtual ~VuoCompilerModule(void);
 
-	VuoCompilerTargetSet parseTargetSet(json_object *o, string key);
-	VuoCompilerTargetSet::MacVersion parseMacVersion(string version);
+	VuoCompilerCompatibility parseCompatibility(json_object *o, string key);
 	static Function * declareFunctionInModule(Module *module, Function *function);
 	virtual set<string> getDependencies(void);
 	virtual string getDependencyName(void);
-	VuoCompilerTargetSet getCompatibleTargets(void);
+	VuoCompilerCompatibility getCompatibleTargets(void);
 	Module * getModule(void);
 	VuoModule * getPseudoBase(void);
 	bool isBuiltIn(void);

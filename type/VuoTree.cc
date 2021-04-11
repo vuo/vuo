@@ -2,7 +2,7 @@
  * @file
  * VuoTree implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -824,7 +824,7 @@ char * VuoTree_getSummary(const VuoTree value)
 	if (! VuoText_isEmpty(name))
 	{
 		char *nameSummary = VuoText_getSummary(name);
-		summary << "<div>name: " << nameSummary << "</div>";
+		summary << "<div>name: " << nameSummary << "</div>\n";
 		free(nameSummary);
 	}
 
@@ -840,13 +840,13 @@ char * VuoTree_getSummary(const VuoTree value)
 			VuoText value = VuoListGetValue_VuoText(attributes.values, i);
 			char *nameSummary = VuoText_getSummary(name);
 			char *valueSummary = VuoText_getSummary(value);
-			summary << "<tr><td>" << nameSummary << "</td><td> → " << valueSummary << "</td></tr>";
+			summary << "\n<tr><td>" << nameSummary << "</td><td> → " << valueSummary << "</td></tr>";
 			free(nameSummary);
 			free(valueSummary);
 		}
 		if (attributeCount > maxAttributes)
-			summary << "<tr><td colspan=\"2\">…</td></tr>";
-		summary << "</table>";
+			summary << "\n<tr><td colspan=\"2\">…</td></tr>";
+		summary << "</table>\n";
 	}
 	VuoDictionary_VuoText_VuoText_retain(attributes);
 	VuoDictionary_VuoText_VuoText_release(attributes);
@@ -856,7 +856,7 @@ char * VuoTree_getSummary(const VuoTree value)
 	if (! VuoText_isEmpty(content))
 	{
 		char *contentSummary = VuoText_getSummary(content);
-		summary << "<div>content: " << contentSummary << "</div>";
+		summary << "<div>content: " << contentSummary << "</div>\n";
 		free(contentSummary);
 	}
 
@@ -873,17 +873,19 @@ char * VuoTree_getSummary(const VuoTree value)
 			VuoText name = VuoTree_getName(childrenArray[i]);
 			char *nameSummary = VuoText_getSummary(name);
 			if (strlen(nameSummary) > 0 && string(nameSummary).find_first_not_of(' ') != string::npos)
-				summary << "<li>" << nameSummary << "</li>";
+				summary << "\n<li>" << nameSummary << "</li>";
 			else
-				summary << "<li>&nbsp;</li>";
+				summary << "\n<li>&nbsp;</li>";
 			free(nameSummary);
 		}
 		if (childCount > maxChildren)
-			summary << "<li>…</li>";
-		summary << "</ul>";
+			summary << "\n<li>…</li>";
+		summary << "</ul>\n";
 	}
 
 	string summaryStr = summary.str();
+	if (summaryStr.back() == '\n')
+		summaryStr = summaryStr.substr(0, summaryStr.length() - 1);
 	if (summaryStr.empty())
 		summaryStr = "Empty tree";
 

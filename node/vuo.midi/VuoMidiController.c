@@ -2,7 +2,7 @@
  * @file
  * VuoMidiController implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -44,7 +44,7 @@ VuoMidiController VuoMidiController_makeFromJson(json_object * js)
 		VuoJson_getObjectValue(VuoInteger, js, "channel", 1),
 		VuoJson_getObjectValue(VuoInteger, js, "controllerNumber", 1),
 		VuoJson_getObjectValue(VuoInteger, js, "value", 127),
-		""};
+	};
 }
 
 /**

@@ -2,7 +2,7 @@
  * @file
  * VuoMidiInputDevice implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,7 @@ VuoMidiInputDevice VuoMidiInputDevice_makeFromJson(json_object * js)
 	return (VuoMidiInputDevice){
 		VuoJson_getObjectValue(VuoInteger, js, "id",   -1),
 		VuoJson_getObjectValue(VuoText,    js, "name", NULL),
-		""};
+	};
 }
 
 /**

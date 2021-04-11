@@ -80,6 +80,7 @@ add_library(VuoCompositionStub SHARED
 	VuoCompositionStub.c)
 target_include_directories(VuoCompositionStub
 	PRIVATE
+		.
 		../library
 )
 VuoPCH(VuoCompositionStub)

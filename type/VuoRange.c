@@ -2,7 +2,7 @@
  * @file
  * VuoRange implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ VuoRange VuoRange_makeFromJson(json_object * js)
 	return (VuoRange){
 		VuoJson_getObjectValue(VuoReal, js, "minimum", VuoRange_NoMinimum),
 		VuoJson_getObjectValue(VuoReal, js, "maximum", VuoRange_NoMaximum),
-		""
 	};
 }
 

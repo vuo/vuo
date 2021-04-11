@@ -2,7 +2,7 @@
  * @file
  * VuoVideoCapture implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -15,9 +15,7 @@
 #include "VuoOsStatus.h"
 #include "../vuo.hid/VuoUsbVendor.h"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <IOKit/IOKitLib.h>
 #include <CoreMediaIO/CMIOHardware.h>
 #include <AVFoundation/AVFoundation.h>
@@ -355,7 +353,11 @@ VuoList_VuoVideoInputDevice VuoVideoCapture_getInputDevices(void)
 
 	// Use +devices instead of +devicesWithMediaType:AVMediaTypeVideo,
 	// since the latter doesn't include tethered iOS devices.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacement, AVCaptureDeviceDiscoverySession, isn't available until macOS 10.15.
 	NSArray *inputDevices = [AVCaptureDevice devices];
+#pragma clang diagnostic pop
 
 	VuoList_VuoVideoInputDevice devices = VuoListCreate_VuoVideoInputDevice();
 
@@ -430,6 +432,8 @@ static void VuoVideoCapture_freeCallback(VuoImage imageToFree)
 		}
 	}
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	__block CVOpenGLTextureRef texture;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		CVOpenGLTextureCacheCreateTextureFromImage(NULL, _vci->textureCache, pixelBuffer, NULL, &texture);
@@ -461,6 +465,7 @@ static void VuoVideoCapture_freeCallback(VuoImage imageToFree)
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		CVOpenGLTextureCacheFlush(_vci->textureCache, 0);
 	});
+#pragma clang diagnostic pop
 }
 @end
 
@@ -480,7 +485,10 @@ void VuoVideoCapture_openDevice(VuoVideoCaptureInternal *vci)
 			&& !VuoText_isEmpty(vci->vdevice.name)
 			&& !vci->device)
 		{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			for (AVCaptureDevice *dev in AVCaptureDevice.devices)
+#pragma clang diagnostic pop
 			{
 				if (![dev hasMediaType:AVMediaTypeVideo]
 					&& ![dev hasMediaType:AVMediaTypeMuxed])
@@ -576,12 +584,18 @@ VuoVideoCapture VuoVideoCapture_make(VuoVideoInputDevice inputDevice, VuoOutputT
 	});
 
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, false, -1);
 		__block CVReturn ret;
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-			ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &vci->textureCache);
+			ret = CVOpenGLTextureCacheCreate(NULL,
+				(CFDictionaryRef)@{
+					(NSString *)kCVOpenGLTextureCacheChromaSamplingModeKey: (NSString *)kCVOpenGLTextureCacheChromaSamplingModeBestPerformance
+				}, cgl_ctx, pf, NULL, &vci->textureCache);
 		});
 		CGLReleasePixelFormat(pf);
+#pragma clang diagnostic pop
 
 		if (ret != kCVReturnSuccess)
 		{
@@ -757,7 +771,10 @@ void VuoVideoCapture_free(void *p)
 
 	if (vci->textureCache)
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			CVOpenGLTextureCacheRelease(vci->textureCache);
+#pragma clang diagnostic pop
 		});
 
 	dispatch_release(vci->queue);

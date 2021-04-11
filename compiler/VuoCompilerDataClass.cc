@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerDataClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -14,8 +14,8 @@
 /**
  * Creates a data type for a data-and-event port.
  */
-VuoCompilerDataClass::VuoCompilerDataClass(string name, Type *type) :
-	VuoCompilerNodeArgumentClass(name, VuoPortClass::notAPort, type)
+VuoCompilerDataClass::VuoCompilerDataClass(string name) :
+	VuoCompilerNodeArgumentClass(name, VuoPortClass::notAPort)
 {
 	vuoType = NULL;
 	details = NULL;
@@ -44,16 +44,6 @@ VuoType * VuoCompilerDataClass::getVuoType(void)
 void VuoCompilerDataClass::setVuoType(VuoType *vuoType)
 {
 	this->vuoType = vuoType;
-}
-
-/**
- * Returns the LLVM type for this port data's Vuo type.
- *
- * Overrides the implementation in @c VuoCompilerNodeArgumentClass.
- */
-Type * VuoCompilerDataClass::getType(void)
-{
-	return vuoType->getCompiler()->getType();
 }
 
 /**

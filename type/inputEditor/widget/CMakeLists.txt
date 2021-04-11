@@ -35,6 +35,7 @@ target_link_libraries(VuoWidget
 	CONAN_PKG::oscpack
 	CONAN_PKG::rtaudio
 	CONAN_PKG::rtmidi
+	CONAN_PKG::syphon
 	${PROJECT_BINARY_DIR}/node/vuo.audio/VuoAudio.o
 	${PROJECT_BINARY_DIR}/node/vuo.midi/VuoMidi.o
 	${PROJECT_BINARY_DIR}/node/vuo.osc/VuoOscDevices.o
@@ -56,8 +57,6 @@ target_link_libraries(VuoWidget
 	"-framework Foundation"
 	"-framework IOKit"
 	"-framework OpenGL"
-	"-F${PROJECT_SOURCE_DIR}/node/vuo.syphon/Syphon"
-	"-framework Syphon"
 )
 VuoPCH(VuoWidget Qt)
 add_custom_command(TARGET VuoWidget POST_BUILD

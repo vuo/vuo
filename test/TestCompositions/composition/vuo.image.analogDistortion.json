@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.analogDistortion node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"zeros": {
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"flagging": 0,
+			"tearing": 0,
+			"edgeBlanking": 0,
+			"bearding": 0,
+			"beardingDistance": 0,
+			"ghosting": 0,
+			"ghostingDistance": 0,
+			"ringing": 0,
+			"noiseAmount": 0,
+			"noiseScale": 0,
+			"verticalOffset": 0,
+		},
+		"outputPortValues": {
+			"distortedImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1}
+		}
+	},
+}}

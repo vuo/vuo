@@ -2,7 +2,7 @@
  * @file
  * VuoLeap implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -24,21 +24,28 @@ extern "C"
 {
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "VuoLeap",
-					 "dependencies" : [
-						 "VuoLeapFrame",
-						 "VuoLeapHand",
-						 "VuoLeapPointable",
-						 "VuoList_VuoLeapHand",
-						 "VuoList_VuoLeapPointable",
-						 "VuoTransform",
-						 "Leap"
-					 ]
-				 });
+	"title": "VuoLeap",
+	"dependencies": [
+		"VuoLeapFrame",
+		"VuoLeapHand",
+		"VuoLeapPointable",
+		"VuoList_VuoLeapHand",
+		"VuoList_VuoLeapPointable",
+		"VuoTransform",
+		"Leap",
+	],
+	"compatibility": {
+		"macos": {
+			"arch": ["x86_64"],
+		},
+	},
+});
+// The Leap SDK isn't yet available on arm64.
 #endif
 }
 
 
+#if defined(__x86_64__) || defined(DOXYGEN)
 /**
  * Scales the specified @a millimeters into Vuo Coordinates,
  * using the width of the interaction box as a reference.
@@ -281,3 +288,16 @@ void VuoLeap_stopListening(VuoLeap l)
 	delete leap->controller;
 	delete leap;
 }
+
+#elif __arm64__
+
+VuoLeap VuoLeap_startListening(VuoOutputTrigger(receivedFrame, VuoLeapFrame))
+{
+	return nullptr;
+}
+
+void VuoLeap_stopListening(VuoLeap l)
+{
+}
+
+#endif

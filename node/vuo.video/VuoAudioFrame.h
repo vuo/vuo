@@ -2,7 +2,7 @@
  * @file
  * VuoAudioFrame C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -32,9 +32,6 @@ typedef struct
 {
 	VuoList_VuoAudioSamples channels;
 	VuoReal timestamp;
-
-	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
-
 } VuoAudioFrame;
 
 VuoAudioFrame VuoAudioFrame_makeFromJson(struct json_object * js);
@@ -62,8 +59,7 @@ void VuoAudioFrame_release(VuoAudioFrame value);
 static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples channels, VuoReal timestamp) __attribute__((const));
 static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples channels, VuoReal timestamp)
 {
-	VuoAudioFrame audioFrame = { channels, timestamp, "" };
-	return audioFrame;
+	return (VuoAudioFrame){channels, timestamp};
 }
 
 /**

@@ -149,40 +149,41 @@ set_directory_properties(PROPERTIES
 	CMAKE_CONFIGURE_DEPENDS "VuoList.h;VuoList.cc"
 )
 
-VuoCompileListTypes(${VuoListTypeSources})
+VuoCompileTypes(BASEDIR "${CMAKE_CURRENT_BINARY_DIR}" ${VuoListTypeSources})
 target_include_directories(vuo.core.list.types
 	PUBLIC
 		${CMAKE_CURRENT_BINARY_DIR}
 	PRIVATE
-	../../node/vuo.artnet
-	../../node/vuo.audio
-	../../node/vuo.bcf2000
-	../../node/vuo.blackmagic
-	../../node/vuo.color
-	../../node/vuo.data
-	../../node/vuo.file
-	../../node/vuo.hid
-	../../node/vuo.image
-	../../node/vuo.keyboard
-	../../node/vuo.layer
-	../../node/vuo.leap
-	../../node/vuo.list
-	../../node/vuo.math
-	../../node/vuo.midi
-	../../node/vuo.mouse
-	../../node/vuo.motion
-	../../node/vuo.ndi
-	../../node/vuo.video
-	../../node/vuo.noise
-	../../node/vuo.osc
-	../../node/vuo.rss
-	../../node/vuo.scene
-	../../node/vuo.serial
-	../../node/vuo.shader
-	../../node/vuo.syphon
-	../../node/vuo.table
-	../../node/vuo.text
-	../../node/vuo.time
-	../../node/vuo.type
-	../../node/vuo.ui
+		../../base
+		../../node/vuo.artnet
+		../../node/vuo.audio
+		../../node/vuo.bcf2000
+		../../node/vuo.blackmagic
+		../../node/vuo.color
+		../../node/vuo.data
+		../../node/vuo.file
+		../../node/vuo.hid
+		../../node/vuo.image
+		../../node/vuo.keyboard
+		../../node/vuo.layer
+		../../node/vuo.leap
+		../../node/vuo.list
+		../../node/vuo.math
+		../../node/vuo.midi
+		../../node/vuo.mouse
+		../../node/vuo.motion
+		../../node/vuo.ndi
+		../../node/vuo.video
+		../../node/vuo.noise
+		../../node/vuo.osc
+		../../node/vuo.rss
+		../../node/vuo.scene
+		../../node/vuo.serial
+		../../node/vuo.shader
+		../../node/vuo.syphon
+		../../node/vuo.table
+		../../node/vuo.text
+		../../node/vuo.time
+		../../node/vuo.type
+		../../node/vuo.ui
 )

@@ -2,7 +2,7 @@
  * @file
  * TestSubcompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -663,7 +663,7 @@ private slots:
 			QStringMap inputPortData;
 			inputPortData["Texts"] = "[\"It's a test\", \"Whee\"]";
 			QStringMap expectedOutputPortData;
-			expectedOutputPortData["ExclamationTexts"] = "List containing 2 items: <ul><li><code>It's a test!</code></li><li><code>Whee!</code></li></ul>";
+			expectedOutputPortData["ExclamationTexts"] = "List containing 2 items: <ul>\n<li><code>It's a test!</code></li>\n<li><code>Whee!</code></li></ul>";
 			QStringList expectedOutputPortEvents;
 			expectedOutputPortEvents.append("ExclamationTexts");
 			QTest::newRow("Trigger uses constant list input port value") << "AddExclamations" << subcompositionNames << "" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;

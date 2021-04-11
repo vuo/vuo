@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindow implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -59,9 +59,6 @@
 #include "VuoRendererComment.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoRendererInputListDrawer.hh"
-#include "VuoRendererReadOnlyDictionary.hh"
-#include "VuoRendererKeyListForReadOnlyDictionary.hh"
-#include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoSearchBox.hh"
 #include "VuoSubcompositionSaveAsDialog.hh"
@@ -379,6 +376,7 @@ VuoEditorWindow::VuoEditorWindow(QString documentIdentifier, QString composition
 	menuChangeNode->setTitle(tr("Change To"));
 
 	connect(ui->menuEdit, &QMenu::aboutToShow, this, &VuoEditorWindow::updateUI);
+	connect(ui->menuEdit, &QMenu::aboutToShow, this, &VuoEditorWindow::updateChangeNodeMenu);
 
 	foreach (QMenu *menu, ui->menuBar->findChildren<QMenu*>())
 		menu->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
@@ -700,6 +698,7 @@ VuoEditorWindow::~VuoEditorWindow()
 	disconnect(ui->paste, &QAction::triggered, this, &VuoEditorWindow::disambiguatePasteRequest);
 	disconnect(ui->menuWindow, &QMenu::aboutToShow, this, &VuoEditorWindow::updateUI);
 	disconnect(ui->menuEdit, &QMenu::aboutToShow, this, &VuoEditorWindow::updateUI);
+	disconnect(ui->menuEdit, &QMenu::aboutToShow, this, &VuoEditorWindow::updateChangeNodeMenu);
 	disconnect(ui->menuHelp, &QMenu::aboutToShow, menuOpenExample, &VuoExampleMenu::disableExampleTitleLookup);
 	disconnect(ui->menuHelp, &QMenu::aboutToHide, menuOpenExample, &VuoExampleMenu::enableExampleTitleLookup);
 
@@ -995,7 +994,7 @@ void VuoEditorWindow::updateRefireAction()
 		isTopLevelCompositionRunning = topLevelComposition->isRunning();
 	});
 
-	ui->refireEvent->setEnabled(isTopLevelCompositionRunning ? composition->getTriggerPortToRefire() : false);
+	ui->refireEvent->setEnabled(isTopLevelCompositionRunning ? (bool)composition->getTriggerPortToRefire() : false);
 }
 
 /**
@@ -1104,13 +1103,22 @@ void VuoEditorWindow::componentsAdded(QList<QGraphicsItem *> components, VuoEdit
  */
 string VuoEditorWindow::getMaximumSubcompositionFromSelection(bool includePublishedPorts, bool includeHeader)
 {
-	// Make sure that the drawers attached to any selected node are selected themselves.
-	// Workaround for https://b33p.net/kosada/node/6064
-	foreach (QGraphicsItem *item, composition->selectedItems())
-		if (dynamic_cast<VuoRendererNode *>(item))
-			dynamic_cast<VuoRendererNode *>(item)->layoutConnectedInputDrawers();
+	QList<QGraphicsItem *> selectedComponents = composition->selectedItems();
 
-	QList<QGraphicsItem *> selectedCompositionComponents = composition->selectedItems();
+	// Make sure to include drawers attached to selected nodes.
+	QList<QGraphicsItem *> selectedComponentsWithAttachments;
+	foreach (QGraphicsItem *item, selectedComponents)
+	{
+		selectedComponentsWithAttachments.append(item);
+		VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(item);
+		if (rn)
+		{
+			set<QGraphicsItem *> dependentAttachments = composition->getDependentAttachmentsForNode(rn, false);
+			foreach (QGraphicsItem *attachment, dependentAttachments)
+				selectedComponentsWithAttachments.push_back(attachment);
+		}
+	}
+
 	QList<QGraphicsItem *> selectedNonStrandedCompositionComponents;
 
 	QStringList nodeDeclarations;
@@ -1119,11 +1127,11 @@ string VuoEditorWindow::getMaximumSubcompositionFromSelection(bool includePublis
 	map<string, bool> nodeRepresented;
 	vector<VuoRendererComment *> commentsToCopy;
 
-	for (QList<QGraphicsItem *>::iterator i = selectedCompositionComponents.begin(); i != selectedCompositionComponents.end(); ++i)
+	for (QList<QGraphicsItem *>::iterator i = selectedComponentsWithAttachments.begin(); i != selectedComponentsWithAttachments.end(); ++i)
 	{
 		VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(*i);
 		VuoRendererInputAttachment *attachment = dynamic_cast<VuoRendererInputAttachment *>(*i);
-		bool strandedAttachment = (attachment && isStrandedAttachment(attachment, selectedCompositionComponents));
+		bool strandedAttachment = (attachment && isStrandedAttachment(attachment, selectedComponentsWithAttachments));
 
 		if (rn && rn->getBase()->hasCompiler() && !strandedAttachment)
 		{
@@ -4345,7 +4353,6 @@ void VuoEditorWindow::updateActiveProtocolDisplay(void)
 {
 	inputPortSidebar->updateActiveProtocol();
 	outputPortSidebar->updateActiveProtocol();
-	setPublishedPortSidebarVisibility(true);
 	updateUI();
 }
 
@@ -4995,8 +5002,6 @@ void VuoEditorWindow::updateSelectedComponentMenuItems()
 	int selectedListsFound = 0;
 	int selectedCommentsFound = 0;
 
-	VuoRendererNode *foundNode = NULL;
-
 	for (QList<QGraphicsItem *>::iterator i = selectedCompositionComponents.begin();
 						(! (selectedNodesFound && selectedCablesFound)) &&
 						(i != selectedCompositionComponents.end());
@@ -5013,10 +5018,7 @@ void VuoEditorWindow::updateSelectedComponentMenuItems()
 			selectedListsFound++;
 
 		else if (rn && !rn->paintingDisabled())
-		{
-			foundNode = rn;
 			selectedNodesFound++;
-		}
 
 		else if (rc && !rc->paintingDisabled())
 			selectedCablesFound++;
@@ -5081,6 +5083,41 @@ void VuoEditorWindow::updateSelectedComponentMenuItems()
 	ui->renameNodes->setEnabled(selectedNodesFound);
 	ui->refactor->setEnabled(selectedNodesFound || selectedCommentsFound);
 	contextMenuTints->setEnabled(selectedNodesFound || selectedCommentsFound);
+}
+
+/**
+ * Enables or disables the "Edit > Change (Node) To" menu item and updates its contents depending
+ * what composition components from the canvas are currently selected.
+ */
+void VuoEditorWindow::updateChangeNodeMenu()
+{
+	QList<QGraphicsItem *> selectedCompositionComponents = composition->selectedItems();
+
+	int selectedNodesFound = 0;
+	int selectedCommentsFound = 0;
+
+	VuoRendererNode *foundNode = NULL;
+
+	for (QList<QGraphicsItem *>::iterator i = selectedCompositionComponents.begin();
+						(selectedNodesFound <= 1) && !selectedCommentsFound &&
+						(i != selectedCompositionComponents.end());
+						++i)
+	{
+		QGraphicsItem *compositionComponent = *i;
+
+		VuoRendererInputDrawer *rl = dynamic_cast<VuoRendererInputDrawer *>(compositionComponent);
+		VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(compositionComponent);
+		VuoRendererComment *rcomment = dynamic_cast<VuoRendererComment *>(compositionComponent);
+
+		if (!rl && rn && !rn->paintingDisabled())
+		{
+			foundNode = rn;
+			selectedNodesFound++;
+		}
+
+		else if (rcomment)
+			selectedCommentsFound++;
+	}
 
 	// Update "Change (Node) To" submenu
 	ui->menuEdit->removeAction(menuChangeNode->menuAction());
@@ -5089,7 +5126,7 @@ void VuoEditorWindow::updateSelectedComponentMenuItems()
 	if ((selectedNodesFound == 1) && !selectedCommentsFound)
 	{
 		composition->populateChangeNodeMenu(menuChangeNode, foundNode);
-		if (menuChangeNode->actions().size() > 0)
+		if (!menuChangeNode->actions().isEmpty())
 		{
 			ui->menuEdit->insertMenu(ui->refactor, menuChangeNode);
 			menuChangeNode->setEnabled(true);
@@ -5420,75 +5457,7 @@ void VuoEditorWindow::showInputEditor(VuoRendererPort *port, bool forwardTabTrav
 
 			undoStack->push(new VuoCommandSetPortConstant(compilerPort, finalEditingSessionValue, this));
 
-			if (composition->requiresStructuralChangesAfterValueChangeAtPort(port))
-			{
-				VuoRendererNode *parentNode = port->getRenderedParentNode();
-
-				// Only current possibility: modifications to "Calculate" node's 'expression' input
-				string nodeClassName = parentNode->getBase()->getNodeClass()->getClassName();
-				vector<string> inputVariablesBeforeEditing = composition->extractInputVariableListFromExpressionsConstant(originalEditingSessionValue, nodeClassName);
-				vector<string> inputVariablesAfterEditing = composition->extractInputVariableListFromExpressionsConstant(finalEditingSessionValue, nodeClassName);
-
-				// Don't make any structural changes if the variables in the input expression remain
-				// the same, even if the expression itself has changed.
-				if (inputVariablesBeforeEditing != inputVariablesAfterEditing)
-				{
-					VuoPort *valuesPort = port->getRenderedParentNode()->getBase()->getInputPortWithName("values");
-
-					set<VuoRendererInputAttachment *> attachments = valuesPort->getRenderer()->getAllUnderlyingUpstreamInputAttachments();
-
-					QList<QGraphicsItem *> attachmentsToRemove;
-
-					VuoRendererReadOnlyDictionary *oldDictionary = nullptr;
-					VuoRendererValueListForReadOnlyDictionary *oldValueList = nullptr;
-					VuoRendererKeyListForReadOnlyDictionary *oldKeyList = nullptr;
-					foreach (VuoRendererInputAttachment *attachment, attachments)
-					{
-						attachmentsToRemove.append(attachment);
-
-						if (dynamic_cast<VuoRendererReadOnlyDictionary *>(attachment))
-							oldDictionary = dynamic_cast<VuoRendererReadOnlyDictionary *>(attachment);
-
-						else if (dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(attachment))
-							oldValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(attachment);
-
-						else if (dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(attachment))
-							oldKeyList = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(attachment);
-					}
-
-					if (oldValueList && oldDictionary && oldKeyList)
-					{
-						set<VuoRendererNode *> nodesToAdd;
-						set<VuoRendererCable *> cablesToAdd;
-						composition->createAndConnectDictionaryAttachmentsForNode(parentNode->getBase(), nodesToAdd, cablesToAdd);
-
-						VuoRendererReadOnlyDictionary *newDictionary = nullptr;
-						VuoRendererValueListForReadOnlyDictionary *newValueList = nullptr;
-						VuoRendererKeyListForReadOnlyDictionary *newKeyList = nullptr;
-						foreach (VuoRendererNode *node, nodesToAdd)
-						{
-							if (dynamic_cast<VuoRendererReadOnlyDictionary *>(node))
-								newDictionary = dynamic_cast<VuoRendererReadOnlyDictionary *>(node);
-
-							else if (dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(node))
-								newValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(node);
-
-							else if (dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(node))
-								newKeyList = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(node);
-						}
-
-						undoStack->push(new VuoCommandReplaceNode(oldValueList, newValueList, this, "Set Port Constant", false, false));
-						undoStack->push(new VuoCommandReplaceNode(oldKeyList, newKeyList, this, "Set Port Constant", false, true));
-						undoStack->push(new VuoCommandReplaceNode(oldDictionary, newDictionary, this, "Set Port Constant", false, true));
-
-						foreach (VuoRendererCable *cable, cablesToAdd)
-						{
-							cable->setFrom(nullptr, nullptr);
-							cable->setTo(nullptr, nullptr);
-						}
-					}
-				}
-			}
+			composition->performStructuralChangesAfterValueChangeAtPort(this, undoStack, port, originalEditingSessionValue, finalEditingSessionValue);
 		}
 
 		// If the port constant ended up with the same value as it had initially

@@ -103,7 +103,7 @@ foreach (language ${languages})
 	foreach (colors solarized highContrast)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/VuoManualPDF-${language}-${colors})
 set(xelatex echo Running xelatex && set -o pipefail && max_print_line=1024 PATH=/Library/TeX/texbin xelatex -halt-on-error -file-line-error VuoManual.tex
-	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|AED: lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded' || true\) )
+	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|AED: lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded|L3 programming layer.*latex.base.article.cls|latex.fontspec.fontspec-xetex.sty.*latex.base.fontenc.sty.*latex.fontspec.fontspec.cfg' || true\) )
 add_custom_command(
 	DEPENDS
 		VuoEditorApp # for CONTRIBUTORS.md
@@ -133,7 +133,7 @@ add_custom_command(
 			--to=latex
 			-o -
 			-
-		| perl -pe "s^PROJECT_SOURCE_DIR^${PROJECT_SOURCE_DIR}^g"
+		| sed "s^PROJECT_SOURCE_DIR^${PROJECT_SOURCE_DIR}^g"
 		> VuoManual.tex
 
 	# The first xelatex run gathers the names of terms and references,

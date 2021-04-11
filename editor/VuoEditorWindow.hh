@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindow interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -62,6 +62,7 @@ public:
 	bool isItemDragInProgress();
 	double getLatestDragTime();
 	void highlightNodeClass(string nodeClass);
+	static bool containsLikelyVuoComposition(QString text);
 	static VuoEditorWindow * getMostRecentActiveEditorWindow();
 	static QString getNodeClassNameForDisplayNameAndCategory(QString compositionName, QString category, QString defaultCompositionName, QString defaultCategory);
 	VuoNodeLibrary * getOwnedNodeLibrary();
@@ -196,6 +197,7 @@ private slots:
 
 	void resetUndoStackMacros();
 	void updateSelectedComponentMenuItems();
+	void updateChangeNodeMenu();
 	void updateSceneRect();
 	void ensureSceneRectContainsRegion(const QList<QRectF> &region);
 	void updateRubberBandSelectionMode(QRect rubberBandRect, QPointF fromScenePoint, QPointF toScenePoint);
@@ -226,6 +228,7 @@ private slots:
 
 private:
 	friend class TestVuoEditor;
+	friend class TestEditorCommands;
 
 	static const qreal viewportStepRate;
 	static const qreal viewportStepRateMultiplier;
@@ -329,7 +332,6 @@ private:
 	void initializeNodeLibrary(VuoCompiler *nodeLibraryCompiler, VuoNodeLibrary::nodeLibraryDisplayMode nodeLibraryDisplayMode, VuoNodeLibrary::nodeLibraryState nodeLibraryState, VuoNodeLibrary *floater=NULL);
 	void pasteCompositionComponents();
 	void componentsPasted(QList<QGraphicsItem *> components, string commandDescription="Paste");
-	bool containsLikelyVuoComposition(QString text);
 	string getMaximumSubcompositionFromSelection(bool includePublishedPorts, bool includeHeader);
 	bool isStrandedAttachment(VuoRendererInputAttachment *attachment, QList<QGraphicsItem *> selectedItems);
 	void instantiateNewCompositionComponentsFromString(string compositionText);

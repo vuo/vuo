@@ -2,14 +2,12 @@
  * @file
  * VuoKeyboard implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
 
 #include "VuoKeyboard.h"
@@ -81,10 +79,10 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 		unsigned long long flags = [event modifierFlags];
 		VuoModifierKey modifiers = VuoModifierKey_None;
 
-		if(flags & NSCommandKeyMask) 	modifiers |= VuoModifierKey_Command;
-		if(flags & NSAlternateKeyMask) 	modifiers |= VuoModifierKey_Option;
-		if(flags & NSControlKeyMask) 	modifiers |= VuoModifierKey_Control;
-		if(flags & NSShiftKeyMask) 		modifiers |= VuoModifierKey_Shift;
+		if(flags & NSEventModifierFlagCommand) modifiers |= VuoModifierKey_Command;
+		if(flags & NSEventModifierFlagOption)  modifiers |= VuoModifierKey_Option;
+		if(flags & NSEventModifierFlagControl) modifiers |= VuoModifierKey_Control;
+		if(flags & NSEventModifierFlagShift)   modifiers |= VuoModifierKey_Shift;
 
 		for (NSUInteger i = 0; i < [unicodeString length]; ++i)
 		{
@@ -154,7 +152,7 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 	NSEventType type = [event type];
 
 	bool isARepeat = false;
-	if (type == NSKeyDown || type == NSKeyUp)
+	if (type == NSEventTypeKeyDown || type == NSEventTypeKeyUp)
 		isARepeat = [event isARepeat];
 
 	if ((! targetWindow || targetWindow == [event window] || [[targetWindow contentView] isInFullScreenMode]) &&
@@ -162,7 +160,7 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 			(shouldFireForRepeat || !isARepeat))
 	{
 		CGEventFlags flags = CGEventGetFlags([event CGEvent]);
-		bool isKeyInFlags = (type == NSFlagsChanged &&
+		bool isKeyInFlags = (type == NSEventTypeFlagsChanged &&
 							 (((key == VuoKey_Command) && (flags & kCGEventFlagMaskCommand)) ||
 							  ((key == VuoKey_CapsLock) && (flags & kCGEventFlagMaskAlphaShift)) ||
 							  ((key == VuoKey_Shift || key == VuoKey_RightShift) && (flags & kCGEventFlagMaskShift)) ||
@@ -172,7 +170,7 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 
 		if (VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey) || isKeyInFlags)
 		{
-			if (type == NSKeyDown || isKeyInFlags)
+			if (type == NSEventTypeKeyDown || isKeyInFlags)
 				pressed();
 			else
 				released();
@@ -195,7 +193,7 @@ void VuoKeyboard_startListeningForTypingWithCallback(VuoKeyboard *keyboardListen
 	context->wordInProgress = [NSMutableString new];
 	context->lineInProgress = [NSMutableString new];
 
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^(NSEvent *event) {
 		VuoKeyboard_fireTypingIfNeeded(event, context, typedLine, typedWord, typedCharacter, window);
 		return event;
 	}];
@@ -232,7 +230,7 @@ void VuoKeyboard_startListeningForButtons(VuoKeyboard *keyboardListener,
 {
 	struct VuoKeyboardContext *context = (struct VuoKeyboardContext *)keyboardListener;
 
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask|NSKeyUpMask|NSFlagsChangedMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown|NSEventMaskKeyUp|NSEventMaskFlagsChanged handler:^(NSEvent *event) {
 		VuoKeyboard_fireButtonsIfNeeded(event, pressed, released, window, key, modifierKey, shouldFireForRepeat);
 		return event;
 	}];

@@ -2,13 +2,14 @@
  * @file
  * VuoCompilerInputDataClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputData.hh"
+#include "VuoStringUtilities.hh"
 #include "VuoType.hh"
 
 /**
@@ -16,10 +17,14 @@
  *
  * The default data value for instances of this data type is not set. Set it with @c setDefaultValue.
  */
-VuoCompilerInputDataClass::VuoCompilerInputDataClass(string name, Type *type, bool twoParameters) :
-	VuoCompilerDataClass(name, type)
+VuoCompilerInputDataClass::VuoCompilerInputDataClass(string name) :
+	VuoCompilerDataClass(name)
 {
-	this->twoParameters = twoParameters;
+	unloweredStructPointerInEventFunction = false;
+	unloweredStructPointerInInitFunction = false;
+	unloweredStructPointerInCallbackStartFunction = false;
+	unloweredStructPointerInCallbackUpdateFunction = false;
+	unloweredStructPointerInCallbackStopFunction = false;
 }
 
 /**
@@ -87,10 +92,108 @@ bool VuoCompilerInputDataClass::getAutoSupersedesDefaultValue(void)
 }
 
 /**
- * Returns true if, in the node event function, Clang converts this one parameter in source code
- * to two parameters in the compiled bitcode.
+ * Helper for `VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction` and friends.
  */
-bool VuoCompilerInputDataClass::isLoweredToTwoParameters(void)
+void VuoCompilerInputDataClass::setUnloweredStructPointer(Type *firstParameterType, bool &unloweredStructPointer)
 {
-	return twoParameters;
+	if (firstParameterType->isPointerTy())
+	{
+		Type *elementType = cast<PointerType>(firstParameterType)->getElementType();
+		if (elementType->isStructTy())
+		{
+			// Check if the LLVM type name looks like e.g. "struct.VuoRange" or "struct.VuoRange.123" (hopefully faster than regex).
+			vector<string> parts = VuoStringUtilities::split(elementType->getStructName().str(), '.');
+			unloweredStructPointer = (parts.size() >= 2
+									  && parts[0] == "struct"
+									  && parts[1] == getVuoType()->getModuleKey()
+									  && std::all_of(parts.begin() + 2, parts.end(), [](const string &s) { return s.find_first_not_of("0123456789") == string::npos; }));
+		}
+	}
+}
+
+/**
+ * Stores whether @a parameterType — this data's first (and possibly only) parameter in the node event function
+ * — is an unlowered struct passed by reference.
+ *
+ * The reason for storing this when a node class's module is first loaded, instead of checking it as needed, is
+ * to work around an apparent bug in LLVM. When the module is linked into a composition (i.e., a clone of it is
+ * passed to `llvm::Linker::linkInModule()`), the struct type names in the module's function parameters are
+ * changed from the original (e.g. `struct.VuoRange`) to something different (e.g. `%"type 0x7f8ef07bce80"*`).
+ * https://b33p.net/kosada/vuo/vuo/-/issues/18132
+ */
+void VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction(Type *firstParameterType)
+{
+	setUnloweredStructPointer(firstParameterType, unloweredStructPointerInEventFunction);
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+bool VuoCompilerInputDataClass::isUnloweredStructPointerInEventFunction(void)
+{
+	return unloweredStructPointerInEventFunction;
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+void VuoCompilerInputDataClass::setUnloweredStructPointerInInitFunction(Type *firstParameterType)
+{
+	setUnloweredStructPointer(firstParameterType, unloweredStructPointerInInitFunction);
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+bool VuoCompilerInputDataClass::isUnloweredStructPointerInInitFunction(void)
+{
+	return unloweredStructPointerInInitFunction;
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+void VuoCompilerInputDataClass::setUnloweredStructPointerInCallbackStartFunction(Type *firstParameterType)
+{
+	setUnloweredStructPointer(firstParameterType, unloweredStructPointerInCallbackStartFunction);
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+bool VuoCompilerInputDataClass::isUnloweredStructPointerInCallbackStartFunction(void)
+{
+	return unloweredStructPointerInCallbackStartFunction;
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+void VuoCompilerInputDataClass::setUnloweredStructPointerInCallbackUpdateFunction(Type *firstParameterType)
+{
+	setUnloweredStructPointer(firstParameterType, unloweredStructPointerInCallbackUpdateFunction);
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+bool VuoCompilerInputDataClass::isUnloweredStructPointerInCallbackUpdateFunction(void)
+{
+	return unloweredStructPointerInCallbackUpdateFunction;
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+void VuoCompilerInputDataClass::setUnloweredStructPointerInCallbackStopFunction(Type *firstParameterType)
+{
+	setUnloweredStructPointer(firstParameterType, unloweredStructPointerInCallbackStopFunction);
+}
+
+/**
+ * @see VuoCompilerInputDataClass::setUnloweredStructPointerInEventFunction.
+ */
+bool VuoCompilerInputDataClass::isUnloweredStructPointerInCallbackStopFunction(void)
+{
+	return unloweredStructPointerInCallbackStopFunction;
 }

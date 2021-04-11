@@ -154,9 +154,15 @@ Check that modifying certain source files causes certain build steps to be perfo
       When  I edit node/vuo.scene/VuoDispersion.c
       And   I build
       Then  it should update the vuo.scene node set
-      And   it should update lib/libVuoInputEditorDispersion.dylib
-      And   it should update bin/Vuo.app/Contents/Resources/InputEditors/libVuoInputEditorDispersion.dylib
+      And   it should update lib/Vuo.framework/Vuo
+      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Vuo
       And   it should update the built-in cache
+
+      # These binaries dynamically link to Vuo.framework,
+      # so they don't need to be re-linked.
+      But   it shouldn't update lib/libVuoInputEditorDispersion.dylib
+      And   it shouldn't update bin/Vuo.app/Contents/Resources/InputEditors/libVuoInputEditorDispersion.dylib
+      And   it shouldn't update bin/Vuo.app/Contents/MacOS/Vuo
 
    Scenario: Editing a module-compiler
       Given a completed build
@@ -180,7 +186,7 @@ Check that modifying certain source files causes certain build steps to be perfo
       Given a completed build
       When  I edit editor/VuoEditorWindow.ui
       And   I build
-      Then  it should update editor/CMakeFiles/VuoEditor.dir/VuoEditorWindow.o
+      Then  it should update editor/CMakeFiles/VuoEditor.dir/VuoEditorWindow.cc.o
       And   it should update bin/Vuo.app/Contents/MacOS/Vuo
       But   it shouldn't update the built-in cache
       # Fails when building with Ninja due to CMake bug: https://gitlab.kitware.com/cmake/cmake/issues/16776

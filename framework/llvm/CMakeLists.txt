@@ -23,7 +23,7 @@ set(llvmFrameworkVersionPath "${llvmFrameworkPath}/Versions/A")
 if (NOT EXISTS "${llvmFrameworkVersionPath}/llvm")
 file(GLOB llvmHeaders ${CONAN_LLVM_ROOT}/include/llvm/*)
 file(COPY ${llvmHeaders}                           DESTINATION "${llvmFrameworkVersionPath}/Headers")
-file(COPY ${CONAN_LLVM_ROOT}/lib/clang/3.3/include DESTINATION "${llvmFrameworkVersionPath}/lib/clang/3.3")
+file(COPY ${CONAN_LLVM_ROOT}/lib/clang/5.0.2/include DESTINATION "${llvmFrameworkVersionPath}/lib/clang/5.0.2")
 file(COPY ${CONAN_LLVM_ROOT}/include/c++           DESTINATION "${llvmFrameworkVersionPath}/Headers/lib")
 file(CREATE_LINK "Versions/Current/Headers" "${llvmFrameworkPath}/Headers" SYMBOLIC)
 file(CREATE_LINK "A" "${llvmFrameworkPath}/Versions/Current" SYMBOLIC)
@@ -74,3 +74,25 @@ file(CREATE_LINK "A" "${clangFrameworkPath}/Versions/Current" SYMBOLIC)
 file(TOUCH "${clangFrameworkVersionPath}/clang")
 endif()
 set_target_properties(VuoClangFramework PROPERTIES VuoGeneratedFiles "${clangFrameworkVersionPath}/clang")
+
+
+add_library(VuoClangCFramework SHARED
+	empty.c
+)
+set_target_properties(VuoClangCFramework PROPERTIES
+	OUTPUT_NAME "clang-c"
+	FRAMEWORK TRUE
+
+	# We just want cmake to generate the structure; we don't need to build/link empty.c.
+	EXCLUDE_FROM_ALL TRUE
+)
+set(clangCFrameworkPath "${PROJECT_BINARY_DIR}/lib/clang-c.framework")
+set(clangCFrameworkVersionPath "${clangCFrameworkPath}/Versions/A")
+if (NOT EXISTS "${clangCFrameworkVersionPath}/clang-c")
+	file(GLOB clangCHeaders ${CONAN_LLVM_ROOT}/include/clang-c/*)
+	file(COPY ${clangCHeaders} DESTINATION "${clangCFrameworkVersionPath}/Headers")
+	file(CREATE_LINK "Versions/Current/Headers" "${clangCFrameworkPath}/Headers" SYMBOLIC)
+	file(CREATE_LINK "A" "${clangCFrameworkPath}/Versions/Current" SYMBOLIC)
+	file(TOUCH "${clangCFrameworkVersionPath}/clang-c")
+endif()
+set_target_properties(VuoClangCFramework PROPERTIES VuoGeneratedFiles "${clangCFrameworkVersionPath}/clang-c")

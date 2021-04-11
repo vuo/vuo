@@ -1861,7 +1861,7 @@ Vuo can turn GLSL fragment shaders in [Interactive Shader Format (ISF)](https://
 
 ## Creating an ISF node
 
-There are two ways to begin developing an ISF node in Vuo. One is to start with an ISF fragment shader that you've already written or downloaded. Save the file to the same location that you would [install a node](#installing-a-node). Then find the node in your Node Library, right-click on it, and go to \menu{Edit Shader…}.
+There are two ways to begin developing an ISF node in Vuo. One is to start with an ISF fragment shader that you've already written or downloaded. Save the file to the same location that you would [install a node](#installing-a-node). Then find the node in your Node Library, right-click on it, and go to \menu{Edit Shader…}. (Vuo supports loading ISF source code consisting of a single `.fs` file. If the source code also has a vertex shader in a `.vs` file, Vuo may or may not be able to load it; this is an experimental feature.)
 
 The other way is to start from scratch. Go to \menu{File > New Shader > Image Filter}, \menu{Image Generator}, or \menu{Image Transition}. ([Making compositions fit a mold with protocols](#making-compositions-fit-a-mold-with-protocols) explains Image Filters, Image Generators, and Image Transitions.) This opens a window with a small template as a starting point.
 
@@ -1892,13 +1892,13 @@ You can also edit and run shaders in Vuo without installing them as nodes. These
 ## How ISF source code translates to a Vuo node
 <abstract>The nitty-gritty of programming Vuo nodes in ISF</abstract>
 
-To be recognized by Vuo, the ISF source code must have a file with extension `.fs` containing GLSL code for a fragment shader.
-
-(Optionally, the ISF source code may also have a vertex shader in a `.vs` file. This is an experimental feature in Vuo and may not work as expected.)
+This section explains how elements in the ISF source code map to elements of the Vuo node. The mapping looks a little different depending on whether you're editing the ISF source code within Vuo or in your own text editor.
 
 ### Node metadata
 
-As with subcompositions and other custom nodes, the file name becomes the node class name. For example, an ISF file called `me.image.squiggle.fs` becomes a node with class name \vuoNodeClass{me.image.squiggle}.
+As with subcompositions and other custom nodes, when you install an ISF file as a node, the file name becomes the node class name. For example, an ISF file called `me.image.squiggle.fs` becomes a node with class name \vuoNodeClass{me.image.squiggle}.
+
+#### When editing in a text editor
 
 The keys and values in the JSON-formatted comment at the beginning of the ISF file are translated to the Vuo node as follows.
 
@@ -1910,7 +1910,13 @@ The keys and values in the JSON-formatted comment at the beginning of the ISF fi
 | `VSN` | Version | Shown in the Node Library. |
 | `KEYWORDS` | Keywords | Used when searching the Node Library. |
 
+#### When editing within Vuo
+
+When editing the ISF source code inside of Vuo, the JSON-formatted comment is hidden. Instead, use \menu{Edit > Composition Information…} to edit the node metadata.
+
 ### Ports
+
+#### When editing in a text editor
 
 In most cases, the input and output ports on the Vuo node correspond to the items listed under `INPUTS` and `OUTPUTS` in the ISF file's JSON-formatted comment.
 
@@ -1930,6 +1936,12 @@ If an ISF file provides no way to determine the output image's size — no input
 If an ISF file lacks an output with `"TYPE"="image"`, an output port called \vuoPort{Output Image} is added automatically to the Vuo node.
 
 One Vuo input port is unusual in that it's not determined by the `INPUTS` and `OUTPUTS` (or lack thereof) in the JSON-formatted comment, but rather by the content of the GLSL code. That is the \vuoPort{Time} port. In any ISF shader, a uniform called `TIME` of type float is automatically declared. If you use the `TIME` uniform anywhere in your GLSL code, an input port called \vuoPort{Time} is added to your Vuo node automatically.
+
+#### When editing within Vuo
+
+Instead of editing the `INPUTS` in the JSON-formatted comment, which is hidden, you can add, remove, and modify the input ports that are displayed in the sidebar of the shader editor.
+
+Each input port is available as a uniform in the ISF code. Typically, the uniform name is the same as the port name. There are two exceptions. For an Image Filter shader, the uniform for the \vuoPort{image} input port is called `inputImage`. For any shader, the \vuoPort{time} input port corresponds to uniform `TIME`.
 
 ### Data types
 

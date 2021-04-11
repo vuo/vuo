@@ -2,7 +2,7 @@
  * @file
  * VuoCommandReplaceNode implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -12,6 +12,7 @@
 
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerNode.hh"
+#include "VuoRendererKeyListForReadOnlyDictionary.hh"
 #include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoGenericType.hh"
@@ -170,7 +171,8 @@ VuoCommandReplaceNode::SingleNodeReplacement::SingleNodeReplacement(VuoRendererN
 	this->preserveDanglingCables = preserveDanglingCables;
 	this->resetConstantValues = resetConstantValues;
 
-	this->replacingDictionaryValueList = false;
+	replacingDictionaryKeyList = false;
+	replacingDictionaryValueList = false;
 }
 
 /**
@@ -178,8 +180,8 @@ VuoCommandReplaceNode::SingleNodeReplacement::SingleNodeReplacement(VuoRendererN
  */
 void VuoCommandReplaceNode::SingleNodeReplacement::createAllMappings()
 {
-	this->replacingDictionaryValueList = (dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(oldNode) &&
-										  dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(newNode));
+	replacingDictionaryKeyList   = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(oldNode) && dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(newNode);
+	replacingDictionaryValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(oldNode) && dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(newNode);
 
 	// Inventory the port constants and connected input cables associated with the old node, to be re-associated with the new node.
 	vector<VuoPort *> oldInputPorts = oldNode->getBase()->getInputPorts();
@@ -396,17 +398,36 @@ void VuoCommandReplaceNode::SingleNodeReplacement::createPortMappings()
 
 /**
  * Returns the input port belonging to the @c newNode that corresponds to the @c oldInputPort belonging to the @c oldNode.
- * In the special case that the node is a value list for a read-only dictionary attachment, the port returned will be the one that
+ * In the special case that the node is a key or value list for a read-only dictionary attachment, the port returned will be the one that
  * corresponds to the same dictionary key as the old one, even if the key has moved within the list.
  * For all other nodes, the port returned will be the one that has the same name as the old port.
  */
 VuoPort * VuoCommandReplaceNode::SingleNodeReplacement::getEquivalentInputPortInNewNode(VuoPort *oldInputPort, VuoRendererNode *oldNode, VuoRendererNode *newNode)
 {
-	if (!replacingDictionaryValueList)
-	{
+	if (!replacingDictionaryKeyList && !replacingDictionaryValueList)
 		return newNode->getBase()->getInputPortWithName(oldInputPort->getClass()->getName());
+	else if (replacingDictionaryKeyList)
+	{
+		VuoRendererKeyListForReadOnlyDictionary *newKeyList = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(newNode);
+		if (!newKeyList)
+			return nullptr;
+
+		VuoCompilerInputEventPort *oldKeyInputCompilerPort = dynamic_cast<VuoCompilerInputEventPort *>(oldInputPort->getCompiler());
+		if (!oldKeyInputCompilerPort || !oldKeyInputCompilerPort->getData())
+			return nullptr;
+		string targetKeyName = oldKeyInputCompilerPort->getData()->getInitialValue();
+
+		vector<VuoPort *> newKeyListInputs = newKeyList->getBase()->getInputPorts();
+		for (int i = VuoNodeClass::unreservedInputPortStartIndex; i < newKeyListInputs.size(); ++i)
+		{
+			VuoCompilerInputEventPort *newKeyInputPort = dynamic_cast<VuoCompilerInputEventPort *>(newKeyListInputs[i]->getCompiler());
+			if (!newKeyInputPort)
+				return nullptr;
+			if (newKeyInputPort->getData()->getInitialValue() == targetKeyName)
+				return newKeyInputPort->getBase();
+		}
 	}
-	else
+	else if (replacingDictionaryValueList)
 	{
 		VuoRendererValueListForReadOnlyDictionary *oldValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(oldNode);
 		VuoRendererValueListForReadOnlyDictionary *newValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(newNode);
@@ -440,9 +461,9 @@ VuoPort * VuoCommandReplaceNode::SingleNodeReplacement::getEquivalentInputPortIn
 				if (newKeyInputPort->getData()->getInitialValue() == targetKeyName)
 					return newValueListInputs[i];
 		}
-
-		return NULL;
 	}
+
+	return nullptr;
 }
 
 /**

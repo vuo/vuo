@@ -2,7 +2,7 @@
  * @file
  * TestControlAndTelemetry interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -380,6 +380,8 @@ private slots:
 		}
 		else if (testNum == 6)  // Error handling: New process, runOnMainThread()
 		{
+			WriteTimesToFileHelper helper;
+
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
 			try
@@ -393,6 +395,8 @@ private slots:
 		}
 		else if (testNum == 7)  // Error handling: Current process, runOnMainThread() on non-main thread
 		{
+			WriteTimesToFileHelper helper;
+
 			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath);
 			runner->start();
 			dispatch_group_t group = dispatch_group_create();
@@ -944,8 +948,8 @@ private:
 				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", incrementPortIdentifier )), QString("1"));
 				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", countPortIdentifier )), QString("0"));
 				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", item1PortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
-				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", listPortIdentifier )), QString("List containing 2 items: <ul>\n<li>0</li>\n<li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( "", valuesPortIdentifier )), QString("List containing 2 items: <ul>\n<li>0</li>\n<li>10</li></ul>"));
 				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( "", sumPortIdentifier )), QString("0"));
 			}
 
@@ -967,9 +971,9 @@ private:
 					expectedIdentifiersAndSummaries.push_back(countPair);
 					IdentifierAndSummary item1Pair = { item1PortIdentifier.c_str(), QString("%1").arg(count) };
 					expectedIdentifiersAndSummaries.push_back(item1Pair);
-					IdentifierAndSummary listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					IdentifierAndSummary listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul>\n<li>%1</li>\n<li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndSummaries.push_back(listPair);
-					IdentifierAndSummary valuesPair = { valuesPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					IdentifierAndSummary valuesPair = { valuesPortIdentifier.c_str(), QString("List containing 2 items: <ul>\n<li>%1</li>\n<li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndSummaries.push_back(valuesPair);
 					IdentifierAndSummary sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
 					expectedIdentifiersAndSummaries.push_back(sumPair);
@@ -2682,7 +2686,7 @@ private slots:
 		{
 			// Add "publishedSetOne".
 			VuoCompilerType *type = compiler->getType("VuoInteger");
-			VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass("publishedSetOne", VuoPortClass::dataAndEventPort, type->getType());
+			VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass("publishedSetOne", VuoPortClass::dataAndEventPort);
 			portClass->setDataVuoType(type->getBase());
 			VuoPublishedPort *publishedPort = static_cast<VuoPublishedPort *>(portClass->newPort()->getBase());
 			int index = composition->getBase()->getPublishedInputPorts().size();

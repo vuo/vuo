@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCompositionDiff implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -269,10 +269,10 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 						if (cable->isPublished() && cable->getCompiler()->carriesData())
 						{
 							json_object *portObj = json_object_new_object();
-							json_object *portIdentifierOnMovedNode = json_object_new_string(internalPort->getClass()->getName().c_str());
-							json_object_object_add(portObj, "copy", portIdentifierOnMovedNode);
-							json_object *portIdentifierOnSubcompositionNode = json_object_new_string((r.compositionIdentifier + "/" + r.unqualifiedSubcompositionIdentifier + ":" + cable->getFromPort()->getClass()->getName()).c_str());
-							json_object_object_add(portObj, "to", portIdentifierOnSubcompositionNode);
+							json_object *portNameOnMovedNode = json_object_new_string(internalPort->getClass()->getName().c_str());
+							json_object_object_add(portObj, "copy", portNameOnMovedNode);
+							json_object *portNameOnSubcompositionNode = json_object_new_string((r.compositionIdentifier + "/" + r.unqualifiedSubcompositionIdentifier + ":" + cable->getFromPort()->getClass()->getName()).c_str());
+							json_object_object_add(portObj, "to", portNameOnSubcompositionNode);
 							json_object_array_add(ports, portObj);
 						}
 					}
@@ -310,7 +310,7 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 			{
 				if (nodeClassReplacement.nodeClassName == nodeClassName && ! nodeReplacementExists(compositionIdentifier, i->first, i->first))
 				{
-					addNodeReplacement(compositionIdentifier, i->first, i->first, nodeClassReplacement.oldAndNewPortIdentifiers);
+					addNodeReplacement(compositionIdentifier, i->first, i->first, nodeClassReplacement.oldAndNewPortNames);
 					break;
 				}
 			}
@@ -395,9 +395,9 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 			json_object_object_add(replaceObj, "with", newNodePath);
 			json_object *ports = json_object_new_array();
 
-			map<string, string> oldAndNewPortIdentifiers = nodeReplacementIter->oldAndNewPortIdentifiers;
+			map<string, string> oldAndNewPortNames = nodeReplacementIter->oldAndNewPortNames;
 
-			if (nodeReplacementIter->shouldMapIdenticalPortIdentifiers)
+			if (nodeReplacementIter->shouldMapIdenticalPortNames)
 			{
 				vector<VuoPort *> oldInputPorts = oldNodeIter->second->getInputPorts();
 				vector<VuoPort *> oldOutputPorts = oldNodeIter->second->getOutputPorts();
@@ -411,7 +411,7 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 						{
 							string oldPortName = (*oldPortIter)->getClass()->getName();
 							string newPortName = (*newPortIter)->getClass()->getName();
-							oldAndNewPortIdentifiers[oldPortName] = newPortName;
+							oldAndNewPortNames[oldPortName] = newPortName;
 							break;
 						}
 					}
@@ -424,20 +424,20 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 						{
 							string oldPortName = (*oldPortIter)->getClass()->getName();
 							string newPortName = (*newPortIter)->getClass()->getName();
-							oldAndNewPortIdentifiers[oldPortName] = newPortName;
+							oldAndNewPortNames[oldPortName] = newPortName;
 							break;
 						}
 					}
 				}
 			}
 
-			for (map<string, string>::const_iterator portMapIter = oldAndNewPortIdentifiers.begin(); portMapIter != oldAndNewPortIdentifiers.end(); ++portMapIter)
+			for (map<string, string>::const_iterator portMapIter = oldAndNewPortNames.begin(); portMapIter != oldAndNewPortNames.end(); ++portMapIter)
 			{
 				json_object *portObj = json_object_new_object();
-				json_object *oldPortIdentifier = json_object_new_string(portMapIter->first.c_str());
-				json_object_object_add(portObj, "map", oldPortIdentifier);
-				json_object *newPortIdentifier = json_object_new_string(portMapIter->second.c_str());
-				json_object_object_add(portObj, "to", newPortIdentifier);
+				json_object *oldPortName = json_object_new_string(portMapIter->first.c_str());
+				json_object_object_add(portObj, "map", oldPortName);
+				json_object *newPortName = json_object_new_string(portMapIter->second.c_str());
+				json_object_object_add(portObj, "to", newPortName);
 				json_object_array_add(ports, portObj);
 			}
 
@@ -540,6 +540,7 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 				//			... ] }
 				json_object *replaceObj = json_object_new_object();
 				json_object *nodePath = json_object_new_string((compositionPath + "/" + nodeIdentifier[i]).c_str());
+				json_object_get(nodePath);
 				json_object_object_add(replaceObj, "replace", nodePath);
 				json_object_object_add(replaceObj, "with", nodePath);
 				json_object *ports = json_object_new_array();
@@ -568,9 +569,9 @@ void VuoCompilerCompositionDiff::diff(VuoCompilerComposition *oldComposition, Vu
 				NodeReplacement n = *i;
 
 				for (int j = 0; j < 2; ++j)
-					n.oldAndNewPortIdentifiers.insert(oldAndNewPublishedPortNames[j].begin(), oldAndNewPublishedPortNames[j].end());
+					n.oldAndNewPortNames.insert(oldAndNewPublishedPortNames[j].begin(), oldAndNewPublishedPortNames[j].end());
 
-				n.shouldMapIdenticalPortIdentifiers = false;
+				n.shouldMapIdenticalPortNames = false;
 
 				nodeReplacements.erase(i);
 				nodeReplacements.insert(n);
@@ -623,9 +624,9 @@ void VuoCompilerCompositionDiff::addNodeReplacementInTopLevelComposition(const s
  * Adds a mapping for a node replaced in the top-level composition.
  */
 void VuoCompilerCompositionDiff::addNodeReplacementInTopLevelComposition(const string &oldNodeIdentifier, const string &newNodeIdentifier,
-																		 const map<string, string> &oldAndNewPortIdentifiers)
+                                                                         const map<string, string> &oldAndNewPortNames)
 {
-	addNodeReplacement(VuoCompilerComposition::topLevelCompositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortIdentifiers);
+    addNodeReplacement(VuoCompilerComposition::topLevelCompositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortNames);
 }
 
 /**
@@ -638,7 +639,7 @@ void VuoCompilerCompositionDiff::addNodeReplacement(const string &compositionIde
 	n.compositionIdentifier = compositionIdentifier;
 	n.oldNodeIdentifier = oldNodeIdentifier;
 	n.newNodeIdentifier = newNodeIdentifier;
-	n.shouldMapIdenticalPortIdentifiers = true;
+	n.shouldMapIdenticalPortNames = true;
 	nodeReplacements.insert(n);
 }
 
@@ -646,14 +647,14 @@ void VuoCompilerCompositionDiff::addNodeReplacement(const string &compositionIde
  * Adds a mapping for a node replaced in a composition.
  */
 void VuoCompilerCompositionDiff::addNodeReplacement(const string &compositionIdentifier, const string &oldNodeIdentifier, const string &newNodeIdentifier,
-													const map<string, string> &oldAndNewPortIdentifiers)
+                                                    const map<string, string> &oldAndNewPortNames)
 {
 	NodeReplacement n;
 	n.compositionIdentifier = compositionIdentifier;
 	n.oldNodeIdentifier = oldNodeIdentifier;
 	n.newNodeIdentifier = newNodeIdentifier;
-	n.oldAndNewPortIdentifiers = oldAndNewPortIdentifiers;
-	n.shouldMapIdenticalPortIdentifiers = false;
+	n.oldAndNewPortNames = oldAndNewPortNames;
+	n.shouldMapIdenticalPortNames = false;
 	nodeReplacements.insert(n);
 }
 
@@ -667,7 +668,7 @@ void VuoCompilerCompositionDiff::addNodeClassReplacement(VuoCompilerNodeClass *o
 	NodeClassReplacement n;
 	n.nodeClassName = oldNodeClass->getBase()->getClassName();
 
-	auto makeOldAndNewPortIdentifiers = [&n] (const vector<VuoPortClass *> &oldPortClasses, const vector<VuoPortClass *> &newPortClasses)
+	auto makeOldAndNewPortNames = [&n] (const vector<VuoPortClass *> &oldPortClasses, const vector<VuoPortClass *> &newPortClasses)
 	{
 		for (VuoPortClass *oldPortClass : oldPortClasses)
 		{
@@ -675,7 +676,7 @@ void VuoCompilerCompositionDiff::addNodeClassReplacement(VuoCompilerNodeClass *o
 			{
 				if (VuoCompilerComposition::portClassesMatch(oldPortClass, newPortClass))
 				{
-					n.oldAndNewPortIdentifiers[oldPortClass->getName()] = newPortClass->getName();
+					n.oldAndNewPortNames[oldPortClass->getName()] = newPortClass->getName();
 					break;
 				}
 			}
@@ -685,8 +686,8 @@ void VuoCompilerCompositionDiff::addNodeClassReplacement(VuoCompilerNodeClass *o
 	vector<VuoPortClass *> oldOutputPorts = oldNodeClass->getBase()->getOutputPortClasses();
 	vector<VuoPortClass *> newInputPorts = newNodeClass->getBase()->getInputPortClasses();
 	vector<VuoPortClass *> newOutputPorts = newNodeClass->getBase()->getOutputPortClasses();
-	makeOldAndNewPortIdentifiers(oldInputPorts, newInputPorts);
-	makeOldAndNewPortIdentifiers(oldOutputPorts, newOutputPorts);
+	makeOldAndNewPortNames(oldInputPorts, newInputPorts);
+	makeOldAndNewPortNames(oldOutputPorts, newOutputPorts);
 
 	if (oldNodeClass->isSubcomposition())
 		n.oldSubcompositionSourceCode = oldNodeClass->getSourceCode();

@@ -2,7 +2,7 @@
  * @file
  * VuoTelemetry implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -64,7 +64,7 @@ void vuoInitMessageWithBool(zmq_msg_t *message, bool value)
  */
 bool VuoTelemetry_hasMoreToReceive(void *socket)
 {
-	int64_t more;
+	int more;
 	size_t moreSize = sizeof more;
 	zmq_getsockopt(socket, ZMQ_RCVMORE, &more, &moreSize);
 	return more;
@@ -78,7 +78,7 @@ char * vuoReceiveAndCopyString(void *socket, char **error)
 	zmq_msg_t message;
 	zmq_msg_init(&message);
 
-	if (zmq_recv(socket, &message, 0) != 0)
+	if (zmq_msg_recv(&message, socket, 0) == -1)
 	{
 		int e = errno;
 		char *errorMessage;
@@ -116,7 +116,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 	zmq_msg_t message;
 	zmq_msg_init(&message);
 
-	if (zmq_recv(socket, &message, 0) != 0)
+	if (zmq_msg_recv(&message, socket, 0) == -1)
 	{
 		int e = errno;
 		char *errorMessage;
@@ -211,8 +211,8 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 		zmq_msg_t message;
 		zmq_msg_init_size(&message, sizeof type);
 		memcpy(zmq_msg_data(&message), &type, sizeof type);
-		int flags = (messageCount>0 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
-		if(zmq_send(socket, &message, flags))
+		int flags = (messageCount > 0 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_DONTWAIT : 0);
+		if (zmq_msg_send(&message, socket, flags) == -1)
 			e = errno;
 		zmq_msg_close(&message);
 	}
@@ -220,8 +220,8 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 	// send the data message-parts
 	for(unsigned int i=0; i<messageCount && e==0; ++i)
 	{
-		int flags = (i<messageCount-1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
-		if(zmq_send(socket, &messages[i], flags))
+		int flags = (i < messageCount - 1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_DONTWAIT : 0);
+		if (zmq_msg_send(&messages[i], socket, flags) == -1)
 			e = errno;
 	}
 

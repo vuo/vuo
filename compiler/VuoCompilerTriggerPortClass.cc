@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTriggerPortClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,17 +10,15 @@
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoPort.hh"
-
+#include "VuoCompilerCodeGenUtilities.hh"
 
 /**
  * Creates a trigger output port. Upon creation, @c isInEventFunction and @c isInCallbackStartFunction both return false.
  *
  * @param name The port's identifier and title.
- * @param type A @c PointerType pointing to a FunctionType which has 0 or 1 parameter. The parameter indicates
- *	the type of data, if any, transmitted by the port alongside the fired event.
  */
-VuoCompilerTriggerPortClass::VuoCompilerTriggerPortClass(string name, PointerType *type)
-	: VuoCompilerPortClass(name, VuoPortClass::triggerPort, type)
+VuoCompilerTriggerPortClass::VuoCompilerTriggerPortClass(string name)
+	: VuoCompilerPortClass(name, VuoPortClass::triggerPort)
 {
 	vuoType = NULL;
 }
@@ -42,11 +40,12 @@ VuoCompilerPort * VuoCompilerTriggerPortClass::newPort(VuoPort *port)
 }
 
 /**
- * Returns the @c FunctionType pointed to by this port's @c PointerType parameter in its node class's event/init functions.
+ * Returns the signature of the trigger function, which either takes no arguments if the trigger is event-only
+ * or has 1 or 2 parameters (depending on C ABI lowering) to pass the data through if the trigger carries data.
  */
-FunctionType * VuoCompilerTriggerPortClass::getFunctionType(void)
+FunctionType * VuoCompilerTriggerPortClass::getFunctionType(Module *module)
 {
-	return (FunctionType *)((PointerType *)type)->getElementType();
+	return VuoCompilerCodeGenUtilities::getFunctionType(module, vuoType);
 }
 
 /**

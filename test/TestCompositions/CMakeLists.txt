@@ -1,6 +1,5 @@
 VuoTest(NAME TestCompositions
 	SOURCE TestCompositions.cc
-	RESOURCE_LOCK GUI;COMPILER
 )
 target_sources(TestCompositions
 	PRIVATE

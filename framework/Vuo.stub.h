@@ -2,7 +2,7 @@
  * @file
  * Vuo prefix header.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -23,6 +23,7 @@
 #endif
 #include "json-c/json.h"
 #pragma clang diagnostic pop
+#undef hexdigit
 
 #include "zmq/zmq.h"
 
@@ -53,6 +54,7 @@ using namespace std;
 #define NO VUO_LLVM_NO_RENAMED
 
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wunreachable-code"
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -63,7 +65,7 @@ using namespace std;
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #include <clang/Basic/Version.h>
 #include <clang/CodeGen/CodeGenAction.h>
-#include <clang/Driver/ArgList.h>
+#include <llvm/Option/ArgList.h>
 #include <clang/Driver/Compilation.h>
 #include <clang/Driver/Driver.h>
 #include <clang/Driver/ToolChain.h>
@@ -72,12 +74,12 @@ using namespace std;
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <llvm/Analysis/ValueTracking.h>
-#include <llvm/Analysis/Verifier.h>
-#include <llvm/Bitcode/Archive.h>
-#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Object/Archive.h>
+#include <llvm/Bitcode/BitcodeReader.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/Interpreter.h>
-#include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Instructions.h>
@@ -86,16 +88,15 @@ using namespace std;
 #include <llvm/IR/ValueSymbolTable.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/LinkAllPasses.h>
-#include <llvm/Linker.h>
-#include <llvm/PassManager.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/PathV1.h>
+#include <llvm/Support/Path.h>
 #include <llvm/Support/Program.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/system_error.h>
 #include <llvm/Transforms/Utils/Cloning.h>
 #pragma clang diagnostic pop
 

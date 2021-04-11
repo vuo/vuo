@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerComposition implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -977,13 +977,13 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 }
 
 /**
- * Returns the set of targets (operating system versions) with which this composition is compatible.
+ * Returns the set of targets (platforms, operating system versions, architectures) with which this composition is compatible.
  */
-VuoCompilerTargetSet VuoCompilerComposition::getCompatibleTargets()
+VuoCompilerCompatibility VuoCompilerComposition::getCompatibleTargets()
 {
-	VuoCompilerTargetSet compositeTarget;
+	VuoCompilerCompatibility compositeTarget(nullptr);
 	for (auto node : getBase()->getNodes())
-		compositeTarget.restrictToBeCompatibleWithAllOf(node->getNodeClass()->getCompiler()->getCompatibleTargets());
+		compositeTarget = compositeTarget.intersection( node->getNodeClass()->getCompiler()->getCompatibleTargets() );
 	return compositeTarget;
 }
 

@@ -2,7 +2,7 @@
  * @file
  * VuoRendererInputListDrawer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -32,13 +32,8 @@ VuoRendererInputListDrawer::VuoRendererInputListDrawer(VuoNode *baseNode, VuoRen
  */
 void VuoRendererInputListDrawer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	VuoNode *hostNode = getUnderlyingHostNode();
-	if (hostNode && hostNode->hasRenderer() && hostNode->getRenderer()->isSelected() && !isSelected())
-		this->setSelected(true);
-
 	drawBoundingRect(painter);
-
-	VuoRendererColors::SelectionType selectionType = (isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
+	VuoRendererColors::SelectionType selectionType = (isEffectivelySelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastExecutionEnded : VuoRendererItem::notTrackingActivity);
 	VuoRendererColors *drawerColors = new VuoRendererColors(getBase()->getTintColor(),
 													  selectionType,

@@ -3,7 +3,7 @@
  * Draws points at random positions (blue) and a crosshair (white) at the average of all the positions so far.
  *
  * @lastSavedInVuoVersion 2.0.3
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

@@ -9,7 +9,7 @@ class FeatureContext implements Context {
     $this->testDir = $testDir;
 
     // Clone from the source tree.
-    // (Don't `svn checkout`, to support testing uncommitted changes.)
+    // (Don't `git clone`, to support testing uncommitted changes.)
     static $updatedSourceTree = false;
     if (!$updatedSourceTree) {
       print "  Updating source tree…\n";
@@ -53,7 +53,7 @@ class FeatureContext implements Context {
 
   private function build($args) {
     $this->lastBuildStarted = time();
-    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && CLICOLOR_FORCE=1 make ' . $args, $output, $returnCode);
+    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && CLICOLOR_FORCE=1 /usr/bin/make ' . $args, $output, $returnCode);
     $this->filterOutput($output);
     $this->lastBuildOutput = $output;
     foreach ($output as $l)

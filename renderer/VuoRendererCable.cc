@@ -2,7 +2,7 @@
  * @file
  * VuoRendererCable implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -388,7 +388,7 @@ VuoNode::TintColor VuoRendererCable::getTintColor(void)
 
 /**
  * Returns a boolean indicating whether this cable is connected to or from a node that is currently selected,
- * either directly or by way of a collapsed typecast.
+ * either directly or by way of a collapsed typecast and/or attachment.
  */
 bool VuoRendererCable::isConnectedToSelectedNode(void)
 {
@@ -397,7 +397,7 @@ bool VuoRendererCable::isConnectedToSelectedNode(void)
 
 	bool fromNodeIsSelected = (fromNode && fromNode->hasRenderer() && fromNode->getRenderer()->isSelected());
 	bool toNodeIsSelected = (toNode && toNode->hasRenderer() && toNode->getRenderer()->isSelected());
-	bool toNodeViaTypeconverterIsSelected = toNode && toNode->hasRenderer() && toNode->getRenderer()->getProxyNode() && toNode->getRenderer()->getProxyNode()->isSelected();
+	bool toNodeViaTypeconverterIsSelected = toNode && toNode->hasRenderer() && toNode->getRenderer()->getProxyNode() && toNode->getRenderer()->getProxyNode()->isEffectivelySelected();
 	bool toNodeViaAttachmentIsSelected = toNode && toNode->hasRenderer() &&
 			dynamic_cast<VuoRendererInputAttachment *>(toNode->getRenderer()) &&
 			dynamic_cast<VuoRendererInputAttachment *>(toNode->getRenderer())->getRenderedHostNode() &&

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerComposition interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -13,12 +13,12 @@
 
 class VuoCompiler;
 class VuoCompilerCable;
+class VuoCompilerCompatibility;
 class VuoCompilerGraph;
 class VuoCompilerGraphvizParser;
 class VuoCompilerIssues;
 class VuoCompilerNodeClass;
 class VuoCompilerPort;
-class VuoCompilerTargetSet;
 class VuoComposition;
 class VuoCable;
 class VuoComment;
@@ -61,7 +61,7 @@ public:
 	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, set<VuoComment *> commentSet,
 											   vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts,
 											   string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
-	VuoCompilerTargetSet getCompatibleTargets(void);
+	VuoCompilerCompatibility getCompatibleTargets(void);
 
 	static bool portsMatch(VuoPort *oldPort, VuoPort *newPort);
 	static bool portClassesMatch(VuoPortClass *oldPortClass, VuoPortClass *newPortClass);

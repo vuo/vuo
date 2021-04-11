@@ -87,12 +87,18 @@ endif()
 if (VUO_HEAP_TRACE_ALL)
 	target_compile_definitions(VuoHeap PRIVATE VUOHEAP_TRACEALL)
 endif()
+if (VUO_COMPILER_DEVELOPER)
+	# Recompile VuoHeap.cc when `VUO_HEAP_TRACE*` change.
+	# Normally this happens automatically, but VUO_COMPILER_DEVELOPER sets CMAKE_SKIP_RULE_DEPENDENCY.
+	set_source_files_properties(VuoHeap.cc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/VuoHeap.dir/flags.make")
+endif()
 target_include_directories(VuoHeap
 	PUBLIC
 		../runtime
 
 	PRIVATE
-	../library
+		.
+		../base
 )
 target_link_libraries(VuoHeap
 	PUBLIC
@@ -142,11 +148,19 @@ set_target_properties(VuoApp PROPERTIES
 )
 target_include_directories(VuoApp
 	PRIVATE
-	${PROJECT_BINARY_DIR}/library  # For vuo-wordmark-teal-cropped.h
-	${PROJECT_BINARY_DIR}/type/list
-	../node
-	../type
+		${PROJECT_BINARY_DIR}/library  # For vuo-wordmark-teal-cropped.h
+		${PROJECT_BINARY_DIR}/type/list
+		../node
+		../type
+		../base
 )
+
+list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
+if (archCount GREATER 1)
+	# Why doesn't CMake automatically add the arch flags here?
+	target_compile_options(VuoApp PRIVATE "SHELL:-arch x86_64" "SHELL:-arch arm64")
+endif()
+
 target_link_libraries(VuoApp
 	PUBLIC
 	"-framework AppKit"
@@ -172,6 +186,7 @@ target_include_directories(VuoGlContext
 		../library
 		../node
 		../type
+		../base
 )
 target_link_libraries(VuoGlContext
 	PUBLIC

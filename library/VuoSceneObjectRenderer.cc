@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObjectRenderer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -323,14 +323,21 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 
 		// https://vuo.org/node/1571
 		// https://b33p.net/kosada/node/12431
-		// The output buffer will always contain all 4 vertex attributes,
+		// The output buffer will always have room for all 4 vertex attributes,
 		// though (depending on input) some might not contain contain useful data.
+
+		// https://b33p.net/kosada/vuo/vuo/-/issues/18103
+		// Though normals are technically optional
+		// (since they're omitted for 2D-only meshes such as that used by VuoImageRenderer),
+		// we expect that all 3D object filters will produce valid normals
+		// (even if they don't use the input mesh's normals),
+		// since composition authors may use a lighting shader or subsequent 3D object filters.
 
 		VuoMesh newMesh = VuoMesh_makeFromGPUBuffers(
 			actualVertexCount, combinedOutputBuffer, combinedOutputBufferSize,
-			(void *)(sizeof(float) * (3        ) * outputVertexCount),
-			(void *)(sizeof(float) * (3 + 3    ) * outputVertexCount),
-			(void *)(sizeof(float) * (3 + 3 + 2) * outputVertexCount),
+									(void *)(sizeof(float) * (3        ) * outputVertexCount),
+			hasTextureCoordinates ? (void *)(sizeof(float) * (3 + 3    ) * outputVertexCount) : nullptr,
+			hasColors             ? (void *)(sizeof(float) * (3 + 3 + 2) * outputVertexCount) : nullptr,
 			0, 0, 0, // Since transform feedback doesn't provide an elementBuffer, render this submesh using glDrawArrays().
 			outputPrimitiveMode);
 		VuoMesh_setFaceCulling(newMesh, VuoMesh_getFaceCulling(mesh));

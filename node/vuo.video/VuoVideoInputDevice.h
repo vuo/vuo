@@ -2,7 +2,7 @@
  * @file
  * VUOVIDEOINPUTDEVICE C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -37,9 +37,6 @@ typedef struct
 
 	VuoText id;		///< [QtCaptureDevice modelUniqueID]
 	VuoText name;	///< [QtCaptureDevice localizedDisplayName]
-
-	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
-
 } VuoVideoInputDevice;
 
 VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(struct json_object * js);
@@ -66,8 +63,7 @@ void VuoVideoInputDevice_release(VuoVideoInputDevice value);
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name) __attribute__((const));
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name)
 {
-	VuoVideoInputDevice device = { VuoVideoInputDevice_MatchIdThenName, id, name, "" };
-	return device;
+    return (VuoVideoInputDevice){VuoVideoInputDevice_MatchIdThenName, id, name};
 }
 
 /**

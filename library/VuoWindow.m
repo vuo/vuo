@@ -2,7 +2,7 @@
  * @file
  * VuoWindow implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -154,7 +154,7 @@ void VuoWindowText_close(VuoWindowText vw)
 					  };
 
 					  // When fullscreen, macOS performs its own close animation, so only apply our fade-out animation when windowed.
-					  if (window.styleMask & NSFullScreenWindowMask)
+					  if (window.styleMask & NSWindowStyleMaskFullScreen)
 						  completionHandler();
 					  else
 						  [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){

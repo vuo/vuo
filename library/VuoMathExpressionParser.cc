@@ -2,7 +2,7 @@
  * @file
  * VuoMathExpressionParser implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -240,9 +240,9 @@ void VuoMathExpressionParser_defineStandardLibrary(void *p)
 
 	// Real -> Integer
 	muParser->DefineFun("round", muparser_rint, true);
-	muParser->DefineFun("floor", ::floor, true);
-	muParser->DefineFun("ceil", ::ceil, true);
-	muParser->DefineFun("trunc", ::trunc, true);
+	muParser->DefineFun<mu::fun_type1>("floor", ::floor, true);
+	muParser->DefineFun<mu::fun_type1>("ceil", ::ceil, true);
+	muParser->DefineFun<mu::fun_type1>("trunc", ::trunc, true);
 
 	// GLSL
 	muParser->DefineFun("fract", fract, true);

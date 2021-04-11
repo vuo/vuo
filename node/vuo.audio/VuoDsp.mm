@@ -2,7 +2,7 @@
  * @file
  * VuoDsp implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,11 +11,8 @@
 #include "VuoDsp.h"
 #include <Accelerate/Accelerate.h>
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#import <Cocoa/Cocoa.h>
-#undef NS_RETURNS_INNER_POINTER
+#include "VuoMacOSSDKWorkaround.h"
+#import <Foundation/Foundation.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({

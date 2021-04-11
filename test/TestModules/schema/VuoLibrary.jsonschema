@@ -18,6 +18,29 @@
 				"pattern": ".+",
 			},
 		},
+		"compatibility": {
+			"type": "object",
+			"properties": {
+				"macos": {
+					"type": "object",
+					"patternProperties": {
+						"(min|max)": {
+							"type": "string",
+							"pattern": "^(10\\.1[1-5]|11\\.0)$",
+						},
+						"arch": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"pattern": "^(x86_64|arm64)$",
+							},
+						},
+					},
+					"additionalProperties": false,
+				},
+			},
+			"additionalProperties": false,
+		},
 	},
 	"required": [
 		"title",

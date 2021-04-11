@@ -2,7 +2,7 @@
  * @file
  * Demonstrates using Vuo's C++ API to compile and run an image filter composition and display its output in a window using GLFW.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -25,6 +25,7 @@
 #endif
 
 
+#include <Vuo/VuoMacOSSDKWorkaround.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 #include <GLFW/glfw3.h>

@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerNodeClass interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -228,15 +228,14 @@ private slots:
 		QTest::addColumn< QString >("portClassName");
 		QTest::addColumn< QString >("typeName");
 		QTest::addColumn< bool >("isInputPort");
-		QTest::addColumn< bool >("isLoweredToTwoParameters");
 
-		QTest::newRow("Not an aggregate type") << "vuo.point.make.VuoPoint2d" << "x" << "VuoReal" << true << false;
-		QTest::newRow("VuoPoint2d output port") << "vuo.point.make.VuoPoint2d" << "point" << "VuoPoint2d" << false << false;
-		QTest::newRow("VuoPoint2d input port") << "vuo.point.get.VuoPoint2d" << "point" << "VuoPoint2d" << true << false;
-		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.VuoPoint3d" << "point" << "VuoPoint3d" << true << false;
-		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.VuoPoint4d" << "point" << "VuoPoint4d" << true << false;
-		QTest::newRow("VuoColor input port") << "vuo.color.get.rgb" << "color" << "VuoColor" << true << true;
-		QTest::newRow("VuoAudioSamples input port") << "vuo.audio.analyze.fft2" << "samples" << "VuoAudioSamples" << true << false;
+		QTest::newRow("Not an aggregate type") << "vuo.point.make.VuoPoint2d" << "x" << "VuoReal" << true;
+		QTest::newRow("VuoPoint2d output port") << "vuo.point.make.VuoPoint2d" << "point" << "VuoPoint2d" << false;
+		QTest::newRow("VuoPoint2d input port") << "vuo.point.get.VuoPoint2d" << "point" << "VuoPoint2d" << true;
+		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.VuoPoint3d" << "point" << "VuoPoint3d" << true;
+		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.VuoPoint4d" << "point" << "VuoPoint4d" << true;
+		QTest::newRow("VuoColor input port") << "vuo.color.get.rgb" << "color" << "VuoColor" << true;
+		QTest::newRow("VuoAudioSamples input port") << "vuo.audio.analyze.fft2" << "samples" << "VuoAudioSamples" << true;
 	}
 	void testAggregateTypePorts()
 	{
@@ -244,7 +243,6 @@ private slots:
 		QFETCH(QString, portClassName);
 		QFETCH(QString, typeName);
 		QFETCH(bool, isInputPort);
-		QFETCH(bool, isLoweredToTwoParameters);
 
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toUtf8().constData());
 		VuoPortClass *portClass = (isInputPort ?
@@ -257,12 +255,6 @@ private slots:
 		QCOMPARE(QString(actualType->getModuleKey().c_str()), QString(expectedType->getModuleKey().c_str()));
 		QCOMPARE(actualType, expectedType);
 		QVERIFY(actualType->getCompiler() != NULL);
-
-		if (isInputPort)
-		{
-			VuoCompilerInputDataClass *dataClass = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->getDataClass();
-			QVERIFY(dataClass->isLoweredToTwoParameters() == isLoweredToTwoParameters);
-		}
 	}
 
 	void testGenericPorts_data()

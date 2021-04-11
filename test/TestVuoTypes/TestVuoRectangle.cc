@@ -2,7 +2,7 @@
  * @file
  * TestVuoRectangle implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -30,9 +30,9 @@ private slots:
 		QTest::addColumn<VuoRectangle>("value");
 		QTest::addColumn<bool>("testStringFromValue");
 
-		QTest::newRow("emptystring") << ""                                                          << VuoRectangle_make(0,0,0,0) << false;
-		QTest::newRow("zero")        << "{\"center\":{\"x\":0,\"y\":0},\"size\":{\"x\":0,\"y\":0}}" << VuoRectangle_make(0,0,0,0) << true;
-		QTest::newRow("nonzero")     << "{\"center\":{\"x\":1,\"y\":2},\"size\":{\"x\":3,\"y\":4}}" << VuoRectangle_make(1,2,3,4) << true;
+		QTest::newRow("emptystring") << ""                                                                  << VuoRectangle_make(0,0,0,0) << false;
+		QTest::newRow("zero")        << "{\"center\":{\"x\":0.0,\"y\":0.0},\"size\":{\"x\":0.0,\"y\":0.0}}" << VuoRectangle_make(0,0,0,0) << true;
+		QTest::newRow("nonzero")     << "{\"center\":{\"x\":1.0,\"y\":2.0},\"size\":{\"x\":3.0,\"y\":4.0}}" << VuoRectangle_make(1,2,3,4) << true;
 	}
 	void testStringConversion()
 	{

@@ -2,7 +2,7 @@
  * @file
  * VuoModuleManager implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -801,6 +801,14 @@ void VuoModuleManager::updateLoadedTypecastClasses(const vector<string> &nodeCla
 				{
 					string nodeClassName = "vuo.list.populated." + typeName;
 					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, loadedTypes["VuoBoolean"]->getBase());
+
+					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
+						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
+				}
+
+				{
+					string nodeClassName = "vuo.list.summarize." + typeName;
+					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, loadedTypes["VuoText"]->getBase());
 
 					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
 						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);

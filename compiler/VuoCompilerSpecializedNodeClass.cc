@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerSpecializedNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -214,7 +214,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 		includeDirs.push_back(tmpDir);
 
 		compiler->compileModule(tmpNodeClassImplementationFile, tmpNodeClassCompiledFile, includeDirs);
-		Module *module = compiler->readModuleFromBitcode(tmpNodeClassCompiledFile);
+		Module *module = compiler->readModuleFromBitcode(tmpNodeClassCompiledFile, compiler->getArch());
 
 		for (set<string>::iterator i = tmpHeaders.begin(); i != tmpHeaders.end(); ++i)
 			remove((*i).c_str());
@@ -333,7 +333,7 @@ VuoPortClass * VuoCompilerSpecializedNodeClass::copyPortClassFromModel(VuoPortCl
 
 		if (dataType)
 		{
-			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("", nullptr, false);
+			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("");
 			inputPortClass->setDataClass(inputDataClass);
 		}
 	}
@@ -346,13 +346,13 @@ VuoPortClass * VuoCompilerSpecializedNodeClass::copyPortClassFromModel(VuoPortCl
 
 			if (dataType)
 			{
-				VuoCompilerOutputDataClass *outputDataClass = new VuoCompilerOutputDataClass("", nullptr);
+				VuoCompilerOutputDataClass *outputDataClass = new VuoCompilerOutputDataClass("");
 				outputPortClass->setDataClass(outputDataClass);
 			}
 		}
 		else if (portType == VuoPortClass::triggerPort)
 		{
-			VuoCompilerTriggerPortClass *triggerPortClass = new VuoCompilerTriggerPortClass(name, nullptr);
+			VuoCompilerTriggerPortClass *triggerPortClass = new VuoCompilerTriggerPortClass(name);
 			portClass = triggerPortClass;
 		}
 	}

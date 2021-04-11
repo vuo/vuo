@@ -2,7 +2,7 @@
  * @file
  * VuoCommandRemove implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -67,7 +67,7 @@ VuoCommandRemove::VuoCommandRemove(QList<QGraphicsItem *> explicitlyRemovedCompo
 			VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(component);
 			if (rn)
 			{
-				set<QGraphicsItem *> attachments = getAttachmentsDependentOnNode(rn);
+				set<QGraphicsItem *> attachments = composition->getDependentAttachmentsForNode(rn, true);
 				foreach (QGraphicsItem *attachment, attachments)
 				{
 					if (!explicitlyRemovedComponentsAndTheirAttachments.contains(attachment))
@@ -465,35 +465,6 @@ void VuoCommandRemove::inventoryNodeAndDependentCables(VuoRendererNode *rn, bool
 		VuoRendererCable *rc = (*cable)->getRenderer();
 		inventoryCableAndDependentTypecasts(rc);
 	}
-}
-
-/**
- * Helper function for the VuoCommandRemove constructor.
- * Returns the set of attachments dependent on the provided node, meaning that if
- * the node is deleted, the attachments should be as well.  These may include
- * upstream and/or sibling attachments.
- */
-set<QGraphicsItem *> VuoCommandRemove::getAttachmentsDependentOnNode(VuoRendererNode *rn)
-{
-	set<QGraphicsItem *> dependentAttachments;
-
-	// Get upstream attachments.
-	vector<VuoPort *> inputPorts = rn->getBase()->getInputPorts();
-	for(unsigned int i = 0; i < inputPorts.size(); ++i)
-	{
-		set<VuoRendererInputAttachment *> portUpstreamAttachments = inputPorts[i]->getRenderer()->getAllUnderlyingUpstreamInputAttachments();
-		dependentAttachments.insert(portUpstreamAttachments.begin(), portUpstreamAttachments.end());
-	}
-
-	// Get co-attachments.
-	VuoRendererInputAttachment *nodeAsAttachment = dynamic_cast<VuoRendererInputAttachment *>(rn);
-	if (nodeAsAttachment)
-	{
-		foreach (VuoNode *coattachment, nodeAsAttachment->getCoattachments())
-			dependentAttachments.insert(coattachment->getRenderer());
-	}
-
-	return dependentAttachments;
 }
 
 /**

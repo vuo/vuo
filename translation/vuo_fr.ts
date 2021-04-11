@@ -143,7 +143,7 @@ Merci à nos contributeurs !</translation>
     <message>
         <location line="+12"/>
         <source>Open an Intro Composition</source>
-        <translation>Ouvrir une composition de présentation</translation>
+        <translation>Ouvrir une composition d'introduction</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -835,7 +835,7 @@ Merci à nos contributeurs !</translation>
     <message>
         <location line="+2"/>
         <source>&lt;p&gt;If you save the composition while it contains these nodes, some information will be lost.&lt;/p&gt;&lt;p&gt;Try searching for these nodes in the &lt;a href=&quot;%1&quot;&gt;Node Gallery&lt;/a&gt;. Or if you don&apos;t need them, just delete them from the composition.&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Si vous enregistrez cette composition avec ces nœuds, certaines informations seront perdues.&lt;/p&gt;&lt;p&gt;Essayer de trouver ces nœuds dans la &lt;a href=&quot;%1&quot;&gt;bibliothèque de nœuds&lt;/a&gt;. Ou s&apos;ils ne sont pas nécessaires, supprimez-les de la composition.&lt;/p&gt;</translation>
+        <translation>&lt;p&gt;Si vous enregistrez cette composition avec ces nœuds manquants, certaines informations seront perdues.&lt;/p&gt;&lt;p&gt;Essayer de trouver ces nœuds dans la &lt;a href=&quot;%1&quot;&gt;bibliothèque de nœuds&lt;/a&gt;. Ou, s&apos;ils ne sont pas nécessaires, supprimez-les de la composition.&lt;/p&gt;</translation>
     </message>
     <message>
         <location line="+242"/>
@@ -1072,9 +1072,8 @@ video effects, maker projects, trade show booths, and more.
 Learn more at %1.</source>
         <translation>**Créez des expériences interactives mémorables — sans coder.**
 
-Glissez, déposez et connectez les blocs de construction simples de Vuo
-pour venir appuyer votre travail créatif :  
-Soirées VJ, expositions, installations, productions scéniques, graphiques pour dôme, signalisation visuelle, effets vidéo, projets de fabricants, stands de foires commerciales, etc.
+Glissez, déposez et connectez les blocs de construction de Vuo pour venir appuyer vos créations :  
+Soirées VJ, expositions, installations, productions scéniques, graphiques pour dôme, signalisation visuelle, effets vidéo, projets de bricolage, stands de foires commerciales, etc.
 
 Plus d&apos;informations à %1.</translation>
     </message>

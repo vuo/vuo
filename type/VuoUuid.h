@@ -2,7 +2,7 @@
  * @file
  * vuo.uuid C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -32,7 +32,6 @@ typedef struct
 {
 	// can't return unsigned char[16] from VuoUuid_makeFromJson, so store in a struct.
 	unsigned char bytes[16]; ///< 16 byte unsigned
-	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoUuid;
 
 VuoUuid VuoUuid_makeFromJson(struct json_object * js);
@@ -56,7 +55,7 @@ void VuoUuid_release(VuoUuid value);
  *
  * @version200New
  */
-static inline bool VuoUuid_areEqual(const VuoUuid value1, const VuoUuid value2)
+static inline bool VuoUuid_areEqual(const VuoUuid value1, const VuoUuid value2) __attribute__((optnone))  // https://b33p.net/kosada/vuo/vuo/-/issues/9141
 {
 	return 	value1.bytes[ 0] == value2.bytes[ 0] &&
 			value1.bytes[ 1] == value2.bytes[ 1] &&

@@ -2,7 +2,7 @@
  * @file
  * <Graph description>
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,6 +10,6 @@
 digraph G
 {
 AddTinted [type="vuo.math.add.VuoInteger" label="AddTinted|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="22,42" fillcolor="yellow"];
-AddCollapsed [type="vuo.math.add.VuoInteger" label="AddCollapsed|<refresh>refresh\l|<values>values\l|<sum>sum\r" collapsed];
+AddCollapsed [type="vuo.math.add.VuoInteger" label="AddCollapsed|<refresh>refresh\l|<values>values\l|<sum>sum\r" collapsed=true];
 AddUncollapsed [type="vuo.math.add.VuoInteger" label="AddUncollapsed|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
 }

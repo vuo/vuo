@@ -13,12 +13,16 @@ Check that compiler developer mode properly modifies build dependencies.
       And   I build
 
       Then  it should update lib/libVuoCompiler.a
+      # These binaries statically link to libVuoCompiler.a, so they need to be re-linked:
       And   it should update bin/vuo-compile
       And   it should update lib/Vuo.framework/Vuo
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Vuo
-      And   it should update bin/Vuo.app/Contents/MacOS/Vuo
 
-      But   it shouldn't update the built-in cache
+      # Vuo Editor's main binary dynamically links to Vuo.framework,
+      # so it doesn't need to be re-linked.
+      But   it shouldn't update bin/Vuo.app/Contents/MacOS/Vuo
+
+      And   it shouldn't update the built-in cache
 
    Scenario: Disabling compiler developer mode
       Given a completed build

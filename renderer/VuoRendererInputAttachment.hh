@@ -2,7 +2,7 @@
  * @file
  * VuoRendererInputAttachment interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -26,10 +26,10 @@ public:
 	virtual VuoPort * getRenderedHostPort();
 	virtual VuoNode * getRenderedHostNode();
 	virtual set<VuoNode *> getCoattachments(void);
+	bool isEffectivelySelected(void) override;
 
 protected:
 	static VuoPort * getUnderlyingHostPortForNode(VuoNode *node);
 	static VuoNode * getUnderlyingHostNodeForNode(VuoNode *node);
 	static VuoNode * getListNodeConnectedToInputPort(VuoPort *port);
 };
-

@@ -2,7 +2,7 @@
  * @file
  * VuoRunner interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -12,19 +12,14 @@
 #include <map>
 #include <set>
 
+#include "VuoMacOSSDKWorkaround.h"
 #include <dispatch/dispatch.h>
 #include "VuoTelemetry.h"
 class VuoRunnerDelegate;
 class VuoRunningCompositionLibraries;
 
-#if (__clang_major__ == 3 && __clang_minor__ >= 2) || __clang_major__ > 3
-	#define VUO_CLANG_32_OR_LATER
-#endif
-
 #pragma clang diagnostic push
-#ifdef VUO_CLANG_32_OR_LATER
-	#pragma clang diagnostic ignored "-Wdocumentation"
-#endif
+#pragma clang diagnostic ignored "-Wdocumentation"
 #include "json-c/json.h"
 #pragma clang diagnostic pop
 

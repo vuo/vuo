@@ -2,7 +2,7 @@
  * @file
  * TestVuoShader implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -129,8 +129,10 @@ private slots:
 		QTest::newRow("color opaque")      << VuoShader_makeUnlitColorShader((VuoColor){1,1,1,1 }) << true;
 		QTest::newRow("color transparent") << VuoShader_makeUnlitColorShader((VuoColor){1,1,1,.5}) << false;
 
+		VuoText testPNGFilename = VuoText_make("resources/SchaikPngSuite/basn2c08.png");
+		VuoLocal(testPNGFilename);
 		QTest::newRow("image NULL opaque")      << VuoShader_makeUnlitImageShader(NULL,                                                  1 ) << true;  // It's not going to render anything, so no need to apply the expensive potentially-transparent treatment.
-		QTest::newRow("image PNG opaque")       << VuoShader_makeUnlitImageShader(VuoImage_get("resources/SchaikPngSuite/basn2c08.png"), 1 ) << true;
+		QTest::newRow("image PNG opaque")       << VuoShader_makeUnlitImageShader(VuoImage_get(testPNGFilename),                         1 ) << true;
 		QTest::newRow("image RGB opaque")       << VuoShader_makeUnlitImageShader(VuoImage_makeColorImage((VuoColor){1,1,1,1 }, 10, 10), 1 ) << true;
 		QTest::newRow("image RGB transparent")  << VuoShader_makeUnlitImageShader(VuoImage_makeColorImage((VuoColor){1,1,1,1 }, 10, 10), .5) << false;
 		QTest::newRow("image RGBA opaque")      << VuoShader_makeUnlitImageShader(VuoImage_makeColorImage((VuoColor){1,1,1,.5}, 10, 10), 1 ) << false;

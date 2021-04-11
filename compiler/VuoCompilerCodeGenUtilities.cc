@@ -2,12 +2,13 @@
  * @file
  * VuoCompilerCodeGenUtilities implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerConstantsCache.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerIssue.hh"
@@ -327,7 +328,7 @@ Value * VuoCompilerCodeGenUtilities::generateCreateDispatchQueue(Module *module,
 	std::vector<Constant*> dispatchQueueLabel_indices;
 	dispatchQueueLabel_indices.push_back(zeroi64Value);
 	dispatchQueueLabel_indices.push_back(zeroi64Value);
-	Constant *dispatchQueueLabel = ConstantExpr::getGetElementPtr(dispatchQueueNameVariable, dispatchQueueLabel_indices);
+	Constant *dispatchQueueLabel = ConstantExpr::getGetElementPtr(dispatchQueueNameType, dispatchQueueNameVariable, dispatchQueueLabel_indices);
 
 	vector<Value *> args;
 	args.push_back(dispatchQueueLabel);
@@ -411,8 +412,8 @@ Value * VuoCompilerCodeGenUtilities::generateConversionToDispatchObject(Module *
 	ConstantInt *eightValue64 = ConstantInt::get(module->getContext(), APInt(64, 8));
 	ConstantInt *eightValue32 = ConstantInt::get(module->getContext(), APInt(32, 8));
 
-	AllocaInst *dispatchObjectUnion = new AllocaInst(dispatch_object_t_type, "", block);
-	AllocaInst *compoundLiteral = new AllocaInst(dispatch_object_t_type, "", block);
+	AllocaInst *dispatchObjectUnion = new AllocaInst(dispatch_object_t_type, 0, "", block);
+	AllocaInst *compoundLiteral = new AllocaInst(dispatch_object_t_type, 0, "", block);
 
 	CastInst *compoundLiteralAsDispatchObjectOriginalType = new BitCastInst(compoundLiteral, dispatchObjectOriginalType, "", block);
 	LoadInst *dispatchObjectValue = new LoadInst(dispatchObjectVariable, "", false, block);
@@ -432,7 +433,7 @@ Value * VuoCompilerCodeGenUtilities::generateConversionToDispatchObject(Module *
 	vector<Value *> gepIndices;
 	gepIndices.push_back(zeroValue32);
 	gepIndices.push_back(zeroValue32);
-	Instruction *dispatchObjectUnionMember = GetElementPtrInst::Create(dispatchObjectUnion, gepIndices, "", block);
+	Instruction *dispatchObjectUnionMember = GetElementPtrInst::Create(dispatch_object_t_type, dispatchObjectUnion, gepIndices, "", block);
 	return new LoadInst(dispatchObjectUnionMember, "", false, block);
 }
 
@@ -529,7 +530,7 @@ Value * VuoCompilerCodeGenUtilities::generateCreateDispatchTime(Module *module, 
  * @param triggerQueueName If the port is a trigger, the name to use when creating its dispatch queue.
  * @return A value of type `PortContext *`.
  */
-Value * VuoCompilerCodeGenUtilities::generateCreatePortContext(Module *module, BasicBlock *block, Type *dataType,
+Value * VuoCompilerCodeGenUtilities::generateCreatePortContext(Module *module, BasicBlock *block, VuoCompilerType *dataType,
 															   bool isTrigger, string triggerQueueName)
 {
 	IntegerType *boolType = IntegerType::get(module->getContext(), 64);
@@ -554,7 +555,7 @@ Value * VuoCompilerCodeGenUtilities::generateCreatePortContext(Module *module, B
 	Value *pointerToDataAsVoidPointer;
 	if (dataType)
 	{
-		Value *pointerToData = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dataType, 1);
+		Value *pointerToData       = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dataType->getSize(module));
 		pointerToDataAsVoidPointer = new BitCastInst(pointerToData, voidPointerType, "", block);
 	}
 	else
@@ -605,10 +606,11 @@ void VuoCompilerCodeGenUtilities::generateSetPortContextEvent(Module *module, Ba
  * @param block The block in which to generate code.
  * @param portContextValue A value of type `PortContext *`.
  * @param dataValue The value to set the field to.
+ * @param dataType The type of the port data.
  */
-void VuoCompilerCodeGenUtilities::generateSetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Value *dataValue)
+void VuoCompilerCodeGenUtilities::generateSetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Value *dataValue, VuoCompilerType *dataType)
 {
-	Value *pointerToData = generateGetPortContextDataVariable(module, block, portContextValue, dataValue->getType());
+	Value *pointerToData = generateGetPortContextDataVariable(module, block, portContextValue, dataType);
 	new StoreInst(dataValue, pointerToData, false, block);
 }
 
@@ -672,21 +674,6 @@ Value * VuoCompilerCodeGenUtilities::generateGetPortContextEvent(Module *module,
 }
 
 /**
- * Generates code that gets the `data` field of a PortContext (and dereferences it to extract the actual data).
- *
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @param portContextValue A value of type `PortContext *`.
- * @param dataType The type that the data should be converted to before returning.
- * @return The value of the field.
- */
-Value * VuoCompilerCodeGenUtilities::generateGetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Type *dataType)
-{
-	Value *pointerToData = generateGetPortContextDataVariable(module, block, portContextValue, dataType);
-	return new LoadInst(pointerToData, "", false, block);
-}
-
-/**
  * Generates code that gets the address of the `data` field of a PortContext.
  *
  * @param module The module in which to generate code.
@@ -695,14 +682,14 @@ Value * VuoCompilerCodeGenUtilities::generateGetPortContextData(Module *module, 
  * @param dataType The type that the data should be converted to before returning.
  * @return The value of the field.
  */
-Value * VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(Module *module, BasicBlock *block, Value *portContextValue, Type *dataType)
+Value * VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(Module *module, BasicBlock *block, Value *portContextValue, VuoCompilerType *dataType)
 {
 	Value *pointerToDataAsVoidPointer = generateGetPortContextDataVariableAsVoidPointer(module, block, portContextValue);
-	return new BitCastInst(pointerToDataAsVoidPointer, PointerType::get(dataType, 0), "", block);
+	return dataType->convertToPortData(block, pointerToDataAsVoidPointer);
 }
 
 /**
- * Generates code that gets the address of the `data` field of a PortContext as a void pointer.
+ * Generates code that returns the `data` field of a PortContext (a void pointer).
  *
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
@@ -1934,7 +1921,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *mod
  */
 Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *module, BasicBlock *block, Value *arrayValue, Value *elementIndexValue)
 {
-	return GetElementPtrInst::Create(arrayValue, elementIndexValue, "", block);
+    return GetElementPtrInst::Create(nullptr, arrayValue, elementIndexValue, "", block);
 }
 
 /**
@@ -1966,7 +1953,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetStructPointerElementVariable(Mod
 	vector<Value *> memberIndices;
 	memberIndices.push_back(zeroValue);
 	memberIndices.push_back(indexValue);
-	return GetElementPtrInst::Create(structPointer, memberIndices, "", block);
+	return GetElementPtrInst::Create(nullptr, structPointer, memberIndices, "", block);
 }
 
 /**
@@ -1974,7 +1961,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetStructPointerElementVariable(Mod
  */
 Value * VuoCompilerCodeGenUtilities::generatePointerToValue(BasicBlock *block, Value *value)
 {
-	AllocaInst *variable = new AllocaInst(value->getType(), "", block);
+	AllocaInst *variable = new AllocaInst(value->getType(), 0, "", block);
 	new StoreInst(value, variable, false, block);
 	return variable;
 }
@@ -1999,7 +1986,7 @@ Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantString(Module *
 	vector<Constant *> pointerIndices;
 	pointerIndices.push_back(zeroValue);
 	pointerIndices.push_back(zeroValue);
-	Constant *pointer = ConstantExpr::getGetElementPtr(global, pointerIndices);
+	Constant *pointer = ConstantExpr::getGetElementPtr(arrayType, global, pointerIndices);
 
 	return pointer;
 }
@@ -2030,7 +2017,7 @@ Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantArrayOfStrings(
 	vector<Constant *> pointerIndices;
 	pointerIndices.push_back(zeroi64Constant);
 	pointerIndices.push_back(zeroi64Constant);
-	Constant *pointer = ConstantExpr::getGetElementPtr(global, pointerIndices);
+	Constant *pointer = ConstantExpr::getGetElementPtr(arrayType, global, pointerIndices);
 
 	return pointer;
 }
@@ -2061,7 +2048,7 @@ Constant * VuoCompilerCodeGenUtilities::generatePointerToConstantArrayOfUnsigned
 	vector<Constant *> pointerIndices;
 	pointerIndices.push_back(zeroi64Constant);
 	pointerIndices.push_back(zeroi64Constant);
-	Constant *pointer = ConstantExpr::getGetElementPtr(global, pointerIndices);
+	Constant *pointer = ConstantExpr::getGetElementPtr(arrayType, global, pointerIndices);
 
 	return pointer;
 }
@@ -2206,7 +2193,7 @@ Value * VuoCompilerCodeGenUtilities::generateFormattedString(Module *module, Bas
 	bufferLengthValue = BinaryOperator::Create(Instruction::Add, bufferLengthValue, oneValue64, "", block);
 
 	// char *buffer = malloc(bufferLength);
-	AllocaInst *bufferVariable = new AllocaInst(pointerToCharType, "buffer", block);
+	AllocaInst *bufferVariable = new AllocaInst(pointerToCharType, 0, "buffer", block);
 	Value *bufferValue = generateMemoryAllocation(module, block, charType, bufferLengthValue);
 	new StoreInst(bufferValue, bufferVariable, false, block);
 
@@ -2352,6 +2339,51 @@ Value * VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, Ba
 }
 
 /**
+ * Generates code that dynamically allocates a specified amount of memory.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param bytes The number of bytes to allocate.
+ * @return A value pointing to the address of the memory.
+ */
+Value *VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, BasicBlock *block, size_t bytes)
+{
+	Value *bytesValue = ConstantInt::get(module->getContext(), APInt(sizeof(size_t) * 8, bytes));
+	Function *mallocFunction = VuoCompilerCodeGenUtilities::getMallocFunction(module);
+	return  CallInst::Create(mallocFunction, bytesValue, "", block);
+}
+
+/**
+ * Generates code that copies memory.
+ *
+ * Beware: this function's arguments are ordered {source, dest},
+ * which is different from the libc's
+ * `memcpy(void *restrict dst, const void *restrict src, size_t n);`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param sourceAddress The type of each array element.
+ * @param destAddress The number of array elements. Assumed to have type integer.
+ * @param bytes The number of array elements. Assumed to have type integer.
+ */
+void VuoCompilerCodeGenUtilities::generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, size_t bytes)
+{
+	vector<Value *> args;
+
+	PointerType *voidPointerType = PointerType::getUnqual(IntegerType::get(module->getContext(), 8));
+	destAddress = new BitCastInst(destAddress, voidPointerType, "", block);
+	args.push_back(destAddress);
+
+	sourceAddress = new BitCastInst(sourceAddress, voidPointerType, "", block);
+	args.push_back(sourceAddress);
+
+	args.push_back(ConstantInt::get(module->getContext(), APInt(sizeof(size_t) * 8, bytes)));
+
+	Function *memcpyFunction = VuoCompilerCodeGenUtilities::getMemcpyFunction(module);
+	CallInst::Create(memcpyFunction, args, "", block);
+}
+
+/**
  * Generates code to cast the value to the desired type (if it doesn't already have that type).
  *
  * @return A value of type @c typeToCastTo (which may be @c valueToCast).
@@ -2375,6 +2407,8 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCast(Module *module, BasicBlock
 		return generateTypeCastFromLoweredTypeToStruct(block, valueToCast, typeToCastTo);
 	else if (typeToCastTo->isVectorTy())
 		return generateTypeCastFromLoweredTypeToVector(block, valueToCast, typeToCastTo);
+	else if (typeToCastTo->isArrayTy())
+		return generateTypeCastFromLoweredTypeToArray(module, block, valueToCast, typeToCastTo);
 	else
 		return new BitCastInst(valueToCast, typeToCastTo, "", block);
 }
@@ -2507,7 +2541,7 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToStruct(Bas
 		// Struct was lowered to a vector or double.
 		PointerType *pointerToLoweredType = PointerType::get(valueToCast->getType(), 0);
 
-		AllocaInst *structVariable = new AllocaInst(typeToCastTo, "", block);
+		AllocaInst *structVariable = new AllocaInst(typeToCastTo, 0, "", block);
 		CastInst *structVariableAsLoweredType = new BitCastInst(structVariable, pointerToLoweredType, "", block);
 		new StoreInst(valueToCast, structVariableAsLoweredType, false, block);
 		return new LoadInst(structVariable, "", false, block);
@@ -2527,7 +2561,7 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToStruct(Bas
 		StructType *structTypeOfValueToCast = static_cast<StructType *>(valueToCast->getType());
 		PointerType *pointerToTypeToCastTo = PointerType::get(typeToCastTo, 0);
 
-		AllocaInst *otherStructVariable = new AllocaInst(structTypeOfValueToCast, "", block);
+		AllocaInst *otherStructVariable = new AllocaInst(structTypeOfValueToCast, 0, "", block);
 		new StoreInst(valueToCast, otherStructVariable, false, block);
 		CastInst *otherStructAsTypeToCastTo = new BitCastInst(otherStructVariable, pointerToTypeToCastTo, "", block);
 		return new LoadInst(otherStructAsTypeToCastTo, "", false, block);
@@ -2551,10 +2585,10 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToVector(Bas
 		uint64_t elementCount = static_cast<VectorType *>(typeToCastTo)->getNumElements();
 		if (elementCount == 2 && valueToCast->getType()->isDoubleTy())
 		{
-			// VuoPoint2d — Vector of 2 floats was lowered to a double.
+			// VuoPoint2d — Vector of 2 floats was lowered to a double (x86_64).
 			PointerType *pointerToDoubleType = PointerType::get(valueToCast->getType(), 0);
 
-			AllocaInst *vectorVariable = new AllocaInst(typeToCastTo, "", block);
+			AllocaInst *vectorVariable = new AllocaInst(typeToCastTo, 0, "", block);
 			CastInst *dstVectorVariableAsDouble = new BitCastInst(vectorVariable, pointerToDoubleType, "", block);
 			new StoreInst(valueToCast, dstVectorVariableAsDouble, false, block);
 			return new LoadInst(vectorVariable, "", false, block);
@@ -2563,17 +2597,55 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToVector(Bas
 				 static_cast<VectorType *>(valueToCast->getType())->getNumElements() == 2 &&
 				 static_cast<VectorType *>(valueToCast->getType())->getElementType()->isDoubleTy())
 		{
-			// VuoPoint3d — Vector of 3 floats was lowered to a vector of 2 doubles.
+			// VuoPoint3d — Vector of 3 floats was lowered to a vector of 2 doubles (x86_64).
 			PointerType *pointerToDoubleVectorType = PointerType::get(valueToCast->getType(), 0);
 
-			AllocaInst *floatVectorVariable = new AllocaInst(typeToCastTo, "", block);
+			AllocaInst *floatVectorVariable = new AllocaInst(typeToCastTo, 0, "", block);
 			CastInst *floatVectorVariableAsDoubleVector = new BitCastInst(floatVectorVariable, pointerToDoubleVectorType, "", block);
 			new StoreInst(valueToCast, floatVectorVariableAsDoubleVector, false, block);
+			return new LoadInst(floatVectorVariable, "", false, block);
+		}
+		else if (elementCount == 3 && valueToCast->getType()->isVectorTy() &&
+				 static_cast<VectorType *>(valueToCast->getType())->getNumElements() == 4 &&
+				 static_cast<VectorType *>(valueToCast->getType())->getElementType()->isIntegerTy(32))
+		{
+			// VuoPoint3d — Vector of 3 floats was lowered to a vector of 4 i32s (arm64).
+			PointerType *pointerToIntVectorType = PointerType::get(valueToCast->getType(), 0);
+			AllocaInst *floatVectorVariable = new AllocaInst(typeToCastTo, 0, "", block);
+			CastInst *floatVectorVariableAsIntVector = new BitCastInst(floatVectorVariable, pointerToIntVectorType, "", block);
+			new StoreInst(valueToCast, floatVectorVariableAsIntVector, false, block);
 			return new LoadInst(floatVectorVariable, "", false, block);
 		}
 	}
 
 	VUserLog("Error: Couldn't cast from lowered type to vector.");
+	valueToCast->getType()->dump();  fprintf(stderr, "\n");
+	typeToCastTo->dump();  fprintf(stderr, "\n");
+	return valueToCast;
+}
+
+/**
+ * Generates code to cast the value, whose type was lowered from a array, to its original array type.
+ *
+ * @return A value of type `typeToCastTo`.
+ */
+Value *VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToArray(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo)
+{
+	if (valueToCast->getType()->isStructTy())
+	{
+		StructType *valueType        = static_cast<StructType *>(valueToCast->getType());
+		ArrayType *arrayTypeToCastTo = static_cast<ArrayType *>(typeToCastTo);
+		if (valueType->getElementType(0)->isFloatTy() && arrayTypeToCastTo->getElementType()->isFloatTy())
+		{
+			AllocaInst *arrayVariable = new AllocaInst(typeToCastTo, 0, "", block);
+			PointerType *pointerToLoweredType = PointerType::get(valueToCast->getType(), 0);
+			CastInst *arrayVariableAsLoweredType = new BitCastInst(arrayVariable, pointerToLoweredType, "", block);
+			new StoreInst(valueToCast, arrayVariableAsLoweredType, false, block);
+			return new LoadInst(arrayVariable, "", false, block);
+		}
+	}
+
+	VUserLog("Error: Couldn't cast from lowered type to array.");
 	valueToCast->getType()->dump();  fprintf(stderr, "\n");
 	typeToCastTo->dump();  fprintf(stderr, "\n");
 	return valueToCast;
@@ -2646,7 +2718,7 @@ void VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(Module *module, Ba
 	}
 	else if (argument->getType()->isStructTy())
 	{
-		AllocaInst *structPointer = new AllocaInst(argument->getType(), "", block);
+		AllocaInst *structPointer = new AllocaInst(argument->getType(), 0, "", block);
 		new StoreInst(argument, structPointer, false, block);
 
 		int numElements = static_cast<StructType *>(argument->getType())->getNumElements();
@@ -3048,7 +3120,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
 
 	Value *nodeIdentifierValue = constantsCache->get(nodeIdentifier);
 
-	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, "", initialBlock);
+	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, 0, "", initialBlock);
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
 
 	vector<Value *> args;
@@ -3096,7 +3168,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(
 
 	Value *nodeIdentifierValue = constantsCache->get(nodeIdentifier);
 
-	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, "", initialBlock);
+	AllocaInst *replacementJsonVariable = new AllocaInst(pointerToJsonObjectType, 0, "", initialBlock);
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
 
 	vector<Value *> args;
@@ -3949,6 +4021,24 @@ Function * VuoCompilerCodeGenUtilities::getMallocFunction(Module *module)
 	return function;
 }
 
+Function *VuoCompilerCodeGenUtilities::getMemcpyFunction(Module *module)
+{
+	const char *functionName = "memcpy";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToi8Type = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToi8Type);
+		functionParams.push_back(pointerToi8Type);
+		functionParams.push_back(IntegerType::get(module->getContext(), sizeof(size_t)*CHAR_BIT));
+		FunctionType *functionType = FunctionType::get(pointerToi8Type, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
 Function * VuoCompilerCodeGenUtilities::getFreeFunction(Module *module)
 {
 	const char *functionName = "free";
@@ -4101,15 +4191,12 @@ Function * VuoCompilerCodeGenUtilities::getVuoShaderSetUniformFunction(Module *m
 		Type *shaderType = getVuoShaderType(module);
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
-		Type *dataSecondParam = nullptr;
-		Type *dataParam = type->getFunctionParameterType(&dataSecondParam);
+		vector<Type *> dataParams = type->getFunctionParameterTypes();
 
 		vector<Type *> functionParams;
 		functionParams.push_back(shaderType);
 		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(dataParam);
-		if (dataSecondParam)
-			functionParams.push_back(dataSecondParam);
+		functionParams.insert(functionParams.end(), dataParams.begin(), dataParams.end());
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
@@ -4421,7 +4508,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 	if (! function)
 	{
 		vector<Type *> functionParams;
-		map<int, AttributeSet> functionAttributes;
+		AttributeList functionAttributes;
 		map<VuoPort *, bool> hasSecondParam;
 		Type *boolType = IntegerType::get(module->getContext(), 1);
 		size_t indexInEventFunction = 0;
@@ -4446,35 +4533,18 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 			if (type)
 			{
-				Type *paramSecondType = NULL;
-				Type *paramType = type->getCompiler()->getFunctionParameterType(&paramSecondType);
-				AttributeSet paramAttributes = type->getCompiler()->getFunctionParameterAttributes();
+				vector<Type *> paramTypes = type->getCompiler()->getFunctionParameterTypes();
+				AttributeList typeFunctionAttributes = type->getCompiler()->getFunctionAttributes();
 
-				functionParams.push_back(paramType);
+				functionParams.insert(functionParams.end(), paramTypes.begin(), paramTypes.end());
 
-				// If we're generating a node function for a subcomposition, and the parameter is a struct that
-				// would normally be passed "byval", don't actually make it "byval" in the node function.
-				// Instead, the Vuo compiler will generate code equivalent to the "byval" semantics.
-				//
-				// This is a workaround for a bug where LLVM would sometimes give the node function body
-				// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
-				if (! (hasCompositionStateArg &&
-					   type->getCompiler()->getType()->isStructTy() &&
-					   paramAttributes.hasAttrSomewhere(Attribute::ByVal)) )
-				{
-					functionAttributes[ functionParams.size() - 1] = paramAttributes;
-				}
+				for (size_t j = 0; j < paramTypes.size(); ++j)
+					functionAttributes = functionAttributes.addParamAttributes(module->getContext(), functionParams.size() - 1, typeFunctionAttributes.getParamAttributes(j));
 
-				indexOfParameter[modelInputPort->getBase()] = indexInEventFunction++;
+				indexOfParameter[modelInputPort->getBase()] = indexInEventFunction;
+				indexInEventFunction += paramTypes.size();
 
-				if (paramSecondType)
-				{
-					functionParams.push_back(paramSecondType);
-					functionAttributes[ functionParams.size() - 1] = paramAttributes;
-					hasSecondParam[*i] = true;
-
-					indexInEventFunction++;
-				}
+				hasSecondParam[*i] = paramTypes.size() > 1;
 
 				if (hasEventArgs)
 				{
@@ -4498,7 +4568,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 
 			if (modelOutputPort->getBase()->getClass()->getPortType() == VuoPortClass::triggerPort)
 			{
-				FunctionType *functionType = static_cast<VuoCompilerTriggerPortClass *>( modelOutputPort->getBase()->getClass()->getCompiler() )->getFunctionType();
+				FunctionType *functionType = static_cast<VuoCompilerTriggerPortClass *>( modelOutputPort->getBase()->getClass()->getCompiler() )->getFunctionType(module);
 				PointerType *triggerFunctionPointerType = PointerType::get(functionType, 0);
 				functionParams.push_back(triggerFunctionPointerType);
 
@@ -4508,7 +4578,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 			{
 				if (type)
 				{
-					PointerType *paramType = PointerType::get( type->getCompiler()->getType(), 0 );
+					PointerType *paramType = type->getCompiler()->getFunctionParameterPointerType();
 					functionParams.push_back(paramType);
 
 					indexOfParameter[modelOutputPort->getBase()] = indexInEventFunction++;
@@ -4534,13 +4604,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 		Type *returnType = (hasInstanceDataReturn ? instanceDataType : Type::getVoidTy(module->getContext()));
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-
-		for (map<int, AttributeSet>::iterator i = functionAttributes.begin(); i != functionAttributes.end(); ++i)
-		{
-			int attributesIndex = i->first + 1;
-			AttributeSet attributes = i->second;
-			function->addAttributes(attributesIndex, copyAttributesToIndex(attributes, attributesIndex));
-		}
+		function->setAttributes(functionAttributes);
 
 		set<string> argNamesUsed;
 
@@ -4951,366 +5015,13 @@ Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Mo
 ///@}
 
 /**
- * Guesses the type that the parameter of the function had in the source code, before it was possibly
- * converted ("lowered") to some other type by Clang/LLVM when the module was compiled.
- * (For example, a struct whose members are all floats may be lowered to a vector of floats.)
- */
-Type * VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(Function *function, Module *module, string typeName)
-{
-	if (typeName == "VuoPoint2d")
-		return VectorType::get(Type::getFloatTy(module->getContext()), 2);
-	if (typeName == "VuoPoint3d")
-		return VectorType::get(Type::getFloatTy(module->getContext()), 3);
-	if (typeName == "VuoPoint4d")
-		return VectorType::get(Type::getFloatTy(module->getContext()), 4);
-
-	Type *type = function->getFunctionType()->getParamType(0);
-	bool hasSecondType = (function->getFunctionType()->getNumParams() == 2);
-
-	// Parameter was originally a struct, but was lowered to a "byval" pointer-to-struct, a vector, or two parameters.
-	if (isParameterPassedByValue(function, 0) || type->isVectorTy() || hasSecondType)
-		type = module->getTypeByName("struct." + typeName);
-
-	if (! type)
-	{
-		VUserLog("Couldn't guess the original type for %s", typeName.c_str());
-		function->getFunctionType()->dump();  fprintf(stderr, "\n");
-	}
-
-	return type;
-}
-
-/**
- * If needed, generates code to convert a function argument from the "lowered" type of the function parameter to an un-lowered type.
- *
- * @param unloweredVuoType The type that the argument should be converted to.
- * @param function The function to which the argument has been passed.
- * @param parameterIndex The index of the argument in the function's argument list (starting at 0).
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @return The argument converted to its un-lowered type. May be the same as the original argument.
- */
-Value * VuoCompilerCodeGenUtilities::unlowerArgument(VuoCompilerType *unloweredVuoType, Function *function, int parameterIndex,
-													 Module *module, BasicBlock *block)
-{
-	Type *unloweredType = unloweredVuoType->getType();
-
-	Type *secondLoweredType = NULL;
-	unloweredVuoType->getFunctionParameterType(&secondLoweredType);
-	bool hasSecondArgument = (secondLoweredType != NULL);
-
-	Function::arg_iterator argIter = function->arg_begin();
-	for (int i = 0; i < parameterIndex; ++i)
-		++argIter;
-	Value *argument = argIter;
-	Value *secondArgument = (hasSecondArgument ? ++argIter : NULL);
-
-	if (unloweredType->isVectorTy())
-	{
-		if (static_cast<VectorType *>(unloweredType)->getElementType()->isFloatTy())
-		{
-			uint64_t elementCount = static_cast<VectorType *>(unloweredType)->getNumElements();
-			if (elementCount == 2 && argument->getType()->isDoubleTy())
-			{
-				// VuoPoint2d — Argument is a vector of 2 floats lowered to a double.
-				PointerType *pointerToVectorType = PointerType::get(unloweredType, 0);
-
-				Value *vectorVariableAsDouble = generatePointerToValue(block, argument);
-				Value *vectorVariable = new BitCastInst(vectorVariableAsDouble, pointerToVectorType, "", block);
-				return new LoadInst(vectorVariable, "", false, block);
-			}
-			else if (elementCount == 3 && argument->getType()->isVectorTy() &&
-					 static_cast<VectorType *>(argument->getType())->getNumElements() == 2 &&
-					 static_cast<VectorType *>(argument->getType())->getElementType()->isDoubleTy())
-			{
-				// VuoPoint3d — Argument is a vector of 3 floats lowered to a vector of 2 doubles.
-				PointerType *pointerToFloatVectorType = PointerType::get(unloweredType, 0);
-
-				Value *floatVectorValueAsDoubleVector = generatePointerToValue(block, argument);
-				Value *floatVectorVariable = new BitCastInst(floatVectorValueAsDoubleVector, pointerToFloatVectorType, "", block);
-				return new LoadInst(floatVectorVariable, "", false, block);
-			}
-		}
-	}
-	else if (unloweredType->isStructTy())
-	{
-		if (! hasSecondArgument)
-		{
-			if (argument->getType()->isVectorTy())
-			{
-				// Argument is a struct lowered to a vector.
-				PointerType *pointerToStructType = PointerType::get(unloweredType, 0);
-
-				Value *structVariableAsVector = generatePointerToValue(block, argument);
-				Value *structVariable = new BitCastInst(structVariableAsVector, pointerToStructType, "", block);
-				return new LoadInst(structVariable, "", false, block);
-			}
-		}
-		else
-		{
-			// Argument is a struct lowered to two parameters (e.g. two vectors).
-			PointerType *pointerToStructType = PointerType::get(unloweredType, 0);
-
-			vector<Type *> bothLoweredMembers;
-			bothLoweredMembers.push_back(argument->getType());
-			bothLoweredMembers.push_back(secondLoweredType);
-			StructType *bothLoweredTypes = StructType::create(bothLoweredMembers);
-
-			Value *structVariableAsBothLoweredTypes = new AllocaInst(bothLoweredTypes, "", block);
-
-			ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(32, 0));
-			ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(32, 1));
-
-			vector<Value *> firstMemberIndices;
-			firstMemberIndices.push_back(zeroValue);
-			firstMemberIndices.push_back(zeroValue);
-			Value *firstMemberPointer = GetElementPtrInst::Create(structVariableAsBothLoweredTypes, firstMemberIndices, "", block);
-			new StoreInst(argument, firstMemberPointer, block);
-
-			vector<Value *> secondMemberIndices;
-			secondMemberIndices.push_back(zeroValue);
-			secondMemberIndices.push_back(oneValue);
-			Value *secondMemberPointer = GetElementPtrInst::Create(structVariableAsBothLoweredTypes, secondMemberIndices, "", block);
-			new StoreInst(secondArgument, secondMemberPointer, block);
-
-			Value *structVariable = new BitCastInst(structVariableAsBothLoweredTypes, pointerToStructType, "", block);
-			return new LoadInst(structVariable, "", false, block);
-		}
-
-		if (isParameterPassedByValue(function, parameterIndex))
-		{
-			// Argument is a struct passed by value.
-			argument = new LoadInst(argument, "", false, block);
-		}
-	}
-
-	if (argument->getType() != unloweredType)
-	{
-		// Argument type doesn't match parameter type because they're structs loaded from different modules.
-		if (argument->getType()->isStructTy() && unloweredType->isStructTy())
-		{
-			Value *argumentVariable = generatePointerToValue(block, argument);
-			Type *pointerToUnloweredType = PointerType::get(unloweredType, 0);
-			Value *argumentVariableAsUnloweredType = new BitCastInst(argumentVariable, pointerToUnloweredType, "", block);
-			return new LoadInst(argumentVariableAsUnloweredType, "", false, block);
-		}
-		else
-		{
-			Type *sourceType = argument->getType();
-			Type *destinationType = unloweredType;
-			while (sourceType->isPointerTy() && destinationType->isPointerTy())
-			{
-				Type *sourceElementType = static_cast<PointerType *>(sourceType)->getElementType();
-				Type *destinationElementType = static_cast<PointerType *>(destinationType)->getElementType();
-				if (sourceElementType->isStructTy() && destinationElementType->isStructTy())
-					return new BitCastInst(argument, unloweredType, "", block);
-				sourceType = sourceElementType;
-				destinationType = destinationElementType;
-			}
-		}
-	}
-
-	if (argument->getType() != unloweredType)
-	{
-		VUserLog("Couldn't convert argument %d of %s to the type of %s", parameterIndex, function->getName().str().c_str(), unloweredVuoType->getBase()->getModuleKey().c_str());
-		function->arg_begin()->getType()->dump();  fprintf(stderr, "\n");
-		argument->getType()->dump();  fprintf(stderr, "\n");
-		unloweredType->dump();  fprintf(stderr, "\n");
-		return NULL;
-	}
-
-	return argument;
-}
-
-/**
- * If needed, generates code to convert the argument to the (possibly "lowered") type(s) of the function parameter(s).
- *
- * @param argument The argument to be converted.
- * @param function The function the argument is being passed to.
- * @param parameterIndex The index of the first (and possibly only) function parameter corresponding to @a argument.
- * @param[out] secondArgument Pointer to the second converted argument, to be passed to the second function parameter corresponding to @a argument. If none, pass NULL.
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @return The first converted argument, to be passed to the first (and possibly only) function parameter corresponding to @a argument. May be the same as @a argument.
- * @throw VuoCompilerException `argument` couldn't be converted to the function's parameter type.
- */
-Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argument, Function *function, int parameterIndex,
-																	Value **secondArgument, Module *module, BasicBlock *block)
-{
-	return convertArgumentToParameterType(argument, function->getFunctionType(), parameterIndex, isParameterPassedByValue(function, parameterIndex),
-										  secondArgument, module, block);
-}
-
-/**
- * If needed, generates code to convert the argument to the (possibly "lowered") type(s) of the function parameter(s).
- *
- * @param argument The argument to be converted.
- * @param functionType The type of the function that the argument is being passed to.
- * @param parameterIndex The index of the first (and possibly only) function parameter corresponding to @a argument.
- * @param isPassedByValue Whether the parameter corresponding to @a argument has the "byval" attribute.
- * @param[out] secondArgument Pointer to the second converted argument, to be passed to the second function parameter corresponding to @a argument. If none, pass NULL.
- * @param module The module in which to generate code.
- * @param block The block in which to generate code.
- * @return The first converted argument, to be passed to the first (and possibly only) function parameter corresponding to @a argument. May be the same as @a argument.
- * @throw VuoCompilerException `argument` couldn't be converted to the function's parameter type.
- */
-Value * VuoCompilerCodeGenUtilities::convertArgumentToParameterType(Value *argument, FunctionType *functionType, int parameterIndex, bool isPassedByValue,
-																	Value **secondArgument, Module *module, BasicBlock *block)
-{
-	if (secondArgument)
-		*secondArgument = NULL;
-
-	Type *parameterType = functionType->getParamType(parameterIndex);
-
-	if (argument->getType()->isVectorTy())
-	{
-		if (static_cast<VectorType *>(argument->getType())->getElementType()->isFloatTy())
-		{
-			uint64_t elementCount = static_cast<VectorType *>(argument->getType())->getNumElements();
-			if (elementCount == 2 && parameterType->isDoubleTy())
-			{
-				// VuoPoint2d — Argument is a vector of 2 floats lowered to a double.
-				PointerType *pointerToDoubleType = PointerType::get(parameterType, 0);
-
-				Value *vectorVariable = generatePointerToValue(block, argument);
-				CastInst *vectorVariableAsDouble = new BitCastInst(vectorVariable, pointerToDoubleType, "", block);
-				return new LoadInst(vectorVariableAsDouble, "", false, block);
-			}
-			else if (elementCount == 3 && parameterType->isVectorTy() &&
-					 static_cast<VectorType *>(parameterType)->getNumElements() == 2 &&
-					 static_cast<VectorType *>(parameterType)->getElementType()->isDoubleTy())
-			{
-				// VuoPoint3d — Argument is a vector of 3 floats lowered to a vector of 2 doubles.
-				PointerType *pointerToDoubleVectorType = PointerType::get(parameterType, 0);
-
-				Value *floatVectorVariable = generatePointerToValue(block, argument);
-				CastInst *floatVectorVariableAsDoubleVector = new BitCastInst(floatVectorVariable, pointerToDoubleVectorType, "", block);
-				return new LoadInst(floatVectorVariableAsDoubleVector, "", false, block);
-			}
-			else if (elementCount == 2 && parameterType->isPointerTy() && static_cast<PointerType *>(parameterType)->getElementType() == argument->getType())
-			{
-				// Workaround for vuo.image.make.checkerboard2 center (https://b33p.net/kosada/node/15936)
-				// VuoPoint2d — Argument is a vector of 2 floats lowered to a pointer to a vector of 2 floats.
-				return generatePointerToValue(block, argument);
-			}
-		}
-	}
-	else if (argument->getType()->isStructTy())
-	{
-		if (! secondArgument)
-		{
-			if (parameterType->isVectorTy())
-			{
-				// Argument is a struct lowered to a vector.
-				PointerType *pointerToVectorType = PointerType::get(parameterType, 0);
-
-				Value *structVariable = generatePointerToValue(block, argument);
-				CastInst *structVariableAsVector = new BitCastInst(structVariable, pointerToVectorType, "", block);
-				return new LoadInst(structVariableAsVector, "", false, block);
-			}
-		}
-		else
-		{
-			// Argument is a struct lowered to two parameters (e.g. two vectors).
-			Type *secondParameterType = functionType->getParamType(parameterIndex + 1);
-			vector<Type *> bothParameterMembers;
-			bothParameterMembers.push_back(parameterType);
-			bothParameterMembers.push_back(secondParameterType);
-			StructType *bothParameterTypes = StructType::create(bothParameterMembers);
-			PointerType *pointerToBothParameterTypes = PointerType::get(bothParameterTypes, 0);
-
-			Value *structVariable = generatePointerToValue(block, argument);
-			CastInst *structVariableAsBothParameterTypes = new BitCastInst(structVariable, pointerToBothParameterTypes, "", block);
-
-			ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(32, 0));
-			ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(32, 1));
-
-			vector<Value *> firstMemberIndices;
-			firstMemberIndices.push_back(zeroValue);
-			firstMemberIndices.push_back(zeroValue);
-			Value *firstMemberPointer = GetElementPtrInst::Create(structVariableAsBothParameterTypes, firstMemberIndices, "", block);
-			Value *firstMember = new LoadInst(firstMemberPointer, "", false, block);
-
-			vector<Value *> secondMemberIndices;
-			secondMemberIndices.push_back(zeroValue);
-			secondMemberIndices.push_back(oneValue);
-			Value *secondMemberPointer = GetElementPtrInst::Create(structVariableAsBothParameterTypes, secondMemberIndices, "", block);
-			Value *secondMember = new LoadInst(secondMemberPointer, "", false, block);
-
-			*secondArgument = secondMember;
-			return firstMember;
-		}
-
-		if (isPassedByValue)
-		{
-			// Argument is a struct passed by value.
-			argument = generatePointerToValue(block, argument);
-		}
-	}
-
-	if (argument->getType() != parameterType)
-	{
-		// Argument type doesn't match parameter type because they're structs loaded from different modules.
-		if (argument->getType()->isStructTy() && parameterType->isStructTy())
-		{
-			Value *argumentVariable = generatePointerToValue(block, argument);
-			Type *pointerToParameterType = PointerType::get(parameterType, 0);
-			Value *argumentVariableAsParameterType = new BitCastInst(argumentVariable, pointerToParameterType, "", block);
-			return new LoadInst(argumentVariableAsParameterType, "", false, block);
-		}
-		else
-		{
-			Type *sourceType = argument->getType();
-			Type *destinationType = parameterType;
-			while (sourceType->isPointerTy() && destinationType->isPointerTy())
-			{
-				Type *sourceElementType = static_cast<PointerType *>(sourceType)->getElementType();
-				Type *destinationElementType = static_cast<PointerType *>(destinationType)->getElementType();
-				if (! sourceElementType->isPointerTy() && ! destinationElementType->isPointerTy())
-					return new BitCastInst(argument, parameterType, "", block);
-				sourceType = sourceElementType;
-				destinationType = destinationElementType;
-			}
-		}
-	}
-
-	if (argument->getType() != parameterType)
-	{
-		string s;
-		raw_string_ostream oss(s);
-		oss << "Couldn't convert argument type `";
-		argument->getType()->print(oss);
-		oss << "` to parameter type `";
-		parameterType->print(oss);
-		oss << "` for function:  \n\n    ";
-		functionType->print(oss);
-		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling composition", "", "Unsupported composition layout", oss.str());
-		throw VuoCompilerException(issue);
-	}
-
-	return argument;
-}
-
-/**
- * Returns true if the function parameter (indexed from 0) has LLVM's 'byval' attribute.
- *
- * @param parameterIndex The index of the function parameter (starting at 0).
- */
-bool VuoCompilerCodeGenUtilities::isParameterPassedByValue(Function *function, int parameterIndex)
-{
-	AttributeSet functionAttrs = function->getAttributes();
-	AttributeSet paramAttrs = functionAttrs.getParamAttributes(parameterIndex + 1);
-	return paramAttrs.hasAttrSomewhere(Attribute::ByVal);
-}
-
-/**
  * Generates a call to the function, whose first parameter is assumed to have LLVM's @c sret attribute.
  */
 Value * VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(Function *function, vector<Value *> args, BasicBlock *block)
 {
 	PointerType *pointerToReturnType = static_cast<PointerType *>(function->getFunctionType()->getParamType(0));
 	Type *returnType = pointerToReturnType->getElementType();
-	Value *returnVariable = new AllocaInst(returnType, "", block);
+	Value *returnVariable = new AllocaInst(returnType, 0, "", block);
 	args.insert(args.begin(), returnVariable);
 	CallInst::Create(function, args, "", block);
 	return returnVariable;
@@ -5322,9 +5033,61 @@ Value * VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(Function *func
  */
 bool VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(Function *function)
 {
-	AttributeSet functionAttrs = function->getAttributes();
-	AttributeSet paramAttrs = functionAttrs.getParamAttributes(1);
-	return paramAttrs.hasAttrSomewhere(Attribute::StructRet);
+	AttributeList functionAttrs = function->getAttributes();
+	AttributeSet paramAttrs = functionAttrs.getParamAttributes(0);
+	return paramAttrs.hasAttribute(Attribute::StructRet);
+}
+
+/**
+ * Adds the LLVM attributes of @a srcFunction's to the corresponding parameters of @a dstFunction.
+ */
+void VuoCompilerCodeGenUtilities::copyParameterAttributes(Function *srcFunction, Function *dstFunction)
+{
+	AttributeList srcAttributes = srcFunction->getAttributes();
+	for (int i = 0; i < srcFunction->getFunctionType()->getNumParams(); ++i)
+		dstFunction->addParamAttrs(i, srcAttributes.getParamAttributes(i));
+}
+
+/**
+ * Adds the LLVM attributes of @a srcFunction's to the corresponding parameters of @a dstCall.
+ */
+void VuoCompilerCodeGenUtilities::copyParameterAttributes(Module *module, Function *srcFunction, CallInst *dstCall)
+{
+	copyParameterAttributes(module, srcFunction->getAttributes(), 0, srcFunction->getFunctionType()->getNumParams(), dstCall, 0);
+}
+
+/**
+ * Sets the LLVM attributes of @a dstFunction's parameters to match the corresponding parameters in @a srcAttributes.
+ */
+void VuoCompilerCodeGenUtilities::copyParameterAttributes(Module *module,
+														  const AttributeList &srcAttributes, size_t srcStartParam, size_t srcNumParams,
+														  Function *dstFunction, size_t dstStartParam)
+{
+	AttributeList dstAttributes = dstFunction->getAttributes();
+	for (size_t i = 0; i < srcNumParams; ++i)
+	{
+		size_t srcIndex = srcStartParam + i;
+		size_t dstIndex = dstStartParam + i;
+		dstAttributes = dstAttributes.addParamAttributes(module->getContext(), dstIndex, srcAttributes.getParamAttributes(srcIndex));
+	}
+	dstFunction->setAttributes(dstAttributes);
+}
+
+/**
+ * Sets the LLVM attributes of @a dstCall's arguments to match the corresponding parameters in @a srcAttributes.
+ */
+void VuoCompilerCodeGenUtilities::copyParameterAttributes(Module *module,
+														  const AttributeList &srcAttributes, size_t srcStartParam, size_t srcNumParams,
+														  CallInst *dstCall, size_t dstStartParam)
+{
+	AttributeList dstAttributes = dstCall->getAttributes();
+	for (size_t i = 0; i < srcNumParams; ++i)
+	{
+		size_t srcIndex = srcStartParam + i;
+		size_t dstIndex = dstStartParam + i;
+		dstAttributes = dstAttributes.addParamAttributes(module->getContext(), dstIndex, srcAttributes.getParamAttributes(srcIndex));
+	}
+	dstCall->setAttributes(dstAttributes);
 }
 
 /**
@@ -5336,13 +5099,7 @@ FunctionType * VuoCompilerCodeGenUtilities::getFunctionType(Module *module, VuoT
 	vector<Type *> params;
 
 	if (vuoType)
-	{
-		Type *secondParamType = NULL;
-		Type *firstParamType = vuoType->getCompiler()->getFunctionParameterType(&secondParamType);
-		params.push_back(firstParamType);
-		if (secondParamType)
-			params.push_back(secondParamType);
-	}
+		params = vuoType->getCompiler()->getFunctionParameterTypes();
 
 	return FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
 }
@@ -5359,33 +5116,4 @@ Value * VuoCompilerCodeGenUtilities::getArgumentAtIndex(Function *function, size
 		argValue = args++;
 
 	return argValue;
-}
-
-/**
- * Creates a new AttributeSet
- * with the attributes from `attributesToCopy`'s index 1 (the AttributeSet's first function parameter)
- * placed in the output AttributeSet's index `destinationIndex` (0 for the return value, 1 for the first parameter, …).
- */
-AttributeSet VuoCompilerCodeGenUtilities::copyAttributesToIndex(AttributeSet attributesToCopy, int destinationIndex)
-{
-	if (attributesToCopy.getNumSlots() > 1)
-		VUserLog("Warning: I was expecting an AttributeSet with 0 or 1 slots, but got %d.", attributesToCopy.getNumSlots());
-
-	int inputIndex = AttributeSet::ReturnIndex + 1;
-
-	string attributeString = attributesToCopy.getAsString(inputIndex);
-	if (!attributeString.empty()
-		&& attributeString != "byval align 8"
-		&& attributeString != "byval align 16")
-		VUserLog("Warning: I don't know how to handle all the attributes in '%s'.", attributeString.c_str());
-
-	AttrBuilder builder;
-
-	if (attributesToCopy.hasAttribute(inputIndex, Attribute::ByVal))
-		builder.addAttribute(Attribute::ByVal);
-
-	if (attributesToCopy.hasAttribute(inputIndex, Attribute::Alignment))
-		builder.addAlignmentAttr(attributesToCopy.getParamAlignment(inputIndex));
-
-	return AttributeSet::get(getGlobalContext(), destinationIndex, builder);
 }

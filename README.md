@@ -20,30 +20,33 @@ Vuo uses the [Qt Framework's translation system](https://doc.qt.io/qt-5/qtlingui
 
 ### Xcode
 
-Install a recent version of [Xcode](https://developer.apple.com/xcode/) (version 3.2 or later).
+Install a recent version of [Xcode](https://developer.apple.com/xcode/).
 
-Accept the Xcode license by opening Xcode.app or running:
-
-    xcodebuild -license
+Launch Xcode and accept the license agreement.
 
 Install Command Line Tools for Xcode:
 
-   - Launch Xcode
-   - Select the Xcode menu > Preferences > Downloads
-   - Next to "Command line tools", click "Install"
+   - Go to https://developer.apple.com/download/more/
+   - In the search box, enter your Xcode version.
+   - In the search results, locate and download the Command Line Tools.
+   - Open the downloaded package and follow the prompts.
 
 ### Homebrew
 
 Install Homebrew:
 
-    ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
-    brew doctor
+```sh
+ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
+brew doctor
+```
 
 Review the results of `brew doctor` and fix any problems it finds, then install the dependencies:
 
-    brew bundle
+   - `cd` to the Vuo source code folder.
+   - `brew bundle`
 
 ### Conan
+
    - `cd` to the Vuo source code folder.
    - `mkdir build`
    - `cd build`
@@ -53,7 +56,6 @@ Review the results of `brew doctor` and fix any problems it finds, then install 
    - On Linux:
       - `conan config install https://vuo.org/sites/default/files/conan-linux.zip`
    - `conan install ..`
-
 
 ## Build Vuo using Qt Creator
 
@@ -88,6 +90,7 @@ Launch Qt Creator.
       - Click Configure Project
    - In Projects (the wrench near the top left):
       - Build > Build Steps > Build, click Details, then set Tool Arguments to `-j8` (or however many cores your processor has)
+      - Run > Run, uncheck "Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH"
       - (optional, to colorize build steps) Build > Build Environment, click Details, click Add, and set `CLICOLOR_FORCE` to `1`
    - In the target selector (the computer icon near the bottom left), select VuoEditorApp
    - In the Search Results panel at the bottom of the window, set Exclusion Pattern to `**/build/**`
@@ -98,47 +101,51 @@ As an alternative to using Qt Creator (above), you can build from the command li
 
 First, generate the makefiles:
 
-    mkdir build
-    cd build
-    cmake ..
+```sh
+mkdir build
+cd build
+cmake ..
+```
 
 Build:
 
-    make -j8
+```sh
+make -j8
+```
 
 Run Vuo Editor:
 
-    make go
+```sh
+make go
+```
 
 …or open the `build/bin` folder in Finder and double-click `Vuo.app`.
 
+Run the command-line tools:
+
+```sh
+bin/vuo-compile --help
+bin/vuo-link --help
+bin/vuo-debug --help
+```
+
 Optionally, build and run the tests:
 
-    # Build and run the quick tests (should take just a minute or two to run).
-    make -j8 VuoTest
-    ctest -j8 --output-on-failure              # Runs all quick tests
-    ctest -j8 --output-on-failure -R Compiler  # Runs only the tests matching the regex
-    ARG="testAddingAndRemovingModules:compiled node class, user, not loading all modules" ctest -V -R ModuleLoading  # Runs only the test datum in the arg
+```sh
+make -j8 VuoTest
 
-    # Or build and run all the tests (takes over an hour to run).
-    cmake .. -DVUO_TEST_LONG=ON
-    make -j8 VuoTest
-    ctest -j8 --output-on-failure
+# Consider adding this alias to your ~/.bashrc :
+alias ctest='ctest -j8 --output-on-failure --progress'
 
-Optionally, build the examples:
-
-    cmake .. -DVUO_TEST_LONG=ON
-    make -j8 TestExamples
-
-You can now run the example compositions from the command line. For example:
-
-    test/TestExamples/AddNoiseToClay
-
-You can now run the command-line tools:
-
-    bin/vuo-compile --help
-    bin/vuo-link --help
-    bin/vuo-debug --help
+ctest                                    # Run all tests (takes a few hours)
+ctest -N                                 # List the names of all tests
+ctest -R …                               # Run tests whose name matches the specified regex (case-sensitive)
+ctest -R vuo.math.keep.average           # Run tests for a node
+ctest -R VuoAnchor                       # Run tests for a type
+ctest -R PlayBluesOrgan                  # Run tests for an example composition
+ctest -R TestModules.testType:VuoAnchor  # Run a single test datum
+ctest -R 'TestVuoRunner\.'               # Run all TestVuoRunner tests (but don't run TestVuoRunnerCocoa)
+```
 
 ## Developer shortcuts
 Vuo's build system includes some shortcuts to make development more efficient.
@@ -146,11 +153,15 @@ Vuo's build system includes some shortcuts to make development more efficient.
 ### Compiler development mode
 Allows you to make changes to VuoBase and VuoCompiler without rebuilding all nodes and types (but you're responsible for keeping track of whether nodes and types need to be rebuilt).  Saves several minutes per edit-compile-test cycle.
 
-    cmake .. -DVUO_COMPILER_DEVELOPER=ON
-    cmake .. -DVUO_COMPILER_DEVELOPER=OFF
+```sh
+cmake .. -DVUO_COMPILER_DEVELOPER=ON
+cmake .. -DVUO_COMPILER_DEVELOPER=OFF
+```
 
 ### Node development mode
 Allows you to make changes to nodes, types, and libraries without rebuilding the Vuo.framework cache.  Saves about 30 seconds per edit-compile-test cycle (but compositions take longer to start up initially).
 
-    cmake .. -DVUO_NODE_DEVELOPER=ON
-    cmake .. -DVUO_NODE_DEVELOPER=OFF
+```sh
+cmake .. -DVUO_NODE_DEVELOPER=ON
+cmake .. -DVUO_NODE_DEVELOPER=OFF
+```

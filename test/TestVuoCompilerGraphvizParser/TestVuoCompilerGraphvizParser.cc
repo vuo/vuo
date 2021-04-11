@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerGraphvizParser interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -48,8 +48,8 @@ private slots:
 
 		QTest::newRow("no cable") << "Constants.vuo" << "Subtract1" << "a" << "11";
 		QTest::newRow("data-and-event cable") << "Constants.vuo" << "Subtract1" << "b" << "0";
-		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "a" << "33";
-		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "b" << "44";
+		QTest::newRow("event cable from event port a") << "Constants.vuo" << "Subtract2" << "a" << "33";
+		QTest::newRow("event cable from event port b") << "Constants.vuo" << "Subtract2" << "b" << "44";
 		QTest::newRow("non-ASCII text") << "LengthOfConstantString.vuo" << "Count Characters" << "text" << "流";
 		QTest::newRow("UTF-8 4-byte characters") << "utf8-4byte.vuo" << "🙏🏽" << "text" << "\"🙏🏽\"";
 		QTest::newRow("empty text overriding non-empty default value") << "NonEmptyDefaultString.vuo" << "UnicodeDefaultString1" << "string" << "\"\"";

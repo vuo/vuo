@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -369,7 +369,7 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 		if (class_getClassMethod(avCaptureDeviceClass, sel_getUid("authorizationStatusForMediaType:")))
 		{
 			CFStringRef mediaType = CFStringCreateWithCString(NULL, "soun", kCFStringEncodingUTF8);
-			long status = (long)objc_msgSend((id)avCaptureDeviceClass, sel_getUid("authorizationStatusForMediaType:"), mediaType);
+			long status = ((long (*)(id, SEL, CFStringRef))objc_msgSend)((id)avCaptureDeviceClass, sel_getUid("authorizationStatusForMediaType:"), mediaType);
 			CFRelease(mediaType);
 
 			if (status == 0 /* AVAuthorizationStatusNotDetermined */)
@@ -656,8 +656,8 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 	if (!found)
 		VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
 			if (device.id == -1 && !VuoText_isEmpty(device.modelUid) && !VuoText_isEmpty(device.name)
-			 && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid)
-			 && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			 && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid)
+			 && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 				setRealizedDevice(item);
@@ -670,8 +670,8 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 	// Third pass: try to find a loose match by model OR name.
 	if (!found)
 		VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
-			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid))
-			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name)))
+			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid))
+			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name)))
 			{
 				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 				setRealizedDevice(item);
@@ -765,8 +765,8 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 	if (!found)
 		VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
 			if (device.id == -1 && !VuoText_isEmpty(device.modelUid) && !VuoText_isEmpty(device.name)
-				&& VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid)
-				&& VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+				&& VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid)
+				&& VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 				setRealizedDevice(item);
@@ -779,8 +779,8 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 	// Third pass: try to find a loose match by model OR name.
 	if (!found)
 		VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
-			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.modelUid))
-			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name)))
+			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid))
+			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name)))
 			{
 				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 				setRealizedDevice(item);

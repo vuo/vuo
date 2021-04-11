@@ -2,7 +2,7 @@
  * @file
  * TestCompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -136,8 +136,21 @@ class TestCompositions : public TestCompositionExecution
 {
 	Q_OBJECT
 
+public:
+
+	TestCompositions(int argc, char *argv[])
+	{
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			singleTestDatum = QString::fromUtf8(argv[1]).section(':', 1);
+		}
+	}
+
 private:
 
+	QString singleTestDatum;
 	VuoCompiler *compiler;
 
 private slots:
@@ -189,8 +202,7 @@ private slots:
 		QDir compositionDir = getCompositionDir();
 		QStringList filter("*.json");
 		QStringList portConfigurationFileNames = compositionDir.entryList(filter);
-		foreach (QString portConfigurationFileName, portConfigurationFileNames)
-		{
+		auto addTestsForPortConfiguration = ^(QString portConfigurationFileName){
 			string portConfigurationPath = getCompositionPath(portConfigurationFileName.toStdString());
 
 			string dir, name, extension;
@@ -216,7 +228,13 @@ private slots:
 			}
 
 			QTest::newRow(name.c_str()) << portConfigurationPath << composition;
-		}
+		};
+
+		if (singleTestDatum.isEmpty())
+			for (auto portConfigurationFileName : portConfigurationFileNames)
+				addTestsForPortConfiguration(portConfigurationFileName);
+		else
+			addTestsForPortConfiguration(singleTestDatum + ".json");
 	}
 	void testRunningCompositions()
 	{
@@ -244,7 +262,7 @@ private slots:
 int main(int argc, char *argv[])
 {
 	qInstallMessageHandler(VuoRendererCommon::messageHandler);
-	TestCompositions tc;
+	TestCompositions tc(argc, argv);
 	QTEST_SET_MAIN_SOURCE_PATH
 	return QTest::qExec(&tc, argc, argv);
 }

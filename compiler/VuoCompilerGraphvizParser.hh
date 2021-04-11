@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerGraphvizParser interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -22,9 +22,8 @@ class VuoCompiler;
 class VuoCompilerCable;
 class VuoCompilerPort;
 
-struct Agraph_t;
-struct Agnode_t;
-typedef struct Agraph_t graph_t; ///< Shorthand for @c Agraph_t.
+typedef struct Agraph_s Agraph_t;  ///< From `graphviz/cgraph.h`.
+typedef struct Agnode_s Agnode_t;  ///< From `graphviz/cgraph.h`.
 
 #include "VuoHeap.h"
 
@@ -36,7 +35,7 @@ class VuoCompilerGraphvizParser
 private:
 	static dispatch_queue_t graphvizQueue;  ///< Serializes calls to Graphviz parsing functions.
 	VuoCompiler *compiler;
-	graph_t *graph;
+	Agraph_t *graph;
 	map<string, VuoNodeClass *> dummyNodeClassForName;
 	map<string, VuoNodeClass *> nodeClassForName;
 	map<string, VuoNode *> nodeForName;

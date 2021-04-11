@@ -2,7 +2,7 @@
  * @file
  * VuoSceneGet implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -141,7 +141,9 @@ static aiFile *VuoSceneObjectGet_open(aiFileIO *afio, const char *filename, cons
 
 	void *data;
 	unsigned int dataLength;
-	if (!VuoUrl_fetch(filename, &data, &dataLength))
+	VuoText filenameT = VuoText_make(filename);
+	VuoLocal(filenameT);
+	if (!VuoUrl_fetch(filenameT, &data, &dataLength))
 		return NULL;
 
 	if (dataLength == 0)

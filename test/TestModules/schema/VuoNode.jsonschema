@@ -68,17 +68,25 @@
 			},
 			"additionalProperties": false,
 		},
-		"compatibleOperatingSystems": {
+		"compatibility": {
 			"type": "object",
 			"properties": {
-				"macosx": {
+				"macos": {
 					"type": "object",
 					"patternProperties": {
 						"(min|max)": {
 							"type": "string",
-							"pattern": "^10\\.(9|10|11|12|13|14)$",
+							"pattern": "^(10\\.1[1-5]|11\\.0)$",
+						},
+						"arch": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"pattern": "^(x86_64|arm64)$",
+							},
 						},
 					},
+					"additionalProperties": false,
 				},
 			},
 			"additionalProperties": false,

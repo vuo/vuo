@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerComposition interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -50,10 +50,10 @@ private slots:
 		VuoNode *countWithinRangeRealNode = compiler->createNode(compiler->getNodeClass("vuo.math.countWithinRange.VuoReal"), "CountWithinRangeReal");
 		VuoNode *fakeSubcompositionNode = compiler->getNodeClass("vuo.math.subtract")->newNode("Subcomposition1");
 
-		VuoCompilerPublishedPortClass *portClass1 = new VuoCompilerPublishedPortClass("publishedInput1", VuoPortClass::eventOnlyPort, NULL);
+		VuoCompilerPublishedPortClass *portClass1 = new VuoCompilerPublishedPortClass("publishedInput1", VuoPortClass::eventOnlyPort);
 		VuoPublishedPort *publishedInput1 = static_cast<VuoPublishedPort *>(portClass1->newPort()->getBase());
 
-		VuoCompilerPublishedPortClass *portClass2 = new VuoCompilerPublishedPortClass("publishedInput2", VuoPortClass::eventOnlyPort, NULL);
+		VuoCompilerPublishedPortClass *portClass2 = new VuoCompilerPublishedPortClass("publishedInput2", VuoPortClass::eventOnlyPort);
 		VuoPublishedPort *publishedInput2 = static_cast<VuoPublishedPort *>(portClass2->newPort()->getBase());
 
 		{
@@ -583,7 +583,7 @@ private slots:
 		{
 			VuoCompilerComposition composition(new VuoComposition(), parser);
 			long hash1 = VuoCompilerGraph::getHash(&composition);
-			VuoCompilerPublishedPortClass *publishedPortClass = new VuoCompilerPublishedPortClass("test", VuoPortClass::eventOnlyPort, NULL);
+			VuoCompilerPublishedPortClass *publishedPortClass = new VuoCompilerPublishedPortClass("test", VuoPortClass::eventOnlyPort);
 			VuoPublishedPort *publishedPort = static_cast<VuoPublishedPort *>( publishedPortClass->newPort()->getBase() );
 			composition.getBase()->addPublishedInputPort(publishedPort, 2);
 			long hash2 = VuoCompilerGraph::getHash(&composition);

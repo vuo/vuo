@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerEventPort interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -24,9 +24,8 @@ public:
 	Value * generateLoadEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue=NULL);
 	void generateStoreEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventValue, Value *portContextValue=NULL);
 	void generateStoreEvent(Module *module, BasicBlock *block, Value *nodeContextValue, bool event, Value *portContextValue=NULL);
-	Value * generateLoadData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue=NULL);
-	void generateStoreData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue);
-	void generateReplaceData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue, Value *portContextValue=NULL);
+	Value * generateRetrieveData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue=NULL);
+	void generateReplaceData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataPointer, Value *portContextValue=NULL);
 
 	/**
 	 * Returns this port's data, or NULL if none.

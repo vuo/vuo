@@ -2,7 +2,7 @@
  * @file
  * VuoAppAboutBox implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -76,7 +76,6 @@
 	NSMutableString *s = [NSMutableString new];
 	[s appendString:@"<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>"];
 
-	[NSAppearance setCurrentAppearance:self.effectiveAppearance];
 	NSString *headingCSS    = NSColor.labelColor.cssString;
 	NSString *subheadingCSS = NSColor.tertiaryLabelColor.cssString;
 	NSString *bodyCSS       = NSColor.secondaryLabelColor.cssString;
@@ -132,7 +131,7 @@
 - (instancetype)init
 {
 	if (self = [super initWithContentRect:NSMakeRect(0, 0, 820, 500)
-								styleMask:NSTitledWindowMask|NSClosableWindowMask|NSFullSizeContentViewWindowMask
+								styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskFullSizeContentView
 								  backing:NSBackingStoreBuffered
 									defer:NO])
 	{
@@ -143,7 +142,7 @@
 		NSBox *leftColumn = [NSBox new];
 		leftColumn.translatesAutoresizingMaskIntoConstraints = NO;
 		leftColumn.boxType = NSBoxCustom;
-		leftColumn.borderType = NSNoBorder;
+		leftColumn.borderWidth = 0;
 		leftColumn.fillColor = NSColor.controlBackgroundColor;
 
 		// Contents of left column.
@@ -171,7 +170,7 @@
 		NSBox *rightColumn = [NSBox new];
 		rightColumn.translatesAutoresizingMaskIntoConstraints = NO;
 		rightColumn.boxType = NSBoxCustom;
-		rightColumn.borderType = NSNoBorder;
+		rightColumn.borderWidth = 0;
 		rightColumn.fillColor = NSColor.windowBackgroundColor;
 
 		// Contents of right column.

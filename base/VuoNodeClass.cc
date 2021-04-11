@@ -2,7 +2,7 @@
  * @file
  * VuoNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -168,6 +168,7 @@ void VuoNodeClass::updateTypecastNodeClassStatus()
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.populated.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.summarize.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.point.length")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get.")

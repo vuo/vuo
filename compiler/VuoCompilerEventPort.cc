@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerEventPort implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -37,7 +37,7 @@ Value * VuoCompilerEventPort::generateCreatePortContext(Module *module, BasicBlo
 {
 	VuoCompilerData *data = getData();
 	VuoCompilerType *dataType = (data ? getDataVuoType()->getCompiler() : NULL);
-	return VuoCompilerCodeGenUtilities::generateCreatePortContext(module, block, dataType ? dataType->getType() : NULL, false, "");
+	return VuoCompilerCodeGenUtilities::generateCreatePortContext(module, block, dataType, false, "");
 }
 
 /**
@@ -80,38 +80,32 @@ void VuoCompilerEventPort::generateStoreEvent(Module *module, BasicBlock *block,
 }
 
 /**
- * Generates code to get the current data value for this port.
+ * Generates code to get a pointer to the current data value for this port.
  */
-Value * VuoCompilerEventPort::generateLoadData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue)
+Value * VuoCompilerEventPort::generateRetrieveData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue)
 {
 	if (! portContextValue)
 		portContextValue = generateGetPortContext(module, block, nodeContextValue);
-	return VuoCompilerCodeGenUtilities::generateGetPortContextData(module, block, portContextValue, getDataType()->getType());
-}
-
-/**
- * Generates code to update the data value for this port.
- */
-void VuoCompilerEventPort::generateStoreData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue)
-{
-	Value *portContextValue = generateGetPortContext(module, block, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateSetPortContextData(module, block, portContextValue, dataValue);
+	return VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(module, block, portContextValue, getDataType());
 }
 
 /**
  * Generates code to update the data value for this port, handling the memory management for replacing the old data value.
  */
-void VuoCompilerEventPort::generateReplaceData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue, Value *portContextValue)
+void VuoCompilerEventPort::generateReplaceData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataPointer, Value *portContextValue)
 {
 	if (! portContextValue)
 		portContextValue = generateGetPortContext(module, block, nodeContextValue);
 
-	Value *oldDataValue = VuoCompilerCodeGenUtilities::generateGetPortContextData(module, block, portContextValue, getDataType()->getType());
-	VuoCompilerCodeGenUtilities::generateSetPortContextData(module, block, portContextValue, dataValue);
+	Value *oldDataPointer = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(module, block, portContextValue, getDataType());
 
 	VuoCompilerType *type = getDataType();
-	type->generateRetainCall(module, block, dataValue);
-	type->generateReleaseCall(module, block, oldDataValue);
+	type->generateRetainCall(module, block, dataPointer);
+	type->generateReleaseCall(module, block, oldDataPointer);
+	/// @todo if dataPointer == oldDataPointer, don't bother retaining/releasing
+
+	Value *dataValue = new LoadInst(dataPointer, "", false, block);
+	VuoCompilerCodeGenUtilities::generateSetPortContextData(module, block, portContextValue, dataValue, type);
 }
 
 /**

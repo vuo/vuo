@@ -2,7 +2,7 @@
  * @file
  * TestInputEditors implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -51,7 +51,7 @@ private:
 	{
 		// [NSApp stop:nil];
 		id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
-		objc_msgSend(*nsAppGlobal, sel_getUid("stop:"), nil);
+		((void (*)(id, SEL, id))objc_msgSend)(*nsAppGlobal, sel_getUid("stop:"), nil);
 
 		// After sending the `stop:` message, the event loop needs to wake up and process another event in order to finish.
 		VuoEventLoop_break();

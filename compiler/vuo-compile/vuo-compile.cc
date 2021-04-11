@@ -2,7 +2,7 @@
  * @file
  * vuo-compile implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -54,7 +54,7 @@ void printHelp(char *argv0)
 		   " -I, --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
 		   "     --list-node-classes[=dot]    Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   " -o, --output <file>              Place the compiled code into <file>.\n"
-//		   "     --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.10.0').\n"
+		   "     --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.10.0').\n"
 		   " -v, --verbose                    Output diagnostic information.\n",
 		   argv0, argv0);
 }
@@ -121,7 +121,7 @@ int main (int argc, char * const argv[])
 					optimization = optarg;
 					break;
 				case 7:  // --generate-builtin-module-caches
-					VuoCompiler::generateBuiltInModuleCaches(optarg);
+					VuoCompiler::generateBuiltInModuleCaches(optarg, target);
 					return 0;
 
 				case -1:  // Short option
@@ -152,8 +152,11 @@ int main (int argc, char * const argv[])
 
 		hasInputFile = (optind < argc) && ! doPrintHelp && ! doListNodeClasses;
 
-		VuoCompileCLIDelegate delegate(issues);  // Declared in this order so destructors are called in reverse order.
-		VuoCompiler compiler;                    // https://b33p.net/kosada/node/15271
+		// Declared in this order so destructors are called in reverse order.
+		// https://b33p.net/kosada/vuo/vuo/-/issues/15271
+		VuoCompileCLIDelegate delegate(issues);
+		VuoCompiler compiler("", target);
+
 		compiler.setVerbose(isVerbose);
 		compiler.setDelegate(&delegate);
 
@@ -208,10 +211,6 @@ int main (int argc, char * const argv[])
 
 				if (outputPath.empty())
 					outputPath = inputDir + inputFile + ".bc";
-
-				/// @todo https://b33p.net/kosada/node/12220
-//				if (! target.empty())
-//					compiler.setTarget(target);
 
 				if (inputExtension == "vuo")
 				{

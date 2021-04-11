@@ -2,7 +2,7 @@
  * @file
  * vuo.app.openUrl node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,35 +45,36 @@ void nodeEvent
 		CFURLRef cfurl = CFURLCreateWithBytes(NULL, (const UInt8 *)normalizedUrl, VuoText_byteCount(normalizedUrl), kCFStringEncodingUTF8, NULL);
 		if (!cfurl)
 		{
-			VUserLog("Couldn't open '%s': Invalid URL.", normalizedUrl);
+			VUserLog("Error: Couldn't open '%s': Invalid URL.", normalizedUrl);
 			return;
 		}
 
-		CFStringRef browserBundleId = LSCopyDefaultHandlerForURLScheme(CFSTR("http"));
-
-		CFURLRef browserAppUrl;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		// Can't use LSCopyApplicationURLsForBundleIdentifier yet since it's only available on Mac OS X v10.10+.
-		OSStatus ret = LSFindApplicationForInfo(kLSUnknownCreator, browserBundleId, NULL, NULL, &browserAppUrl);
-#pragma clang diagnostic pop
-		if (ret != noErr)
+		CFErrorRef error = NULL;
+		CFURLRef browserAppUrl = LSCopyDefaultApplicationURLForURL(cfurl, kLSRolesAll, &error);
+		if (!browserAppUrl)
 		{
-			char *errStr = VuoOsStatus_getText(ret);
-			VUserLog("Couldn't open '%s': Couldn't find web browser '%s': %s", normalizedUrl, VuoText_makeFromCFString(browserBundleId), errStr);
-			free(errStr);
+			CFStringRef errorCFS = CFErrorCopyDescription(error);
+			CFRelease(error);
+			VuoText errorText = VuoText_makeFromCFString(errorCFS);
+			CFRelease(errorCFS);
+			VuoRetain(errorText);
+			VUserLog("Error: Couldn't open '%s': %s", normalizedUrl, errorText);
+			VuoRelease(errorText);
+			CFRelease(cfurl);
+			return;
 		}
 
 		CFArrayRef itemsToOpen = CFArrayCreate(NULL, (const void **)&cfurl, 1, &kCFTypeArrayCallBacks);
 		LSLaunchURLSpec lus = {browserAppUrl, itemsToOpen, NULL, kLSLaunchDefaults, NULL};
-		ret = LSOpenFromURLSpec(&lus, NULL);
+		OSStatus ret = LSOpenFromURLSpec(&lus, NULL);
 		if (ret != noErr)
 		{
 			char *errStr = VuoOsStatus_getText(ret);
-			VUserLog("Couldn't open '%s': %s", normalizedUrl, errStr);
+			VUserLog("Error: Couldn't open '%s': %s", normalizedUrl, errStr);
 			free(errStr);
 		}
 
+		CFRelease(browserAppUrl);
 		CFRelease(cfurl);
 	}
 }

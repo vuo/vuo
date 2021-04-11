@@ -2,7 +2,7 @@
  * @file
  * VuoEventLoop implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,14 +11,15 @@
 #include "VuoLog.h"
 #include "VuoCompositionState.h"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
 #import <AppKit/AppKit.h>
+#import <IOKit/pwr_mgt/IOPMLib.h>
+#import <IOKit/pwr_mgt/IOPM.h>
 
 #include <objc/objc-runtime.h>
 
 #include <dlfcn.h>
+
+bool VuoEventLoop_systemAsleep = false;  ///< True if this process has received NSWorkspaceWillSleepNotification.
 
 /**
  * Is the current thread the main thread?
@@ -89,7 +90,7 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode)
 
 		// When the composition is ready to stop, it posts a killswitch NSEvent,
 		// to ensure that this function returns immediately.
-		NSEvent *event = [*nsAppGlobal nextEventMatchingMask:NSAnyEventMask
+		NSEvent *event = [*nsAppGlobal nextEventMatchingMask:NSEventMaskAny
 												   untilDate:(mode == VuoEventLoop_WaitIndefinitely ? [NSDate distantFuture] : [NSDate distantPast])
 													  inMode:NSDefaultRunLoopMode
 													 dequeue:YES];
@@ -124,7 +125,7 @@ void VuoEventLoop_break(void)
 		// Send an event, to ensure VuoEventLoop_processEvent()'s call to `nextEventMatchingMask:…` returns immediately.
 		// -[NSApplication postEvent:atStart:] must be called from the main thread.
 		dispatch_async(dispatch_get_main_queue(), ^{
-			NSEvent *killswitch = [NSEvent otherEventWithType:NSApplicationDefined
+			NSEvent *killswitch = [NSEvent otherEventWithType:NSEventTypeApplicationDefined
 								   location:NSMakePoint(0,0)
 							  modifierFlags:0
 								  timestamp:0
@@ -240,10 +241,29 @@ void VuoEventLoop_installSignalHandlers(void)
 }
 
 /**
- * Log initial thermal state and state change notifications.
+ * Logs changes to the system's CPU speed limit.
+ */
+static void VuoShowSystemPowerEvent(void *refcon, io_service_t root_domain, natural_t messageType, void *messageArgument)
+{
+	if (messageType != kIOPMMessageSystemPowerEventOccurred)
+		return;
+
+	CFDictionaryRef d;
+	IOPMCopyCPUPowerStatus(&d);
+	CFNumberRef cpuSpeedLimitCF = CFDictionaryGetValue(d, CFSTR(kIOPMCPUPowerLimitProcessorSpeedKey));
+	int cpuSpeedLimit = -1;
+	CFNumberGetValue(cpuSpeedLimitCF, kCFNumberIntType, &cpuSpeedLimit);
+	CFRelease(d);
+
+	if (cpuSpeedLimit >= 0)
+		VDebugLog("The system changed the CPU speed limit to %d%%.", cpuSpeedLimit);
+}
+
+/**
+ * Log initial thermal state and state change notifications, for debugging.
  * Eventually we could use these to adapt graphics quality.
  */
-void VuoThermalState(void)
+static void VuoThermalState(void)
 {
 	void (^logThermalState)(int thermalState) = ^(int thermalState){
 		if (thermalState == 0)
@@ -257,24 +277,103 @@ void VuoThermalState(void)
 	};
 	if ([NSProcessInfo.processInfo respondsToSelector:@selector(thermalState)])
 	{
-		logThermalState((int)objc_msgSend(NSProcessInfo.processInfo, @selector(thermalState)));
+		logThermalState(((int (*)(id, SEL))objc_msgSend)(NSProcessInfo.processInfo, @selector(thermalState)));
 		[NSNotificationCenter.defaultCenter addObserverForName:@"NSProcessInfoThermalStateDidChangeNotification" object:nil queue:nil usingBlock:^(NSNotification *note){
-			logThermalState((int)objc_msgSend(note.object, @selector(thermalState)));
+			logThermalState(((int (*)(id, SEL))objc_msgSend)(note.object, @selector(thermalState)));
 		}];
+	}
+
+
+	// Start listening for system power events.
+	io_service_t rootDomain = IORegistryEntryFromPath(kIOMasterPortDefault, kIOPowerPlane ":/IOPowerConnection/IOPMrootDomain");
+	IONotificationPortRef notePort = IONotificationPortCreate(MACH_PORT_NULL);
+	if (rootDomain && notePort)
+	{
+		io_object_t notification_object = MACH_PORT_NULL;
+		IOReturn ret = IOServiceAddInterestNotification(notePort, rootDomain, kIOGeneralInterest, VuoShowSystemPowerEvent, NULL, &notification_object);
+		if (ret == kIOReturnSuccess)
+		{
+			CFRunLoopSourceRef runLoopSrc = IONotificationPortGetRunLoopSource(notePort);
+			if (runLoopSrc)
+				CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSrc, kCFRunLoopDefaultMode);
+		}
 	}
 }
 
 /**
- * Log sleep/wake state changes, for debugging.
+ * Log system memory pressure state change notifications, for debugging.
+ * Eventually we could use these to adapt cache usage.
  */
-void VuoSleepWake(void)
+static void VuoMemoryPressure(void)
+{
+	dispatch_source_t memoryPressureWatcher = dispatch_source_create(DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0, DISPATCH_MEMORYPRESSURE_NORMAL|DISPATCH_MEMORYPRESSURE_WARN|DISPATCH_MEMORYPRESSURE_CRITICAL, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_event_handler(memoryPressureWatcher, ^{
+		int pressure = dispatch_source_get_data(memoryPressureWatcher);
+		if (pressure == DISPATCH_MEMORYPRESSURE_NORMAL)
+			VDebugLog("memoryPressure = normal");
+		else if (pressure == DISPATCH_MEMORYPRESSURE_WARN)
+			VDebugLog("memoryPressure = warning");
+		else if (pressure == DISPATCH_MEMORYPRESSURE_CRITICAL)
+			VDebugLog("memoryPressure = critical");
+	});
+	dispatch_resume(memoryPressureWatcher);
+}
+
+/**
+ * Track workspace state changes, for debugging.
+ */
+static void VuoWorkspaceState(void)
 {
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceWillSleepNotification object:nil queue:nil usingBlock:^(NSNotification *note){
 		VDebugLog("The system is going to sleep.");
+		VuoEventLoop_systemAsleep = true;
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
 		VDebugLog("The system is waking up.");
+		VuoEventLoop_systemAsleep = false;
 	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceWillPowerOffNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system is powering off");
+	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceScreensDidSleepNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The screens are going to sleep.");
+	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceScreensDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The screens are waking up.");
+	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceSessionDidBecomeActiveNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system is switching back to this user account.");
+	}];
+	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceSessionDidResignActiveNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system is switching to another user account.");
+	}];
+	[NSNotificationCenter.defaultCenter addObserverForName:NSSystemClockDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
+		VDebugLog("The system's clock changed to %s", NSDate.date.description.UTF8String);
+	}];
+}
+
+/**
+ * Returns true if the system is asleep
+ * (i.e., the screens are off but the CPU is still active).
+ */
+bool VuoEventLoop_isSystemAsleep(void)
+{
+    return VuoEventLoop_systemAsleep;
+}
+
+/**
+ * Starts monitoring for system sleep events,
+ * to better support maintaining a connection between VuoRunner and VuoRuntime while the system is sleeping.
+ *
+ * Also starts monitoring other system/workspace events, for debugging.
+ *
+ * @threadMain
+ */
+void VuoEventLoop_installSleepHandlers(void)
+{
+	VuoThermalState();
+	VuoMemoryPressure();
+	VuoWorkspaceState();
 }
 
 /**
@@ -290,7 +389,4 @@ void VuoEventLoop_disableAppNap(void)
 		reason: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];
 
 	[activityToken retain];
-
-	VuoThermalState();
-	VuoSleepWake();
 }

@@ -2,7 +2,7 @@
  * @file
  * TestVuoPoint2d implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -33,7 +33,7 @@ private slots:
 		{
 			VuoPoint2d p;
 			p.x = p.y = 0;
-			QTest::newRow("zero") << "{\"x\":0,\"y\":0}" << p << true;
+			QTest::newRow("zero") << "{\"x\":0.0,\"y\":0.0}" << p << true;
 			QTest::newRow("emptystring") << "" << p << false;
 			QTest::newRow("partial point 1") << "{\"y\":0}" << p << false;
 			QTest::newRow("zero text") << QUOTE("0,0") << p << false;
@@ -43,7 +43,7 @@ private slots:
 		{
 			VuoPoint2d p;
 			p.x = p.y = 1;
-			QTest::newRow("one") << "{\"x\":1,\"y\":1}" << p << true;
+			QTest::newRow("one") << "{\"x\":1.0,\"y\":1.0}" << p << true;
 			QTest::newRow("one text") << QUOTE("1,1") << p << false;
 		}
 
@@ -94,4 +94,3 @@ private slots:
 QTEST_APPLESS_MAIN(TestVuoPoint2d)
 
 #include "TestVuoPoint2d.moc"
-

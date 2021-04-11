@@ -2,7 +2,7 @@
  * @file
  * VuoMidiNote implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,7 @@ VuoMidiNote VuoMidiNote_makeFromJson(json_object * js)
 		VuoJson_getObjectValue(VuoBoolean, js, "isNoteOn",   true),
 		VuoJson_getObjectValue(VuoInteger, js, "velocity",   127),
 		VuoJson_getObjectValue(VuoInteger, js, "noteNumber", 60),
-		""};
+	};
 }
 
 /**

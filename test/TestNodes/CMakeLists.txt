@@ -1,7 +1,5 @@
 VuoTest(NAME TestNodes
 	SOURCE TestNodes.cc
-	RESOURCE_LOCK GUI;COMPILER
-	COST 100
 	FIXTURE TestNodes
 )
 target_link_libraries(TestNodes

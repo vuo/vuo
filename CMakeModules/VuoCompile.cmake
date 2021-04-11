@@ -122,20 +122,25 @@ function (VuoNodeSet)
 		${descriptions}
 		${headers}
 	)
+	set(nodeSetStagingFolder ${CMAKE_CURRENT_BINARY_DIR}/staging)
 	add_custom_command(
 		DEPENDS
 			${builtFiles}
 			${sourceFiles}
 			${targets}
 		COMMENT "Archiving ${nodeSetName}"
-		# Run `zip` twice, to collect files from different folders while using relative paths in the zip.
-		# @todo does 7zip compress faster and/or produce smaller files?
-		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && zip --quiet --must-match ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode ${builtFiles}
-		COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && zip --quiet --must-match ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode ${sourceFiles}
-		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode
+		# Use `rsync` to create a staging folder for the archive's content (since `ditto` can only take a single source argument).
+		COMMAND rm -Rf ${nodeSetStagingFolder}
+		COMMAND mkdir ${nodeSetStagingFolder}
+		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && rsync --archive --extended-attributes --relative ${builtFiles}  ${nodeSetStagingFolder}
+		COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && rsync --archive --extended-attributes --relative ${sourceFiles} ${nodeSetStagingFolder}
+		# Use `ditto` (rather than Info-Zip or 7zip) since it preserves extended attributes
+		# (which is where `codesign` stores signatures for `.bc` and `.o` files, required for Notarization).
+		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && ditto -ck --extattr --zlibCompressionLevel 9 ${nodeSetStagingFolder} ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode
+		OUTPUT ${nodeSetName}.vuonode
 	)
 
-	add_custom_target(${nodeSetName} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode)
+	add_custom_target(${nodeSetName} DEPENDS ${nodeSetName}.vuonode)
 
 	get_property(VuoNodeSets GLOBAL PROPERTY VuoNodeSets)
 	list(APPEND VuoNodeSets ${nodeSetName})
@@ -168,8 +173,13 @@ endfunction()
 # Compiles the specified type source files using `vuo-compile`,
 # then converts them to native objects.
 function (VuoCompileTypes)
+	cmake_parse_arguments(arg "" "BASEDIR" "" ${ARGV})
+	if (NOT arg_BASEDIR)
+		set(arg_BASEDIR "${CMAKE_CURRENT_SOURCE_DIR}")
+	endif()
+
 	VuoGetNodeSetName(nodeSetName)
-	set(typeSources ${ARGV})
+	set(typeSources ${arg_UNPARSED_ARGUMENTS})
 	set(target "${nodeSetName}.types")
 
 	if (VUO_COMPILER_DEVELOPER)
@@ -182,49 +192,103 @@ function (VuoCompileTypes)
 		set(exclude EXCLUDE_FROM_ALL)
 	endif()
 
-	# Compile sources into bitcode.
-	foreach (typeSource ${typeSources})
-		get_filename_component(typeBitcode ${typeSource} NAME_WLE)
-		set(typeBitcode "${typeBitcode}.bc")
-		add_custom_command(
-			DEPENDS
-				${dependsOnVuoCompile}
-				VuoCoreTypesHeader
-				${CMAKE_CURRENT_SOURCE_DIR}/${typeSource}
-			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${typeSource}
-			COMMENT "Compiling ${nodeSetName} type ${typeSource}"
-			COMMAND_EXPAND_LISTS
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile
-				-I${PROJECT_BINARY_DIR}/type/list
-				"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
-				${CMAKE_CURRENT_SOURCE_DIR}/${typeSource}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-		)
-		list(APPEND typeBitcodes ${typeBitcode})
-	endforeach()
+	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
 
-	# Convert bitcode into native objects.
-	# (Unlike VuoCompileLibraries, we _do_ want to convert the LLVM bitcode
-	# to native objects, since we need the generated _retain/_release functions.)
-	foreach (typeBitcode ${typeBitcodes})
-		get_filename_component(typeObject ${typeBitcode} NAME_WLE)
-		set(typeObject "${typeObject}.o")
-		add_custom_command(
-			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-			COMMENT "Converting ${nodeSetName} type ${typeBitcode} to .o"
-			COMMAND ${CMAKE_CXX_COMPILER}
-				-Oz
-				-c ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${typeObject}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${typeObject}
-		)
-		list(APPEND typeObjects ${typeObject})
+	foreach (typeSource ${typeSources})
+		set(typeBitcodeParts "")
+		set(typeObjectParts "")
+		foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+			get_filename_component(typeBitcode ${typeSource} NAME_WLE)
+			if (archCount EQUAL 1)
+				set(typeBitcode "${typeBitcode}.bc")
+			else()
+				set(typeBitcode "${typeBitcode}-${arch}.bc")
+			endif()
+
+			# Compile source into bitcode.
+			add_custom_command(
+				DEPENDS
+					${dependsOnVuoCompile}
+					VuoCoreTypesHeader
+					${arg_BASEDIR}/${typeSource}
+				IMPLICIT_DEPENDS CXX ${arg_BASEDIR}/${typeSource}
+				COMMENT "Compiling ${nodeSetName} type ${typeSource} (${arch})"
+				COMMAND_EXPAND_LISTS
+				COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile
+					--target ${arch}-apple-macosx10.10.0
+					-I${PROJECT_BINARY_DIR}/type/list
+					"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
+					${arg_BASEDIR}/${typeSource}
+					-o ${typeBitcode}
+				OUTPUT ${typeBitcode}
+			)
+
+			# Convert bitcode into a native object.
+			# (Unlike VuoCompileLibraries, we do want to _convert_ the LLVM bitcode
+			# to a native object (rather than compiling it from C source to a native object),
+			# since we need the generated _retain/_release functions.)
+			get_filename_component(typeObject ${typeSource} NAME_WLE)
+			if (archCount EQUAL 1)
+				set(typeObject "${typeObject}.o")
+			else()
+				set(typeObject "${typeObject}-${arch}.o")
+			endif()
+			add_custom_command(
+				DEPENDS ${typeBitcode}
+				COMMENT "Converting ${nodeSetName} type ${typeBitcode} to .o"
+				COMMAND ${CMAKE_CXX_COMPILER}
+					-target ${arch}-apple-macosx10.10.0
+					-Oz
+					-c ${typeBitcode}
+					-o ${typeObject}
+				OUTPUT ${typeObject}
+			)
+			if (archCount EQUAL 1)
+				list(APPEND typeBitcodes ${typeBitcode})
+				list(APPEND typeObjects ${typeObject})
+			else()
+				list(APPEND typeBitcodeParts ${typeBitcode})
+				list(APPEND typeObjectParts ${typeObject})
+			endif()
+		endforeach()
+
+		if (archCount GREATER 1)
+			get_filename_component(typeBitcode ${typeSource} NAME_WLE)
+			set(typeBitcode "${typeBitcode}.bc")
+			add_custom_command(
+				DEPENDS ${typeBitcodeParts}
+				COMMENT "Merging ${nodeSetName} type ${typeObject} (bitcode)"
+				COMMAND lipo -create ${typeBitcodeParts} -output ${typeBitcode}
+				OUTPUT ${typeBitcode}
+			)
+			if (VuoPackage)
+				VuoPackageCodesign(${typeBitcode})
+			endif()
+			list(APPEND typeBitcodes ${typeBitcode})
+
+			get_filename_component(typeObject ${typeSource} NAME_WLE)
+			set(typeObject "${typeObject}.o")
+			add_custom_command(
+				DEPENDS ${typeObjectParts}
+				COMMENT "Merging ${nodeSetName} type ${typeObject} (native)"
+				COMMAND lipo -create ${typeObjectParts} -output ${typeObject}
+				OUTPUT ${typeObject}
+			)
+			if (VuoPackage)
+				VuoPackageCodesign(${typeObject})
+			endif()
+			list(APPEND typeObjects ${typeObject})
+		endif()
 	endforeach()
 
 	add_library(${target} STATIC ${exclude} ${typeBitcodes} ${typeObjects})
 	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
-	target_include_directories(${target} INTERFACE .)
+	target_include_directories(${target}
+		INTERFACE
+			.
+		PRIVATE
+			${PROJECT_SOURCE_DIR}/base
+	)
 
 	# This target enables the source files to show up in Qt Creator's Projects tree.
 	add_library(${target}.source MODULE EXCLUDE_FROM_ALL ${typeSources})
@@ -232,68 +296,8 @@ function (VuoCompileTypes)
 endfunction()
 
 
-# Compiles the specified generated type source files using `vuo-compile`,
-# then converts them to native objects.
-function (VuoCompileListTypes)
-	VuoGetNodeSetName(nodeSetName)
-	set(typeSources ${ARGV})
-	set(target "${nodeSetName}.types")
-
-	if (VUO_COMPILER_DEVELOPER)
-		set(dependsOnVuoCompile "")
-	else()
-		set(dependsOnVuoCompile "vuo-compile")
-	endif()
-
-	# Compile sources into bitcode.
-	foreach (typeSource ${typeSources})
-		get_filename_component(typeBitcode ${typeSource} NAME_WLE)
-		set(typeBitcode "${typeBitcode}.bc")
-		add_custom_command(
-			DEPENDS
-				${dependsOnVuoCompile}
-				VuoCoreTypesHeader
-				${CMAKE_CURRENT_BINARY_DIR}/${typeSource}
-			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_BINARY_DIR}/${typeSource}
-			COMMENT "Compiling ${nodeSetName} type ${typeSource}"
-			COMMAND_EXPAND_LISTS
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile
-				-I${PROJECT_BINARY_DIR}/type/list
-				"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
-				${CMAKE_CURRENT_BINARY_DIR}/${typeSource}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-		)
-		list(APPEND typeBitcodes ${typeBitcode})
-	endforeach()
-
-	# Convert bitcode into native objects.
-	foreach (typeBitcode ${typeBitcodes})
-		get_filename_component(typeObject ${typeBitcode} NAME_WLE)
-		set(typeObject "${typeObject}.o")
-		add_custom_command(
-			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-			COMMENT "Converting ${nodeSetName} type ${typeBitcode} to .o"
-			COMMAND ${CMAKE_CXX_COMPILER}
-				-Oz
-				-c ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${typeObject}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${typeObject}
-		)
-		list(APPEND typeObjects ${typeObject})
-	endforeach()
-
-	add_library(${target} STATIC ${typeBitcodes} ${typeObjects})
-	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
-	target_include_directories(${target} INTERFACE .)
-
-	# This target enables the source files to show up in Qt Creator's Projects tree.
-	add_library(${target}.source MODULE EXCLUDE_FROM_ALL ${typeSources})
-endfunction()
-
-
 # Compiles the specified library source files to bitcode using `clang`,
-# then converts them to native objects.
+# and builds them as native objects.
 function (VuoCompileLibraries)
 	VuoGetNodeSetName(nodeSetName)
 	VuoCompileLibrariesWithTarget("${nodeSetName}.libraries" ${ARGV})
@@ -318,6 +322,11 @@ function (VuoCompileLibrariesWithTarget target)
 		list(APPEND cxxFlags -O0)
 	endif()
 
+	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
+	foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+		list(APPEND archFlags -arch ${arch})
+	endforeach()
+
 	# Compile sources into bitcode.
 	set(definitionGen "$<REMOVE_DUPLICATES:$<TARGET_PROPERTY:${target},COMPILE_DEFINITIONS>>")
 	set(includeGen "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
@@ -331,31 +340,58 @@ function (VuoCompileLibrariesWithTarget target)
 			set(flags "${cxxFlags}")
 		endif()
 
-		get_filename_component(bitcode ${source} NAME_WLE)
-		set(bitcode "${bitcode}.bc")
+		set(bitcodeParts "")
+		foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+			get_filename_component(bitcode ${source} NAME_WLE)
+			if (archCount EQUAL 1)
+				set(bitcode "${bitcode}.bc")
+			else()
+				set(bitcode "${bitcode}-${arch}.bc")
+			endif()
 
-		add_custom_command(
-			DEPENDS
-				VuoCoreTypesHeader
-				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			COMMENT "Compiling ${target} (bitcode) ${source}"
-			COMMAND_EXPAND_LISTS
-			COMMAND ${compiler}
-				${flags}
-				-DVUO_COMPILER
-				"$<$<BOOL:${definitionGen}>:-D$<JOIN:${definitionGen},;-D>>"
-				"$<$<BOOL:${includeGen}>:-I$<JOIN:${includeGen},;-I>>"
-				-target x86_64-apple-macosx10.10.0
-				-fblocks
-				-fexceptions
-				-emit-llvm
-				-isysroot ${CMAKE_OSX_SYSROOT}
-				-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
-		)
-		list(APPEND bitcodes ${bitcode})
+			add_custom_command(
+				DEPENDS
+					VuoCoreTypesHeader
+					${CMAKE_CURRENT_SOURCE_DIR}/${source}
+				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
+				COMMENT "Compiling ${target} (${arch} bitcode) ${source}"
+				COMMAND_EXPAND_LISTS
+				COMMAND ${compiler}
+					${flags}
+					-DVUO_COMPILER
+					"$<$<BOOL:${definitionGen}>:-D$<JOIN:${definitionGen},;-D>>"
+					"$<$<BOOL:${includeGen}>:-I$<JOIN:${includeGen},;-I>>"
+					-arch ${arch}
+					-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}
+					-fblocks
+					-fexceptions
+					-emit-llvm
+					-isysroot ${CMAKE_OSX_SYSROOT}
+					-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
+					-o ${bitcode}
+				OUTPUT ${bitcode}
+			)
+			if (archCount EQUAL 1)
+				list(APPEND bitcodes ${bitcode})
+			else()
+				list(APPEND bitcodeParts ${bitcode})
+			endif()
+		endforeach()
+
+		if (archCount GREATER 1)
+			get_filename_component(bitcode ${source} NAME_WLE)
+			set(bitcode "${bitcode}.bc")
+			add_custom_command(
+				DEPENDS ${bitcodeParts}
+				COMMENT "Merging ${target} bitcode ${source}"
+				COMMAND lipo -create ${bitcodeParts} -output ${bitcode}
+				OUTPUT ${bitcode}
+			)
+			if (VuoPackage)
+				VuoPackageCodesign(${bitcode})
+			endif()
+			list(APPEND bitcodes ${bitcode})
+		endif()
 	endforeach()
 
 	# Compile sources into native objects.
@@ -385,14 +421,18 @@ function (VuoCompileLibrariesWithTarget target)
 				${flags}
 				"$<$<BOOL:${definitionGen}>:-D$<JOIN:${definitionGen},;-D>>"
 				"$<$<BOOL:${includeGen}>:-I$<JOIN:${includeGen},;-I>>"
-				-target x86_64-apple-macosx10.10.0
+				${archFlags}
+				-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}
 				-fblocks
 				-fexceptions
 				-isysroot ${CMAKE_OSX_SYSROOT}
 				-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${object}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${object}
+				-o ${object}
+			OUTPUT ${object}
 		)
+		if (VuoPackage)
+			VuoPackageCodesign(${object})
+		endif()
 		list(APPEND objects ${object})
 	endforeach()
 
@@ -403,6 +443,7 @@ function (VuoCompileLibrariesWithTarget target)
 			.
 		PRIVATE
 			${PROJECT_BINARY_DIR}/type/list
+			${PROJECT_SOURCE_DIR}/base
 			${PROJECT_SOURCE_DIR}/library
 			${PROJECT_SOURCE_DIR}/node
 			${PROJECT_SOURCE_DIR}/runtime
@@ -433,43 +474,73 @@ function (VuoCompileNodes)
 		set(exclude EXCLUDE_FROM_ALL)
 	endif()
 
+	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
+
 	# Compile sources into bitcode.
 	foreach (source ${sources})
-		get_filename_component(bitcode ${source} NAME_WLE)
-		set(bitcode "${bitcode}.vuonode")
+		set(bitcodeParts "")
+		foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+			get_filename_component(bitcode ${source} NAME_WLE)
+			if (archCount EQUAL 1)
+				set(bitcode "${bitcode}.vuonode")
+			else()
+				set(bitcode "${bitcode}-${arch}.vuonode")
+			endif()
 
-		# Use the framework compiler for ISF files.
-		get_filename_component(extension ${source} LAST_EXT)
-		if (extension STREQUAL ".fs")
-			set(thisDep ${dependsOnVuoCompileForFramework})
-			set(thisCompiler ${PROJECT_BINARY_DIR}/bin/vuo-compile-for-framework)
-		else()
-			set(thisDep ${dependsOnVuoCompile})
-			set(thisCompiler ${PROJECT_BINARY_DIR}/bin/vuo-compile)
+			# Use the framework compiler for ISF files.
+			get_filename_component(extension ${source} LAST_EXT)
+			if (extension STREQUAL ".fs")
+				set(thisDep ${dependsOnVuoCompileForFramework})
+				set(thisCompiler ${PROJECT_BINARY_DIR}/bin/vuo-compile-for-framework)
+			else()
+				set(thisDep ${dependsOnVuoCompile})
+				set(thisCompiler ${PROJECT_BINARY_DIR}/bin/vuo-compile)
+			endif()
+
+			add_custom_command(
+				DEPENDS
+					${thisDep}
+					VuoCoreTypesHeader
+					${CMAKE_CURRENT_SOURCE_DIR}/${source}
+				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
+				COMMENT "Compiling ${nodeSetName} node ${source} (${arch})"
+				COMMAND_EXPAND_LISTS
+				COMMAND ${thisCompiler}
+					-I${CMAKE_CURRENT_SOURCE_DIR}
+					"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
+					--target ${arch}-apple-macosx10.10.0
+					${CMAKE_CURRENT_SOURCE_DIR}/${source}
+					-o ${bitcode}
+				OUTPUT ${bitcode}
+			)
+			if (archCount EQUAL 1)
+				list(APPEND bitcodes ${bitcode})
+			else()
+				list(APPEND bitcodeParts ${bitcode})
+			endif()
+		endforeach()
+
+		if (archCount GREATER 1)
+			get_filename_component(bitcode ${source} NAME_WLE)
+			set(bitcode "${bitcode}.vuonode")
+			add_custom_command(
+				DEPENDS ${bitcodeParts}
+				COMMENT "Merging ${target} bitcode ${source}"
+				COMMAND lipo -create ${bitcodeParts} -output ${bitcode}
+				OUTPUT ${bitcode}
+			)
+			if (VuoPackage)
+				VuoPackageCodesign(${bitcode})
+			endif()
+			list(APPEND bitcodes ${bitcode})
 		endif()
-
-		add_custom_command(
-			DEPENDS
-				${thisDep}
-				VuoCoreTypesHeader
-				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			COMMENT "Compiling ${nodeSetName} node ${source}"
-			COMMAND_EXPAND_LISTS
-			COMMAND ${thisCompiler}
-				-I${CMAKE_CURRENT_SOURCE_DIR}
-				"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
-				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
-		)
-		list(APPEND bitcodes ${bitcode})
 	endforeach()
 
 	add_library(${target} OBJECT ${exclude} ${bitcodes})
 	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
 	target_include_directories(${target}
 		PRIVATE
+			${PROJECT_SOURCE_DIR}/base
 			${PROJECT_BINARY_DIR}/type/list
 	)
 
@@ -501,38 +572,63 @@ function (VuoCompileCompositions target)
 		set(dependsOnVuoCompile "vuo-compile")
 	endif()
 
+	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
+
 	# Compile sources into bitcode.
 	foreach (source ${sources})
-		get_filename_component(compositionBitcode ${source} NAME_WLE)
-		set(compositionBitcode "${compositionBitcode}.bc")
-		add_custom_command(
-			DEPENDS
-				${dependsOnVuoCompile}
-				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			COMMENT "Compiling composition ${source}"
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile-for-framework
-				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				-o ${CMAKE_CURRENT_BINARY_DIR}/${compositionBitcode}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${compositionBitcode}
-		)
-		list(APPEND compositionBitcodes ${compositionBitcode})
+		set(executableParts "")
+		foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+			get_filename_component(compositionBitcode ${source} NAME_WLE)
+			get_filename_component(compositionExecutable ${compositionBitcode} NAME_WLE)
+			if (archCount EQUAL 1)
+				set(compositionBitcode "${compositionBitcode}.bc")
+			else()
+				set(compositionBitcode "${compositionBitcode}-${arch}.bc")
+				set(compositionExecutable "${compositionExecutable}-${arch}")
+			endif()
+
+			add_custom_command(
+				DEPENDS
+					${dependsOnVuoCompile}
+					vuo-link
+					${CMAKE_CURRENT_SOURCE_DIR}/${source}
+				COMMENT "Compiling and linking composition ${source} (${arch})"
+				COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile-for-framework
+					--target ${arch}-apple-macosx10.10.0
+					${CMAKE_CURRENT_SOURCE_DIR}/${source}
+					-o ${compositionBitcode}
+				COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-link
+					--optimization fast-build-existing-cache
+					--target ${arch}-apple-macosx10.10.0
+					${compositionBitcode}
+					--output ${compositionExecutable}
+				OUTPUT ${compositionExecutable}
+			)
+
+			if (archCount EQUAL 1)
+				set(singleTarget ${target}_${compositionExecutable})
+				add_custom_target(${singleTarget} DEPENDS ${compositionExecutable})
+				list(APPEND compositionTargets ${singleTarget})
+			else()
+				list(APPEND executableParts ${compositionExecutable})
+			endif()
+		endforeach()
+
+		if (archCount GREATER 1)
+			get_filename_component(compositionExecutable ${source} NAME_WLE)
+			add_custom_command(
+				DEPENDS ${executableParts}
+				COMMENT "Merging composition ${source}"
+				COMMAND lipo -create ${executableParts} -output ${compositionExecutable}
+				OUTPUT ${compositionExecutable}
+			)
+			set(singleTarget ${target}_${compositionExecutable})
+			add_custom_target(${singleTarget} DEPENDS ${compositionExecutable})
+			list(APPEND compositionTargets ${singleTarget})
+		endif()
 	endforeach()
 
-	# Link bitcodes into executables.
-	foreach (compositionBitcode ${compositionBitcodes})
-		get_filename_component(compositionExecutable ${compositionBitcode} NAME_WLE)
-		add_custom_command(
-			DEPENDS vuo-link ${CMAKE_CURRENT_BINARY_DIR}/${compositionBitcode}
-			COMMENT "Linking composition ${compositionExecutable}"
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-link
-				${CMAKE_CURRENT_BINARY_DIR}/${compositionBitcode}
-				--output ${CMAKE_CURRENT_BINARY_DIR}/${compositionExecutable}
-			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${compositionExecutable}
-		)
-		list(APPEND compositionExecutables ${CMAKE_CURRENT_BINARY_DIR}/${compositionExecutable})
-	endforeach()
-
-	add_custom_target(${target} DEPENDS ${compositionExecutables})
+	add_custom_target(${target} DEPENDS ${compositionTargets})
 endfunction()
 
 
@@ -550,15 +646,15 @@ function (VuoRender target)
 
 		get_filename_component(nodeName ${node} NAME)
 		string(REGEX REPLACE "\.vuo$" "" nodeName ${nodeName})
-		set(nodePNG "${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}.png")
-		set(nodePDF "${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}.pdf")
+		set(nodePNG "image-generated/${nodeName}.png")
+		set(nodePDF "image-generated/${nodeName}.pdf")
 		add_custom_command(
 			DEPENDS vuo-export
 			COMMENT "Rendering ${nodeName}"
 			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-export source --format=pdf --output ${nodePDF} ${node}
 			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-export source --format=png --output ${nodePNG} ${node}
 			COMMAND pngquant ${nodePNG}
-			COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/image-generated/${nodeName}-fs8.png ${nodePNG}
+			COMMAND mv image-generated/${nodeName}-fs8.png ${nodePNG}
 			OUTPUT ${nodePDF} ${nodePNG}
 		)
 		list(APPEND output ${nodePDF} ${nodePNG})

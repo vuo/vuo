@@ -2,7 +2,7 @@
  * @file
  * TestModules interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -32,6 +32,8 @@ class TestModules : public QObject
 	Q_OBJECT
 
 private:
+	int argc;
+	char **argv;
 	VuoCompiler *compiler;
 	WJElement VuoType;
 	WJElement VuoLibrary;
@@ -119,7 +121,9 @@ private:
 
 
 public:
-	TestModules()
+	TestModules(int argc, char **argv)
+		: argc(argc),
+		  argv(argv)
 	{
 		compiler = new VuoCompiler();
 
@@ -147,11 +151,22 @@ public:
 		delete compiler;
 	}
 
-
 private slots:
 	void testType_data()
 	{
 		QTest::addColumn<VuoCompilerType *>("type");
+
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			QString typeName(QString::fromUtf8(argv[1]).section(':', 1));
+			if (!typeName.isEmpty())
+			{
+				QTest::newRow(typeName.toUtf8().constData()) << compiler->getType(typeName.toStdString());
+				return;
+			}
+		}
 
 		map<string, VuoCompilerType *> types = compiler->getTypes();
 		for (map<string, VuoCompilerType *>::iterator i = types.begin(); i != types.end(); ++i)
@@ -168,6 +183,18 @@ private slots:
 	{
 		QTest::addColumn<VuoCompilerModule *>("library");
 
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			QString libraryName(QString::fromUtf8(argv[1]).section(':', 1));
+			if (!libraryName.isEmpty())
+			{
+				QTest::newRow(libraryName.toUtf8().constData()) << compiler->getLibraryModule(libraryName.toStdString());
+				return;
+			}
+		}
+
 		map<string, VuoCompilerModule *> libraries = compiler->getLibraryModules();
 		for (map<string, VuoCompilerModule *>::iterator i = libraries.begin(); i != libraries.end(); ++i)
 			QTest::newRow(i->first.c_str()) << i->second;
@@ -183,6 +210,18 @@ private slots:
 	{
 		QTest::addColumn<VuoCompilerNodeClass *>("nodeClass");
 
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			QString nodeClassName(QString::fromUtf8(argv[1]).section(':', 1));
+			if (!nodeClassName.isEmpty())
+			{
+				QTest::newRow(nodeClassName.toUtf8().constData()) << compiler->getNodeClass(nodeClassName.toStdString());
+				return;
+			}
+		}
+
 		map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
 		for (map<string, VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
 		{
@@ -195,6 +234,8 @@ private slots:
 	void testNode()
 	{
 		QFETCH(VuoCompilerNodeClass *, nodeClass);
+
+		QVERIFY(nodeClass);
 
 		QVERIFY(validate(VuoNode, json_object_to_json_string(nodeClass->moduleDetails), nodeClass->getBase()->getClassName().c_str()));
 
@@ -240,5 +281,10 @@ private slots:
 	}
 };
 
-QTEST_APPLESS_MAIN(TestModules)
+int main(int argc, char *argv[])
+{
+	TestModules tc(argc, argv);
+	return QTest::qExec(&tc, argc, argv);
+}
+
 #include "TestModules.moc"

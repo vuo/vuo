@@ -2,7 +2,7 @@
  * @file
  * VuoDragEvent C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -34,8 +34,6 @@ typedef struct
 {
 	VuoPoint2d position;
 	VuoList_VuoUrl urls;
-
-	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoDragEvent;
 
 VuoDragEvent VuoDragEvent_makeFromJson(struct json_object *js);

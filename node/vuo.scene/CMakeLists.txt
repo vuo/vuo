@@ -79,6 +79,7 @@ VuoCompileNodes(
 	vuo.scene.tc.remove.c
 	vuo.scene.tile.c
 	vuo.scene.transform.c
+	vuo.scene.transform.trs.c
 	vuo.scene.trim.c
 	vuo.scene.twirl.c
 )

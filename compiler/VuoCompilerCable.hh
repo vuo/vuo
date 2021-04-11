@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCable interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -29,7 +29,7 @@ public:
 	bool getHidden(void);
 	string getGraphvizDeclaration(void);
 	bool carriesData(void);
-	void generateTransmission(Module *module, BasicBlock *block, Value *toNodeContextValue, Value *toPortContextValue, Value *outputDataValue, bool shouldTransmitEvent=true);
+	void generateTransmission(Module *module, BasicBlock *block, Value *toNodeContextValue, Value *toPortContextValue, Value *outputDataPointer, bool shouldTransmitEvent=true);
 
 private:
 	bool isAlwaysEventOnly;

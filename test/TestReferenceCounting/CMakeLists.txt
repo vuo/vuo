@@ -1,6 +1,5 @@
 VuoTest(NAME TestReferenceCounting
 	SOURCE TestReferenceCounting.cc
-	RESOURCE_LOCK COMPILER
 )
 target_link_libraries(TestReferenceCounting
 	PRIVATE

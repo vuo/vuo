@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -81,8 +81,8 @@ public:
 	void setConstant(string constantValue);
 	string getPortNameToRender() const;
 	string getPortNameToRenderWhenDisplayed() const;
-	static QString getPortIdentifierRegExp();
-	static QString sanitizePortIdentifier(QString portID);
+	static QString getPortNameRegExp();
+	static QString sanitizePortName(QString portName);
 	void setPortNameToRender(string name);
 	bool getPublishable() const;
 	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
@@ -126,6 +126,7 @@ private:
 
 	QFont getPortNameFont(void) const;
 	static void addRoundedTriangle(QPainterPath &p, QPointF center, qreal radius, qreal cornerRadius);
+	void updateToolTip();
 
 	// Port attributes affecting drawing
 	bool isOutput;
@@ -175,4 +176,3 @@ protected:
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };
-

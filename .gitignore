@@ -1,3 +1,14 @@
 CMakeLists.txt.user
-build
+build*
 editor/VuoEditorApp/qml/welcome/*.qmlc
+test/TestCompositions/composition/RecordAndPlayTimes-recording*.txt
+test/TestCompositions/composition/SaveImageFetchImage*.BMP
+test/TestCompositions/composition/SaveImageFetchImage*.EXR
+test/TestCompositions/composition/SaveImageFetchImage*.GIF
+test/TestCompositions/composition/SaveImageFetchImage*.HDR
+test/TestCompositions/composition/SaveImageFetchImage*.JPEG
+test/TestCompositions/composition/SaveImageFetchImage*.PNG
+test/TestCompositions/composition/SaveImageFetchImage*.TGA
+test/TestCompositions/composition/SaveImageFetchImage*.TIFF
+test/TestCompositions/composition/SaveImageFetchImage*.WEBP
+test/TestCompositions/composition/vuo.image.make.text-size-*.png

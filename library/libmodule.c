@@ -2,7 +2,7 @@
  * @file
  * Implementations of functions available to modules (nodes, types, libraries).
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -226,9 +226,13 @@ bool VuoIsPro(void)
  */
 bool VuoProcessorSupportsAVX2(void)
 {
+#if __x86_64__
 	// Based on https://software.intel.com/en-us/articles/how-to-detect-new-instruction-support-in-the-4th-generation-intel-core-processor-family
 	uint32_t eax = 7, ebx, ecx = 0, edx;
 	__asm__ ( "cpuid" : "+b" (ebx), "+a" (eax), "+c" (ecx), "=d" (edx) );
 	uint32_t avx2_mask = 1 << 5;
 	return (ebx & avx2_mask) == avx2_mask;
+#else
+	return false;
+#endif
 }

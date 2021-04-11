@@ -2,7 +2,7 @@
  * @file
  * VuoMidiPitchBend implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,7 @@ VuoMidiPitchBend VuoMidiPitchBend_makeFromJson(json_object *js)
 	return (VuoMidiPitchBend){
 		VuoJson_getObjectValue(VuoInteger, js, "channel", 1),
 		VuoJson_getObjectValue(VuoInteger, js, "value", 8192),
-		""};
+	};
 }
 
 /**
@@ -90,6 +90,5 @@ char *VuoMidiPitchBend_getSummary(const VuoMidiPitchBend value)
  */
 VuoMidiPitchBend VuoMidiPitchBend_make(VuoInteger channel, VuoInteger value)
 {
-	return (VuoMidiPitchBend){channel, value, ""};
+    return (VuoMidiPitchBend){channel, value};
 }
-

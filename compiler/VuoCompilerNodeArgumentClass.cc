@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeArgumentClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -13,12 +13,10 @@
 /**
  * Creates a parameter for calling a node's event or init function, and creates its corresponding base @c VuoPortClass.
  */
-VuoCompilerNodeArgumentClass::VuoCompilerNodeArgumentClass(string name, enum VuoPortClass::PortType portType, Type *type)
+VuoCompilerNodeArgumentClass::VuoCompilerNodeArgumentClass(string name, enum VuoPortClass::PortType portType)
 	: VuoBaseDetail<VuoPortClass>("VuoPortClass", new VuoPortClass(name,portType))
 {
 	getBase()->setCompiler(this);
-
-	this->type = type;
 
 	inEventFunction = false;
 	inInitFunction = false;
@@ -32,14 +30,6 @@ VuoCompilerNodeArgumentClass::VuoCompilerNodeArgumentClass(string name, enum Vuo
  */
 VuoCompilerNodeArgumentClass::~VuoCompilerNodeArgumentClass(void)
 {
-}
-
-/**
- * Returns the type of this argument.
- */
-Type * VuoCompilerNodeArgumentClass::getType(void)
-{
-	return type;
 }
 
 /**

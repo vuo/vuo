@@ -3,16 +3,16 @@
  * main.m
  * VuoPluginApp
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#import <Cocoa/Cocoa.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Metal reimplementation coming soon.
 
 NSOpenGLContext *VuoPluginAppSharedOpenGLContext = nil;
-
-#include <Vuo/Vuo.h>
 
 /**
  * Creates an OpenGL graphics context to be shared between Vuo and this host app.
@@ -42,6 +42,7 @@ void VuoPluginApp_createOpenGLContext(void)
 	// Share the GL Context with Vuo
 	VuoGlContext_setGlobalRootContext((void *)cgl_ctx);
 }
+#pragma clang diagnostic pop
 
 int main(int argc, const char * argv[])
 {

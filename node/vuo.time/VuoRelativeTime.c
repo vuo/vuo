@@ -2,7 +2,7 @@
  * @file
  * VuoRelativeTime implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -69,35 +69,35 @@ char *VuoRelativeTime_getSummary(const VuoRelativeTime value)
 
 	if (years)
 	{
-		char *s = VuoText_format("%d year%s", abs(years), abs(years) == 1 ? "" : "s");
+		char *s = VuoText_format("%lld year%s", llabs(years), llabs(years) == 1 ? "" : "s");
 		VuoListAppendValue_VuoText(components, VuoText_make(s));
 		free(s);
 	}
 
 	if (months)
 	{
-		char *s = VuoText_format("%d month%s", abs(months), abs(months) == 1 ? "" : "s");
+		char *s = VuoText_format("%lld month%s", llabs(months), llabs(months) == 1 ? "" : "s");
 		VuoListAppendValue_VuoText(components, VuoText_make(s));
 		free(s);
 	}
 
 	if (days)
 	{
-		char *s = VuoText_format("%d day%s", abs(days), abs(days) == 1 ? "" : "s");
+		char *s = VuoText_format("%lld day%s", llabs(days), llabs(days) == 1 ? "" : "s");
 		VuoListAppendValue_VuoText(components, VuoText_make(s));
 		free(s);
 	}
 
 	if (hours)
 	{
-		char *s = VuoText_format("%d hour%s", abs(hours), abs(hours) == 1 ? "" : "s");
+		char *s = VuoText_format("%lld hour%s", llabs(hours), llabs(hours) == 1 ? "" : "s");
 		VuoListAppendValue_VuoText(components, VuoText_make(s));
 		free(s);
 	}
 
 	if (minutes)
 	{
-		char *s = VuoText_format("%d minute%s", abs(minutes), abs(minutes) == 1 ? "" : "s");
+		char *s = VuoText_format("%lld minute%s", llabs(minutes), llabs(minutes) == 1 ? "" : "s");
 		VuoListAppendValue_VuoText(components, VuoText_make(s));
 		free(s);
 	}

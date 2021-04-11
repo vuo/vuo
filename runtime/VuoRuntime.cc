@@ -2,7 +2,7 @@
  * @file
  * VuoRuntime implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -241,6 +241,7 @@ void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *tele
 	{
 		runtimeState = new VuoRuntimeState();
 		VuoEventLoop_installSignalHandlers();
+		VuoEventLoop_installSleepHandlers();
 		VuoEventLoop_disableAppNap();
 	}
 

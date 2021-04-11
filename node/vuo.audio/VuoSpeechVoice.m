@@ -2,7 +2,7 @@
  * @file
  * VuoSpeechVoice implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,10 +14,8 @@
 #include "VuoSpeechVoice.h"
 #include "VuoList_VuoSpeechVoice.h"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#include <Cocoa/Cocoa.h>
+#include "VuoMacOSSDKWorkaround.h"
+#include <AppKit/AppKit.h>
 
 /// @{
 #ifdef VUO_COMPILER

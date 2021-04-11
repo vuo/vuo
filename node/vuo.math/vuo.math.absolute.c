@@ -2,7 +2,7 @@
  * @file
  * vuo.math.absolute node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -34,7 +34,7 @@ static VuoReal VuoReal_Absolute(VuoReal val)
 
 static VuoInteger VuoInteger_Absolute(VuoInteger val)
 {
-	return abs(val);
+	return llabs(val);
 }
 
 #pragma clang diagnostic pop

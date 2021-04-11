@@ -1,6 +1,5 @@
 VuoTest(NAME TestControlAndTelemetry
 	SOURCE TestControlAndTelemetry.cc
-	RESOURCE_LOCK COMPILER
 )
 target_link_libraries(TestControlAndTelemetry
 	PRIVATE
@@ -16,4 +15,7 @@ VuoCompileNodes(
 	node-TestControlAndTelemetry/vuo.test.temporarilyDisableTermination.c
 	node-TestControlAndTelemetry/vuo.test.writeTimeToFile.c
 )
-add_dependencies(TestControlAndTelemetry TestControlAndTelemetry.nodes)
+add_dependencies(TestControlAndTelemetry
+	TestControlAndTelemetry.nodes
+	VuoEditorApp
+)

@@ -2,7 +2,7 @@
  * @file
  * VuoPortPopover implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -734,8 +734,7 @@ void VuoPortPopover::updateStyle()
 		setAttribute(Qt::WA_DeleteOnClose, false);
 
 #if __APPLE__
-		void *window = VuoPopover::getWindowForPopover(this);
-		Class nsWindow = (Class)objc_getClass("NSWindow");
+		id window = (id)VuoPopover::getWindowForPopover(this);
 
 		unsigned long styleMask = 0;
 		styleMask |= 1 << 0; // NSWindowStyleMaskTitled
@@ -744,35 +743,17 @@ void VuoPortPopover::updateStyle()
 		styleMask |= 1 << 4; // NSWindowStyleMaskUtilityWindow
 		if (isDark)
 			styleMask |= 1 << 13; // NSWindowStyleMaskHUDWindow
-		objc_msgSend((id)window, sel_getUid("setStyleMask:"), styleMask);
+		((void (*)(id, SEL, unsigned long))objc_msgSend)(window, sel_getUid("setStyleMask:"), styleMask);
 
 		// Continue to show the panel even when the Vuo Editor isn't the focused application.
-		{
-			// [window setHidesOnDeactivate:NO];
-			SEL setHidesOnDeactivateSEL = sel_registerName("setHidesOnDeactivate:");
-			Method nsWindowSetHidesOnDeactivateMethod = class_getInstanceMethod(nsWindow, setHidesOnDeactivateSEL);
-			IMP nsWindowSetHidesOnDeactivate = method_getImplementation(nsWindowSetHidesOnDeactivateMethod);
-			nsWindowSetHidesOnDeactivate((id)window, method_getName(nsWindowSetHidesOnDeactivateMethod), 0);
-		}
+		((void (*)(id, SEL, BOOL))objc_msgSend)(window, sel_getUid("setHidesOnDeactivate:"), NO);
 
 		// Disable the maximize button (since disabling flag Qt::WindowMaximizeButtonHint doesn't do it).
 		{
-			// zoomButton = [window standardWindowButton:NSWindowZoomButton];
-			SEL standardWindowButtonSEL = sel_registerName("standardWindowButton:");
-			Method nsWindowStandardWindowButtonMethod = class_getInstanceMethod(nsWindow, standardWindowButtonSEL);
-			IMP nsWindowStandardWindowButton = method_getImplementation(nsWindowStandardWindowButtonMethod);
 			int NSWindowZoomButton = 2;
-			id zoomButton = nsWindowStandardWindowButton((id)window, method_getName(nsWindowStandardWindowButtonMethod), NSWindowZoomButton);
-
+			id zoomButton = ((id (*)(id, SEL, unsigned long))objc_msgSend)(window, sel_getUid("standardWindowButton:"), NSWindowZoomButton);
 			if (zoomButton)
-			{
-				// [zoomButton setEnabled:NO];
-				Class nsButton = (Class)objc_getClass("NSButton");
-				SEL setEnabledSEL = sel_registerName("setEnabled:");
-				Method nsButtonSetEnabledMethod = class_getInstanceMethod(nsButton, setEnabledSEL);
-				IMP nsButtonSetEnabled = method_getImplementation(nsButtonSetEnabledMethod);
-				nsButtonSetEnabled(zoomButton, method_getName(nsButtonSetEnabledMethod), 0);
-			}
+				((void (*)(id, SEL, BOOL))objc_msgSend)(zoomButton, sel_getUid("setEnabled:"), NO);
 		}
 #endif
 

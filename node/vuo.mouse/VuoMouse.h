@@ -2,7 +2,7 @@
  * @file
  * VuoMouse interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -30,7 +30,7 @@ void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)
 void VuoMouse_startListeningForScrollsWithCallback(VuoMouse *mouseListener, void (^scrolled)(VuoPoint2d),
 												   VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d),
-									 VuoWindowReference window, VuoModifierKey modifierKey);
+									 VuoWindowReference window, VuoModifierKey modifierKey, bool global);
 void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (^movedTo)(VuoPoint2d),
 									 VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(VuoPoint2d),
@@ -66,7 +66,7 @@ bool VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
 						VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey,
 						bool onlyUpdateWhenActive) VuoWarnUnusedResult;
 
-#ifdef NSAppKitVersionNumber10_0
+#ifdef _APPKITDEFINES_H
 VuoPoint2d VuoMouse_convertWindowToVuoCoordinates(NSPoint pointInWindow, NSWindow *window, bool *shouldFire);
 #endif
 

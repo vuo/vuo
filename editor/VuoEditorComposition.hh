@@ -2,7 +2,7 @@
  * @file
  * VuoEditorComposition interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -71,8 +71,12 @@ public:
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoRendererCable *&rendererCable);
 	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, set<VuoRendererNode *> &createdRendererNodes, set<VuoRendererCable *> &createdRendererCables);
 	QList<QGraphicsItem *>  createAndConnectInputAttachments(VuoRendererNode *node, bool createButDoNotAdd=false);
+	set<QGraphicsItem *> getDependentAttachmentsForNode(VuoRendererNode *rn, bool includeCoattachments);
 	void modifyComponents(void (^modify)(void));
+
 	bool requiresStructuralChangesAfterValueChangeAtPort(VuoRendererPort *port);
+	void performStructuralChangesAfterValueChangeAtPort(VuoEditorWindow *editorWindow, QUndoStack *undoStack, VuoRendererPort *port, string originalEditingSessionValue, string finalEditingSessionValue);
+
 	QAction * getContextMenuDeleteSelectedAction(void);
 	QMenu * getContextMenuTints(QMenu *parent = 0);
 	void populateChangeNodeMenu(QMenu *menu, VuoRendererNode *node, int matchLimit=0);
@@ -99,7 +103,6 @@ public:
 	json_object * getPortValueInRunningComposition(VuoPort *port);
 	static string getIdentifierForStaticPort(VuoPort *staticPort, VuoNode *parentNode=NULL);
 	VuoPort * getPortWithStaticIdentifier(string portID);
-	void updateInternalPortConstant(string portID, string newValue, bool updateInRunningComposition);
 	void updatePublishedPortConstant(string portName, string newValue, bool updateInRunningComposition);
 	void updatePortConstant(VuoCompilerPort *port, string newValue, bool updateInRunningComposition=true);
 	void updateGenericPortTypes(void);
@@ -427,4 +430,5 @@ private:
 	QGraphicsItemAnimation * getAvailableAnimationForPort(VuoRendererPort *port);
 
 	friend class TestVuoEditor;
+	friend class TestEditorCommands;
 };

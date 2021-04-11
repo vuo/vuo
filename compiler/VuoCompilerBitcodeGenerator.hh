@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -117,7 +117,7 @@ private:
 	void generateGetPublishedPortValueFunction(bool input);
 	void generateCompositionSetPublishedInputPortValueFunction(void);
 	void generateSetPublishedInputPortValueFunction(void);
-	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *outputNode, VuoCompilerPort *outputPort, Value *eventValue, Value *dataValue, bool requiresEvent = true, bool shouldSendTelemetry = true);
+	void generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *outputNode, VuoCompilerPort *outputPort, Value *eventValue, Value *dataPointer, bool requiresEvent = true, bool shouldSendTelemetry = true);
 	void generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node, bool requiresEvent = true, bool shouldSendTelemetry = true);
 	void generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node);
 	void generateDataOnlyTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *node, bool shouldWaitForDownstreamNodes, bool shouldUpdateTriggers, bool shouldSendTelemetry);

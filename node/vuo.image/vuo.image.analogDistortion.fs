@@ -1,8 +1,8 @@
 /*{
 	"ISFVSN": "2.0",
 	"LABEL": "Add Analog Image Distortion",
-	"VSN": "1.0.0",
-	"LICENSE": "Copyright © 2012–2020 Kosada Incorporated.  This code may be modified and distributed under the terms of the MIT License.  For more information, see https://vuo.org/license.",
+	"VSN": "1.0.1",
+	"LICENSE": "Copyright © 2012–2021 Kosada Incorporated.  This code may be modified and distributed under the terms of the MIT License.  For more information, see https://vuo.org/license.",
 	"KEYWORDS": [
 		"filter",
 		"glitch", "artifact", "malfunction", "error", "scramble", "degrade",
@@ -126,7 +126,7 @@ void main()
 	// Chrominance Noise
 	// https://bavc.github.io/avaa/artifacts/chrominance_noise.html
 	// Slightly horizontally stretched.  Most visible in dark areas.
-	float scale = 1. / noiseScale;
+	float scale = 1. / max(0.000001, noiseScale);
 	vec3 chromaNoise = snoise3D3D(vec3((p.x - .5) * scale/3, (p.y - .5) * scale / aspectRatio, FRAMEINDEX));
 	float brightness = VuoGlsl_brightness(color, 0);
 	color.rgb += chromaNoise * (1. - pow(brightness, .1)) * max(0., noiseAmount) * (1. + variance1/10.);

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerInputDataClass interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -18,14 +18,30 @@ class VuoCompilerData;
  */
 class VuoCompilerInputDataClass : public VuoCompilerDataClass
 {
-private:
-	bool twoParameters;  /// True if this event function parameter in the node class implementation is lowered to two parameters in the LLVM bitcode.
-
 public:
-	VuoCompilerInputDataClass(string name, Type *type, bool twoParameters);
+	explicit VuoCompilerInputDataClass(string name);
 	VuoCompilerData * newData(void);
 	string getDefaultValue(void);
 	string getAutoValue(void);
 	bool getAutoSupersedesDefaultValue(void);
-	bool isLoweredToTwoParameters(void);
+
+	void setUnloweredStructPointerInEventFunction(Type *firstParameterType);
+	bool isUnloweredStructPointerInEventFunction(void);
+	void setUnloweredStructPointerInInitFunction(Type *firstParameterType);
+	bool isUnloweredStructPointerInInitFunction(void);
+	void setUnloweredStructPointerInCallbackStartFunction(Type *firstParameterType);
+	bool isUnloweredStructPointerInCallbackStartFunction(void);
+	void setUnloweredStructPointerInCallbackUpdateFunction(Type *firstParameterType);
+	bool isUnloweredStructPointerInCallbackUpdateFunction(void);
+	void setUnloweredStructPointerInCallbackStopFunction(Type *firstParameterType);
+	bool isUnloweredStructPointerInCallbackStopFunction(void);
+
+private:
+	void setUnloweredStructPointer(Type *firstParameterType, bool &unloweredStructPointer);
+
+	bool unloweredStructPointerInEventFunction;
+	bool unloweredStructPointerInInitFunction;
+	bool unloweredStructPointerInCallbackStartFunction;
+	bool unloweredStructPointerInCallbackUpdateFunction;
+	bool unloweredStructPointerInCallbackStopFunction;
 };

@@ -64,6 +64,7 @@ VuoCompileNodes(
 	vuo.layer.render.window2.c
 	vuo.layer.tile.cc
 	vuo.layer.transform.c
+	vuo.layer.transform.trs.c
 	vuo.layer.within2.c
 	vuo.layer.within.c
 )

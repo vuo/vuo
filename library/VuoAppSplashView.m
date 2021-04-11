@@ -2,14 +2,12 @@
  * @file
  * VuoAppSplashView implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #import <AppKit/AppKit.h>
 
 #import "VuoAppSplashView.h"
@@ -62,7 +60,7 @@ NSString *windowURLCELabel = @"vuo.org/community-edition";
 	NSImage *logoImage = [[NSImage alloc] initWithData:logoData];
 
 	NSMutableParagraphStyle *textStyle = NSMutableParagraphStyle.defaultParagraphStyle.mutableCopy;
-	textStyle.alignment = 2; // NSTextAlignmentCenter
+	textStyle.alignment = NSTextAlignmentCenter;
 	NSMutableDictionary *textAttributes = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 		[NSFont fontWithName:@"Helvetica Neue Light" size:(large ? 18 : 13)], NSFontAttributeName,
 		NSColor.secondaryLabelColor, NSForegroundColorAttributeName,

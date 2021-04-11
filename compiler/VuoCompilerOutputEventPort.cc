@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerOutputEventPort implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -16,11 +16,11 @@
  */
 VuoCompilerOutputEventPort * VuoCompilerOutputEventPort::newPort(string name, VuoType *type)
 {
-	VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass(name, nullptr);
+	VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass(name);
 
 	if (type)
 	{
-		VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("", nullptr);
+		VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("");
 		dataClass->setVuoType(type);
 		portClass->setDataClass(dataClass);
 	}

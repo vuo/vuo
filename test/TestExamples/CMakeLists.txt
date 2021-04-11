@@ -14,19 +14,12 @@ list(REMOVE_ITEM examples
 	# Skip self-terminating (`vuo.app.stopComposition`) compositions
 	# since `runAndScreenshotExample.sh` expects them to run for at least 10 seconds.
 	../../node/vuo.video/examples/SaveProcessedMovie.vuo
-
-	# Skip example ocmpositions that block on user input.
-	../../node/vuo.ui/examples/OpenImage.vuo
-	../../node/vuo.ui/examples/SaveImage.vuo
 )
-
-VuoCompileCompositions(TestExamples ${examples})
-add_dependencies(VuoTest TestExamples)
 
 # See TestSDK for tests of /example/node and /example/runner.
 # See TestNodes for tests of descriptions and deprecated nodes in example compositions.
 
-# Creates a test that launches and screenshots each example composition.
+# Creates a test that builds, launches, and screenshots each example composition.
 foreach (example ${examples})
 	get_filename_component(exampleDir ${example} DIRECTORY)
 	get_filename_component(exampleDir ${exampleDir} ABSOLUTE)
@@ -34,10 +27,9 @@ foreach (example ${examples})
 	set(testName TestExample_${exampleName})
 	add_test(NAME ${testName}
 		WORKING_DIRECTORY ${exampleDir}
-		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runAndScreenshotExample.sh ${CMAKE_CURRENT_BINARY_DIR}/${exampleName}
+		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runAndScreenshotExample.sh "${PROJECT_BINARY_DIR}/bin" "${CMAKE_CURRENT_BINARY_DIR}" "${exampleName}"
 	)
 	set_tests_properties(${testName} PROPERTIES
-		RESOURCE_LOCK GUI
 		FIXTURES_REQUIRED "TestExamples;TestScreenshots"
 	)
 endforeach()

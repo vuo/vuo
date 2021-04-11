@@ -2,13 +2,14 @@
  * @file
  * VuoEditorComposition implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoEditorComposition.hh"
 
+#include "VuoCommandReplaceNode.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoComposition.hh"
 #include "VuoCompositionMetadata.hh"
@@ -32,6 +33,9 @@
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerPublishedPortClass.hh"
+#include "VuoRendererReadOnlyDictionary.hh"
+#include "VuoRendererKeyListForReadOnlyDictionary.hh"
+#include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoCompilerType.hh"
 #include "VuoGenericType.hh"
@@ -647,6 +651,37 @@ QList<QGraphicsItem *>  VuoEditorComposition::createAndConnectInputAttachments(V
 }
 
 /**
+ * Returns the set of connected attachments upstream of the provided node, meaning that if
+ * the node is deleted, the attachments should be as well.
+ *
+ * @param rn The renderer node whose attachments should be returned.
+ * @param includeCoattachments If the node is itself an attachment, include sibling attachments.
+ */
+set<QGraphicsItem *> VuoEditorComposition::getDependentAttachmentsForNode(VuoRendererNode *rn, bool includeCoattachments)
+{
+	set<QGraphicsItem *> dependentAttachments;
+
+	// Get upstream attachments.
+	vector<VuoPort *> inputPorts = rn->getBase()->getInputPorts();
+	for(unsigned int i = 0; i < inputPorts.size(); ++i)
+	{
+		set<VuoRendererInputAttachment *> portUpstreamAttachments = inputPorts[i]->getRenderer()->getAllUnderlyingUpstreamInputAttachments();
+		dependentAttachments.insert(portUpstreamAttachments.begin(), portUpstreamAttachments.end());
+	}
+
+	// Get co-attachments.
+	VuoRendererInputAttachment *nodeAsAttachment = dynamic_cast<VuoRendererInputAttachment *>(rn);
+	if (nodeAsAttachment && includeCoattachments)
+	{
+		foreach (VuoNode *coattachment, nodeAsAttachment->getCoattachments())
+			dependentAttachments.insert(coattachment->getRenderer());
+	}
+
+	return dependentAttachments;
+}
+
+
+/**
  * Wraps the call to @a modify in code that saves and restores the state of the composition,
  * such as selected components.
  */
@@ -734,6 +769,82 @@ bool VuoEditorComposition::requiresStructuralChangesAfterValueChangeAtPort(VuoRe
 		return true;
 
 	return false;
+}
+
+/**
+ * Replaces nodes, if needed, to accommodate the new port value.
+ */
+void VuoEditorComposition::performStructuralChangesAfterValueChangeAtPort(VuoEditorWindow *editorWindow, QUndoStack *undoStack, VuoRendererPort *port, string originalEditingSessionValue, string finalEditingSessionValue)
+{
+	if (!requiresStructuralChangesAfterValueChangeAtPort(port))
+		return;
+
+	VuoRendererNode *parentNode = port->getRenderedParentNode();
+
+	// Only current possibility: modifications to "Calculate" node's 'expression' input
+	string nodeClassName = parentNode->getBase()->getNodeClass()->getClassName();
+	vector<string> inputVariablesBeforeEditing = extractInputVariableListFromExpressionsConstant(originalEditingSessionValue, nodeClassName);
+	vector<string> inputVariablesAfterEditing = extractInputVariableListFromExpressionsConstant(finalEditingSessionValue, nodeClassName);
+
+	// Don't make any structural changes if the variables in the input expression remain
+	// the same, even if the expression itself has changed.
+	if (inputVariablesBeforeEditing != inputVariablesAfterEditing)
+	{
+		VuoPort *valuesPort = port->getRenderedParentNode()->getBase()->getInputPortWithName("values");
+
+		set<VuoRendererInputAttachment *> attachments = valuesPort->getRenderer()->getAllUnderlyingUpstreamInputAttachments();
+
+		QList<QGraphicsItem *> attachmentsToRemove;
+
+		VuoRendererReadOnlyDictionary *oldDictionary = nullptr;
+		VuoRendererValueListForReadOnlyDictionary *oldValueList = nullptr;
+		VuoRendererKeyListForReadOnlyDictionary *oldKeyList = nullptr;
+		foreach (VuoRendererInputAttachment *attachment, attachments)
+		{
+			attachmentsToRemove.append(attachment);
+
+			if (dynamic_cast<VuoRendererReadOnlyDictionary *>(attachment))
+				oldDictionary = dynamic_cast<VuoRendererReadOnlyDictionary *>(attachment);
+
+			else if (dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(attachment))
+				oldValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(attachment);
+
+			else if (dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(attachment))
+				oldKeyList = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(attachment);
+		}
+
+		if (oldValueList && oldDictionary && oldKeyList)
+		{
+			set<VuoRendererNode *> nodesToAdd;
+			set<VuoRendererCable *> cablesToAdd;
+			createAndConnectDictionaryAttachmentsForNode(parentNode->getBase(), nodesToAdd, cablesToAdd);
+
+			VuoRendererReadOnlyDictionary *newDictionary = nullptr;
+			VuoRendererValueListForReadOnlyDictionary *newValueList = nullptr;
+			VuoRendererKeyListForReadOnlyDictionary *newKeyList = nullptr;
+			foreach (VuoRendererNode *node, nodesToAdd)
+			{
+				if (dynamic_cast<VuoRendererReadOnlyDictionary *>(node))
+					newDictionary = dynamic_cast<VuoRendererReadOnlyDictionary *>(node);
+
+				else if (dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(node))
+					newValueList = dynamic_cast<VuoRendererValueListForReadOnlyDictionary *>(node);
+
+				else if (dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(node))
+					newKeyList = dynamic_cast<VuoRendererKeyListForReadOnlyDictionary *>(node);
+			}
+
+			undoStack->push(new VuoCommandReplaceNode(oldValueList, newValueList, editorWindow, "Set Port Constant", false, false));
+			undoStack->push(new VuoCommandReplaceNode(oldKeyList, newKeyList, editorWindow, "Set Port Constant", false, true));
+			undoStack->push(new VuoCommandReplaceNode(oldDictionary, newDictionary, editorWindow, "Set Port Constant", false, true));
+
+			foreach (VuoRendererCable *cable, cablesToAdd)
+			{
+				cable->setFrom(nullptr, nullptr);
+				cable->setTo(nullptr, nullptr);
+			}
+		}
+	}
 }
 
 /**
@@ -4366,19 +4477,6 @@ QRectF VuoEditorComposition::internalSelectedItemsChildrenBoundingRect() const
 
 /**
  * Updates the constant value of the internal input port with the provided @c portID
- * to the @c newValue, in both the static and running copies of the composition (if applicable).
- */
-void VuoEditorComposition::updateInternalPortConstant(string portID, string newValue, bool updateInRunningComposition)
-{
-	VuoPort *port = getPortWithStaticIdentifier(portID);
-	if (!port)
-		return;
-
-	updatePortConstant(dynamic_cast<VuoCompilerInputEventPort *>(port->getCompiler()), newValue, updateInRunningComposition);
-}
-
-/**
- * Updates the constant value of the internal input port with the provided @c portID
  * to the @c newValue, in both the stored and running copies of the composition (if applicable).
  */
 void VuoEditorComposition::updatePublishedPortConstant(string portName, string newValue, bool updateInRunningComposition)
@@ -5338,7 +5436,7 @@ VuoRendererPublishedPort * VuoEditorComposition::publishInternalPort(VuoPort *po
 {
 	string publishedPortName = ((! name.empty())?
 									name :
-									VuoRendererPort::sanitizePortIdentifier(port->getRenderer()->getPortNameToRenderWhenDisplayed().c_str()).toUtf8().constData());
+									VuoRendererPort::sanitizePortName(port->getRenderer()->getPortNameToRenderWhenDisplayed().c_str()).toUtf8().constData());
 	bool isPublishedInput = port->getRenderer()->getInput();
 	VuoType *portType = port->getRenderer()->getDataType();
 	VuoPublishedPort *publishedPort = NULL;
@@ -6850,7 +6948,9 @@ string VuoEditorComposition::getIdentifierForRunningPort(VuoPort *runningPort)
 }
 
 /**
- * Returns the identifier of the provided @c staticPort in the stored composition.
+ * If `staticPort` is a published port, returns its name (without the node identifier + colon).
+ *
+ * If `staticPort` is an internal port, returns its identifier (including the node identifier + colon) in the stored composition.
  * If a @c parentNode is provided, uses that node identifier to help derive the
  * port identifier. Otherwise, attempts to determine the parent node via renderer items.
  */
@@ -7161,7 +7261,7 @@ void VuoEditorComposition::disableStrandedPortPopovers()
 		{
 			string portID = i->first;
 
-			bool foundPort = identifierCache->doForPortWithIdentifier(portID, [&foundPort](VuoPort *port) {});
+			bool foundPort = identifierCache->doForPortWithIdentifier(portID, [](VuoPort *port) {});
 			if (! foundPort)
 				disablePopoverForPort(portID);
 		}
@@ -7253,7 +7353,7 @@ void VuoEditorComposition::setPopoversHideOnDeactivate(bool shouldHide)
 			if (popover && popover->getDetached())
 			{
 				id nsWindow = (id)VuoPopover::getWindowForPopover(popover);
-				objc_msgSend(nsWindow, sel_getUid("setHidesOnDeactivate:"), shouldHide);
+				((void (*)(id, SEL, BOOL))objc_msgSend)(nsWindow, sel_getUid("setHidesOnDeactivate:"), shouldHide);
 			}
 		}
 	});
@@ -7948,7 +8048,7 @@ string VuoEditorComposition::getDefaultPublishedPortNameForType(VuoType *type)
 	else if (type->getDefaultTitle() == "3D Transform")
 		return "Transform3D";
 
-	return VuoRendererPort::sanitizePortIdentifier(formatTypeNameForDisplay(type)).toUtf8().constData();
+	return VuoRendererPort::sanitizePortName(formatTypeNameForDisplay(type)).toUtf8().constData();
 }
 
 /**
@@ -8133,7 +8233,7 @@ map<string, string> VuoEditorComposition::publishPorts(set<string> portsToPublis
 		string specializedPublishedPortName = generateSpecialPublishedNameForPort(rp->getBase());
 		string publishedPortName = (!specializedPublishedPortName.empty()?
 										specializedPublishedPortName :
-										VuoRendererPort::sanitizePortIdentifier(rp->getPortNameToRenderWhenDisplayed().c_str()).toUtf8().constData());
+										VuoRendererPort::sanitizePortName(rp->getPortNameToRenderWhenDisplayed().c_str()).toUtf8().constData());
 
 		bool forceEventOnlyPublication = rp->effectivelyHasConnectedDataCable(false);
 		VuoRendererPort *publishedPort = publishInternalPort(rp->getBase(), forceEventOnlyPublication, publishedPortName, publishedPortType, false);
@@ -8160,7 +8260,7 @@ string VuoEditorComposition::generateSpecialPublishedNameForPort(VuoPort *port)
 			(port->getRenderer()->getUnderlyingParentNode()->getBase()->getTitle() !=
 			port->getRenderer()->getUnderlyingParentNode()->getBase()->getNodeClass()->getDefaultTitle()))
 	{
-		return VuoRendererPort::sanitizePortIdentifier(port->getRenderer()->getUnderlyingParentNode()->getBase()->getTitle().c_str()).toUtf8().constData();
+		return VuoRendererPort::sanitizePortName(port->getRenderer()->getUnderlyingParentNode()->getBase()->getTitle().c_str()).toUtf8().constData();
 	}
 
 	return "";

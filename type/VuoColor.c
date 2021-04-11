@@ -2,7 +2,7 @@
  * @file
  * VuoColor implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -189,21 +189,21 @@ char *VuoColor_getSummary(const VuoColor value)
 				<th>Green</th>
 				<th>Blue</th>
 				<th>Alpha</th>
-			</tr>
+			</tr>\n
 			<tr>
 				<th>Normalized:</th>
 				<td>%4.03f</td>
 				<td>%4.03f</td>
 				<td>%4.03f</td>
 				<td>%4.03f</td>
-			</tr>
+			</tr>\n
 			<tr>
 				<th>8-bit:</th>
 				<td>%d</td>
 				<td>%d</td>
 				<td>%d</td>
 				<td>%d</td>
-			</tr>
+			</tr>\n
 			<tr>
 				<th>Hex:</th>
 				<td class='left' colspan=4>&nbsp;%s</td>

@@ -2,7 +2,7 @@
  * @file
  * vuo.ui.open node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,9 +14,7 @@
 
 #include <json-c/json.h>
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
 
 VuoModuleMetadata({
@@ -100,7 +98,11 @@ void nodeInstanceEvent(
 			op.canChooseDirectories = NO;
 
 			if (fileType == VuoFileType_AnyFile)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+				// The replacement, allowedContentTypes, isn't available until macOS 11.
 				op.allowedFileTypes = nil;
+#pragma clang diagnostic pop
 			else
 			{
 				NSMutableArray *types = [NSMutableArray new];
@@ -108,7 +110,11 @@ void nodeInstanceEvent(
 				int extensionCount = json_object_array_length(extensions);
 				for (int i = 0; i < extensionCount; ++i)
 					[types addObject:[NSString stringWithUTF8String:json_object_get_string(json_object_array_get_idx(extensions, i))]];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+				// The replacement, allowedContentTypes, isn't available until macOS 11.
 				op.allowedFileTypes = types;
+#pragma clang diagnostic pop
 				[types release];
 			}
 		}
@@ -143,7 +149,7 @@ void nodeInstanceEvent(
 	}
 
 	VuoApp_executeOnMainThread(^{
-		if (response == NSFileHandlingPanelOKButton)
+		if (response == NSModalResponseOK)
 		{
 			*selectedURLs = VuoListCreate_VuoText();
 			for (NSURL *u in op.URLs)

@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -203,6 +203,9 @@ private:
 	class Environment : public VuoFileWatcherDelegate
 	{
 	private:
+		string target;  ///< The LLVM target triple this Environment uses.
+		bool builtIn;  ///< True if this environment is for the built-in level of scope, false otherwise.
+		bool generated;  ///< True if this environment is for generated modules, false if for original modules.
 		set<VuoCompiler *> compilersToNotify;  ///< The compilers that this Environment notifies when it loads/unloads modules as a result of changes to the watched search paths.
 		dispatch_queue_t compilersToNotifyQueue;  ///< Synchronizes access to `compilersToNotify`.
 		set<VuoFileWatcher *> moduleSearchPathWatchers;  ///< Dispatch sources watching module search paths for changes.
@@ -220,12 +223,13 @@ private:
 		vector<string> frameworkSearchPaths;  ///< Search paths for frameworks.
 		vector<string> expatriateSourceFiles;  ///< Paths of source files belonging to this environment that are located elsewhere than a module search path.
 		string moduleCachePath;  ///< The directory that contains the caches for this environment's scope.
-		string moduleCacheSuffix;  ///< The suffix on this environment's module cache file names, distinguishing them from other environments' at the same scope.
+		string currentModuleCacheDylib;  ///< The path of the most recent revision of this environment's module cache dylib.
+		unsigned long lastModuleCacheRebuild;   ///< The time (in seconds since a reference date) when this Environment instance last scheduled its cache to be rebuilt; or, if none and this is not a built-in environment, the time when the module cache dylib was last modified; otherwise, 0.
 		bool isModuleCacheableDataDirty;  ///< True if the module cache may be out-of-date. (Ignored until @ref isModuleCacheInitialized is true.)
 		bool isModuleCacheInitialized;  ///< True if the module cache has been checked for the first time.
 		bool isModuleCacheAvailable;  ///< True if the module cache has been checked (and rebuilt if needed) and is now up-to-date.
 		set<string> moduleCacheContents;  ///< The keys/names of modules and dependencies contained in the module cache.
-		set<string> moduleCacheDylibs;  ///< The path of the module cache dylib and the other dylibs that it links to.
+		set<string> moduleCacheDylibs;  ///< The paths of the dylibs that the module cache dylib links to.
 		set<string> moduleCacheFrameworks;  ///< The names of the frameworks that the module cache dylib links to.
 		static map<string, VuoFileUtilities::File *> moduleCacheFileForLocking;  ///< The files locked to keep different VuoCompiler processes from interfering with each other when rebuilding the module cache, indexed by path. Static so they can be reused if an Environment is destroyed and recreated, e.g. with @ref VuoCompiler::reset.
 		static dispatch_queue_t moduleCacheBuildingQueue;  ///< Ensures that module caches are rebuilt one at a time in the order they were requested.
@@ -245,8 +249,9 @@ private:
 		dispatch_queue_t moduleSearchPathContentsChangedQueue;  ///< Synchronizes calls to `moduleSearchPathContentsChanged()`.
 		static const string pidCacheDirPrefix;  ///< The prefix of the names of pid-specific directories in the module cache.
 
-		Environment(void);
+		explicit Environment(string target, bool builtIn, bool generated);
 		virtual ~Environment(void);
+		string getTarget();
 		void addCompilerToNotify(VuoCompiler *compiler);
 		void removeCompilerToNotify(VuoCompiler *compiler);
 		map<string, VuoCompilerNodeClass *> getNodeClasses(void);
@@ -255,6 +260,7 @@ private:
 		map<string, VuoCompilerType *> getTypes(void);
 		VuoCompilerType * getType(const string &moduleKey);
 		map<string, VuoNodeSet *> getNodeSets();
+		VuoCompilerModule *getLibraryModule(const string &libraryModuleName);
 		map<string, VuoCompilerModule *> getLibraryModules(void);
 		VuoCompilerModule * findModule(const string &moduleKey);
 		VuoNodeSet * findNodeSet(const string &name);
@@ -298,13 +304,17 @@ private:
 		void addToDependencyGraph(VuoCompilerModule *module);
 		void removeFromDependencyGraph(VuoCompilerModule *module);
 		void reifyPortTypes(const map<string, VuoCompilerType *> &inheritedTypes);
-		void getCacheableModulesAndDependencies(bool isBuiltIn, bool installed, set<string> &cacheableModulesAndDependencies, set<string> &dylibsNeededToLinkToThisCache, set<string> &frameworksNeededToLinkToThisCache);
-		void useModuleCache(bool shouldUseExistingCache, VuoCompiler *compiler, set<string> cacheableModulesAndDependencies, set<string> dylibsNeededToLinkToCaches, set<string> frameworksNeededToLinkToCaches);
+		void getCacheableModulesAndDependencies(set<string> &cacheableModulesAndDependencies, set<string> &dylibsNeededToLinkToThisCache, set<string> &frameworksNeededToLinkToThisCache);
+		void useModuleCache(bool shouldUseExistingCache, VuoCompiler *compiler, set<string> cacheableModulesAndDependencies, set<string> dylibsNeededToLinkToCaches, set<string> frameworksNeededToLinkToCaches, unsigned long lastPrerequisiteModuleCacheRebuild);
 		static void waitForModuleCachesToBuild(void);
 		bool findInModuleCache(const string &moduleOrDependency, string &cachePath);
+		string getCurrentModuleCacheDylib(void);
+		unsigned long getLastModuleCacheRebuild(void);
 		void modulesChanged(void);
 
-		bool isBuiltIn();
+		bool isBuiltInOriginal(void);
+		bool isBuiltIn(void);
+		bool isGenerated(void);
 		string getName();
 
 #ifdef VUO_PRO
@@ -314,7 +324,7 @@ private:
 
 	static set<VuoCompiler *> allCompilers;  ///< All VuoCompiler instances that have been constructed and not yet destroyed.
 	static dispatch_queue_t environmentQueue;  ///< Synchronizes access to the Environment data members and `allCompilers`. It's OK to call `llvmQueue` from this queue.
-	static vector< vector<Environment *> > sharedEnvironments;  ///< Built-in, system, user scope (1st dimension) and installed, generated (2nd dimension)
+	static map<string, vector< vector<Environment *> > > sharedEnvironments;  ///< LLVM target triple (1st dimension), built-in, system, user scope (2nd dimension) and installed, generated (3rd dimension)
 	static map<string, vector<Environment *> > environmentsForCompositionFamily;  ///< Environments for a composition and its local subcompositions, indexed by the path of the directory containing the composition.
 	vector< vector<Environment *> > environments;  ///< Environments available to this VuoCompiler instance, in order from broadest to narrowest.
 	string lastCompositionBaseDir;  ///< The base (top-level composition's) directory for the path most recently passed to @ref VuoCompiler::setCompositionPath.
@@ -322,12 +332,13 @@ private:
 	bool shouldLoadAllModules;  ///< If true, all available modules are loaded the first time @ref loadModulesIfNeeded is called without specifying the modules. If false, only the specified modules and their dependencies are loaded.
 	bool hasLoadedAllModules;  ///< False until the first time that all available modules are loaded due to @ref shouldLoadAllModules being true.
 	dispatch_queue_t modulesToLoadQueue;  ///< Synchronizes access to @ref shouldLoadAllModules and @ref hasLoadedAllModules.
-	static dispatch_group_t moduleSourceCompilersExist;  ///< Enables @ref reset to wait until all VuoCompiler instances asynchronously compiling subcompositions have been destroyed.
+	dispatch_group_t moduleSourceCompilersExist;  ///< Enables a function to wait until all scheduled asynchronous compilations of subcompositions or specialized node classes have completed.
+	static dispatch_group_t moduleSourceCompilersExistGlobally;  ///< Enables @ref reset to wait until all VuoCompiler instances asynchronously compiling subcompositions or specialized node classes have been destroyed.
 	dispatch_group_t moduleCacheBuilding;  ///< Enables the destructor to wait until asynchronous building of the module cache has completed.
 	VuoDirectedAcyclicNetwork *dependencyGraph;  ///< A full dependency graph, containing all modules that have been loaded and their dependencies.
 	VuoDirectedAcyclicNetwork *compositionDependencyGraph;  ///< A partial dependency graph, containing all subcompositions (loaded or not) and the node classes that are their direct dependencies.
 	static string vuoFrameworkInProgressPath;  ///< The path to use for Vuo.framework during a call to @ref VuoCompiler::generateBuiltInModuleCaches.
-	llvm::sys::Path clangPath;
+	string clangPath;
 	string telemetry;
 	string target;
 	bool isVerbose;
@@ -350,7 +361,7 @@ private:
 	void reifyGenericPortTypes(VuoNode *node);
 	Module * compileCompositionToModule(VuoCompilerComposition *composition, const string &moduleKey, bool isTopLevelComposition, VuoCompilerIssues *issues);
 	void compileSubcompositionString(const string &compositionString, const string &outputPath, std::function<void(void)> moduleLoadedCallback, Environment *environment, VuoCompilerIssues *issues = NULL, const string inputPathForIssues = "");
-	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, Optimization optimization, bool isDylib, string rPath="");
+	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, Optimization optimization, bool isDylib, string rPath="", bool shouldAdHocCodeSign = true);
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	set<string> getDependenciesForComposition(const set<string> &directDependencies, bool checkCompatibility);
 	void getLinkerInputs(const set<string> &dependencies, Optimization optimization, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
@@ -358,20 +369,23 @@ private:
 	static string getLibraryPath(const string &dependency, vector<string> librarySearchPaths);
 	void useModuleCache(bool shouldUseExistingBuiltInCaches, bool shouldUseExistingOtherCaches);
 	bool findInModuleCache(const string &moduleOrDependency, string &cachePath, bool &isBuiltinCache) VuoWarnUnusedResult;
-	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="", VuoCompilerIssues *issues = nullptr);
+	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="", bool shouldAdHocCodeSign = true, VuoCompilerIssues *issues = nullptr);
+	static void adHocCodeSign(string path);
 	Module *readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs, VuoCompilerIssues *issues);
-	static Module * readModuleFromBitcode(VuoFileUtilities::File *inputFile);
-	static Module * readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error);
+	static Module *readModuleFromBitcode(VuoFileUtilities::File *inputFile, string arch);
+	static Module *readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string arch, string &error);
 	static bool writeModuleToBitcode(Module *module, string outputPath);
 	VuoNode * createPublishedNode(const string &nodeClassName, const vector<VuoPublishedPort *> &publishedPorts);
-	static void setTargetForModule(Module *module, string target = "");
+	static void setTargetForModule(Module *module, string target);
+	static string getTargetArch(string target);
+	static string getProcessTarget(void);
 	VuoCompilerModule * getModule(const string &moduleKey);
 	static vector<string> getCoreVuoDependencies(void);
 	static string getRuntimeMainDependency(void);
 	static string getRuntimeDependency(void);
 	void addModuleSearchPath(string path);
 	static string getVuoFrameworkPath(void);
-	llvm::sys::Path getClangPath(void);
+	string getClangPath(void);
 	void setClangPath(const string &clangPath);
 	string getCompositionStubPath(void);
 	static string getCachePathForComposition(const string compositionDir);
@@ -388,11 +402,11 @@ private:
 	friend class TestVuoIsfModuleCompiler;  ///< TestVuoIsfModuleCompiler calls `writeModuleToBitcode()`.
 
 public:
-	VuoCompiler(const string &compositionPath = "");
+	VuoCompiler(const string &compositionPath = "", string target = "");
 	~VuoCompiler(void);
 	void setDelegate(VuoCompilerDelegate *delegate);
 	void setCompositionPath(const string &compositionPath);
-	static Module * readModuleFromBitcode(string inputPath);
+	static Module *readModuleFromBitcode(string inputPath, string arch);
 	static void destroyModule(VuoCompilerModule *module);
 	static void destroyLlvmModule(Module *module);
 	void compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition, VuoCompilerIssues *issues);
@@ -400,14 +414,15 @@ public:
 	void compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition, VuoCompilerIssues *issues);
 	void compileModule(string inputPath, string outputPath);
 	void compileModule(string inputPath, string outputPath, const vector<string> &includeDirs);
-	void linkCompositionToCreateExecutable(string inputPath, string outputPath, Optimization optimization, string rPath="");
-	void linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization);
+	void linkCompositionToCreateExecutable(string inputPath, string outputPath, Optimization optimization, string rPath="", bool shouldAdHocCodeSign = true);
+	void linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization, bool shouldAdHocCodeSign = true);
 	void linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath, VuoRunningCompositionLibraries *runningCompositionLibraries);
 	set<string> getDirectDependenciesForComposition(VuoCompilerComposition *composition);
 	set<string> getDependenciesForComposition(VuoCompilerComposition *composition);
 	set<string> getDylibDependencyPathsForComposition(VuoCompilerComposition *composition);
 	void prepareForFastBuild(void);
-	static void generateBuiltInModuleCaches(const string &vuoFrameworkPath);
+	string getArch(void);
+	static void generateBuiltInModuleCaches(string vuoFrameworkPath, string target);
 	static void deleteOldModuleCaches(void);
 	void setLoadAllModules(bool shouldLoadAllModules);
 	VuoNode * createNode(VuoCompilerNodeClass *nodeClass, string title="", double x=0, double y=0);
@@ -422,6 +437,7 @@ public:
 	map<string, VuoCompilerNodeClass *> getNodeClasses(void);
 	VuoCompilerType * getType(const string &typeName);
 	map<string, VuoCompilerType *> getTypes(void);
+	VuoCompilerModule *getLibraryModule(const string &libraryModuleName);
 	map<string, VuoCompilerModule *> getLibraryModules();
 	map<string, VuoNodeSet *> getNodeSets();
 	VuoNodeSet * getNodeSetForName(const string &name);
@@ -434,7 +450,6 @@ public:
 	void addLibrarySearchPath(const string &path);
 	void addFrameworkSearchPath(const string &path);
 	void setTelemetry(const string &telemetry);
-	void setTarget(const string &target);
 	void setVerbose(bool isVerbose);
 	void setShouldPotentiallyShowSplashWindow(bool potentiallyShow);
 	bool shouldShowSplashWindow();
@@ -445,6 +460,8 @@ public:
 	static VuoRunner * newSeparateProcessRunnerFromCompositionString(string composition, string processName, string workingDirectory, VuoCompilerIssues *issues);
 	static VuoRunner * newCurrentProcessRunnerFromCompositionFile(string compositionFilePath, VuoCompilerIssues *issues);
 	static VuoRunner * newCurrentProcessRunnerFromCompositionString(string composition, string workingDirectory, VuoCompilerIssues *issues);
+
+	static llvm::LLVMContext *globalLLVMContext;
 
 private:
 	void *p;

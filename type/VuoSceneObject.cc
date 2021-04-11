@@ -2,13 +2,14 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include <list>
 
+#include "VuoMacOSSDKWorkaround.h"
 #include <OpenGL/CGLMacro.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2472,7 +2473,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 			rotationString = VuoPoint3d_getSummary(so->transform.rotationSource.target);
 		}
 
-		char *valueAsString = VuoText_format("<div>%s named \"%s\"</div><div>At (%s)</div><div>%s (%s)</div><div>%g%s</div><div>Shows objects between depth %g and %g</div>",
+		char *valueAsString = VuoText_format("<div>%s named \"%s\"</div>\n<div>At (%s)</div>\n<div>%s (%s)</div>\n<div>%g%s</div>\n<div>Shows objects between depth %g and %g</div>",
 											 type, so->name ? so->name : "",
 											 translationString,
 											 rotationLabel, rotationString,
@@ -2499,7 +2500,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		{
 			char *positionString = VuoPoint3d_getSummary(so->transform.translation);
 
-			positionRangeString = VuoText_format("<div>Position (%s)</div><div>Range %g units (%g sharpness)</div>",
+			positionRangeString = VuoText_format("\n<div>Position (%s)</div>\n<div>Range %g units (%g sharpness)</div>",
 												 positionString, so->light.range, so->light.sharpness);
 
 			free(positionString);
@@ -2513,7 +2514,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 			VuoPoint3d direction = VuoTransform_getDirection(so->transform);
 			char *directionString = VuoPoint3d_getSummary(direction);
 
-			directionConeString = VuoText_format("<div>Direction (%s)</div><div>Cone %g°</div>",
+			directionConeString = VuoText_format("\n<div>Direction (%s)</div>\n<div>Cone %g°</div>",
 												 directionString, so->light.cone * 180./M_PI);
 
 			free(directionString);
@@ -2521,7 +2522,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		else
 			directionConeString = strdup("");
 
-		char *valueAsString = VuoText_format("<div>%s</div><div>Color %s</div><div>Brightness %g</div>%s%s",
+		char *valueAsString = VuoText_format("<div>%s</div>\n<div>Color %s</div>\n<div>Brightness %g</div>%s%s",
 											 type, colorString, so->light.brightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
@@ -2551,7 +2552,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		VuoSceneObject_getStatistics(sceneObject, &descendantCount, &totalVertexCount, &totalElementCount);
 		const char *descendantPlural = descendantCount == 1 ? "" : "s";
 
-		descendants = VuoText_format("<div>%ld descendant%s</div><div>Total, including descendants:</div><div>%ld vertices, %ld elements</div>",
+		descendants = VuoText_format("\n<div>%ld descendant%s</div>\n<div>Total, including descendants:</div>\n<div>%ld vertices, %ld elements</div>",
 									 descendantCount, descendantPlural, totalVertexCount, totalElementCount);
 	}
 	else
@@ -2563,10 +2564,11 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 	if (VuoListGetCount_VuoText(shaderNames))
 	{
 		VuoInteger shaderNameCount = VuoListGetCount_VuoText(shaderNames);
-		const char *header = "<div>Shaders:<ul>";
+		const char *header = "\n<div>Shaders:<ul>";
+		/// @todo simplify this using C++ strings
 		VuoInteger shaderNameLength = strlen(header);
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
-			shaderNameLength += strlen("<li>") + strlen(VuoListGetValue_VuoText(shaderNames, i)) + strlen("</li>");
+			shaderNameLength += strlen("\n<li>") + strlen(VuoListGetValue_VuoText(shaderNames, i)) + strlen("</li>");
 		shaderNameLength += strlen("</ul></div>");
 
 		shaderNamesSummary = (char *)malloc(shaderNameLength + 1);
@@ -2574,7 +2576,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 		t = strcpy(t, header) + strlen(header);
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
 		{
-			t = strcpy(t, "<li>") + strlen("<li>");
+			t = strcpy(t, "\n<li>") + strlen("\n<li>");
 			t = strcpy(t, VuoListGetValue_VuoText(shaderNames, i)) + strlen(VuoListGetValue_VuoText(shaderNames, i));
 			t = strcpy(t, "</li>") + strlen("</li>");
 		}
@@ -2586,9 +2588,9 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 
 	char *name = NULL;
 	if (so->name)
-		name = VuoText_format("<div>Object named \"%s\"</div>", so->name);
+		name = VuoText_format("<div>Object named \"%s\"</div>\n", so->name);
 
-	char *valueAsString = VuoText_format("%s<div>%ld vertices, %ld elements</div><div>%s</div><div>ID %lld</div><div>%ld child object%s</div>%s%s",
+	char *valueAsString = VuoText_format("%s<div>%ld vertices, %ld elements</div>\n<div>%s</div>\n<div>ID %lld</div>\n<div>%ld child object%s</div>%s%s",
 										 name ? name : "",
 										 vertexCount, elementCount,
 										 transform,

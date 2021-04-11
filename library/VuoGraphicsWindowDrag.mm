@@ -2,7 +2,7 @@
  * @file
  * VuoWindowDrag implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -73,13 +73,21 @@ VuoModuleMetadata({
 
 	NSPasteboard *pboard = [sender draggingPasteboard];
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacement, NSPasteboardTypeFileURL, isn't available until macOS 11.
 	if (![[pboard types] containsObject:NSFilenamesPboardType])
 		return NO;
+#pragma clang diagnostic pop
 
 	NSPoint p = [sender draggingLocation];
 
 	VuoList_VuoUrl urls = VuoListCreate_VuoUrl();
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacement, NSPasteboardTypeFileURL, isn't available until macOS 11.
 	NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
+#pragma clang diagnostic pop
 	for (NSString *file in files)
 	{
 		VuoText path = VuoText_makeFromCFString(file);

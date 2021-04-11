@@ -2,7 +2,7 @@
  * @file
  * TestVuoTable implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -845,32 +845,32 @@ private slots:
 
 		QString table = QUOTE(a,b,c\nd,e,f\ng,h,i\nalpha,beta,gamma);
 
-		QTest::newRow("empty table")                              << ""    << 0 << ""  << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(null);
+		QTest::newRow("empty table")                              << ""    << 0 << ""  << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(null);
 
 		// Column 0 (out of range) should be clamped to 1.
-		QTest::newRow("table, column 0 equals ''")                << table << 0 << ""  << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(null);
-		QTest::newRow("table, column 0 equals 'g', header")       << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(["g","h","i"]);
-		QTest::newRow("table, column 0 equals 'g', no header")    << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(["h","i"]);
-		QTest::newRow("table, column 0 contains '', header")      << table << 0 << "a" << ""   << (VuoTextComparison){VuoTextComparison_Contains, false, ""} << true  << QUOTE(["a","b","c"]);
-		QTest::newRow("table, column 0 contains '', no header")   << table << 0 << "a" << ""   << (VuoTextComparison){VuoTextComparison_Contains, false, ""} << false << QUOTE(["b","c"]);
-		QTest::newRow("table, column 0 equals 'g', header")       << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(["g","h","i"]);
-		QTest::newRow("table, column 0 equals 'g', no header")    << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(["h","i"]);
+		QTest::newRow("table, column 0 equals ''")                << table << 0 << ""  << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(null);
+		QTest::newRow("table, column 0 equals 'g', header")       << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << true  << QUOTE(["g","h","i"]);
+		QTest::newRow("table, column 0 equals 'g', no header")    << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(["h","i"]);
+		QTest::newRow("table, column 0 contains '', header")      << table << 0 << "a" << ""   << (VuoTextComparison){VuoTextComparison_Contains, false} << true  << QUOTE(["a","b","c"]);
+		QTest::newRow("table, column 0 contains '', no header")   << table << 0 << "a" << ""   << (VuoTextComparison){VuoTextComparison_Contains, false} << false << QUOTE(["b","c"]);
+		QTest::newRow("table, column 0 contains 'g', header")     << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Contains, false} << true  << QUOTE(["g","h","i"]);
+		QTest::newRow("table, column 0 contains 'g', no header")  << table << 0 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Contains, false} << false << QUOTE(["h","i"]);
 
-		QTest::newRow("table, column 1 equals 'g', header")       << table << 1 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(["g","h","i"]);
-		QTest::newRow("table, column 1 equals 'g', no header")    << table << 1 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(["h","i"]);
+		QTest::newRow("table, column 1 equals 'g', header")       << table << 1 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << true  << QUOTE(["g","h","i"]);
+		QTest::newRow("table, column 1 equals 'g', no header")    << table << 1 << "a" << "g"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(["h","i"]);
 
-		QTest::newRow("table, column 2 equals 'z'")               << table << 2 << "b" << "z"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(null);
-		QTest::newRow("table, column 2 equals 'e', header")       << table << 2 << "b" << "e"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(["d","e","f"]);
-		QTest::newRow("table, column 2 equals 'e', no header")    << table << 2 << "b" << "e"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(["e","f"]);
+		QTest::newRow("table, column 2 equals 'z'")               << table << 2 << "b" << "z"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << true  << QUOTE(null);
+		QTest::newRow("table, column 2 equals 'e', header")       << table << 2 << "b" << "e"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << true  << QUOTE(["d","e","f"]);
+		QTest::newRow("table, column 2 equals 'e', no header")    << table << 2 << "b" << "e"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(["e","f"]);
 
-		QTest::newRow("table, column 2 contains 'zz'")            << table << 2 << "b" << "zz" << (VuoTextComparison){VuoTextComparison_Contains, false, ""} << true  << QUOTE(null);
-		QTest::newRow("table, column 2 contains 'et', header")    << table << 2 << "b" << "et" << (VuoTextComparison){VuoTextComparison_Contains, false, ""} << true  << QUOTE(["alpha","beta","gamma"]);
-		QTest::newRow("table, column 2 contains 'et', no header") << table << 2 << "b" << "et" << (VuoTextComparison){VuoTextComparison_Contains, false, ""} << false << QUOTE(["beta","gamma"]);
+		QTest::newRow("table, column 2 contains 'zz'")            << table << 2 << "b" << "zz" << (VuoTextComparison){VuoTextComparison_Contains, false} << true  << QUOTE(null);
+		QTest::newRow("table, column 2 contains 'et', header")    << table << 2 << "b" << "et" << (VuoTextComparison){VuoTextComparison_Contains, false} << true  << QUOTE(["alpha","beta","gamma"]);
+		QTest::newRow("table, column 2 contains 'et', no header") << table << 2 << "b" << "et" << (VuoTextComparison){VuoTextComparison_Contains, false} << false << QUOTE(["beta","gamma"]);
 
 		// Column 4 (out of range) should be clamped to 3.
-		QTest::newRow("table, column 4 equals ''")                << table << 4 << "c" << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(null);
-		QTest::newRow("table, column 4 equals 'i', header")       << table << 4 << "c" << "i"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << true  << QUOTE(["g","h","i"]);
-		QTest::newRow("table, column 4 equals 'i', no header")    << table << 4 << "c" << "i"  << (VuoTextComparison){VuoTextComparison_Equals,   false, ""} << false << QUOTE(["h","i"]);
+		QTest::newRow("table, column 4 equals ''")                << table << 4 << "c" << ""   << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(null);
+		QTest::newRow("table, column 4 equals 'i', header")       << table << 4 << "c" << "i"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << true  << QUOTE(["g","h","i"]);
+		QTest::newRow("table, column 4 equals 'i', no header")    << table << 4 << "c" << "i"  << (VuoTextComparison){VuoTextComparison_Equals,   false} << false << QUOTE(["h","i"]);
 	}
 	void testFindFirstMatchingRow()
 	{

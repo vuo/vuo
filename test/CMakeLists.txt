@@ -1,8 +1,11 @@
 add_custom_target(VuoTest)
 
+include(QtTest)
+configure_file("CTestCustom.cmake.in" "${PROJECT_BINARY_DIR}/CTestCustom.cmake")
+
 # Adds steps to build and run a test.
 function (VuoTest)
-	cmake_parse_arguments(arg "" "NAME;SOURCE;COST;TIMEOUT;FIXTURE" "RESOURCE_LOCK" ${ARGV})
+	cmake_parse_arguments(arg "" "NAME;SOURCE;TIMEOUT;FIXTURE;RUN_SERIAL" "" ${ARGV})
 
 	add_executable(${arg_NAME} EXCLUDE_FROM_ALL ${arg_SOURCE})
 	set(rpaths
@@ -52,6 +55,8 @@ function (VuoTest)
 		vuo.core.libraries
 	)
 	if (arg_NAME STREQUAL TestBuiltProducts
+	 OR arg_NAME STREQUAL TestEditorCommands
+	 OR arg_NAME STREQUAL TestExport
 	 OR arg_NAME STREQUAL TestInputEditors
 	 OR arg_NAME STREQUAL TestNodes
 	 OR arg_NAME STREQUAL TestVuoEditor
@@ -64,61 +69,48 @@ function (VuoTest)
 
 	add_dependencies(VuoTest ${arg_NAME})
 
-	if (VUO_TEST_OUTPUT_XML)
-		set(testXML "-xml -o ${PROJECT_BINARY_DIR}/test/${arg_NAME}.qtest")
-	endif()
-	if (NOT arg_NAME STREQUAL TestVuoVideo)
-		set(minimumValue "-minimumvalue 1000")
+	if (arg_RUN_SERIAL)
+		list(APPEND testProperties RUN_SERIAL ${arg_RUN_SERIAL})
 	endif()
 
-	add_test(NAME ${arg_NAME}
-		# Allow setting an execution-time environment variable to add arguments to the test invocation
-		# (can't use $ARG{} since that requires re-running CMake).  For example:
-		#     ARG="testAddingAndRemovingModules:compiled node class, user, not loading all modules" ctest -V -R ModuleLoading
-		COMMAND bash -c "ARG=\"$(printenv ARG)\" ;
-			if [ -n \"\$ARG\" ]; then
-				${PROJECT_BINARY_DIR}/bin/${arg_NAME} -nocrashhandler ${minimumValue} -maxwarnings 10000 ${testXML} \"\$ARG\"
-			else
-				${PROJECT_BINARY_DIR}/bin/${arg_NAME} -nocrashhandler ${minimumValue} -maxwarnings 10000 ${testXML}
-			fi
-			"
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	)
-
-	if (arg_RESOURCE_LOCK)
-		set_tests_properties(${arg_NAME} PROPERTIES
-			RESOURCE_LOCK "${arg_RESOURCE_LOCK}"
-		)
-	endif()
-	if (arg_COST)
-		set_tests_properties(${arg_NAME} PROPERTIES
-			COST ${arg_COST}
-		)
-	endif()
 	if (arg_TIMEOUT)
-		set_tests_properties(${arg_NAME} PROPERTIES
-			TIMEOUT ${arg_TIMEOUT}
-		)
+		list(APPEND testProperties TIMEOUT ${arg_TIMEOUT})
 	endif()
+
 	if (arg_FIXTURE)
-		set_tests_properties(${arg_NAME} PROPERTIES
-			FIXTURES_REQUIRED ${arg_FIXTURE}
-		)
+		list(APPEND testProperties FIXTURES_REQUIRED ${arg_FIXTURE})
 	endif()
+
 	if (EXISTS /Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
-		set_tests_properties(${arg_NAME} PROPERTIES
-			ENVIRONMENT DYLD_INSERT_LIBRARIES=/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib
-			FAIL_REGULAR_EXPRESSION "Main Thread Checker: UI API called on a background thread"
-		)
+		list(APPEND testProperties ENVIRONMENT DYLD_INSERT_LIBRARIES=/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
+		list(APPEND testFailRegexes "Main Thread Checker: UI API called on a background thread")
 	endif()
+
+	if (NOT arg_NAME STREQUAL TestReferenceCounting)
+		list(APPEND testFailRegexes "(VuoRegister|VuoRegisterSingleton|VuoRetain|VuoRelease) was (not called enough times|called (more than once|for (bogus|unregistered|unretained) pointer))")
+	endif()
+
+	list(APPEND testFailRegexes "Function has no testdata|Unknown test function|Unknown testdata for function")
+
+	list(JOIN testFailRegexes "|" testFailRegexes)
+	list(APPEND testProperties FAIL_REGULAR_EXPRESSION "\"${testFailRegexes}\"")
+
+	qtest_discover_tests(${arg_NAME}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		DISCOVERY_TIMEOUT 600
+		PROPERTIES ${testProperties}
+	)
 endfunction()
 
+
+add_subdirectory(TestTests)
 
 # Listed in approximately low-level (unit) to high-level (integration/end-to-end) order.
 
 add_subdirectory(TestVuoUtilities)
 add_subdirectory(TestVuoDirectedAcyclicGraph)
 add_subdirectory(TestVuoProtocol)
+add_subdirectory(TestVuoCompilerCompatibility)
 add_subdirectory(TestVuoRunnerCocoa)
 
 add_subdirectory(TestVuoCompiler)
@@ -142,33 +134,28 @@ add_subdirectory(TestCompositionExecution)
 
 add_subdirectory(TestHeap)
 add_subdirectory(TestModules)
+add_subdirectory(TestExamples)
 add_subdirectory(TestDocumentation)
 
-# All of the above tests should complete in less than a minute.
-# The tests below take significantly longer than that, and/or interfere with the GUI.
-if (VUO_TEST_LONG)
-	# Long.
-	add_subdirectory(TestCompilingAndLinking)
-	add_subdirectory(TestModuleLoading)
-	add_subdirectory(TestControlAndTelemetry)
-	add_subdirectory(TestSubcompositions)
-	add_subdirectory(TestEventDropping)
-	add_subdirectory(TestVuoRunner)
-	add_subdirectory(TestTypes)
-	add_subdirectory(TestVuoVideo)
-	add_subdirectory(TestBuildSystem)
-	add_subdirectory(TestBuiltProducts)
-	add_subdirectory(TestExamples)
-	add_subdirectory(TestSDK)
+# Long.
+add_subdirectory(TestCompilingAndLinking)
+add_subdirectory(TestModuleLoading)
+add_subdirectory(TestControlAndTelemetry)
+add_subdirectory(TestSubcompositions)
+add_subdirectory(TestEventDropping)
+add_subdirectory(TestVuoRunner)
+add_subdirectory(TestTypes)
+add_subdirectory(TestVuoVideo)
+add_subdirectory(TestBuildSystem)
+add_subdirectory(TestSDK)
 
-	# GUI.
-	add_subdirectory(TestProtocolDrivers)
-	add_subdirectory(TestWindow)
-	add_subdirectory(TestVuoEditor)
-	add_subdirectory(TestInputEditors)
-	add_subdirectory(TestCompositions)
-	add_subdirectory(TestNodes)
-endif()
+# GUI.
+add_subdirectory(TestProtocolDrivers)
+add_subdirectory(TestWindow)
+add_subdirectory(TestEditorCommands)
+add_subdirectory(TestInputEditors)
+add_subdirectory(TestCompositions)
+add_subdirectory(TestNodes)
 
 if (VuoPro)
 	include(pro/pro.cmake)

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPublishedInputNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -88,7 +88,7 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClass(vector<VuoPublis
 VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithImplementation(const string &nodeClassName,
 																				  const vector<string> &portNames, const vector<VuoType *> &types)
 {
-	Module *module = new Module(nodeClassName, getGlobalContext());
+	Module *module = new Module(nodeClassName, *VuoCompiler::globalLLVMContext);
 
 	// VuoModuleMetadata({});
 	VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
@@ -177,12 +177,12 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithImplementatio
 		if (dataType)
 		{
 			size_t inputDataArgIndex = indexOfParameter[ modelInputPorts[i] ];
-			Value *inputDataArg = VuoCompilerCodeGenUtilities::unlowerArgument(dataType->getCompiler(), eventFunction, inputDataArgIndex, module, eventBlock);
+			Value *inputDataPointer = dataType->getCompiler()->convertArgsToPortData(module, eventBlock, eventFunction, inputDataArgIndex);
 
 			size_t outputDataArgIndex = indexOfParameter[ modelOutputPorts[i] ];
 			Value *outputDataArg = VuoCompilerCodeGenUtilities::getArgumentAtIndex(eventFunction, outputDataArgIndex);
 
-			new StoreInst(inputDataArg, outputDataArg, eventBlock);
+			VuoCompilerCodeGenUtilities::generateMemoryCopy(module, eventBlock, inputDataPointer, outputDataArg, dataType->getCompiler()->getSize(module));
 		}
 
 		BranchInst::Create(noEventBlock, eventBlock);
@@ -220,7 +220,7 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithoutImplementa
 		VuoCompilerInputEventPortClass *inputPortClass = new VuoCompilerInputEventPortClass(portNames.at(i));
 		if (types.at(i))
 		{
-			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("", nullptr, false);
+			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("");
 			inputPortClass->setDataClass(inputDataClass);
 			inputPortClass->setDataVuoType(types.at(i));
 		}
@@ -242,7 +242,7 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithoutImplementa
 		VuoCompilerInputEventPortClass *outputPortClass = new VuoCompilerInputEventPortClass(outputName);
 		if (types.at(i))
 		{
-			VuoCompilerInputDataClass *outputDataClass = new VuoCompilerInputDataClass("", nullptr, false);
+			VuoCompilerInputDataClass *outputDataClass = new VuoCompilerInputDataClass("");
 			outputPortClass->setDataClass(outputDataClass);
 			outputPortClass->setDataVuoType(types.at(i));
 		}

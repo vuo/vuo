@@ -2,7 +2,7 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -48,6 +48,8 @@ static void VuoGlContext_renderers(void)
 	VuoScreen *screens = VuoListGetData_VuoScreen(screensList);
 	VuoLocal(screensList);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	// https://developer.apple.com/library/mac/qa/qa1168/_index.html says:
 	// "If you are looking for the VRAM sizes of all the renderers on your system […]
 	// you may specify a -1/0xFFFFFFFF display mask in the CGLQueryRendererInfo() function.
@@ -137,6 +139,7 @@ static void VuoGlContext_renderers(void)
 			VUserLog("    OpenCL supported   : %s", cl ? "yes" : "no");
 	}
 	CGLDestroyRendererInfo(ri);
+#pragma clang diagnostic pop
 
 
 	const char *gldriver = "GLDriver";
@@ -168,43 +171,45 @@ static void VuoGlContext_renderers(void)
 		for (int i = 0; i < mtlDeviceCount; ++i)
 		{
 			id dev = (id)CFArrayGetValueAtIndex(mtlDevices, i);
-			VUserLog("    %s:", (char *)objc_msgSend(objc_msgSend(dev, sel_getUid("name")), sel_getUid("UTF8String")));
+			id devName = ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("name"));
+			const char *devNameZ = ((char * (*)(id, SEL))objc_msgSend)(devName, sel_getUid("UTF8String"));
+			VUserLog("    %s:", devNameZ);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("registryID")))
-			VUserLog("        ID                                  : %p", objc_msgSend(dev, sel_getUid("registryID")));
+			VUserLog("        ID                                  : %p", ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("registryID")));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("recommendedMaxWorkingSetSize")))
-			VUserLog("        Recommended max working-set size    : %lld MiB", (int64_t)objc_msgSend(dev, sel_getUid("recommendedMaxWorkingSetSize"))/1048576);
+			VUserLog("        Recommended max working-set size    : %lld MiB", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("recommendedMaxWorkingSetSize"))/1048576);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxBufferLength")))
-			VUserLog("        Max buffer length                   : %lld MiB", (int64_t)objc_msgSend(dev, sel_getUid("maxBufferLength"))/1048576);
+			VUserLog("        Max buffer length                   : %lld MiB", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxBufferLength"))/1048576);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxThreadgroupMemoryLength")))
-			VUserLog("        Threadgroup memory                  : %lld B", (int64_t)objc_msgSend(dev, sel_getUid("maxThreadgroupMemoryLength")));
-			VUserLog("        Low-power                           : %s", objc_msgSend(dev, sel_getUid("isLowPower")) ? "yes" : "no");
+			VUserLog("        Threadgroup memory                  : %lld B", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxThreadgroupMemoryLength")));
+			VUserLog("        Low-power                           : %s", ((bool (*)(id, SEL))objc_msgSend) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("isRemovable")))
-			VUserLog("        Removable                           : %s", objc_msgSend(dev, sel_getUid("isRemovable")) ? "yes" : "no");
-			VUserLog("        Headless                            : %s", objc_msgSend(dev, sel_getUid("isHeadless")) ? "yes" : "no");
+			VUserLog("        Removable                           : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("isRemovable")) ? "yes" : "no");
+			VUserLog("        Headless                            : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("isHeadless")) ? "yes" : "no");
 
-			if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10005))
+			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10005))
 			VUserLog("        Feature set                         : GPU Family 2 v1");
-			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10004))
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10004))
 			VUserLog("        Feature set                         : GPU Family 1 v4");
-			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10003))
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10003))
 			VUserLog("        Feature set                         : GPU Family 1 v3");
-			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10001))
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10001))
 			VUserLog("        Feature set                         : GPU Family 1 v2");
-			else if (objc_msgSend(dev, sel_getUid("supportsFeatureSet:"), 10000))
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10000))
 			VUserLog("        Feature set                         : GPU Family 1 v1");
 			else
 			VUserLog("        Feature set                         : (unknown)");
 
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("readWriteTextureSupport")))
-			VUserLog("        Read-write texture support tier     : %lld", (int64_t)objc_msgSend(dev, sel_getUid("readWriteTextureSupport")));
+			VUserLog("        Read-write texture support tier     : %lld", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("readWriteTextureSupport")));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("argumentBuffersSupport")))
-			VUserLog("        Argument buffer support tier        : %lld", (int64_t)objc_msgSend(dev, sel_getUid("argumentBuffersSupport")));
+			VUserLog("        Argument buffer support tier        : %lld", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("argumentBuffersSupport")));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxArgumentBufferSamplerCount")))
-			VUserLog("        Max argument buffers                : %lld", (int64_t)objc_msgSend(dev, sel_getUid("maxArgumentBufferSamplerCount")));
+			VUserLog("        Max argument buffers                : %lld", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxArgumentBufferSamplerCount")));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("areProgrammableSamplePositionsSupported")))
-			VUserLog("        Programmable sample position support: %s", objc_msgSend(dev, sel_getUid("areProgrammableSamplePositionsSupported")) ? "yes" : "no");
+			VUserLog("        Programmable sample position support: %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("areProgrammableSamplePositionsSupported")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("areRasterOrderGroupsSupported")))
-			VUserLog("        Raster order group support          : %s", objc_msgSend(dev, sel_getUid("areRasterOrderGroupsSupported")) ? "yes" : "no");
+			VUserLog("        Raster order group support          : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("areRasterOrderGroupsSupported")) ? "yes" : "no");
 		}
 		CFRelease(mtlDevices);
 	}
@@ -391,6 +396,8 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 	 */
 	void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx))
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		if (!function)
 			return;
 
@@ -440,6 +447,7 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 			CGLUnlockContext(VuoGlContext_root);
 			pthread_setspecific(VuoGlContextPerformKey, (void *)false);
 		}
+#pragma clang diagnostic pop
 	}
 
 	/**
@@ -447,6 +455,8 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 	 */
 	static CGLContextObj VuoGlContext_create(CGLContextObj rootContext)
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		static dispatch_once_t info = 0;
 		dispatch_once(&info, ^{
 			if (VuoIsDebugEnabled())
@@ -530,6 +540,7 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 		}
 
 		return context;
+#pragma clang diagnostic pop
 	}
 
 /**
@@ -595,7 +606,10 @@ int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context)
 	static dispatch_once_t multisamplingCheck = 0;
 	dispatch_once(&multisamplingCheck, ^{
 		GLint rendererID;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLGetParameter((CGLContextObj)context, kCGLCPCurrentRendererID, &rendererID);
+#pragma clang diagnostic pop
 		rendererID &= kCGLRendererIDMatchingMask;
 
 		CGLContextObj cgl_ctx = (CGLContextObj)context;
@@ -630,6 +644,8 @@ int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context)
  */
 void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core, GLint displayMask)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	// Check whether it's OK to use multisampling on this GPU.
 	static dispatch_once_t multisamplingCheck = 0;
 	static int multisample = 0;
@@ -739,6 +755,7 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Cor
 	}
 
 	return (void *)pf;
+#pragma clang diagnostic pop
 }
 
 /**
@@ -767,6 +784,8 @@ void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const 
  */
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber, const char *func)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	GLint vertexOnGPU, fragmentOnGPU;
 	CGLGetParameter(cgl_ctx, kCGLCPGPUVertexProcessing, &vertexOnGPU);
 	if (!vertexOnGPU)
@@ -774,6 +793,7 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber
 	CGLGetParameter(cgl_ctx, kCGLCPGPUFragmentProcessing, &fragmentOnGPU);
 	if (!fragmentOnGPU)
 		VuoLog(file, linenumber, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
+#pragma clang diagnostic pop
 
 	bool foundError = false;
 	do

@@ -1,7 +1,10 @@
 VuoTest(NAME TestWindow
 	SOURCE TestWindow.cc
-	RESOURCE_LOCK GUI;COMPILER
-	TIMEOUT 600
+	TIMEOUT 60
+
+	# This test controls the mouse cursor
+	# and expects its windows to be in the foreground without interruption.
+	RUN_SERIAL ON
 )
 target_link_libraries(TestWindow
 	PRIVATE

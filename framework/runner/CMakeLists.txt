@@ -8,8 +8,11 @@ endif()
 add_library(VuoRunner SHARED
 	empty.c
 )
+set(frameworkPath "${PROJECT_BINARY_DIR}/lib/VuoRunner.framework")
+set(frameworkVersionPath "${frameworkPath}/Versions/${VuoFrameworkVersion}")
+set(frameworkBinaryPath "${frameworkVersionPath}/VuoRunner")
 list(APPEND generatedFiles
-	${PROJECT_BINARY_DIR}/lib/VuoRunner.framework/Versions/${VuoFrameworkVersion}/VuoRunner
+	${vuoRunnerBinary}
 )
 
 # This value is substituted into Info.plist.
@@ -68,11 +71,13 @@ target_link_options(VuoRunner
 		LINKER:-unexported_symbols_list ${unexportedSymbolsList}
 )
 
-set(frameworkPath "${PROJECT_BINARY_DIR}/lib/VuoRunner.framework")
-set(frameworkVersionPath "${frameworkPath}/Versions/${VuoFrameworkVersion}")
 file(MAKE_DIRECTORY "${frameworkVersionPath}/Documentation/Licenses")
 file(MAKE_DIRECTORY "${frameworkVersionPath}/Modules")
 file(CREATE_LINK "Versions/Current/Documentation" "${frameworkPath}/Documentation" SYMBOLIC)
 file(CREATE_LINK "Versions/Current/Modules"       "${frameworkPath}/Modules"       SYMBOLIC)
 
 set_target_properties(VuoRunner PROPERTIES VuoGeneratedFiles "${generatedFiles}")
+
+add_custom_command(TARGET VuoRunner POST_BUILD
+	COMMAND ${codesignAdHoc} ${frameworkBinaryPath}
+)

@@ -2,7 +2,7 @@
  * @file
  * VuoVideoInputDevice implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -59,7 +59,7 @@ static const char *VuoVideoInputDevice_getStringForMatchType(VuoVideoInputDevice
  */
 VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(json_object *js)
 {
-	VuoVideoInputDevice value = {VuoVideoInputDevice_MatchIdThenName, "", "", ""};
+	VuoVideoInputDevice value = {VuoVideoInputDevice_MatchIdThenName, "", ""};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "matchType", &o))

@@ -2,7 +2,7 @@
  * @file
  * VuoVideoPlayer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -29,6 +29,8 @@ VuoModuleMetadata({
 				 });
 #endif
 }
+
+const double VuoVideoPlayer_loadTimeout = 10;  ///< Seconds
 
 /// Release and set a video frame to null if it's not null already.
 #define TRY_RELEASE_VIDEO(v) { if(v.image != NULL) { VuoRelease(v.image); v.image = NULL; v.timestamp = -1.0; } }
@@ -376,10 +378,13 @@ double VuoVideoPlayer::GetDuration()
 	double dur = 0;
 
 	/// if ffmpeg didn't load, let avfoundation think about it before returning
-	while(!IsReady() && !failedLoading)
+	double t0 = VuoLogGetElapsedTime();
+	while (!IsReady() && !failedLoading && VuoLogGetElapsedTime() - t0 < VuoVideoPlayer_loadTimeout)
 	{
 		usleep(USEC_PER_SEC / 24); // @@@
 	}
+	if (!IsReady())
+		failedLoading = true;
 
 	pthread_mutex_lock(&decoderMutex);
 	dur = failedLoading ? 0 : decoder->GetDuration();
@@ -392,10 +397,13 @@ unsigned int VuoVideoPlayer::GetAudioChannels()
 {
 	unsigned int channelCount = 0;
 
-	while(!IsReady() && !failedLoading)
+	double t0 = VuoLogGetElapsedTime();
+	while (!IsReady() && !failedLoading && VuoLogGetElapsedTime() - t0 < VuoVideoPlayer_loadTimeout)
 	{
 		usleep(USEC_PER_SEC / 24); // @@@
 	}
+	if (!IsReady())
+		failedLoading = true;
 
 	pthread_mutex_lock(&decoderMutex);
 	channelCount = failedLoading ? 0 : decoder->GetAudioChannelCount();
@@ -406,6 +414,9 @@ unsigned int VuoVideoPlayer::GetAudioChannels()
 
 bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 {
+	if (!decoder)
+		return false;
+
 	const int MAX_FRAMES_TO_STEP_BEFORE_SEEK = 5;
 	const double floatingPointError = 0.0001;
 	double averageFrameDuration = 1. / decoder->GetFrameRate();
@@ -669,4 +680,3 @@ void VuoVideoPlayer::sendAudioFrame()
 		audioFrame.channels = NULL;
 	}
 }
-

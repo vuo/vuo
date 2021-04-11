@@ -2,7 +2,7 @@
  * @file
  * vuo.mouse.move node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -51,7 +51,7 @@ void nodeInstanceTriggerStart
 	(*context)->isTriggerStopped = false;
 	(*context)->window = window;
 	(*context)->modifierKey = modifierKey;
-	VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+	VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey, false);
 }
 
 void nodeInstanceTriggerUpdate
@@ -71,7 +71,7 @@ void nodeInstanceTriggerUpdate
 		VuoMouse_stopListening((*context)->movedListener);
 		(*context)->window = window;
 		(*context)->modifierKey = modifierKey;
-		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey, false);
 	}
 }
 
@@ -92,7 +92,7 @@ void nodeInstanceEvent
 		VuoMouse_stopListening((*context)->movedListener);
 		(*context)->window = window;
 		(*context)->modifierKey = modifierKey;
-		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey, false);
 	}
 }
 

@@ -6,6 +6,7 @@ add_library(VuoCompiler STATIC
 	VuoCompilerChain.cc
 	VuoCompilerCodeGenUtilities.cc
 	VuoCompilerComment.cc
+	VuoCompilerCompatibility.cc
 	VuoCompilerComposition.cc
 	VuoCompilerCompositionDiff.cc
 	VuoCompilerConstantsCache.cc
@@ -44,7 +45,6 @@ add_library(VuoCompiler STATIC
 	VuoCompilerPublishedPort.cc
 	VuoCompilerPublishedPortClass.cc
 	VuoCompilerSpecializedNodeClass.cc
-	VuoCompilerTargetSet.cc
 	VuoCompilerTriggerDescription.cc
 	VuoCompilerTriggerPort.cc
 	VuoCompilerTriggerPortClass.cc

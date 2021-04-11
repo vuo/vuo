@@ -2,14 +2,12 @@
  * @file
  * VuoMouse implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
 #include <AvailabilityMacros.h>
 
@@ -81,6 +79,7 @@ struct VuoMouseContext
 {
 	id monitor;  ///< The handle returned by NSEvent's method to start monitoring events, to be used to stop monitoring.
 	id monitor2;  ///< Like `monitor`, but listens for control-leftclicks (when needed).
+	id globalMonitor;  ///< Listens for events to other apps.
 
 	dispatch_queue_t clickQueue;  ///< Synchronizes handling of click events.
 	dispatch_group_t clickGroup;  ///< Synchronizes handling of click events.
@@ -277,11 +276,11 @@ static void VuoMouse_fireScrollDeltaIfNeeded(NSEvent *event, VuoWindowReference 
  * If the mouse event is not ignored, calls the block and passes it the mouse position.
  *
  * If a window is given, the mouse position is in Vuo coordinates relative to the window's content view.
- * The mouse event is ignored if it doesn't correspond to this window.
+ * The mouse event is ignored if it doesn't correspond to this window (unless `fireRegardlessOfWindow` is true).
  *
  * If no window is given, the mouse position is in screen coordinates.
  */
-static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, NSPoint fullscreenPoint, VuoWindowReference windowRef, VuoModifierKey modifierKey, bool fireRegardlessOfPosition, void (^fire)(VuoPoint2d))
+static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, NSPoint fullscreenPoint, VuoWindowReference windowRef, VuoModifierKey modifierKey, bool fireRegardlessOfPosition, bool fireRegardlessOfWindow, void (^fire)(VuoPoint2d))
 {
 	if (! VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey))
 		return;
@@ -306,7 +305,7 @@ static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, NSPoint fullscree
 		}
 		else if (targetWindow == [event window])
 			convertedPoint = VuoMouse_convertWindowToVuoCoordinates(pointInWindowOrScreen, targetWindow, &shouldFire);
-		else if (! [event window] && isKeyWindow)
+		else if ((! [event window] && isKeyWindow) || fireRegardlessOfWindow)
 		{
 			// Workaround (https://b33p.net/kosada/node/7545):
 			// [event window] becomes nil for some reason after mousing over certain other applications.
@@ -416,7 +415,7 @@ static void VuoMouse_fireMouseClickIfNeeded(struct VuoMouseContext *context, NSE
 	dispatch_after(clickInterval, context->clickQueue, ^{
 					   if (context->pendingClickCount == clickCount)
 					   {
-						   VuoMouse_fireMousePositionIfNeeded(event, fullscreenPoint, windowRef, modifierKey, false, ^(VuoPoint2d point){ fired(point); });
+						   VuoMouse_fireMousePositionIfNeeded(event, fullscreenPoint, windowRef, modifierKey, false, false, ^(VuoPoint2d point){ fired(point); });
 						   context->pendingClickCount = 0;
 					   }
 					   dispatch_group_leave(context->clickGroup);
@@ -431,7 +430,7 @@ static void VuoMouse_fireMouseClickIfNeeded(struct VuoMouseContext *context, NSE
  */
 void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSScrollWheelMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskScrollWheel handler:^(NSEvent *event) {
 		VuoMouse_fireScrollDeltaIfNeeded(event, window, modifierKey, ^(VuoPoint2d point){ scrolled(point); });
 		return event;
 	}];
@@ -447,7 +446,7 @@ void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)
  */
 void VuoMouse_startListeningForScrollsWithCallback(VuoMouse *mouseListener, void (^scrolled)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSScrollWheelMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskScrollWheel handler:^(NSEvent *event) {
 		VuoMouse_fireScrollDeltaIfNeeded(event, window, modifierKey, scrolled);
 		return event;
 	}];
@@ -481,15 +480,20 @@ static void VuoMouse_fireInitialEvent(void (^movedTo)(VuoPoint2d), VuoWindowRefe
  *
  * @threadAny
  */
-void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
+void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey, bool global)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
-		VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, true, ^(VuoPoint2d point){ movedTo(point); });
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMouseMoved|NSEventMaskLeftMouseDragged|NSEventMaskRightMouseDragged|NSEventMaskOtherMouseDragged handler:^(NSEvent *event) {
+		VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, true, false, ^(VuoPoint2d point){ movedTo(point); });
 		return event;
 	}];
 
 	struct VuoMouseContext *context = (struct VuoMouseContext *)mouseListener;
 	context->monitor = monitor;
+
+	if (global)
+		context->globalMonitor = [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventMaskMouseMoved|NSEventMaskLeftMouseDragged|NSEventMaskRightMouseDragged|NSEventMaskOtherMouseDragged handler:^(NSEvent *event) {
+			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, true, true, ^(VuoPoint2d point){ movedTo(point); });
+		}];
 
 	VuoMouse_fireInitialEvent(^(VuoPoint2d point){ movedTo(point); }, window, modifierKey);
 }
@@ -504,8 +508,8 @@ void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(Vu
 void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (^movedTo)(VuoPoint2d),
 									 VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
-		VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, true, movedTo);
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMouseMoved|NSEventMaskLeftMouseDragged|NSEventMaskRightMouseDragged|NSEventMaskOtherMouseDragged handler:^(NSEvent *event) {
+		VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, true, false, movedTo);
 		return event;
 	}];
 
@@ -522,7 +526,7 @@ void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (
  */
 void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMouseMoved|NSEventMaskLeftMouseDragged|NSEventMaskRightMouseDragged|NSEventMaskOtherMouseDragged handler:^(NSEvent *event) {
 		VuoMouse_fireMouseDeltaIfNeeded(event, window, modifierKey, movedBy);
 		return event;
 	}];
@@ -545,28 +549,28 @@ void VuoMouse_startListeningForDragsWithCallback(VuoMouse *mouseListener, void (
 	switch (button)
 	{
 		case VuoMouseButton_Left:
-			eventMask = NSLeftMouseDraggedMask;
+			eventMask = NSEventMaskLeftMouseDragged;
 			break;
 		case VuoMouseButton_Middle:
-			eventMask = NSOtherMouseDraggedMask;
+			eventMask = NSEventMaskOtherMouseDragged;
 			break;
 		case VuoMouseButton_Right:
-			eventMask = NSRightMouseDraggedMask;
+			eventMask = NSEventMaskRightMouseDragged;
 
 			// Also fire events for control-leftclicks.
-			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseDraggedMask handler:^(NSEvent *event) {
-					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, fireRegardlessOfPosition, dragMovedTo);
+			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged handler:^(NSEvent *event) {
+					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, fireRegardlessOfPosition, false, dragMovedTo);
 					return event;
 				}];
 
 			break;
 		case VuoMouseButton_Any:
-			eventMask = NSLeftMouseDraggedMask | NSOtherMouseDraggedMask | NSRightMouseDraggedMask;
+			eventMask = NSEventMaskLeftMouseDragged | NSEventMaskOtherMouseDragged | NSEventMaskRightMouseDragged;
 			break;
 	}
 
 	context->monitor = [NSEvent addLocalMonitorForEventsMatchingMask:eventMask handler:^(NSEvent *event) {
-			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, fireRegardlessOfPosition, dragMovedTo);
+			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, fireRegardlessOfPosition, false, dragMovedTo);
 			return event;
 		}];
 }
@@ -597,23 +601,23 @@ void VuoMouse_startListeningForPressesWithCallback(VuoMouse *mouseListener, void
 	switch (button)
 	{
 		case VuoMouseButton_Left:
-			eventMask = NSLeftMouseDownMask;
+			eventMask = NSEventMaskLeftMouseDown;
 			break;
 		case VuoMouseButton_Middle:
-			eventMask = NSOtherMouseDownMask;
+			eventMask = NSEventMaskOtherMouseDown;
 			break;
 		case VuoMouseButton_Right:
-			eventMask = NSRightMouseDownMask;
+			eventMask = NSEventMaskRightMouseDown;
 
 			// Also fire events for control-leftclicks.
-			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseDownMask handler:^(NSEvent *event) {
-					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, false, pressed);
+			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^(NSEvent *event) {
+					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, false, false, pressed);
 					return event;
 				}];
 
 			break;
 		case VuoMouseButton_Any:
-			eventMask = NSLeftMouseDownMask | NSOtherMouseDownMask | NSRightMouseDownMask;
+			eventMask = NSEventMaskLeftMouseDown | NSEventMaskOtherMouseDown | NSEventMaskRightMouseDown;
 			break;
 	}
 
@@ -623,11 +627,11 @@ void VuoMouse_startListeningForPressesWithCallback(VuoMouse *mouseListener, void
 		if (event.type == NSEventTypePressure)
 		{
 			if (context->priorPressureStage == 1 && event.stage == 2 && forcePressed)
-				VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, false, forcePressed);
+				VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, false, false, forcePressed);
 			context->priorPressureStage = event.stage;
 		}
 		else
-			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, false, pressed);
+			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, false, false, pressed);
 		return event;
 	}];
 }
@@ -683,28 +687,28 @@ void VuoMouse_startListeningForReleasesWithCallback(VuoMouse *mouseListener, voi
 	switch (button)
 	{
 		case VuoMouseButton_Left:
-			eventMask = NSLeftMouseUpMask;
+			eventMask = NSEventMaskLeftMouseUp;
 			break;
 		case VuoMouseButton_Middle:
-			eventMask = NSOtherMouseUpMask;
+			eventMask = NSEventMaskOtherMouseUp;
 			break;
 		case VuoMouseButton_Right:
-			eventMask = NSRightMouseUpMask;
+			eventMask = NSEventMaskRightMouseUp;
 
 			// Also fire events for control-leftclicks.
-			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseUpMask handler:^(NSEvent *event) {
-					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, fireRegardlessOfPosition, released);
+			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp handler:^(NSEvent *event) {
+					VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, VuoModifierKey_Control, fireRegardlessOfPosition, false, released);
 					return event;
 				}];
 
 			break;
 		case VuoMouseButton_Any:
-			eventMask = NSLeftMouseUpMask | NSOtherMouseUpMask | NSRightMouseUpMask;
+			eventMask = NSEventMaskLeftMouseUp | NSEventMaskOtherMouseUp | NSEventMaskRightMouseUp;
 			break;
 	}
 
 	context->monitor = [NSEvent addLocalMonitorForEventsMatchingMask:eventMask handler:^(NSEvent *event) {
-			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, fireRegardlessOfPosition, released);
+			VuoMouse_fireMousePositionIfNeeded(event, [NSEvent mouseLocation], window, modifierKey, fireRegardlessOfPosition, false, released);
 			return event;
 		}];
 }
@@ -736,23 +740,23 @@ void VuoMouse_startListeningForClicks(VuoMouse *mouseListener, void (*singleClic
 	switch (button)
 	{
 		case VuoMouseButton_Left:
-			eventMask = NSLeftMouseUpMask;
+			eventMask = NSEventMaskLeftMouseUp;
 			break;
 		case VuoMouseButton_Middle:
-			eventMask = NSOtherMouseUpMask;
+			eventMask = NSEventMaskOtherMouseUp;
 			break;
 		case VuoMouseButton_Right:
-			eventMask = NSRightMouseUpMask;
+			eventMask = NSEventMaskRightMouseUp;
 
 			// Also fire events for control-leftclicks.
-			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseUpMask handler:^(NSEvent *event) {
+			context->monitor2 = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp handler:^(NSEvent *event) {
 					VuoMouse_fireMouseClickIfNeeded(context, event, window, VuoModifierKey_Control, singleClicked, doubleClicked, tripleClicked);
 					return event;
 				}];
 
 			break;
 		case VuoMouseButton_Any:
-			eventMask = NSLeftMouseUpMask | NSOtherMouseUpMask | NSRightMouseUpMask;
+			eventMask = NSEventMaskLeftMouseUp | NSEventMaskOtherMouseUp | NSEventMaskRightMouseUp;
 			break;
 	}
 
@@ -809,6 +813,12 @@ void VuoMouse_stopListening(VuoMouse *mouseListener)
 								[NSEvent removeMonitor:context->monitor2];
 								context->monitor2 = nil;
 							}
+
+							if (context->globalMonitor)
+							{
+								[NSEvent removeMonitor:context->globalMonitor];
+								context->globalMonitor = nil;
+							}
 						}
 				  });
 
@@ -863,10 +873,10 @@ void VuoMouseStatus_use(void)
 		VuoMouseStatus_middleButton = false;
 		VuoMouseStatus_rightButton  = false;
 		VuoMouseStatus_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:
-				NSMouseMovedMask
-				|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask
-				|NSLeftMouseDownMask|NSOtherMouseDownMask|NSRightMouseDownMask
-				|NSLeftMouseUpMask|NSOtherMouseUpMask|NSRightMouseUpMask
+				NSEventMaskMouseMoved
+				|NSEventMaskLeftMouseDragged|NSEventMaskRightMouseDragged|NSEventMaskOtherMouseDragged
+				|NSEventMaskLeftMouseDown|NSEventMaskOtherMouseDown|NSEventMaskRightMouseDown
+				|NSEventMaskLeftMouseUp|NSEventMaskOtherMouseUp|NSEventMaskRightMouseUp
 			handler:^(NSEvent *event) {
 				// Despite the name, -locationInWindow sometimes returns screen coordinates.
 				NSPoint p = [event locationInWindow];
@@ -881,12 +891,12 @@ void VuoMouseStatus_use(void)
 
 				switch ([event type])
 				{
-					case NSLeftMouseDown:   if (!VuoMouse_isResizing()) VuoMouseStatus_leftButton   = true;  break;
-					case NSLeftMouseUp:                                 VuoMouseStatus_leftButton   = false; break;
-					case NSOtherMouseDown:  if (!VuoMouse_isResizing()) VuoMouseStatus_middleButton = true;  break;
-					case NSOtherMouseUp:                                VuoMouseStatus_middleButton = false; break;
-					case NSRightMouseDown:  if (!VuoMouse_isResizing()) VuoMouseStatus_rightButton  = true;  break;
-					case NSRightMouseUp:                                VuoMouseStatus_rightButton  = false; break;
+					case NSEventTypeLeftMouseDown:   if (!VuoMouse_isResizing()) VuoMouseStatus_leftButton   = true;  break;
+					case NSEventTypeLeftMouseUp:                                 VuoMouseStatus_leftButton   = false; break;
+					case NSEventTypeOtherMouseDown:  if (!VuoMouse_isResizing()) VuoMouseStatus_middleButton = true;  break;
+					case NSEventTypeOtherMouseUp:                                VuoMouseStatus_middleButton = false; break;
+					case NSEventTypeRightMouseDown:  if (!VuoMouse_isResizing()) VuoMouseStatus_rightButton  = true;  break;
+					case NSEventTypeRightMouseUp:                                VuoMouseStatus_rightButton  = false; break;
 					default: break;
 				}
 

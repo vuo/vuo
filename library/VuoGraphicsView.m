@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsView implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,12 @@ VuoModuleMetadata({
 	{
 		self.wantsLayer = true;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		// Replaced by acceptsTouchEvents, which isn't available in OS X 10.11.
 		self.acceptsTouchEvents = YES;
+#pragma clang diagnostic pop
+
 		self.wantsRestingTouches = YES;
 		_touchTriggers = [NSMutableSet new];
 		_zoomedTriggers = [NSMutableSet new];

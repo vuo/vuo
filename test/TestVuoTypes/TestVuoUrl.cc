@@ -2,7 +2,7 @@
  * @file
  * TestVuoUrl implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -244,7 +244,8 @@ private slots:
 		QTest::newRow("http explicit port")	<< "http://example.com:8080"									<< "http"	<< ""		<< "example.com"	<< 8080	<< ""													<< ""			<< "";
 		QTest::newRow("http everything")	<< "http://user@example.com:8080/a?b=c&d=e#f"					<< "http"	<< "user"	<< "example.com"	<< 8080	<< "/a"													<< "b=c&d=e"	<< "f";
 		QTest::newRow("https")				<< "https://example.com/"										<< "https"	<< ""		<< "example.com"	<< 443	<< "/"													<< ""			<< "";
-		QTest::newRow("file")				<< "file:///System/Library/CoreServices/SystemVersion.plist"	<< "file"	<< ""		<< ""				<< 0	<< "/System/Library/CoreServices/SystemVersion.plist"	<< ""			<< "";
+		QTest::newRow("file, empty-authority") << "file:///System/Library/CoreServices/SystemVersion.plist" << "file"   << ""       << ""               << 0    << "/System/Library/CoreServices/SystemVersion.plist"   << ""           << "";
+		QTest::newRow("file, no-authority")    << "file:/System/Library/CoreServices/SystemVersion.plist"   << "file"   << ""       << ""               << 0    << "/System/Library/CoreServices/SystemVersion.plist"   << ""           << "";
 		QTest::newRow("data")               << "data:;base64,AA=="                                          << "data"   << ""       << ""               << 0    << ""                                                   << ""           << "";
 	}
 	void testParts()
@@ -326,6 +327,7 @@ private slots:
 		QTest::newRow("non-bundle folder2")	<< "file:///Applications"								<< false;
 		QTest::newRow("app bundle")         << "file:///Applications/Safari.app"                    << true;
 		QTest::newRow("framework bundle")	<< "file:///System/Library/Frameworks/AppKit.framework"	<< false;
+		QTest::newRow("nonexistent path")   << "file:///nonexistent"                                << false;
 	}
 	void testBundle()
 	{

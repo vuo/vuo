@@ -2,7 +2,7 @@
  * @file
  * TestVuoUtilities implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -231,8 +231,6 @@ private slots:
 
 		QString dir(getcwd(nullptr, 0) + QStringLiteral("/aliases-directory"));
 
-		unlink("empty-directory/.gitignore");
-
 		QTest::newRow("Empty directory")                           << "empty-directory"                     << QSet<QString>();
 		QTest::newRow("Plain directory with a single file")        << "aliases-directory/targetDir"         << QSet<QString>({"aliases-directory/targetDir/someFile"});
 		QTest::newRow("Symlink to a directory with a single file") << "aliases-directory/targetDir symlink" << QSet<QString>({"aliases-directory/targetDir symlink/someFile"});
@@ -243,6 +241,9 @@ private slots:
 		QFETCH(QString, path);
 		QFETCH(QSet<QString>, expectedFiles);
 
+		if (string(QTest::currentDataTag()) == "Empty directory")
+			unlink("empty-directory/.gitignore");
+
 		auto foundFilesV = VuoFileUtilities::findAllFilesInDirectory(path.toStdString(), set<string>(), true);
 
 		QSet<QString> foundFiles;
@@ -250,6 +251,9 @@ private slots:
 			foundFiles << QString::fromStdString(file->path());
 
 		QCOMPARE(foundFiles, expectedFiles);
+
+		if (string(QTest::currentDataTag()) == "Empty directory")
+			VuoFileUtilities::writeStringToFile("", "empty-directory/.gitignore");
 	}
 
 	void testCopyDirectory_data()
@@ -257,8 +261,6 @@ private slots:
 		QTest::addColumn<QString>("sourcePath");
 		QTest::addColumn<QSet<QString>>("expectedFiles");
 		{
-			unlink("empty-directory/.gitignore");
-
 			QSet<QString> expectedFiles;
 			QTest::newRow("Empty directory")
 				<< "empty-directory"
@@ -301,6 +303,9 @@ private slots:
 		QFETCH(QString, sourcePath);
 		QFETCH(QSet<QString>, expectedFiles);
 
+		if (string(QTest::currentDataTag()) == "Empty directory")
+			unlink("empty-directory/.gitignore");
+
 		string destPath =  VuoFileUtilities::makeTmpDir("testCopyDirectory");
 		VuoFileUtilities::copyDirectory(sourcePath.toStdString(), destPath);
 
@@ -313,6 +318,9 @@ private slots:
 		QDir(QString::fromStdString(destPath)).removeRecursively();
 
 		QCOMPARE(copiedFilesRelative, expectedFiles);
+
+		if (string(QTest::currentDataTag()) == "Empty directory")
+			VuoFileUtilities::writeStringToFile("", "empty-directory/.gitignore");
 	}
 
 	void testLockFile_data()
@@ -499,11 +507,11 @@ private slots:
 		QTest::addColumn<bool>("testEscaping");
 		QTest::addColumn<bool>("testUnescaping");
 
-		QTest::newRow("<") << "a<b" << "a\\<b" << true << true;
-		QTest::newRow("|") << "a|b" << "a\\|b" << true << true;
-		QTest::newRow(">") << "a>b" << "a\\>b" << true << true;
-		QTest::newRow("\\") << "a\\b" << "a\\\\b" << true << true;
-		QTest::newRow("\"\\\"") << "\"\\\"" << "\\\"\\\\\\\"" << true << true;
+		QTest::newRow("lessthan") << "a<b" << "a\\<b" << true << true;
+		QTest::newRow("pipe") << "a|b" << "a\\|b" << true << true;
+		QTest::newRow("greaterthan") << "a>b" << "a\\>b" << true << true;
+		QTest::newRow("backslash") << "a\\b" << "a\\\\b" << true << true;
+		QTest::newRow("doublequoted backslash") << "\"\\\"" << "\\\"\\\\\\\"" << true << true;
 
 		// Graphviz's agget() returns strings with the double-quotes unescaped, but leaves everything else escaped.  Make sure we handle that situation.
 		QTest::newRow("agget()") << "\"\\\\\"" << "\"\\\\\\\\\"" << false << true;

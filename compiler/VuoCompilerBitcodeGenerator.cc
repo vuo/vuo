@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -404,7 +404,7 @@ void VuoCompilerBitcodeGenerator::makePortContextInfo(void)
  */
 void VuoCompilerBitcodeGenerator::makeSubcompositionModelPorts(void)
 {
-	Module module("", getGlobalContext());
+	Module module("", *VuoCompiler::globalLLVMContext);
 
 	vector<VuoPublishedPort *> publishedInputPorts = composition->getBase()->getPublishedInputPorts();
 	vector<VuoPublishedPort *> publishedOutputPorts = composition->getBase()->getPublishedOutputPorts();
@@ -419,9 +419,7 @@ void VuoCompilerBitcodeGenerator::makeSubcompositionModelPorts(void)
 		if (publishedOutputTriggerNames.find(portName) != publishedOutputTriggerNames.end())
 		{
 			VuoType *dataType = static_cast<VuoCompilerPortClass *>( modelOutputPorts[i]->getClass()->getCompiler() )->getDataVuoType();
-			FunctionType *functionType = VuoCompilerCodeGenUtilities::getFunctionType(&module, dataType);
-			PointerType *pointerToFunctionType = PointerType::get(functionType, 0);
-			VuoCompilerTriggerPortClass *modelTriggerPortClass = new VuoCompilerTriggerPortClass(portName, pointerToFunctionType);
+			VuoCompilerTriggerPortClass *modelTriggerPortClass = new VuoCompilerTriggerPortClass(portName);
 			modelTriggerPortClass->setDataVuoType(dataType);
 			VuoCompilerPort *modelTriggerPort = modelTriggerPortClass->newPort();
 			modelOutputPorts[i] = modelTriggerPort->getBase();
@@ -464,7 +462,7 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 		}
 	}
 
-	module = new Module(moduleKey, getGlobalContext());
+	module = new Module(moduleKey, *VuoCompiler::globalLLVMContext);
 	constantsCache = new VuoCompilerConstantsCache(module);
 
 	for (VuoCompilerNode *node : orderedNodes)
@@ -677,7 +675,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionCreateContextForNodeFunctio
 	nodeIndexValue->setName("nodeIndex");
 
 	PointerType *pointerToNodeContext = PointerType::get(VuoCompilerCodeGenUtilities::getNodeContextType(module), 0);
-	AllocaInst *nodeContextVariable = new AllocaInst(pointerToNodeContext, "nodeContext", initialBlock);
+	AllocaInst *nodeContextVariable = new AllocaInst(pointerToNodeContext, 0, "nodeContext", initialBlock);
 
 	vector< pair<BasicBlock *, BasicBlock *> > blocksForIndex;
 
@@ -731,7 +729,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionPerformDataOnlyTransmission
 			Value *compositionIdentifierValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateCompositionIdentifier(module, block, compositionStateValue);
 			Value *subcompositionIdentifierValue = node->generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
 			Value *subcompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, runtimeStateValue, subcompositionIdentifierValue);
-			Value *subcompositionStateValueDst = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(subcompositionStateValue, subcompositionFunctionSrc, 0, nullptr, module, block);
+			Value *subcompositionStateValueDst = new BitCastInst(subcompositionStateValue, subcompositionFunctionSrc->getFunctionType()->getParamType(0), "", block);
 
 			// Copy the subcomposition node's input port values to the subcomposition's published input node's input ports.
 
@@ -773,6 +771,8 @@ void VuoCompilerBitcodeGenerator::generateCompositionPerformDataOnlyTransmission
 /**
  * Generates the `compositionReleasePortData()` function.
  *
+ * The first argument is `portContext->data`.
+ *
  * \eg{void compositionReleasePortData(void *portData, unsigned long typeIndex);}
  */
 void VuoCompilerBitcodeGenerator::generateCompositionReleasePortDataFunction(void)
@@ -794,9 +794,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionReleasePortDataFunction(voi
 		VuoCompilerType *type = *i;
 
 		BasicBlock *block = BasicBlock::Create(module->getContext(), type->getBase()->getModuleKey(), function, NULL);
-		Value *portAddress = new BitCastInst(portAddressAsVoidPointer, PointerType::get(type->getType(), 0), "", block);
-		Value *portValue = new LoadInst(portAddress, "", false, block);
-		type->generateReleaseCall(module, block, portValue);
+		type->generateReleaseCall(module, block, portAddressAsVoidPointer);
 
 		blocksForIndex.push_back(make_pair(block, block));
 	}
@@ -839,26 +837,9 @@ void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(
 			size_t dataArgIndex = indexOfParameter[ modelInputPorts[i] ];
 			VuoCompilerType *type = static_cast<VuoCompilerPort *>( publishedInputPort->getCompiler() )->getDataVuoType()->getCompiler();
 
-			// If the argument is a struct that would normally be passed "byval", it's not "byval" here.
-			// Instead, the Vuo compiler has implemented the "byval" semantics in the caller, which
-			// has passed a struct pointer that is effectively passed by value but not marked as such.
-			//
-			// This is a workaround for a bug where LLVM would sometimes give the node function body
-			// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
-			Value *dataArg;
-			if (type->getType()->isStructTy() &&
-					type->getFunctionParameterAttributes().hasAttrSomewhere(Attribute::ByVal))
-			{
-				Value *argAsPointerToOtherType = VuoCompilerCodeGenUtilities::getArgumentAtIndex(function, dataArgIndex);
-				Value *argAsPointer = new BitCastInst(argAsPointerToOtherType, type->getType()->getPointerTo(), "", block);
-				dataArg = new LoadInst(argAsPointer, "", block);
-			}
-			else
-			{
-				dataArg = VuoCompilerCodeGenUtilities::unlowerArgument(type, function, dataArgIndex, module, block);
-			}
+			Value *dataPointer = type->convertArgsToPortData(module, block, function, dataArgIndex);
 
-			inputEventPort->generateReplaceData(module, block, publishedNodeContextValue, dataArg);
+			inputEventPort->generateReplaceData(module, block, publishedNodeContextValue, dataPointer);
 		}
 	}
 
@@ -1006,7 +987,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 
 		if (portType == VuoPortClass::dataAndEventPort || portType == VuoPortClass::eventOnlyPort)
 		{
-			VuoPort *inputPort = graph->getInputPortOnPublishedOutputNode(i);
+			VuoCompilerEventPort *inputPort = static_cast<VuoCompilerEventPort *>( graph->getInputPortOnPublishedOutputNode(i)->getCompiler() );
 			bool hasEventParameter = false;
 			size_t eventIndex = 0;
 
@@ -1015,8 +996,10 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 				size_t index = indexOfParameter[ modelOutputPort ];
 				Value *outputArg = VuoCompilerCodeGenUtilities::getArgumentAtIndex(function, index);
 
-				Value *value = static_cast<VuoCompilerEventPort *>( inputPort->getCompiler() )->generateLoadData(module, block, publishedOutputNodeContext);
-				new StoreInst(value, outputArg, block);
+				Value *inputDataPointer = inputPort->generateRetrieveData(module, block, publishedOutputNodeContext);
+
+				VuoCompilerType *dataType = inputPort->getDataVuoType()->getCompiler();
+				VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, inputDataPointer, outputArg, dataType->getSize(module));
 
 				map<VuoPort *, size_t>::iterator iter = indexOfEventParameter.find(modelOutputPort);
 				if (iter != indexOfEventParameter.end())
@@ -1384,7 +1367,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
-	AllocaInst *retVariable = new AllocaInst(pointerToCharType, "ret", initialBlock);
+	AllocaInst *retVariable = new AllocaInst(pointerToCharType, 0, "ret", initialBlock);
 	ConstantPointerNull *nullPointerToChar = ConstantPointerNull::get(pointerToCharType);
 	new StoreInst(nullPointerToChar, retVariable, false, initialBlock);
 
@@ -1471,15 +1454,11 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 			firstStringBlock = stringBlock;
 		}
 
-		PointerType *pointerToType = PointerType::get(type->getType(), 0);
-		Value *portAddress = new BitCastInst(portAddressAsVoidPointer, pointerToType, "", checkSummaryBlock);
-		Value *portValue = new LoadInst(portAddress, "", false, checkSummaryBlock);
-
 		ConstantInt *zeroValue = ConstantInt::get(static_cast<IntegerType *>(serializationTypeValue->getType()), 0);
 		ICmpInst *serializationTypeEqualsZero = new ICmpInst(*checkSummaryBlock, ICmpInst::ICMP_EQ, serializationTypeValue, zeroValue, "");
 		BranchInst::Create(summaryBlock, firstStringBlock, serializationTypeEqualsZero, checkSummaryBlock);
 
-		Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, portValue);
+		Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, portAddressAsVoidPointer);
 		new StoreInst(summaryValue, retVariable, summaryBlock);
 		BranchInst::Create(typeFinalBlock, summaryBlock);
 
@@ -1490,13 +1469,13 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 			BranchInst::Create(stringBlock, interprocessBlock, serializationTypeEqualsOne, checkStringBlock);
 		}
 
-		Value *stringValue = type->generateStringFromValueFunctionCall(module, stringBlock, portValue);
+		Value *stringValue = type->generateStringFromValueFunctionCall(module, stringBlock, portAddressAsVoidPointer);
 		new StoreInst(stringValue, retVariable, stringBlock);
 		BranchInst::Create(typeFinalBlock, stringBlock);
 
 		if (hasInterprocess)
 		{
-			Value *interprocessValue = type->generateInterprocessStringFromValueFunctionCall(module, interprocessBlock, portValue);
+			Value *interprocessValue = type->generateInterprocessStringFromValueFunctionCall(module, interprocessBlock, portAddressAsVoidPointer);
 			new StoreInst(interprocessValue, retVariable, interprocessBlock);
 			BranchInst::Create(typeFinalBlock, interprocessBlock);
 		}
@@ -1648,7 +1627,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	Value *nodeIndexValue = VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(module, checkWaitBlock, compositionStateValue, portIdentifierValue);
 
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	AllocaInst *summaryVariable = new AllocaInst(pointerToCharType, "summary", checkWaitBlock);
+	AllocaInst *summaryVariable = new AllocaInst(pointerToCharType, 0, "summary", checkWaitBlock);
 	ConstantPointerNull *nullSummary = ConstantPointerNull::get(pointerToCharType);
 	new StoreInst(nullSummary, summaryVariable, false, checkWaitBlock);
 
@@ -1671,28 +1650,29 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 
 	// if (typeIndex == 0)
 	// {
-	//   VuoText oldPortValue;
-	//   if (hasOldValue)
-	//     oldPortValue = *((VuoText *)portAddress);
+	//   VuoText newPortValue;
 	//   if (hasNewValue)
 	//   {
-	//     VuoText portValue = VuoText_makeFromString(valueAsString);
-	//     *((VuoText *)portAddress) = portValue;
-	//     VuoRetain(portValue);
-	//     if (shouldSendTelemetry)
-	//       summary = VuoText_getSummary(portValue);
+	//     newPortValue = VuoText_makeFromString(valueAsString);
+	//     VuoRetain(newPortValue);
 	//   }
 	//   if (hasOldValue)
-	//     VuoRelease(oldPortValue);
+	//     VuoRelease(*(portContext->data));
+	//   if (hasNewValue)
+	//   {
+	//     memcpy(portContext->data, &newPortValue, sizeof(VuoText));
+	//     if (shouldSendTelemetry)
+	//       summary = VuoText_getSummary(newPortValue);
+	//   }
 	// }
 	// else if (typeIndex == 1)
 	// {
 	//   if (hasNewValue)
 	//   {
-	//     VuoReal portValue = VuoReal_makeFromString(valueAsString);
-	//     *((VuoReal *)portAddress) = portValue;
+	//     VuoReal newPortValue = VuoReal_makeFromString(valueAsString);
+	//     memcpy(portContext->data, &newPortValue, sizeof(VuoReal));
 	//     if (shouldSendTelemetry)
-	//       summary = VuoReal_getSummary(portValue);
+	//       summary = VuoReal_getSummary(newPortValue);
 	//   }
 	// }
 	// else if ...
@@ -1707,53 +1687,37 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 		VuoCompilerType *type = orderedTypes[i];
 
 		BasicBlock *typeInitialBlock = BasicBlock::Create(module->getContext(), type->getBase()->getModuleKey() + "_initial", function, 0);
-		Value *portAddress = new BitCastInst(portAddressAsVoidPointer, PointerType::get(type->getType(), 0), "", typeInitialBlock);
-
+		BasicBlock *makeNewValueBlock = BasicBlock::Create(module->getContext(), "makeNewValue", function, 0);
+		BasicBlock *checkOldValueBlock = BasicBlock::Create(module->getContext(), "checkOldValue", function, 0);
+		BasicBlock *releaseOldValueBlock = BasicBlock::Create(module->getContext(), "releaseOldValue", function, 0);
+		BasicBlock *checkNewValueBlock = BasicBlock::Create(module->getContext(), "checkNewValue", function, 0);
+		BasicBlock *setNewValueBlock = BasicBlock::Create(module->getContext(), "setNewValue", function, 0);
+		BasicBlock *summaryBlock = BasicBlock::Create(module->getContext(), "summary", function, 0);
 		BasicBlock *typeFinalBlock = BasicBlock::Create(module->getContext(), type->getBase()->getModuleKey() + "_final", function, 0);
 
-		BasicBlock *setNewValueBlock = BasicBlock::Create(module->getContext(), "setNewValue", function, 0);
-		Value *portValue = type->generateValueFromStringFunctionCall(module, setNewValueBlock, valueAsStringValue);
-		new StoreInst(portValue, portAddress, false, setNewValueBlock);
-		type->generateRetainCall(module, setNewValueBlock, portValue);
+		Value *portAddress = type->convertToPortData(typeInitialBlock, portAddressAsVoidPointer);
+		AllocaInst *newPortValueAddress = new AllocaInst(cast<PointerType>(portAddress->getType())->getElementType(), 0, "newPortValueAddress", typeInitialBlock);
 
-		BasicBlock *summaryBlock = BasicBlock::Create(module->getContext(), "summary", function, 0);
-		Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, portValue);
+		BranchInst::Create(makeNewValueBlock, checkOldValueBlock, hasNewValueIsTrue, typeInitialBlock);
+
+		Value *newPortValueAddressLocal = type->generateValueFromStringFunctionCall(module, makeNewValueBlock, valueAsStringValue);
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, makeNewValueBlock, newPortValueAddressLocal, newPortValueAddress, type->getSize(module));
+		type->generateRetainCall(module, makeNewValueBlock, newPortValueAddress);
+		BranchInst::Create(checkOldValueBlock, makeNewValueBlock);
+
+		BranchInst::Create(releaseOldValueBlock, checkNewValueBlock, hasOldValueIsTrue, checkOldValueBlock);
+
+		type->generateReleaseCall(module, releaseOldValueBlock, portAddress);
+		BranchInst::Create(checkNewValueBlock, releaseOldValueBlock);
+
+		BranchInst::Create(setNewValueBlock, typeFinalBlock, hasNewValueIsTrue, checkNewValueBlock);
+
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, setNewValueBlock, newPortValueAddress, portAddress, type->getSize(module));
+		BranchInst::Create(summaryBlock, typeFinalBlock, shouldSendTelemetryIsTrue, setNewValueBlock);
+
+		Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, portAddress);
 		new StoreInst(summaryValue, summaryVariable, false, summaryBlock);
-
-		if (VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(type->getType()))
-		{
-			BasicBlock *saveOldValueBlock = BasicBlock::Create(module->getContext(), "saveOldValue", function, 0);
-			BasicBlock *checkNewValueBlock = BasicBlock::Create(module->getContext(), "checkNewValue", function, 0);
-			BasicBlock *checkOldValueBlock = BasicBlock::Create(module->getContext(), "checkOldValue", function, 0);
-			BasicBlock *releaseOldValueBlock = BasicBlock::Create(module->getContext(), "releaseOldValue", function, 0);
-
-			AllocaInst *oldPortValueVariable = new AllocaInst(type->getType(), "oldPortValue", typeInitialBlock);
-			BranchInst::Create(saveOldValueBlock, checkNewValueBlock, hasOldValueIsTrue, typeInitialBlock);
-
-			Value *oldPortValue = new LoadInst(portAddress, "", false, saveOldValueBlock);
-			new StoreInst(oldPortValue, oldPortValueVariable, false, saveOldValueBlock);
-			BranchInst::Create(checkNewValueBlock, saveOldValueBlock);
-
-			BranchInst::Create(setNewValueBlock, checkOldValueBlock, hasNewValueIsTrue, checkNewValueBlock);
-
-			BranchInst::Create(summaryBlock, checkOldValueBlock, shouldSendTelemetryIsTrue, setNewValueBlock);
-
-			BranchInst::Create(checkOldValueBlock, summaryBlock);
-
-			BranchInst::Create(releaseOldValueBlock, typeFinalBlock, hasOldValueIsTrue, checkOldValueBlock);
-
-			oldPortValue = new LoadInst(oldPortValueVariable, "", false, releaseOldValueBlock);
-			type->generateReleaseCall(module, releaseOldValueBlock, oldPortValue);
-			BranchInst::Create(typeFinalBlock, releaseOldValueBlock);
-		}
-		else
-		{
-			BranchInst::Create(setNewValueBlock, typeFinalBlock, hasNewValueIsTrue, typeInitialBlock);
-
-			BranchInst::Create(summaryBlock, typeFinalBlock, shouldSendTelemetryIsTrue, setNewValueBlock);
-
-			BranchInst::Create(typeFinalBlock, summaryBlock);
-		}
+		BranchInst::Create(typeFinalBlock, summaryBlock);
 
 		blocksForTypeIndex.push_back( make_pair(typeInitialBlock, typeFinalBlock) );
 	}
@@ -1910,37 +1874,25 @@ void VuoCompilerBitcodeGenerator::generateCompositionFireTriggerPortEventFunctio
 		Value *triggerFunctionValue = trigger->generateLoadFunction(module, currentBlock, nodeContextValue);
 
 		vector<Value *> triggerArgs;
-		AttributeSet triggerParamAttributes;
 		VuoType *dataType = trigger->getDataVuoType();
 		if (dataType)
 		{
 			generateLockNodes(module, currentBlock, compositionStateValue, vector<VuoCompilerNode *>(1, triggerNode));
 
-			Value *arg = trigger->generateLoadPreviousData(module, currentBlock, nodeContextValue);
+			FunctionType *triggerFunctionType = trigger->getClass()->getFunctionType(module);
 
-			FunctionType *triggerFunctionType = trigger->getClass()->getFunctionType();
-
-			Type *secondParam = NULL;
-			dataType->getCompiler()->getFunctionParameterType(&secondParam);
-
-			triggerParamAttributes = dataType->getCompiler()->getFunctionParameterAttributes();
-			bool isByVal = triggerParamAttributes.hasAttrSomewhere(Attribute::ByVal);
-
-			Value *secondArg = NULL;
-			Value **secondArgIfNeeded = (secondParam ? &secondArg : NULL);
-			arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, triggerFunctionType, 0, isByVal, secondArgIfNeeded, module, currentBlock);
-
-			triggerArgs.push_back(arg);
-			if (secondParam)
-				triggerArgs.push_back(secondArg);
+			Value *dataPointer = trigger->generateRetrievePreviousData(module, currentBlock, nodeContextValue);
+			triggerArgs = dataType->getCompiler()->convertPortDataToArgs(module, currentBlock, dataPointer, triggerFunctionType, 0, false);
 		}
 
 		CallInst *call = CallInst::Create(triggerFunctionValue, triggerArgs, "", currentBlock);
-		if (dataType)
-			call->setAttributes(VuoCompilerCodeGenUtilities::copyAttributesToIndex(triggerParamAttributes, 1));
 
 		if (dataType)
+		{
+			dataType->getCompiler()->copyFunctionParameterAttributes(module, call);
+
 			generateUnlockNodes(module, currentBlock, compositionStateValue, vector<VuoCompilerNode *>(1, triggerNode));
+		}
 
 		blocksForString[currentPortIdentifier] = make_pair(origCurrentBlock, currentBlock);
 	}
@@ -2159,9 +2111,9 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 {
 	string functionName = "firePublishedInputPortEvent";
 	Function *function = module->getFunction(functionName);
+	PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 	if (! function)
 	{
-		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		PointerType *pointerToPointerToChar = PointerType::get(pointerToChar, 0);
 		Type *countType = IntegerType::get(module->getContext(), 32);
 
@@ -2235,7 +2187,7 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 	Value *publishedInputNodeContextValue = publishedInputNode->generateGetContext(module, initialBlock, compositionStateValue);
 
 	Value *zeroValue = ConstantInt::get(static_cast<IntegerType *>(countValue->getType()), 0);
-	AllocaInst *iterVariable = new AllocaInst(countValue->getType(), "i", initialBlock);
+	AllocaInst *iterVariable = new AllocaInst(countValue->getType(), 0, "i", initialBlock);
 	new StoreInst(zeroValue, iterVariable, false, initialBlock);
 
 	BasicBlock *loopConditionBlock = BasicBlock::Create(module->getContext(), "loopCondition", function, 0);
@@ -2279,6 +2231,8 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 	Value *triggerNodeContextValue = triggerNode->generateGetContext(module, fireBlock, compositionStateValue);
 	Value *triggerFunctionValue = trigger->generateLoadFunction(module, fireBlock, triggerNodeContextValue);
 	CallInst::Create(triggerFunctionValue, "", fireBlock);
+
+	VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, fireBlock, compositionStateValue);
 
 	ReturnInst::Create(module->getContext(), fireBlock);
 }
@@ -2336,7 +2290,7 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedPortValueFunction(bool inp
 
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 	PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	AllocaInst *retVariable = new AllocaInst(pointerToChar, "ret", initialBlock);
+	AllocaInst *retVariable = new AllocaInst(pointerToChar, 0, "ret", initialBlock);
 	ConstantPointerNull *nullValue = ConstantPointerNull::get(pointerToChar);
 	new StoreInst(nullValue, retVariable, false, initialBlock);
 
@@ -2428,7 +2382,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPublishedInputPortValueF
 	// const char *inputPortIdentifier = NULL;
 
 	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	AllocaInst *inputPortIdentifierVariable = new AllocaInst(pointerToCharType, "inputPortIdentifier", initialBlock);
+	AllocaInst *inputPortIdentifierVariable = new AllocaInst(pointerToCharType, 0, "inputPortIdentifier", initialBlock);
 	ConstantPointerNull *nullInputPortIdentifier = ConstantPointerNull::get(pointerToCharType);
 	new StoreInst(nullInputPortIdentifier, inputPortIdentifierVariable, false, initialBlock);
 
@@ -2592,7 +2546,7 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
 void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock,
 																	 Value *compositionStateValue,
 																	 VuoCompilerNode *outputNode, VuoCompilerPort *outputPort,
-																	 Value *eventValue, Value *dataValue,
+																	 Value *eventValue, Value *dataPointer,
 																	 bool requiresEvent, bool shouldSendTelemetry)
 {
 	IntegerType *boolType = IntegerType::get(module->getContext(), 1);
@@ -2605,14 +2559,14 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 	Constant *transmittedEventValue = (requiresEvent ? trueValue : falseValue);
 
 	// char *dataSummary = NULL;
-	AllocaInst *dataSummaryVariable = new AllocaInst(pointerToCharType, "dataSummary", currentBlock);
+	AllocaInst *dataSummaryVariable = new AllocaInst(pointerToCharType, 0, "dataSummary", currentBlock);
 	new StoreInst(ConstantPointerNull::get(pointerToCharType), dataSummaryVariable, currentBlock);
 
 	map<VuoCompilerPort *, ICmpInst *> shouldSummarizeInput;
 	if (shouldSendTelemetry)
 	{
 		// bool sentData = false;
-		AllocaInst *sentDataVariable = new AllocaInst(boolType, "sentData", currentBlock);
+		AllocaInst *sentDataVariable = new AllocaInst(boolType, 0, "sentData", currentBlock);
 		new StoreInst(falseValue, sentDataVariable, currentBlock);
 
 		for (set<VuoCompilerCable *>::iterator i = outgoingCables.begin(); i != outgoingCables.end(); ++i)
@@ -2627,7 +2581,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 			shouldSummarizeInput[inputPort] = shouldSendDataForInput;
 		}
 
-		if (dataValue)
+		if (dataPointer)
 		{
 			Value *shouldSummarizeOutput = VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(module, currentBlock,
 																												  outputPort->getIdentifier(),
@@ -2654,7 +2608,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 
 			// dataSummary = <type>_getSummary(portValue);
 			VuoCompilerType *type = outputPort->getDataVuoType()->getCompiler();
-			Value *dataSummaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, dataValue);
+			Value *dataSummaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, dataPointer);
 			new StoreInst(dataSummaryValue, dataSummaryVariable, summaryBlock);
 
 			BranchInst::Create(sendOutputBlock, summaryBlock);
@@ -2701,18 +2655,18 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 		VuoCompilerInputEventPort *inputPort = static_cast<VuoCompilerInputEventPort *>( cable->getBase()->getToPort()->getCompiler() );
 		Value *inputPortContextValue = inputPort->generateGetPortContext(module, transmissionBlock, inputNodeContextValue);
 
-		Value *transmittedDataValue = (cable->carriesData() ? dataValue : NULL);
+		Value *transmittedDataPointer = (cable->carriesData() ? dataPointer : NULL);
 
-		cable->generateTransmission(module, transmissionBlock, inputNodeContextValue, inputPortContextValue, transmittedDataValue, requiresEvent);
+		cable->generateTransmission(module, transmissionBlock, inputNodeContextValue, inputPortContextValue, transmittedDataPointer, requiresEvent);
 
 		if (shouldSendTelemetry && inputNode != graph->getPublishedInputNode())
 		{
 			// char *inputDataSummary = NULL;
-			AllocaInst *inputDataSummaryVariable = new AllocaInst(pointerToCharType, "inputDataSummary", transmissionBlock);
+			AllocaInst *inputDataSummaryVariable = new AllocaInst(pointerToCharType, 0, "inputDataSummary", transmissionBlock);
 			new StoreInst(ConstantPointerNull::get(pointerToCharType), inputDataSummaryVariable, transmissionBlock);
 
 			// bool receivedData = false;
-			AllocaInst *receivedDataVariable = new AllocaInst(boolType, "receivedData", transmissionBlock);
+			AllocaInst *receivedDataVariable = new AllocaInst(boolType, 0, "receivedData", transmissionBlock);
 			new StoreInst(falseValue, receivedDataVariable, transmissionBlock);
 
 			VuoType *inputDataType = inputPort->getDataVuoType();
@@ -2723,7 +2677,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 				BranchInst::Create(summaryBlock, sendInputBlock, shouldSummarizeInput[inputPort], transmissionBlock);
 
 				Value *inputDataSummaryValue;
-				if (transmittedDataValue)
+				if (transmittedDataPointer)
 				{
 					// receivedData = true;
 					new StoreInst(trueValue, receivedDataVariable, summaryBlock);
@@ -2734,8 +2688,8 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 				else
 				{
 					// inputDataSummary = <Type>_getSummary(inputData);
-					Value *inputDataValue = inputPort->generateLoadData(module, summaryBlock, inputNodeContextValue, inputPortContextValue);
-					inputDataSummaryValue = inputDataType->getCompiler()->generateSummaryFromValueFunctionCall(module, summaryBlock, inputDataValue);
+					Value *inputDataPointer = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariableAsVoidPointer(module, summaryBlock, inputPortContextValue);
+					inputDataSummaryValue = inputDataType->getCompiler()->generateSummaryFromValueFunctionCall(module, summaryBlock, inputDataPointer);
 				}
 				new StoreInst(inputDataSummaryValue, inputDataSummaryVariable, summaryBlock);
 
@@ -2751,7 +2705,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 			VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(module, transmissionBlock, compositionStateValue, inputPortIdentifierValue,
 																	   transmittedEventValue, receivedDataValue, inputDataSummaryValue);
 
-			if (inputDataType && ! transmittedDataValue)
+			if (inputDataType && ! transmittedDataPointer)
 			{
 				// free(inputDataSummary);
 				VuoCompilerCodeGenUtilities::generateFreeCall(module, transmissionBlock, inputDataSummaryValue);
@@ -2769,7 +2723,7 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 		currentBlock = noTransmissionBlock;
 	}
 
-	if (shouldSendTelemetry && dataValue)
+	if (shouldSendTelemetry && dataPointer)
 	{
 		// free(dataSummary)
 		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
@@ -2816,11 +2770,11 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *functio
 
 		// Transmit the data through the output port to each connected input port.
 		VuoCompilerOutputData *outputData = outputEventPort->getData();
-		Value *outputDataValue = (outputData ?
-									  outputEventPort->generateLoadData(module, telemetryBlock, nodeContextValue, portContextValue) :
+		Value *outputDataPointer = (outputData ?
+									  outputEventPort->generateRetrieveData(module, telemetryBlock, nodeContextValue, portContextValue) :
 									  NULL);
 		generateTransmissionFromOutputPort(function, telemetryBlock, compositionStateValue,
-										   node, outputEventPort, outputEventValue, outputDataValue, requiresEvent, shouldSendTelemetry);
+										   node, outputEventPort, outputEventValue, outputDataPointer, requiresEvent, shouldSendTelemetry);
 
 		if (requiresEvent)
 		{
@@ -2862,20 +2816,20 @@ void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Funct
 		BranchInst::Create(telemetryBlock, noTelemetryBlock, eventValueIsTrue, currentBlock);
 
 		VuoCompilerInputData *data = inputEventPort->getData();
-		Value *dataValue = data ? inputEventPort->generateLoadData(module, telemetryBlock, nodeContextValue) : NULL;
+		Value *dataPointer = data ? inputEventPort->generateRetrieveData(module, telemetryBlock, nodeContextValue) : NULL;
 		Constant *trueValue = ConstantInt::get(boolType, 1);
 		Constant *falseValue = ConstantInt::get(boolType, 0);
 
 		Value *sentDataValue = NULL;
 		Value *dataSummaryValue = NULL;
-		if (dataValue)
+		if (dataPointer)
 		{
 			// sentData = true;
 			sentDataValue = trueValue;
 
 			// dataSummary = <type>_getSummary(portValue);
 			VuoCompilerType *type = inputEventPort->getDataVuoType()->getCompiler();
-			dataSummaryValue = type->generateSummaryFromValueFunctionCall(module, telemetryBlock, dataValue);
+			dataSummaryValue = type->generateSummaryFromValueFunctionCall(module, telemetryBlock, dataPointer);
 		}
 		else
 		{
@@ -2889,6 +2843,8 @@ void VuoCompilerBitcodeGenerator::generateTelemetryFromPublishedOutputNode(Funct
 		Constant *portIdentifierValue = constantsCache->get(inputEventPort->getBase()->getClass()->getName());
 		VuoCompilerCodeGenUtilities::generateSendPublishedOutputPortsUpdated(module, telemetryBlock, compositionStateValue, portIdentifierValue,
 																			 sentDataValue, dataSummaryValue);
+
+		VuoCompilerCodeGenUtilities::generateFreeCall(module, telemetryBlock, dataSummaryValue);
 
 		BranchInst::Create(noTelemetryBlock, telemetryBlock);
 		currentBlock = noTelemetryBlock;
@@ -3413,10 +3369,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
 	Function *function = Function::Create(functionType, GlobalValue::InternalLinkage, functionName, module);
 
 	if (dataType)
-	{
-		AttributeSet paramAttributes = dataType->getCompiler()->getFunctionParameterAttributes();
-		function->setAttributes(paramAttributes);
-	}
+		dataType->getCompiler()->copyFunctionParameterAttributes(function);
 
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, NULL);
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
@@ -3734,7 +3687,8 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 		Value *triggerDataValue = trigger->generateDataValueUpdate(module, triggerBlock, function, triggerNodeContextValue);
 
 		// Transmit events and data (if any) out of the trigger port, and send telemetry for port updates.
-		generateTransmissionFromOutputPort(function, triggerBlock, compositionStateValue, triggerNode, trigger, NULL, triggerDataValue);
+		Value *triggerDataPointer = triggerDataValue ? VuoCompilerCodeGenUtilities::generatePointerToValue(triggerBlock, triggerDataValue) : nullptr;
+		generateTransmissionFromOutputPort(function, triggerBlock, compositionStateValue, triggerNode, trigger, NULL, triggerDataPointer);
 	}
 
 	// If the trigger node isn't downstream of the trigger, signal the trigger node's semaphore.
@@ -4121,7 +4075,6 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 					BranchInst::Create(triggerBlock, nextBlock, isPortHitValue, currBlock);
 
 					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>( port->getCompiler() );
-					VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>( port->getClass()->getCompiler() );
 					VuoType *dataType = eventPort->getDataVuoType();
 
 					FunctionType *triggerFunctionType = VuoCompilerCodeGenUtilities::getFunctionType(module, dataType);
@@ -4129,16 +4082,8 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 					vector<Value *> args;
 					if (dataType)
 					{
-						Value *dataValue = eventPort->generateLoadData(module, triggerBlock, nodeContextValue);
-						bool isPassedByValue = dataType->getCompiler()->getFunctionParameterAttributes().hasAttrSomewhere(Attribute::ByVal);
-						bool isLoweredToTwoParameters = eventPortClass->getDataClass()->isLoweredToTwoParameters();
-						Value *secondArg = NULL;
-						Value **secondArgIfNeeded = (isLoweredToTwoParameters ? &secondArg : NULL);
-						Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(dataValue, triggerFunctionType, 0, isPassedByValue,
-																								 secondArgIfNeeded, module, triggerBlock);
-						args.push_back(arg);
-						if (secondArg)
-							args.push_back(secondArg);
+						Value *dataPointer = eventPort->generateRetrieveData(module, triggerBlock, nodeContextValue);
+						args = dataType->getCompiler()->convertPortDataToArgs(module, triggerBlock, dataPointer, triggerFunctionType, 0, false);
 					}
 
 					int indexInSubcompositionPorts = VuoNodeClass::unreservedInputPortStartIndex + publishedInputPorts.size() +
@@ -4147,7 +4092,10 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 					Value *portContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, triggerBlock, compositionContextValue, indexInSubcompositionPorts);
 					Value *triggerFunction = VuoCompilerCodeGenUtilities::generateGetPortContextTriggerFunction(module, triggerBlock, portContextValue, triggerFunctionType);
 
-					CallInst::Create(triggerFunction, args, "", triggerBlock);
+					CallInst *triggerFunctionCall = CallInst::Create(triggerFunction, args, "", triggerBlock);
+					if (dataType)
+						dataType->getCompiler()->copyFunctionParameterAttributes(module, triggerFunctionCall);
+
 					BranchInst::Create(nextBlock, triggerBlock);
 
 					currBlock = nextBlock;

@@ -1,22 +1,26 @@
-cmake_minimum_required(VERSION 3.15...3.17 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16...3.19 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.2.1 LANGUAGES NONE)
+project(Vuo VERSION 2.3.0 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
 set(VuoFrameworkVersion 2)
 
+if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64")
+	set(VUO_ADHOC_CODESIGN_DEFAULT ON)
+else()
+	set(VUO_ADHOC_CODESIGN_DEFAULT OFF)
+endif()
+
 option(VUO_COMPILER_DEVELOPER "Compiler development mode.  Allows you to make changes to VuoBase and VuoCompiler without rebuilding all nodes and types (but you're responsible for keeping track of whether nodes and types need to be rebuilt).  Saves several minutes per edit-compile-test cycle." OFF)
 option(VUO_NODE_DEVELOPER     "Node development mode.  Allows you to make changes to nodes, types, and libraries without rebuilding the Vuo.framework cache.  Saves about 30 seconds per edit-compile-test cycle (but compositions take longer to start up initially)." OFF)
 option(VUO_HEAP_TRACE         "Logs reference-counting errors to stderr (in addition to the usual telemetry-based error reporting), including backtraces.  Also enables using VuoHeap_addTrace().")
 option(VUO_HEAP_TRACE_ALL     "Logs all reference-counting operations.  Very noisy.")
-option(VUO_TEST_LONG          "Run all tests (including those that take a long time)." OFF)
-option(VUO_TEST_OUTPUT_XML    "Output test results as XML files." OFF)
 option(VUO_PROFILE            "Add instrumentation for performance profiling." OFF)
 option(VUO_ANALYZE            "Run Clang Analyzer and other time-consuming analysis tools." OFF)
-option(VUO_PRECOMPILE_HEADERS "Precompile common headers to improve build performance." OFF)
+option(VUO_ADHOC_CODESIGN     "If enabled, executables and dylibs will be ad-hoc code-signed during the normal build, to support running on ARM64/Apple Silicon.  If disabled, code-signing will only happen for the VuoPackage target (which isn't part of the normal build)." ${VUO_ADHOC_CODESIGN_DEFAULT})
 
 
 # Commands ===================================================================
@@ -72,7 +76,7 @@ if (NOT EXISTS ${conanBuildInfo} OR ${conanFile} IS_NEWER_THAN ${conanBuildInfo}
 endif()
 
 set(CMAKE_C_COMPILER_ID Clang)
-set(CMAKE_C_COMPILER_VERSION 3.3)
+set(CMAKE_C_COMPILER_VERSION 5.0.2)
 set(CMAKE_CXX_COMPILER_ID ${CMAKE_C_COMPILER_ID})
 set(CMAKE_CXX_COMPILER_VERSION ${CMAKE_C_COMPILER_VERSION})
 set(CONAN_COMPILER clang)
@@ -85,14 +89,10 @@ conan_basic_setup(KEEP_RPATHS TARGETS)
 list(REMOVE_ITEM CONAN_LIBS_LLVM
 	LLVMArchive
 	LLVMDebugInfo
-	LLVMMCDisassembler
 	LLVMMCJIT
-	LLVMOption
 	LLVMTableGen
 	LTO
 	clang
-	clangASTMatchers
-	clangFormat
 	clangTooling
 )
 
@@ -104,18 +104,18 @@ list(REMOVE_ITEM CONAN_LIBS_LLVM
 
 
 # Compilers ==================================================================
-enable_testing()
+include(CTest)
 
-set(macOSSDKVersion 10.10)
-execute_process(COMMAND /usr/local/bin/conan info macos-sdk/${macOSSDKVersion}-0@vuo/stable --paths --json conan_macos_sdk-${macOSSDKVersion}.json OUTPUT_QUIET)
-file(READ ${CMAKE_BINARY_DIR}/conan_macos_sdk-${macOSSDKVersion}.json macOSSDKJSON)
-string(REGEX MATCH "\"package_folder\": \"([^\"]+)\"" UNUSED "${macOSSDKJSON}")
-set(CMAKE_OSX_SYSROOT "${CMAKE_MATCH_1}" CACHE STRING "" FORCE)
-if (NOT IS_DIRECTORY "${CMAKE_OSX_SYSROOT}")
-	message(FATAL_ERROR "\nCouldn't find the ${macOSSDKVersion} SDK (${CMAKE_OSX_SYSROOT}):\n${conanInfoOutput}")
-endif()
-
+set(CMAKE_OSX_SYSROOT "${CONAN_MACOS-SDK_ROOT}" CACHE STRING "" FORCE)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "" FORCE)
+
+if (NOT CMAKE_OSX_ARCHITECTURES)
+	execute_process(COMMAND /usr/bin/uname -m OUTPUT_VARIABLE systemArch)
+	string(STRIP ${systemArch} systemArch)
+	set(CMAKE_OSX_ARCHITECTURES ${systemArch} CACHE STRING "" FORCE)
+endif()
+list(JOIN CMAKE_OSX_ARCHITECTURES " " buildArch)
+message(STATUS "Building to run on: ${buildArch}")
 
 include_directories(SYSTEM
 	${CONAN_INCLUDE_DIRS_JSONC}
@@ -127,15 +127,13 @@ include_directories(
 )
 
 set(CMAKE_C_COMPILER "${CONAN_BIN_DIRS_LLVM}/clang")
-set(CMAKE_C_SOURCE_FILE_EXTENSIONS c;m)
-set(CMAKE_C_OUTPUT_EXTENSION_REPLACE 1)
 set(CMAKE_CXX_COMPILER "${CONAN_BIN_DIRS_LLVM}/clang++")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 string(JOIN " " commonFlags
-	-march=x86-64
+	-fcolor-diagnostics
 	-fvisibility-inlines-hidden
 	-g
 	-Wdocumentation
@@ -162,17 +160,31 @@ string(JOIN " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}"
 	-std=c++11
 	${commonFlags}
 )
+string(JOIN " " CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS}"
+	-std=c99
+	${commonFlags}
+)
+string(JOIN " " CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS}"
+	-stdlib=libc++
+	-std=c++11
+	${commonFlags}
+)
 set(CMAKE_C_FLAGS_RELEASE -Oz)
 set(CMAKE_CXX_FLAGS_RELEASE -Oz)
-set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS cc;cpp;mm)
-set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+set(CMAKE_OBJC_FLAGS_RELEASE -Oz)
+set(CMAKE_OBJCXX_FLAGS_RELEASE -Oz)
 set(CMAKE_BUILD_TYPE Release)
 
 # Reduce file size.
-# Explicitly specify the SDK version, since Xcode 12's linker can't figure it out from the Conan-packaged SDK.
-set(CMAKE_SHARED_LINKER_FLAGS "-Xlinker -no_function_starts -Xlinker -dead_strip -Wl,-sdk_version,${macOSSDKVersion}")
+# Explicitly specify the SDK version, since we still want some old behaviors.
+set(CMAKE_SHARED_LINKER_FLAGS "-Xlinker -no_function_starts -Xlinker -dead_strip -Wl,-sdk_version,10.10")
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 set(CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+
+# If we modify a source file (e.g. VuoHeap.cc),
+# re-link the dylib containing it (e.g. libVuoHeap.dylib),
+# but don't re-link the dylibs/executables that link to that first dylib (e.g., vuo-compile).
+set(CMAKE_LINK_DEPENDS_NO_SHARED ON)
 
 
 if (VUO_COMPILER_DEVELOPER)
@@ -185,6 +197,8 @@ endif()
 
 enable_language(C)
 enable_language(CXX)
+enable_language(OBJC)
+enable_language(OBJCXX)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
@@ -192,16 +206,13 @@ define_property(TARGET PROPERTY VuoGeneratedFiles
 	BRIEF_DOCS "Files generated by this target"
 	FULL_DOCS  "Files generated by this target"
 )
-define_property(TARGET PROPERTY VuoPCHUseCount
-	BRIEF_DOCS "For PCH targets (see VuoGeneratePCH), the number of source files that use this PCH"
-	FULL_DOCS  "For PCH targets (see VuoGeneratePCH), the number of source files that use this PCH"
-)
 
 
 include(VuoCompile)
 
 if (EXISTS ${CMAKE_MODULE_PATH}/VuoCompilePro.cmake)
 	include(VuoCompilePro)
+	include(VuoPackage)
 else()
 	message(STATUS "Vuo Pro support is not available.")
 endif()
@@ -225,83 +236,72 @@ function (VuoAddInfoPListSection target infoPlistFile)
 	target_link_options(${target} PRIVATE LINKER:-sectcreate,__TEXT,__info_plist,${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
 endfunction()
 
+# Provides macros so that source code can identify the architecture(s) for which it was built.
+function (VuoDefineArchitectureMacros target)
+	if ("x86_64" IN_LIST CMAKE_OSX_ARCHITECTURES)
+		target_compile_options(${target} PRIVATE -DVUO_TARGET_ARCHITECTURE_X86_64)
+	endif()
+	if ("arm64" IN_LIST CMAKE_OSX_ARCHITECTURES)
+		target_compile_options(${target} PRIVATE -DVUO_TARGET_ARCHITECTURE_ARM64)
+	endif()
+endfunction()
+
 
 # Qt =========================================================================
 set(_qt5gui_OPENGL_INCLUDE_DIR "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers" CACHE STRING "" FORCE)
 find_package(Qt5 REQUIRED COMPONENTS Widgets Test MacExtras Network PrintSupport Quick LinguistTools Svg)
 
 
-# Prefix header ==============================================================
-set(VuoPCHDir ${PROJECT_BINARY_DIR}/pch)
-file(MAKE_DIRECTORY ${VuoPCHDir})
-set_property(GLOBAL PROPERTY VuoPCH)
+# Precompiled prefix header ==================================================
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/empty.c)
+	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.c "")
+	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cc "")
+	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.mm "")
+endif()
+
 # Builds a precompiled header.
 function (VuoGeneratePCH target)
-	set(pch ${VuoPCHDir}/${target}.pch)
+	cmake_parse_arguments(arg "" "TARGET" "LANGUAGES;DEFINITIONS" ${ARGV})
 
-	get_directory_property(defines COMPILE_DEFINITIONS)
-	string(JOIN ";-D" defines ${ARGN} ${defines})
-	if (defines)
-		set(defines "-D${defines}")
-	endif()
-
-	get_directory_property(includes INCLUDE_DIRECTORIES)
-	string(JOIN ";-isystem;" includes ${includes})
-
-	set(cxxFlags "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-	separate_arguments(cxxFlags)
-
-	if ("VUO_PCH_FRAMEWORK" IN_LIST ARGN)
-		set(extraDepends
-			${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Headers/Vuo.h
-			${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Headers/type.h
-		)
-	endif()
-
-	add_custom_command(
-		DEPENDS
-			${PROJECT_SOURCE_DIR}/vuo.pch
-			${PROJECT_SOURCE_DIR}/library/VuoLog.h
-			${extraDepends}
-		IMPLICIT_DEPENDS CXX ${PROJECT_SOURCE_DIR}/vuo.pch
-		COMMENT "Precompiling ${target}"
-		COMMAND ${CMAKE_CXX_COMPILER}
-			${defines}
-			-isystem ${includes}
-			-iframework ${CONAN_QT_ROOT}/lib
-			-F ${PROJECT_BINARY_DIR}/lib
-			-I base/config
-			-I ../base
-			-I ../compiler
-			-I ../library
-			${cxxFlags}
-			-isysroot ${CMAKE_OSX_SYSROOT}
-			-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}
-			-fPIC
-			-x c++-header
-			${PROJECT_SOURCE_DIR}/vuo.pch
-			-o ${pch}
-		OUTPUT ${pch}
+	add_library(${arg_TARGET} OBJECT)
+	target_compile_definitions(${arg_TARGET} PRIVATE ${arg_DEFINITIONS})
+	target_include_directories(${arg_TARGET}
+		PRIVATE
+			${PROJECT_SOURCE_DIR}/base
+			${PROJECT_SOURCE_DIR}/compiler
+			${PROJECT_SOURCE_DIR}/library
+			${PROJECT_SOURCE_DIR}/type
+			${PROJECT_BINARY_DIR}/base/config
+			${PROJECT_BINARY_DIR}/type/list
+			${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers
 	)
-	add_custom_target(${target} DEPENDS ${pch})
-	set_target_properties(${target} PROPERTIES
-		COMPILE_DEFINITIONS "${ARGN}"
-		VuoPCHUseCount 0
-	)
+	target_precompile_headers(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/vuo.pch)
 
-	if ("VUO_PCH_FRAMEWORK" IN_LIST ARGN)
-		add_dependencies(${target} VuoFrameworkDylib)
+	# Save time by only building each PCH for the languages that actually use it.
+	if ("C" IN_LIST arg_LANGUAGES)
+		target_sources(${arg_TARGET} PRIVATE empty.c)
+	endif()
+	if ("CXX" IN_LIST arg_LANGUAGES)
+		target_sources(${arg_TARGET} PRIVATE empty.cc)
+	endif()
+	if ("OBJCXX" IN_LIST arg_LANGUAGES)
+		target_sources(${arg_TARGET} PRIVATE empty.mm)
 	endif()
 
-	get_property(VuoPCH GLOBAL PROPERTY VuoPCH)
-	list(APPEND VuoPCH ${target})
-	set_property(GLOBAL PROPERTY VuoPCH "${VuoPCH}")
+	if ("VUO_PCH_QT" IN_LIST arg_DEFINITIONS OR "VUO_PCH_QTEST" IN_LIST arg_DEFINITIONS)
+		target_link_libraries(${arg_TARGET} PRIVATE Qt5::Widgets)
+	endif()
+
+	if ("VUO_PCH_FRAMEWORK" IN_LIST arg_DEFINITIONS)
+		target_compile_options(${arg_TARGET} PRIVATE "SHELL:-F ${PROJECT_BINARY_DIR}/lib")
+		add_dependencies(${arg_TARGET} VuoFrameworkDylib)
+	endif()
 endfunction()
-VuoGeneratePCH(VuoPCHDefault                                                       )
-VuoGeneratePCH(VuoPCHLLVM              VUO_PCH_LLVM                                )
-VuoGeneratePCH(VuoPCHLLVMQt            VUO_PCH_LLVM VUO_PCH_QT                     )
-VuoGeneratePCH(VuoPCHQt                             VUO_PCH_QT                     )
-VuoGeneratePCH(VuoPCHQTestVuoFramework              VUO_PCH_QTEST VUO_PCH_FRAMEWORK)
+VuoGeneratePCH(TARGET VuoPCHDefault              LANGUAGES C CXX OBJCXX    DEFINITIONS                                             )
+VuoGeneratePCH(TARGET VuoPCHLLVM                 LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM                                )
+VuoGeneratePCH(TARGET VuoPCHLLVMQt               LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM VUO_PCH_QT                     )
+VuoGeneratePCH(TARGET VuoPCHQt                   LANGUAGES   CXX OBJCXX    DEFINITIONS              VUO_PCH_QT                     )
+VuoGeneratePCH(TARGET VuoPCHQTestVuoFramework    LANGUAGES   CXX OBJCXX    DEFINITIONS              VUO_PCH_QTEST VUO_PCH_FRAMEWORK)
 
 # Adds a precompiled (or prefix) header to the sources in the specified target.
 # The second argument specifies which PCH to use (none for default, LLVM for VuoPCHLLVM, …).
@@ -311,59 +311,18 @@ function (VuoPCH target)
 		set(pch VuoPCH${ARGN})
 	endif()
 
-	if (VUO_PRECOMPILE_HEADERS)
+	target_precompile_headers(${target} REUSE_FROM ${pch})
 
-		add_dependencies(${target} ${pch})
+	# Help Qt Creator parse the precompiled header correctly.
+	get_target_property(defines ${pch} COMPILE_DEFINITIONS)
+	if (defines)
+		target_compile_definitions(${target} PRIVATE ${defines})
+	endif()
 
-		# Use the PCH for C++ sources.
-		get_target_property(cxxSources ${target} SOURCES)
-		list(FILTER cxxSources INCLUDE REGEX "\.cc$$")
-
-		get_target_property(automoc ${target} AUTOMOC)
-		if (automoc)
-			list(APPEND cxxSources ${target}_autogen/mocs_compilation.cpp)
-		endif()
-		get_target_property(defines ${pch} COMPILE_DEFINITIONS)
-		foreach (source ${cxxSources})
-			set_property(SOURCE ${source} APPEND PROPERTY COMPILE_FLAGS "-include-pch ${VuoPCHDir}/${pch}.pch")
-			set_property(SOURCE ${source} APPEND PROPERTY COMPILE_DEFINITIONS "${defines}")
-		endforeach()
-
-		# Merely prefix the header for non-C++ sources.
-		get_target_property(nonCXXSources ${target} SOURCES)
-		list(FILTER nonCXXSources EXCLUDE REGEX "\.cc$$")
-		foreach (source ${nonCXXSources})
-			set_property(SOURCE ${source} APPEND PROPERTY COMPILE_FLAGS "-include ${PROJECT_SOURCE_DIR}/vuo.pch")
-			set_property(SOURCE ${source} APPEND PROPERTY COMPILE_DEFINITIONS "${defines}")
-		endforeach()
-
-		# Tell Qt Creator that we're using a PCH.
-		# https://bugreports.qt.io/browse/QTCREATORBUG-20590
-		set(QTC_${target}_PCH ${PROJECT_SOURCE_DIR}/vuo.pch CACHE INTERNAL "")
-
-		if (VUO_PROFILE)
-			# Keep stats.
-			get_target_property(pchUseCount ${pch} VuoPCHUseCount)
-			list(LENGTH cxxSources sourceCount)
-			math(EXPR pchUseCount "${pchUseCount} + ${sourceCount}")
-			set_target_properties(${pch} PROPERTIES VuoPCHUseCount ${pchUseCount})
-		endif()
-
-	else()
-
-		# Merely prefix the header.
-		get_target_property(sources ${target} SOURCES)
-
-		get_target_property(automoc ${target} AUTOMOC)
-		if (automoc)
-			list(APPEND sources ${target}_autogen/mocs_compilation.cpp)
-		endif()
-
-		set_property(SOURCE ${sources} APPEND PROPERTY COMPILE_FLAGS "-iframework ${CONAN_QT_ROOT}/lib -include ${PROJECT_SOURCE_DIR}/vuo.pch")
-
-		get_target_property(defines ${pch} COMPILE_DEFINITIONS)
-		set_property(SOURCE ${sources} APPEND PROPERTY COMPILE_DEFINITIONS "${defines}")
-
+	# Help Qt Creator find includes.
+	get_target_property(includes ${pch} INCLUDE_DIRECTORIES)
+	if (includs)
+		target_include_directories(${target} PRIVATE ${includes})
 	endif()
 endfunction()
 
@@ -384,6 +343,20 @@ function (VuoGenerateUnexportedSymbolsList outputFile typeTargets)
 	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unexported_symbols_list.txt "${detailsSymbolsString}\n")
 	set(${outputFile} "${CMAKE_CURRENT_BINARY_DIR}/unexported_symbols_list.txt" PARENT_SCOPE)
 endfunction()
+
+
+# Ad-hoc code-signing ========================================================
+if (VUO_ADHOC_CODESIGN)
+	# Add an ad-hoc code-signature, in order to be allowed to run on arm64.
+	# Replace existing signature (if any).
+	set(codesignAdHoc ${PROJECT_SOURCE_DIR}/base/codesignWrapper.sh --sign - --force)
+	set(codesignAdHocVerify codesign --verify)
+	set(codesignAdHocIgnoreReplace 2>&1 | (grep -F -v ': replacing existing signature' || true))
+else()
+	set(codesignAdHoc true)
+	set(codesignAdHocVerify true)
+	set(codesignAdHocIgnoreReplace "")
+endif()
 
 
 # Subprojects ================================================================
@@ -410,10 +383,12 @@ set(ignore "${QT_QMAKE_EXECUTABLE}")
 
 # In cmake-gui, hide unused/rarely-used variables ============================
 mark_as_advanced(FORCE
+	BUILD_TESTING
 	CMAKE_BUILD_TYPE
 	CMAKE_EXECUTABLE_FORMAT
+	CONAN_FRAMEWORK_HapInAVFoundation_FOUND
+	CONAN_FRAMEWORK_Syphon_FOUND
 	CMAKE_INSTALL_PREFIX
-	CMAKE_OSX_ARCHITECTURES
 	CMAKE_OSX_DEPLOYMENT_TARGET
 	CMAKE_OSX_SYSROOT
 	Qt5Core_DIR
@@ -429,15 +404,3 @@ mark_as_advanced(FORCE
 	Qt5Widgets_DIR
 	Qt5_DIR
 )
-
-
-# Info about build performance ===============================================
-if (VUO_PROFILE)
-	get_property(VuoPCH GLOBAL PROPERTY VuoPCH)
-	foreach (pch ${VuoPCH})
-		set(pchPadded "${pch}                       ")
-		string(SUBSTRING ${pchPadded} 0 23 pchPadded)
-		get_target_property(pchUseCount ${pch} VuoPCHUseCount)
-		message(STATUS "${pchPadded} used by ${pchUseCount}")
-	endforeach()
-endif()

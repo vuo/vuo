@@ -8,11 +8,8 @@
 #define VUO_BUILD_DIR                "@PROJECT_BINARY_DIR@"
 
 #define LLVM_ROOT                    "@CONAN_LLVM_ROOT@"
-#define GRAPHVIZ_ROOT                "@CONAN_GRAPHVIZ_ROOT@"
 #define JSONC_ROOT                   "@CONAN_JSONC_ROOT@"
 #define OPENSSL_ROOT                 "@CONAN_OPENSSL_ROOT@"
-#define LEAP_ROOT                    "@PROJECT_SOURCE_DIR@/node/vuo.leap/Leap"
-#define SYPHON_ROOT                  "@PROJECT_SOURCE_DIR@/node/vuo.syphon/Syphon"
 #define MACOS_SDK_ROOT               "@CMAKE_OSX_SYSROOT@"
 
 #define CONAN_LIBRARY_PATHS          "@CONAN_LIB_DIRS@"

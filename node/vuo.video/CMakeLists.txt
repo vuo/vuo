@@ -11,7 +11,7 @@ VuoCompileLibraries(
 )
 target_include_directories(vuo.video.libraries
 	PRIVATE
-	HapInAVFoundation.framework/Headers
+		${CONAN_FRAMEWORK_DIRS_HAP}/HapInAVFoundation.framework/Headers
 )
 target_link_libraries(vuo.video.libraries
 	PUBLIC

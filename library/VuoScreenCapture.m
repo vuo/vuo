@@ -2,18 +2,17 @@
  * @file
  * VuoScreenCapture implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include "module.h"
 #include "VuoScreenCapture.h"
-#include"VuoGlPool.h"
+#include "VuoApp.h"
+#include "VuoGlPool.h"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
 
@@ -21,6 +20,7 @@
 VuoModuleMetadata({
 					  "title" : "VuoScreenCapture",
 					  "dependencies" : [
+						  "VuoApp",
 						  "AVFoundation.framework",
 						  "CoreMedia.framework",
 						  "CoreVideo.framework"
@@ -66,6 +66,8 @@ static void VuoScreenCapture_freeCallback(VuoImage imageToFree)
 {
 	CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	__block CVOpenGLTextureRef texture;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		CVOpenGLTextureCacheCreateTextureFromImage(NULL, _sci->textureCache, pixelBuffer, NULL, &texture);
@@ -86,6 +88,7 @@ static void VuoScreenCapture_freeCallback(VuoImage imageToFree)
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		CVOpenGLTextureCacheFlush(_sci->textureCache, 0);
 	});
+#pragma clang diagnostic pop
 }
 @end
 
@@ -108,7 +111,10 @@ void VuoScreenCapture_free(void *p)
 
 	if (sci->textureCache)
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			CVOpenGLTextureCacheRelease(sci->textureCache);
+#pragma clang diagnostic pop
 		});
 
 	dispatch_release(sci->queue);
@@ -122,6 +128,10 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 	if ( (rectangle.center.x-rectangle.size.x/2.) >= screen.width
 	  || (rectangle.center.y-rectangle.size.y/2.) >= screen.height)
 		return NULL;
+
+	// AVCaptureScreenInput causes formerly-headless apps to begin bouncing endlessly in the dock.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/18174
+	VuoApp_init(false);
 
 	VuoScreenCaptureInternal *sci = (VuoScreenCaptureInternal *)calloc(1, sizeof(VuoScreenCaptureInternal));
 	VuoRegister(sci, VuoScreenCapture_free);
@@ -171,12 +181,18 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 				  });
 
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
 		__block CVReturn ret;
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-			ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &sci->textureCache);
+			ret = CVOpenGLTextureCacheCreate(NULL,
+				(CFDictionaryRef)@{
+					(NSString *)kCVOpenGLTextureCacheChromaSamplingModeKey: (NSString *)kCVOpenGLTextureCacheChromaSamplingModeBestPerformance
+				}, cgl_ctx, pf, NULL, &sci->textureCache);
 		});
 		CGLReleasePixelFormat(pf);
+#pragma clang diagnostic pop
 
 		if (ret != kCVReturnSuccess)
 		{

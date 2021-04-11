@@ -1,6 +1,5 @@
 VuoTest(NAME TestVuoCompilerNodeClass
 	SOURCE TestVuoCompilerNodeClass.cc
-	RESOURCE_LOCK COMPILER
 )
 target_link_libraries(TestVuoCompilerNodeClass
 	PRIVATE

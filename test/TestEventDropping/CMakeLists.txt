@@ -1,6 +1,8 @@
 VuoTest(NAME TestEventDropping
 	SOURCE TestEventDropping.cc
-	RESOURCE_LOCK COMPILER
+
+	# This test installs modules to shared folders, which can trip up other tests.
+	RUN_SERIAL ON
 )
 target_link_libraries(TestEventDropping
 	PRIVATE

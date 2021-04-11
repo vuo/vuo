@@ -2,7 +2,7 @@
  * @file
  * VuoPopover implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 #include "VuoPopover.hh"
 
 #ifdef __APPLE__
-#include <objc/runtime.h>
+#include <objc/message.h>
 #endif
 
 /**
@@ -137,15 +137,7 @@ QMargins VuoPopover::getPopoverContentsMargins(Qt::AnchorPoint arrowSide)
 void * VuoPopover::getWindowForPopover(QWidget *popoverWidget)
 {
 	id view = (id)popoverWidget->winId();
-
-	// window = [view window];
-	Class nsView = (Class)objc_getClass("NSView");
-	SEL windowSEL = sel_registerName("window");
-	Method nsViewWindowMethod = class_getInstanceMethod(nsView, windowSEL);
-	IMP nsViewWindow = method_getImplementation(nsViewWindowMethod);
-	void *window = nsViewWindow(view, method_getName(nsViewWindowMethod));
-
-	return window;
+	return ((id (*)(id, SEL))objc_msgSend)(view, sel_getUid("window"));
 }
 
 /**
@@ -188,17 +180,11 @@ void VuoPopover::setWindowLevel(bool top, QWidget *popoverWidget)
  */
 void VuoPopover::setWindowLevelForNextUpdate(bool top, QWidget *popoverWidget)
 {
-	void *window = getWindowForPopover(popoverWidget);
-
-	// [window setLevel:...];
-	Class nsWindow = (Class)objc_getClass("NSWindow");
-	SEL setLevelSEL = sel_registerName("setLevel:");
-	Method nsWindowSetLevelMethod = class_getInstanceMethod(nsWindow, setLevelSEL);
-	IMP nsWindowSetLevel = method_getImplementation(nsWindowSetLevelMethod);
-	int key;
+	id window = (id)getWindowForPopover(popoverWidget);
+	unsigned long key;
 	if (top)
 		key = 8; // kCGMainMenuWindowLevelKey
 	else
 		key = 0; // Anything higher than zero seems to float..?
-	nsWindowSetLevel((id)window, method_getName(nsWindowSetLevelMethod), key);
+	((void (*)(id, SEL, unsigned long))objc_msgSend)(window, sel_getUid("setLevel:"), key);
 }

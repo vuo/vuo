@@ -2,7 +2,7 @@
  * @file
  * VuoSyphonInternal implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,6 +11,7 @@
 #import "VuoSyphonListener.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/CGLMacro.h>
 #include "VuoGlContext.h"
 #include "module.h"
 #include "node.h"
@@ -219,9 +220,10 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 
 	// Connect the client to the server.
 	void (^connect)(void) = ^{
-					  SyphonClient *s = [[SyphonClient alloc] initWithServerDescription:chosenServerDict options:nil newFrameHandler:^(SyphonClient *client) {
-									  VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-									  SyphonImage *frame = [client newFrameImageForContext:cgl_ctx];
+		__block SyphonClient *s;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			s = [[SyphonClient alloc] initWithServerDescription:chosenServerDict context:cgl_ctx options:nil newFrameHandler:^(SyphonClient *client) {
+									  SyphonImage *frame = [client newFrameImage];
 
 									  if (frame.textureSize.width < 1 || frame.textureSize.height < 1)
 									  {
@@ -234,11 +236,11 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 									  callback(VuoImage_makeCopy(image, false, 0, 0, false));
 									  VuoRelease(image);
 
-									  });
-					  }];
-					  self.syphonClient = s;
-					  [s release];
-				  };
+									  }];
+		});
+		self.syphonClient = s;
+		[s release];
+	};
 	if (VuoSyphonListener_isMainThread())
 		connect();
 	else

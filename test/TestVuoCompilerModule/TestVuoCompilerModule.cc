@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerModule interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -163,7 +163,7 @@ private slots:
 
 		{
 			vector<string> keywords;
-			QTest::newRow("vuo.test.compatibleWith1011 does not have keywords") << "vuo.test.compatibleWith1011" << keywords;
+			QTest::newRow("vuo.test.details does not have keywords") << "vuo.test.details" << keywords;
 		}
 
 		{
@@ -188,47 +188,6 @@ private slots:
 			string expectedKeyword = expectedKeywords.at(i);
 			QCOMPARE(QString(actualKeyword.c_str()), QString(expectedKeyword.c_str()));
 		}
-	}
-
-	void testCompatibleOperatingSystems_data()
-	{
-		QTest::addColumn< QString >("nodeClass");
-		QTest::addColumn< bool >("shouldBeCompatibleWithAny");
-		QTest::addColumn< bool >("shouldBeCompatibleWith1011");
-		QTest::addColumn< bool >("shouldBeCompatibleWith1012");
-		QTest::addColumn< bool >("shouldBeCompatibleWith1013");
-
-		QTest::newRow("any") << "vuo.math.add.VuoInteger" << true << true << true << true;
-		QTest::newRow("macOS 10.11") << "vuo.test.compatibleWith1011" << false << true << false << false;
-		QTest::newRow("macOS 10.11 and 10.12") << "vuo.test.compatibleWith1011And1012" << false << true << true << false;
-		QTest::newRow("macOS 10.11 and up") << "vuo.test.compatibleWith1011AndUp" << false << true << true << true;
-	}
-	void testCompatibleOperatingSystems()
-	{
-		QFETCH(QString, nodeClass);
-		QFETCH(bool, shouldBeCompatibleWithAny);
-		QFETCH(bool, shouldBeCompatibleWith1011);
-		QFETCH(bool, shouldBeCompatibleWith1012);
-		QFETCH(bool, shouldBeCompatibleWith1013);
-
-		VuoCompilerTargetSet targetAny;
-		VuoCompilerTargetSet target1011;
-		target1011.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_11);
-		target1011.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_11);
-		VuoCompilerTargetSet target1012;
-		target1012.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_12);
-		target1012.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_12);
-		VuoCompilerTargetSet target1013;
-		target1013.setMinMacVersion(VuoCompilerTargetSet::MacVersion_10_13);
-		target1013.setMaxMacVersion(VuoCompilerTargetSet::MacVersion_10_13);
-
-		VuoCompilerNodeClass *cnc = compiler->getNodeClass( qPrintable(nodeClass) );
-		VuoCompilerTargetSet actualTargets = cnc->getCompatibleTargets();
-
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(targetAny), shouldBeCompatibleWithAny);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1011), shouldBeCompatibleWith1011);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1012), shouldBeCompatibleWith1012);
-		QCOMPARE(actualTargets.isCompatibleWithAllOf(target1013), shouldBeCompatibleWith1013);
 	}
 
 	void testModuleKeyForPath_data()

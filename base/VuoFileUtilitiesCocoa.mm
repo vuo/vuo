@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilitiesCocoa implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -12,10 +12,8 @@
 #include "VuoException.hh"
 #include "VuoStringUtilities.hh"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#include <Cocoa/Cocoa.h>
+#include <AppKit/AppKit.h>
+#include <sys/utsname.h>
 
 /**
  * Moves the specified file to the user's trash folder.
@@ -153,13 +151,15 @@ int VuoFileUtilitiesCocoa_getOSVersionMinor(void)
 }
 
 /**
- * Changes the Finder icon for a file or folder.
+ * Returns the current system's processor architecture.
  */
-void VuoFileUtilitiesCocoa_setIcon(string filePath, string imagePath)
+string VuoFileUtilitiesCocoa_getArchitecture(void)
 {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:imagePath.c_str()]];
-	[[NSWorkspace sharedWorkspace] setIcon:image forFile:[NSString stringWithUTF8String:filePath.c_str()] options:0];
-	[image release];
+	struct utsname un;
+	if (uname(&un) < 0)
+		throw VuoException("Couldn't look up the system's architecture: %s", strerror(errno));
+
+	return un.machine;
 }
 
 /**

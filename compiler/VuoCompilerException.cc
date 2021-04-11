@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerException implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -18,7 +18,8 @@ VuoCompilerException::VuoCompilerException(const VuoCompilerIssue &issue)
 {
 	issues = new VuoCompilerIssues(issue);
 	ownsIssues = true;
-	shortDescription = strdup(issues->getShortDescription(false).c_str());
+	if (issues)
+		shortDescription = strdup(issues->getShortDescription(false).c_str());
 }
 
 /**
@@ -28,11 +29,12 @@ VuoCompilerException::VuoCompilerException(const VuoCompilerIssue &issue)
  * Otherwise, the caller is responsible.
  */
 VuoCompilerException::VuoCompilerException(VuoCompilerIssues *issues, bool ownsIssues)
-	: VuoException(issues->getShortDescription(false), false)
+    : VuoException(issues ? issues->getShortDescription(false) : "", false)
 {
 	this->issues = issues;
 	this->ownsIssues = ownsIssues;
-	this->shortDescription = strdup(issues->getShortDescription(false).c_str());
+	if (issues)
+		this->shortDescription = strdup(issues->getShortDescription(false).c_str());
 }
 
 /**

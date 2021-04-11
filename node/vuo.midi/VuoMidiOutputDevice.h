@@ -2,7 +2,7 @@
  * @file
  * VuoMidiOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -27,8 +27,6 @@ typedef struct
 {
 	VuoInteger id;	///< If @c id is non-negative, use the specified device identifier.
 	VuoText name;	///< If @c id is negative, use the first device whose name contains @c name.
-
-	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoMidiOutputDevice;
 
 VuoMidiOutputDevice VuoMidiOutputDevice_makeFromJson(struct json_object * js);
@@ -55,11 +53,9 @@ void VuoMidiOutputDevice_release(VuoMidiOutputDevice value);
 static inline VuoMidiOutputDevice VuoMidiOutputDevice_make(VuoInteger id, VuoText name) __attribute__((const));
 static inline VuoMidiOutputDevice VuoMidiOutputDevice_make(VuoInteger id, VuoText name)
 {
-	VuoMidiOutputDevice md = { id, name, "" };
-	return md;
+	return (VuoMidiOutputDevice){id, name};
 }
 
 /**
  * @}
  */
-

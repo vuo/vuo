@@ -2,7 +2,7 @@
  * @file
  * VuoRunnerCocoa+Conversion implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -382,6 +382,8 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			return js;
 		}
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		if (type == CVOpenGLTextureGetTypeID())
 		{
 			CVOpenGLTextureRef cvgl = (CVOpenGLTextureRef)value;
@@ -420,6 +422,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			VuoRelease(vi);
 			return js;
 		}
+#pragma clang diagnostic pop
 
 		NSString *typeDescription = (NSString *)CFCopyTypeIDDescription(type);
 		VUserLog("Error: Unknown CFType '%s'", [typeDescription UTF8String]);
@@ -574,7 +577,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	NSGraphicsContext *ngc = [NSGraphicsContext graphicsContextWithBitmapImageRep:nbir];
 	[NSGraphicsContext saveGraphicsState];
 	[NSGraphicsContext setCurrentContext:ngc];
-	[self drawInRect:NSMakeRect(0,0,pixelsWide,pixelsHigh) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1 respectFlipped:YES hints:nil];
+	[self drawInRect:NSMakeRect(0,0,pixelsWide,pixelsHigh) fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1 respectFlipped:YES hints:nil];
 	[ngc flushGraphics];
 	[NSGraphicsContext setCurrentContext:nil];
 	[NSGraphicsContext restoreGraphicsState];

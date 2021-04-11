@@ -2,7 +2,7 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -106,7 +106,7 @@ private slots:
 
 		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,GL_RGBA,640,480)))
 										<< true
-										<< "<div>640×480 pixels @ 1x</div><div>RGBA, each channel 8-bit unsigned integer</div><div>OpenGL: GL_TEXTURE_2D, GL_RGBA, ID 43</div>";
+										<< "<div>640×480 pixels @ 1x</div>\n<div>RGBA, each channel 8-bit unsigned integer</div>\n<div>OpenGL: GL_TEXTURE_2D, GL_RGBA, ID 43</div>";
 	}
 	void testSerializationAndSummary()
 	{
@@ -875,9 +875,11 @@ private slots:
 		auto color = (VuoColor){.4,.5,.6,1.};
 		json_object *js = VuoImage_getInterprocessJson(VuoImage_makeColorImage(color, 640, 480));
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, isOpenGL32Core, -1);
 		CGLContextObj cgl_ctx;
-		CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
+ 		CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
 		if (error != kCGLNoError)
 			QFAIL(CGLErrorString(error));
 		QVERIFY(cgl_ctx);
@@ -913,6 +915,7 @@ private slots:
 			QVERIFY(fabs(imageBuffer[1] - color.a*255*color.g) < 2.);
 			QVERIFY(fabs(imageBuffer[0] - color.a*255*color.b) < 2.);
 			QVERIFY(fabs(imageBuffer[3] - color.a*255        ) < 2.);
+#pragma clang diagnostic pop
 	}
 
 	void createAndCheckIOSurface(VuoColor color)

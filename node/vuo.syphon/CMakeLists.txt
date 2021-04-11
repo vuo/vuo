@@ -5,16 +5,16 @@ VuoCompileLibraries(
 	VuoSyphonServerNotifier.m
 )
 target_include_directories(vuo.syphon.libraries
-	PRIVATE
-	Syphon/Syphon.framework/Headers
+    PRIVATE
+		${CONAN_FRAMEWORK_DIRS_SYPHON}/Syphon.framework/Headers
 )
 target_link_libraries(vuo.syphon.libraries
 	PUBLIC
-	"-F${CMAKE_CURRENT_SOURCE_DIR}/Syphon"
-	"-framework Syphon"
-	VuoApp
-	VuoGlContext
-	VuoGlPool
+		CONAN_PKG::syphon
+		"-F${CONAN_FRAMEWORK_DIRS_SYPHON}"
+		VuoApp
+		VuoGlContext
+		VuoGlPool
 )
 
 VuoCompileTypes(

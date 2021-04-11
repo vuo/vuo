@@ -2,7 +2,7 @@
  * @file
  * VuoTransform2d implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -126,7 +126,7 @@ char * VuoTransform2d_getSummary(const VuoTransform2d value)
 		return strdup("identity transform (no change)");
 
 	VuoReal rotationInDegrees = value.rotation * 180./M_PI;
-	return VuoText_format("<div>translation (%g, %g)</div><div>rotation %g°</div><div>scale (%g, %g)</div>",
+	return VuoText_format("<div>translation (%g, %g)</div>\n<div>rotation %g°</div>\n<div>scale (%g, %g)</div>",
 						  value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
 }
 

@@ -2,7 +2,7 @@
  * @file
  * VuoEditor implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -216,12 +216,12 @@ VuoEditor::VuoEditor(int &argc, char *argv[])
 	VuoEditor_Pro1();
 #endif
 
+	compiler->prepareForFastBuild();
+
 	builtInDriversQueue = dispatch_queue_create("org.vuo.editor.drivers", NULL);
 	dispatch_async(builtInDriversQueue, ^{
 		initializeBuiltInDrivers();
 	});
-
-	compiler->prepareForFastBuild();
 
 	// If operating in documentation-generation mode, generate the node documentation and exit.
 	if (!documentationGenerationDirectory.empty())
@@ -1484,6 +1484,13 @@ QMainWindow * VuoEditor::openFileWithName(QString filename, bool addToRecentFile
 	if (isComposition)
 	{
 		VUserLog("%s.%s:      Open", file.c_str(), ext.c_str());
+
+		if (! VuoEditorWindow::containsLikelyVuoComposition(VuoFileUtilities::readFileToString(filename.toStdString()).c_str()))
+		{
+			VuoErrorDialog::show(NULL, tr("\"%1\" can't be opened.").arg(QFileInfo(filename).fileName()), "It is not a valid Vuo composition.");
+			return NULL;
+		}
+
 		window = createEditorWindow(filename, true);
 		if (!window)
 			return nullptr;
@@ -1645,7 +1652,7 @@ void VuoEditor::updateUI()
 	if (openWindows.empty())
 	{
 		id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
-		id currentMainMenu = objc_msgSend(*nsAppGlobal, sel_getUid("mainMenu"), nil);
+		id currentMainMenu = ((id (*)(id, SEL))objc_msgSend)(*nsAppGlobal, sel_getUid("mainMenu"));
 		if (menuBar->toNSMenu() != currentMainMenu)
 		{
 			// No windows are open, and the currently-visible main menu isn't the global menu, so we need to explicitly restore the global menu.
@@ -3372,16 +3379,23 @@ map<QString, QString> VuoEditor::getExampleCompositionsForProtocol(VuoProtocol *
 
 	if (protocol->getId() == VuoProtocol::imageFilter)
 	{
+		modelExampleCompositionsAndNodeSets["ChangeRipplePeriodically.vuo"] = "vuo.time";
 		modelExampleCompositionsAndNodeSets["PixellateImageRadially.vuo"] = "vuo.image";
 	}
 
 	else if (protocol->getId() == VuoProtocol::imageGenerator)
 	{
+		modelExampleCompositionsAndNodeSets["AnimateConcentricCircles.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["DrawRainbowTrail.vuo"] = "vuo.layer";
+		modelExampleCompositionsAndNodeSets["FlyAtWarpSpeed.vuo"] = "vuo.image";
 		modelExampleCompositionsAndNodeSets["GenerateCheckerboardImage.vuo"] = "vuo.image";
 		modelExampleCompositionsAndNodeSets["MakeDriftingClouds.vuo"] = "vuo.image";
 		modelExampleCompositionsAndNodeSets["MakeOvalPatterns.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["RecordCameraDrags.vuo"] = "vuo.data";
 		modelExampleCompositionsAndNodeSets["RippleImageGradients.vuo"] = "vuo.image";
+		modelExampleCompositionsAndNodeSets["RippleImageOfSphere.vuo"] = "vuo.scene";
 		modelExampleCompositionsAndNodeSets["SpinKaleidoscope.vuo"] = "vuo.event";
+		modelExampleCompositionsAndNodeSets["Tschuri.vuo"] = "vuo.image";
 	}
 
 	else if (protocol->getId() == VuoProtocol::imageTransition)

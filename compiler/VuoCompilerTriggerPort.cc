@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTriggerPort implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -32,7 +32,7 @@ Value * VuoCompilerTriggerPort::generateCreatePortContext(Module *module, BasicB
 	VuoType *dataType = getClass()->getDataVuoType();
 
 	return VuoCompilerCodeGenUtilities::generateCreatePortContext(module, block,
-																  dataType ? dataType->getCompiler()->getType() : NULL,
+																  dataType ? dataType->getCompiler() : nullptr,
 																  true, "org.vuo.composition." + getIdentifier());
 }
 
@@ -54,23 +54,18 @@ void VuoCompilerTriggerPort::generateScheduleWorker(Module *module, Function *fu
 	Value *dataCopyAsVoidPointer;
 	if (dataType)
 	{
-		// PortDataType_retain(data);
-		// PortDataType *dataCopy = (void *)malloc(sizeof(VuoImage));
-		// *dataCopy = data;
-		Value *dataValue = VuoCompilerCodeGenUtilities::unlowerArgument(dataType->getCompiler(), function, 0, module, block);
-		dataType->getCompiler()->generateRetainCall(module, block, dataValue);
-		ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(64, 1));
-		Value *dataCopyAddress = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dataType->getCompiler()->getType(), oneValue);
-		new StoreInst(dataValue, dataCopyAddress, false, block);
-		dataCopyAsVoidPointer = new BitCastInst(dataCopyAddress, voidPointer, "", block);
+		// Create a copy of the data on the heap.
+		Value *dataPointer = dataType->getCompiler()->convertArgsToPortData(module, block, function, 0);
+		size_t byteCount = dataType->getCompiler()->getSize(module);
+		dataCopyAsVoidPointer = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, byteCount);
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, dataPointer, dataCopyAsVoidPointer, byteCount);
+
+		dataType->getCompiler()->generateRetainCall(module, block, dataCopyAsVoidPointer);
 	}
 	else
-	{
 		dataCopyAsVoidPointer = ConstantPointerNull::get(voidPointer);
-	}
 
-	// unsigned long *eventIdCopy = (unsigned long *)malloc(sizeof(unsigned long));
-	// *eventIdCopy = eventId;
+	// Create a copy of the event ID on the heap.
 	Type *eventIdType = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module)->getType();
 	Value *eventIdCopyAddress = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, eventIdType, 1);
 	new StoreInst(eventIdValue, eventIdCopyAddress, false, block);
@@ -160,7 +155,7 @@ void VuoCompilerTriggerPort::generateSignalForSemaphore(Module *module, BasicBlo
 Value * VuoCompilerTriggerPort::generateLoadFunction(Module *module, BasicBlock *block, Value *nodeContextValue)
 {
 	Value *portContextValue = generateGetPortContext(module, block, nodeContextValue);
-	return VuoCompilerCodeGenUtilities::generateGetPortContextTriggerFunction(module, block, portContextValue, getClass()->getFunctionType());
+	return VuoCompilerCodeGenUtilities::generateGetPortContextTriggerFunction(module, block, portContextValue, getClass()->getFunctionType(module));
 }
 
 /**
@@ -173,12 +168,12 @@ void VuoCompilerTriggerPort::generateStoreFunction(Module *module, BasicBlock *b
 }
 
 /**
- * Generates code to get the data most recently fired from the trigger.
+ * Generates code to get a pointer to the data most recently fired from the trigger.
  */
-Value * VuoCompilerTriggerPort::generateLoadPreviousData(Module *module, BasicBlock *block, Value *nodeContextValue)
+Value * VuoCompilerTriggerPort::generateRetrievePreviousData(Module *module, BasicBlock *block, Value *nodeContextValue)
 {
 	Value *portContextValue = generateGetPortContext(module, block, nodeContextValue);
-	return VuoCompilerCodeGenUtilities::generateGetPortContextData(module, block, portContextValue, getDataType());
+	return VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(module, block, portContextValue, getClass()->getDataVuoType()->getCompiler());
 }
 
 /**
@@ -223,10 +218,7 @@ Value * VuoCompilerTriggerPort::generateDataValue(Module *module, BasicBlock *bl
 	Type *voidPointerPointerType = PointerType::get(voidPointerType, 0);
 
 	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *dataCopyAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 1);
-	PointerType *pointerToDataType = PointerType::get(getDataType(), 0);
-	Value *dataCopyValue = new BitCastInst(dataCopyAsVoidPointer, pointerToDataType, "", block);
-	return new LoadInst(dataCopyValue, "", block);
+	return VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 1);
 }
 
 /**
@@ -258,27 +250,22 @@ Value * VuoCompilerTriggerPort::generateEventIdValue(Module *module, BasicBlock 
 Value * VuoCompilerTriggerPort::generateDataValueUpdate(Module *module, BasicBlock *block, Function *workerFunction, Value *nodeContextValue)
 {
 	Value *currentDataValue = NULL;
-	Type *dataType = getDataType();
+	VuoType *dataType = getClass()->getDataVuoType();
 
 	if (dataType)
 	{
 		// Load the previous data.
-		Value *portContextValue = generateGetPortContext(module, block, nodeContextValue);
-		Value *previousDataValue = VuoCompilerCodeGenUtilities::generateGetPortContextData(module, block, portContextValue, dataType);
+		Value *previousDataPointer = generateRetrievePreviousData(module, block, nodeContextValue);
 
 		// Load the current data.
-		//
-		// PortDataType *dataCopy = (PortDataType *)((void **)context)[1]);
-		// PortDataType data = *dataCopy;
-		currentDataValue = generateDataValue(module, block, workerFunction);
+		Value *currentDataVoidPointer = generateDataValue(module, block, workerFunction);
+		Value *currentDataPointer = dataType->getCompiler()->convertToPortData(block, currentDataVoidPointer);
+		currentDataValue = new LoadInst(currentDataPointer, "", block);
 
 		// The current data becomes the previous data.
-		//
-		// PortDataType_release(previousData);
-		// previousData = data;
-		VuoCompilerCodeGenUtilities::generateSetPortContextData(module, block, portContextValue, currentDataValue);
-		VuoCompilerType *type = getClass()->getDataVuoType()->getCompiler();
-		type->generateReleaseCall(module, block, previousDataValue);
+		dataType->getCompiler()->generateReleaseCall(module, block, previousDataPointer);
+		Value *portContextValue = generateGetPortContext(module, block, nodeContextValue);
+		VuoCompilerCodeGenUtilities::generateSetPortContextData(module, block, portContextValue, currentDataValue, dataType->getCompiler());
 	}
 
 	return currentDataValue;
@@ -290,9 +277,9 @@ Value * VuoCompilerTriggerPort::generateDataValueUpdate(Module *module, BasicBlo
 void VuoCompilerTriggerPort::generateDataValueDiscardFromScheduler(Module *module, Function *function, BasicBlock *block,
 																   VuoType *dataType)
 {
-	Value *dataValue = VuoCompilerCodeGenUtilities::unlowerArgument(dataType->getCompiler(), function, 0, module, block);
-	dataType->getCompiler()->generateRetainCall(module, block, dataValue);
-	dataType->getCompiler()->generateReleaseCall(module, block, dataValue);
+	Value *dataPointer = dataType->getCompiler()->convertArgsToPortData(module, block, function, 0);
+	dataType->getCompiler()->generateRetainCall(module, block, dataPointer);
+	dataType->getCompiler()->generateReleaseCall(module, block, dataPointer);
 }
 
 /**
@@ -305,17 +292,9 @@ void VuoCompilerTriggerPort::generateDataValueDiscardFromWorker(Module *module, 
 	if (dataType)
 	{
 		Value *dataValue = generateDataValue(module, block, workerFunction);
+		dataValue = dataType->getCompiler()->convertToPortData(block, dataValue);
 		dataType->getCompiler()->generateReleaseCall(module, block, dataValue);
 	}
-}
-
-/**
- * Returns the type of data associated with the trigger, or NULL if the trigger is event-only.
- */
-Type * VuoCompilerTriggerPort::getDataType(void)
-{
-	VuoType *vuoType = getClass()->getDataVuoType();
-	return (vuoType == NULL ? NULL : vuoType->getCompiler()->getType());
 }
 
 /**

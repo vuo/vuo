@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeParser implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -149,33 +149,6 @@ string VuoCompilerBitcodeParser::getArgumentNameInSourceCode(string argumentName
 }
 
 /**
- * Returns true if this argument and the argument after it correspond to a single argument
- * in the source code, and were lowered to two arguments when Clang compiled them to bitcode.
- * This happens for some struct types.
- */
-bool VuoCompilerBitcodeParser::isFirstOfTwoLoweredArguments(Argument *firstArgument)
-{
-	Function *function = firstArgument->getParent();
-	for (Function::arg_iterator i = function->arg_begin(); i != function->arg_end(); ++i)
-	{
-		Argument *currArgument = i;
-		if (currArgument == firstArgument)
-		{
-			if (++i != function->arg_end())
-			{
-				Argument *secondArgument = i;
-
-				string firstArgumentName = getArgumentNameInSourceCode(firstArgument->getName());
-				string secondArgumentName = getArgumentNameInSourceCode(secondArgument->getName());
-				return (firstArgumentName == secondArgumentName);
-			}
-			break;
-		}
-	}
-	return false;
-}
-
-/**
  * Gets all the function's arguments that have annotations, and associates each argument with its annotation(s).
  */
 vector<pair<Argument *, string> > VuoCompilerBitcodeParser::getAnnotatedArguments(Function *function)
@@ -189,7 +162,7 @@ vector<pair<Argument *, string> > VuoCompilerBitcodeParser::getAnnotatedArgument
 	BitCastInst *precedingBitCastInst = NULL;
 	for(BasicBlock::iterator it = b->begin();it!=b->end();++it)
 	{
-		Instruction *inst = it;
+		Instruction *inst = &(*it);
 		if(! CallInst::classof(inst))
 		{
 			if (BitCastInst::classof(inst))

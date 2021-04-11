@@ -2,7 +2,7 @@
  * @file
  * Expected outputs for vuo.scene.make.lines.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,14 +12,14 @@
 	"empty":           {"firingPort":"Positions", "inputPortValues":{"Positions":[                                                                                         ]}, "outputPortValues":{"Summary":"No object"}},
 	"only 1 element":  {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}                                                                            ]}, "outputPortValues":{"Summary":"No object"}},
 	"only 2 elements": {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}                                                             ]}, "outputPortValues":{"Summary":"No object"}},
-	"3 elements":      {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
-	"only 4 elements": {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}                               ]}, "outputPortValues":{"Summary":"3 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
-	"only 5 elements": {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}, {"x":2,"y":0}                ]}, "outputPortValues":{"Summary":"3 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
-	"6 elements":      {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}, {"x":2,"y":0}, {"x":0,"y":2} ]}, "outputPortValues":{"Summary":"6 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
+	"3 elements":      {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
+	"only 4 elements": {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}                               ]}, "outputPortValues":{"Summary":"3 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
+	"only 5 elements": {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}, {"x":2,"y":0}                ]}, "outputPortValues":{"Summary":"3 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
+	"6 elements":      {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}, {"x":1,"y":1}, {"x":2,"y":0}, {"x":0,"y":2} ]}, "outputPortValues":{"Summary":"6 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
 
 	// An valid list of positions, followed by an invalid one, followed by a valid one should output a non-empty mesh.
-	"invalid-valid0":  {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
+	"invalid-valid0":  {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
 	"invalid-valid1":  {"firingPort":"Positions", "inputPortValues":{"Positions":[                                                                                         ]}, "outputPortValues":{"Summary":"No object"}},
-	"invalid-valid2":  {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elementsIdentity transform (no change)ID 00 child objectsShaders:Default Shader (Checkerboard)"}},
+	"invalid-valid2":  {"firingPort":"Positions", "inputPortValues":{"Positions":[{"x":0,"y":0}, {"x":1,"y":0}, {"x":0,"y":1}                                              ]}, "outputPortValues":{"Summary":"3 vertices, 0 elements\nIdentity transform (no change)\nID 0\n0 child objects\nShaders:\nDefault Shader (Checkerboard)"}},
 
 }}

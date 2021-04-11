@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -98,9 +98,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	updateCachedPortPath();
 	updateCachedBoundingRect();
 	updateEnabledStatus();
-
-	if (getConstantAsStringToRender() != getConstantAsTruncatedStringToRender())
-		setToolTip(QString("<span></span>") + getConstantAsStringToRender().c_str());
+	updateToolTip();
 }
 
 /**
@@ -123,6 +121,45 @@ void VuoRendererPort::addRoundedTriangle(QPainterPath &p, QPointF center, qreal 
 				theta - (first ? 0 : 60),
 				(first||last ? 60 : 120));
 	}
+}
+
+/**
+ * If the port constant has been truncated (so it doesn't take up too much space on the canvas),
+ * show a hover-tooltip with more information.
+ */
+void VuoRendererPort::updateToolTip()
+{
+	if (getConstantAsStringToRender() != getConstantAsTruncatedStringToRender())
+	{
+		QString constantString = QString::fromStdString(getConstantAsStringToRender());
+
+		if (!constantString.startsWith("<style>"))  // Don't trim the specially-formatted VuoColor tooltips.
+		{
+			// Trim it down to about 1/2 screenful of text
+			// on the smallest display dimensions sold recently by Apple (1280x768).
+			int maxColumns    = 100;
+			int lineHeight    = 19;
+			int screenHeight  = 768;
+			int menuBarHeight = 22;
+			int dockHeight    = 50;
+			int maxRows       = (screenHeight - menuBarHeight - dockHeight) / lineHeight;
+			int maxLength     = maxColumns * maxRows;
+			if (constantString.length() > maxLength)
+			{
+				constantString.truncate(maxLength);
+				constantString += "…";
+			}
+
+			// Periodically insert spaces to ensure the text can word-wrap.
+			for (int i = maxColumns; i < constantString.length(); i += maxColumns)
+				constantString.insert(i, "\u200b");  // Unicode zero-width space
+		}
+
+		// <span></span> forces Qt to render the tooltip as rich text, enabling word-wrapping.
+		setToolTip("<span></span>" + constantString);
+	}
+	else
+		setToolTip("");
 }
 
 /**
@@ -320,7 +357,7 @@ VuoNode::TintColor VuoRendererPort::getPortTint() const
 	{
 		// Tint protocol ports the same color as the protocol.
 		if (dynamic_cast<const VuoRendererPublishedPort *>(this) &&
-				(dynamic_cast<VuoPublishedPort *>(this->getBase()))->isProtocolPort())
+				(static_cast<VuoPublishedPort *>(this->getBase()))->isProtocolPort())
 		{
 			// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
 			return VuoRendererColors::getActiveProtocolTint(0, !isOutput);
@@ -699,7 +736,7 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 	if (rpp)
 		painter->setPen((rpp->isSelected() && rpp->getCurrentlyActive())
 						? Qt::white
-						: (dynamic_cast<VuoPublishedPort *>(rpp->getBase())->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
+						: (static_cast<VuoPublishedPort *>(rpp->getBase())->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
 	else
 		painter->setPen(colors->portTitle());
 
@@ -823,7 +860,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	bool isColorInverted = isRefreshPort || isFunctionPort;
 
-	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected())? VuoRendererColors::directSelection :
+	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isEffectivelySelected())? VuoRendererColors::directSelection :
 													   VuoRendererColors::noSelection);
 
 	bool isHovered = isEligibleForSelection;
@@ -865,7 +902,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		portBrush = colors->portTitlebarFill();
 	else if (isAnimated)
 		portBrush = colors->animatedPortFill();
-	else if (publishedPort && dynamic_cast<VuoPublishedPort *>(publishedPort->getBase())->isProtocolPort())
+	else if (publishedPort && static_cast<VuoPublishedPort *>(publishedPort->getBase())->isProtocolPort())
 		portBrush = colors->portTitlebarFill();
 	else if (publishedPort)
 		portBrush = colors->publishedPortFill();
@@ -2245,10 +2282,7 @@ void VuoRendererPort::setConstant(string constantValue)
 
 		eventPort->getData()->setInitialValue(constantValue);
 
-		if (getConstantAsStringToRender() != getConstantAsTruncatedStringToRender())
-			setToolTip(QString("<span></span>") + getConstantAsStringToRender().c_str());
-		else
-			setToolTip("");
+		updateToolTip();
 
 		setCacheMode(normalCacheMode);
 		updateCachedPortPath();
@@ -2465,11 +2499,11 @@ void VuoRendererPort::updateEnabledStatus()
 
 /**
  * Returns a string representation of the regular expression that describes valid
- * port identifiers.
+ * port names.
  *
- * See also VuoRendererPort::sanitizePortIdentifier(QString portID).
+ * See also @ref sanitizePortName.
  */
-QString VuoRendererPort::getPortIdentifierRegExp()
+QString VuoRendererPort::getPortNameRegExp()
 {
 	// A published port name must:
 	// - Contain only alphanumeric characters; and
@@ -2481,29 +2515,29 @@ QString VuoRendererPort::getPortIdentifierRegExp()
 }
 
 /**
- * Sanitizes the provided @c portID to meet the requirements of a
- * valid port identifier. Sanitizes only by removing characters, never adding,
+ * Sanitizes the provided `portName` to meet the requirements of a
+ * valid port name. Sanitizes only by removing characters, never adding,
  * so it is possible for sanitization to fail, in which case this function
  * returns the empty string.
  *
- * See also VuoRendererPort::getPortIdentifierRegExp().
+ * See also @ref getPortNameRegExp.
  */
-QString VuoRendererPort::sanitizePortIdentifier(QString portID)
+QString VuoRendererPort::sanitizePortName(QString portName)
 {
 	// Remove non-alphanumeric characters.
-	portID.remove(QRegExp("[^A-Za-z0-9]"));
+	portName.remove(QRegExp("[^A-Za-z0-9]"));
 
-	// Unless the identifier is purely numeric, remove non-alphabetic first characters.
-	if (!portID.contains(QRegExp("^[0-9]+$")))
+	// Unless the name is purely numeric, remove non-alphabetic first characters.
+	if (!portName.contains(QRegExp("^[0-9]+$")))
 	{
-		while (!portID.isEmpty() && !portID.contains(QRegExp("^[A-Za-z]")))
-			portID = portID.right(portID.size()-1);
+		while (!portName.isEmpty() && !portName.contains(QRegExp("^[A-Za-z]")))
+			portName = portName.right(portName.size()-1);
 	}
 
 	// Remove characters beyond the 31st.
-	portID = portID.left(31);
+	portName = portName.left(31);
 
-	return portID;
+	return portName;
 }
 
 VuoRendererPort::~VuoRendererPort()

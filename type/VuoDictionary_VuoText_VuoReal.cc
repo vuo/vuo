@@ -2,7 +2,7 @@
  * @file
  * VuoDictionary_VuoText_VuoReal implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -120,8 +120,7 @@ char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoR
  */
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void)
 {
-	VuoDictionary_VuoText_VuoReal d = { VuoListCreate_VuoText(), VuoListCreate_VuoReal(), 0 };
-	return d;
+    return (VuoDictionary_VuoText_VuoReal){VuoListCreate_VuoText(), VuoListCreate_VuoReal()};
 }
 
 /**
@@ -129,7 +128,7 @@ VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void)
  */
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreateWithLists_VuoText_VuoReal(const VuoList_VuoText keys, const VuoList_VuoReal values)
 {
-	return (VuoDictionary_VuoText_VuoReal){ keys, values, 0 };
+    return (VuoDictionary_VuoText_VuoReal){keys, values};
 }
 
 /**

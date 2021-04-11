@@ -2,12 +2,13 @@
  * @file
  * VuoIsfModuleCompiler implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoIsfModuleCompiler.hh"
+#include <sstream>
 
 /**
  * Registers this compiler.
@@ -102,7 +103,7 @@ Module * VuoIsfModuleCompiler::compile(std::function<VuoCompilerType *(const str
 	__block Module *module;
 	dispatch_sync(llvmQueue, ^{
 
-		module = new Module(moduleKey, getGlobalContext());
+		module = new Module(moduleKey, *VuoCompiler::globalLLVMContext);
 		VuoCompilerConstantsCache constantsCache(module);
 
 		if (shaderFile->type() == VuoShaderFile::GLSLImageFilter
@@ -110,8 +111,8 @@ Module * VuoIsfModuleCompiler::compile(std::function<VuoCompilerType *(const str
 		 || shaderFile->type() == VuoShaderFile::GLSLImageTransition)
 		{
 			generateMetadata(module);
-			generateNodeInstanceInitFunction(module, &constantsCache, vuoTypes);
-			generateNodeInstanceEventFunction(module, &constantsCache, vuoTypes);
+			generateNodeInstanceInitFunction(module, &constantsCache, vuoTypes, issues);
+			generateNodeInstanceEventFunction(module, &constantsCache, vuoTypes, issues);
 		}
 		else if (shaderFile->type() == VuoShaderFile::GLSLObjectRenderer)
 		{
@@ -140,14 +141,19 @@ void VuoIsfModuleCompiler::generateMetadata(Module *module)
  * Generates the `nodeInstanceInit` function and constants used by it.
  */
 void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoCompilerConstantsCache *constantsCache,
-															map<string, VuoCompilerType *> vuoTypes)
+															map<string, VuoCompilerType *> vuoTypes, VuoCompilerIssues *issues)
 {
 	Constant *vertexSourceValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, shaderFile->expandedVertexSource(), "vertexSource");
 	Constant *geometrySourceValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, shaderFile->expandedGeometrySource(), "geometrySource");
 	Constant *fragmentSourceValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, shaderFile->expandedFragmentSource(), "fragmentSource");
 
 	VuoCompilerType *vuoShaderType = vuoTypes["VuoShader"];
-	Type *llvmShaderType = vuoShaderType->getType();
+	if (!isTypeFound(vuoShaderType, issues))
+		return;
+
+	Type *llvmShaderType = getFunctionParameterType(vuoShaderType, issues);
+	if (!llvmShaderType)
+		return;
 
 	map<VuoPort *, size_t> indexOfParameterInit;
 
@@ -193,7 +199,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceInitFunction(Module *module, VuoC
  * Generates the `nodeInstanceEvent` function.
  */
 void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, VuoCompilerConstantsCache *constantsCache,
-															 map<string, VuoCompilerType *> vuoTypes)
+															 map<string, VuoCompilerType *> vuoTypes, VuoCompilerIssues *issues)
 {
 	vector<VuoPort *> inputPorts;
 	vector<VuoPort *> outputPorts;
@@ -308,7 +314,12 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 	}
 
 	VuoCompilerType *vuoShaderType = vuoTypes["VuoShader"];
-	Type *llvmShaderType = vuoShaderType->getType();
+	if (!isTypeFound(vuoShaderType, issues))
+		return;
+
+	Type *llvmShaderType = getFunctionParameterType(vuoShaderType, issues);
+	if (!llvmShaderType)
+		return;
 
 	map<VuoPort *, size_t> indexOfParameter;
 	map<VuoPort *, size_t> indexOfEventParameter;
@@ -331,10 +342,16 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 	BasicBlock *widthHeightBlock = BasicBlock::Create(module->getContext(), "widthHeight", function, nullptr);
 
 	VuoCompilerType *vuoImageType = vuoTypes["VuoImage"];
-	Type *llvmImageType = vuoImageType->getType();
+	if (!isTypeFound(vuoImageType, issues))
+		return;
+
+	Type *llvmImageType = getFunctionParameterType(vuoImageType, issues);
+	if (!llvmImageType)
+		return;
+
 	ConstantPointerNull *nullImageValue = ConstantPointerNull::get(static_cast<PointerType *>(llvmImageType));
 
-	AllocaInst *foundImageVariable = new AllocaInst(llvmImageType, "foundImageVar", findImageBlock);
+	AllocaInst *foundImageVariable = new AllocaInst(llvmImageType, 0, "foundImageVar", findImageBlock);
 	new StoreInst(nullImageValue, foundImageVariable, findImageBlock);
 
 	BasicBlock *currBlock = findImageBlock;
@@ -411,8 +428,14 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 		// If no non-NULL image, default to VuoImageColorDepth_8.
 
 		VuoCompilerType *vuoColorDepthType = vuoTypes["VuoImageColorDepth"];
-		Type *llvmColorDepthType = vuoColorDepthType->getType();
-		AllocaInst *colorDepthVariable = new AllocaInst(llvmColorDepthType, "colorDepthVar", colorDepthBlock);
+		if (!isTypeFound(vuoColorDepthType, issues))
+			return;
+
+		Type *llvmColorDepthType = getFunctionParameterType(vuoColorDepthType, issues);
+		if (! llvmColorDepthType)
+			return;
+
+		AllocaInst *colorDepthVariable = new AllocaInst(llvmColorDepthType, 0, "colorDepthVar", colorDepthBlock);
 
 		Value *defaultColorDepthValue = ConstantInt::get(llvmColorDepthType, 0);
 		new StoreInst(defaultColorDepthValue, colorDepthVariable, colorDepthBlock);
@@ -425,7 +448,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 		BranchInst::Create(imageNotNullBlock, loadColorDepthBlock, imageNotNull, colorDepthBlock);
 
 		Function *colorDepthFunction = VuoCompilerCodeGenUtilities::getVuoImageGetColorDepthFunction(module);
-		Value *imageValueArg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(imageValue, colorDepthFunction, 0, nullptr, module, imageNotNullBlock);
+		Value *imageValueArg = new BitCastInst(imageValue, colorDepthFunction->getFunctionType()->getParamType(0), "", imageNotNullBlock);
 		Value *imageColorDepthValue = CallInst::Create(colorDepthFunction, imageValueArg, "colorDepth", imageNotNullBlock);
 		new StoreInst(imageColorDepthValue, colorDepthVariable, imageNotNullBlock);
 		BranchInst::Create(loadColorDepthBlock, imageNotNullBlock);
@@ -450,7 +473,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 		VuoType *portDataType = static_cast<VuoCompilerPort *>(inputPort->getCompiler())->getDataVuoType();
 		Function *setUniformFunction = VuoCompilerCodeGenUtilities::getVuoShaderSetUniformFunction(module, portDataType ? portDataType->getCompiler() : vuoTypes["VuoBoolean"]);
 
-		Value *instanceDataValue_setUniform = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(instanceDataValue, setUniformFunction, 0, nullptr, module, setUniformsBlock);
+		Value *instanceDataValue_setUniform = new BitCastInst(instanceDataValue, setUniformFunction->getFunctionType()->getParamType(0), "", setUniformsBlock);
 
 		string portName = (inputPort == timeInputPort ? "TIME" : inputPort->getClass()->getName());
 		Value *portNameValue = constantsCache->get(portName);
@@ -499,7 +522,7 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 
 	Function *renderFunction = VuoCompilerCodeGenUtilities::getVuoImageRendererRenderFunction(module);
 
-	Value *instanceDataValue_render = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(instanceDataValue, renderFunction, 0, nullptr, module, renderBlock);
+	Value *instanceDataValue_render = new BitCastInst(instanceDataValue, renderFunction->getFunctionType()->getParamType(0), "", renderBlock);
 
 	vector<Value *> renderArgs;
 	renderArgs.push_back(instanceDataValue_render);
@@ -516,4 +539,33 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 	BranchInst::Create(finalBlock, renderBlock);
 
 	ReturnInst::Create(module->getContext(), finalBlock);
+}
+
+bool VuoIsfModuleCompiler::isTypeFound(VuoCompilerType *type, VuoCompilerIssues *issues)
+{
+	if (!type)
+	{
+		string moduleKey = type->getBase()->getModuleKey();
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling ISF node class", "", "Couldn't find type " + moduleKey + ".", "");
+		issues->append(issue);
+		return false;
+	}
+
+	return true;
+}
+
+Type * VuoIsfModuleCompiler::getFunctionParameterType(VuoCompilerType *type, VuoCompilerIssues *issues)
+{
+	vector<Type *> params = type->getFunctionParameterTypes();
+	if (params.size() != 1)
+	{
+		string moduleKey = type->getBase()->getModuleKey();
+		ostringstream details;
+		details << moduleKey << " is lowered to " << params.size() << " parameters; expected 1.";
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling ISF node class", "", moduleKey + " has an unsupported format.", details.str());
+		issues->append(issue);
+		return nullptr;
+	}
+
+	return params[0];
 }

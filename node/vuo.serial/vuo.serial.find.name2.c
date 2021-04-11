@@ -2,7 +2,7 @@
  * @file
  * vuo.serial.find.name node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -33,7 +33,7 @@ void nodeEvent(
 	for (unsigned long i = 1; i <= deviceCount; ++i)
 	{
 		VuoSerialDevice d = VuoListGetValue_VuoSerialDevice(serialDevices, i);
-		if (VuoText_compare(d.name, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, name))
+		if (VuoText_compare(d.name, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, name))
 			VuoListAppendValue_VuoSerialDevice(*foundSerialDevices, d);
 	}
 }

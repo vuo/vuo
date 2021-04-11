@@ -2,7 +2,7 @@
  * @file
  * VuoTextComparison implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -30,7 +30,7 @@ VuoModuleMetadata({
  */
 VuoTextComparison VuoTextComparison_makeFromJson(json_object *js)
 {
-	VuoTextComparison value = { VuoTextComparison_Equals, true, "" };
+	VuoTextComparison value = {VuoTextComparison_Equals, true};
 
 	json_object *o;
 	if (json_object_object_get_ex(js, "type", &o))

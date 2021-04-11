@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,8 +11,6 @@
 #include "VuoUrlFetch.h"
 #include "VuoOsStatus.h"
 #include "VuoEventLoop.h"
-
-#include <dispatch/dispatch.h>
 
 #include <AudioToolbox/AudioToolbox.h>
 //#include <CoreServices/CoreServices.h>

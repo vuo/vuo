@@ -1,6 +1,5 @@
 VuoTest(NAME TestNodeExecutionOrder
 	SOURCE TestNodeExecutionOrder.cc
-	RESOURCE_LOCK COMPILER
 )
 target_link_libraries(TestNodeExecutionOrder
 	PRIVATE

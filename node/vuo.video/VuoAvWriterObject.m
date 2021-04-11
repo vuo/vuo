@@ -2,7 +2,7 @@
  * @file
  * VuoAvWriterObject implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -76,6 +76,9 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 	self.originalWidth = width;
 	self.originalHeight = height;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacements, AVVideoCodecType*, aren't available until macOS 10.13.
 	NSString* videoEncoding = AVVideoCodecJPEG;
 
 	if (format.imageEncoding == VuoMovieImageEncoding_H264)
@@ -84,6 +87,7 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 		videoEncoding = AVVideoCodecAppleProRes4444;
 	else if(format.imageEncoding == VuoMovieImageEncoding_ProRes422)
 		videoEncoding = AVVideoCodecAppleProRes422;
+#pragma clang diagnostic pop
 	else if (format.imageEncoding == VuoMovieImageEncoding_ProRes422HQ)
 	{
 		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,15,0}])
@@ -155,6 +159,9 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 	float clampedQuality = MAX(format.imageQuality, 0.01);
 	float bitrate = clampedQuality * width * height * 60. * fudge;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacements, AVVideoCodecType*, aren't available until macOS 10.13.
 	if( [videoEncoding isEqualToString:AVVideoCodecJPEG] )
 		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{
 			AVVideoQualityKey: @(clampedQuality),
@@ -164,6 +171,7 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{
 			AVVideoAverageBitRateKey: @(bitrate),
 		};
+#pragma clang diagnostic pop
 	else if ([videoEncoding isEqualToString:@"muxa" /*AVVideoCodecTypeHEVCWithAlpha*/])
 	{
 		videoOutputSettings[AVVideoCompressionPropertiesKey] = @{

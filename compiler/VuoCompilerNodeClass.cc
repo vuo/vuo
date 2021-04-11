@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -881,6 +881,42 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 				portClass->setPortAction(true);
 		}
 	}
+
+	// Set whether each added input port's data is passed as an unlowered struct pointer.
+	for (VuoPortClass *portClass : addedInputPortClasses)
+	{
+		if (portClass->getPortType() == VuoPortClass::dataAndEventPort)
+		{
+			VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler());
+			VuoCompilerInputDataClass *dataClass = eventPortClass->getDataClass();
+
+			if (function == eventFunction)
+			{
+				Type *firstParameterType = function->getFunctionType()->getParamType( dataClass->getIndexInEventFunction() );
+				dataClass->setUnloweredStructPointerInEventFunction(firstParameterType);
+			}
+			else if (function == initFunction)
+			{
+				Type *firstParameterType = function->getFunctionType()->getParamType( dataClass->getIndexInInitFunction() );
+				dataClass->setUnloweredStructPointerInInitFunction(firstParameterType);
+			}
+			else if (function == callbackStartFunction)
+			{
+				Type *firstParameterType = function->getFunctionType()->getParamType( dataClass->getIndexInCallbackStartFunction() );
+				dataClass->setUnloweredStructPointerInCallbackStartFunction(firstParameterType);
+			}
+			else if (function == callbackUpdateFunction)
+			{
+				Type *firstParameterType = function->getFunctionType()->getParamType( dataClass->getIndexInCallbackUpdateFunction() );
+				dataClass->setUnloweredStructPointerInCallbackUpdateFunction(firstParameterType);
+			}
+			else if (function == callbackStopFunction)
+			{
+				Type *firstParameterType = function->getFunctionType()->getParamType( dataClass->getIndexInCallbackStopFunction() );
+				dataClass->setUnloweredStructPointerInCallbackStopFunction(firstParameterType);
+			}
+		}
+	}
 }
 
 /**
@@ -892,11 +928,7 @@ VuoCompilerInputDataClass * VuoCompilerNodeClass::parseInputDataParameter(string
 		return NULL;
 
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
-	bool isLoweredToTwoParameters = parser->isFirstOfTwoLoweredArguments(a);
-	VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass(argumentName,
-																		 a->getType(),
-																		 isLoweredToTwoParameters);
-	return dataClass;
+	return new VuoCompilerInputDataClass(argumentName);
 }
 
 /**
@@ -914,9 +946,7 @@ VuoCompilerOutputDataClass * VuoCompilerNodeClass::parseOutputDataParameter(stri
 		return NULL;
 	}
 
-	VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass(argumentName,
-																		   ((PointerType *)a->getType())->getElementType());
-	return dataClass;
+	return new VuoCompilerOutputDataClass(argumentName);
 }
 
 /**
@@ -929,9 +959,7 @@ VuoCompilerInputEventPortClass * VuoCompilerNodeClass::parseInputEventParameter(
 
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 
-	VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(argumentName,
-																				   a->getType());
-	return portClass;
+	return new VuoCompilerInputEventPortClass(argumentName);
 }
 
 /**
@@ -949,9 +977,7 @@ VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParamete
 		return NULL;
 	}
 
-	VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass(argumentName,
-																					 ((PointerType *)a->getType())->getElementType());
-	return portClass;
+	return new VuoCompilerOutputEventPortClass(argumentName);
 }
 
 /**
@@ -969,9 +995,7 @@ VuoCompilerTriggerPortClass * VuoCompilerNodeClass::parseTriggerParameter(string
 		return NULL;
 	}
 
-	VuoCompilerTriggerPortClass *portClass = new VuoCompilerTriggerPortClass(argumentName,
-																				 (PointerType *)a->getType());
-	return portClass;
+	return new VuoCompilerTriggerPortClass(argumentName);
 }
 
 /**
@@ -989,9 +1013,8 @@ VuoCompilerInstanceDataClass * VuoCompilerNodeClass::parseInstanceDataParameter(
 		return NULL;
 	}
 
-	VuoCompilerInstanceDataClass *instanceDataClass = new VuoCompilerInstanceDataClass(argumentName,
-																					   ((PointerType *)a->getType())->getElementType());
-	return instanceDataClass;
+	Type *instanceDataType = static_cast<PointerType *>(a->getType())->getElementType();
+	return new VuoCompilerInstanceDataClass(argumentName, instanceDataType);
 }
 
 /**

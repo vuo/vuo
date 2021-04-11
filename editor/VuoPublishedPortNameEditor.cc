@@ -2,7 +2,7 @@
  * @file
  * VuoPublishedPortNameEditor implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -21,7 +21,7 @@ void VuoPublishedPortNameEditor::setUpDialog(QDialog &dialog, json_object *origi
 	setUpLineEdit(new QLineEdit(&dialog), originalValue);
 
 	// The user-entered published port name must be a valid port identifier.
-	QString portIdentifierRegExp = VuoRendererPort::getPortIdentifierRegExp();
+	QString portIdentifierRegExp = VuoRendererPort::getPortNameRegExp();
 
 	// Exception: Allow the published port name temporarily to be empty during editing.
 	// The empty string will be rejected upon submission (in VuoPublishedPortNameEditor::getAcceptedValue()).

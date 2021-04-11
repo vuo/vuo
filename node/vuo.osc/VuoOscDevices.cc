@@ -2,7 +2,7 @@
  * @file
  * VuoOscDevices implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -432,7 +432,7 @@ bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *real
 	// If no port was specified, match by name.
 	else
 		VuoListForeach_VuoOscInputDevice(devices, ^(const VuoOscInputDevice item){
-			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
 				setRealizedDevice(item);
@@ -493,7 +493,7 @@ bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *r
 	// If no port was specified, match by name.
 	else
 		VuoListForeach_VuoOscOutputDevice(devices, ^(const VuoOscOutputDevice item){
-			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
 				setRealizedDevice(item);

@@ -28,8 +28,6 @@ typedef struct
 
 	// The maximum value of a range.  (minimum >= maximum >= VuoRange_NoMaximum)
 	VuoReal maximum;
-
-	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoRange;
 
 VuoRange VuoRange_makeFromJson(struct json_object * js);
@@ -57,8 +55,7 @@ void VuoRange_release(VuoRange value);
 static inline VuoRange VuoRange_make(VuoReal _minimum, VuoReal _maximum) __attribute__((const));
 static inline VuoRange VuoRange_make(VuoReal _minimum, VuoReal _maximum)
 {
-	VuoRange range = { _minimum, _maximum, "" };
-	return range;
+	return (VuoRange){_minimum, _maximum};
 }
 
 /**
@@ -77,7 +74,7 @@ static inline VuoRange VuoRange_getOrderedRange(VuoRange range) __attribute__((c
 static inline VuoRange VuoRange_getOrderedRange(VuoRange range)
 {
 	if (VuoRange_isInverted(range))
-		return (VuoRange){range.maximum, range.minimum, ""};
+		return (VuoRange){range.maximum, range.minimum};
 	else
 		return range;
 }

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPublishedOutputNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -84,7 +84,7 @@ VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClass(vector<VuoPubli
 VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClassWithImplementation(const string &nodeClassName,
 																				   const vector<string> &portNames, const vector<VuoType *> &types)
 {
-	Module *module = new Module(nodeClassName, getGlobalContext());
+	Module *module = new Module(nodeClassName, *VuoCompiler::globalLLVMContext);
 
 	// VuoModuleMetadata({});
 	VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
@@ -154,7 +154,7 @@ VuoNodeClass * VuoCompilerPublishedOutputNodeClass::newNodeClassWithoutImplement
 		VuoCompilerInputEventPortClass *inputPortClass = new VuoCompilerInputEventPortClass(portNames.at(i));
 		if (types.at(i))
 		{
-			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("", nullptr, false);
+			VuoCompilerInputDataClass *inputDataClass = new VuoCompilerInputDataClass("");
 			inputPortClass->setDataClass(inputDataClass);
 			inputPortClass->setDataVuoType(types.at(i));
 		}

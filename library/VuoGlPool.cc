@@ -2,7 +2,7 @@
  * @file
  * VuoGlPool implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -380,6 +380,8 @@ bool VuoGlTexture_formatHasAlphaChannel(GLuint format)
  */
 unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 	static unsigned long maximumTextureBytes = 0;
 	static dispatch_once_t maximumTextureBytesQuery = 0;
@@ -420,6 +422,7 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 					  CGLDestroyRendererInfo(ri);
 				  });
 	return maximumTextureBytes;
+#pragma clang diagnostic pop
 }
 
 /**
@@ -538,6 +541,8 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, VuoGlTexturePoolAllocation a
 		}
 		else if (allocation == VuoGlTexturePool_AllocateIOSurface)
 		{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, internalformat, width, height, format, VuoGlTexture_getType(format), (IOSurfaceRef)ioSurfaceRef, 0);
 			if (err != kCGLNoError)
 			{
@@ -552,6 +557,7 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, VuoGlTexturePoolAllocation a
 				VGL();
 				return false;
 			}
+#pragma clang diagnostic pop
 		}
 		VuoGlPool_logVRAMAllocated(requiredBytes);
 	}
@@ -1011,9 +1017,12 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 	{
 		CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		/// @todo kIOSurfaceIsGlobal is deprecated on 10.11; replace int32 lookup with IOSurfaceCreateXPCObject or something.
 		/// https://web.archive.org/web/20151220161520/https://lists.apple.com/archives/mac-opengl/2009/Sep/msg00110.html
 		CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
+#pragma clang diagnostic pop
 
 		long long pixelsWideLL = pixelsWide;
 		CFNumberRef pixelsWideCF = CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsWideLL);
@@ -1026,6 +1035,10 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		long long bytesPerElement = 4;
 		CFNumberRef bytesPerElementCF = CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement);
 		CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, bytesPerElementCF);
+
+		uint32_t pixelFormat = 'BGRA';  // kCVPixelFormatType_32BGRA;
+		CFNumberRef pixelFormatCF = CFNumberCreate(NULL, kCFNumberSInt32Type, &pixelFormat);
+		CFDictionaryAddValue(properties, kIOSurfacePixelFormat, pixelFormatCF);
 
 		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 

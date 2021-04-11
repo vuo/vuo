@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNode implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -173,7 +173,7 @@ void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Val
 		Value *subcompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, runtimeStateValue, subcompositionIdentifierValue);
 
 		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-		Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(subcompositionStateValue, subcompositionFunctionDst, 0, NULL, module, block);
+		Value *arg = new BitCastInst(subcompositionStateValue, subcompositionFunctionDst->getFunctionType()->getParamType(0), "", block);
 		CallInst::Create(subcompositionFunctionDst, arg, "", block);
 
 		VuoCompilerCodeGenUtilities::generateFreeCompositionState(module, block, subcompositionStateValue);
@@ -328,7 +328,7 @@ void VuoCompilerNode::generateInitFunctionCall(Module *module, BasicBlock *block
 	Value *nodeContextValue = generateGetContext(module, block, compositionStateValue);
 	CallInst *call = generateFunctionCall(functionSrc, module, block, compositionStateValue, nodeContextValue);
 
-	Type *instanceDataType = instanceData->getBase()->getClass()->getCompiler()->getType();
+	Type *instanceDataType = instanceData->getType();
 	Value *callCasted = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, call, instanceDataType);
 	instanceData->generateStore(module, block, nodeContextValue, callCasted);
 
@@ -442,7 +442,7 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 		Value *compositionIdentifierValue = VuoCompilerCodeGenUtilities::generateGetCompositionStateCompositionIdentifier(module, block, compositionStateValue);
 		subcompositionIdentifierValue = generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
 		subcompositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, block, runtimeStateValue, subcompositionIdentifierValue);
-		args[0] = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(subcompositionStateValue, functionDst, 0, NULL, module, block);
+		args[0] = new BitCastInst(subcompositionStateValue, functionDst->getFunctionType()->getParamType(0), "", block);
 	}
 
 	// Set up the arguments for input ports.
@@ -471,40 +471,12 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 			if (isDataArgumentInFunction)
 			{
 				size_t index = getArgumentIndexInFunction(data, functionSrc);
-				Value *arg = eventPort->generateLoadData(module, block, nodeContextValue, portContextValue);
-				Value *secondArg = NULL;
-
-				// If we're calling a node function for a subcomposition, and the parameter is a struct that
-				// would normally be passed "byval", instead generate code equivalent to the "byval" semantics:
-				// Allocate a stack variable, copy the struct into it, and pass the variable's address as
-				// the argument to the node function.
-				//
-				// This is a workaround for a bug where LLVM would sometimes give the node function body
-				// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
-				if (getBase()->getNodeClass()->getCompiler()->isSubcomposition() &&
-						arg->getType()->isStructTy() &&
-						eventPort->getDataVuoType()->getCompiler()->getFunctionParameterAttributes().hasAttrSomewhere(Attribute::ByVal))
-				{
-					Value *argAsPointer = VuoCompilerCodeGenUtilities::generatePointerToValue(block, arg);
-					arg = new BitCastInst(argAsPointer, functionSrc->getFunctionType()->getParamType(index), "", block);
-				}
-				else
-				{
-					bool isLoweredToTwoParameters = static_cast<VuoCompilerInputDataClass *>(data->getBase()->getClass()->getCompiler())->isLoweredToTwoParameters();
-					Value **secondArgIfNeeded = (isLoweredToTwoParameters ? &secondArg : NULL);
-					arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, functionDst, index, secondArgIfNeeded, module, block);
-					if (!arg)
-					{
-						VUserLog("Warning: Couldn't convert argument for input port '%s' of function %s; not generating call.",
-								 (*i)->getClass()->getName().c_str(),
-								 functionDst->getName().str().c_str());
-						return nullptr;
-					}
-				}
-
-				args[index] = arg;
-				if (secondArg)
-					args[index + 1] = secondArg;
+				Value *pointerToDataAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariableAsVoidPointer(module, block, portContextValue);
+				vector<Value *> loweredArgs = eventPort->getDataType()->convertPortDataToArgs(module, block, pointerToDataAsVoidPointer,
+																							  functionDst->getFunctionType(), index,
+																							  isUnloweredStructPointerParameter(data, functionSrc));
+				for (auto a : loweredArgs)
+					args[index++] = a;
 			}
 		}
 	}
@@ -526,7 +498,7 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 			{
 				size_t index = getArgumentIndexInFunction(eventPort, functionSrc);
 				PointerType *eventPointerType = static_cast<PointerType *>( functionDst->getFunctionType()->getParamType(index) );
-				AllocaInst *arg = new AllocaInst(eventPointerType->getElementType(), "", block);
+				AllocaInst *arg = new AllocaInst(eventPointerType->getElementType(), 0, "", block);
 				new StoreInst(ConstantInt::get(eventPointerType->getElementType(), 0), arg, block);
 				outputPortEventVariables[eventPort] = arg;
 				args[index] = arg;
@@ -540,18 +512,11 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 													   eventPort->generateGetPortContext(module, block, nodeContextValue));
 
 				size_t index = getArgumentIndexInFunction(data, functionSrc);
-				Type *type = eventPort->getDataVuoType()->getCompiler()->getType();
-				Value *dataVariable = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(module, block, portContextValue, type);
-				outputPortDataVariables[eventPort] = dataVariable;
+				VuoCompilerType *type = eventPort->getDataVuoType()->getCompiler();
+				Value *dataPointer = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariable(module, block, portContextValue, type);
+				outputPortDataVariables[eventPort] = dataPointer;
 
-				Value *arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(dataVariable, functionDst, index, NULL, module, block);
-				if (!arg)
-				{
-					VUserLog("Warning: Couldn't convert argument for output port '%s' of function %s; not generating call.",
-							 (*i)->getClass()->getName().c_str(),
-							 functionDst->getName().str().c_str());
-					return nullptr;
-				}
+				Value *arg = new BitCastInst(dataPointer, functionDst->getFunctionType()->getParamType(index), "dataArgumentCasted", block);
 				args[index] = arg;
 			}
 		}
@@ -561,7 +526,8 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 			if (isArgumentInFunction(triggerPort, functionSrc))
 			{
 				size_t index = getArgumentIndexInFunction(triggerPort, functionSrc);
-				args[index] = triggerPort->generateLoadFunction(module, block, nodeContextValue);
+				Value *triggerFunction = triggerPort->generateLoadFunction(module, block, nodeContextValue);
+				args[index] = new BitCastInst(triggerFunction, functionDst->getFunctionType()->getParamType(index), "triggerArgumentCasted", block);
 			}
 		}
 	}
@@ -570,12 +536,12 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 	Value *instanceDataVariable = NULL;
 	if (instanceData && isArgumentInFunction(instanceData, functionSrc))
 	{
-		Type *type = instanceData->getBase()->getClass()->getCompiler()->getType();
+		Type *type = instanceData->getType();
 		instanceDataVariable = VuoCompilerCodeGenUtilities::generateGetNodeContextInstanceDataVariable(module, block, nodeContextValue, type);
 
 		size_t index = getArgumentIndexInFunction(instanceData, functionSrc);
 		Value *arg = instanceDataVariable;
-		args[index] = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, functionDst, index, NULL, module, block);
+		args[index] = new BitCastInst(arg, functionDst->getFunctionType()->getParamType(index), "", block);
 		if (!args[index])
 		{
 			VUserLog("Warning: Couldn't convert argument for instance data of function %s; not generating call.", functionDst->getName().str().c_str());
@@ -584,13 +550,15 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 	}
 
 	// Save the old output port values so they can be released later.
-	map<VuoCompilerOutputEventPort *, Value *> oldOutputDataValues;
+	map<VuoCompilerOutputEventPort *, Value *> oldOutputDataPointers;
 	for (map<VuoCompilerOutputEventPort *, Value *>::iterator i = outputPortDataVariables.begin(); i != outputPortDataVariables.end(); ++i)
 	{
 		VuoCompilerOutputEventPort *eventPort = i->first;
-		Value *dataVariable = i->second;
-
-		oldOutputDataValues[eventPort] = new LoadInst(dataVariable, "", false, block);
+		Value *dataVariable                   = i->second;  // For VuoText, this is `char **`
+		Value *dataPointer                    = new AllocaInst(static_cast<PointerType *>(dataVariable->getType())->getElementType(), 0, "", block);  // For VuoText, this is `char **`
+		Value *dataValue                      = new LoadInst(dataVariable, "", false, block);  // For VuoText, this is `char *`
+		new StoreInst(dataValue, dataPointer, block);
+		oldOutputDataPointers[eventPort] = dataPointer;
 	}
 
 	// Save the old instance data value so it can be released later.
@@ -643,19 +611,18 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 		VuoCompilerOutputEventPort *eventPort = i->first;
 		Value *dataVariable = i->second;
 
-		Value *outputDataValue = new LoadInst(dataVariable, "", false, block);
 		VuoCompilerType *type = eventPort->getDataVuoType()->getCompiler();
-		type->generateRetainCall(module, block, outputDataValue);
+		type->generateRetainCall(module, block, dataVariable);
 	}
 
 	// Release the old output port values.
-	for (map<VuoCompilerOutputEventPort *, Value *>::iterator i = oldOutputDataValues.begin(); i != oldOutputDataValues.end(); ++i)
+	for (map<VuoCompilerOutputEventPort *, Value *>::iterator i = oldOutputDataPointers.begin(); i != oldOutputDataPointers.end(); ++i)
 	{
 		VuoCompilerOutputEventPort *eventPort = i->first;
-		Value *oldOutputDataValue = i->second;
+		Value *oldOutputDataPointer = i->second;  // For VuoText, this is `char **`
 
 		VuoCompilerType *type = eventPort->getDataVuoType()->getCompiler();
-		type->generateReleaseCall(module, block, oldOutputDataValue);
+		type->generateReleaseCall(module, block, oldOutputDataPointer);
 	}
 
 	if (instanceDataVariable)
@@ -724,6 +691,29 @@ size_t VuoCompilerNode::getArgumentIndexInFunction(VuoCompilerNodeArgument *argu
 	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction())
 		return argumentClass->getIndexInCallbackStopFunction();
 	return 0;
+}
+
+/**
+ * Returns true if the parameter matching the argument in the specified node class function is
+ * an unlowered struct pointer.
+ *
+ * @param inputData The argument to check.
+ * @param function The node class's event, init, fini, callback start, callback update, or callback stop function.
+ */
+bool VuoCompilerNode::isUnloweredStructPointerParameter(VuoCompilerInputData *inputData, Function *function)
+{
+	VuoCompilerInputDataClass *inputDataClass = static_cast<VuoCompilerInputDataClass *>(inputData->getBase()->getClass()->getCompiler());
+	if (function == getBase()->getNodeClass()->getCompiler()->getEventFunction())
+		return inputDataClass->isUnloweredStructPointerInEventFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getInitFunction())
+		return inputDataClass->isUnloweredStructPointerInInitFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStartFunction())
+		return inputDataClass->isUnloweredStructPointerInCallbackStartFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackUpdateFunction())
+		return inputDataClass->isUnloweredStructPointerInCallbackUpdateFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction())
+		return inputDataClass->isUnloweredStructPointerInCallbackStopFunction();
+	return false;
 }
 
 /**
@@ -886,7 +876,7 @@ string VuoCompilerNode::getGraphvizDeclaration(bool shouldPrintPosition, double 
 
 	// manually firable input port
 	if (manuallyFirableInputPort)
-		declaration << " _" << manuallyFirableInputPort->getClass()->getName() << "_manuallyFirable";
+		declaration << " _" << manuallyFirableInputPort->getClass()->getName() << "_manuallyFirable=\"yes\"";
 
 	declaration << "];";
 

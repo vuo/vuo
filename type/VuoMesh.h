@@ -2,7 +2,7 @@
  * @file
  * VuoMesh C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -48,7 +48,7 @@ typedef enum {
 
 /**
  * A 3D mesh, consisting of CPU and/or GPU data
- * describing a list of elements (positions, normals, texture coordinates, colors)
+ * describing a list of elements (positions; and optionally normals, texture coordinates, and colors)
  * which represent points or are assembled into lines or triangles.
  *
  * @version200Changed{VuoSceneObject is now an opaque, heap-allocated type.

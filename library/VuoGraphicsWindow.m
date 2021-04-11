@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsWindow implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -80,7 +80,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 {
 	NSRect mainScreenFrame = [[NSScreen mainScreen] frame];
 	_contentRectWhenWindowed = NSMakeRect(mainScreenFrame.origin.x, mainScreenFrame.origin.y, VuoGraphicsWindowDefaultWidth, 768);
-	_styleMaskWhenWindowed = NSTitledWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+	_styleMaskWhenWindowed = NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
 	if (self = [super initWithContentRect:_contentRectWhenWindowed
 								styleMask:_styleMaskWhenWindowed
 								  backing:NSBackingStoreBuffered
@@ -101,7 +101,11 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		self.collectionBehavior = NSWindowCollectionBehaviorFullScreenPrimary;
 
 		[self initDrag];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		// The replacement, NSPasteboardTypeFileURL, isn't available until macOS 11.
 		[self registerForDraggedTypes:@[NSFilenamesPboardType]];
+#pragma clang diagnostic pop
 
 		_userResizedWindow = NO;
 		_programmaticallyResizingWindow = NO;
@@ -131,10 +135,10 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 		_contentRectCached = l.frame;
 
-		_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseDownMask|NSLeftMouseUpMask handler:^(NSEvent *event) {
-			if (event.type == NSLeftMouseDown)
+		_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown|NSEventMaskLeftMouseUp handler:^(NSEvent *event) {
+			if (event.type == NSEventTypeLeftMouseDown)
 				_leftMouseDown = true;
-			else if (event.type == NSLeftMouseUp)
+			else if (event.type == NSEventTypeLeftMouseUp)
 			{
 				_leftMouseDown = false;
 				if (!NSEqualSizes(_pendingResize, NSZeroSize))
@@ -203,7 +207,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 
 	NSMenu *fileMenu = [[[NSMenu alloc] initWithTitle:@"File"] autorelease];
 	_recordMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:@selector(toggleRecording) keyEquivalent:@"e"];
-	[_recordMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask|NSAlternateKeyMask];
+	[_recordMenuItem setKeyEquivalentModifierMask:NSEventModifierFlagCommand|NSEventModifierFlagOption];
 	[fileMenu addItem:_recordMenuItem];
 	NSMenuItem *fileMenuItem = [[NSMenuItem new] autorelease];
 	[fileMenuItem setSubmenu:fileMenu];
@@ -488,9 +492,9 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		{
 			[[self standardWindowButton:NSWindowZoomButton] setEnabled:property.resizable];
 			if ([self isFullScreen])
-				_styleMaskWhenWindowed = property.resizable ? (_styleMaskWhenWindowed | NSResizableWindowMask) : (_styleMaskWhenWindowed & ~NSResizableWindowMask);
+				_styleMaskWhenWindowed = property.resizable ? (_styleMaskWhenWindowed | NSWindowStyleMaskResizable) : (_styleMaskWhenWindowed & ~NSWindowStyleMaskResizable);
 			else
-				self.styleMask =         property.resizable ? ([self styleMask]       | NSResizableWindowMask) : ([self styleMask]       & ~NSResizableWindowMask);
+				self.styleMask =         property.resizable ? ([self styleMask]       | NSWindowStyleMaskResizable) : ([self styleMask]       & ~NSWindowStyleMaskResizable);
 		}
 		else if (property.type == VuoWindowProperty_Cursor)
 		{
@@ -739,7 +743,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 			// If a size-locked window enters Mac-fullscreen mode,
 			// its height increases upon exiting Mac-fullscreen mode.
 			// Mark it resizeable while fullscreen, to keep its size from changing (!).
-			self.styleMask |= NSResizableWindowMask;
+			self.styleMask |= NSWindowStyleMaskResizable;
 
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 				dispatch_semaphore_wait(VuoGraphicsWindow_fullScreenTransitionSemaphore, DISPATCH_TIME_FOREVER);
@@ -811,7 +815,8 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 {
 	_programmaticallyResizingWindow = false;
 
-	[self.delegate windowDidResize:nil];
+	NSNotification *n = [NSNotification notificationWithName:@"unused" object:nil];
+	[self.delegate windowDidResize:n];
 
 	[self makeFirstResponder:self];
 
@@ -881,13 +886,17 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	[sp setTitle:@"Save Movie"];
 	[sp setNameFieldLabel:@"Save Movie To:"];
 	[sp setPrompt:@"Save"];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// The replacement, setAllowedContentTypes, isn't available until macOS 11.
 	[sp setAllowedFileTypes:@[@"mov"]];
+#pragma clang diagnostic pop
 
 	char *title = VuoApp_getName();
 	sp.nameFieldStringValue = [NSString stringWithUTF8String:title];
 	free(title);
 
-	if ([sp runModal] == NSFileHandlingPanelCancelButton)
+	if ([sp runModal] == NSModalResponseCancel)
 		goto done;
 
 	NSError *error;

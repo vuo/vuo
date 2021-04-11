@@ -9,7 +9,7 @@
         <key>CFBundleShortVersionString</key>
 	<string>@SHORT_VERSION@</string>
         <key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012–2020 Kosada Incorporated.  This framework may be used and distributed according to the terms described on https://vuo.org/license.</string>
+	<string>Copyright © 2012–2021 Kosada Incorporated.  This framework may be used and distributed according to the terms described on https://vuo.org/license.</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>

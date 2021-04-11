@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerDiagnosticConsumer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -54,13 +54,13 @@ void VuoCompilerDiagnosticConsumer::HandleDiagnostic(clang::DiagnosticsEngine::L
 
 		auto filename = sourceManager.getFilename(loc);
 
-		// Not our code.
-		if (filename.find("/Vuo.framework/Frameworks/llvm.framework/") != llvm::StringRef::npos
-		 || filename.find("/Vuo.framework/Headers/macos/") != llvm::StringRef::npos
-		 || filename.find("/.conan/data/") != llvm::StringRef::npos
-		 || filename.find("/Applications/Xcode.app/") != llvm::StringRef::npos)
-			if (issueType == VuoCompilerIssue::Warning)
-				return;
+		// Ignore warnings in other people's code.
+		if ((level == clang::DiagnosticsEngine::Note || level == clang::DiagnosticsEngine::Warning)
+		 && (filename.find("/Vuo.framework/Frameworks/llvm.framework/") != llvm::StringRef::npos
+		  || filename.find("/Vuo.framework/Headers/macos/") != llvm::StringRef::npos
+		  || filename.find("/.conan/data/") != llvm::StringRef::npos
+		  || filename.find("/Applications/Xcode.app/") != llvm::StringRef::npos))
+			return;
 
 		llvm::raw_svector_ostream oss(location);
 		loc.print(oss, sourceManager);

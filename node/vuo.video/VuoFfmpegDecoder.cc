@@ -2,7 +2,7 @@
  * @file
  * VuoFfmpegDecoder implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -441,14 +441,10 @@ bool VuoFfmpegDecoder::NextPacket()
 		if( packet.stream_index == container.videoStreamIndex ||
 			packet.stream_index == container.audioStreamIndex )
 		{
-			AVPacket pkt;
-			if (av_packet_ref(&pkt, &packet) < 0)
-				continue;
-
 			if( packet.stream_index == container.videoStreamIndex )
-				videoPackets.Add(pkt);
+				videoPackets.Add(packet);
 			else if( packet.stream_index == container.audioStreamIndex && audioIsEnabled )
-				audioPackets.Add(pkt);
+				audioPackets.Add(packet);
 
 			return true;
 		}
@@ -561,14 +557,14 @@ bool VuoFfmpegDecoder::StepAudioFrame(int64_t pts)
 				return false;
 		}
 
-		// don't Delete frames when seeking since decode isn't actually allocating anything
-		// AudioFrame::Delete(&audioFrame);
+		AudioFrame::Delete(&audioFrame);
 	} while(audioFrame.pts < pts);
 
 	lastAudioTimestamp = audioFrame.timestamp;
 
 	// flush whatever's left - shouldn't be much
-	while (audioFrames.Shift(&audioFrame));
+	while (audioFrames.Shift(&audioFrame))
+		AudioFrame::Delete(&audioFrame);
 
 	return true;
 }
@@ -702,6 +698,9 @@ SKIP_VIDEO_FRAME:
 			av_frame_free(&frame);
 			return false;
 		}
+
+		if (!frameFinished)
+			av_packet_unref(&packet);
 	}
 
 	if( frameFinished && frame != NULL)

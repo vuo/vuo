@@ -2,7 +2,7 @@
  * @file
  * VuoRunningCompositionLibraries implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -41,9 +41,47 @@ void VuoRunningCompositionLibraries::enqueueResourceLibraryToLoad(const string &
 			find(resourcePathsToUnload.begin(), resourcePathsToUnload.end(), path) != resourcePathsToUnload.end())
 	{
 		resourcePathsToLoad.push_back(path);
-		isPathUnloadable[path] = isUnloadable;
+		canUnloadPathToLoad[path] = isUnloadable;
 		dependenciesToLoad[path] = dependenciesInLibrary;
 	}
+}
+
+/**
+ * Adds the resource library to the list of those pending to be unloaded.
+ */
+void VuoRunningCompositionLibraries::enqueueResourceLibraryToUnload(const string &path)
+{
+	if (find(resourcePathsLoaded.begin(), resourcePathsLoaded.end(), path) != resourcePathsLoaded.end())
+	{
+		if (! canUnloadPathLoaded[path])
+		{
+			VUserLog("The resource library %s can't be unloaded.", path.c_str());
+			return;
+		}
+
+		resourcePathsToUnload.insert(path);
+	}
+}
+
+/**
+ * Adds all currently-loaded unloadable resource libraries to the list of those pending to be unloaded.
+ *
+ * Returns the dependencies contained in those libraries.
+ */
+set<string> VuoRunningCompositionLibraries::enqueueAllUnloadableResourceLibrariesToUnload(void)
+{
+	set<string> dependenciesInLibraries;
+
+	for (string path : resourcePathsLoaded)
+	{
+		if (canUnloadPathLoaded[path])
+		{
+			resourcePathsToUnload.insert(path);
+			dependenciesInLibraries.insert( dependenciesLoaded[path].begin(), dependenciesLoaded[path].end() );
+		}
+	}
+
+	return dependenciesInLibraries;
 }
 
 /**
@@ -59,9 +97,35 @@ void VuoRunningCompositionLibraries::enqueueCacheLibraryToLoad(const string &pat
 			find(cachePathsToUnload.begin(), cachePathsToUnload.end(), path) != cachePathsToUnload.end())
 	{
 		cachePathsToLoad.push_back(path);
-		isPathUnloadable[path] = isUnloadable;
+		canUnloadPathToLoad[path] = isUnloadable;
 		dependenciesToLoad[path] = dependenciesInLibrary;
 	}
+}
+
+/**
+ * Adds the cache library to the list of those pending to be unloaded.
+ *
+ * If the cache library either is enqueued to be unloaded by this function or was already enqueued,
+ * this function returns the dependencies contained in the cache library.
+ */
+set<string> VuoRunningCompositionLibraries::enqueueCacheLibraryToUnload(const string &path)
+{
+	if (find(cachePathsLoaded.begin(), cachePathsLoaded.end(), path) != cachePathsLoaded.end())
+	{
+		if (! canUnloadPathLoaded[path])
+		{
+			VUserLog("The cache library %s can't be unloaded.", path.c_str());
+			return {};
+		}
+
+		cachePathsToUnload.insert(path);
+	}
+	else if (find(cachePathsToUnload.begin(), cachePathsToUnload.end(), path) == cachePathsToUnload.end())
+	{
+		return {};
+	}
+
+	return dependenciesLoaded[path];
 }
 
 /**
@@ -75,7 +139,7 @@ void VuoRunningCompositionLibraries::enqueueLibraryContainingDependencyToUnload(
 		{
 			string libraryPath = i->first;
 
-			if (! isPathUnloadable[libraryPath])
+			if (! canUnloadPathLoaded[libraryPath])
 			{
 				VUserLog("The library containing %s (%s) can't be unloaded.", dependency.c_str(), libraryPath.c_str());
 				break;
@@ -102,13 +166,13 @@ vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToLoad(void)
 	vector<string> libraryPathsToLoad;
 
 	for (vector<string>::iterator i = cachePathsLoaded.begin(); i != cachePathsLoaded.end(); ++i)
-		if (isPathUnloadable[*i])
+		if (canUnloadPathLoaded[*i])
 			libraryPathsToLoad.push_back(*i);
 
 	libraryPathsToLoad.insert(libraryPathsToLoad.end(), cachePathsToLoad.begin(), cachePathsToLoad.end());
 
 	for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
-		if (isPathUnloadable[*i])
+		if (canUnloadPathLoaded[*i])
 			libraryPathsToLoad.push_back(*i);
 
 	libraryPathsToLoad.insert(libraryPathsToLoad.end(), resourcePathsToLoad.begin(), resourcePathsToLoad.end());
@@ -121,6 +185,9 @@ vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToLoad(void)
 
 	dependenciesLoaded.insert(dependenciesToLoad.begin(), dependenciesToLoad.end());
 	dependenciesToLoad.clear();
+
+	canUnloadPathLoaded.insert(canUnloadPathToLoad.begin(), canUnloadPathToLoad.end());
+	canUnloadPathToLoad.clear();
 
 	return libraryPathsToLoad;
 }
@@ -137,10 +204,16 @@ vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToUnload(void)
 	for (set<string>::iterator i = resourcePathsToUnload.begin(); i != resourcePathsToUnload.end(); ++i)
 	{
 		dependenciesLoaded.erase(*i);
-		isPathUnloadable.erase(*i);
+		canUnloadPathLoaded.erase(*i);
 
 		if (shouldDeleteResourceLibraries)
 			VuoFileUtilities::deleteFile(*i);
+	}
+
+	for (set<string>::iterator i = cachePathsToUnload.begin(); i != cachePathsToUnload.end(); ++i)
+	{
+		dependenciesLoaded.erase(*i);
+		canUnloadPathLoaded.erase(*i);
 	}
 
 	for (int i = resourcePathsLoaded.size()-1; i >= 0; --i)
@@ -156,13 +229,13 @@ vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToUnload(void)
 	libraryPathsToUnload.insert(libraryPathsToUnload.end(), resourcePathsToUnload.rbegin(), resourcePathsToUnload.rend());
 
 	for (vector<string>::reverse_iterator i = resourcePathsLoaded.rbegin(); i != resourcePathsLoaded.rend(); ++i)
-		if (isPathUnloadable[*i])
+		if (canUnloadPathLoaded[*i])
 			libraryPathsToUnload.push_back(*i);
 
 	libraryPathsToUnload.insert(libraryPathsToUnload.end(), cachePathsToUnload.rbegin(), cachePathsToUnload.rend());
 
 	for (vector<string>::reverse_iterator i = cachePathsLoaded.rbegin(); i != cachePathsLoaded.rend(); ++i)
-		if (isPathUnloadable[*i])
+		if (canUnloadPathLoaded[*i])
 			libraryPathsToUnload.push_back(*i);
 
 	resourcePathsToUnload.clear();
@@ -179,11 +252,11 @@ vector<string> VuoRunningCompositionLibraries::getNonUnloadableLibrariesLoaded(v
 	vector<string> libraryPathsLoaded;
 
 	for (vector<string>::iterator i = cachePathsLoaded.begin(); i != cachePathsLoaded.end(); ++i)
-		if (! isPathUnloadable[*i])
+		if (! canUnloadPathLoaded[*i])
 			libraryPathsLoaded.push_back(*i);
 
 	for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
-		if (! isPathUnloadable[*i])
+		if (! canUnloadPathLoaded[*i])
 			libraryPathsLoaded.push_back(*i);
 
 	return libraryPathsLoaded;
@@ -197,14 +270,42 @@ vector<string> VuoRunningCompositionLibraries::getUnloadableLibrariesLoaded(void
 	vector<string> libraryPathsLoaded;
 
 	for (vector<string>::iterator i = cachePathsLoaded.begin(); i != cachePathsLoaded.end(); ++i)
-		if (isPathUnloadable[*i] && cachePathsToUnload.find(*i) == cachePathsToUnload.end())
+		if (canUnloadPathLoaded[*i] && cachePathsToUnload.find(*i) == cachePathsToUnload.end())
 			libraryPathsLoaded.push_back(*i);
 
 	for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
-		if (isPathUnloadable[*i] && resourcePathsToUnload.find(*i) == resourcePathsToUnload.end())
+		if (canUnloadPathLoaded[*i] && resourcePathsToUnload.find(*i) == resourcePathsToUnload.end())
 			libraryPathsLoaded.push_back(*i);
 
 	return libraryPathsLoaded;
+}
+
+/**
+ * Returns the currently-loaded resource libraries that can be loaded and are not enqueued to be unloaded.
+ */
+vector<string> VuoRunningCompositionLibraries::getUnloadableResourceLibrariesLoaded(void)
+{
+	vector<string> unloadableResourcePathsLoaded;
+
+	for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
+		if (canUnloadPathLoaded[*i] && resourcePathsToUnload.find(*i) == resourcePathsToUnload.end())
+			unloadableResourcePathsLoaded.push_back(*i);
+
+	return unloadableResourcePathsLoaded;
+}
+
+/**
+ * Returns the currently-loaded cache libraries that can be loaded and are not enqueued to be unloaded.
+ */
+vector<string> VuoRunningCompositionLibraries::getUnloadableCacheLibrariesLoaded(void)
+{
+	vector<string> unloadableCachePathsLoaded;
+
+	for (vector<string>::iterator i = cachePathsLoaded.begin(); i != cachePathsLoaded.end(); ++i)
+		if (canUnloadPathLoaded[*i] && cachePathsToUnload.find(*i) == cachePathsToUnload.end())
+			unloadableCachePathsLoaded.push_back(*i);
+
+	return unloadableCachePathsLoaded;
 }
 
 /**
@@ -228,6 +329,14 @@ set<string> VuoRunningCompositionLibraries::getDependenciesLoaded(void)
 	}
 
 	return dependenciesLoadedSet;
+}
+
+/**
+ * Returns true if there is at least one cache library enqueued to be unloaded.
+ */
+bool VuoRunningCompositionLibraries::hasCacheLibraryEnqueuedToUnload(void)
+{
+	return ! cachePathsToUnload.empty();
 }
 
 /**

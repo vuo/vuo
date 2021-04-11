@@ -2,47 +2,12 @@
  * @file
  * TestVuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "TestVuoCompiler.hh"
-
-/**
- * Uses the LLVM JIT to execute the specified function in the specified module.
- *
- * @see llvm/tools/lli/lli.cpp
- */
-bool TestVuoCompiler::executeFunction(Module *mod, string functionName, vector<GenericValue> &args, GenericValue &ret)
-{
-	ForceJITLinking::ForceJITLinking();
-
-	string errMsg;
-	bool isErr = mod->MaterializeAllPermanently(&errMsg);
-	if (isErr) {
-		fprintf(stderr, "Couldn't materialize: %s\n", errMsg.c_str());
-		return false;
-	}
-
-	EngineBuilder builder(mod);
-	builder.setErrorStr(&errMsg);
-	ExecutionEngine *ee = builder.create();
-	if (! ee) {
-		fprintf(stderr, "Couldn't create execution engine: %s\n", errMsg.c_str());
-		return false;
-	}
-
-	Function *function = mod->getFunction(functionName);
-	if (! function) {
-		fprintf(stderr, "Couldn't find function %s\n", functionName.c_str());
-		return false;
-	}
-
-	//		int ret = ee->runFunctionAsMain(EntryFn, InputArgv, envp);
-	ret = ee->runFunction(function, args);
-	return true;
-}
 
 /**
  * Initializes @c compiler and loads node classes.

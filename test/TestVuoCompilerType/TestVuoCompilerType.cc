@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerType interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -40,25 +40,33 @@ private slots:
 		QCOMPARE(QString(title.c_str()), QString("Integer"));
 	}
 
-	void testLLVMTypes_data()
+	void testLlvmTypes_data()
 	{
 		QTest::addColumn< QString >("typeName");
-		QTest::addColumn< Type::TypeID >("typeID");
+		QTest::addColumn< Type::TypeID >("argumentTypeId");
+		QTest::addColumn< Type::TypeID >("secondArgumentTypeId");
+		QTest::addColumn< Type::TypeID >("returnTypeId");
+		QTest::addColumn< bool >("isReturnPassedAsArgument");
 
-		QTest::newRow("VuoInteger") << "VuoInteger" << Type::IntegerTyID;
-		QTest::newRow("VuoText") << "VuoText" << Type::PointerTyID;
-		QTest::newRow("VuoPoint2d") << "VuoPoint2d" << Type::VectorTyID;
-		QTest::newRow("VuoColor") << "VuoColor" << Type::StructTyID;
-		QTest::newRow("VuoSceneObject") << "VuoSceneObject" << Type::PointerTyID;
+		// This only tests types that are lowered the same on x86_64 and arm64. TestTypes::testLlvmTypes tests all types.
+		QTest::newRow("integer") << "VuoInteger" << Type::IntegerTyID << Type::VoidTyID << Type::IntegerTyID << false;
+		QTest::newRow("pointer") << "VuoText" << Type::PointerTyID << Type::VoidTyID << Type::PointerTyID << false;
+		QTest::newRow("large struct") << "VuoArtNetInputDevice" << Type::PointerTyID << Type::VoidTyID << Type::PointerTyID << true;
 	}
-	void testLLVMTypes()
+	void testLlvmTypes()
 	{
 		QFETCH(QString, typeName);
-		QFETCH(Type::TypeID, typeID);
+		QFETCH(Type::TypeID, argumentTypeId);
+		QFETCH(Type::TypeID, secondArgumentTypeId);
+		QFETCH(Type::TypeID, returnTypeId);
+		QFETCH(bool, isReturnPassedAsArgument);
 
-		VuoCompilerType *type = compiler->getType(typeName.toUtf8().constData());
-		QVERIFY(type->getType() != NULL);
-		QCOMPARE(QString("%1").arg(type->getType()->getTypeID()), QString("%1").arg(typeID));
+		VuoCompilerType *type = compiler->getType(typeName.toStdString());
+
+		QCOMPARE(QString("%1").arg(type->llvmArgumentType->getTypeID()), QString("%1").arg(argumentTypeId));
+		QCOMPARE(QString("%1").arg(type->llvmSecondArgumentType ? type->llvmSecondArgumentType->getTypeID() : Type::VoidTyID), QString("%1").arg(secondArgumentTypeId));
+		QCOMPARE(QString("%1").arg(type->llvmReturnType->getTypeID()), QString("%1").arg(returnTypeId));
+		QCOMPARE(type->isReturnPassedAsArgument, isReturnPassedAsArgument);
 	}
 
 	void testRealizePortTypes_data()

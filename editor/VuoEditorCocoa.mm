@@ -2,7 +2,7 @@
  * @file
  * VuoEditorCocoa implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,10 +11,8 @@
 
 #include "VuoEditor.hh"
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#include <Cocoa/Cocoa.h>
+#include "VuoMacOSSDKWorkaround.h"
+#include <AppKit/AppKit.h>
 #include <Carbon/Carbon.h>
 
 /**
@@ -25,16 +23,16 @@ void VuoEditorCocoa_detectSubmenuKeyEvents()
 {
 	VuoEditor *editor = (VuoEditor *)qApp;
 
-	[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:^(NSEvent *event) {
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^(NSEvent *event) {
 		// Cmd+Shift+O (Open Most Recent File)
-		if ((event.modifierFlags & NSCommandKeyMask) && (event.modifierFlags & NSShiftKeyMask)
+		if ((event.modifierFlags & NSEventModifierFlagCommand) && (event.modifierFlags & NSEventModifierFlagShift)
 				&& (event.keyCode == kVK_ANSI_O))
 		{
 			editor->openMostRecentFile();
 			return (NSEvent *)nil; // event was handled by this monitor (avoids the system beep)
 		}
 		// Cmd+Option+O (Open Random Example)
-		else if ((event.modifierFlags & NSCommandKeyMask) && (event.modifierFlags & NSAlternateKeyMask)
+		else if ((event.modifierFlags & NSEventModifierFlagCommand) && (event.modifierFlags & NSEventModifierFlagOption)
 				 && (event.keyCode == kVK_ANSI_O))
 		{
 			editor->openRandomExample();

@@ -2,7 +2,7 @@
  * @file
  * Prototypes for node class, type, and library module implementations.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -48,8 +48,8 @@ extern "C" {
  *     "keywords" : [ "print", "log" ],
  *     "version" : "1.0.0",
  *     "dependencies" : [ "VuoWindow" ],
- *     "compatibleOperatingSystems": {
- *         "macosx" : { "min": "10.13" }
+ *     "compatibility": {
+ *         "macos": { "min": "10.13" }
  *     },
  *     "node": {
  *         "exampleCompositions" : [ "HelloWorld.vuo" ]
@@ -83,10 +83,12 @@ extern "C" {
  *   - "keywords" — A list of words related to the module's name. This list is used when searching for node classes in the Vuo editor's Node Library.
  *   - "version" — A version number for the module. It should use the <a href="http://semver.org/">Semantic Versioning (SemVer)</a> scheme.
  *   - "dependencies" — A list of libraries that this module depends upon.
- *   - "compatibleOperatingSystems" — A set of operating systems on which this module can run. Unless this key is present, the module is assumed to run on all operating systems.
- *      This object contains keys for operating system names and values for the range of versions supported. Each range may specify "min", "max", or both.
+ *   - "compatibility" — A set of operating systems on which this module can run. Unless this key is present, the module is assumed to run on all operating systems and CPU architectures.
+ *      This object contains keys for operating system names and values for the range of versions and CPU architectures supported. Each range may specify "min", "max", "arch", or any combination.
  *      The operating systems and versions currently supported are:
- *      - "macosx" — "10.10", "10.11", "10.12", "10.13", "10.14", "10.15"
+ *      - "macos" — "10.11", "10.12", "10.13", "10.14", "10.15", "11.0"
+ *      The CPU architectures currently supported are:
+ *      - "arch" — "x86_64", "arm64"
  *   - "genericTypes" — Information about generic types used by this module.
  *      (This key is optional even if the module uses generic types. Currently, this key is only supported for node classes.)
  *      This object contains keys for generic type names and values for details about those types.
@@ -116,6 +118,7 @@ extern "C" {
 	/// https://b33p.net/kosada/node/9139
 	#define DISPATCH_RETURNS_RETAINED_BLOCK
 #endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <dispatch/dispatch.h>
 
 /**

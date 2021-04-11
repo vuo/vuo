@@ -2,7 +2,7 @@
  * @file
  * VuoVideoFrame C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -33,9 +33,6 @@ typedef struct
 	VuoImage image;
 	VuoReal timestamp;
 	VuoReal duration;
-
-	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
-
 } VuoVideoFrame;
 
 VuoVideoFrame VuoVideoFrame_makeFromJson(struct json_object * js);
@@ -63,8 +60,7 @@ void VuoVideoFrame_release(VuoVideoFrame value);
 static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp, VuoReal duration) __attribute__((const));
 static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp, VuoReal duration)
 {
-	VuoVideoFrame device = { image, timestamp, duration, "" };
-	return device;
+    return (VuoVideoFrame){image, timestamp, duration};
 }
 
 /**

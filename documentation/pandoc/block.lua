@@ -21,14 +21,25 @@ function texToDocbook(s)
 	return s
 end
 
-function replaceTag(blocks, elem, tag, prefix, suffix)
+function stringStartsWith(str, start)
+   return str:sub(1, #start) == start
+end
+
+function replaceTag(blocks, elem, tag, prefix, suffix, matchOnlyAtBeginning)
+	matchOnlyAtBeginning = matchOnlyAtBeginning or false
 	for tagContent in elem.c[2]:gmatch('\\' .. tag .. '{([^\n]+)}') do
+		if matchOnlyAtBeginning and not stringStartsWith(elem.c[2], '\\' .. tag .. '{') then
+			goto continue
+		end
+
 		tagContent = texToDocbook(tagContent)
 		table.insert(blocks, pandoc.RawBlock('html', prefix .. tagContent .. suffix))
 
 		if tagContent:find('\\[a-z]') then
 			io.stderr:write(string.format("warning: unknown TeX tag in \\%s: %s\n", tag, tagContent))
 		end
+
+		::continue::
 	end
 end
 
@@ -38,12 +49,16 @@ return {
 			local blocks = {}
 
 			for language, caption, code in elem.c[2]:gmatch('\\begin{lstlisting}%[language=([A-Za-z]+),caption=([^]]+)%](.+)\\end{lstlisting}') do
-				table.insert(blocks, pandoc.CodeBlock(code))
+				table.insert(blocks, pandoc.RawBlock('docbook',
+					'<example>'
+						.. '<title>' .. caption .. '</title>'
+						.. '<programlisting>' .. code .. '</programlisting>'
+					.. '</example>'))
 			end
 
 			replaceTag(blocks, elem, 'tip', '<para role="vuo-tip">', '</para>')
 			replaceTag(blocks, elem, 'noteTextProgrammers', '<para role="vuo-note-text">', '</para>')
-			replaceTag(blocks, elem, 'menu', '<phrase role="vuo-menu">', '</phrase>')
+			replaceTag(blocks, elem, 'menu', '<phrase role="vuo-menu">', '</phrase>', true)
 			replaceTag(blocks, elem, 'code', '<programlisting>', '</programlisting>')
 
 			if #blocks > 0 then

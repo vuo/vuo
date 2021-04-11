@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerType implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,9 +10,10 @@
 #include <sstream>
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerException.hh"
+#include "VuoCompilerIssue.hh"
 #include "VuoCompilerType.hh"
 #include "VuoType.hh"
-
 
 /**
  * Creates a type from an LLVM module, and creates its corresponding base @c VuoType.
@@ -34,7 +35,10 @@ VuoCompilerType::VuoCompilerType(string typeName, Module *module)
 	isLessThanFunction = NULL;
 	retainFunction = NULL;
 	releaseFunction = NULL;
-	llvmType = NULL;
+	llvmArgumentType              = nullptr;
+	llvmSecondArgumentType        = nullptr;
+	llvmReturnType                = nullptr;
+	isReturnPassedAsArgument      = false;
 
 	parse();
 }
@@ -82,7 +86,26 @@ void VuoCompilerType::parse(void)
 	if (! getSummaryFunction)
 		VUserLog("Error: Couldn't find %s_getSummary() function.", typeName.c_str());
 
-	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(getJsonFunction, module, typeName);
+	llvmArgumentType = getJsonFunction->getFunctionType()->getParamType(0);
+	if (getJsonFunction->getFunctionType()->getNumParams() == 2)
+		llvmSecondArgumentType = getJsonFunction->getFunctionType()->getParamType(1);
+	else if (getJsonFunction->getFunctionType()->getNumParams() != 1)
+	{
+		string s;
+		raw_string_ostream oss(s);
+		oss << "Expected a function with 1 or 2 parameters, got " << getJsonFunction->getFunctionType()->getNumParams() << " for function `";
+		getJsonFunction->getFunctionType()->print(oss);
+		oss << "`.";
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling composition", "", "Unsupported port data type", oss.str());
+		throw VuoCompilerException(issue);
+	}
+
+	llvmReturnType = makeFromJsonFunction->getReturnType();
+	if (llvmReturnType->isVoidTy())
+	{
+		isReturnPassedAsArgument = true;
+		llvmReturnType = makeFromJsonFunction->arg_begin()->getType();
+	}
 
 	parseOrGenerateValueFromStringFunction();
 	parseOrGenerateStringFromValueFunction(false);
@@ -142,7 +165,7 @@ void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
 		if (isReturnInParam)
-			function->setAttributes(makeFromJsonFunction->getAttributes().getParamAttributes(1));
+			VuoCompilerCodeGenUtilities::copyParameterAttributes(makeFromJsonFunction, function);
 	}
 
 	if (function->isDeclaration())
@@ -218,9 +241,7 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
-		AttributeSet paramAttributeSet = chosenJsonFromValueFunction->getAttributes().getParamAttributes(1);
-		for (int i = 0; i < getJsonFunctionType->getNumParams(); ++i)
-			function->addAttributes(i+1, VuoCompilerCodeGenUtilities::copyAttributesToIndex(paramAttributeSet, i+1));
+		copyFunctionParameterAttributes(function);
 	}
 
 	if (function->isDeclaration())
@@ -289,15 +310,15 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 
 	if (! function)
 	{
-		Type *secondParamType = NULL;
-		Type *firstParamType = getFunctionParameterType(&secondParamType);
 		vector<Type *> functionParams;
-		functionParams.push_back(firstParamType);
-		if (secondParamType)
-			functionParams.push_back(secondParamType);
+		functionParams.push_back(llvmArgumentType);
+		if (llvmSecondArgumentType)
+			functionParams.push_back(llvmSecondArgumentType);
+
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-		function->setAttributes(getFunctionParameterAttributes());
+
+		copyFunctionParameterAttributes(function);
 	}
 
 	if (function->isDeclaration())
@@ -306,14 +327,32 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 
 		Function::arg_iterator args = function->arg_begin();
 		Value *arg = args++;
-		arg->setName("value");
 
-		arg = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, arg, llvmType);
+		if (!llvmSecondArgumentType)
+		{
+			if (isReturnPassedAsArgument && arg->getType()->isPointerTy() && static_cast<PointerType *>(arg->getType())->getElementType()->isStructTy())
+			{
+				// The data type is a struct that is passed by reference (LLVM's `byval` attribute on x86_64).
+				arg = new LoadInst(arg, "unloweredStruct", false, block);
+			}
 
-		if (isRetain)
-			VuoCompilerCodeGenUtilities::generateRetainCall(module, block, arg);
+			VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(module, block, arg, isRetain);
+		}
 		else
-			VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, arg);
+		{
+			if (llvmArgumentType->isPointerTy())
+			{
+				// The data type is a struct with pointer field(s), lowered to 2 arguments, the 1st of which is a pointer.
+				VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(module, block, arg, isRetain);
+			}
+
+			if (llvmSecondArgumentType->isPointerTy())
+			{
+				// The data type is a struct with pointer field(s), lowered to 2 arguments, the 2nd of which is a pointer.
+				Value *secondArg = args++;
+				VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(module, block, secondArg, isRetain);
+			}
+		}
 
 		ReturnInst::Create(module->getContext(), block);
 	}
@@ -336,21 +375,17 @@ Value * VuoCompilerType::generateValueFromStringFunctionCall(Module *module, Bas
 {
 	Function *function = declareFunctionInModule(module, makeFromStringFunction);
 
-	if (VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(makeFromStringFunction))
+	if (isReturnPassedAsArgument)
 	{
 		vector<Value *> functionArgs;
 		functionArgs.push_back(arg);
 		Value *returnVariable = VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(function, functionArgs, block);
-
-		// Fix return type to match llvmType.
-		returnVariable = new BitCastInst(returnVariable, PointerType::get(llvmType, 0), "", block);
-
-		return new LoadInst(returnVariable, "", false, block);
+		return new BitCastInst(returnVariable, llvmReturnType, "valueFromString", block);
 	}
 	else
 	{
-		Value *returnValue = CallInst::Create(function, arg, "", block);
-		return VuoCompilerCodeGenUtilities::generateTypeCast(module, block, returnValue, llvmType);
+		Value *returnValue = CallInst::Create(function, arg, "valueFromString", block);
+		return VuoCompilerCodeGenUtilities::generatePointerToValue(block, returnValue);
 	}
 }
 
@@ -401,7 +436,7 @@ Value * VuoCompilerType::generateSummaryFromValueFunctionCall(Module *module, Ba
  */
 void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Value *arg)
 {
-	if (VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(getType()))
+	if (isRetainOrReleaseNeeded())
 		generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
 }
 
@@ -410,47 +445,192 @@ void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Valu
  */
 void VuoCompilerType::generateReleaseCall(Module *module, BasicBlock *block, Value *arg)
 {
-	if (VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(getType()))
+	if (isRetainOrReleaseNeeded())
 		generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
 }
 
 /**
+ * Generates an argument or arguments representing the port data, lowered for the C ABI.
+ *
+ * `arg` should be the same data type as `portContext->data`.
+ */
+vector<Value *> VuoCompilerType::convertPortDataToArgs(Module *module, BasicBlock *block, Value *arg, FunctionType *functionType, int parameterIndex,
+													   bool isUnloweredStructPointerParameter)
+{
+	vector<Value *> args;
+	if (!llvmSecondArgumentType)
+	{
+		Type *parameterType = functionType->getParamType(parameterIndex);
+
+		if (!isReturnPassedAsArgument)
+		{
+			bool isLoweredAsUsual = true;
+			if (parameterType->isPointerTy() && !llvmArgumentType->isPointerTy())
+				isLoweredAsUsual = false;
+
+			if (isLoweredAsUsual)
+			{
+				// The data type is either not lowered or lowered to 1 parameter.
+				arg = new BitCastInst(arg, PointerType::getUnqual(parameterType), "dataPointerCasted", block);
+				arg = new LoadInst(arg, "data", false, block);
+			}
+			else
+			{
+				// The data type is normally lowered to 1 parameter, but here is passed by reference ('byval').
+				arg = new BitCastInst(arg, parameterType, "dataCasted", block);
+			}
+		}
+		else
+		{
+			// The data type is a struct that is passed by reference (LLVM's `byval` attribute on x86_64).
+			arg = new BitCastInst(arg, parameterType, "dataCasted", block);
+		}
+
+		args.push_back(arg);
+	}
+	else
+	{
+		if (! isUnloweredStructPointerParameter)
+		{
+			// The data type is lowered to 2 parameters.
+			arg = new BitCastInst(arg, PointerType::getUnqual(llvmReturnType), "dataStructCasted", block);
+			for (int i = 0; i < 2; ++i)
+			{
+				Value *currArg = VuoCompilerCodeGenUtilities::generateGetStructPointerElement(module, block, arg, i);
+				if (currArg->getType()->isPointerTy())
+				{
+					Type *parameterType = functionType->getParamType(parameterIndex + i);
+					currArg = new BitCastInst(currArg, parameterType, "dataCasted", block);
+				}
+				args.push_back(currArg);
+			}
+		}
+		else
+		{
+			// The data type is normally lowered to 2 parameters, but here is a struct passed by reference (`byval`).
+			Type *parameterType = functionType->getParamType(parameterIndex);
+			arg = new BitCastInst(arg, parameterType, "dataCasted", block);
+			args.push_back(arg);
+		}
+	}
+
+	return args;
+}
+
+/**
+ * Unlowers the function argument at @a parameterIndex (and the one after, if this data type is lowered to 2 arguments)
+ * into port data (the same data type as `portContext->data`).
+ */
+Value * VuoCompilerType::convertArgsToPortData(Module *module, BasicBlock *block, Function *function, int parameterIndex)
+{
+	vector<Value *> args;
+	args.push_back( VuoCompilerCodeGenUtilities::getArgumentAtIndex(function, parameterIndex) );
+	if (llvmSecondArgumentType)
+		args.push_back( VuoCompilerCodeGenUtilities::getArgumentAtIndex(function, parameterIndex+1) );
+
+	if (!llvmSecondArgumentType)
+	{
+		if (!isReturnPassedAsArgument)
+		{
+			Value *argPointer = VuoCompilerCodeGenUtilities::generatePointerToValue(block, args[0]);
+			return new BitCastInst(argPointer, PointerType::getUnqual(llvmReturnType), "dataPointerCasted", block);
+		}
+		else
+			return args[0];
+	}
+	else
+	{
+		size_t totalArgByteCount = 0;
+		for (auto arg : args)
+			totalArgByteCount += module->getDataLayout().getTypeStoreSize(arg->getType());
+
+		size_t dataByteCount = getSize(module);
+
+		Value *dataPointer = new AllocaInst(llvmReturnType, 0, "dataPointer", block);
+		Value *dataPointerAsBytePointer = new BitCastInst(dataPointer, PointerType::getUnqual(IntegerType::get(module->getContext(), 8)), "dataBytePointer", block);
+
+		size_t argByteOffset = 0;
+		for (auto arg : args)
+		{
+			Value *argPointer        = VuoCompilerCodeGenUtilities::generatePointerToValue(block, arg);
+			Value *offsetValue       = ConstantInt::get(module->getContext(), APInt(64, argByteOffset));
+			Value *offsetDataPointer = GetElementPtrInst::Create(nullptr, dataPointerAsBytePointer, offsetValue, "", block);
+			size_t argByteCount      = module->getDataLayout().getTypeStoreSize(arg->getType());
+			size_t copyByteCount     = max(argByteCount, argByteCount - (dataByteCount - (argByteOffset + argByteCount)));
+			VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, argPointer, offsetDataPointer, copyByteCount);
+			argByteOffset += argByteCount;
+		}
+
+		return dataPointer;
+	}
+}
+
+/**
  * Generates a call to any of the API functions for the type that takes a value of the type as its only argument.
+ *
+ * `arg` should be `portContext->data`.
  *
  * @throw VuoCompilerException `arg` couldn't be converted to `sourceFunction`'s parameter type.
  */
 Value * VuoCompilerType::generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction)
 {
 	Function *function = declareFunctionInModule(module, sourceFunction);
-
-	Value *secondArgument = NULL;
-	Value **secondArgumentIfNeeded = (function->getFunctionType()->getNumParams() == 2 ? &secondArgument : NULL);
-	arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, function, 0, secondArgumentIfNeeded, module, block);
-
-	vector<Value *> args;
-	args.push_back(arg);
-	if (secondArgument)
-		args.push_back(secondArgument);
+	vector<Value *> args = convertPortDataToArgs(module, block, arg, sourceFunction->getFunctionType(), 0, false);
 	return CallInst::Create(function, args, "", block);
 }
 
 /**
- * Returns the LLVM type for this Vuo type.
+ * Returns this type's storage size in bytes.
  */
-Type * VuoCompilerType::getType(void)
+size_t VuoCompilerType::getSize(Module *module)
 {
-	return llvmType;
+	Type *type = llvmReturnType;
+	if (isReturnPassedAsArgument)
+		type = static_cast<PointerType *>(llvmReturnType)->getElementType();
+
+	size_t size = module->getDataLayout().getTypeStoreSize(type);
+	return size;
 }
 
 /**
- * Returns the LLVM type for this Vuo type when it appears as a function parameter.
- *
- * This is needed, for example, for struct parameters with the "byval" attribute.
+ * Casts a `void *` to a pointer to this type's storage.
  */
-Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
+Value * VuoCompilerType::convertToPortData(BasicBlock *block, Value *voidPointer)
 {
-	*secondType = (getJsonFunction->getFunctionType()->getNumParams() == 2 ? getJsonFunction->getFunctionType()->getParamType(1) : NULL);
-	return getJsonFunction->getFunctionType()->getParamType(0);
+	Type *type = PointerType::getUnqual(llvmReturnType);
+	if (isReturnPassedAsArgument)
+		type = llvmReturnType;
+
+	return new BitCastInst(voidPointer, type, "", block);
+}
+
+/**
+ * Returns true if this type is itself reference-counted,
+ * or may have structure members that are reference-counted.
+ */
+bool VuoCompilerType::isRetainOrReleaseNeeded()
+{
+	return llvmReturnType->isPointerTy() || llvmReturnType->isStructTy();
+}
+
+/**
+ * Returns the LLVM type(s) for when this Vuo type is passed to a function.
+ */
+vector<Type *> VuoCompilerType::getFunctionParameterTypes(void)
+{
+	vector<Type *> types;
+	types.push_back(llvmArgumentType);
+	if (llvmSecondArgumentType)
+		types.push_back(llvmSecondArgumentType);
+	return types;
+}
+
+/**
+ * Returns the LLVM type for when a pointer to this Vuo type is passed to a function.
+ */
+PointerType * VuoCompilerType::getFunctionParameterPointerType(void)
+{
+	return PointerType::getUnqual(llvmReturnType);
 }
 
 /**
@@ -458,9 +638,25 @@ Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
  *
  * This is needed, for example, for struct parameters with the "byval" attribute.
  */
-AttributeSet VuoCompilerType::getFunctionParameterAttributes(void)
+AttributeList VuoCompilerType::getFunctionAttributes(void)
 {
-	return getJsonFunction->getAttributes().getParamAttributes(1);
+	return getJsonFunction->getAttributes();
+}
+
+/**
+ * Copies the LLVM attributes for this Vuo type as a function parameter onto the parameter(s) of @a dstFunction.
+ */
+void VuoCompilerType::copyFunctionParameterAttributes(Function *dstFunction)
+{
+	VuoCompilerCodeGenUtilities::copyParameterAttributes(getJsonFunction, dstFunction);
+}
+
+/**
+ * Copies the LLVM attributes for this Vuo type as a function parameter onto the parameter(s) of @a dstCall.
+ */
+void VuoCompilerType::copyFunctionParameterAttributes(Module *module, CallInst *dstCall)
+{
+	VuoCompilerCodeGenUtilities::copyParameterAttributes(module, getJsonFunction, dstCall);
 }
 
 /**

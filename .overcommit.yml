@@ -20,10 +20,8 @@ PreCommit:
         description: 'Check spelling'
         required_executable: codespell
         flags:
-            - --check-hidden
-            - --check-filenames
-            - --builtin
-            - clear,rare,informal,code,names,en-GB_to_en-US
+            - --config
+            - .codespellrc
         exclude:
             - translation/*_de.ts
             - translation/*_es.ts

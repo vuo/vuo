@@ -2,7 +2,7 @@
  * @file
  * VuoCocoa header.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,16 +11,8 @@
 
 #if defined(__OBJC__) || defined(DOXYGEN)
 
-#ifdef NS_RETURNS_INNER_POINTER
-	#undef NS_RETURNS_INNER_POINTER
-#endif
-/// Disable NS_RETURNS_INNER_POINTER (new in Mac OS 10.10's system headers), since Clang 3.2 doesn't support it.
-/// https://b33p.net/kosada/node/9140
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#import <Cocoa/Cocoa.h>
-#undef NS_RETURNS_INNER_POINTER
+#include "VuoMacOSSDKWorkaround.h"
+#import <AppKit/AppKit.h>
 
 /// @{ Stub.
 #define VuoRunner void

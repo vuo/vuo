@@ -1,6 +1,8 @@
 VuoTest(NAME TestCompilingAndLinking
 	SOURCE TestCompilingAndLinking.cc
-	RESOURCE_LOCK COMPILER
+
+	# This test modifies shared caches, which can trip up other tests.
+	RUN_SERIAL ON
 )
 target_link_libraries(TestCompilingAndLinking
 	PRIVATE

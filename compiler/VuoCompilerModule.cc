@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerModule implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -19,6 +19,7 @@
  * as a pseudo compiler detail class of the given VuoModule.
  */
 VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
+	: compatibleTargets(nullptr)
 {
 #if VUO_PRO
 	init_Pro();
@@ -120,7 +121,7 @@ void VuoCompilerModule::parseMetadata(void)
 	base->setKeywords(VuoJsonUtilities::parseArrayOfStrings(moduleDetails, "keywords"));
 	vector<string> dependenciesVector = VuoJsonUtilities::parseArrayOfStrings(moduleDetails, "dependencies");
 	dependencies = set<string>(dependenciesVector.begin(), dependenciesVector.end());
-	compatibleTargets = parseTargetSet(moduleDetails, "compatibleOperatingSystems");
+	compatibleTargets = parseCompatibility(moduleDetails, "compatibility");
 }
 
 /**
@@ -128,46 +129,13 @@ void VuoCompilerModule::parseMetadata(void)
  *
  * If no such value is found, returns an unrestricted target set.
  */
-VuoCompilerTargetSet VuoCompilerModule::parseTargetSet(json_object *o, string key)
+VuoCompilerCompatibility VuoCompilerModule::parseCompatibility(json_object *o, string key)
 {
-	VuoCompilerTargetSet t;
-	json_object *operatingSystemsObject = NULL;
-	if (json_object_object_get_ex(o, key.c_str(), &operatingSystemsObject))
-	{
-		if (json_object_get_type(operatingSystemsObject) == json_type_object)
-		{
-			json_object *macosObject = NULL;
-			if (json_object_object_get_ex(operatingSystemsObject, "macosx", &macosObject))
-			{
-				t.setMinMacVersion( parseMacVersion(VuoJsonUtilities::parseString(macosObject, "min")) );
-				t.setMaxMacVersion( parseMacVersion(VuoJsonUtilities::parseString(macosObject, "max")) );
-			}
-		}
-	}
-	return t;
-}
+	json_object *compatibilityObject = nullptr;
+	if (json_object_object_get_ex(o, key.c_str(), &compatibilityObject))
+		return VuoCompilerCompatibility(compatibilityObject);
 
-/**
- * Parses a macOS version from a string.
- *
- * If the string doesn't represent a macOS version, returns @c VuoCompilerTargetSet::MacVersion_Any.
- */
-VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string version)
-{
-	if (version == "10.11")
-		return VuoCompilerTargetSet::MacVersion_10_11;
-	if (version == "10.12")
-		return VuoCompilerTargetSet::MacVersion_10_12;
-	if (version == "10.13")
-		return VuoCompilerTargetSet::MacVersion_10_13;
-	if (version == "10.14")
-		return VuoCompilerTargetSet::MacVersion_10_14;
-	if (version == "10.15")
-		return VuoCompilerTargetSet::MacVersion_10_15;
-	if (version == "11.0")
-		return VuoCompilerTargetSet::MacVersion_11_0;
-
-	return VuoCompilerTargetSet::MacVersion_Any;
+	return VuoCompilerCompatibility(nullptr);
 }
 
 /**
@@ -280,7 +248,7 @@ string VuoCompilerModule::getDependencyName(void)
 /**
  * Returns the set of targets (operating system versions) with which this module is compatible.
  */
-VuoCompilerTargetSet VuoCompilerModule::getCompatibleTargets(void)
+VuoCompilerCompatibility VuoCompilerModule::getCompatibleTargets(void)
 {
 	return compatibleTargets;
 }

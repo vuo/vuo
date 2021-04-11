@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -44,7 +44,7 @@ private:
 	static Value * generateTypeCastFromPointerToFloatingPoint(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static Value * generateTypeCastFromLoweredTypeToStruct(BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static Value * generateTypeCastFromLoweredTypeToVector(BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
-	static void generateRetainOrReleaseCall(Module *module, BasicBlock *block, Value *argument, bool isRetain);
+	static Value * generateTypeCastFromLoweredTypeToArray(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 
 	static Function * getNodeFunction(Module *module, string moduleKey, string functionName, bool hasCompositionStateArg, bool hasInstanceDataArg, bool hasInstanceDataReturn, bool hasEventArgs,
 									  Type *instanceDataType,
@@ -58,8 +58,6 @@ private:
 	static Function * getVuoReleaseFunction(Module *module);
 
 	static Value * generateStderr(Module *module, BasicBlock *block);
-
-	static bool isParameterPassedByValue(Function *function, int parameterIndex);
 
 public:
 	static PointerType * getDispatchSemaphoreType(Module *module);
@@ -94,13 +92,12 @@ public:
 
 	static Value * generateCreateDispatchTime(Module *module, BasicBlock *block, Value *deltaValue);
 
-	static Value * generateCreatePortContext(Module *module, BasicBlock *block, Type *dataType, bool isTrigger, std::string triggerQueueName);
+	static Value * generateCreatePortContext(Module *module, BasicBlock *block, VuoCompilerType *dataType, bool isTrigger, std::string triggerQueueName);
 	static void generateSetPortContextEvent(Module *module, BasicBlock *block, Value *portContextValue, Value *eventValue);
-	static void generateSetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Value *dataValue);
+	static void generateSetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Value *dataValue, VuoCompilerType *dataType);
 	static void generateSetPortContextTriggerFunction(Module *module, BasicBlock *block, Value *portContextValue, Value *triggerFunctionValue);
 	static Value * generateGetPortContextEvent(Module *module, BasicBlock *block, Value *portContextValue);
-	static Value * generateGetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Type *dataType);
-	static Value * generateGetPortContextDataVariable(Module *module, BasicBlock *block, Value *portContextValue, Type *dataType);
+	static Value * generateGetPortContextDataVariable(Module *module, BasicBlock *block, Value *portContextValue, VuoCompilerType *dataType);
 	static Value * generateGetPortContextDataVariableAsVoidPointer(Module *module, BasicBlock *block, Value *portContextValue);
 	static Value * generateGetPortContextTriggerQueue(Module *module, BasicBlock *block, Value *portContextValue);
 	static Value * generateGetPortContextTriggerSemaphore(Module *module, BasicBlock *block, Value *portContextValue);
@@ -162,12 +159,15 @@ public:
 	static Value * generateStringConcatenation(Module *module, BasicBlock *block, vector<Value *> stringsToConcatenate, VuoCompilerConstantsCache *constantsCache);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, int elementCount);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, Value *elementCountValue);
+	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, size_t bytes);
+	static void generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, size_t bytes);
 	static Value * generateTypeCast(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static void generateAnnotation(Module *module, BasicBlock *block, Value *value, string annotation, string fileName, unsigned int lineNumber, VuoCompilerConstantsCache *constantsCache);
 	static void generateModuleMetadata(Module *module, string metadata, string moduleKey);
 	static void generateRegisterCall(Module *module, BasicBlock *block, Value *argument, Function *freeFunction);
 	static void generateRetainCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateReleaseCall(Module *module, BasicBlock *block, Value *argument);
+	static void generateRetainOrReleaseCall(Module *module, BasicBlock *block, Value *argument, bool isRetain);
 	static bool isRetainOrReleaseNeeded(Type *type);
 	static void generateFreeCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateJsonObjectPut(Module *module, BasicBlock *block, Value *jsonObjectValue);
@@ -216,6 +216,7 @@ public:
 	static Function * getFprintfFunction(Module *module);
 	static Function * getPutsFunction(Module *module);
 	static Function * getMallocFunction(Module *module);
+	static Function * getMemcpyFunction(Module *module);
 	static Function * getFreeFunction(Module *module);
 	static Function * getAnnotateFunction(Module *module);
 	static Function * getJsonObjectPutFunction(Module *module);
@@ -257,14 +258,12 @@ public:
 	static Function * getCompositionSetPublishedInputPortValueFunction(Module *module);
 	static Function * getSetPublishedInputPortValueFunction(Module *module);
 
-	static Type * getParameterTypeBeforeLowering(Function *function, Module *module, string typeName);
-	static Value * unlowerArgument(VuoCompilerType *unloweredVuoType, Function *function, int parameterIndex, Module *module, BasicBlock *block);
-	static Value * convertArgumentToParameterType(Value *argument, Function *function, int parameterIndex, Value **secondArgument, Module *module, BasicBlock *block);
-	static Value * convertArgumentToParameterType(Value *argument, FunctionType *functionType, int parameterIndex, bool isPassedByValue, Value **secondArgument, Module *module, BasicBlock *block);
 	static Value * callFunctionWithStructReturn(Function *function, vector<Value *> args, BasicBlock *block);
 	static bool isFunctionReturningStructViaParameter(Function *function);
+	static void copyParameterAttributes(Function *srcFunction, Function *dstFunction);
+	static void copyParameterAttributes(Module *module, Function *srcFunction, CallInst *dstCall);
+	static void copyParameterAttributes(Module *module, const AttributeList &srcAttributes, size_t srcStartParam, size_t srcNumParams, Function *dstFunction, size_t dstStartParam);
+	static void copyParameterAttributes(Module *module, const AttributeList &srcAttributes, size_t srcStartParam, size_t srcNumParams, CallInst *dstCall, size_t dstStartParam);
 	static FunctionType * getFunctionType(Module *module, VuoType *paramType);
 	static Value * getArgumentAtIndex(Function *function, size_t index);
-
-	static AttributeSet copyAttributesToIndex(AttributeSet attributesToCopy, int destinationIndex);
 };

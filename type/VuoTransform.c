@@ -2,7 +2,7 @@
  * @file
  * VuoTransform implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -664,7 +664,7 @@ char * VuoTransform_getSummary(const VuoTransform value)
 		return strdup("Identity transform (no change)");
 
 	if (value.type == VuoTransformTypeTargeted)
-		return VuoText_format("<div>Position (%g, %g, %g)</div><div>Target (%g, %g, %g)</div><div>Up (%g, %g, %g)</div>",
+		return VuoText_format("<div>Position (%g, %g, %g)</div>\n<div>Target (%g, %g, %g)</div>\n<div>Up (%g, %g, %g)</div>",
 							  value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
 
 	char *rotation;
@@ -678,7 +678,7 @@ char * VuoTransform_getSummary(const VuoTransform value)
 								  r.x, r.y, r.z);
 	}
 
-	char *valueAsString = VuoText_format("<div>Translation (%g, %g, %g)</div><div>Rotation %s</div><div>Scale (%g, %g, %g)</div>",
+	char *valueAsString = VuoText_format("<div>Translation (%g, %g, %g)</div>\n<div>Rotation %s</div>\n<div>Scale (%g, %g, %g)</div>",
 										 value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
 	free(rotation);
 	return valueAsString;

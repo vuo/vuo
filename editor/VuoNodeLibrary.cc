@@ -2,7 +2,7 @@
  * @file
  * VuoNodeLibrary implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -879,11 +879,17 @@ void VuoNodeLibrary::showEvent(QShowEvent *event)
 	// indirectly calls this, but putting the re-sizing call within prepareAndMakeVisible() has no effect.
 	if (preferredNodeLibraryWidth >= 0)
 	{
-		setMinimumWidth(preferredNodeLibraryWidth); // Allow some wiggle room so that the docking area doesn't lose its border.
-		setMaximumWidth(minimumWidth()+1);
-		updateGeometry();
+		setMinimumWidth(preferredNodeLibraryWidth+1); // Prevents the docked library from losing its draggable border.
+		setMinimumWidth(preferredNodeLibraryWidth);
+
+	}
+	else
+	{
+		setMinimumWidth(minimumWidth()+1); // Prevents the docked library from losing its draggable border.
+		setMinimumWidth(minimumWidth()-1);
 	}
 
+	updateGeometry();
 	updateSplitterPosition();
 
 	// The node documentation panel content width must be estimated as if the
@@ -1414,7 +1420,7 @@ void VuoNodeLibrary::updateColor(bool isDark)
 		setWindowFlags(windowFlags() | Qt::Dialog);
 
 		id nsView = (id)winId();
-		id nsWindow = objc_msgSend(nsView, sel_getUid("window"));
+		id nsWindow = ((id (*)(id, SEL))objc_msgSend)(nsView, sel_getUid("window"));
 		unsigned long styleMask = 0;
 		styleMask |= 1 << 0; // NSWindowStyleMaskTitled
 		styleMask |= 1 << 1; // NSWindowStyleMaskClosable
@@ -1422,10 +1428,10 @@ void VuoNodeLibrary::updateColor(bool isDark)
 		styleMask |= 1 << 4; // NSWindowStyleMaskUtilityWindow
 		if (isDark)
 			styleMask |= 1 << 13; // NSWindowStyleMaskHUDWindow
-		objc_msgSend(nsWindow, sel_getUid("setStyleMask:"), styleMask);
+		((void (*)(id, SEL, unsigned long))objc_msgSend)(nsWindow, sel_getUid("setStyleMask:"), styleMask);
 
 		// https://b33p.net/kosada/node/15082
-		objc_msgSend(nsWindow, sel_getUid("setMovableByWindowBackground:"), false);
+		((void (*)(id, SEL, BOOL))objc_msgSend)(nsWindow, sel_getUid("setMovableByWindowBackground:"), NO);
 #endif
 	}
 }

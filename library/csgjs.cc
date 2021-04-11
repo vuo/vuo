@@ -134,14 +134,6 @@ inline static csgjs_vector cross(const csgjs_vector & a, const csgjs_vector & b)
 
 // Vertex implementation
 
-// Invert all orientation-specific data (e.g. vertex normal). Called when the
-// orientation of a polygon is flipped.
-inline static csgjs_vertex flip(csgjs_vertex v)
-{
-	v.normal = negate(v.normal);
-	return v;
-}
-
 // Create a new vertex between this vertex and `other` by linearly
 // interpolating all properties using a parameter of `t`. Subclasses should
 // override this to interpolate additional properties.

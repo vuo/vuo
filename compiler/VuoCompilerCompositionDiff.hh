@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCompositionDiff interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -23,7 +23,7 @@ public:
 	string diff(const string &oldCompositionGraphvizDeclaration, VuoCompilerComposition *newComposition, VuoCompiler *compiler);
 
 	void addNodeReplacement(const string &compositionIdentifier, const string &oldNodeIdentifier, const string &newNodeIdentifier);
-	void addNodeReplacement(const string &compositionIdentifier, const string &oldNodeIdentifier, const string &newNodeIdentifier, const map<string, string> &oldAndNewPortIdentifiers);
+	void addNodeReplacement(const string &compositionIdentifier, const string &oldNodeIdentifier, const string &newNodeIdentifier, const map<string, string> &oldAndNewPortNames);
 	void addNodeClassReplacement(VuoCompilerNodeClass *oldNodeClass, VuoCompilerNodeClass *newNodeClass);
 	void addModuleReplacement(const string &moduleKey);
 	void addRefactoring(const string &compositionIdentifier, const set<VuoCompilerNode *> &nodesMoved, VuoCompilerNode *subcompositionMovedTo);
@@ -33,7 +33,7 @@ private:
 	void diff(VuoCompilerComposition *oldComposition, VuoCompilerComposition *newComposition, const string &parentCompositionIdentifier, const string &parentCompositionPath, const string &unqualifiedCompositionIdentifier, VuoCompiler *compiler, json_object *diffJson);
 
 	void addNodeReplacementInTopLevelComposition(const string &oldNodeIdentifier, const string &newNodeIdentifier);
-	void addNodeReplacementInTopLevelComposition(const string &oldNodeIdentifier, const string &newNodeIdentifier, const map<string, string> &oldAndNewPortIdentifiers);
+	void addNodeReplacementInTopLevelComposition(const string &oldNodeIdentifier, const string &newNodeIdentifier, const map<string, string> &oldAndNewPortNames);
 	bool isNodeBeingReplaced(const string &compositionIdentifier, const string &oldNodeIdentifier) const;
 	bool isNodeReplacingAnother(const string &compositionIdentifier, const string &newNodeIdentifier) const;
 	bool isNodeBeingRefactored(const string &parentCompositionIdentifier, const string &compositionIdentifier, const string &nodeIdentifier) const;
@@ -47,8 +47,8 @@ private:
 		string compositionIdentifier;  ///< The identifier of the (sub)composition in which a node is being replaced.
 		string oldNodeIdentifier;  ///< The Graphviz identifier of the original node.
 		string newNodeIdentifier;  ///< The Graphviz identifier of the replacement node.
-		map<string, string> oldAndNewPortIdentifiers;  ///< A mapping of equivalent port class names from the original node to the replacement node.
-		bool shouldMapIdenticalPortIdentifiers;  ///< If true, ports with identical names in original and replacement node are automatically added to the mapping.
+		map<string, string> oldAndNewPortNames;  ///< A mapping of equivalent port class names from the original node to the replacement node.
+		bool shouldMapIdenticalPortNames;  ///< If true, ports with identical names in original and replacement node are automatically added to the mapping.
 	};
 	friend bool operator<(const NodeReplacement &lhs, const NodeReplacement &rhs);
 
@@ -59,7 +59,7 @@ private:
 	{
 	public:
 		string nodeClassName;
-		map<string, string> oldAndNewPortIdentifiers;
+		map<string, string> oldAndNewPortNames;
 		string oldSubcompositionSourceCode;
 	};
 	friend bool operator<(const NodeClassReplacement &lhs, const NodeClassReplacement &rhs);

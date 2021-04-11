@@ -7,10 +7,6 @@
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-
 #include "module.h"
 #include <AppKit/AppKit.h>
 

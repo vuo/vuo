@@ -64,6 +64,19 @@ hr {
 	}
 }
 
+.example .example-title {
+	background-color: rgb(238,232,213); /* solarized base2 */
+	padding: 0.8em;
+}
+.example .example-contents pre {
+	font-family: 'Monaco', monospace;
+	font-size: 10pt;
+	margin: 0;
+}
+.example + .example-break {
+	display: none;
+}
+
 /* Previous/Next buttons */
 .navheader tr:last-child td:first-child a,
 .navheader tr:last-child td:last-child a,

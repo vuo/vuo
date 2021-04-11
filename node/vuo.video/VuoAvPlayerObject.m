@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -185,12 +185,15 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 	if (self)
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
 		__block CVReturn ret;
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 			ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
 		});
 		CGLReleasePixelFormat(pf);
+#pragma clang diagnostic pop
 		if (ret != kCVReturnSuccess)
 		{
 			VUserLog("Error: Couldn't create texture cache: %d", ret);
@@ -244,7 +247,10 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	avDecoderCppObject = NULL;
 
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CVOpenGLTextureCacheRelease(textureCache);
+#pragma clang diagnostic pop
 	});
 
 	[self clearFrameQueue];
@@ -291,8 +297,10 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	}
 
 
+	NSArray *videoTracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+	if (videoTracks.count)
 	{
-		AVAssetTrack *videoTrack = [asset tracksWithMediaType:AVMediaTypeVideo][0];
+		AVAssetTrack *videoTrack = videoTracks[0];
 		CMFormatDescriptionRef desc = (CMFormatDescriptionRef)videoTrack.formatDescriptions[0];
 		CMVideoCodecType codec = CMFormatDescriptionGetMediaSubType(desc);
 		if (codec == 'ap4h'  // AVVideoCodecTypeAppleProRes4444
@@ -938,6 +946,8 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 				return false;
 			}
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			__block CVOpenGLTextureRef texture;
 			__block CVReturn ret;
 			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
@@ -965,6 +975,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 				CVOpenGLTextureCacheFlush(textureCache, 0);
 			});
+#pragma clang diagnostic pop
 
 			CMSampleBufferInvalidate(sampleBuffer);
 			CFRelease(sampleBuffer);

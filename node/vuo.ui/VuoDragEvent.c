@@ -2,7 +2,7 @@
  * @file
  * VuoDragEvent implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -41,7 +41,7 @@ VuoDragEvent VuoDragEvent_makeFromJson(json_object * js)
 	return (VuoDragEvent){
 		VuoJson_getObjectValue(VuoPoint2d,     js, "position", (VuoPoint2d){0,0}),
 		VuoJson_getObjectValue(VuoList_VuoUrl, js, "urls",     NULL),
-		""};
+	};
 }
 
 /**
@@ -75,7 +75,7 @@ char *VuoDragEvent_getSummary(const VuoDragEvent value)
  */
 VuoDragEvent VuoDragEvent_make(const VuoPoint2d position, const VuoList_VuoUrl urls)
 {
-	return (VuoDragEvent){position, urls, ""};
+    return (VuoDragEvent){position, urls};
 }
 
 /**

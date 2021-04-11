@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeArgumentClass interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -21,7 +21,6 @@
 class VuoCompilerNodeArgumentClass : public VuoBaseDetail<VuoPortClass>
 {
 protected:
-	Type *type; ///< The parameter's type.
 	bool inEventFunction; ///< Does this parameter appear in the node's event function?
 	size_t indexInEventFunction; ///< Where this parameter appears in the node's event function's parameter list.
 	bool inInitFunction; ///< Does this parameter appear in the node's init function?
@@ -33,12 +32,11 @@ protected:
 	bool inCallbackStopFunction; ///< Does this parameter appear in the node's callback stop function?
 	size_t indexInCallbackStopFunction; ///< Where this parameter appears in the node's callback stop function's parameter list.
 
-	VuoCompilerNodeArgumentClass(string name, VuoPortClass::PortType portType, Type *type);
+	VuoCompilerNodeArgumentClass(string name, VuoPortClass::PortType portType);
 
 public:
 	virtual ~VuoCompilerNodeArgumentClass(void);  ///< to make this class dynamic_cast-able
 
-	virtual Type * getType(void);
 	bool isInEventFunction(void);
 	size_t getIndexInEventFunction(void);
 	void setIndexInEventFunction(size_t indexInEventFunction);

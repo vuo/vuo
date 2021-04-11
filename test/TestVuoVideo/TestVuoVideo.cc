@@ -2,7 +2,7 @@
  * @file
  * TestVuoVideo interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -28,13 +28,13 @@ public:
 	{
 		// +[NSAutoreleasePool new];
 		Class poolClass = (Class)objc_getClass("NSAutoreleasePool");
-		pool = objc_msgSend((id)poolClass, sel_getUid("new"));
+		pool = ((id (*)(id, SEL))objc_msgSend)((id)poolClass, sel_getUid("new"));
 	}
 
 	~AutoreleasePool()
 	{
 		// -[NSAutoreleasePool drain];
-		objc_msgSend(pool, sel_getUid("drain"));
+		((void (*)(id, SEL))objc_msgSend)(pool, sel_getUid("drain"));
 	}
 
 private:
@@ -80,7 +80,7 @@ private slots:
 	void createData(int optimize)
 	{
 		QTest::addColumn<QString>("url");
-		QTest::addColumn<double>("expectedDuration");	// in seconds
+		QTest::addColumn<double>("expectedDuration");  // in seconds, or 0 if the movie file isn't expected to load at all.
 		QTest::addColumn<int>("expectedFrameCount");
 		QTest::addColumn<int>("expectedPixelsWide");
 		QTest::addColumn<int>("expectedPixelsHigh");
@@ -115,6 +115,7 @@ private slots:
 		QTest::newRow(VuoText_format("QuickTime - FFmpeg - Hap5 opt=%d",optimize))				<< "/MovieGauntlet/Hap/crawling-ffmpeg-Hap5.mov"														<<  10.5	<<  315	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - QT7 - HapY opt=%d",optimize))					<< "/MovieGauntlet/Hap/crawling-qt7-HapY.mov"															<<  10.5	<<  315	<<  320 <<  240	<<  0 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - Hap Sample Pack - Hap1 opt=%d",optimize))     << "/MovieGauntlet/Hap/(other)/Hap Sample Pack One 1080p/Movies/Gadane Fega Hap HD.mov"                 <<   8.0    <<  240 << 1920 << 1080 <<  2   << optimize;
+		QTest::newRow(VuoText_format("no video track - AIFF opt=%d",optimize))                  << "/System/Library/Sounds/Sosumi.aiff"                                                                 <<   0.     <<    0 <<    0 <<    0 <<  0   << optimize;
 
 		// Disabled for now since the server is often down.
 //		QTest::newRow(VuoText_format("RTSP - H.264 opt=%d",optimize))                           << "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov"                                               << 6627.56  <<  0 <<  0 <<  0 <<  0   << optimize;
@@ -137,17 +138,19 @@ private slots:
 		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 
-		// QBENCHMARK
+		QBENCHMARK
 		{
-		double duration;
-		VuoVideo decoder = VuoVideo_make(url.toUtf8().data(), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
-		QVERIFY(decoder != NULL);
-		VuoRetain(decoder);
-		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(decoder), true, MAX_VIDEO_LOAD_TIME);
-		duration = VuoVideo_getDuration(decoder);
-		QVERIFY(duration);
-		VuoRelease(decoder);
-		QVERIFY2(fabs(duration - expectedDuration) < 1, QString("expected %1, got %2").arg(expectedDuration).arg(duration).toUtf8().data());
+			double duration;
+			VuoVideo decoder = VuoVideo_make(VuoText_make(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
+			QVERIFY(decoder != NULL);
+			VuoRetain(decoder);
+			if (expectedDuration > 0)
+				QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(decoder), true, MAX_VIDEO_LOAD_TIME);
+			duration = VuoVideo_getDuration(decoder);
+			if (expectedDuration > 0)
+				QVERIFY(duration);
+			VuoRelease(decoder);
+			QVERIFY2(fabs(duration - expectedDuration) < 1, QString("expected %1, got %2").arg(expectedDuration).arg(duration).toUtf8().data());
 		}
 	}
 
@@ -177,10 +180,11 @@ private slots:
 
 		warnedAboutSlowFlip = false;
 
-		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
+		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		QVERIFY(m != NULL);
 		VuoRetain(m);
-		QTRY_COMPARE_WITH_TIMEOUT( VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+		if (expectedFrameCount > 0)
+			QTRY_COMPARE_WITH_TIMEOUT( VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
 		/// if the video has an audio channel that contains nothing, don't try to read it since
 		/// otherwise the decoder will try to sync video frames with it which can be slower and
@@ -260,7 +264,9 @@ private slots:
 
 		QBENCHMARK
 		{
-			QVERIFY(VuoVideo_seekToSecond(m, 0));
+			bool seeked = VuoVideo_seekToSecond(m, 0);
+			if (expectedFrameCount > 0)
+				QVERIFY(seeked);
 			videoFrameCount = 0;
 
 			do
@@ -280,14 +286,17 @@ private slots:
 			} while( gotVideo );
 
 			/// AvFoundation and Ffmpeg don't sync exactly with frame counts, but they're very close.  Test that the frame count is approximately correct.
-			QVERIFY2(abs(expectedFrameCount - videoFrameCount) < expectedFrameCount * .03, QString("expected ~%1 frames, got %2").arg(expectedFrameCount).arg(videoFrameCount).toUtf8().data());
+			QVERIFY2(abs(expectedFrameCount - videoFrameCount) <= expectedFrameCount * .03, QString("expected ~%1 frames, got %2").arg(expectedFrameCount).arg(videoFrameCount).toUtf8().data());
 		}
 
-		QCOMPARE(lastImage->pixelsWide, (unsigned long)expectedPixelsWide);
-		QCOMPARE(lastImage->pixelsHigh, (unsigned long)expectedPixelsHigh);
-
-		QVERIFY(!VuoImage_isEmpty(lastImage));
-		VuoRelease(lastImage);
+		QCOMPARE((bool)lastImage, (bool)expectedPixelsWide);
+		if (lastImage)
+		{
+			QCOMPARE(lastImage->pixelsWide, (unsigned long)expectedPixelsWide);
+			QCOMPARE(lastImage->pixelsHigh, (unsigned long)expectedPixelsHigh);
+			QVERIFY(!VuoImage_isEmpty(lastImage));
+			VuoRelease(lastImage);
+		}
 
 		VuoRelease(m);
 
@@ -309,6 +318,8 @@ private slots:
 	{
 		QFETCH(QString, url);
 		QFETCH(int, optimize);
+		QFETCH(int, expectedFrameCount);
+		QFETCH(int, expectedPixelsWide);
 		// QFETCH(int, expectedAudioChannels);
 		VUserLog("[%s] optimize=%s",url.toUtf8().data(), (optimize == AVFOUNDATION_OPTIMIZED ? "AVFoundation" : "FFMPEG"));
 
@@ -319,18 +330,19 @@ private slots:
 
 		warnedAboutSlowFlip = false;
 
-		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
+		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		VuoRetain(m);
 		QVERIFY(m != NULL);
 
 		// when seeking around with VuoVideo_getFrameAtSecond it's faster to ignore audio entirely.
 		VuoVideo_setPlaybackRate(m, 0);
 
-		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+		if (expectedFrameCount > 0)
+			QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
 		double duration = VuoVideo_getDuration(m);
 
-		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
+		VuoVideoFrame videoFrame = {nullptr, 0, 0};
 		QBENCHMARK
 		{
 			AutoreleasePool pool;
@@ -338,12 +350,15 @@ private slots:
 			if(videoFrame.image != NULL)
 				VuoRelease(videoFrame.image);
 			double frameTime = (duration - .5) * (double)rand()/(double)RAND_MAX;
-			QVERIFY(VuoVideo_getFrameAtSecond(m, frameTime, &videoFrame));
-			VuoRetain(videoFrame.image);
+			bool gotFrame    = VuoVideo_getFrameAtSecond(m, frameTime, &videoFrame);
+			QCOMPARE(gotFrame, (bool)expectedPixelsWide);
+			if (expectedPixelsWide)
+				VuoRetain(videoFrame.image);
 		}
 
-		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
-		VuoRelease(videoFrame.image);
+		QCOMPARE(!VuoImage_isEmpty(videoFrame.image), (bool)expectedPixelsWide);
+		if (expectedPixelsWide)
+			VuoRelease(videoFrame.image);
 		VuoRelease(m);
 
 		QVERIFY(!warnedAboutSlowFlip);
@@ -362,6 +377,8 @@ private slots:
 	void testSequentialDecodePerformance()
 	{
 		QFETCH(QString, url);
+		QFETCH(int, expectedFrameCount);
+		QFETCH(int, expectedPixelsWide);
 
 		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
@@ -377,17 +394,18 @@ private slots:
 
 		warnedAboutSlowFlip = false;
 
-		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);
 
 		QVERIFY(m != NULL);
 
 		VuoVideo_setPlaybackRate(m, 0);
 
-		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+		if (expectedFrameCount > 0)
+			QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
 		double duration = VuoVideo_getDuration(m) - .5;
-		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
+		VuoVideoFrame videoFrame = {nullptr, 0, 0};
 
 		int64_t max = duration * 1000;
 
@@ -419,8 +437,9 @@ private slots:
 					.toUtf8().data());
 		}
 
-		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
-		VuoRelease(videoFrame.image);
+		QCOMPARE(!VuoImage_isEmpty(videoFrame.image), (bool)expectedPixelsWide);
+		if (expectedPixelsWide)
+			VuoRelease(videoFrame.image);
 		VuoRelease(m);
 
 		QVERIFY(!warnedAboutSlowFlip);
@@ -439,6 +458,8 @@ private slots:
 	void testDecodeFirstFrame()
 	{
 		QFETCH(QString, url);
+		QFETCH(int, expectedFrameCount);
+		QFETCH(int, expectedPixelsWide);
 
 		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
@@ -452,19 +473,21 @@ private slots:
 		if (url.contains("/out-sd.mov"))
 			QSKIP("This movie starts at PTS 0.083000");
 
-		VuoVideo video = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoVideo video = VuoVideo_make(VuoText_make(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(video);
 		QVERIFY(video);
 
 		VuoVideo_setPlaybackRate(video, 0);
 
-		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(video), true, MAX_VIDEO_LOAD_TIME);
+		if (expectedFrameCount > 0)
+			QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(video), true, MAX_VIDEO_LOAD_TIME);
 
 		VuoVideoFrame videoFrame;
-		QVERIFY(VuoVideo_getFrameAtSecond(video, 0, &videoFrame));
-		QVERIFY(videoFrame.image);
+		QCOMPARE(VuoVideo_getFrameAtSecond(video, 0, &videoFrame), (bool)expectedPixelsWide);
+		if (expectedPixelsWide)
+			QVERIFY(videoFrame.image);
 
-		if (!isNetworkStream(url))
+		if (!isNetworkStream(url) && expectedFrameCount)
 			QVERIFY2(VuoReal_areEqual(videoFrame.timestamp, 0),
 				QString("Requested timestamp 0 but actually got %1").arg(videoFrame.timestamp).toUtf8().data());
 
@@ -484,29 +507,34 @@ private slots:
 	void testDecodeOutOfBoundsFrame()
 	{
 		QFETCH(QString, url);
+		QFETCH(int, expectedFrameCount);
 
 		if (!exists(url))
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data());
 		if (isNetworkStream(url))
 			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
-		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);
 		QVERIFY(m != NULL);
 
 		VuoVideo_setPlaybackRate(m, 0);
 
-		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+		if (expectedFrameCount > 0)
+			QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
 		double duration = VuoVideo_getDuration(m);
 
-		VuoVideoFrame videoFrame = { NULL, 0, 0, "" };
+		VuoVideoFrame videoFrame = {nullptr, 0, 0};
 
-		QVERIFY2( VuoVideo_getFrameAtSecond(m, -1, &videoFrame), "VuoVideo_getFrameAtSecond(-1) returned false.");
-		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(-1) returned null image" );
+		if (expectedFrameCount)
+		{
+			QVERIFY2(VuoVideo_getFrameAtSecond(m, -1, &videoFrame), "VuoVideo_getFrameAtSecond(-1) returned false.");
+			QVERIFY2(videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(-1) returned null image");
 
-		QVERIFY2( VuoVideo_getFrameAtSecond(m, duration + 10, &videoFrame), "VuoVideo_getFrameAtSecond(duration + 10) returned false." );
-		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(duration + 10) returned null image" );
+			QVERIFY2(VuoVideo_getFrameAtSecond(m, duration + 10, &videoFrame), "VuoVideo_getFrameAtSecond(duration + 10) returned false.");
+			QVERIFY2(videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(duration + 10) returned null image");
+		}
 
 		VuoRelease(m);
 	}

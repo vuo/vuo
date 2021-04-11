@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTriggerPort interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -30,7 +30,7 @@ public:
 	void generateSignalForSemaphore(Module *module, BasicBlock *block, Value *nodeContextValue);
 	Value * generateLoadFunction(Module *module, BasicBlock *block, Value *nodeContextValue);
 	void generateStoreFunction(Module *module, BasicBlock *block, Value *nodeContextValue, Value *functionValue);
-	Value * generateLoadPreviousData(Module *module, BasicBlock *block, Value *nodeContextValue);
+	Value * generateRetrievePreviousData(Module *module, BasicBlock *block, Value *nodeContextValue);
 	void generateFreeContext(Module *module, BasicBlock *block, Function *workerFunction);
 	Value * generateCompositionStateValue(Module *module, BasicBlock *block, Function *workerFunction);
 	Value * generateDataValue(Module *module, BasicBlock *block, Function *workerFunction);
@@ -38,6 +38,5 @@ public:
 	Value * generateDataValueUpdate(Module *module, BasicBlock *block, Function *workerFunction, Value *nodeContextValue);
 	static void generateDataValueDiscardFromScheduler(Module *module, Function *function, BasicBlock *block, VuoType *dataType);
 	void generateDataValueDiscardFromWorker(Module *module, BasicBlock *block, Function *workerFunction);
-	Type * getDataType(void);
 	VuoCompilerTriggerPortClass * getClass(void);
 };

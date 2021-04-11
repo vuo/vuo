@@ -2,18 +2,14 @@
  * @file
  * TestVuoRunnerCocoa implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
-#undef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
-#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
+#include "VuoMacOSSDKWorkaround.h"
 #include <OpenGL/CGLMacro.h>
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
 #include <QuartzCore/CoreImage.h>
 #include <QuartzCore/CoreVideo.h>
 
@@ -145,7 +141,8 @@ private slots:
 
 	NSURL *url(void)
 	{
-		return [NSURL fileURLWithPath:[NSString stringWithUTF8String:(string("composition/") + QTest::currentDataTag()).c_str()]];
+		QString dataTagBeforeSpace = QString(QTest::currentDataTag()).section(' ', 0, 0);
+		return [NSURL fileURLWithPath:("composition/" + dataTagBeforeSpace).toNSString()];
 	}
 
 	NSString *compositionString(void)
@@ -181,14 +178,14 @@ private slots:
 		QTest::addColumn<QString>("className");
 		QTest::addColumn<bool>("expectedCompliance");
 
-		QTest::newRow("ImageFilter.vuo")	<< "VuoImageFilter"		<< true;
-		QTest::newRow("ImageFilter.vuo")	<< "VuoImageGenerator"	<< false;
+		QTest::newRow("ImageFilter.vuo as filter")    << "VuoImageFilter"    << true;
+		QTest::newRow("ImageFilter.vuo as generator") << "VuoImageGenerator" << false;
 
-		QTest::newRow("ImageGenerator.vuo")	<< "VuoImageFilter"		<< false;
-		QTest::newRow("ImageGenerator.vuo")	<< "VuoImageGenerator"	<< true;
+		QTest::newRow("ImageGenerator.vuo as filter")    << "VuoImageFilter"    << false;
+		QTest::newRow("ImageGenerator.vuo as generator") << "VuoImageGenerator" << true;
 
-		QTest::newRow("NoProtocol.vuo")		<< "VuoImageFilter"		<< false;
-		QTest::newRow("NoProtocol.vuo")		<< "VuoImageGenerator"	<< false;
+		QTest::newRow("NoProtocol.vuo as filter")    << "VuoImageFilter"    << false;
+		QTest::newRow("NoProtocol.vuo as generator") << "VuoImageGenerator" << false;
 	}
 	void testCanOpenComposition(void)
 	{
@@ -222,7 +219,7 @@ private slots:
 		QTest::newRow("ImageFilter.vuo")
 				<< "ImageFilter"
 				<< "An empty composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+				<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -232,7 +229,7 @@ private slots:
 		QTest::newRow("ImageFilter512.vuo")
 				<< "ImageFilter512"
 				<< "A large composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+				<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -247,9 +244,9 @@ private slots:
 			curveEasingDetails["menuItems"] = "In,Out,In + Out,Middle,";
 
 			MapOfStrings inputPortValues;
-			inputPortValues["background"] = "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
+			inputPortValues["background"] = "{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0}";
 			inputPortValues["curveEasing"] = "\"in\"";
-			inputPortValues["foreground"] = "{\"r\":0,\"g\":0,\"b\":0,\"a\":1}";
+			inputPortValues["foreground"] = "{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0}";
 			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
@@ -258,7 +255,7 @@ private slots:
 			QTest::newRow("ImageFilterWithExtraPorts.vuo")
 					<< "ImageFilter with unconnected extra ports"
 					<< "An ImageFilter with unconnected non-protocol ports."
-					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					// Disconnected published ports should have a title, type, default, and menuItems, but no other details.
@@ -275,9 +272,9 @@ private slots:
 			curveEasingDetails["menuItems"] = "In,Out,In + Out,Middle,";
 
 			MapOfStrings inputPortValues;
-			inputPortValues["background"] = "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
+			inputPortValues["background"] = "{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0}";
 			inputPortValues["curveEasing"] = "\"middle\"";
-			inputPortValues["foreground"] = "{\"r\":0,\"g\":0,\"b\":0,\"a\":1}";
+			inputPortValues["foreground"] = "{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0}";
 			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
@@ -286,7 +283,7 @@ private slots:
 			QTest::newRow("ImageFilterWithExtraPortsConnected.vuo")
 					<< "ImageFilter with connected extra ports"
 					<< "An ImageFilter with connected non-protocol ports."
-					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					<< (QList<PortAndDetails>() << PortAndDetails("curveEasing", curveEasingDetails))
@@ -319,13 +316,13 @@ private slots:
 
 			MapOfStrings inputPortValues;
 			inputPortValues["fieldOfView"] = "0.01";
-			inputPortValues["position"] = "{\"x\":0,\"y\":0,\"z\":1}";
+			inputPortValues["position"] = "{\"x\":0.0,\"y\":0.0,\"z\":1.0}";
 			inputPortValues["Palette"] = "1";
 
 			QTest::newRow("ImageFilterWithDetailCoalescing.vuo")
 					<< "ImageFilter with Detail Coalescing"
 					<< "An ImageFilter with published input ports connected to multiple internal ports each with differing details."
-					<< "Copyright © 2012–2020 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "position" << "fieldOfView" << "Palette")
 					<< QList<QString>()
 					<< (QList<PortAndDetails>()
@@ -415,10 +412,10 @@ private slots:
 		QTest::newRow("curve")		<< (void *)@"exponential";
 		QTest::newRow("curveList")	<< (void *)[NSArray arrayWithObjects:@"circular", @"quadratic", nil];
 		QTest::newRow("text")		<< (void *)@"流";
-		QTest::newRow("color")		<< (void *)blueishColor;
-		QTest::newRow("color")		<< (void *)[CIColor colorWithRed:0.1 green:0.2 blue:0.3 alpha:0.4];
-		QTest::newRow("point2d")	<< (void *)[NSValue valueWithPoint:NSMakePoint(4,2)];
-		QTest::newRow("point2d")	<< (void *)[NSValue valueWithPoint:CGPointMake(4,2)];
+		QTest::newRow("color NSColor")   << (void *)blueishColor;
+		QTest::newRow("color CIColor")   << (void *)[CIColor colorWithRed:0.1 green:0.2 blue:0.3 alpha:0.4];
+		QTest::newRow("point2d NSPoint") << (void *)[NSValue valueWithPoint:NSMakePoint(4,2)];
+		QTest::newRow("point2d CGPoint") << (void *)[NSValue valueWithPoint:CGPointMake(4,2)];
 		QTest::newRow("point3d")	<< (void *)[NSData dataWithBytes:(double[3]){42,4,2} length:sizeof(double[3])];
 	}
 	void testDataTypes(void)
@@ -426,13 +423,14 @@ private slots:
 		QFETCH(void *, data);
 		id inputData = (id)data;
 
-		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{[NSString stringWithUTF8String:QTest::currentDataTag()] : inputData}];
+		QString inputPortName = QString(QTest::currentDataTag()).section(' ', 0, 0);
+
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{[NSString stringWithUTF8String:inputPortName.toUtf8().data()] : inputData}];
 		QVERIFY(valueSetSuccessfully);
 
 		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
 		QVERIFY(outputImage);
 
-		QString inputPortName = QString(QTest::currentDataTag());
 		QString outputPortName = QString("output") + inputPortName[0].toUpper() + inputPortName.mid(1);
 		id outputData = [sharedPassthruImageFilter valueForOutputPort:[NSString stringWithUTF8String:outputPortName.toUtf8().data()]];
 //		NSLog(@" inputData: %@", inputData);
@@ -480,7 +478,7 @@ private slots:
 
 	void testImageFilterNSBitmapImageRep(void)
 	{
-		NSBitmapImageRep *bir = [[reddishImage representations] objectAtIndex:0];
+		NSBitmapImageRep *bir = (NSBitmapImageRep *)[[reddishImage representations] objectAtIndex:0];
 
 		bool valueSetSuccessfully = [sharedPassthruImageFilter setInputValues:@{@"image2":bir}];
 		QVERIFY(valueSetSuccessfully);
@@ -519,7 +517,7 @@ private slots:
 		// Create a CVPixelBufferRef.
 		CVPixelBufferRef inputCVPB;
 		{
-			NSBitmapImageRep *bir = [[reddishImage representations] objectAtIndex:0];
+			NSBitmapImageRep *bir = (NSBitmapImageRep *)[[reddishImage representations] objectAtIndex:0];
 			QVERIFY(bir);
 			// [bir bitmapData] is in RGBA format, but the CVPixelBufferRef expects BGRA.  Account for this later...
 			CVReturn createdSuccessfully = CVPixelBufferCreateWithBytes(NULL, 10, 10, kCVPixelFormatType_32BGRA, [bir bitmapData], [bir bytesPerRow], cvPixelBufferFreeCallback, NULL, nil, &inputCVPB);
@@ -551,7 +549,7 @@ private slots:
 		// Create a CVPixelBufferRef.
 		CVPixelBufferRef inputCVPB;
 		{
-			NSBitmapImageRep *bir = [[reddishImage representations] objectAtIndex:0];
+			NSBitmapImageRep *bir = (NSBitmapImageRep *)[[reddishImage representations] objectAtIndex:0];
 			QVERIFY(bir);
 
 			// [bir bitmapData] is in RGBA format, but the CVPixelBufferRef expects BGRA.
@@ -575,6 +573,8 @@ private slots:
 			QCOMPARE((long)kCVReturnSuccess, (long)createdSuccessfully);
 		}
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		// Create a CVOpenGLTexture.
 		CVOpenGLTextureCacheRef textureCache;
 		CVOpenGLTextureRef inputCVOGLT;
@@ -603,6 +603,7 @@ private slots:
 		CVPixelBufferRelease(inputCVPB);
 		CVOpenGLTextureRelease(inputCVOGLT);
 		CVOpenGLTextureCacheRelease(textureCache);
+#pragma clang diagnostic pop
 	}
 
 	void testImageFilterGLTexture2D(void)

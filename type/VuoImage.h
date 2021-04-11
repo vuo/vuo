@@ -2,7 +2,7 @@
  * @file
  * VuoImage C type definition.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -18,6 +18,7 @@ extern "C" {
 	/// https://b33p.net/kosada/node/9139
 	#define DISPATCH_RETURNS_RETAINED_BLOCK
 #endif
+#include "VuoMacOSSDKWorkaround.h"
 #include <dispatch/dispatch.h>
 
 #include "VuoBoolean.h"
@@ -81,7 +82,7 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext) __attribute__((nonnull(5)));
 VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext) __attribute__((nonnull(5)));
 VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels)) __attribute__((nonnull(1)));
-VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, unsigned int bytesPerRow, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels)) __attribute__((nonnull(1)));
+VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, unsigned int bytesPerRow, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels)) __attribute__((nonnull(1))) __attribute__((nonnull(7)));
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
 VuoImage VuoImage_makeCopy(VuoImage image, bool flip, unsigned int forcePixelsWide, unsigned int forcePixelsHigh, bool forceAlpha);
 VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image);

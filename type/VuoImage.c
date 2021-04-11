@@ -2,7 +2,7 @@
  * @file
  * VuoImage implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -186,12 +186,6 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat
  */
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
-	if (!freeCallback)
-	{
-		VUserLog("Error: freeCallback may not be NULL.");
-		return NULL;
-	}
-
 	if (!glTextureName || !pixelsWide || !pixelsHigh)
 		return NULL;
 
@@ -266,20 +260,8 @@ VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsign
  */
 VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, unsigned int bytesPerRow, VuoImageColorDepth colorDepth, void (^freeCallback)(void *pixels))
 {
-	if (!pixels || !pixelsWide || !pixelsHigh)
+	if (!pixelsWide || !pixelsHigh)
 		return NULL;
-
-	if (!freeCallback)
-	{
-		static bool freeCallbackWarningEmitted = false;
-		if (!freeCallbackWarningEmitted)
-		{
-			freeCallbackWarningEmitted = true;
-			VUserLog("VuoImage_makeFromBuffer() and VuoImage_makeFromBufferWithStride() now take ownership of `pixels`, and therefore `freeCallback` is required.  Since there's no `freeCallback`, I'm giving up and outputting an empty image.  Please update the plugin listed in the backtrace below.");
-			VuoLog_backtrace();
-		}
-		return NULL;
-	}
 
 	__block GLenum internalformat;
 	__block GLuint glTextureName;
@@ -1113,7 +1095,10 @@ GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *
 	CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)*outputPixelsWide, (GLsizei)*outputPixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, *surf, 0);
 	if(err != kCGLNoError)
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+#pragma clang diagnostic pop
 		return;
 	}
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
@@ -1206,7 +1191,10 @@ bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, 
 			CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)inputPixelsWide, (GLsizei)inputPixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, *surf, 0);
 			if (err != kCGLNoError)
 			{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 				VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+#pragma clang diagnostic pop
 				success = false;
 				return;
 			}
@@ -1535,8 +1523,9 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
  *
  * @threadAny
  *
- * @eg{GL Texture (ID 42)
- * 640x480}
+ * @eg{640x480 pixels @ 1x
+ * RGB, each channel 8-bit unsigned integer
+ * OpenGL: GL_TEXTURE_2D, GL_RGB, ID 42}
  */
 char * VuoImage_getSummary(const VuoImage value)
 {
@@ -1565,7 +1554,7 @@ char * VuoImage_getSummary(const VuoImage value)
 	char *target         = VuoGl_stringForConstant(value->glTextureTarget);
 	char *internalformat = VuoGl_stringForConstant(value->glInternalFormat);
 
-	char *summary = VuoText_format("<div>%lu×%lu pixels @ %gx</div><div>%s</div><div>OpenGL: %s, %s, ID %u</div>",
+	char *summary = VuoText_format("<div>%lu×%lu pixels @ %gx</div>\n<div>%s</div>\n<div>OpenGL: %s, %s, ID %u</div>",
 		value->pixelsWide, value->pixelsHigh,
 		value->scaleFactor,
 		type,
@@ -1574,6 +1563,7 @@ char * VuoImage_getSummary(const VuoImage value)
 		value->glTextureName);
 
 	free(internalformat);
+	free(target);
 
 	return summary;
 }

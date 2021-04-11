@@ -2,14 +2,12 @@
  * @file
  * vuo.image.make.web node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #import <OpenGL/CGLMacro.h>
 #import <WebKit/WebKit.h>
 
@@ -31,10 +29,10 @@ VuoModuleMetadata({
 	"node" : {
 		"exampleCompositions" : [ "SpinSphereWithControlPanel.vuo", "ShowWebPage.vuo" ]
 	},
-	"compatibleOperatingSystems" : {
-		"macosx": {
-			"min" : "10.13",
-		}
+	"compatibility": {
+		"macos": {
+			"min": "10.13",
+		},
 	},
 });
 
@@ -330,7 +328,7 @@ void nodeInstanceTriggerStart(
 			// and since it doesn't provide a way to specify the backingScaleFactor.)
 			// https://b33p.net/kosada/node/11013#comment-75585
 			VuoImageMakeWebWindow *shamWindow = [[VuoImageMakeWebWindow alloc] initWithContentRect:NSMakeRect(-16000, -16000, width, height)
-																						 styleMask:NSBorderlessWindowMask
+																						 styleMask:NSWindowStyleMaskBorderless
 																						   backing:NSBackingStoreBuffered
 																							 defer:NO];
 			shamWindow.collectionBehavior = NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorIgnoresCycle;
@@ -431,7 +429,7 @@ void nodeInstanceEvent(
 	{
 		VuoApp_executeOnMainThread(^{
 			NSPoint p = convertVuoToViewCoordinates(*context, clickMouse);
-			[(*context)->webView mouseDown:[NSEvent mouseEventWithType:NSLeftMouseDown
+			[(*context)->webView mouseDown:[NSEvent mouseEventWithType:NSEventTypeLeftMouseDown
 															  location:p
 														 modifierFlags:0
 															 timestamp:[NSDate timeIntervalSinceReferenceDate]
@@ -441,7 +439,7 @@ void nodeInstanceEvent(
 															clickCount:1
 															  pressure:1]];
 
-			[(*context)->webView mouseUp:[NSEvent mouseEventWithType:NSLeftMouseUp
+			[(*context)->webView mouseUp:[NSEvent mouseEventWithType:NSEventTypeLeftMouseUp
 															location:p
 													   modifierFlags:0
 														   timestamp:[NSDate timeIntervalSinceReferenceDate]

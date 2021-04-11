@@ -2,7 +2,7 @@
  * @file
  * VuoRunner implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -72,6 +72,8 @@ static void __attribute__((constructor)) VuoRunner_init()
 
 	if (VuoStringUtilities::makeFromCFString(CFBundleGetIdentifier(CFBundleGetMainBundle())) == "com.vidvox.VDMX5")
 		VuoRunner_isHostVDMX = true;
+
+	VuoEventLoop_installSleepHandlers();
 }
 
 /**
@@ -543,8 +545,8 @@ void VuoRunner::startInternal(void)
 		if (ret)
 			throw VuoException("The composition couldn't start because a pipe couldn't be opened : " + string(strerror(errno)));
 
-		char * argv[7];
 		int argSize = args.size();
+		char *argv[argSize + 1];
 		for (size_t i = 0; i < argSize; ++i)
 		{
 			size_t mallocSize = args[i].length() + 1;
@@ -610,7 +612,14 @@ void VuoRunner::startInternal(void)
 			{
 				close(fd[0]);
 
-				write(fd[1], &grandchildPid, sizeof(pid_t));
+				int ret = write(fd[1], &grandchildPid, sizeof(pid_t));
+				if (ret != sizeof(pid_t))
+				{
+					strerror_r(errno, errorBuffer, ERROR_BUFFER_LEN);
+					write(STDERR_FILENO, errorExecutable.c_str(), errorExecutable.length());
+					write(STDERR_FILENO, errorBuffer, strlen(errorBuffer));
+					write(STDERR_FILENO, "\n", 1);
+				}
 				close(fd[1]);
 
 				_exit(0);
@@ -639,13 +648,14 @@ void VuoRunner::startInternal(void)
 			for (size_t i = 0; i < argSize; ++i)
 				free(argv[i]);
 
-			pid_t grandchildPid;
-			read(fd[0], &grandchildPid, sizeof(pid_t));
+			pid_t grandchildPid = 0;
+			int ret = read(fd[0], &grandchildPid, sizeof(pid_t));
+			if (ret != sizeof(pid_t))
+				throw VuoException("The composition couldn't start because the composition process id couldn't be obtained: " + string(strerror(errno)));
 			close(fd[0]);
 
 			// Reap the child process.
 			int status;
-			int ret;
 			do {
 				ret = waitpid(childPid, &status, 0);
 			} while (ret == -1 && errno == EINTR);
@@ -2211,6 +2221,14 @@ void VuoRunner::listen()
 			dispatch_semaphore_signal(beganListeningSemaphore);
 			return;
 		}
+
+		const int highWaterMark = 0;  // no limit
+		if(zmq_setsockopt(ZMQTelemetry,ZMQ_RCVHWM,&highWaterMark,sizeof(highWaterMark)))
+		{
+			listenError = strerror(errno);
+			dispatch_semaphore_signal(beganListeningSemaphore);
+			return;
+		}
 	}
 
 	{
@@ -2269,7 +2287,7 @@ void VuoRunner::listen()
 		int itemCount = 2;
 
 		// Wait 1 second.  If no telemetry was received in that second, we probably lost contact with the composition.
-		long timeout = pendingCancel ? USEC_PER_SEC / 10 : USEC_PER_SEC;
+		long timeout = pendingCancel ? 100 : 1000;
 		zmq_poll(items,itemCount,timeout);
 		if(items[0].revents & ZMQ_POLLIN)
 		{
@@ -2483,10 +2501,19 @@ void VuoRunner::listen()
 			else
 			{
 				// Timeout.
-				listenCanceled = true;
-				string dir, file, ext;
-				VuoFileUtilities::splitPath(executablePath, dir, file, ext);
-				stopBecauseLostContact("The connection between the composition ('" + file + "') and runner timed out while listening for telemetry.");
+				// Could happen if the composition crashed, or if the system fell asleep then hibernated (standby mode).
+				// If it's a crash we should disconnect; if it's hibernation we should ignore the timeout and try zmq_poll again.
+				if (VuoEventLoop_isSystemAsleep())
+					VDebugLog("zmq_poll timed out, but system is sleeping so I'll try again.");
+				else if (VuoLog_isDebuggerAttached())
+					VDebugLog("zmq_poll timed out, but a debugger is attached to the host so I'll try again.");
+				else
+				{
+					listenCanceled = true;
+					string dir, file, ext;
+					VuoFileUtilities::splitPath(executablePath, dir, file, ext);
+					stopBecauseLostContact("The connection between the composition ('" + file + "') and runner timed out while listening for telemetry.");
+				}
 			}
 		}
 	}

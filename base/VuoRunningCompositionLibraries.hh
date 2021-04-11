@@ -2,7 +2,7 @@
  * @file
  * VuoRunningCompositionLibraries interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -21,13 +21,19 @@ public:
 	VuoRunningCompositionLibraries(void);
 	~VuoRunningCompositionLibraries(void);
 	void enqueueResourceLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary, bool isUnloadable);
+	void enqueueResourceLibraryToUnload(const string &path);
+	set<string> enqueueAllUnloadableResourceLibrariesToUnload(void);
 	void enqueueCacheLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary, bool isUnloadable);
+	set<string> enqueueCacheLibraryToUnload(const string &path);
 	void enqueueLibraryContainingDependencyToUnload(const string &dependency);
 	vector<string> dequeueLibrariesToLoad(void);
 	vector<string> dequeueLibrariesToUnload(void);
 	vector<string> getNonUnloadableLibrariesLoaded(void);
 	vector<string> getUnloadableLibrariesLoaded(void);
+	vector<string> getUnloadableResourceLibrariesLoaded(void);
+	vector<string> getUnloadableCacheLibrariesLoaded(void);
 	set<string> getDependenciesLoaded(void);
+	bool hasCacheLibraryEnqueuedToUnload(void);
 	void addExternalLibraries(const set<string> &paths);
 	void addExternalFrameworks(const set<string> &paths);
 	set<string> getExternalLibraries(void);
@@ -41,7 +47,8 @@ private:
 	vector<string> cachePathsLoaded;  ///< Cache dylibs currently loaded, in the order they were created.
 	set<string> resourcePathsToUnload;  ///< Resource dylibs still loaded but earmarked to be unloaded.
 	set<string> cachePathsToUnload;  ///< Cache dylibs still loaded but earmarked to be unloaded.
-	map<string, bool> isPathUnloadable;  ///< For each of the not-yet-loaded and currently-loaded resource and cache dylibs, whether it can be unloaded.
+	map<string, bool> canUnloadPathToLoad;  ///< For each of the not-yet-loaded resource and cache dylibs, whether it can be unloaded.
+	map<string, bool> canUnloadPathLoaded;  ///< For each of the currently-loaded resource and cache dylibs, whether it can be unloaded.
 	map<string, set<string> > dependenciesToLoad;  ///< For each of the not-yet-loaded resource and cache dylibs, the node classes, etc. contained within it.
 	map<string, set<string> > dependenciesLoaded;  ///< For each of the currently-loaded resource and cache dylibs, the node classes, etc. contained within it.
 	set<string> externalLibraries;  ///< Dylibs not created by the Vuo compiler that are referenced by the resource and cache dylibs.

@@ -2,7 +2,7 @@
  * @file
  * VuoRendererNode interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -50,6 +50,7 @@ public:
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	virtual QRectF getOuterNodeFrameBoundingRect(void) const;
 	virtual bool paintingDisabled(void) const;
+	virtual bool isEffectivelySelected(void);
 
 	vector<VuoRendererInputDrawer *> getAttachedInputDrawers(void) const;
 	qreal getInputDrawerOffset(unsigned int portIndex) const;
@@ -151,4 +152,3 @@ private:
 
 	QPointF getPortPoint(VuoRendererPort *port, unsigned int portIndex) const;
 };
-

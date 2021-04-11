@@ -2,7 +2,7 @@
  * @file
  * vuo.layer.transform node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,7 +11,7 @@
 #include "VuoLayer.h"
 
 VuoModuleMetadata({
-					 "title" : "Transform Layer",
+					 "title" : "Transform Layer (Transform)",
 					 "keywords" : [ "scenegraph", "composite", "rotate", "scale", "translate" ],
 					 "version" : "1.0.0",
 					 "node": {
@@ -21,8 +21,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoTransform2d) transform,
 		VuoInputData(VuoLayer) layer,
+		VuoInputData(VuoTransform2d) transform,
 		VuoOutputData(VuoLayer) transformedLayer
 )
 {

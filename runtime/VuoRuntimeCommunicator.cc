@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimeCommunicator implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -230,6 +230,13 @@ void VuoRuntimeCommunicator::openConnection(void *_zmqContext, const char *contr
 		if (zmq_connect(zmqSelfSend, "inproc://vuo-runtime-self") != 0)
 		{
 			errorMessage << "Couldn't connect self-send socket: " << zmq_strerror(errno) << " " << errno << endl;
+			error = true;
+		}
+
+		const int highWaterMark = 0;  // no limit
+		if(zmq_setsockopt(zmqTelemetry,ZMQ_SNDHWM,&highWaterMark,sizeof(highWaterMark)))
+		{
+			errorMessage << "Couldn't set high-water mark on telemetry socket: " << zmq_strerror(errno) << " " << errno << endl;
 			error = true;
 		}
 
@@ -1119,7 +1126,7 @@ void VuoRuntimeCommunicator::interruptListeningForControl(void)
 	zmq_msg_t message;
 	zmq_msg_init_size(&message, sizeof z);
 	memcpy(zmq_msg_data(&message), &z, sizeof z);
-	if (zmq_send(zmqSelfSend, &message, 0) != 0)
+	if (zmq_msg_send(&message, static_cast<zmq_msg_t *>(zmqSelfSend), 0) == -1)
 		VUserLog("Couldn't break: %s (%d)", zmq_strerror(errno), errno);
 	zmq_msg_close(&message);
 }

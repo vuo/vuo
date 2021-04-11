@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCable implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -164,12 +164,12 @@ bool VuoCompilerCable::carriesData(void)
  * Generates code to transmit the data (if any) and an event (if any) from an output port to an input port.
  */
 void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, Value *toNodeContextValue, Value *toPortContextValue,
-											Value *outputDataValue, bool shouldTransmitEvent)
+											Value *outputDataPointer, bool shouldTransmitEvent)
 {
 	VuoCompilerInputEventPort *inputEventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getToPort()->getCompiler());
 
-	if (outputDataValue)
-		inputEventPort->generateReplaceData(module, block, toNodeContextValue, outputDataValue, toPortContextValue);
+	if (outputDataPointer)
+		inputEventPort->generateReplaceData(module, block, toNodeContextValue, outputDataPointer, toPortContextValue);
 
 	if (shouldTransmitEvent)
 		inputEventPort->generateStoreEvent(module, block, toNodeContextValue, true, toPortContextValue);

@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -1373,12 +1373,14 @@ void VuoFileUtilities::focusProcess(pid_t pid, bool force)
 }
 
 /**
- * Runs a binary.
+ * Launches another process and waits for it to finish.
  * If the exit status is nonzero, throws an exception containing stdout and stderr.
+ *
+ * The optional `environment` argument should consist of strings of the form `key=value`.
  *
  * @throw VuoException
  */
-void VuoFileUtilities::executeProcess(vector<string> processAndArgs)
+void VuoFileUtilities::executeProcess(vector<string> processAndArgs, vector<string> environment)
 {
 	string binaryDir, binaryFile, binaryExt;
 	splitPath(processAndArgs[0], binaryDir, binaryFile, binaryExt);
@@ -1403,16 +1405,33 @@ void VuoFileUtilities::executeProcess(vector<string> processAndArgs)
 	// posix_spawn requires a null-terminated array, which `&processAndArgs[0]` doesn't guarantee.
 	char **processAndArgsZ = (char **)malloc(sizeof(char *) * (processAndArgs.size() + 1));
 	int argCount = 0;
+	string commandLine;
 	for (auto arg : processAndArgs)
-		if (argCount == 0)
-			processAndArgsZ[argCount++] = strdup(binaryFile.c_str());
-		else
-			processAndArgsZ[argCount++] = strdup(arg.c_str());
+	{
+		processAndArgsZ[argCount++] = strdup(arg.c_str());
+		if (argCount > 0)
+			commandLine += ' ';
+		commandLine += '"' + arg + '"';
+	}
 	processAndArgsZ[argCount] = nullptr;
+
+
+	// Convert environment.
+	// posix_spawn requires a null-terminated array, which `&processAndArgs[0]` doesn't guarantee.
+	char **environmentZ = (char **)malloc(sizeof(char *) * (environment.size() + 1));
+	int environmentVarCount = 0;
+	for (auto environmentVar : environment)
+	{
+		environmentZ[environmentVarCount++] = strdup(environmentVar.c_str());
+		commandLine = environmentVar + " " + commandLine;
+	}
+	environmentZ[environmentVarCount] = nullptr;
+
 
 	// Execute.
 	pid_t pid;
-	ret = posix_spawn(&pid, processAndArgs[0].c_str(), &fileActions, NULL, (char * const *)processAndArgsZ, NULL);
+	VDebugLog("%s", commandLine.c_str());
+	ret = posix_spawn(&pid, processAndArgs[0].c_str(), &fileActions, NULL, (char * const *)processAndArgsZ, (char * const *)environmentZ);
 	close(pipeWrite);
 	posix_spawn_file_actions_destroy(&fileActions);
 	for (int i = 0; i < argCount; ++i)
@@ -1422,21 +1441,33 @@ void VuoFileUtilities::executeProcess(vector<string> processAndArgs)
 		throw VuoException(errorPrefix + strerror(ret));
 	else
 	{
+		int ret;
 		int status;
-		if (waitpid(pid, &status, 0) == -1)
-			throw VuoException(errorPrefix + "waitpid failed: " + strerror(errno));
-		else if (status != 0)
+		while (true)
 		{
-			string output;
-			char buf[256];
-			bzero(buf, 256);
-			while (read(pipeRead, &buf, 255) > 0)
+			ret = waitpid(pid, &status, 0);
+			if (ret == -1 && errno == EINTR)
+				// This process received a signal while waiting for the other process
+				// (seems to happen when running under lldb); try waiting again.
+				continue;
+			else if (ret == -1)
+				throw VuoException(errorPrefix + "waitpid failed: " + strerror(errno));
+			else if (status != 0)
 			{
-				output += buf;
+				string output;
+				char buf[256];
 				bzero(buf, 256);
-			}
+				while (read(pipeRead, &buf, 255) > 0)
+				{
+					output += buf;
+					bzero(buf, 256);
+				}
 
-			throw VuoException(binaryFile + " failed: " + output);
+				throw VuoException(binaryFile + " failed: " + output);
+			}
+			else
+				// The other process completed without error.
+				break;
 		}
 	}
 }
@@ -1486,4 +1517,135 @@ bool VuoFileUtilities::isIsfSourceExtension(string extension)
 	e.insert("vuoshader");
 	e.insert("vuoobjectfilter");
 	return e.find(extension) != e.end();
+}
+
+/**
+ * Returns a human-readable description of the module cache.
+ */
+string VuoFileUtilities::buildModuleCacheDescription(const string &moduleCachePath, bool generated)
+{
+	return string() + "the cache of " + (generated ? "generated" : "installed") + " modules at '" + moduleCachePath + "'";
+}
+
+/**
+ * Returns the path of the index file within the module cache.
+ */
+string VuoFileUtilities::buildModuleCacheIndexPath(const string &moduleCachePath, bool builtIn, bool generated)
+{
+	string moduleCachePathCanonical = moduleCachePath;
+	canonicalizePath(moduleCachePathCanonical);
+
+	return moduleCachePathCanonical + "/moduleCache-" + (generated ? "generated" : "installed") + ".txt";
+}
+
+/**
+ * Returns the path of a dylib file within the module cache.
+ * - For the built-in module caches, the returned path is always the same.
+ * - For other module caches, this function returns an unused path at which a new revision of the dylib can be saved.
+ */
+string VuoFileUtilities::buildModuleCacheDylibPath(const string &moduleCachePath, bool builtIn, bool generated)
+{
+	string moduleCachePathCanonical = moduleCachePath;
+	canonicalizePath(moduleCachePathCanonical);
+
+	string partialPath = moduleCachePathCanonical + "/libVuoModuleCache-" + (generated ? "generated" : "installed");
+	if (builtIn)
+		return partialPath + ".dylib";
+
+	string uniquePath;
+	do {
+		uniquePath = partialPath + "-" + VuoStringUtilities::makeRandomHash(4) + ".dylib";
+	} while (fileExists(uniquePath));
+	return uniquePath;
+}
+
+/**
+ * Returns the most recently created dylib file within the module cache, or an empty string if none exists.
+ */
+string VuoFileUtilities::findLatestRevisionOfModuleCacheDylib(const string &moduleCachePath, bool builtIn, bool generated,
+															  unsigned long &lastModified)
+{
+	string path = buildModuleCacheDylibPath(moduleCachePath, builtIn, generated);
+
+	if (builtIn)
+	{
+		if (fileExists(path))
+		{
+			lastModified = getFileLastModifiedInSeconds(path);
+			return path;
+		}
+		else
+		{
+			lastModified = 0;
+			return "";
+		}
+	}
+
+	string dir, file, ext;
+	splitPath(path, dir, file, ext);
+	string fileName = file + "." + ext;
+
+	vector< pair<string, unsigned long> > existingRevisions;
+	for (File *existingFile : findFilesInDirectory(moduleCachePath, {"dylib"}))
+	{
+		if (areDifferentRevisionsOfSameModuleCacheDylib(existingFile->getRelativePath(), fileName))
+			existingRevisions.push_back({existingFile->path(), getFileLastModifiedInSeconds(existingFile->path())});
+
+		delete existingFile;
+	}
+
+	if (existingRevisions.empty())
+	{
+		lastModified = 0;
+		return "";
+	}
+
+	auto latest = std::max_element(existingRevisions.begin(), existingRevisions.end(),
+								   [](pair<string, unsigned long> p1, pair<string, unsigned long> p2) { return p1.second < p2.second; });
+
+	lastModified = latest->second;
+	return latest->first;
+}
+
+/**
+ * Deletes any files in the same directory as @a dylibPath that differ only in their revision suffix.
+ */
+void VuoFileUtilities::deleteOtherRevisionsOfModuleCacheDylib(const string &dylibPath)
+{
+	string moduleCachePath, file, ext;
+	splitPath(dylibPath, moduleCachePath, file, ext);
+	string dylibFileName = file + "." + ext;
+
+	for (File *otherFile : findFilesInDirectory(moduleCachePath, {"dylib"}))
+	{
+		if (areDifferentRevisionsOfSameModuleCacheDylib(otherFile->getRelativePath(), dylibFileName))
+			deleteFile(otherFile->path());
+
+		delete otherFile;
+	}
+}
+
+/**
+ * Returns true if the two paths differ only in their revision suffix.
+ */
+bool VuoFileUtilities::areDifferentRevisionsOfSameModuleCacheDylib(const string &dylibPath1, const string &dylibPath2)
+{
+	string dir1, dir2, file1, file2, ext;
+	splitPath(dylibPath1, dir1, file1, ext);
+	splitPath(dylibPath2, dir2, file2, ext);
+
+	if (arePathsEqual(dir1, dir2))
+	{
+		vector<string> parts1 = VuoStringUtilities::split(file1, '-');
+		vector<string> parts2 = VuoStringUtilities::split(file2, '-');
+
+		if (parts1.size() == 3 && parts2.size() == 3 && parts1.back() != parts2.back())
+		{
+			parts1.pop_back();
+			parts2.pop_back();
+			return parts1 == parts2;
+		}
+	}
+
+	return false;
 }

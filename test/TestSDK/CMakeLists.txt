@@ -12,7 +12,6 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 			-P ${CMAKE_CURRENT_LIST_FILE}
 	)
 	set_tests_properties(TestSDK PROPERTIES
-		RESOURCE_LOCK "GUI;COMPILER"
 		FIXTURES_REQUIRED TestSDK
 	)
 
@@ -66,7 +65,7 @@ else()
 	)
 		set(buildDir ${sdkDir}/example/${example}/build)
 		file(MAKE_DIRECTORY ${buildDir})
-		execute(COMMAND cmake .. -DCMAKE_PREFIX_PATH=${CONAN_QT_ROOT}/lib/cmake)
+		execute(COMMAND cmake .. -DCMAKE_FRAMEWORK_PATH=../../../framework -DCMAKE_PREFIX_PATH=${CONAN_QT_ROOT}/lib/cmake)
 		execute(COMMAND make -j9)
 		if (example STREQUAL "runner/RunImageFilter-GLFW")
 			execute(TIMEOUT COMMAND ./RunImageFilter-current-makeFromJson               )
@@ -83,6 +82,14 @@ else()
 	endforeach()
 
 	set(buildDir ${sdkDir}/example/runner/VuoPluginApp)
+	# Normally VuoPluginApp uses an absolute path to the system-wide Vuo.framework installed by the PKG.
+	# For this test, use a relative path to the Vuo.framework we just built (without needing to install it system-wide).
+	set(xcodeProjectFile ${buildDir}/VuoPluginApp.xcodeproj/project.pbxproj)
+	message("xcodeProjectFile=${xcodeProjectFile}")
+	file(READ ${xcodeProjectFile} xcodeProjectContents)
+	string(REPLACE "path = /Library/Developer/Vuo/framework/Vuo.framework; sourceTree = \"<absolute>\";" "path = ../../../framework/Vuo.framework; sourceTree = SOURCE_ROOT;" xcodeProjectContents "${xcodeProjectContents}")
+	string(REPLACE "/Library/Developer/Vuo/framework" "../../../framework" xcodeProjectContents "${xcodeProjectContents}")
+	file(WRITE ${xcodeProjectFile} "${xcodeProjectContents}")
 	execute(COMMAND xcodebuild)
 	execute(TIMEOUT COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
 

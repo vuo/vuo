@@ -42,6 +42,7 @@ target_include_directories(vuo.core.runtime.libraries
 target_link_libraries(vuo.core.runtime.libraries
 	PUBLIC
 	"-framework AppKit"
+	"-framework IOKit"
 )
 string(REPLACE ${prefixHeader} "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string(REPLACE ${prefixHeader} "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

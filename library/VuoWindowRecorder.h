@@ -2,17 +2,15 @@
  * @file
  * VuoWindowRecorder interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#import <AppKit/AppKit.h>
+#include "VuoMacOSSDKWorkaround.h"
+#import <Foundation/Foundation.h>
 
 #import "VuoGlPool.h"
 
@@ -26,4 +24,3 @@
 - (void)saveImage:(VuoIoSurface)vis;
 - (void)finish;
 @end
-

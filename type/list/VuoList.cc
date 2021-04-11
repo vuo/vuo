@@ -2,7 +2,7 @@
  * @file
  * VuoList implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -137,14 +137,14 @@ char * LIST_TYPE_getSummary(const LIST_TYPE value)
 		std::string itemSummary = itemSummaryCstr;
 		free(itemSummaryCstr);
 		if (itemSummary.length() && itemSummary.find_first_not_of(' ') != std::string::npos)
-			summary << "<li>" << itemSummary << "</li>";
+			summary << "\n<li>" << itemSummary << "</li>";
 		else
-			summary << "<li>&nbsp;</li>";
+			summary << "\n<li>&nbsp;</li>";
 		characterCount += itemSummary.length();
 	}
 
 	if (i <= itemCount)
-		summary << "<li>…</li>";
+		summary << "\n<li>…</li>";
 
 	summary << "</ul>";
 

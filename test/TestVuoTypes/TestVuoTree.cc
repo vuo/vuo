@@ -2,7 +2,7 @@
  * @file
  * TestVuoTree implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -43,7 +43,9 @@ private:
 	{
 		void *data = NULL;
 		unsigned int dataLength = 0;
-		VuoUrl_fetch(path, &data, &dataLength);
+		VuoText pathT = VuoText_make(path);
+		VuoLocal(pathT);
+		VuoUrl_fetch(pathT, &data, &dataLength);
 		VuoTree tree = (isXml ?
 							VuoTree_makeFromXmlText((const char *)data, includeWhitespaceInXml) :
 							VuoTree_makeFromJsonText((const char *)data));
@@ -1214,7 +1216,7 @@ private slots:
 		QFETCH(QStringList, names);
 		QFETCH(QStringList, contents);
 
-		VuoTextComparison comparison = { VuoTextComparison_Equals, caseSensitive, "" };
+		VuoTextComparison comparison = {VuoTextComparison_Equals, caseSensitive};
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithName(tree, name.toUtf8().constData(), comparison, includeDescendants);
 
 		unsigned long count = VuoListGetCount_VuoTree(foundTrees);
@@ -1277,7 +1279,7 @@ private slots:
 		QFETCH(bool, includeDescendants);
 		QFETCH(QStringList, names);
 
-		VuoTextComparison comparison = { VuoTextComparison_BeginsWith, true, "" };
+		VuoTextComparison comparison = {VuoTextComparison_BeginsWith, true};
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithAttribute(tree, attribute.toUtf8().constData(), value.toUtf8().constData(),
 																	comparison, includeDescendants);
 
@@ -1355,7 +1357,7 @@ private slots:
 		QFETCH(bool, includeDescendants);
 		QFETCH(QStringList, names);
 
-		VuoTextComparison comparison = { VuoTextComparison_Contains, true, "" };
+		VuoTextComparison comparison = {VuoTextComparison_Contains, true};
 		VuoList_VuoTree foundTrees = VuoTree_findItemsWithContent(tree, content.toUtf8().constData(), comparison, includeDescendants);
 
 		unsigned long count = VuoListGetCount_VuoTree(foundTrees);
@@ -1390,7 +1392,9 @@ private slots:
 
 		void *data = NULL;
 		unsigned int dataLength = 0;
-		VuoUrl_fetch("resources/TestVuoTree_inventory.xml", &data, &dataLength);
+		VuoText filePath = VuoText_make("resources/TestVuoTree_inventory.xml");
+		VuoLocal(filePath);
+		VuoUrl_fetch(filePath, &data, &dataLength);
 		VuoDefer(^{ free(data); });
 
 		dispatch_queue_t concurrentQueue = dispatch_queue_create("org.vuo.TestVuoTree.concurrent", DISPATCH_QUEUE_CONCURRENT);
@@ -1583,7 +1587,7 @@ private slots:
 		{
 			size_t results[2][numIterations];
 			const char *content = "Bob";
-			VuoTextComparison comparison = { VuoTextComparison_Equals, true, "" };
+			VuoTextComparison comparison = {VuoTextComparison_Equals, true};
 
 			for (int h = 0; h < 2; ++h)
 			{

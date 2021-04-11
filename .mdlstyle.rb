@@ -13,4 +13,4 @@ exclude_rule 'MD033'
 exclude_rule 'MD034'
 exclude_rule 'MD037'
 exclude_rule 'MD041'
-rule 'MD046', :style => :indented
+exclude_rule 'MD046'

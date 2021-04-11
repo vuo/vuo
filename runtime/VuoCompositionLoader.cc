@@ -2,7 +2,7 @@
  * @file
  * VuoCompositionLoader implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
 			zmq_msg_t message;
 			zmq_msg_init_size(&message, sizeof z);
 			memcpy(zmq_msg_data(&message), &z, sizeof z);
-			if (zmq_send(ZMQLoaderSelfSend, &message, 0) != 0)
+			if (zmq_msg_send(&message, static_cast<zmq_msg_t *>(ZMQLoaderSelfSend), 0) == -1)
 				VUserLog("Couldn't break: %s (%d)", zmq_strerror(errno), errno);
 			zmq_msg_close(&message);
 		}
@@ -320,7 +320,7 @@ bool replaceComposition(const char *dylibPath, char *compositionDiff)
 	VuoApp_dylibPath = strdup(dylibPath);
 	// Provide the composition name to the crash reporter.
 	{
-		char *filename = strrchr(dylibPath, '/');
+		const char *filename = strrchr(dylibPath, '/');
 		if (filename)
 		{
 			char *name = strdup(filename + 1); // Trim leading slash.

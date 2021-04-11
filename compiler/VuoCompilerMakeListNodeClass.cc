@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerMakeListNodeClass implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -99,11 +99,10 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 		dispatch_sync(llvmQueue, ^{
 
-						  Type *itemParamSecondType = NULL;
-						  Type *itemParamType = itemType->getFunctionParameterType(&itemParamSecondType);
-						  AttributeSet itemParamAttributes = itemType->getFunctionParameterAttributes();
+						  vector<Type *> itemParamTypes = itemType->getFunctionParameterTypes();
+						  AttributeList itemFunctionAttributes = itemType->getFunctionAttributes();
 
-						  Module *module = new Module("", getGlobalContext());
+						  Module *module = new Module("", *VuoCompiler::globalLLVMContext);
 
 						  // VuoModuleMetadata({});
 						  VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
@@ -124,8 +123,8 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 							  oss << i+1;
 							  string portName = oss.str();
 
-							  VuoCompilerInputEventPortClass *modelItemPortClass = new VuoCompilerInputEventPortClass(portName, NULL);
-							  VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("", NULL, false);
+							  VuoCompilerInputEventPortClass *modelItemPortClass = new VuoCompilerInputEventPortClass(portName);
+							  VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("");
 							  dataClass->setVuoType( itemType->getBase() );
 							  modelItemPortClass->setDataClass(dataClass);
 							  VuoCompilerPort *modelItemPort = modelItemPortClass->newPort();
@@ -133,8 +132,8 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 							  modelInputPorts.push_back( modelItemPort->getBase() );
 						  }
 
-						  VuoCompilerOutputEventPortClass *modelListPortClass = new VuoCompilerOutputEventPortClass("list", NULL);
-						  VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("", NULL);
+						  VuoCompilerOutputEventPortClass *modelListPortClass = new VuoCompilerOutputEventPortClass("list");
+						  VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("");
 						  dataClass->setVuoType( listType->getBase() );
 						  modelListPortClass->setDataClass(dataClass);
 						  VuoCompilerPort *modelListPort = modelListPortClass->newPort();
@@ -185,15 +184,11 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 						  {
 							  vector<Type *> functionParams;
 							  functionParams.push_back(voidPointerType);
-							  functionParams.push_back(itemParamType);
-							  if (itemParamSecondType)
-							  {
-								  functionParams.push_back(itemParamSecondType);
-							  }
+							  functionParams.insert(functionParams.end(), itemParamTypes.begin(), itemParamTypes.end());
 							  FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 							  listAppendFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listAppendFunctionName, module);
 
-							  listAppendFunction->setAttributes(VuoCompilerCodeGenUtilities::copyAttributesToIndex(itemParamAttributes, 2));
+							  VuoCompilerCodeGenUtilities::copyParameterAttributes(module, itemFunctionAttributes, 0, functionParams.size() - 1, listAppendFunction, 1);
 						  }
 
 						  vector<Value *> itemValues;
@@ -202,32 +197,32 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 							  size_t argIndex = indexOfParameter[itemPort];
 							  Value *itemValue = VuoCompilerCodeGenUtilities::getArgumentAtIndex(eventFunction, argIndex);
 							  itemValues.push_back(itemValue);
-							  if (itemParamSecondType)
+							  if (itemParamTypes.size() > 1)
 							  {
 								  Value *itemSecondValue = VuoCompilerCodeGenUtilities::getArgumentAtIndex(eventFunction, argIndex + 1);
 								  itemValues.push_back(itemSecondValue);
 							  }
 						  }
 						  size_t listArgIndex = indexOfParameter[modelListPort->getBase()];
-						  Value *listVariable = VuoCompilerCodeGenUtilities::getArgumentAtIndex(eventFunction, listArgIndex);
+						  Value *listArg = VuoCompilerCodeGenUtilities::getArgumentAtIndex(eventFunction, listArgIndex);
 
 						  CallInst *listValue = CallInst::Create(listCreateFunction, "", block);
-						  Value *listValueAsStruct = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, listValue, static_cast<PointerType *>(listVariable->getType())->getElementType());
-						  new StoreInst(listValueAsStruct, listVariable, false, block);
+						  Value *listPointer = VuoCompilerCodeGenUtilities::generatePointerToValue(block, listValue);
+						  VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, listPointer, listArg, listType->getSize(module));
 
 						  for (unsigned long i = 0; i < itemCount; ++i)
 						  {
-							  int itemValuesIndex = (itemParamSecondType ? 2*i : i);
+							  int itemValuesIndex = (itemParamTypes.size() > 1 ? 2*i : i);
 							  vector<Value *> listAppendParams;
 							  listAppendParams.push_back(listValue);
 							  listAppendParams.push_back(itemValues[itemValuesIndex]);
-							  if (itemParamSecondType)
+							  if (itemParamTypes.size() > 1)
 							  {
 								  listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
 							  }
 							  CallInst *call = CallInst::Create(listAppendFunction, listAppendParams, "", block);
 
-							  call->setAttributes(VuoCompilerCodeGenUtilities::copyAttributesToIndex(itemParamAttributes, 2));
+							  VuoCompilerCodeGenUtilities::copyParameterAttributes(module, itemFunctionAttributes, 0, listAppendParams.size() - 1, call, 1);
 						  }
 
 						  ReturnInst::Create(module->getContext(), block);
@@ -262,7 +257,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 			ostringstream oss;
 			oss << i;
 			VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(oss.str());
-			VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("", NULL, false);
+			VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("");
 			portClass->setDataClass(dataClass);
 			portClass->setDataVuoType(itemType->getBase());
 			inputPortClasses.push_back(portClass->getBase());
@@ -271,7 +266,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 		vector<VuoPortClass *> outputPortClasses;
 		{
 			VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass("list");
-			VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("", NULL);
+			VuoCompilerOutputDataClass *dataClass = new VuoCompilerOutputDataClass("");
 			portClass->setDataClass(dataClass);
 			portClass->setDataVuoType(listType->getBase());
 			outputPortClasses.push_back(portClass->getBase());

@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.transform node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Transform 3D Object",
+					 "title" : "Transform 3D Object (Transform)",
 					 "keywords" : [ "scenegraph", "composite", "rotate", "scale", "translate" ],
 					 "version" : "1.0.0",
 					 "node": {
@@ -20,8 +20,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoTransform) transform,
 		VuoInputData(VuoSceneObject) object,
+		VuoInputData(VuoTransform) transform,
 		VuoOutputData(VuoSceneObject) transformedObject
 )
 {

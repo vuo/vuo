@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindowCocoa implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -21,10 +21,8 @@
 #undef slots
 #endif
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
-#include <Cocoa/Cocoa.h>
+#include "VuoMacOSSDKWorkaround.h"
+#include <AppKit/AppKit.h>
 #include <objc/message.h>
 
 
@@ -201,7 +199,7 @@
 	button = [NSButton new];
 	[button setFrame:NSMakeRect(0,1,32,24)];
 
-	[button setButtonType:NSMomentaryChangeButton];
+	[button setButtonType:NSButtonTypeMomentaryChange];
 	[button setBordered:NO];
 
 	[button setAction:@selector(itemIdentifier)];
@@ -258,11 +256,11 @@
 	NSImage *offImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"showEvents" ofType:@"pdf"]];
 	if (state)
 	{
-		// Manage state manually, since we need to use NSMomentaryChangeButton to prevent the grey background when clicking.
+		// Manage state manually, since we need to use NSButtonTypeMomentaryChange to prevent the grey background when clicking.
 		NSImage *onImage = [offImage copy];
 		[onImage lockFocus];
 		[[NSColor colorWithCalibratedRed:29./255 green:106./255 blue:229./255 alpha:1] set];	// #1d6ae5
-		NSRectFillUsingOperation(NSMakeRect(0, 0, [onImage size].width, [onImage size].height), NSCompositeSourceAtop);
+		NSRectFillUsingOperation(NSMakeRect(0, 0, [onImage size].width, [onImage size].height), NSCompositingOperationSourceAtop);
 		[onImage unlockFocus];
 		[button setImage:onImage];
 		[onImage release];
@@ -427,7 +425,11 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 		NSToolbarItem *ti = toolbarEventsItem->nativeToolBarItem();
 		eventsButton = [[VuoEditorEventsButton alloc] initWithQMacToolBarItem:toolbarEventsItem];
 		[ti setView:eventsButton];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		// `setMinSize:` is deprecated with no apparent replacement.
 		[ti setMinSize:[eventsButton bounds].size];
+#pragma clang diagnostic pop
 		ti.toolTip = [NSString stringWithUTF8String:VuoEditor::tr("Toggle whether the canvas shows event flow by highlighting trigger ports and nodes.").toUtf8().data()];
 	}
 
@@ -437,7 +439,11 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 		NSToolbarItem *ti = toolbarZoomItem->nativeToolBarItem();
 		zoomButtons = [[VuoEditorZoomButtons alloc] initWithQMacToolBarItem:toolbarZoomItem isCodeEditor:isCodeEditor];
 		[ti setView:zoomButtons];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		// `setMinSize:` is deprecated with no apparent replacement.
 		[ti setMinSize:[zoomButtons bounds].size];
+#pragma clang diagnostic pop
 	}
 
 
@@ -665,7 +671,7 @@ void VuoEditorWindowToolbar::updateColor(bool isDark)
 		// even if titlebarAppearsTransparent was NO.  When linking against the 10.13 SDK, textured windows must
 		// explicitly set titlebarAppearsTransparent to YES for this behavior."
 		// - https://developer.apple.com/library/content/releasenotes/AppKit/RN-AppKit/
-		objc_msgSend(nsWindow, sel_getUid("setTitlebarAppearsTransparent:"), true);
+		nsWindow.titlebarAppearsTransparent = YES;
 
 		// Requesting a transparent titlebar causes toolbar drawing to glitch (icons change color when defocused; text looks anemic).
 		// Enabling Core Animation seems to avoid that Cocoa bug.
@@ -677,8 +683,8 @@ void VuoEditorWindowToolbar::updateColor(bool isDark)
 			// - https://developer.apple.com/library/archive/releasenotes/AppKit/RN-AppKit/index.html
 			// …but it works fine for us, so reenable it.
 			// https://b33p.net/kosada/node/15412
-			objc_msgSend(nsWindow, sel_getUid("setTabbingMode:"), 0 /*NSWindowTabbingModeAutomatic*/);
-			objc_msgSend(nsWindow, sel_getUid("setTabbingIdentifier:"), @"Vuo Composition");
+			nsWindow.tabbingMode = NSWindowTabbingModeAutomatic;
+			nsWindow.tabbingIdentifier = @"Vuo Composition";
 		}
 	}
 

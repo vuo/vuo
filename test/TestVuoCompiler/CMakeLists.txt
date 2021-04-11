@@ -20,9 +20,6 @@ target_link_libraries(TestVuoCompiler
 VuoPCH(TestVuoCompiler QTestVuoFramework)
 
 VuoCompileNodes(
-	node-TestVuoCompiler/vuo.test.compatibleWith1011.c
-	node-TestVuoCompiler/vuo.test.compatibleWith1011And1012.c
-	node-TestVuoCompiler/vuo.test.compatibleWith1011AndUp.c
 	node-TestVuoCompiler/vuo.test.details.c
 	node-TestVuoCompiler/vuo.test.inputDataPortOrder.c
 	node-TestVuoCompiler/vuo.test.keywords.c
@@ -31,4 +28,7 @@ VuoCompileNodes(
 	node-TestVuoCompiler/vuo.test.triggerWithOutput.c
 	node-TestVuoCompiler/vuo.test.unicodeDefaultString.c
 )
-add_dependencies(TestVuoCompiler TestVuoCompiler.nodes)
+add_dependencies(TestVuoCompiler
+	TestVuoCompiler.nodes
+	VuoEditorApp
+)

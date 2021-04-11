@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNode interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -13,6 +13,7 @@
 
 class VuoCompilerEventPort;
 class VuoCompilerConstantsCache;
+class VuoCompilerInputData;
 class VuoCompilerInstanceData;
 class VuoCompilerNodeArgument;
 class VuoCompilerType;
@@ -34,6 +35,7 @@ private:
 									const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	bool isArgumentInFunction(VuoCompilerNodeArgument *argument, Function *function);
 	size_t getArgumentIndexInFunction(VuoCompilerNodeArgument *argument, Function *function);
+	bool isUnloweredStructPointerParameter(VuoCompilerInputData *inputData, Function *function);
 
 public:
 	VuoCompilerNode(VuoNode *baseNode);

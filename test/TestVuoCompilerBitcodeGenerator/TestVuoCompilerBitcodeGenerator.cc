@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerBitcodeGenerator interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -1044,7 +1044,7 @@ private slots:
 			VuoCompilerIssues issues;
 			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition, &issues);
 
-			Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
+			Module *module = VuoCompiler::readModuleFromBitcode(bcPath, "x86_64");
 			remove(bcPath.c_str());
 
 			set<string> functionNames;
@@ -1059,36 +1059,6 @@ private slots:
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerStart") != functionNames.end()) == isStateful);
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerStop") != functionNames.end()));
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerUpdate") != functionNames.end()) == (! isTopLevelComposition && isStateful));
-		}
-	}
-
-	void testPublishedPortGetters()
-	{
-		string compositionPath = getCompositionPath("Subtract_published.vuo");
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
-		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		VuoCompilerIssues issues;
-		compiler->compileComposition(compositionPath, bcPath, true, &issues);
-
-		Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
-		remove(bcPath.c_str());
-		vector<GenericValue> args;
-
-		{
-			GenericValue ret;
-			bool success = executeFunction(module, "getPublishedInputPortCount", args, ret);
-			QVERIFY(success);
-			QCOMPARE(ret.IntVal.getZExtValue(), (uint64_t)2);
-		}
-
-		{
-			GenericValue ret;
-			bool success = executeFunction(module, "getPublishedInputPortNames", args, ret);
-			QVERIFY(success);
-			char **names = (char **)ret.PointerVal;
-			for (int i = 0; i < 2; ++i)
-				QVERIFY2(! strcmp(names[i], "publishedIn0") || ! strcmp(names[i], "publishedIn1"), names[i]);  // std::string::operator== doesn't work here
 		}
 	}
 

@@ -2,7 +2,7 @@
  * @file
  * VuoWindowRecorder implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -101,7 +101,11 @@ VuoModuleMetadata({
 		_assetWriter.movieFragmentInterval = CMTimeMake(TIMEBASE*10, TIMEBASE);
 
 		NSDictionary *videoSettings = @{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+			// The replacement, AVVideoCodecTypeH264, isn't available until macOS 10.13.
 			AVVideoCodecKey: AVVideoCodecH264,
+#pragma clang diagnostic pop
 			AVVideoWidthKey: [NSNumber numberWithInt:_originalWidth],
 			AVVideoHeightKey: [NSNumber numberWithInt:_originalHeight]
 		};

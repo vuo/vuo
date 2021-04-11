@@ -2,7 +2,7 @@
  * @file
  * vuo.osc.filter.address node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -33,7 +33,7 @@ void nodeEvent
 	if (!message)
 		return;
 
-	if (!VuoText_compare(message->address, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, address))
+	if (!VuoText_compare(message->address, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, address))
 		return;
 
 	*filteredMessage = message;

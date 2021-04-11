@@ -2,7 +2,7 @@
  * @file
  * TestVuoList implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -326,7 +326,7 @@ private slots:
 			VuoList_VuoText shortList = VuoListCreate_VuoText();
 			VuoListAppendValue_VuoText(shortList, VuoText_make("one"));
 			VuoListAppendValue_VuoText(shortList, VuoText_make("two"));
-			QTest::newRow("short list") << shortList << "List containing 2 items: <ul><li><code>one</code></li><li><code>two</code></li></ul>";
+			QTest::newRow("short list") << shortList << "List containing 2 items: <ul>\n<li><code>one</code></li>\n<li><code>two</code></li></ul>";
 		}
 
 		{
@@ -335,21 +335,21 @@ private slots:
 				VuoListAppendValue_VuoText(listWithLongItems, VuoText_make("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris."));
 			// Since the text exceeds VuoList_*_getSummary()'s 400 character limit,
 			// the list summary should just show a single item, followed by an ellipsis.
-			QTest::newRow("list with 10 long items") << listWithLongItems << "List containing 10 items: <ul><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris.</code></li><li>…</li></ul>";
+			QTest::newRow("list with 10 long items") << listWithLongItems << "List containing 10 items: <ul>\n<li><code>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris.</code></li>\n<li>…</li></ul>";
 		}
 
 		{
 			VuoList_VuoText listWithLongItems = VuoListCreate_VuoText();
 			VuoListAppendValue_VuoText(listWithLongItems, VuoText_make("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris."));
 			// A list with 1 long item should show that item (and it should not have an ellipsis as its last item).
-			QTest::newRow("list with 1 long item") << listWithLongItems << "List containing 1 item: <ul><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris.</code></li></ul>";
+			QTest::newRow("list with 1 long item") << listWithLongItems << "List containing 1 item: <ul>\n<li><code>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris.</code></li></ul>";
 		}
 
 		{
 			VuoList_VuoText listWithManyItems = VuoListCreate_VuoText();
 			for (int i = 0; i < 100; ++i)
 				VuoListAppendValue_VuoText(listWithManyItems, VuoText_make("item"));
-			QTest::newRow("list with many items") << listWithManyItems << "List containing 100 items: <ul><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li>…</li></ul>";
+			QTest::newRow("list with many items") << listWithManyItems << "List containing 100 items: <ul>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li><code>item</code></li>\n<li>…</li></ul>";
 		}
 	}
 	void testSummary()

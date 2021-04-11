@@ -2,7 +2,7 @@
  * @file
  * VuoAudioFrame implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -41,7 +41,6 @@ VuoAudioFrame VuoAudioFrame_makeFromJson(json_object *js)
 	return (VuoAudioFrame){
 		VuoJson_getObjectValue(VuoList_VuoAudioSamples, js, "channels",  NULL),
 		VuoJson_getObjectValue(VuoReal,                 js, "timestamp", 0),
-		""
 	};
 }
 
@@ -74,8 +73,7 @@ char * VuoAudioFrame_getSummary(const VuoAudioFrame value)
  */
 bool VuoAudioFrame_areEqual(VuoAudioFrame value1, VuoAudioFrame value2)
 {
-	// Maybe this should just check image?
-	return abs(value1.timestamp - value2.timestamp) < .001;
+    return fabs(value1.timestamp - value2.timestamp) < .001;
 }
 
 /**

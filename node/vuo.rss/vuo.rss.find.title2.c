@@ -2,7 +2,7 @@
  * @file
  * vuo.rss.find.title node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -34,7 +34,7 @@ void nodeEvent(
 	{
 		VuoRssItem item = VuoListGetValue_VuoRssItem(items, i);
 
-		if (VuoText_compare(item.title, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true, ""}, title))
+		if (VuoText_compare(item.title, (VuoTextComparison){VuoTextComparison_MatchesWildcard, true}, title))
 			VuoListAppendValue_VuoRssItem(*foundItems, item);
 	}
 }

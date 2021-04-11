@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPortClass interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -24,7 +24,7 @@ class VuoCompilerPortClass : public VuoCompilerNodeArgumentClass
 protected:
 	struct json_object *details;  ///< Metadata specified in the node class implementation, such as the port's display name.
 
-	VuoCompilerPortClass(string name, VuoPortClass::PortType portType, Type *type);
+	VuoCompilerPortClass(string name, VuoPortClass::PortType portType);
 
 public:
 	~VuoCompilerPortClass(void);

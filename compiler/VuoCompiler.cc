@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -51,12 +51,14 @@ dispatch_queue_t VuoCompiler::Environment::moduleCacheBuildingQueue = dispatch_q
 const string VuoCompiler::Environment::pidCacheDirPrefix = "pid-";
 set<VuoCompiler *> VuoCompiler::allCompilers;
 dispatch_queue_t VuoCompiler::environmentQueue = dispatch_queue_create("org.vuo.compiler.environment", NULL);
-vector< vector<VuoCompiler::Environment *> > VuoCompiler::sharedEnvironments;
+map<string, vector< vector<VuoCompiler::Environment *> > > VuoCompiler::sharedEnvironments;
 map<string, vector<VuoCompiler::Environment *> > VuoCompiler::environmentsForCompositionFamily;
-dispatch_group_t VuoCompiler::moduleSourceCompilersExist = dispatch_group_create();
+dispatch_group_t VuoCompiler::moduleSourceCompilersExistGlobally = dispatch_group_create();
 string VuoCompiler::vuoFrameworkInProgressPath;
 
 dispatch_queue_t llvmQueue = NULL;  ///< Synchronizes access to LLVM's global context. Don't call environmentQueue from this queue.
+
+llvm::LLVMContext *VuoCompiler::globalLLVMContext = nullptr;  ///< LLVM's global context.  @todo replace this with a per-VuoCompiler-instance context?
 
 /**
  * Workaround for an LLVM bug.
@@ -74,7 +76,12 @@ static void __attribute__((constructor)) VuoCompiler_init(void)
 	llvmQueue = dispatch_queue_create("org.vuo.compiler.llvm", NULL);
 
 	dispatch_sync(llvmQueue, ^{
-					  llvm::InitializeNativeTarget();
+					  // llvm::InitializeNativeTarget();
+					  llvm::InitializeAllTargetMCs();
+					  llvm::InitializeAllTargets();
+					  // TargetRegistry::printRegisteredTargetsForVersion();
+
+					  VuoCompiler::globalLLVMContext = new llvm::LLVMContext;
 
 					  // If the Vuo compiler/linker...
 					  //   1. Loads a node class that uses dispatch_object_t.
@@ -87,7 +94,7 @@ static void __attribute__((constructor)) VuoCompiler_init(void)
 					  //
 					  // https://b33p.net/kosada/node/3845
 					  // http://lists.cs.uiuc.edu/pipermail/llvmdev/2012-December/057075.html
-					  Module module("", getGlobalContext());
+					  Module module("", *VuoCompiler::globalLLVMContext);
 					  VuoCompilerCodeGenUtilities::getDispatchObjectType(&module);
 
 					  // Workaround for a possibly related error where the compiler ends up with the wrong
@@ -408,10 +415,12 @@ VuoCompiler::ModuleInfo * VuoCompiler::ModuleInfoIterator::next(void)
 /**
  * Creates an empty environment.
  */
-VuoCompiler::Environment::Environment(void)
+VuoCompiler::Environment::Environment(string target, bool builtIn, bool generated)
+	: target(target), builtIn(builtIn), generated(generated)
 {
 	compilersToNotifyQueue = dispatch_queue_create("org.vuo.compiler.notify", 0);
 	moduleSearchPathContentsChangedQueue = dispatch_queue_create("org.vuo.compiler.watch", 0);
+	lastModuleCacheRebuild = 0;
 	isModuleCacheableDataDirty = false;
 	isModuleCacheInitialized = false;
 	isModuleCacheAvailable = false;
@@ -460,6 +469,14 @@ VuoCompiler::Environment::~Environment(void)
 
 	delete dependencyGraph;
 	delete compositionDependencyGraph;
+}
+
+/**
+ * Returns this environment's LLVM target triple.
+ */
+string VuoCompiler::Environment::getTarget()
+{
+    return target;
 }
 
 /**
@@ -559,6 +576,20 @@ VuoCompilerType * VuoCompiler::Environment::getType(const string &moduleKey)
 map<string, VuoNodeSet *> VuoCompiler::Environment::getNodeSets(void)
 {
 	return nodeSetForName;
+}
+
+/**
+ * Returns the library with the given `libraryModuleName`, or null if no library by that name has been loaded.
+ *
+ * @threadQueue{environmentQueue}
+ */
+VuoCompilerModule *VuoCompiler::Environment::getLibraryModule(const string &libraryModuleName)
+{
+	map<string, VuoCompilerModule *>::iterator libraryIter = libraryModules.find(libraryModuleName);
+	if (libraryIter != libraryModules.end())
+		return libraryIter->second;
+
+	return nullptr;
 }
 
 /**
@@ -817,6 +848,10 @@ void VuoCompiler::Environment::updateModulesAtSearchPath(const string &path)
 	{
 		VuoFileUtilities::File *moduleFile = *i;
 
+		// Ignore macOS extended attribute storage (a.k.a. xattr, resource fork).
+		if (VuoStringUtilities::beginsWith(moduleFile->basename(), "._"))
+			continue;
+
 		ModuleInfo *m = new ModuleInfo(this, path, moduleFile, false, false);
 		fileForModuleKey[m->getModuleKey()] = m;
 	}
@@ -1058,7 +1093,8 @@ vector<string> VuoCompiler::Environment::getBuiltInHeaderSearchPaths(void)
 	if (! vuoFrameworkPath.empty())
 	{
 		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers");
-		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers/macos");  // system headers installed by Xcode Command Line Tools
+		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers/macos");          // system headers installed by Xcode Command Line Tools
+		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers/macos/pthread");  //
 		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Frameworks/llvm.framework/Versions/A/Headers/lib/c++/v1");
 	}
 	else
@@ -1098,8 +1134,6 @@ vector<string> VuoCompiler::Environment::getBuiltInLibrarySearchPaths(void)
 		builtInLibrarySearchPaths.push_back(VUO_BUILD_DIR "/type/list");
 		builtInLibrarySearchPaths.push_back(VUO_BUILD_DIR "/runtime");
 
-		builtInLibrarySearchPaths.push_back(LEAP_ROOT);
-
 		vector<string> conanLibDirs = VuoStringUtilities::split(CONAN_LIBRARY_PATHS, ';');
 		builtInLibrarySearchPaths.insert(builtInLibrarySearchPaths.end(), conanLibDirs.begin(), conanLibDirs.end());
 	}
@@ -1119,10 +1153,6 @@ vector<string> VuoCompiler::Environment::getBuiltInFrameworkSearchPaths(void)
 	{
 		builtInFrameworkSearchPaths.push_back(vuoFrameworkPath + "/Modules/");
 		builtInFrameworkSearchPaths.push_back(vuoFrameworkPath + "/Frameworks/");
-	}
-	else
-	{
-		builtInFrameworkSearchPaths.push_back(SYPHON_ROOT);
 	}
 
 	return builtInFrameworkSearchPaths;
@@ -1542,7 +1572,8 @@ set<dispatch_group_t> VuoCompiler::Environment::loadSpecializedModules(const set
 				compiler->loadNodeClassGeneratedAtRuntime(specNodeClass, this);
 
 				set<string> dependencies = specNodeClass->getDependencies();
-				compiler->loadModulesIfNeeded(dependencies);
+				if (!dependencies.empty())
+					compiler->loadModulesIfNeeded(dependencies);
 			}
 
 			dispatch_sync(environmentQueue, ^{
@@ -1570,9 +1601,9 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 {
 	ModuleInfoIterator modulesToLoadIter = listSourceFiles(moduleKeys);
 
-	int environmentIndex = sharedEnvironments.size();
-	for (int i = 0; i < sharedEnvironments.size(); ++i)
-		if (this == sharedEnvironments.at(i).at(0))
+	int environmentIndex = sharedEnvironments[target].size();
+	for (int i = 0; i < sharedEnvironments[target].size(); ++i)
+		if (this == sharedEnvironments[target].at(i).at(0))
 			environmentIndex = i;
 
 	set<dispatch_group_t> sourcesLoading;
@@ -1607,7 +1638,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 		sourceInfo->setAttempted(true);
 
 		dispatch_group_enter(loadingGroup);
-		dispatch_group_enter(moduleSourceCompilersExist);
+		dispatch_group_enter(moduleSourceCompilersExistGlobally);
 
 		VuoModuleCompilationQueue::Item *queueItem = new VuoModuleCompilationQueue::Item();
 		queueItem->moduleKey = moduleKey;
@@ -1716,7 +1747,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 				}
 
 				delete compiler;
-				dispatch_group_leave(moduleSourceCompilersExist);
+				dispatch_group_leave(moduleSourceCompilersExistGlobally);
 			});
 		}
 	});
@@ -1810,6 +1841,13 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(ModuleInfo *moduleInfo)
 	if (VuoStringUtilities::beginsWith(moduleKey, "libVuo"))
 		return NULL;
 
+	// Don't try to load single-target parts
+	// (such as those found in `build/test/TestControlAndTelemetry`),
+	// since they just fail and pollute the logs.
+	if (VuoStringUtilities::endsWith(moduleKey, "-x86_64")
+	 || VuoStringUtilities::endsWith(moduleKey, "-arm64"))
+		return nullptr;
+
 	__block size_t inputDataBytes;
 	__block char *rawInputData;
 	dispatch_sync(llvmQueue, ^{
@@ -1838,8 +1876,9 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(ModuleInfo *moduleInfo)
 	if (!moduleParseError)
 	{
 		string moduleReadError;
-		VuoLog_status("Loading module \"%s\"", moduleKey.c_str());
-		module = readModuleFromBitcodeData(processedInputData, inputDataBytes, moduleReadError);
+		string arch = VuoCompiler::getTargetArch(target);
+		VuoLog_status("Loading module \"%s\" (%s)", moduleKey.c_str(), arch.c_str());
+		module = readModuleFromBitcodeData(processedInputData, inputDataBytes, arch, moduleReadError);
 		VuoLog_status(NULL);
 		free(processedInputData);
 
@@ -1853,7 +1892,7 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(ModuleInfo *moduleInfo)
 			if (dir == getCompiledModuleCachePath())
 				VuoFileUtilities::deleteFile(moduleInfo->getFile()->path());
 			else
-				VUserLog("Error: Couldn't parse module '%s': %s.", moduleInfo->getFile()->getRelativePath().c_str(), moduleReadError.c_str());
+				VUserLog("Error: Couldn't load module '%s' into %s environment: %s.", moduleInfo->getFile()->getRelativePath().c_str(), arch.c_str(), moduleReadError.c_str());
 		}
 	}
 
@@ -1897,7 +1936,7 @@ VuoCompilerModule * VuoCompiler::Environment::loadModule(ModuleInfo *moduleInfo)
 			loadModule_Pro1(rawInputData, processedInputData, compilerModule);
 #endif
 
-			compilerModule->setBuiltIn( isBuiltIn() );
+			compilerModule->setBuiltIn( isBuiltInOriginal() );
 
 			return compilerModule;
 		}
@@ -1938,9 +1977,8 @@ void VuoCompiler::Environment::addToDependencyGraph(VuoCompilerModule *module)
 
 	vertex->setEnvironment(this);
 
-	VuoCompilerTargetSet compositionTargets;
-	compositionTargets.restrictToCurrentOperatingSystemVersion();
-	vertex->setCompatible( module->getCompatibleTargets().isCompatibleWithAllOf(compositionTargets) );
+	VuoCompilerCompatibility compositionTargets = VuoCompilerCompatibility::currentSystem();
+	vertex->setCompatible( module->getCompatibleTargets().isCompatibleWith(compositionTargets) );
 
 	set<string> dependencies = module->getDependencies();
 	for (set<string>::iterator i = dependencies.begin(); i != dependencies.end(); ++i)
@@ -2039,16 +2077,14 @@ void VuoCompiler::Environment::reifyPortTypes(const map<string, VuoCompilerType 
 /**
  * Inventories the items that should be included in this environment's cache.
  *
- * @param builtIn If true, this environment is at the built-in level of scope.
- * @param installed If true, this environment contains modules loaded from files; if false, modules generated by the compiler.
  * @param[out] cacheableModulesAndDependencies The keys/names of all modules and static libraries that should be contained
  *     in this environment's cache.
- * @param[out] dylibsNeededToLinkToThisCache The path of the cache dylib plus the paths of all other dylibs that it links to.
+ * @param[out] dylibsNeededToLinkToThisCache The paths of all dylibs that the module cache dylib links to.
  * @param[out] frameworksNeededToLinkToThisCache The names of all frameworks that the cache dylib links to.
  *
  * @threadQueue{environmentQueue}
  */
-void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, bool installed, set<string> &cacheableModulesAndDependencies,
+void VuoCompiler::Environment::getCacheableModulesAndDependencies(set<string> &cacheableModulesAndDependencies,
 																  set<string> &dylibsNeededToLinkToThisCache,
 																  set<string> &frameworksNeededToLinkToThisCache)
 {
@@ -2060,8 +2096,7 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, 
 		return;
 	}
 
-	VuoCompilerTargetSet compositionTargets;
-	compositionTargets.restrictToCurrentOperatingSystemVersion();
+	VuoCompilerCompatibility compositionTargets = VuoCompilerCompatibility::currentSystem();
 
 	// Include all modules…
 	map<string, VuoCompilerModule *> allModules;
@@ -2082,7 +2117,7 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, 
 #endif
 
 		// … and incompatible modules.
-		if (! module->getCompatibleTargets().isCompatibleWithAllOf(compositionTargets))
+		if (! module->getCompatibleTargets().isCompatibleWith(compositionTargets))
 			continue;
 
 		cacheableModulesAndDependencies.insert(moduleKey);
@@ -2092,7 +2127,7 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, 
 	}
 
 	// For the built-in environment, include Vuo's core dependencies.
-	if (builtIn && installed)
+	if (builtIn && ! generated)
 	{
 		vector<string> coreDependencies = getCoreVuoDependencies();
 		dependencies.insert(coreDependencies.begin(), coreDependencies.end());
@@ -2121,11 +2156,11 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, 
 		}
 	}
 
-	moduleCacheSuffix = (installed ? "installed" : "generated");
-	dylibsNeededToLinkToThisCache.insert(moduleCachePath + "/libVuoModuleCache-" + moduleCacheSuffix + ".dylib");
-
 	moduleCacheDylibs = dylibsNeededToLinkToThisCache;
 	moduleCacheFrameworks = frameworksNeededToLinkToThisCache;
+
+	if (builtIn)
+		currentModuleCacheDylib = VuoFileUtilities::buildModuleCacheDylibPath(moduleCachePath, builtIn, generated);
 }
 
 /**
@@ -2144,11 +2179,14 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(bool builtIn, 
  * @param cacheableModulesAndDependencies The items that the cache should contain, from @ref getCacheableModulesAndDependencies.
  * @param dylibsNeededToLinkToCaches Dynamic libraries that the cache should link to, from @ref getCacheableModulesAndDependencies.
  * @param frameworksNeededToLinkToCaches Frameworks that the cache should link to, from @ref getCacheableModulesAndDependencies.
+ * @param lastPrerequisiteModuleCacheRebuild The most recent time that any of the caches that this cache depends on were rebuilt.
  *
  * @threadQueue{environmentQueue}
  */
-void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCompiler *compiler, set<string> cacheableModulesAndDependencies,
-											  set<string> dylibsNeededToLinkToCaches, set<string> frameworksNeededToLinkToCaches)
+void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCompiler *compiler,
+											  set<string> cacheableModulesAndDependencies,
+											  set<string> dylibsNeededToLinkToCaches, set<string> frameworksNeededToLinkToCaches,
+											  unsigned long lastPrerequisiteModuleCacheRebuild)
 {
 	// Ignore the cache if the `prelinkCache` preference is false.
 
@@ -2171,10 +2209,11 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 	if (moduleCachePath.empty())
 		return;
 
-	// Don't bother rechecking the cache if the modules in this environment haven't changed.
+	// Don't bother rechecking the cache if neither the modules in this environment nor the caches that it depends on have changed.
 
-	string cacheDescription = string() + "the cache of " + moduleCacheSuffix + " modules at '" + moduleCachePath + "'";
-	if (isModuleCacheInitialized && ! isModuleCacheableDataDirty)
+	string cacheDescription = VuoFileUtilities::buildModuleCacheDescription(moduleCachePath, generated);
+	if (isModuleCacheInitialized && ! isModuleCacheableDataDirty &&
+			(builtIn || lastModuleCacheRebuild >= lastPrerequisiteModuleCacheRebuild))
 	{
 		VDebugLog("No need to recheck %s.", cacheDescription.c_str());
 		return;
@@ -2192,60 +2231,66 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 		isModuleCacheInitialized = true;
 		isModuleCacheableDataDirty = false;
 
-		const string dylibFileName = "libVuoModuleCache-" + moduleCacheSuffix + ".dylib";
-		const string indexFileName = "moduleCache-" + moduleCacheSuffix + ".txt";
-		string dylibPath = moduleCachePath + "/" + dylibFileName;
-		string indexPath = moduleCachePath + "/" + indexFileName;
+		string indexPath = VuoFileUtilities::buildModuleCacheIndexPath(moduleCachePath, builtIn, generated);
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(indexPath, dir, file, ext);
+		string indexFileName = file + "." + ext;
 
-		// Create the cache files if they don't already exist. (If they do exist, don't affect the last-modified times.)
-
-		bool dylibFileExists = false;
-		bool indexFileExists = false;
+		// Create the cache directory and index if they don't already exist. (If they do exist, don't affect the last-modified times.)
 
 		bool dirExists = VuoFileUtilities::fileExists(moduleCachePath);
-		if (dirExists)
-		{
-			dylibFileExists = VuoFileUtilities::fileExists(dylibPath);
-			indexFileExists = VuoFileUtilities::fileExists(indexPath);
-		}
-
-		if (! (dirExists && dylibFileExists && indexFileExists))
+		if (! dirExists)
 		{
 			if (shouldUseExistingCache)
-				throw VuoException("Trying to use the existing cache, but the cache doesn't exist.", false);
-			else
-			{
-				if (! dirExists)
-					VuoFileUtilities::makeDir(moduleCachePath);
-				if (! indexFileExists)
-					VuoFileUtilities::createFile(indexPath);
-				if (! dylibFileExists)
-					VuoFileUtilities::createFile(dylibPath);
+				throw VuoException("Trying to use the existing cache, but the cache directory doesn't exist.", false);
 
-				isCacheUpToDate = false;
-			}
+			VuoFileUtilities::makeDir(moduleCachePath);
+			isCacheUpToDate = false;
+		}
+
+		bool indexFileExists = VuoFileUtilities::fileExists(indexPath);
+		if (! indexFileExists)
+		{
+			if (shouldUseExistingCache)
+				throw VuoException("Trying to use the existing cache, but the cache index doesn't exist.", false);
+
+			VuoFileUtilities::createFile(indexPath);
+			isCacheUpToDate = false;
 		}
 
 		// Lock the cache for reading.
 
 		VuoFileUtilities::File *fileForLocking;
 		{
-			fileForLocking = moduleCacheFileForLocking[dylibPath];
+			fileForLocking = moduleCacheFileForLocking[indexPath];
 			if (! fileForLocking)
 			{
-				fileForLocking = new VuoFileUtilities::File(moduleCachePath, dylibFileName);
-				moduleCacheFileForLocking[dylibPath] = fileForLocking;
+				fileForLocking = new VuoFileUtilities::File(moduleCachePath, indexFileName);
+				moduleCacheFileForLocking[indexPath] = fileForLocking;
 			}
 
 			if (!fileForLocking->lockForReading())
 				VDebugLog("\tWarning: Couldn't lock for reading.");
 		}
 
+		// If this is the first time this Environment is using its cache, see if there's a dylib on disk.
+
+		if (currentModuleCacheDylib.empty())
+			currentModuleCacheDylib = VuoFileUtilities::findLatestRevisionOfModuleCacheDylib(moduleCachePath, builtIn, generated, lastModuleCacheRebuild);
+
+		if (shouldUseExistingCache && currentModuleCacheDylib.empty())
+			throw VuoException("Trying to use the existing cache, but the cache dylib doesn't exist.", false);
+
+		// Check if the dylib is newer than the other caches that it depends on.
+
+		if (isCacheUpToDate)
+			isCacheUpToDate = lastModuleCacheRebuild >= lastPrerequisiteModuleCacheRebuild;
+
 		// Check if the dylib looks remotely valid.
 
 		if (isCacheUpToDate)
 		{
-			bool dylibHasData = VuoFileUtilities::fileContainsReadableData(dylibPath);
+			bool dylibHasData = VuoFileUtilities::fileContainsReadableData(currentModuleCacheDylib);
 			if (! dylibHasData)
 			{
 				if (shouldUseExistingCache)
@@ -2296,7 +2341,7 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 
 		if (isCacheUpToDate)
 		{
-			unsigned long cacheLastModified = VuoFileUtilities::getFileLastModifiedInSeconds(dylibPath);
+			unsigned long cacheLastModified = VuoFileUtilities::getFileLastModifiedInSeconds(currentModuleCacheDylib);
 
 			for (map<string, map<string, ModuleInfo *> >::iterator i = moduleFilesAtSearchPath.begin(); i != moduleFilesAtSearchPath.end(); ++i)
 			{
@@ -2323,6 +2368,15 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 
 		// Otherwise, (re)build the cache.
 
+		if (! builtIn)
+		{
+			currentModuleCacheDylib = VuoFileUtilities::buildModuleCacheDylibPath(moduleCachePath, builtIn, generated);
+
+			struct timeval t;
+			gettimeofday(&t, NULL);
+			lastModuleCacheRebuild = t.tv_sec;
+		}
+
 		dispatch_async(moduleCacheBuildingQueue, ^{
 			VDebugLog("Rebuilding %s…", cacheDescription.c_str());
 
@@ -2333,10 +2387,6 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 				compiler->getLinkerInputs(cacheableModulesAndDependencies, Optimization_SmallBinary, modulesToLink, librariesToLink, frameworksToLink);
 
 				librariesToLink.insert(dylibsNeededToLinkToCaches.begin(), dylibsNeededToLinkToCaches.end());
-				set<string>::iterator iter = librariesToLink.find(dylibPath);  // getCacheableModulesAndDependencies includes dylibPath, but don't want to link against self
-				if (iter != librariesToLink.end())
-					librariesToLink.erase(iter);
-
 				frameworksToLink.insert(frameworksNeededToLinkToCaches.begin(), frameworksNeededToLinkToCaches.end());
 			}
 
@@ -2351,28 +2401,36 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 											 "If any processes whose names start with \"VuoComposition\" or one of your composition file names appear in Activity Monitor, force-quit them.",
 									   false);
 
-				// Link the dependencies to create a temporary file.
+				// Link the dependencies to create the cached resources dylib in a temporary file.
 				string dir, file, ext;
-				VuoFileUtilities::splitPath(dylibFileName, dir, file, ext);
+				VuoFileUtilities::splitPath(currentModuleCacheDylib, dir, file, ext);
 				string tmpPath = VuoFileUtilities::makeTmpFile(file, "dylib");
-				compiler->link(tmpPath, modulesToLink, librariesToLink, frameworksToLink, true);
+				compiler->link(tmpPath, modulesToLink, librariesToLink, frameworksToLink, true, "", false);
 
-				// Copy the contents of the temporary file into the cached resources dylib.
-				// This preserves the lock on the cached resources dylib file (https://b33p.net/kosada/node/12970).
-				VuoFileUtilities::copyFile(tmpPath, dylibPath, true);
-				VuoFileUtilities::deleteFile(tmpPath);
+				// Move the temporary file into the cache.
+				VuoFileUtilities::moveFile(tmpPath, currentModuleCacheDylib);
 
+				// Change the dylib's ID from the temporary path to the path within the cache.
 				VuoFileUtilities::executeProcess({
 					getVuoFrameworkPath() + "/Helpers/install_name_tool",
 					"-id",
-					dylibPath,
-					dylibPath,
+					currentModuleCacheDylib,
+					currentModuleCacheDylib,
 				});
+
+				// Ad-hoc code-sign the runtime-generated System and User caches,
+				// but don't ad-hoc code-sign the buildtime-generated Builtin module cache
+				// since `framework/CMakeLists.txt` later changes its ID/rpath/loads.
+				if (vuoFrameworkInProgressPath.empty())
+					adHocCodeSign(currentModuleCacheDylib);
 
 				// Write the list of dependencies to the index file.
 				vector<string> expectedContents(cacheableModulesAndDependencies.begin(), cacheableModulesAndDependencies.end());
 				string index = VuoStringUtilities::join(expectedContents, separator);
 				VuoFileUtilities::writeStringToFile(index, indexPath);
+
+				// Delete any older revisions of the dylib.
+				VuoFileUtilities::deleteOtherRevisionsOfModuleCacheDylib(currentModuleCacheDylib);
 
 				// Downgrade the file lock back to reading.
 				if (!fileForLocking->lockForReading())
@@ -2423,11 +2481,28 @@ bool VuoCompiler::Environment::findInModuleCache(const string &moduleOrDependenc
 {
 	if (isModuleCacheAvailable && moduleCacheContents.find(moduleOrDependency) != moduleCacheContents.end())
 	{
-		cachePath = moduleCachePath + "/libVuoModuleCache-" + moduleCacheSuffix + ".dylib";
+		cachePath = currentModuleCacheDylib;
 		return true;
 	}
 
 	return false;
+}
+
+/**
+ * Returns the path of the most recent revision of this environment's module cache dylib.
+ */
+string VuoCompiler::Environment::getCurrentModuleCacheDylib(void)
+{
+	return currentModuleCacheDylib;
+}
+
+/**
+ * Returns the time (in seconds since a reference date) when this Environment instance last scheduled its cache to be rebuilt;
+ * or, if none and this is not a built-in environment, the time when the module cache dylib was last modified; otherwise, 0.
+ */
+unsigned long VuoCompiler::Environment::getLastModuleCacheRebuild(void)
+{
+	return lastModuleCacheRebuild;
 }
 
 /**
@@ -2445,9 +2520,25 @@ void VuoCompiler::Environment::modulesChanged(void)
 /**
  * Returns true if this is the environment for built-in original modules.
  */
+bool VuoCompiler::Environment::isBuiltInOriginal()
+{
+	return builtIn && ! generated;
+}
+
+/**
+ * Returns true if this environment is for built-in modules.
+ */
 bool VuoCompiler::Environment::isBuiltIn()
 {
-    return this == sharedEnvironments[0][0];
+	return builtIn;
+}
+
+/**
+ * Returns true if this environment is for generated modules, false if for original modules.
+ */
+bool VuoCompiler::Environment::isGenerated()
+{
+	return generated;
 }
 
 /**
@@ -2455,17 +2546,17 @@ bool VuoCompiler::Environment::isBuiltIn()
  */
 string VuoCompiler::Environment::getName()
 {
-	if (isBuiltIn())
+	if (isBuiltInOriginal())
 		return "builtin";
-	else if (this == sharedEnvironments[0][1])
+	else if (this == sharedEnvironments[target][0][1])
 		return "builtin (generated)";
-	else if (this == sharedEnvironments[1][0])
+	else if (this == sharedEnvironments[target][1][0])
 		return "system";
-	else if (this == sharedEnvironments[1][1])
+	else if (this == sharedEnvironments[target][1][1])
 		return "system (generated)";
-	else if (this == sharedEnvironments[2][0])
+	else if (this == sharedEnvironments[target][2][0])
 		return "user";
-	else if (this == sharedEnvironments[2][1])
+	else if (this == sharedEnvironments[target][2][1])
 		return "user (generated)";
 	return "composition-local";
 }
@@ -2515,10 +2606,25 @@ void VuoCompiler::applyToAllEnvironments(void (^doForEnvironment)(Environment *e
  *     pass the path so the compiler can locate composition-local modules. If the path is not yet known,
  *     it can be set later with @ref setCompositionPath or @ref compileComposition. If not compiling a composition,
  *     pass an empty string.
+ * @param target The LLVM Target Triple to use for this compiler instance.
+ *               Affects which slice of multi-archtecture binaries is loaded,
+ *               and affects the bitcode that's generated.
+ *               If no target is specified, the current process's architecture is used.
  * @version200Changed{Added `compositionPath` argument.}
  */
-VuoCompiler::VuoCompiler(const string &compositionPath)
+VuoCompiler::VuoCompiler(const string &compositionPath, string target)
 {
+	if (target.empty())
+	{
+		this->target = target = getProcessTarget();
+		VDebugLog("%p  target=%s (from current process)", this, this->target.c_str());
+	}
+	else
+	{
+		this->target = target;
+		VDebugLog("%p  target=%s", this, this->target.c_str());
+	}
+
 #if VUO_PRO
 	init_Pro();
 #endif
@@ -2526,6 +2632,7 @@ VuoCompiler::VuoCompiler(const string &compositionPath)
 	shouldLoadAllModules = true;
 	hasLoadedAllModules = false;
 	modulesToLoadQueue = dispatch_queue_create("org.vuo.compiler.modules", NULL);
+	moduleSourceCompilersExist = dispatch_group_create();
 	moduleCacheBuilding = dispatch_group_create();
 	dependencyGraph = NULL;
 	compositionDependencyGraph = NULL;
@@ -2538,47 +2645,41 @@ VuoCompiler::VuoCompiler(const string &compositionPath)
 	if (! vuoFrameworkPath.empty())
 		clangPath = vuoFrameworkPath + "/Helpers/clang";
 	else
-		clangPath = llvm::sys::Path(StringRef(LLVM_ROOT "/bin/clang"));
+		clangPath = LLVM_ROOT "/bin/clang";
 
 	dispatch_sync(environmentQueue, ^{
 					  allCompilers.insert(this);
 
-					  if (sharedEnvironments.empty())
+					  if (sharedEnvironments[target].empty())
 					  {
-						  sharedEnvironments = vector< vector<Environment *> >(3, vector<Environment *>(2, NULL));
-						  for (vector< vector<Environment *> >::iterator i = sharedEnvironments.begin(); i != sharedEnvironments.end(); ++i) {
-							  for (vector<Environment *>::iterator j = i->begin(); j != i->end(); ++j) {
-								  *j = new Environment();
-							  }
-						  }
+						  sharedEnvironments[target] = vector< vector<Environment *> >(3, vector<Environment *>(2, NULL));
+						  for (vector< vector<Environment *> >::iterator i = sharedEnvironments[target].begin(); i != sharedEnvironments[target].end(); ++i)
+							  for (vector<Environment *>::iterator j = i->begin(); j != i->end(); ++j)
+								  *j = new Environment(this->target, i == sharedEnvironments[target].begin(), j != i->begin());
 
 						  vector<string> builtInModuleSearchPaths = Environment::getBuiltInModuleSearchPaths();
-						  for (vector<string>::iterator i = builtInModuleSearchPaths.begin(); i != builtInModuleSearchPaths.end(); ++i) {
-							  sharedEnvironments[0][0]->addModuleSearchPath(*i, false);
-						  }
+						  for (vector<string>::iterator i = builtInModuleSearchPaths.begin(); i != builtInModuleSearchPaths.end(); ++i)
+							  sharedEnvironments[target][0][0]->addModuleSearchPath(*i, false);
 
 						  vector<string> builtInHeaderSearchPaths = Environment::getBuiltInHeaderSearchPaths();
-						  for (vector<string>::iterator i = builtInHeaderSearchPaths.begin(); i != builtInHeaderSearchPaths.end(); ++i) {
-							  sharedEnvironments[0][0]->addHeaderSearchPath(*i);
-						  }
+						  for (vector<string>::iterator i = builtInHeaderSearchPaths.begin(); i != builtInHeaderSearchPaths.end(); ++i)
+							  sharedEnvironments[target][0][0]->addHeaderSearchPath(*i);
 
 						  vector<string> builtInLibrarySearchPaths = Environment::getBuiltInLibrarySearchPaths();
-						  for (vector<string>::iterator i = builtInLibrarySearchPaths.begin(); i != builtInLibrarySearchPaths.end(); ++i) {
-							  sharedEnvironments[0][0]->addLibrarySearchPath(*i);
-						  }
+						  for (vector<string>::iterator i = builtInLibrarySearchPaths.begin(); i != builtInLibrarySearchPaths.end(); ++i)
+							  sharedEnvironments[target][0][0]->addLibrarySearchPath(*i);
 
 						  vector<string> builtInFrameworkSearchPaths = Environment::getBuiltInFrameworkSearchPaths();
-						  for (vector<string>::iterator i = builtInFrameworkSearchPaths.begin(); i != builtInFrameworkSearchPaths.end(); ++i) {
-							  sharedEnvironments[0][0]->addFrameworkSearchPath(*i);
-						  }
+						  for (vector<string>::iterator i = builtInFrameworkSearchPaths.begin(); i != builtInFrameworkSearchPaths.end(); ++i)
+							  sharedEnvironments[target][0][0]->addFrameworkSearchPath(*i);
 
 						  // Allow system administrator to override Vuo.framework modules
-						  sharedEnvironments[1][0]->addModuleSearchPath(VuoFileUtilities::getSystemModulesPath());
-						  sharedEnvironments[1][0]->addLibrarySearchPath(VuoFileUtilities::getSystemModulesPath());
+						  sharedEnvironments[target][1][0]->addModuleSearchPath(VuoFileUtilities::getSystemModulesPath());
+						  sharedEnvironments[target][1][0]->addLibrarySearchPath(VuoFileUtilities::getSystemModulesPath());
 
 						  // Allow user to override Vuo.framework and system-wide modules
-						  sharedEnvironments[2][0]->addModuleSearchPath(VuoFileUtilities::getUserModulesPath());
-						  sharedEnvironments[2][0]->addLibrarySearchPath(VuoFileUtilities::getUserModulesPath());
+						  sharedEnvironments[target][2][0]->addModuleSearchPath(VuoFileUtilities::getUserModulesPath());
+						  sharedEnvironments[target][2][0]->addLibrarySearchPath(VuoFileUtilities::getUserModulesPath());
 
 						  // Set up module cache paths.
 						  // Since the built-in module caches are part of Vuo.framework (put there by `generateBuiltInModuleCaches`),
@@ -2595,10 +2696,10 @@ VuoCompiler::VuoCompiler(const string &compositionPath)
 							  {
 								  string moduleCachePath = moduleCachePaths[i];
 
-								  sharedEnvironments[i][0]->setModuleCachePath(moduleCachePath);
-								  sharedEnvironments[i][0]->addModuleSearchPath(moduleCachePath + "/Modules", false);
+								  sharedEnvironments[target][i][0]->setModuleCachePath(moduleCachePath);
+								  sharedEnvironments[target][i][0]->addModuleSearchPath(moduleCachePath + "/Modules", false);
 
-								  sharedEnvironments[i][1]->setModuleCachePath(moduleCachePath);
+								  sharedEnvironments[target][i][1]->setModuleCachePath(moduleCachePath);
 							  }
 						  }
 					  }
@@ -2640,10 +2741,11 @@ VuoCompiler::~VuoCompiler(void)
  */
 void VuoCompiler::reset(void)
 {
-	dispatch_group_wait(moduleSourceCompilersExist, DISPATCH_TIME_FOREVER);
+	dispatch_group_wait(moduleSourceCompilersExistGlobally, DISPATCH_TIME_FOREVER);
 
 	dispatch_sync(environmentQueue, ^{
-	for (vector< vector<Environment *> >::iterator i = sharedEnvironments.begin(); i != sharedEnvironments.end(); ++i)
+	for (auto e : sharedEnvironments)
+	for (vector< vector<Environment *> >::iterator i = e.second.begin(); i != e.second.end(); ++i)
 	{
 		(*i)[0]->stopWatchingModuleSearchPaths();
 		dispatch_sync((*i)[0]->moduleSearchPathContentsChangedQueue, ^{});
@@ -2655,7 +2757,8 @@ void VuoCompiler::reset(void)
 		dispatch_sync((i->second)[0]->moduleSearchPathContentsChangedQueue, ^{});
 	}
 
-	for (vector< vector<Environment *> >::iterator i = sharedEnvironments.begin(); i != sharedEnvironments.end(); ++i)
+	for (auto e : sharedEnvironments)
+	for (vector< vector<Environment *> >::iterator i = e.second.begin(); i != e.second.end(); ++i)
 		for (vector<Environment *>::iterator j = i->begin(); j != i->end(); ++j)
 			delete *j;
 
@@ -2741,7 +2844,7 @@ void VuoCompiler::setCompositionPath(const string &compositionPath)
 					  // If the composition is not in a shared environment, add all of the shared environments to the compiler.
 
 					  bool isCompositionInSharedEnvironment = false;
-					  for (vector< vector<Environment *> >::iterator i = sharedEnvironments.begin(); i != sharedEnvironments.end(); ++i)
+					  for (vector< vector<Environment *> >::iterator i = sharedEnvironments[target].begin(); i != sharedEnvironments[target].end(); ++i)
 					  {
 						  environments.push_back(*i);
 
@@ -2771,8 +2874,8 @@ void VuoCompiler::setCompositionPath(const string &compositionPath)
 						  if (compositionFamilyEnvironments.empty())
 						  {
 							  compositionFamilyEnvironments = vector<Environment *>(2, NULL);
-							  compositionFamilyEnvironments[0] = new Environment();
-							  compositionFamilyEnvironments[1] = new Environment();
+							  compositionFamilyEnvironments[0] = new Environment(this->target, false, false);
+							  compositionFamilyEnvironments[1] = new Environment(this->target, false, true);
 							  environmentsForCompositionFamily[compositionBaseDir] = compositionFamilyEnvironments;
 
 							  // Allow the user to place modules/subcompositions in a Modules folder inside the composition folder.
@@ -2798,8 +2901,8 @@ void VuoCompiler::setCompositionPath(const string &compositionPath)
 					  if (compositionEnvironments.empty())
 					  {
 						  compositionEnvironments = vector<Environment *>(2, NULL);
-						  compositionEnvironments[0] = new Environment();
-						  compositionEnvironments[1] = new Environment();
+						  compositionEnvironments[0] = new Environment(this->target, false, false);
+						  compositionEnvironments[1] = new Environment(this->target, false, true);
 					  }
 					  environments.push_back(compositionEnvironments);
 
@@ -2940,6 +3043,7 @@ void VuoCompiler::loadModulesIfNeeded(const set<string> &moduleKeys)
 
 	// Load modules and start sources compiling.
 
+	dispatch_group_enter(moduleSourceCompilersExist);
 	__block set<dispatch_group_t> sourcesLoading;
 	dispatch_sync(environmentQueue, ^{
 					  sourcesLoading = loadModulesAndSources(moduleKeys, set<string>(), set<string>(),
@@ -2947,14 +3051,15 @@ void VuoCompiler::loadModulesIfNeeded(const set<string> &moduleKeys)
 															 willLoadAllModules, false, nullptr, nullptr, nullptr, "");
 				  });
 
-	// Wait for sources to finish compiling and their modules to be loaded,
-	// to ensure that `getNodeClass(subcomposition)` finds the subcomposition node class.
+	// Wait for subcompositions and specialized node classes to finish compiling and their modules to be loaded
+	// to ensure that the next call to getNodeClass() will return them.
 
 	for (set<dispatch_group_t>::iterator i = sourcesLoading.begin(); i != sourcesLoading.end(); ++i)
 	{
 		dispatch_group_wait(*i, DISPATCH_TIME_FOREVER);
 		dispatch_release(*i);
 	}
+	dispatch_group_leave(moduleSourceCompilersExist);
 }
 
 /**
@@ -3217,7 +3322,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 
 			actualModulesRemoved[env] = env->unloadCompiledModules(modulesToUnload);
 
-			if (!env->isBuiltIn() && !actualModulesRemoved[env].empty())
+			if (!env->isBuiltInOriginal() && !actualModulesRemoved[env].empty())
 			{
 				set<string> actualModulesRemovedKeys;
 				for (auto m : actualModulesRemoved[env])
@@ -3278,7 +3383,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 				potentialSpecializedDependencies[genEnv].insert(dependencies.begin(), dependencies.end());
 			}
 
-			if (!env->isBuiltIn() && !actualModulesLoaded.empty())
+			if (!env->isBuiltInOriginal() && !actualModulesLoaded.empty())
 			{
 				map<string, string> actualFilesAndHashesLoaded;
 				for (auto module : actualModulesLoaded)
@@ -3437,7 +3542,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 			});
 		}
 
-		if (!env->isBuiltIn() && !sourcesToUnload.empty())
+		if (!env->isBuiltInOriginal() && !sourcesToUnload.empty())
 			VUserLog("Deleting from %s environment: %s", env->getName().c_str(), VuoStringUtilities::join(sourcesToUnload, ", ").c_str());
 
 		env->deleteModulesCompiledFromSourceCode(sourcesToUnload);
@@ -3466,7 +3571,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 		searchDependencyGraphs.push_back(compositionDependencyGraph);
 		for (map<string, vector<Environment *> >::iterator ii = environmentsForCompositionFamily.begin(); ii != environmentsForCompositionFamily.end(); ++ii)
 		{
-			vector< vector<Environment *> > otherEnvs = sharedEnvironments;
+			vector< vector<Environment *> > otherEnvs = sharedEnvironments[target];
 			otherEnvs.push_back(ii->second);
 			VuoDirectedAcyclicNetwork *other = makeDependencyNetwork(otherEnvs, ^VuoDirectedAcyclicGraph * (Environment *env) { return env->getCompositionDependencyGraph(); });
 			searchDependencyGraphs.push_back(other);
@@ -3784,7 +3889,7 @@ void VuoCompiler::loadNodeClassGeneratedAtRuntime(VuoCompilerNodeClass *nodeClas
 	if (module)
 	{
 		dispatch_sync(llvmQueue, ^{
-			setTargetForModule(nodeClass->getModule());
+			setTargetForModule(nodeClass->getModule(), env->getTarget());
 		});
 	}
 
@@ -3908,6 +4013,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 			Module *module = moduleCompiler->compile(getType, llvmQueue, issues);
 			if (module)
 				dispatch_sync(llvmQueue, ^{
+					setTargetForModule(module, target);
 					writeModuleToBitcode(module, outputPath);
 				});
 
@@ -3998,7 +4104,10 @@ Module * VuoCompiler::compileCompositionToModule(VuoCompilerComposition *composi
 		}
 		catch (VuoCompilerException &e)
 		{
-			issues->append(e.getIssues());
+			if (issues)
+				issues->append(e.getIssues());
+			else
+				VUserLog("%s", e.getIssues()->getLongDescription(false).c_str());
 		}
 	});
 
@@ -4045,7 +4154,7 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 void VuoCompiler::compileComposition(string inputPath, string outputPath, bool isTopLevelComposition,
 									 VuoCompilerIssues *issues)
 {
-	VDebugLog("Compiling '%s'…", inputPath.c_str());
+	VDebugLog("Compiling '%s' (%s)…", inputPath.c_str(), target.c_str());
 	if (isVerbose)
 		print();
 
@@ -4066,8 +4175,9 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
 	}
 	catch (VuoCompilerException &e)
 	{
-		e.getIssues()->setFilePathIfEmpty(inputPath);
-		if (!issues)
+		if (e.getIssues())
+			e.getIssues()->setFilePathIfEmpty(inputPath);
+		if (!issues && e.getIssues())
 			VUserLog("%s", e.getIssues()->getLongDescription(false).c_str());
 		throw;
 	}
@@ -4136,13 +4246,14 @@ void VuoCompiler::compileSubcompositionString(const string &compositionString, c
  * @param optimization Controls the time it takes to link the composition and the size and dependencies of the
  *			resulting executable.
  * @param rPath An optional @c -rpath argument to be passed to clang.
+ * @param shouldAdHocCodeSign  Whether to ad-hoc code-sign the generated executable.  Disable to improve performance (e.g., for systems that don't require code-signing, or if you will later be code-signing the whole bundle).
  * @throw VuoCompilerException At least one of the dependencies is incompatible with the targets for building the composition,
  *			or the linker encountered errors and failed.
  * @version200Changed{Removed `isApp` argument.}
  */
-void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, Optimization optimization, string rPath)
+void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, Optimization optimization, string rPath, bool shouldAdHocCodeSign)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, false, rPath);
+    linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, false, rPath, shouldAdHocCodeSign);
 }
 
 /**
@@ -4158,12 +4269,13 @@ void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string out
  * @param outputPath Path where the resulting dynamic library should be placed.
  * @param optimization Controls the time it takes to link the composition and the size and dependencies of the
  *			resulting dynamic library.
+ * @param shouldAdHocCodeSign  Whether to ad-hoc code-sign the generated dylib.  Disable to improve performance (e.g., for systems that don't require code-signing, or if you will later be code-signing the whole bundle).
  * @throw VuoCompilerException At least one of the dependencies is incompatible with the targets for building the composition,
  *			or the linker encountered errors and failed.
  */
-void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization)
+void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization, bool shouldAdHocCodeSign)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, true);
+    linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, true, "", shouldAdHocCodeSign);
 }
 
 /**
@@ -4181,7 +4293,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  *			or the linker encountered errors and failed.
  */
 void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath,
-																	Optimization optimization, bool isDylib, string rPath)
+                                                                    Optimization optimization, bool isDylib, string rPath, bool shouldAdHocCodeSign)
 {
 	if (isVerbose)
 		print();
@@ -4201,11 +4313,11 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 
 	libraries.insert(compiledCompositionPath);
 
-	link(linkedCompositionPath, modules, libraries, frameworks, isDylib, rPath);
+	link(linkedCompositionPath, modules, libraries, frameworks, isDylib, rPath, shouldAdHocCodeSign);
 }
 
 /**
- * Creates one dynamic library for the composition by itself and, if needed, another dynamic library for the
+ * Creates one dynamic library for the composition by itself and, if needed, additional dynamic libraries for the
  * node classes and other resources that are dependencies of the composition.
  *
  * @param compiledCompositionPath Path to the compiled composition (an LLVM bitcode file).
@@ -4223,6 +4335,11 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 {
 	if (isVerbose)
 		print();
+
+	bool shouldAdHocCodeSign = false;
+#if __arm64__
+	shouldAdHocCodeSign = true;
+#endif
 
 	// Get the dependencies used by the new resources and not the previous resources.
 
@@ -4255,6 +4372,8 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 	set<string> allFrameworks;
 	if (! addedDependencies.empty())
 	{
+		// Get the modules, libraries, and frameworks that will provide the composition's dependencies.
+
 		set<string> builtInModuleAndLibraryDependencies;
 		set<string> userModuleAndLibraryDependencies;
 		set<Module *> builtInModules;
@@ -4270,9 +4389,74 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		string dir, linkedCompositionFile, ext;
 		VuoFileUtilities::splitPath(linkedCompositionPath, dir, linkedCompositionFile, ext);
 
+		// For any module caches that were rebuilt, remove the previous revision from the lists of libraries to link to and load.
+
+		vector<string> carriedOverUserCacheLibraries = runningCompositionLibraries->getUnloadableCacheLibrariesLoaded();
+
+		__block vector<string> currentCacheLibraries;
+		applyToAllEnvironments(^void (Environment *env) {
+			currentCacheLibraries.push_back( env->getCurrentModuleCacheDylib() );
+		});
+
+		for (string cachePath : carriedOverUserCacheLibraries)
+		{
+			for (string currentCachePath : currentCacheLibraries)
+			{
+				if (VuoFileUtilities::areDifferentRevisionsOfSameModuleCacheDylib(cachePath, currentCachePath))
+				{
+					set<string> dependenciesInCache = runningCompositionLibraries->enqueueCacheLibraryToUnload(cachePath);
+
+					userCacheDependencies[currentCachePath].insert(dependenciesInCache.begin(), dependenciesInCache.end());
+
+					auto cacheDependenciesIter = userCacheDependencies.find(cachePath);
+					if (cacheDependenciesIter != userCacheDependencies.end())
+					{
+						userCacheDependencies[currentCachePath].insert(cacheDependenciesIter->second.begin(), cacheDependenciesIter->second.end());
+						userCacheDependencies.erase(cacheDependenciesIter);
+					}
+
+					auto carriedOverIter = find(carriedOverUnloadableLibraries.begin(), carriedOverUnloadableLibraries.end(), cachePath);
+					if (carriedOverIter != carriedOverUnloadableLibraries.end())
+						*carriedOverIter = currentCachePath;
+				}
+			}
+		}
+
+		// If any module caches were rebuilt, prepare to replace the existing user resource dylibs with the new resource dylib created below.
+
+		bool wasModuleCacheRebuilt = runningCompositionLibraries->hasCacheLibraryEnqueuedToUnload();
+		if (wasModuleCacheRebuilt)
+		{
+			vector<string> carriedOverResourceLibraries = runningCompositionLibraries->getUnloadableResourceLibrariesLoaded();
+
+			vector<string> carriedOverUnloadableMinusResourceLibraries;
+			std::set_difference(carriedOverUnloadableLibraries.begin(), carriedOverUnloadableLibraries.end(),
+								carriedOverResourceLibraries.begin(), carriedOverResourceLibraries.end(),
+								std::back_inserter(carriedOverUnloadableMinusResourceLibraries));
+
+			carriedOverUnloadableLibraries = carriedOverUnloadableMinusResourceLibraries;
+
+			set<string> dependenciesInResourceLibraries = runningCompositionLibraries->enqueueAllUnloadableResourceLibrariesToUnload();
+			userModuleAndLibraryDependencies.insert(dependenciesInResourceLibraries.begin(), dependenciesInResourceLibraries.end());
+
+			set<string> builtInModuleAndLibraryDependencies_tmp;
+			set<string> userModuleAndLibraryDependencies_tmp;
+			map<string, set<string> > builtInCacheDependencies_tmp;
+			set<Module *> builtInModules_tmp;
+			set<string> builtInLibraries_tmp;
+			set<string> externalLibraries_tmp;
+			set<string> externalFrameworks_tmp;
+
+			getLinkerInputs(userModuleAndLibraryDependencies, Optimization_FastBuild,
+							builtInModuleAndLibraryDependencies_tmp, userModuleAndLibraryDependencies_tmp, builtInCacheDependencies_tmp, userCacheDependencies,
+							builtInModules_tmp, userModules, builtInLibraries_tmp, userLibraries, externalLibraries_tmp, externalFrameworks_tmp);
+		}
+
+		// If built-in dependencies were added, create an additional resource dylib.
+
 		if (! builtInModules.empty() || builtInLibraries.size() > builtInCacheDependencies.size())
 		{
-			nonUnloadableResourcePath = VuoFileUtilities::makeTmpFile(linkedCompositionFile + "-resource", "dylib");
+			nonUnloadableResourcePath = VuoFileUtilities::makeTmpFile(linkedCompositionFile + "-resource-nonunloadable", "dylib");
 			nonUnloadableDependencies = builtInModuleAndLibraryDependencies;
 
 			set<string> librariesForNonUnloadableResource = builtInLibraries;
@@ -4280,7 +4464,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 			librariesForNonUnloadableResource.insert(carriedOverExternalLibraries.begin(), carriedOverExternalLibraries.end());
 			librariesForNonUnloadableResource.insert(addedExternalLibraries.begin(), addedExternalLibraries.end());
 
-			link(nonUnloadableResourcePath, builtInModules, librariesForNonUnloadableResource, allFrameworks, true);\
+			link(nonUnloadableResourcePath, builtInModules, librariesForNonUnloadableResource, allFrameworks, true, "", shouldAdHocCodeSign);
 
 			for (set<string>::iterator i = builtInLibraries.begin(); i != builtInLibraries.end(); )
 			{
@@ -4299,9 +4483,11 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 			}
 		}
 
-		if (! userModules.empty() || userLibraries.size() > userCacheDependencies.size())
+		// If user dependencies were added or module caches were rebuilt, create an additional resource dylib.
+
+		if (! userModules.empty() || userLibraries.size() > userCacheDependencies.size() || wasModuleCacheRebuilt)
 		{
-			unloadableResourcePath = VuoFileUtilities::makeTmpFile(linkedCompositionFile + "-resource", "dylib");
+			unloadableResourcePath = VuoFileUtilities::makeTmpFile(linkedCompositionFile + "-resource-unloadable", "dylib");
 			unloadableDependencies = userModuleAndLibraryDependencies;
 
 			set<string> librariesForUnloadableResource = userLibraries;
@@ -4313,7 +4499,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 			if (! nonUnloadableResourcePath.empty())
 				librariesForUnloadableResource.insert(nonUnloadableResourcePath);
 
-			link(unloadableResourcePath, userModules, librariesForUnloadableResource, allFrameworks, true);
+			link(unloadableResourcePath, userModules, librariesForUnloadableResource, allFrameworks, true, "", shouldAdHocCodeSign);
 
 			for (set<string>::iterator i = userLibraries.begin(); i != userLibraries.end(); )
 			{
@@ -4357,7 +4543,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		if (! unloadableResourcePath.empty())
 			libraries.insert(unloadableResourcePath);
 		libraries.insert(vuoRuntimePaths.begin(), vuoRuntimePaths.end());
-		link(linkedCompositionPath, modules, libraries, allFrameworks, true);
+		link(linkedCompositionPath, modules, libraries, allFrameworks, true, "", shouldAdHocCodeSign);
 	}
 
 	// Now that we're past the point where an exception can be thrown, update the RunningCompositionLibraries.
@@ -4391,7 +4577,7 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 	// Add the node classes in the top-level composition and their dependencies.
 	__block set<string> directDependencies;
 	string moduleKey = getModuleKeyForPath(compiledCompositionPath);
-	Module *module = readModuleFromBitcode(compiledCompositionPath);
+	Module *module = readModuleFromBitcode(compiledCompositionPath, getTargetArch(target));
 	dispatch_sync(llvmQueue, ^{
 					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module, "");
 					  directDependencies = compilerModule->getDependencies();
@@ -4563,33 +4749,32 @@ set<string> VuoCompiler::getDependenciesForComposition(const set<string> &direct
 		}
 		else
 		{
-			VuoCompilerTargetSet compositionTargets;
-			compositionTargets.restrictToCurrentOperatingSystemVersion();
+			VuoCompilerCompatibility compositionTargets = VuoCompilerCompatibility::currentSystem();
 
 			string dependencyTargetString;
 			VuoCompilerModule *module = getModule(moduleKey);
 			if (module)
 			{
-				VuoCompilerTargetSet dependencyTargets = module->getCompatibleTargets();
+				VuoCompilerCompatibility dependencyTargets = module->getCompatibleTargets();
 				for (set<string>::iterator i = incompatibleDependencies.begin(); i != incompatibleDependencies.end(); ++i)
 				{
 					VuoCompilerModule *subModule = getModule(*i);
 					if (subModule)
 					{
-						VuoCompilerTargetSet subDependencyTargets = subModule->getCompatibleTargets();
-						dependencyTargets.restrictToBeCompatibleWithAllOf(subDependencyTargets);
+						VuoCompilerCompatibility subDependencyTargets = subModule->getCompatibleTargets();
+						dependencyTargets = dependencyTargets.intersection(subDependencyTargets);
 					}
 				}
 				dependencyTargetString = dependencyTargets.toString();
 			}
 			else
-				dependencyTargetString = "(unknown operating systems)";
+				dependencyTargetString = "(unknown systems)";
 
 			string modulePlaceholder = (module ? "%module" : "%moduleKey");
 			VuoCompilerIssue issue(VuoCompilerIssue::Error, "linking composition", "",
-								   "Node incompatible with operating system",
+								   "Node incompatible with system",
 								   modulePlaceholder + " is only compatible with " + dependencyTargetString +
-								   ", so this composition can't run on your macOS version (" + compositionTargets.toString() + ").");
+								   ", so this composition can't run on your system (" + compositionTargets.toString() + ").");
 			issue.setModule(module->getPseudoBase());
 			issue.setModuleKey(moduleKey);
 			throw VuoCompilerException(issue);
@@ -4784,15 +4969,16 @@ string VuoCompiler::getLibraryPath(const string &dependency, vector<string> libr
 void VuoCompiler::useModuleCache(bool shouldUseExistingBuiltInCaches, bool shouldUseExistingOtherCaches)
 {
 	loadModulesIfNeeded();
+	dispatch_group_wait(moduleSourceCompilersExist, DISPATCH_TIME_FOREVER);  // Wait for any previous loadModulesIfNeeded() calls to complete.
 
 	// Iterate through the environments in the order that the caches need to be built.
 
 	dispatch_sync(environmentQueue, ^{
 					  set<string> dylibsForCachesOfInstalledModules;
 					  set<string> frameworksForCachesOfInstalledModules;
+					  unsigned long lastPrerequisiteModuleCacheRebuild = 0;
 					  for (vector< vector<Environment *> >::iterator i = environments.begin(); i != environments.end(); ++i)
 					  {
-						  bool builtin = (i == environments.begin());
 						  set<string> dylibsForCacheOfGeneratedModules;
 						  set<string> frameworksForCacheOfGeneratedModules;
 
@@ -4804,7 +4990,7 @@ void VuoCompiler::useModuleCache(bool shouldUseExistingBuiltInCaches, bool shoul
 							  set<string> cacheableModulesAndDependencies;
 							  set<string> dylibsNeededToLinkToThisCache;
 							  set<string> frameworksNeededToLinkToThisCache;
-							  env->getCacheableModulesAndDependencies(builtin, installed, cacheableModulesAndDependencies,
+							  env->getCacheableModulesAndDependencies(cacheableModulesAndDependencies,
 																	  dylibsNeededToLinkToThisCache, frameworksNeededToLinkToThisCache);
 
 							  set<string> accumulatedDylibs;
@@ -4817,9 +5003,15 @@ void VuoCompiler::useModuleCache(bool shouldUseExistingBuiltInCaches, bool shoul
 							  accumulatedFrameworks.insert(frameworksForCachesOfInstalledModules.begin(), frameworksForCachesOfInstalledModules.end());
 							  accumulatedFrameworks.insert(frameworksForCacheOfGeneratedModules.begin(), frameworksForCacheOfGeneratedModules.end());
 
-							  bool shouldUseExistingCache = (builtin ? shouldUseExistingBuiltInCaches : shouldUseExistingOtherCaches);
+							  bool shouldUseExistingCache = (env->isBuiltIn() ? shouldUseExistingBuiltInCaches : shouldUseExistingOtherCaches);
 							  env->useModuleCache(shouldUseExistingCache, this, cacheableModulesAndDependencies,
-												  accumulatedDylibs, accumulatedFrameworks);
+												  accumulatedDylibs, accumulatedFrameworks, lastPrerequisiteModuleCacheRebuild);
+
+							  string cacheDylib = env->getCurrentModuleCacheDylib();
+							  accumulatedDylibs.insert(cacheDylib);
+							  dylibsForCachesOfInstalledModules.insert(cacheDylib);
+
+							  lastPrerequisiteModuleCacheRebuild = max(lastPrerequisiteModuleCacheRebuild, env->getLastModuleCacheRebuild());
 
 							  if (installed)
 							  {
@@ -4892,6 +5084,15 @@ void VuoCompiler::prepareForFastBuild(void)
 }
 
 /**
+ * Returns this compiler instance's CPU architecture.
+ * E.g., `x86_64` or `arm64`.
+ */
+string VuoCompiler::getArch(void)
+{
+	return getTargetArch(target);
+}
+
+/**
  * Generates the caches of built-in modules and places them inside of Vuo.framework.
  *
  * This function is intended for running Vuo in a special mode just to generate the caches and then exit.
@@ -4901,13 +5102,14 @@ void VuoCompiler::prepareForFastBuild(void)
  *
  * @param vuoFrameworkPath The absolute path of Vuo.framework, as would be returned by
  *     @ref VuoFileUtilities::getVuoFrameworkPath if the Vuo.framework dynamic library were loaded.
+ * @param target The LLVM target-triple to build.
  * @version200New
  */
-void VuoCompiler::generateBuiltInModuleCaches(const string &vuoFrameworkPath)
+void VuoCompiler::generateBuiltInModuleCaches(string vuoFrameworkPath, string target)
 {
 	vuoFrameworkInProgressPath = vuoFrameworkPath;
 
-	VuoCompiler compiler;
+	VuoCompiler compiler("", target);
 	compiler.useModuleCache(false, true);
 }
 
@@ -4967,11 +5169,12 @@ void VuoCompiler::setLoadAllModules(bool shouldLoadAllModules)
  * @param frameworks The frameworks to link in.
  * @param isDylib If true, the output file will be a dynamic library. Otherwise, it will be an executable.
  * @param rPath The @c -rpath argument to be passed to clang. If empty, the folder containing the Vuo framework on the build system will be used.
+ * @param shouldAdHocCodeSign  Whether to ad-hoc code-sign the generated binary.  Disable to improve performance (e.g., for live-editing on systems that don't require code-signing).
  * @throw VuoCompilerException clang or ld failed to link the given dependencies.
  */
-void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath, VuoCompilerIssues *issues)
+void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath, bool shouldAdHocCodeSign, VuoCompilerIssues *issues)
 {
-	VDebugLog("Linking '%s'…", outputPath.c_str());
+	VDebugLog("Linking '%s' (%s)…", outputPath.c_str(), getTargetArch(target).c_str());
 	// https://stackoverflow.com/questions/11657529/how-to-generate-an-executable-from-an-llvmmodule
 
 
@@ -4979,16 +5182,16 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	string compositeModulePath = VuoFileUtilities::makeTmpFile("composite", "bc");
 	dispatch_sync(llvmQueue, ^{
 					  double t0 = VuoLogGetTime();
-					  Module *compositeModule = new Module("composite", getGlobalContext());
-					  setTargetForModule(compositeModule);
-					  for (set<Module *>::const_iterator i = modules.begin(); i != modules.end(); ++i)
+					  unique_ptr<Module> compositeModule(new Module("composite", *globalLLVMContext));
+					  Linker linker(*compositeModule);
+					  setTargetForModule(compositeModule.get(), target);
+					  for (auto i : modules)
 					  {
-						  string error;
-						  if (Linker::LinkModules(compositeModule, *i, Linker::PreserveSource, &error))
-						  VUserLog("Error: Failed to link compositeModule: %s", error.c_str());
+						  unique_ptr<Module> upi = llvm::CloneModule(i);
+						  if (linker.linkInModule(std::move(upi)))
+							  VUserLog("Error: Failed to link compositeModule.");
 					  }
-					  writeModuleToBitcode(compositeModule, compositeModulePath);
-					  delete compositeModule;
+					  writeModuleToBitcode(compositeModule.get(), compositeModulePath);
 					  VDebugLog("\tLinkModules took %5.2fs", VuoLogGetTime() - t0);
 				  });
 
@@ -4996,7 +5199,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	// llvm-3.1/llvm/tools/clang/tools/driver/driver.cpp
 
 	// Invoke clang as `clang++` so it includes the C++ standard libraries.
-	llvm::sys::Path clangPath(getClangPath().str() + "++");
+	string clangPath(getClangPath() + "++");
 
 	vector<const char *> args;
 	vector<char *> argsToFree;
@@ -5066,30 +5269,11 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 		argsToFree.push_back(frameworkNameZ);
 	}
 
-	// Check for C Runtime path within Vuo.framework
-	llvm::sys::Path cRuntimePath;
-	llvm::sys::Path crt1Path;
-	string vuoFrameworkPath = getVuoFrameworkPath();
-	string vuoFrameworkContainingFolder = vuoFrameworkPath + "/..";
-	if (! vuoFrameworkPath.empty())
-	{
-		cRuntimePath = vuoFrameworkPath + "/Modules/";
-		crt1Path = cRuntimePath;
-		crt1Path.appendComponent("crt1.o");
-	}
-
-	// If we have located a bundled version of crt1.o, link it in explicitly rather than relying on
-	// clang's heuristic to locate a system version.
-	if (!isDylib && crt1Path.canRead())
-	{
-		args.push_back("-nostartfiles");
-		args.push_back(crt1Path.c_str());
-	}
-
-
 	// When linking on a development workstation or Jenkins or an end-user system,
 	// use the partial macOS SDK bundled in Vuo.framework, since it includes all the TBDs we need.
-	string frameworkMacOSSDKFolder = getVuoFrameworkPath() + "/SDKs/MacOSX10.11.sdk";
+	string vuoFrameworkPath = getVuoFrameworkPath();
+	string vuoFrameworkContainingFolder = vuoFrameworkPath + "/..";
+	string frameworkMacOSSDKFolder = vuoFrameworkPath + "/SDKs/MacOSX10.11.sdk";
 	if (!VuoFileUtilities::fileExists(frameworkMacOSSDKFolder))
 		throw VuoException("Couldn't find the macOS SDK.");
 
@@ -5115,7 +5299,6 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back("-headerpad_max_install_names");
 
 	// Tell the built dylib/executable where to find Vuo.framework
-	/// @todo https://b33p.net/kosada/node/6761 Copy only the needed dynamic dependencies into the app bundle, and change the rpath accordingly.
 	args.push_back("-rpath");
 	string rPathArg = (rPath.empty() ? vuoFrameworkContainingFolder : rPath);
 	args.push_back(rPathArg.c_str());
@@ -5124,6 +5307,9 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back("-rpath");
 	args.push_back(LLVM_ROOT "/lib");
 #endif
+
+	args.push_back("-target");
+	args.push_back(target.c_str());
 
 	args.push_back("-std=c++11");
 	args.push_back("-stdlib=libc++");
@@ -5145,8 +5331,8 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 	// Redirect linker output to a file, so we can feed it through VuoLog.
 	string stdoutFile = VuoFileUtilities::makeTmpFile("vuo-linker-output", "txt");
-	const llvm::sys::Path stdoutPath(stdoutFile);
-	const llvm::sys::Path *redirects[] = {
+	const StringRef stdoutPath(stdoutFile);
+	const StringRef *redirects[] = {
 		nullptr,      // stdin
 		&stdoutPath,  // stdout
 		&stdoutPath,  // stderr
@@ -5161,7 +5347,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	string errMsg;
 	bool executionFailed;
 	double t0 = VuoLogGetTime();
-	int ret = llvm::sys::Program::ExecuteAndWait(llvm::sys::Path(args[0]), argsz, nullptr, redirects, 0, 0, &errMsg, &executionFailed);
+	int ret = llvm::sys::ExecuteAndWait(args[0], argsz, nullptr, redirects, 0, 0, &errMsg, &executionFailed);
 
 	for (auto i : argsToFree)
 		free(i);
@@ -5198,6 +5384,29 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 	VuoFileUtilities::deleteFile(stdoutFile);
 	VDebugLog("\tLinking     took %5.2fs", VuoLogGetTime() - t0);
+
+	if (shouldAdHocCodeSign)
+		adHocCodeSign(outputPath);
+}
+
+/**
+ * Ad-hoc code-signs the specified binary.
+ */
+void VuoCompiler::adHocCodeSign(string path)
+{
+	double t0 = VuoLogGetTime();
+	VuoFileUtilities::executeProcess({
+		"/usr/bin/codesign",
+		"--sign",
+		"-",  // "-" = ad-hoc
+		path,
+	}, {
+#if VUO_PRO
+		"CODESIGN_ALLOCATE=" + getCodesignAllocatePath(),
+#endif
+	});
+
+	VDebugLog("\tAd-hoc code-signing took %5.2fs", VuoLogGetTime() - t0);
 }
 
 /**
@@ -5246,81 +5455,75 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
 	clang::DiagnosticsEngine *diags = new clang::DiagnosticsEngine(DiagID, diagOptions, diagnosticConsumer);
 
-	OwningPtr<clang::CompilerInvocation> CI(new clang::CompilerInvocation);
-	clang::CompilerInvocation::CreateFromArgs(*CI, &args[0], &args[0] + args.size(), *diags);
+	shared_ptr<clang::CompilerInvocation> compilerInvocation(new clang::CompilerInvocation);
+	clang::CompilerInvocation::CreateFromArgs(*compilerInvocation, &args[0], &args[0] + args.size(), *diags);
+	compilerInvocation->TargetOpts->Triple = target;
 
 	clang::CompilerInstance Clang;
-	Clang.setInvocation(CI.take());
+	Clang.setInvocation(compilerInvocation);
 
 	Clang.setDiagnostics(diags);
 	if (!Clang.hasDiagnostics())
 		return NULL;
 
 	// See CompilerInvocation::GetResourcesPath -- though we're not calling it because we don't have MainAddr.
-	llvm::sys::Path builtinHeaderSearchPath;
+	string builtinHeaderSearchPath;
 	string vuoFrameworkPath = getVuoFrameworkPath();
 	if (vuoFrameworkPath.empty())
 	{
-		llvm::sys::Path clangPath = getClangPath();
-		builtinHeaderSearchPath   = clangPath;
-		builtinHeaderSearchPath.eraseComponent();  // Remove /clang from foo/bin/clang
-		builtinHeaderSearchPath.eraseComponent();  // Remove /bin   from foo/bin
-		builtinHeaderSearchPath.appendComponent("lib");
-		builtinHeaderSearchPath.appendComponent("clang");
-		builtinHeaderSearchPath.appendComponent(CLANG_VERSION_STRING);  // foo/lib/clang/<version>
+		builtinHeaderSearchPath = getClangPath();
+		if (VuoStringUtilities::endsWith(builtinHeaderSearchPath, "Helpers/clang"))
+			builtinHeaderSearchPath = VuoStringUtilities::substrBefore(builtinHeaderSearchPath, "Helpers/clang");
+		else if (VuoStringUtilities::endsWith(builtinHeaderSearchPath, "bin/clang"))
+			builtinHeaderSearchPath = VuoStringUtilities::substrBefore(builtinHeaderSearchPath, "bin/clang");
+		builtinHeaderSearchPath += "lib/clang/" CLANG_VERSION_STRING;
 	}
 	else
-	{
-		builtinHeaderSearchPath = vuoFrameworkPath;
-		builtinHeaderSearchPath.appendComponent("Frameworks");
-		builtinHeaderSearchPath.appendComponent("llvm.framework");
-		builtinHeaderSearchPath.appendComponent("Versions");
-		builtinHeaderSearchPath.appendComponent("A");
-		builtinHeaderSearchPath.appendComponent("lib");
-		builtinHeaderSearchPath.appendComponent("clang");
-		builtinHeaderSearchPath.appendComponent(CLANG_VERSION_STRING);  // foo/lib/clang/<version>
-	}
-	Clang.getHeaderSearchOpts().ResourceDir = builtinHeaderSearchPath.str();
+		builtinHeaderSearchPath = vuoFrameworkPath + "/Frameworks/llvm.framework/Versions/A/lib/clang/" CLANG_VERSION_STRING;
+	Clang.getHeaderSearchOpts().ResourceDir = builtinHeaderSearchPath;
 
 //	OwningPtr<clang::CodeGenAction> Act(new clang::EmitLLVMOnlyAction());  // @@@ return value of takeModule() is destroyed at the end of this function
 	clang::CodeGenAction *Act = new clang::EmitLLVMOnlyAction();
 	if (!Clang.ExecuteAction(*Act))
 		return NULL;
 
-	return Act->takeModule();
+	unique_ptr<Module> module = Act->takeModule();
+	if (!module)
+		VUserLog("Error compiling %s: module is null.", inputPath.c_str());
+	return module.release();
 }
 
 /**
- * Returns the LLVM module read from @a inputPath (an LLVM bitcode file).
+ * Returns the LLVM module in the `arch` slice of `inputFile`.
  *
  * @threadNoQueue{llvmQueue}
  */
-Module * VuoCompiler::readModuleFromBitcode(string inputPath)
+Module *VuoCompiler::readModuleFromBitcode(string inputPath, string arch)
 {
 	string dir, file, ext;
 	VuoFileUtilities::splitPath(inputPath, dir, file, ext);
 	VuoFileUtilities::File inputFile(dir, file + "." + ext);
-	return readModuleFromBitcode(&inputFile);
+	return readModuleFromBitcode(&inputFile, arch);
 }
 
 /**
- * Returns the LLVM module read from @a inputFile (an LLVM bitcode file).
+ * Returns the LLVM module in the `arch` slice of `inputFile`.
  *
  * @threadNoQueue{llvmQueue}
  *
  * @throw VuoException The file couldn't be read.
  */
-Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
+Module *VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile, string arch)
 {
 	size_t inputDataBytes;
 	char *inputData = inputFile->getContentsAsRawData(inputDataBytes);
 
 	string error;
-	VuoLog_status("Loading module \"%s\"", inputFile->getRelativePath().c_str());
-	Module *module = readModuleFromBitcodeData(inputData, inputDataBytes, error);
+	VuoLog_status("Loading module \"%s\" (%s)", inputFile->getRelativePath().c_str(), arch.c_str());
+	Module *module = readModuleFromBitcodeData(inputData, inputDataBytes, arch, error);
 	VuoLog_status(NULL);
 	if (! module)
-		VUserLog("Error: Couldn't parse module '%s': %s.", inputFile->getRelativePath().c_str(), error.c_str());
+		VUserLog("Error: Couldn't parse module '%s' (%s): %s.", inputFile->getRelativePath().c_str(), arch.c_str(), error.c_str());
 
 	free(inputData);
 
@@ -5328,19 +5531,91 @@ Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
 }
 
 /**
- * Returns the LLVM module read from @a inputData (a data buffer of size @a inputDataBytes).
+ * Returns the LLVM module in the `arch` slice of `inputData` (a data buffer of size `inputDataBytes`).
  *
  * @threadNoQueue{llvmQueue}
  */
-Module * VuoCompiler::readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error)
+Module *VuoCompiler::readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string arch, string &error)
 {
-	__block Module *module;
+	if (inputDataBytes < sizeof(unsigned int))
+		return nullptr;
+
+	__block Module *module = nullptr;
 	dispatch_sync(llvmQueue, ^{
-					  StringRef inputDataAsStringRef(inputData, inputDataBytes);
-					  MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
-					  module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
-					  delete mb;
-				  });
+		StringRef inputDataAsStringRef(inputData, inputDataBytes);
+		auto mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
+		if (!mb)
+		{
+			error = "Couldn't create MemoryBuffer";
+			return;
+		}
+
+		MemoryBufferRef bitcodeBuffer;
+		string moduleArch;
+		unsigned int fileID = *(unsigned int *)inputData;
+		if (fileID == 0x0b17c0de)
+			// This is a single-architecture LLVM bitcode `.bc` file, so read the entire file.
+			bitcodeBuffer = mb.get()->getMemBufferRef();
+
+		else if (fileID == 0xdec04342)
+		{
+			// This is a single-architecture raw bitcode file, presumably generated by Vuo 2.2.1 or earlier.
+			bitcodeBuffer = mb.get()->getMemBufferRef();
+			moduleArch = "x86_64";
+		}
+
+		else if (fileID == 0xbebafeca)
+		{
+			if (arch.empty())
+			{
+				error = "It's a Mach-O universal binary, but this compiler instance's LLVM target isn't set";
+				return;
+			}
+
+			// This is a Mach-O wrapper around multiple LLVM bitcode files;
+			// parse the Mach-O header to extract just a single architecture.
+			auto binary = llvm::object::MachOUniversalBinary::create(mb.get()->getMemBufferRef());
+			if (!binary)
+			{
+				error = "Couldn't read Mach-O universal binary:";
+				handleAllErrors(binary.takeError(), [&error](const ErrorInfoBase &ei) {
+					error += " " + ei.message();
+				});
+				return;
+			}
+
+			for (auto &o : binary.get()->objects())
+				if (o.getArchFlagName() == arch)
+					bitcodeBuffer = MemoryBufferRef(mb.get()->getMemBufferRef().getBuffer().slice(o.getOffset(), o.getOffset() + o.getSize()), "");
+			if (!bitcodeBuffer.getBufferSize())
+			{
+				error = "The Mach-O universal binary doesn't have an \"" + arch + "\" slice";
+				return;
+			}
+		}
+
+		auto wrappedModule = llvm::parseBitcodeFile(bitcodeBuffer, *globalLLVMContext);
+		if (!wrappedModule)
+		{
+			error = "Couldn't parse bitcode file:";
+			handleAllErrors(wrappedModule.takeError(), [&error](const ErrorInfoBase &ei) {
+				error += " " + ei.message();
+			});
+			return;
+		}
+
+		module = wrappedModule.get().release();
+
+		if (moduleArch.empty())
+			moduleArch = getTargetArch(module->getTargetTriple());
+		if (moduleArch != arch)
+		{
+			error = "The module's CPU architecture \"" + moduleArch + "\" doesn't match the compiler's CPU architecture \"" + arch + "\"";
+			delete module;
+			module = nullptr;
+			return;
+		}
+	});
 	return module;
 }
 
@@ -5353,57 +5628,85 @@ Module * VuoCompiler::readModuleFromBitcodeData(char *inputData, size_t inputDat
  */
 bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 {
-	if (verifyModule(*module, PrintMessageAction))
+	string str;
+	raw_string_ostream verifyOut(str);
+	if (llvm::verifyModule(*module, &verifyOut))
 	{
-		VUserLog("Error: Module verification failed.");
+		VUserLog("Error: Module verification failed:\n%s", verifyOut.str().c_str());
 		return true;
 	}
 
-	string err;
-	raw_fd_ostream out(outputPath.c_str(), err);
-	if (! err.empty())
+	// Ensure the module gets output in the bitcode wrapper format instead of raw bitcode.
+	if (module->getTargetTriple().empty())
+		setTargetForModule(module, getProcessTarget());
+
+	std::error_code err;
+	raw_fd_ostream out(outputPath.c_str(), err, sys::fs::F_None);
+	if (err)
 	{
-		VUserLog("Error: Couldn't open file '%s' for writing: %s", outputPath.c_str(), err.c_str());
+		VUserLog("Error: Couldn't open file '%s' for writing: %s", outputPath.c_str(), err.message().c_str());
 		return true;
 	}
-	WriteBitcodeToFile(module, out);
+	llvm::WriteBitcodeToFile(module, out);
 
 	return false;
 }
 
 /**
- * Sets the target triple for @c module. If @c target is empty, uses the target triple of the host machine.
+ * Sets the target triple and data layout for `module`.
  *
  * @threadQueue{llvmQueue}
  */
-void VuoCompiler::setTargetForModule(Module *module, string target)
+void VuoCompiler::setTargetForModule(Module *module, string targetTriple)
 {
-/*
-	string effectiveTarget = target;
-	if (effectiveTarget.empty())
+	module->setTargetTriple(targetTriple);
+
+	string error;
+	auto target = TargetRegistry::lookupTarget(module->getTargetTriple(), error);
+	if (!target)
 	{
-		// llvm::sys::getDefaultTargetTriple() finds a target based on the host, but the "default" target is not necessarily the
-		// same target that results from invoking command-line clang without a -target argument. That is the "effective" target.
-		// For example, the "default" target could be x86_64-apple-darwin10.10.0 and the "effective" target could be x86_64-apple-macosx10.10.0.
-
-		llvm::sys::Path clangPath = getClangPath();
-
-		vector<const char *> args;
-		args.push_back(clangPath.c_str());
-		args.push_back("/bin/sh");  // Driver needs an input file (that exists) or it refuses to give you the correct effective target.
-
-		clang::DiagnosticOptions * diagOptions = new clang::DiagnosticOptions();
-		IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
-		clang::DiagnosticsEngine Diags(DiagID, diagOptions);
-
-		clang::driver::Driver TheDriver(args[0], llvm::sys::getDefaultTargetTriple(), "a.out", true, Diags);
-		OwningPtr<clang::driver::Compilation> C(TheDriver.BuildCompilation(args));
-		effectiveTarget = C->getDefaultToolChain().ComputeEffectiveClangTriple(C->getArgs());
+		VUserLog("Error: Couldn't look up target: %s", error.c_str());
+		return;
 	}
 
-	module->setTargetTriple(effectiveTarget);
-*/
-	module->setTargetTriple("x86_64-apple-macosx10.10.0");
+	auto targetMachine = target->createTargetMachine(module->getTargetTriple(), "", "", TargetOptions(), Optional<Reloc::Model>());
+	if (!targetMachine)
+	{
+		VUserLog("Error: Couldn't create targetMachine.");
+		return;
+	}
+
+	module->setDataLayout(targetMachine->createDataLayout());
+
+	delete targetMachine;
+}
+
+/**
+ * Returns the CPU architecture part of the target triple.
+ * E.g., for `x86_64-apple-macosx10.10.0`, returns `x86_64`.
+ */
+string VuoCompiler::getTargetArch(string target)
+{
+	auto hyphen = target.find('-');
+	if (hyphen == string::npos)
+		return "";
+
+	return target.substr(0, hyphen);
+}
+
+/**
+ * Returns an LLVM target triple compatible with the current process.
+ */
+string VuoCompiler::getProcessTarget(void)
+{
+	// llvm::sys::getProcessTriple() returns `LLVM_HOST_TRIPLE`,
+	// which is always `x86_64-*` since we built LLVM on x86_64.
+	// Instead, use llvm::sys::getDefaultTargetTriple()
+	// which _actually_ returns the current process's target.
+	return getTargetArch(llvm::sys::getDefaultTargetTriple())
+		// Always target OS `macos10.10.0` (ignoring the current process's OS)
+		// to ensure compatibility with 3rd-party modules.
+		+ "-apple-macosx10.10.0";
 }
 
 /**
@@ -5777,6 +6080,28 @@ map<string, VuoCompilerType *> VuoCompiler::getTypes()
 }
 
 /**
+ * Returns the library specified by `libraryName`, or null if it can't be found or loaded.
+ *
+ * The library is loaded if it haven't been already.
+ */
+VuoCompilerModule *VuoCompiler::getLibraryModule(const string &libraryModuleName)
+{
+	set<string> libraryNameSet;
+	libraryNameSet.insert(libraryModuleName);
+	loadModulesIfNeeded(libraryNameSet);
+
+	__block VuoCompilerModule *module = nullptr;
+	void (^envGetLibraryModule)(Environment *) = ^void (Environment *env) {
+		VuoCompilerModule *result = env->getLibraryModule(libraryModuleName);
+		if (result)
+			module = result;
+	};
+	applyToInstalledEnvironments(envGetLibraryModule);
+
+	return module;
+}
+
+/**
  * Returns all libraries found and loaded, indexed by key.
  *
  * The libraries are loaded if they haven't been already.
@@ -5945,7 +6270,7 @@ string VuoCompiler::getVuoFrameworkPath(void)
 /**
  * Returns the path to the Clang binary.
  */
-llvm::sys::Path VuoCompiler::getClangPath(void)
+string VuoCompiler::getClangPath(void)
 {
 	return clangPath;
 }
@@ -6073,14 +6398,6 @@ void VuoCompiler::setTelemetry(const string &telemetry)
 }
 
 /**
- * Sets the target triple to use when compiling or linking.
- */
-void VuoCompiler::setTarget(const string &target)
-{
-	this->target = target;
-}
-
-/**
  * Sets the verbosity to use when compiling or linking. If true, prints some debug info and passes the `-v` option to Clang.
  */
 void VuoCompiler::setVerbose(bool isVerbose)
@@ -6118,7 +6435,7 @@ bool VuoCompiler::shouldShowSplashWindow()
  */
 void VuoCompiler::setClangPath(const string &clangPath)
 {
-	this->clangPath = llvm::sys::Path(StringRef(clangPath));
+	this->clangPath = clangPath;
 }
 
 /**
@@ -6203,7 +6520,7 @@ void VuoCompiler::print(void)
 	if (! getVuoFrameworkPath().empty())
 		fprintf(stderr, " %s\n", getVuoFrameworkPath().c_str());
 	fprintf(stderr, "Clang path:\n");
-	if (! getClangPath().str().empty())
+	if (! getClangPath().empty())
 		fprintf(stderr, " %s\n", getClangPath().c_str());
 }
 

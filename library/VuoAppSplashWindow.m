@@ -2,14 +2,12 @@
  * @file
  * VuoAppSplashWindow implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
+#include "VuoMacOSSDKWorkaround.h"
 #import <AppKit/AppKit.h>
 
 #import "VuoAppSplashWindow.h"
@@ -32,7 +30,7 @@ const double VuoApp_splashWindowHeight = 384;
 void VuoApp_showSplashWindow(void)
 {
 	VuoApp_splashWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, VuoApp_splashWindowWidth, VuoApp_splashWindowHeight)
-																styleMask:NSBorderlessWindowMask
+																styleMask:NSWindowStyleMaskBorderless
 																  backing:NSBackingStoreBuffered
 																	defer:NO];
 	VuoApp_splashWindow.animationBehavior = NSWindowAnimationBehaviorNone;
@@ -66,7 +64,7 @@ void VuoApp_showSplashWindow(void)
 	double t0 = VuoLogGetElapsedTime();
 	do
 	{
-		NSEvent *event = [VuoApp_splashWindow nextEventMatchingMask:NSAnyEventMask
+		NSEvent *event = [VuoApp_splashWindow nextEventMatchingMask:NSEventMaskAny
 								untilDate:[NSDate dateWithTimeIntervalSinceNow:1./60]
 								inMode:NSDefaultRunLoopMode
 								dequeue:YES];
@@ -82,7 +80,7 @@ void VuoApp_showSplashWindow(void)
 	t0 = VuoLogGetElapsedTime();
 	do
 	{
-		NSEvent *event = [VuoApp_splashWindow nextEventMatchingMask:NSAnyEventMask
+		NSEvent *event = [VuoApp_splashWindow nextEventMatchingMask:NSEventMaskAny
 								untilDate:[NSDate dateWithTimeIntervalSinceNow:splashHoldSeconds]
 								inMode:NSDefaultRunLoopMode
 								dequeue:YES];

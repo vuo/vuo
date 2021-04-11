@@ -2,7 +2,7 @@
  * @file
  * VuoData implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -33,7 +33,7 @@ VuoModuleMetadata({
  */
 VuoData VuoData_makeFromJson(json_object *js)
 {
-	VuoData value = {0, NULL, ""};
+	VuoData value = {0, NULL};
 
 	if (json_object_get_type(js) != json_type_string)
 		return value;

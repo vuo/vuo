@@ -2,7 +2,7 @@
  * @file
  * vuo-link implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -20,7 +20,7 @@ void printHelp(char *argv0)
 		   "  --help                         Display this information.\n"
 		   "  --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>                Place the compiled code into <file>.\n"
-//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.10.0').\n"
+		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.10.0').\n"
 		   "  --format <arg>                 Output the given type of binary file. <arg> can be 'executable' or 'dylib'. The default is 'executable'.\n"
 		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 		   "  --framework-search-path <dir>  Search for macOS frameworks in <dir>. This option may be specified more than once.\n"
@@ -48,7 +48,6 @@ int main (int argc, char * const argv[])
 		vector<char *> librarySearchPaths;
 		vector<char *> frameworkSearchPaths;
 		string optimizationOption;
-		VuoCompiler compiler;
 
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
@@ -99,13 +98,15 @@ int main (int argc, char * const argv[])
 					break;
 				case 8:  // --verbose
 					isVerbose = true;
-					compiler.setVerbose(true);
 					break;
 				default:
 					VUserLog("Error: Unknown option %d.", optionIndex);
 					break;
 			}
 		}
+
+		VuoCompiler compiler("", target);
+		compiler.setVerbose(isVerbose);
 
 		hasInputFile = (optind < argc) && ! doPrintHelp && ! doListNodeClasses;
 
@@ -145,10 +146,6 @@ int main (int argc, char * const argv[])
 			}
 
 			compiler.setCompositionPath(inputPath);
-
-			/// @todo https://b33p.net/kosada/node/12220
-//			if (! target.empty())
-//				compiler.setTarget(target);
 
 			VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild;
 			if (! optimizationOption.empty())

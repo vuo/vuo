@@ -2,7 +2,7 @@
  * @file
  * VuoRendererNode implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -208,7 +208,7 @@ void VuoRendererNode::layoutConnectedInputDrawersAtAndAbovePort(VuoRendererPort 
 }
 
 /**
- * Calculates and sets the position, tint, and selection status of the node's connected input drawer
+ * Calculates and sets the position and tint of the node's connected input drawer
  * at the provided index @c i.
  */
 void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
@@ -229,7 +229,6 @@ void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
 		drawer->setHorizontalDrawerOffset(inputDrawerOffset.x());
 		drawer->setPos(mapToScene(point-inputDrawerOffset));
 		drawer->getBase()->setTintColor(this->getBase()->getTintColor());
-		drawer->setSelected(this->isSelected());
 
 		// Update the list's cached bounding rect, so long arms don't disappear when the ports scroll offscreen.
 		auto listDrawer = dynamic_cast<VuoRendererInputListDrawer *>(drawer);
@@ -526,6 +525,17 @@ bool VuoRendererNode::paintingDisabled() const
 }
 
 /**
+ * Returns a boolean indicating whether the node should be rendered as if it is selected,
+ * regardless of whether it has been directly selected.
+ *
+ * For regular (non-input-attachment) nodes, these two concepts are equivalent.
+ */
+bool VuoRendererNode::isEffectivelySelected()
+{
+	return isSelected();
+}
+
+/**
  * Returns the center point of the specified input/output port circle.
  *
  * @param port The port.
@@ -787,10 +797,25 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 	{
 		setCacheModeForConnectedCables(QGraphicsItem::NoCache);
 
-		// When the node is (de)selected, repaint all ports and cables (since they also reflect selection status).
+		// When the node is (de)selected, repaint all ports, attachments, and cables (since they also reflect selection status).
 		for (vector<VuoRendererPort *>::iterator it = inputPorts.begin(); it != inputPorts.end(); ++it)
 		{
 			(*it)->update();
+			foreach (VuoRendererInputAttachment *attachment, (*it)->getAllUnderlyingUpstreamInputAttachments())
+			{
+				attachment->setCacheModeForConnectedCables(QGraphicsItem::NoCache);
+				attachment->update();
+				foreach (VuoRendererPort *attachmentInputPort, attachment->getInputPorts())
+				{
+					attachmentInputPort->update();
+					auto rtp = dynamic_cast<VuoRendererTypecastPort *>(attachmentInputPort);
+					if (rtp)
+						rtp->getChildPort()->update();
+				}
+
+				attachment->updateConnectedCableGeometry();
+				attachment->setCacheModeForConnectedCables(getCurrentDefaultCacheMode());
+			}
 
 			auto rtp = dynamic_cast<VuoRendererTypecastPort *>(*it);
 			if (rtp)
@@ -800,7 +825,6 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 			(*it)->update();
 
 		updateConnectedCableGeometry();
-
 		setCacheModeForConnectedCables(getCurrentDefaultCacheMode());
 	}
 

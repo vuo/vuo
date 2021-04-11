@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompiler interface.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -26,7 +26,6 @@ class TestVuoCompiler : public QObject
 
 protected:
 	VuoCompiler *compiler; ///< A compiler instance for testing.
-	bool executeFunction(Module *mod, string functionName, vector<GenericValue> &args, GenericValue &ret) VuoWarnUnusedResult;
 	void initCompiler();
 	void cleanupCompiler();
 	string getCompositionPath(string compositionFileName);

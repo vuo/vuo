@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerInputEventPort implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -18,13 +18,11 @@
  */
 VuoCompilerInputEventPort * VuoCompilerInputEventPort::newPort(string name, VuoType *type)
 {
-	VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(name, nullptr);
+	VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(name);
 
 	if (type)
 	{
-		Type *secondType = nullptr;
-		type->getCompiler()->getFunctionParameterType(&secondType);
-		VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("", nullptr, secondType);
+		VuoCompilerInputDataClass *dataClass = new VuoCompilerInputDataClass("");
 		dataClass->setVuoType(type);
 		portClass->setDataClass(dataClass);
 	}

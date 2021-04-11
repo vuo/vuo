@@ -68,6 +68,7 @@ add_custom_command(
 	COMMAND rsync --update
 		${inputEditors}
 		${inputEditorsDestDir}
+	COMMAND ${codesignAdHoc} ${inputEditorsDest} ${codesignAdHocIgnoreReplace}
 	# Update timestamps, to help `make` believe this target was successfully rebuilt.
 	COMMAND touch ${inputEditorsDest}
 	OUTPUT ${inputEditorsDest}
@@ -101,6 +102,7 @@ add_custom_command(
 		${CONAN_LIB_DIRS_QT}/QtWidgets.framework
 		${CONAN_LIB_DIRS_QT}/QtXml.framework
 		${frameworksDestDir}
+	COMMAND ${codesignAdHoc} ${frameworksDestDir}/Qt*.framework ${codesignAdHocIgnoreReplace}
 	COMMAND rsync --recursive --links --perms --delete
 		--include libqcocoa.dylib
 		--include libqsvgicon.dylib
@@ -117,10 +119,12 @@ add_custom_command(
 		--exclude playlistformats
 		--exclude printsupport
 		--exclude sqldrivers
+		--exclude '*.dSYM'
 		--exclude '*.dylib'
 		${CONAN_QT_ROOT}/plugins/
 		${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Frameworks/QtPlugins
 	COMMAND rsync --recursive --links --perms --delete
+		--exclude '*.dSYM'
 		--exclude '*.qmltypes'
 		--exclude Qt/labs/calendar
 		--exclude Qt/labs/folderlistmodel
@@ -153,12 +157,18 @@ add_custom_command(
 		${VuoStubsTarget}  ${VuoStubsGeneratedFiles}
 	COMMENT "Copying Vuo.framework and VuoRunner.framework into Vuo.app"
 	COMMAND mkdir -p ${frameworksDestDir}
-	COMMAND rsync --recursive --links --update --delete
+	# Use `--extended-attributes` since `codesign` stores signatures for `.bc` and `.o` files
+	# in macOS extended attributes (a.k.a. xattr, resource forks),
+	# and those code signatures are required for Notarization.
+	COMMAND rsync --recursive --links --update --delete --extended-attributes
 		${PROJECT_BINARY_DIR}/lib/Vuo.framework
 		${PROJECT_BINARY_DIR}/lib/VuoRunner.framework
 		${frameworksDestDir}
-	# Update timestamp, to help `make` believe this target was successfully rebuilt.
-	COMMAND touch ${frameworksDestDir}/Vuo.framework/Versions/Current/Vuo
+	COMMAND ${codesignAdHoc} ${frameworksDestDir}/Vuo.framework ${codesignAdHocIgnoreReplace}
+
+	# Update timestamps, to help `make` believe this target was successfully rebuilt.
+	COMMAND touch ${frameworkDest}
+
 	OUTPUT ${frameworkDest}
 )
 add_custom_target(VuoEditorAppFramework DEPENDS ${frameworkDest})
@@ -173,6 +183,7 @@ add_custom_command(
 	COMMAND rsync --perms
 		${PROJECT_BINARY_DIR}/lib/libVuoWidget.dylib
 		${frameworksDestDir}
+	COMMAND ${codesignAdHoc} ${frameworksDestDir}/libVuoWidget.dylib
 	OUTPUT ${frameworksDestDir}/libVuoWidget.dylib
 )
 add_custom_target(VuoEditorAppLibraries DEPENDS ${frameworksDestDir}/libVuoWidget.dylib)
@@ -188,3 +199,9 @@ add_custom_command(
 )
 add_custom_target(VuoEditorAppContributors DEPENDS ${contributorsDest})
 add_dependencies(VuoEditorApp VuoEditorAppContributors)
+
+
+# Code-sign the whole mess after all the frameworks and helpers have been copied into Vuo.app.
+add_custom_command(TARGET VuoEditorApp POST_BUILD
+	COMMAND ${codesignAdHoc} ${CMAKE_BINARY_DIR}/bin/Vuo.app
+)

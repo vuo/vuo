@@ -2,7 +2,7 @@
  * @file
  * TestTypes implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,19 +11,27 @@
 #include <Vuo/Vuo.h>
 
 /**
- * Tests each type for common mistakes.
+ * Tests each type for common mistakes and errors.
  */
 class TestTypes : public TestCompositionExecution
 {
 	Q_OBJECT
 
 private:
+	QString singleTestDatum;
 	VuoCompiler *compiler;
 
 public:
-	TestTypes()
+	TestTypes(int argc, char **argv)
 	{
 		compiler = initCompiler();
+
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			singleTestDatum = QString::fromUtf8(argv[1]).section(':', 1);
+		}
 	}
 	~TestTypes()
 	{
@@ -84,7 +92,52 @@ private slots:
 		runner->stop();
 		delete runner;
 	}
+
+	void testLlvmTypes_data()
+	{
+		QTest::addColumn< QString >("typeName");
+
+		initCompiler();
+		if (singleTestDatum.isEmpty())
+			for (auto i : compiler->getTypes())
+				QTest::newRow(i.first.c_str()) << QString::fromStdString(i.first);
+		else
+			QTest::newRow(singleTestDatum.toUtf8().constData()) << singleTestDatum;
+	}
+	void testLlvmTypes()
+	{
+		QFETCH(QString, typeName);
+
+		VuoCompilerType *type = compiler->getType(typeName.toStdString());
+
+		Module *module = new Module("", *VuoCompiler::globalLLVMContext);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), false);
+		Function *function = Function::Create(functionType, GlobalValue::ExternalLinkage, "test", module);
+		BasicBlock *block = BasicBlock::Create(*VuoCompiler::globalLLVMContext, "", function, nullptr);
+
+		Value *emptyString = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, "");
+		Value *value = type->generateValueFromStringFunctionCall(module, block, emptyString);  // tests llvmReturnType
+
+		Value *pointerToValue = VuoCompilerCodeGenUtilities::generatePointerToValue(block, value);
+		vector<Value *> args = type->convertPortDataToArgs(module, block, pointerToValue, type->getSummaryFunction->getFunctionType(), 0, false);  // tests llvmArgumentType
+		QVERIFY2(args.size() == 1 || args.size() == 2, qPrintable(QString("%1 should be 1 or 2").arg(args.size())));
+
+		size_t argsTotalSize = 0;
+		for (Value *arg : args)
+			argsTotalSize += module->getDataLayout().getTypeStoreSize(arg->getType());
+		QVERIFY2(argsTotalSize <= type->getSize(module), qPrintable(QString("%1 should be <= %2").arg(argsTotalSize).arg(type->getSize(module))));
+
+		CallInst::Create(type->getSummaryFunction, args, "", block);
+
+		delete module;
+	}
+
 };
 
-QTEST_APPLESS_MAIN(TestTypes)
+int main(int argc, char *argv[])
+{
+	TestTypes tc(argc, argv);
+	return QTest::qExec(&tc, argc, argv);
+}
+
 #include "TestTypes.moc"

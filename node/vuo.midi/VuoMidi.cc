@@ -2,7 +2,7 @@
  * @file
  * VuoMidi implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -180,7 +180,7 @@ VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 	{
 		VuoMidiOutputDevice realizedDevice;
 		if (!VuoMidiOutputDevice_realize(md, &realizedDevice))
-			throw RtError("No matching device found");
+			throw RtMidiError("No matching device found");
 		VuoMidiOutputDevice_retain(realizedDevice);
 
 		midiout = new RtMidiOut();
@@ -188,7 +188,7 @@ VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 
 		VuoMidiOutputDevice_release(realizedDevice);
 	}
-	catch (RtError &error)
+	catch (RtMidiError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_getSummary(md), error.what());
@@ -347,7 +347,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 	{
 		VuoMidiInputDevice realizedDevice;
 		if (!VuoMidiInputDevice_realize(md, &realizedDevice))
-			throw RtError("No matching device found");
+			throw RtMidiError("No matching device found");
 		VuoMidiInputDevice_retain(realizedDevice);
 
 		midiin = new RtMidiIn();
@@ -366,7 +366,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 		// Ignore SysEx, timing, and active sensing for now.
 		midiin->ignoreTypes(true,true,true);
 	}
-	catch (RtError &error)
+	catch (RtMidiError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_getSummary(md), error.what());
@@ -480,7 +480,7 @@ bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *r
 	// Second pass: try to find a match by name.
 	if (!found)
 		VuoListForeach_VuoMidiInputDevice(devices, ^(const VuoMidiInputDevice item){
-			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
 				setRealizedDevice(item);
@@ -551,7 +551,7 @@ bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice
 	// Second pass: try to find a match by name.
 	if (!found)
 		VuoListForeach_VuoMidiOutputDevice(devices, ^(const VuoMidiOutputDevice item){
-			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true, ""}, device.name))
+			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
 				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
 				setRealizedDevice(item);

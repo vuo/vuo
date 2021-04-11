@@ -2,7 +2,7 @@
  * @file
  * TestNodes interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -25,6 +25,7 @@ class TestNodes : public TestCompositionExecution
 	Q_OBJECT
 
 private:
+	QString singleTestDatum;
 	VuoCompiler *compiler;
 	set<string> customModuleKeys;
 	set<VuoCompilerNodeClass *> builtInNodeClasses;
@@ -32,9 +33,8 @@ private:
 
 	bool isCompatibleWithCurrentTarget(VuoCompilerModule *module)
 	{
-		VuoCompilerTargetSet currentTarget;
-		currentTarget.restrictToCurrentOperatingSystemVersion();
-		return module->getCompatibleTargets().isCompatibleWithAllOf(currentTarget);
+		VuoCompilerCompatibility currentTarget = VuoCompilerCompatibility::currentSystem();
+		return module->getCompatibleTargets().isCompatibleWith(currentTarget);
 	}
 
 	void makeBuiltInNodeClasses(void)
@@ -91,7 +91,7 @@ private:
 	}
 
 public:
-	TestNodes()
+	TestNodes(int argc, char **argv)
 	{
 		compiler = initCompiler();
 
@@ -110,8 +110,17 @@ public:
 			}
 		}
 
-		makeBuiltInNodeClasses();
-		makeBuiltInTypes();
+		if (argc > 1)
+		{
+			// If a single test is specified on the command line,
+			// improve performance by loading only data for that test.
+			singleTestDatum = QString::fromUtf8(argv[1]).section(':', 1);
+			if (singleTestDatum.isEmpty())
+			{
+				makeBuiltInNodeClasses();
+				makeBuiltInTypes();
+			}
+		}
 	}
 
 	~TestNodes()
@@ -195,19 +204,16 @@ private slots:
 	{
 		QTest::addColumn<QString>("nodeClassName");
 
-		set<VuoCompilerNodeClass *> nodeClasses = builtInNodeClasses;
-		for (set<VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
-		{
-			VuoCompilerNodeClass *nodeClass = *i;
+		auto addTestsForNodeClass = ^(VuoCompilerNodeClass *nodeClass){
 			string nodeClassName = nodeClass->getBase()->getClassName();
 
-			// Test each node class in its original (possibly generic) form.
-			QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
-
-			// Test some specializations of each generic node class.
 			vector<string> genericTypeNames = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
-			if (! genericTypeNames.empty())
+			if (genericTypeNames.empty())
+				// Test each node class in its original form.
+				QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
+			else
 			{
+				// Test some specializations of each generic node class.
 				map<string, vector<string> > specializedTypeNamesForGeneric;
 				size_t maxSpecializedTypesCount = 0;
 
@@ -269,7 +275,13 @@ private slots:
 					QTest::newRow(specializedNodeClassName.c_str()) << QString::fromStdString(specializedNodeClassName);
 				}
 			}
-		}
+		};
+
+		if (singleTestDatum.isEmpty())
+			for (auto nodeClass : builtInNodeClasses)
+				addTestsForNodeClass(nodeClass);
+		else
+			addTestsForNodeClass(compiler->getNodeClass(singleTestDatum.toStdString()));
 	}
 	void testEachNode()
 	{
@@ -378,20 +390,24 @@ private slots:
 		QTest::addColumn< VuoCompilerNodeClass * >("nodeClass");
 
 		string genericNodeClassName = "vuo.list.get";
-		set<VuoCompilerType *> types = builtInTypes;
-		for (set<VuoCompilerType *>::iterator i = types.begin(); i != types.end(); ++i)
-		{
-			string typeName = (*i)->getBase()->getModuleKey();
+		auto addTestForType = ^(VuoCompilerType *type){
+			string typeName = type->getBase()->getModuleKey();
 			if (VuoType::isListTypeName(typeName) || VuoType::isDictionaryTypeName(typeName) ||
 					typeName == "VuoMathExpressionList")  /// @todo https://b33p.net/kosada/node/8550
-				continue;
+				return;
 
 			string specializedNodeClassName = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(genericNodeClassName,
 																											  vector<string>(1, typeName));
 			VuoCompilerNodeClass *specializedNodeClass = compiler->getNodeClass(specializedNodeClassName);
 			QVERIFY2(specializedNodeClass, specializedNodeClassName.c_str());
-			QTest::newRow(specializedNodeClassName.c_str()) << specializedNodeClass;
-		}
+			QTest::newRow(typeName.c_str()) << specializedNodeClass;
+		};
+
+		if (singleTestDatum.isEmpty())
+			for (auto type : builtInTypes)
+				addTestForType(type);
+		else
+			addTestForType(compiler->getType(singleTestDatum.toStdString()));
 	}
 	void testEachListType()
 	{
@@ -478,6 +494,12 @@ private slots:
 	{
 		QTest::addColumn<QString>("nodeClassName");
 
+		if (!singleTestDatum.isEmpty())
+		{
+			QTest::newRow(singleTestDatum.toUtf8().constData()) << singleTestDatum;
+			return;
+		}
+
 		set<VuoCompilerNodeClass *> nodeClasses = builtInNodeClasses;
 		for (set<VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
 		{
@@ -525,7 +547,7 @@ private slots:
 int main(int argc, char *argv[])
 {
 	qInstallMessageHandler(VuoRendererCommon::messageHandler);
-	TestNodes tc;
+	TestNodes tc(argc, argv);
 	QTEST_SET_MAIN_SOURCE_PATH
 	return QTest::qExec(&tc, argc, argv);
 }

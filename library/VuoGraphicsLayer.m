@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsLayer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,6 +14,9 @@
 #import "VuoCglPixelFormat.h"
 #import "VuoEventLoop.h"
 #import "VuoGraphicsView.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #import <OpenGL/gl.h>
 /// @{ Stub.
@@ -501,3 +504,4 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 #pragma clang diagnostic pop
 
 @end
+#pragma clang diagnostic pop

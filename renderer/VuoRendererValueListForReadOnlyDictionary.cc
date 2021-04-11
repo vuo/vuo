@@ -2,7 +2,7 @@
  * @file
  * VuoRendererValueListForReadOnlyDictionary implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -63,29 +63,8 @@ string VuoRendererValueListForReadOnlyDictionary::getRenderedPortNameFormForText
  */
 void VuoRendererValueListForReadOnlyDictionary::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	if (!isSelected())
-	{
-		VuoNode *renderedHostNode = getRenderedHostNode();
-		if (renderedHostNode && renderedHostNode->hasRenderer() && renderedHostNode->getRenderer()->isSelected())
-			this->setSelected(true);
-
-		else
-		{
-			set<VuoNode *> coattachments = getCoattachments();
-			foreach (VuoNode *coattachment, coattachments)
-			{
-				if (coattachment->hasRenderer() && coattachment->getRenderer()->isSelected())
-				{
-					this->setSelected(true);
-					break;
-				}
-			}
-		}
-	}
-
 	drawBoundingRect(painter);
-
-	VuoRendererColors::SelectionType selectionType = (isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
+	VuoRendererColors::SelectionType selectionType = (isEffectivelySelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastExecutionEnded : VuoRendererItem::notTrackingActivity);
 	VuoRendererColors *drawerColors = new VuoRendererColors(getBase()->getTintColor(),
 													  selectionType,

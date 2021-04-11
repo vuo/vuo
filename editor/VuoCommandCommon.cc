@@ -2,7 +2,7 @@
  * @file
  * VuoCommandCommon implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -229,15 +229,15 @@ VuoCompilerCompositionDiff * VuoCommandCommon::addNodeReplacementToDiff(VuoCompi
 		// Tell VuoCompositionDiff about the node replacements, since some information can't be inferred from the composition snapshot:
 		//  - the fact that a node was replaced if its node class hasn't changed
 		//  - for `Calculate` nodes, the mapping from old to new ports on the `Make List` node that holds the variable values
-		map<string, string> oldAndNewPortIdentifiers;
+		map<string, string> oldAndNewPortNames;
 		for (VuoPort *oldPort : oldNode->getBase()->getInputPorts())
 		{
 			VuoPort *newPort = updatedPortForOriginalPort[oldPort];
 			if (newPort)
 			{
-				string oldPortIdentifier = static_cast<VuoCompilerPort *>(oldPort->getCompiler())->getIdentifier();
-				string newPortIdentifier = static_cast<VuoCompilerPort *>(newPort->getCompiler())->getIdentifier();
-				oldAndNewPortIdentifiers[oldPortIdentifier] = newPortIdentifier;
+				string oldPortName = oldPort->getClass()->getName();
+				string newPortName = newPort->getClass()->getName();
+				oldAndNewPortNames[oldPortName] = newPortName;
 			}
 		}
 
@@ -245,7 +245,7 @@ VuoCompilerCompositionDiff * VuoCommandCommon::addNodeReplacementToDiff(VuoCompi
 		string newNodeIdentifier = newNode->getBase()->getCompiler()->getIdentifier();
 
 		string compositionIdentifier = static_cast<VuoEditor *>(qApp)->getSubcompositionRouter()->getCompositionIdentifier(composition);
-		diffInfo->addNodeReplacement(compositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortIdentifiers);
+		diffInfo->addNodeReplacement(compositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortNames);
 
 		return diffInfo;
 }

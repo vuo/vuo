@@ -42,9 +42,10 @@ In the `/Library/Developer/Vuo/example` folder:
 
 To build, install, and use each example:
 
+   - Copy the example's folder to your Desktop or some other folder you have write access to
    - For the `VuoPluginApp` example, open `VuoPluginApp.xcodeproj` in Xcode, and click the Run button
    - For the other examples:
-      - In Terminal, change to the example's folder — e.g., `cd example/node/stateless`
+      - In Terminal, change to the example's folder — e.g., `cd stateless`
       - Create a build folder — `mkdir build`
       - Change to the build folder — `cd build`
       - Run `cmake ..` to generate the makefile

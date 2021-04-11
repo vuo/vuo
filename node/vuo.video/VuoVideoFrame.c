@@ -2,7 +2,7 @@
  * @file
  * VuoVideoFrame implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -42,7 +42,6 @@ VuoVideoFrame VuoVideoFrame_makeFromJson(json_object *js)
 		VuoJson_getObjectValue(VuoImage, js, "image",     NULL),
 		VuoJson_getObjectValue(VuoReal,  js, "timestamp", 0),
 		VuoJson_getObjectValue(VuoReal,  js, "duration",  0),
-		""
 	};
 }
 

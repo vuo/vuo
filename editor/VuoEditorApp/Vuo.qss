@@ -51,13 +51,45 @@ QMenu::separator {
 }
 
 
-.VuoEditorWindow QTabWidget::pane {
+/* The frame around the contents of each tab. */
+.VuoMetadataEditor QTabWidget::pane {
 	color: #bbb;
 	background: #e3e3e3;
-	border: 1px solid #dadada;
-	border-radius: 7px;
+	border: 1px solid #d8d8d8;
+	border-radius: 5px;
 	margin-top: -10px;
 	padding-top: 10px;
+}
+
+/* The background area behind the contents of each tab. */
+.VuoMetadataEditor QTabWidget > QWidget > QWidget {
+	background-color: #e6e6e6;
+}
+
+.VuoMetadataEditor QTabBar::tab {
+	background: rgba(208,208,208,0.5);
+	border: 1px solid #d0d0d0;
+	padding: 2px 12px;
+}
+
+.VuoMetadataEditor QTabBar::tab:first {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	border-right: none;
+}
+.VuoMetadataEditor QTabBar::tab:middle {
+	border-right: none;
+}
+.VuoMetadataEditor QTabBar::tab:last {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.VuoMetadataEditor QTabBar::tab:pressed {
+	background: rgba(255,255,255,0.5);
+}
+.VuoMetadataEditor QTabBar::tab:selected {
+	background: #ffffff;
 }
 
 

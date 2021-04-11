@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
 project(ListPublishedPorts)
 
-set(CMAKE_FRAMEWORK_PATH
-	../../../framework
-	../../../build/lib
-)
+set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
 find_library(VUO_FRAMEWORK Vuo)
 
 add_executable(ListPublishedPorts ListPublishedPorts.cc)

@@ -2,7 +2,7 @@
  * @file
  * VuoScreenCommon implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,12 +14,8 @@
 #include "VuoPnpId.h"
 #include "VuoApp.h"
 
+#include "VuoMacOSSDKWorkaround.h"
 #include <IOKit/graphics/IOGraphicsLib.h>
-/// Disable NS_RETURNS_INNER_POINTER (new in Mac OS 10.10's system headers), since Clang 3.2 doesn't support it.
-/// https://b33p.net/kosada/node/9140
-#ifndef NS_RETURNS_INNER_POINTER
-#define NS_RETURNS_INNER_POINTER
-#endif
 #include <AppKit/AppKit.h>
 
 #ifdef VUO_COMPILER

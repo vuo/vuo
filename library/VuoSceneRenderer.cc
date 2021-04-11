@@ -2,7 +2,7 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -285,7 +285,10 @@ VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 		glGenFramebuffers(1, &sceneRenderer->outputFramebuffer);
 		glGenFramebuffers(1, &sceneRenderer->outputFramebuffer2);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &sceneRenderer->glContextRendererID);
+#pragma clang diagnostic pop
 	});
 
 	return (VuoSceneRenderer)sceneRenderer;
@@ -1084,7 +1087,10 @@ extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr, CGLContextObj cgl_ctx
 	if (VuoIsDebugEnabled())
 	{
 		GLint rendererID;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &rendererID);
+#pragma clang diagnostic pop
 		if (rendererID != sceneRenderer->glContextRendererID)
 		{
 			VUserLog("OpenGL context %p's renderer changed to %s", cgl_ctx, VuoCglRenderer_getText(rendererID));
@@ -1725,7 +1731,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 	if (!*outputTexture || (outputDepthTexture && !*outputDepthTexture))
 		return false;
 
-	sceneRenderer->shouldSortByDepth = *outputDepthTexture;
+	sceneRenderer->shouldSortByDepth = outputDepthTexture && *outputDepthTexture;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneRenderer->outputFramebuffer);
 

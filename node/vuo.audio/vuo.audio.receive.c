@@ -2,7 +2,7 @@
  * @file
  * vuo.audio.receive node implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -68,7 +68,7 @@ void nodeInstanceTriggerUpdate
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioInputDevice) device,
-		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"})
+		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples)
 )
 {
 	if (! VuoAudioInputDevice_areEqual(device, (*context)->device))
@@ -83,7 +83,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioInputDevice) device,
-		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"})
+		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"})
 )
 {
 	if (!(*context)->triggersEnabled)

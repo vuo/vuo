@@ -26,6 +26,7 @@ VuoCompileGenericNodes(
 	vuo.list.sort.c
 	vuo.list.spread.c
 	vuo.list.spread.group.c
+	vuo.list.summarize.c
 	vuo.list.take.c
 )
 

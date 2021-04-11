@@ -2,7 +2,7 @@
  * @file
  * VuoWindowProperty implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -187,7 +187,7 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 	else if (value.type == VuoWindowProperty_FullScreen)
 	{
 		char *screenSummary = VuoScreen_getSummary(value.screen);
-		char *summary = VuoText_format("<div>Change to %s</div><div>%s</div>",
+		char *summary = VuoText_format("<div>Change to %s</div>\n<div>%s</div>",
 									   value.fullScreen ? "Fullscreen" : "Windowed",
 									   screenSummary);
 		free(screenSummary);

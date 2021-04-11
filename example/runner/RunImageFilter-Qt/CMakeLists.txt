@@ -3,10 +3,7 @@ project(RunImageFilterQt)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(CMAKE_FRAMEWORK_PATH
-	../../../framework
-	../../../build/lib
-)
+set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
 find_library(VUO_FRAMEWORK Vuo)
 
 set(CMAKE_AUTOMOC ON)

@@ -25,8 +25,6 @@ typedef struct
 	VuoInteger minimum;
 	// The maximum value of a range.  (minimum >= maximum >= VuoIntegerRange_max)
 	VuoInteger maximum;
-
-	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoIntegerRange;
 
 VuoIntegerRange VuoIntegerRange_makeFromJson(struct json_object * js);
@@ -49,8 +47,7 @@ void VuoIntegerRange_release(VuoIntegerRange value);
 static inline VuoIntegerRange VuoIntegerRange_make(VuoInteger _minimum, VuoInteger _maximum) __attribute__((const));
 static inline VuoIntegerRange VuoIntegerRange_make(VuoInteger _minimum, VuoInteger _maximum)
 {
-	VuoIntegerRange range = { _minimum, _maximum, "" };
-	return range;
+	return (VuoIntegerRange){_minimum, _maximum};
 }
 
 /**
@@ -69,7 +66,7 @@ static inline VuoIntegerRange VuoIntegerRange_getOrderedRange(VuoIntegerRange ra
 static inline VuoIntegerRange VuoIntegerRange_getOrderedRange(VuoIntegerRange range)
 {
 	if (VuoIntegerRange_isInverted(range))
-		return (VuoIntegerRange){range.maximum, range.minimum, ""};
+		return (VuoIntegerRange){range.maximum, range.minimum};
 	else
 		return range;
 }

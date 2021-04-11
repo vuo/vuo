@@ -2,7 +2,7 @@
  * @file
  * TestVuoRunner implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -240,6 +240,8 @@ private slots:
 
 	void testSetGlobalRootContext(void)
 	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false, -1);
 		CGLContextObj rootContext;
 		CGLError error = CGLCreateContext(pf, NULL, &rootContext);
@@ -264,6 +266,7 @@ private slots:
 
 		CGLUnlockContext(rootContext);
 		CGLReleaseContext(rootContext);
+#pragma clang diagnostic pop
 	}
 
 	void testPortDetails(void)
@@ -345,7 +348,7 @@ private slots:
 		QFETCH(int, dataParts);
 		QFETCH(int, dataSizePerPart);
 
-		const char *port = "ipc:///tmp/testZMQReqRepPerformance";
+		char *port = strdup(("ipc://" + VuoFileUtilities::makeTmpFile("v", "")).c_str());
 
 		pid_t pid = fork();
 		if (pid == 0)
@@ -374,7 +377,7 @@ private slots:
 				for (int i = 0; i < dataParts; ++i)
 				{
 					zmq_msg_init(&message);
-					zmq_recv(control, &message, 0);
+					zmq_msg_recv(&message, control, 0);
 					size = zmq_msg_size(&message);
 					QCOMPARE((size_t)dataSizePerPart, size);
 					memcpy(data, zmq_msg_data(&message), size);
@@ -386,10 +389,13 @@ private slots:
 				{
 					zmq_msg_init_size(&message, size);
 					memcpy(zmq_msg_data(&message), &data, size);
-					QVERIFY(zmq_send(control, &message, i < dataParts-1 ? ZMQ_SNDMORE : 0) == 0);
+					QVERIFY(zmq_msg_send(&message, control, i < dataParts-1 ? ZMQ_SNDMORE : 0) != -1);
 					zmq_msg_close(&message);
 				}
 			}
+
+			zmq_close(control);
+			zmq_term(context);
 		}
 		else
 		{
@@ -411,7 +417,7 @@ private slots:
 				{
 					zmq_msg_init_size(&message, dataSizePerPart);
 					memcpy(zmq_msg_data(&message), &data, dataSizePerPart);
-					QVERIFY(zmq_send(control, &message, i < dataParts-1 ? ZMQ_SNDMORE : 0) == 0);
+					QVERIFY(zmq_msg_send(&message, control, i < dataParts-1 ? ZMQ_SNDMORE : 0) != -1);
 					zmq_msg_close(&message);
 				}
 
@@ -419,7 +425,7 @@ private slots:
 				for (int i = 0; i < dataParts; ++i)
 				{
 					zmq_msg_init(&message);
-					zmq_recv(control, &message, 0);
+					zmq_msg_recv(&message, control, 0);
 					size_t size = zmq_msg_size(&message);
 					QCOMPARE((size_t)dataSizePerPart, size);
 					memcpy(&data, zmq_msg_data(&message), size);
@@ -431,6 +437,8 @@ private slots:
 			zmq_close(control);
 			zmq_term(context);
 		}
+
+		free(port);
 	}
 
 	/**

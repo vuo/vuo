@@ -2,7 +2,7 @@
  * @file
  * TestVuoIsfModuleCompiler interface and implementation.
  *
- * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -349,7 +349,7 @@ private slots:
 			inputNames << "vuoTime" << inputNames_WidthHeight;
 			inputDisplayNames << "Time" << inputDisplayNames_WidthHeight;
 			inputTypes << "VuoReal" << inputTypes_WidthHeight;
-			inputDefaults << "0" << inputDefaults_WidthHeight;
+			inputDefaults << "0.0" << inputDefaults_WidthHeight;
 
 			QTest::newRow("image generator: time input port") << "vuo.test.imageGenerator.timeInput.fs"
 															  << "vuo.test.imageGenerator.timeInput"
@@ -443,7 +443,7 @@ private slots:
 		compileIsfToLlvmModule(m, llvmModule, issues);
 
 		QVERIFY2(issues->isEmpty(), issues->getLongDescription(false).c_str());
-		QVERIFY(! verifyModule(*llvmModule, PrintMessageAction));
+		QVERIFY(!llvm::verifyModule(*llvmModule));
 
 		VuoCompilerNodeClass *nodeClass;
 		loadLlvmModuleAsNodeClass(m, llvmModule, nodeClass);
@@ -669,8 +669,9 @@ private slots:
 		compileIsfToLlvmModule(m, llvmModule, issues);
 
 		QVERIFY2(issues->isEmpty(), issues->getLongDescription(false).c_str());
-		QVERIFY(! verifyModule(*llvmModule, PrintMessageAction));
+		QVERIFY(!llvm::verifyModule(*llvmModule));
 
+		VuoCompiler::setTargetForModule(llvmModule, "x86_64-apple-macosx10.10.0");
 		VuoCompiler::writeModuleToBitcode(llvmModule, m.getCompiledPath());
 
 		VuoCompiler *compiler = new VuoCompiler(m.getCompositionDir());

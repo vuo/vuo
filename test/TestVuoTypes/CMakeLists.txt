@@ -46,3 +46,7 @@ target_link_libraries(TestVuoUiTheme
 	PRIVATE
 	vuo.ui.libraries
 )
+target_link_libraries(TestVuoUrl
+	PRIVATE
+		Qt5::Widgets
+)
