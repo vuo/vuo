@@ -39,6 +39,7 @@ void nodeInstanceEvent
 			{"value":0, "name": "Oldest"},
 			{"value":1, "name": "Newest"}
 		], "default": 0}) discardWhenFull,
+		VuoInputEvent({"eventBlocking":"wall","data":"discardWhenFull"}) discardWhenFullEvent,
 		VuoInputEvent({"eventBlocking":"none"}) clearList,
 		VuoOutputData(VuoList_VuoGenericType1) list
 )
