@@ -1,14 +1,14 @@
-Adds an item to a list, discarding the oldest item from the list if needed.
+Keeps track of a list of items.
 
-This node stores the most recently added items in a list. The list is "first in, first out" — as new items are added, the oldest items are removed to make room.
+When the composition starts or this node is added to a running composition, the list is empty.
 
-   - `Add Item` — When this port receives an event, the given item is added to the list. If this makes the list exceed `Max Item Count`, the item added longest ago is removed from the list.
+   - `Add Item` — When this port receives an event, the item is added to the list if there's room.
    - `Max Item Count` — The maximum number of items in the list. If this is 0, the node always outputs an empty list. If this is `Auto`, the list will be unlimited.
    - `Clear List` — When this port receives an event, all items are removed from the list.
-   - `Discard When Full` -
-      - Oldest - Discards items in the list from oldest to newest when list is full (default).
-      - Newest - Prevents adding additional items when list is full.
-   - `List` — The list of recent items, in order from oldest to newest.
+   - `Discard When Full` - Which end of the list to discard from if the list exceeds `Max Item Count`.
+      - `Oldest` - The oldest items are discarded to make room for the newest items.
+      - `Newest` - New items are not added to the list.
+   - `List` — In order from oldest (first item) to newest (last item).
 
 If an event hits both `Add Item` and `Clear List`, then the list is cleared before the item is added.
 
