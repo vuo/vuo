@@ -35,11 +35,12 @@ void nodeEvent
 
 	*items = VuoListCreate_VuoGenericType1();
 
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
 	for(unsigned long i = 1; i <= rangeCount; ++i)
 	{
 		VuoIntegerRange range = VuoIntegerRange_getOrderedRange(VuoListGetValue_VuoIntegerRange(ranges, i));
 
 		for(VuoInteger n = MAX(range.minimum, 1); n <= MIN(range.maximum, listCount); n++)
-			VuoListAppendValue_VuoGenericType1(*items, VuoListGetData_VuoGenericType1(list)[n-1]);
+			VuoListAppendValue_VuoGenericType1(*items, listCopy[n-1]);
 	}
 }
