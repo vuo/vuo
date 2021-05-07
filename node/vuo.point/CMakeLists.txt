@@ -25,6 +25,9 @@ VuoCompileNodes(
 	vuo.point.merge.xy.c
 	vuo.point.merge.xyz.c
 	vuo.point.merge.xyzw.c
+	vuo.point.split.VuoPoint2d.c
+	vuo.point.split.VuoPoint3d.c
+	vuo.point.split.VuoPoint4d.c
 	vuo.point.sort.distance.w.VuoPoint4d.c
 	vuo.point.within.box.c
 	vuo.point.within.circle.c
