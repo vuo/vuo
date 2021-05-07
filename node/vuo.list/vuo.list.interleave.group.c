@@ -12,7 +12,7 @@
     VuoModuleMetadata({
                           "title" : "Interleave List Item Groups",
                           "keywords" : [ "sort", "indecies", "big", "high", "small", "most", ">", "<", "upper", "limit", "bound", "range" ],
-                          "version" : "2.1.0",
+                          "version" : "1.1.0",
                           "genericTypes" : {
                               "VuoGenericType1" : {
                                   "defaultType" : "VuoReal",
