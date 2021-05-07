@@ -26,7 +26,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-        VuoInputData(VuoList_VuoPoint3d) points,
+        VuoInputData(VuoList_VuoPoint4d) points,
         VuoOutputData(VuoList_VuoReal) x,
         VuoOutputData(VuoList_VuoReal) y,
         VuoOutputData(VuoList_VuoReal) z,
@@ -38,11 +38,11 @@ void nodeEvent
     *y = VuoListCreate_VuoReal();
     *z = VuoListCreate_VuoReal();
     *w = VuoListCreate_VuoReal();
-    VuoInteger listSize = VuoListGetCount_VuoPoint3d(points);
+    VuoInteger listSize = VuoListGetCount_VuoPoint4d(points);
 
     for(int i = 1; i <= listSize; i++)
     {
-        VuoPoint3d point = VuoListGetValue_VuoPoint3d(points, i);
+        VuoPoint4d point = VuoListGetValue_VuoPoint4d(points, i);
         VuoListAppendValue_VuoReal(*x, point.x);
         VuoListAppendValue_VuoReal(*y, point.y);
         VuoListAppendValue_VuoReal(*z, point.z);
