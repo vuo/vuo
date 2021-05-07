@@ -12,7 +12,7 @@
 VuoModuleMetadata({
                       "title" : "Split XY Lists",
                       "keywords" : [ "sort", "indecies", "big", "high", "small", "most", ">", "<", "upper", "limit", "bound", "range" ],
-                      "version" : "2.1.0",
+                      "version" : "1.0.0",
                       "genericTypes" : {
                           "VuoGenericType1" : {
                               "defaultType" : "VuoReal",
