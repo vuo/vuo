@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-                      "title" : "Split Points (XYZW)",
+                      "title" : "Split XYZW Lists",
                       "keywords" : [ "sort", "indecies", "big", "high", "small", "most", ">", "<", "upper", "limit", "bound", "range" ],
                       "version" : "2.1.0",
                       "genericTypes" : {
