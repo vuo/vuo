@@ -12,7 +12,7 @@
 VuoModuleMetadata({
                       "title" : "Wrap List",
                       "keywords" : [ "sort", "indecies", "big", "high", "small", "most", ">", "<", "upper", "limit", "bound", "range" ],
-                      "version" : "2.1.0",
+                      "version" : "1.0.0",
                       "genericTypes" : {
                           "VuoGenericType1" : {
                               "defaultType" : "VuoReal",
@@ -35,10 +35,9 @@ void nodeEvent
     *wrappedList = VuoListCreate_VuoGenericType1();
     VuoInteger listSize = VuoListGetCount_VuoGenericType1(list);
 
-    for(int i = 0; i < listSize; i++){
-            VuoGenericType1 value = VuoListGetValue_VuoGenericType1(
-                        list,
-                        (((startPosition - 1) + i) % listSize) + 1);
-            VuoListAppendValue_VuoGenericType1(*wrappedList, value);
-        }
+    for(int i = 0; i < listSize; i++)
+    {
+        VuoGenericType1 value = VuoListGetValue_VuoGenericType1(list,(((startPosition - 1) + i) % listSize) + 1);
+        VuoListAppendValue_VuoGenericType1(*wrappedList, value);
+    }
 }
