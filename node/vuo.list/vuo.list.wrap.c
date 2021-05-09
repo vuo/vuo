@@ -37,7 +37,7 @@ void nodeEvent
 
     for(int i = 0; i < listSize; i++)
     {
-        VuoGenericType1 value = VuoListGetValue_VuoGenericType1(list,(((startPosition - 1) + i) % listSize) + 1);
+        VuoGenericType1 value = VuoListGetData_VuoGenericType1(list)[ ((startPosition - 1) + i) % listSize ];
         VuoListAppendValue_VuoGenericType1(*wrappedList, value);
     }
 }
