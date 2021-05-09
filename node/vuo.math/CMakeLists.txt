@@ -10,6 +10,7 @@ VuoCompileGenericNodes(
 	vuo.math.areEqual.c
 	vuo.math.areNotEqual.c
 	vuo.math.average.c
+	vuo.math.average.group.c
 	vuo.math.compareNumbers.c
 	vuo.math.cos.c
 	vuo.math.count.c
