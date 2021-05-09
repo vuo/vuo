@@ -35,7 +35,7 @@ void nodeEvent
     {
         for(int j = 1; j <= VuoListGetCount_VuoReal(tempList); ++j)
         {
-            VuoListSetValue_VuoReal(tempList, VuoListGetValue_VuoReal(list, i+ (j - 1)), j, false);
+            VuoListSetValue_VuoReal(tempList, VuoListGetData_VuoReal(list)[i + (j - 1) -1], j, false);
         }
         VuoListAppendValue_VuoReal(*averageValues, VuoReal_average(tempList));
     }
