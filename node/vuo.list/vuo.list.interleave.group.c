@@ -45,7 +45,7 @@
         {
             for(unsigned long k = 1; k <= itemPerGroup1; ++k)
             {
-                VuoListAppendValue_VuoGenericType1(*interleavedList, VuoListGetValue_VuoGenericType1(list1,i + k));
+                VuoListAppendValue_VuoGenericType1(*interleavedList, VuoListGetData_VuoGenericType1(list1)[i + k - 1]);
             }
         }
 
@@ -53,7 +53,7 @@
         {
             for(unsigned long m = 1; m <= itemPerGroup2; ++m)
             {
-                VuoListAppendValue_VuoGenericType1(*interleavedList, VuoListGetValue_VuoGenericType1(list2,j + m));
+                VuoListAppendValue_VuoGenericType1(*interleavedList, VuoListGetData_VuoGenericType1(list2)[j + m - 1]);
             }
         }
     }
