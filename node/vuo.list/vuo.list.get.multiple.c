@@ -35,16 +35,13 @@ void nodeEvent
 	
 	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
 	VuoInteger* positionsList = VuoListGetData_VuoInteger(positions);
+	unsigned long listSize = VuoListGetCount_VuoInteger(list);
 	for(int i = 1; i <= VuoListGetCount_VuoInteger(positions); i++)
 	{
 		VuoInteger index = positionsList[i - 1];
 		unsigned long indexUnsigned = MAX(0, index);
 
-		if(indexUnsigned < 1)
-			VuoListAppendValue_VuoGenericType1(*items, listCopy[0]);
-		else if(indexUnsigned > VuoListGetCount_VuoInteger(list))
-			VuoListAppendValue_VuoGenericType1(*items, listCopy[VuoListGetCount_VuoInteger(list) - 1]);
-		else
-			VuoListAppendValue_VuoGenericType1(*items, listCopy[indexUnsigned - 1]);
+		unsigned long realIndex = VuoListIndexToCArrayIndex(indexUnsigned, listSize);
+		VuoListAppendValue_VuoGenericType1(*items, listCopy[realIndex]);
 	}
 }

@@ -51,6 +51,12 @@ LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const E
 LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list);
 
 /**
+ * Returns a c index
+ * If the index is larger than the size of the list, size of the list minus 1 is used to get the index
+ */
+static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount) __attribute__((const));
+
+/**
  * Returns the @ref ELEMENT_TYPE at @c index.
  * Index values start at 1.
  * If the list has no items, returns a default value.

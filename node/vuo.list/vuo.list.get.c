@@ -27,10 +27,7 @@ void nodeEvent
 {
 	unsigned long whichUnsigned = MAX(0, which);
 	
-	if(whichUnsigned < 1)
-		*item = VuoListGetData_VuoGenericType1(list)[0];
-	else if(whichUnsigned > VuoListGetCount_VuoGenericType1(list))
-		*item = VuoListGetData_VuoGenericType1(list)[VuoListGetCount_VuoGenericType1(list) - 1];
-	else
-		*item = VuoListGetData_VuoGenericType1(list)[whichUnsigned - 1];
+	unsigned long listSize = VuoListGetCount_VuoGenericType1(list);
+	unsigned long index = VuoListIndexToCArrayIndex(whichUnsigned, listSize);
+	*item = VuoListGetData_VuoGenericType1(list)[index];
 }
