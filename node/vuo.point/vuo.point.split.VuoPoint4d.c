@@ -42,7 +42,7 @@ void nodeEvent
 
     for(int i = 1; i <= listSize; i++)
     {
-        VuoPoint4d point = VuoListGetValue_VuoPoint4d(points, i);
+        VuoPoint4d point = VuoListGetData_VuoPoint4d(points)[i -1];
         VuoListAppendValue_VuoReal(*x, point.x);
         VuoListAppendValue_VuoReal(*y, point.y);
         VuoListAppendValue_VuoReal(*z, point.z);

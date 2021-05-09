@@ -38,7 +38,7 @@ void nodeEvent
 
     for(int i = 1; i <= listSize; i++)
     {
-        VuoPoint2d point = VuoListGetValue_VuoPoint2d(points, i);
+        VuoPoint2d point = VuoListGetData_VuoPoint2d(points)[i -1];
         VuoListAppendValue_VuoReal(*x, point.x);
         VuoListAppendValue_VuoReal(*y, point.y);
     }
