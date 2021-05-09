@@ -200,6 +200,23 @@ void VuoListDestroy_ELEMENT_TYPE(void *list)
 	delete l;
 }
 
+#ifndef VUOLISTINDEXTOCARRAYINDEX
+#define VUOLISTINDEXTOCARRAYINDEX
+
+static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount) __attribute__((const));
+static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount)
+{
+	if (index == 0)
+		return 0;
+
+	if (index > listCount)
+		return listCount - 1;
+
+	return index - 1;
+}
+
+#endif
+
 ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned long index)
 {
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;

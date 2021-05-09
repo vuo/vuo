@@ -24,5 +24,5 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) lastItem
 )
 {
-	*lastItem = VuoListGetValue_VuoGenericType1(list, VuoListGetCount_VuoGenericType1(list));
+	*lastItem = VuoListGetData_VuoGenericType1(list)[VuoListGetCount_VuoGenericType1(list) - 1];
 }

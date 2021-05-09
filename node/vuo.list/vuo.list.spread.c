@@ -28,7 +28,8 @@ void nodeEvent
 	unsigned long clampedCopies = MAX(0,copies);
 	*outputList = VuoListCreate_VuoGenericType1();
 	unsigned long inputCount = VuoListGetCount_VuoGenericType1(list);
+	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
 	for (unsigned long i = 1; i <= inputCount; ++i)
 		for (unsigned long j = 0; j < clampedCopies; ++j)
-			VuoListAppendValue_VuoGenericType1(*outputList, VuoListGetValue_VuoGenericType1(list, i));
+			VuoListAppendValue_VuoGenericType1(*outputList, listCopy[i-1]);
 }

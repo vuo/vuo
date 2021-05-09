@@ -28,10 +28,12 @@ void nodeEvent
 	*combinedList = VuoListCreate_VuoGenericType1();
 
 	unsigned long list1Count = VuoListGetCount_VuoGenericType1(list1);
+	VuoGenericType1* list1Copy = VuoListGetData_VuoGenericType1(list1);
 	for (unsigned long i = 1; i <= list1Count; ++i)
-		VuoListAppendValue_VuoGenericType1(*combinedList, VuoListGetValue_VuoGenericType1(list1, i));
+		VuoListAppendValue_VuoGenericType1(*combinedList, list1Copy[i-1]);
 
 	unsigned long list2Count = VuoListGetCount_VuoGenericType1(list2);
+	VuoGenericType1* list2Copy = VuoListGetData_VuoGenericType1(list2);
 	for (unsigned long i = 1; i <= list2Count; ++i)
-		VuoListAppendValue_VuoGenericType1(*combinedList, VuoListGetValue_VuoGenericType1(list2, i));
+		VuoListAppendValue_VuoGenericType1(*combinedList, list2Copy[i-1]);
 }
