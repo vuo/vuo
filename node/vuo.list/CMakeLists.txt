@@ -18,6 +18,7 @@ VuoCompileGenericNodes(
 	vuo.list.get.range.c
 	vuo.list.insert.c
 	vuo.list.interleave.c
+	vuo.list.interleave.group.c
 	vuo.list.populated.c
 	vuo.list.process.c
 	vuo.list.removeDuplicates.c
