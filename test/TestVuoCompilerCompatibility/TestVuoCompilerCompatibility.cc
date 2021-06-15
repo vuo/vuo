@@ -67,9 +67,9 @@ private slots:
 		auto makeCompatibility = [](QString s)
 		{
 			if (s == "current")
-				return VuoCompilerCompatibility::currentSystem();
+				return VuoCompilerCompatibility::compatibilityWithTargetTriple(VuoCompiler::getProcessTarget());
 			if (s == "any")
-				return VuoCompilerCompatibility(nullptr);
+				return VuoCompilerCompatibility::compatibilityWithAnySystem();
 
 			return VuoCompilerCompatibility(json_tokener_parse(s.toUtf8().constData()));
 		};
@@ -85,13 +85,14 @@ private slots:
 		QTest::addColumn< QString >("jsonStr");
 		QTest::addColumn< QString >("expected");
 
-		QTest::newRow("single architecture")      << VUO_QSTRINGIFY({"macos":{"arch":["x86_64"]}})               << "macOS on x86_64";
-		QTest::newRow("multiple architectures")   << VUO_QSTRINGIFY({"macos":{"arch":["x86_64","arm64"]}})       << "macOS on x86_64,arm64";
+		QTest::newRow("any")                      << "null"                                                      << "any system that Vuo supports";
+		QTest::newRow("single architecture")      << VUO_QSTRINGIFY({"macos":{"arch":["x86_64"]}})               << "macOS on an Intel (X86-64) CPU";
+		QTest::newRow("multiple architectures")   << VUO_QSTRINGIFY({"macos":{"arch":["x86_64","arm64"]}})       << "macOS on an Intel (X86-64) CPU or an Apple Silicon (M1/ARM64) CPU";
 		QTest::newRow("single version")           << VUO_QSTRINGIFY({"macos":{"min":"10.14","max":"10.14"}})     << "macOS 10.14";
 		QTest::newRow("range of versions")        << VUO_QSTRINGIFY({"macos":{"min":"10.13","max":"10.15"}})     << "macOS 10.13 through 10.15";
 		QTest::newRow("min version")              << VUO_QSTRINGIFY({"macos":{"min":"10.12"}})                   << "macOS 10.12 and above";
 		QTest::newRow("max version")              << VUO_QSTRINGIFY({"macos":{"max":"10.11"}})                   << "macOS 10.11 and below";
-		QTest::newRow("version and architecture") << VUO_QSTRINGIFY({"macos":{"min":"10.14","arch":["x86_64"]}}) << "macOS 10.14 and above on x86_64";
+		QTest::newRow("version and architecture") << VUO_QSTRINGIFY({"macos":{"min":"10.14","arch":["x86_64"]}}) << "macOS 10.14 and above on an Intel (X86-64) CPU";
 	}
 	void testToString()
 	{
@@ -104,6 +105,27 @@ private slots:
 
 		QCOMPARE(QString::fromStdString(c.toString()), expected);
 	}
+
+	void testCreateFromTargetTriple_data()
+	{
+		QTest::addColumn<QString>("target");
+		QTest::addColumn<QString>("expected");
+
+		QTest::newRow("x86_64-apple-macosx10.15.4") << "x86_64-apple-macosx10.15.4" << "macOS 10.15 on an Intel (X86-64) CPU";
+		QTest::newRow("arm64-apple-macosx11.3.1") << "arm64-apple-macosx11.3.1" << "macOS 11.3 on an Apple Silicon (M1/ARM64) CPU";
+		QTest::newRow("arm64-apple-macosx10.16.0") << "arm64-apple-macosx10.16.0" << "macOS 11 on an Apple Silicon (M1/ARM64) CPU";
+		QTest::newRow("arm64-apple-macosx10.17.0") << "arm64-apple-macosx10.17.0" << "macOS 12 on an Apple Silicon (M1/ARM64) CPU";
+	}
+	void testCreateFromTargetTriple()
+	{
+		QFETCH(QString, target);
+		QFETCH(QString, expected);
+
+		VuoCompilerCompatibility c = VuoCompilerCompatibility::compatibilityWithTargetTriple(target.toUtf8().constData());
+
+		QCOMPARE(QString::fromStdString(c.toString()), expected);
+	}
+
 };
 
 QTEST_APPLESS_MAIN(TestVuoCompilerCompatibility)

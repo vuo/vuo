@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "VuoCompilerCompatibility.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoFileWatcher.hh"
 #include "VuoDirectedAcyclicGraph.hh"
@@ -141,8 +142,6 @@ private:
 		string getDependency(void);
 		Environment * getEnvironment(void);
 		void setEnvironment(Environment *environment);
-		bool isCompatible(void);
-		void setCompatible(bool compatible);
 		string key(void);
 
 	private:
@@ -157,8 +156,8 @@ private:
 	class ModuleInfoIterator
 	{
 	public:
-		ModuleInfoIterator(map<string, map<string, ModuleInfo *> > *allModuleInfos);
-		ModuleInfoIterator(map<string, map<string, ModuleInfo *> > *allModuleInfos, const set<string> &searchModuleKeys);
+		ModuleInfoIterator(map<string, map<string, ModuleInfo *> > *allModuleInfos, const string &overriddenCompiledModuleCachePath);
+		ModuleInfoIterator(map<string, map<string, ModuleInfo *> > *allModuleInfos, const string &overriddenCompiledModuleCachePath, const set<string> &searchModuleKeys);
 		ModuleInfo * next(void);
 
 	private:
@@ -170,6 +169,8 @@ private:
 		map<string, map<string, ModuleInfo *> >::iterator currSearchPath;
 		map<string, ModuleInfo *>::iterator currModuleKey;
 		bool hasCurrModuleKey;
+		string overriddenCompiledModuleCachePath;
+		set<string> overriddenModuleKeys;
 	};
 
 	/**
@@ -271,7 +272,7 @@ private:
 		void addLibrarySearchPath(const string &path);
 		vector<string> getLibrarySearchPaths(void);
 		void addFrameworkSearchPath(const string &path);
-		void setModuleCachePath(const string &path);
+		void setModuleCachePath(const string &path, bool shouldAddModuleSearchPath);
 		string getCompiledModuleCachePath(void);
 		string getOverriddenCompiledModuleCachePath(void);
 		vector<string> getFrameworkSearchPaths(void);
@@ -325,7 +326,7 @@ private:
 	static set<VuoCompiler *> allCompilers;  ///< All VuoCompiler instances that have been constructed and not yet destroyed.
 	static dispatch_queue_t environmentQueue;  ///< Synchronizes access to the Environment data members and `allCompilers`. It's OK to call `llvmQueue` from this queue.
 	static map<string, vector< vector<Environment *> > > sharedEnvironments;  ///< LLVM target triple (1st dimension), built-in, system, user scope (2nd dimension) and installed, generated (3rd dimension)
-	static map<string, vector<Environment *> > environmentsForCompositionFamily;  ///< Environments for a composition and its local subcompositions, indexed by the path of the directory containing the composition.
+	static map<string, map<string, vector<Environment *> > > environmentsForCompositionFamily;  ///< LLVM target triple (1st dimension), path of directory containing the composition (2nd dimension), and environments for a composition and its local subcompositions (3rd dimension)
 	vector< vector<Environment *> > environments;  ///< Environments available to this VuoCompiler instance, in order from broadest to narrowest.
 	string lastCompositionBaseDir;  ///< The base (top-level composition's) directory for the path most recently passed to @ref VuoCompiler::setCompositionPath.
 	bool lastCompositionIsSubcomposition;  ///< True if the path most recently passed to @ref VuoCompiler::setCompositionPath is for a subcomposition installed in a Modules folder.
@@ -360,7 +361,6 @@ private:
 	void reifyGenericPortTypes(VuoCompilerComposition *composition);
 	void reifyGenericPortTypes(VuoNode *node);
 	Module * compileCompositionToModule(VuoCompilerComposition *composition, const string &moduleKey, bool isTopLevelComposition, VuoCompilerIssues *issues);
-	void compileSubcompositionString(const string &compositionString, const string &outputPath, std::function<void(void)> moduleLoadedCallback, Environment *environment, VuoCompilerIssues *issues = NULL, const string inputPathForIssues = "");
 	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, Optimization optimization, bool isDylib, string rPath="", bool shouldAdHocCodeSign = true);
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	set<string> getDependenciesForComposition(const set<string> &directDependencies, bool checkCompatibility);
@@ -373,7 +373,7 @@ private:
 	static void adHocCodeSign(string path);
 	Module *readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs, VuoCompilerIssues *issues);
 	static Module *readModuleFromBitcode(VuoFileUtilities::File *inputFile, string arch);
-	static Module *readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string arch, string &error);
+	static Module *readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string arch, set<string> &availableArchs, string &error);
 	static bool writeModuleToBitcode(Module *module, string outputPath);
 	VuoNode * createPublishedNode(const string &nodeClassName, const vector<VuoPublishedPort *> &publishedPorts);
 	static void setTargetForModule(Module *module, string target);
@@ -384,7 +384,6 @@ private:
 	static string getRuntimeMainDependency(void);
 	static string getRuntimeDependency(void);
 	void addModuleSearchPath(string path);
-	static string getVuoFrameworkPath(void);
 	string getClangPath(void);
 	void setClangPath(const string &clangPath);
 	string getCompositionStubPath(void);
@@ -400,6 +399,8 @@ private:
 	friend class TestModuleLoading;  ///< TestModuleLoading calls `reset()`.
 	friend class TestEventDropping;  ///< TestEventDropping calls `reset()`.
 	friend class TestVuoIsfModuleCompiler;  ///< TestVuoIsfModuleCompiler calls `writeModuleToBitcode()`.
+	friend class TestVuoCompilerCompatibility;  ///< TestVuoCompilerCompatibility calls `getProcessTarget()`.
+	friend class TestNodes;  ///< TestNodes calls `getProcessTarget()`.
 
 public:
 	VuoCompiler(const string &compositionPath = "", string target = "");
@@ -420,7 +421,9 @@ public:
 	set<string> getDirectDependenciesForComposition(VuoCompilerComposition *composition);
 	set<string> getDependenciesForComposition(VuoCompilerComposition *composition);
 	set<string> getDylibDependencyPathsForComposition(VuoCompilerComposition *composition);
+	VuoCompilerCompatibility getCompatibilityOfDependencies(const set<string> &dependencies);
 	void prepareForFastBuild(void);
+	string getTarget(void);
 	string getArch(void);
 	static void generateBuiltInModuleCaches(string vuoFrameworkPath, string target);
 	static void deleteOldModuleCaches(void);
@@ -442,6 +445,7 @@ public:
 	map<string, VuoNodeSet *> getNodeSets();
 	VuoNodeSet * getNodeSetForName(const string &name);
 	void listNodeClasses(const string &format = "");
+	static string getVuoFrameworkPath(void);
 	static string getModuleKeyForPath(string path);
 	bool isCompositionLocalModule(string moduleKey);
 	string getCompositionLocalModulesPath(void);

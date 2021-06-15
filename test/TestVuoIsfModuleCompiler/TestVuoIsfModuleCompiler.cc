@@ -157,7 +157,7 @@ private:
 
 	void loadLlvmModuleAsNodeClass(ModuleFileGroup &m, Module *llvmModule, VuoCompilerNodeClass *&nodeClass)
 	{
-		VuoCompilerModule *module = VuoCompilerModule::newModule(m.getModuleKey(), llvmModule, m.getCompiledPath());
+		VuoCompilerModule *module = VuoCompilerModule::newModule(m.getModuleKey(), llvmModule, m.getCompiledPath(), VuoCompilerCompatibility::compatibilityWithAnySystem());
 		QVERIFY(module);
 
 		nodeClass = dynamic_cast<VuoCompilerNodeClass *>(module);

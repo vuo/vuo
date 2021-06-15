@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_policy(VERSION 3.16...3.20)
+
 execute_process(
 	COMMAND xcrun --sdk macosx --show-sdk-path
 	OUTPUT_VARIABLE CMAKE_OSX_SYSROOT

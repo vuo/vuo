@@ -21,8 +21,7 @@ VuoDoubleSpinBox::VuoDoubleSpinBox(QWidget *parent, int precision)
 	buttonMaximum = std::numeric_limits<double>::max();
 	this->precision = precision;
 	setKeyboardTracking(false);
-	setMinimum(buttonMinimum);
-	setMaximum(buttonMaximum);
+	unsetLineEditBounds();
 }
 
 /**
@@ -76,6 +75,15 @@ QString VuoDoubleSpinBox::textFromValue(double value) const
 		newLineEditText.remove(QLocale().groupSeparator());
 
 	return newLineEditText;
+}
+
+/**
+ * Unsets the minimum and maximum values that can be typed into the line edit.
+ */
+void VuoDoubleSpinBox::unsetLineEditBounds()
+{
+	setMinimum(-std::numeric_limits<double>::max());
+	setMaximum(std::numeric_limits<double>::max());
 }
 
 /**
@@ -146,5 +154,3 @@ void VuoDoubleSpinBox::hideEvent(QHideEvent * event)
 	if(hasFocus())
 		QDoubleSpinBox::hideEvent(event);
 }
-
-

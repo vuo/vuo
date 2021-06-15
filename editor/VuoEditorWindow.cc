@@ -3390,6 +3390,8 @@ void VuoEditorWindow::keyPressEvent(QKeyEvent *event)
 			getCurrentNodeLibrary()->close();
 		else if (arePublishedPortSidebarsVisible())
 			on_showPublishedPorts_triggered();
+		else if (isFullScreen())
+			showNormal();
 		return;
 	}
 
@@ -4331,6 +4333,8 @@ void VuoEditorWindow::changeActiveProtocol(void)
 
 	// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
 	toggleActiveStatusForProtocol(selectedProtocol);
+
+	setPublishedPortSidebarVisibility(true);
 
 	VUserLog("%s:      }", getWindowTitleWithoutPlaceholder().toUtf8().data());
 }
@@ -5691,8 +5695,8 @@ bool VuoEditorWindow::ensureThisParentCompositionSaved()
 		messageBox.setDefaultButton(QMessageBox::Save);
 		messageBox.setStyleSheet("#qt_msgbox_informativelabel, QMessageBoxDetailsText { font-weight: normal; font-size: 11pt; }");
 		messageBox.setIconPixmap(VuoEditorUtilities::vuoLogoForDialogs());
-		messageBox.setText("Save before packaging");
-		messageBox.setInformativeText("Please save this composition so Vuo knows where to save your new subcomposition.");
+		messageBox.setText(tr("Save before packaging"));
+		messageBox.setInformativeText(tr("Please save this composition so Vuo knows where to save your new subcomposition."));
 		messageBox.setButtonText(QMessageBox::Save, tr("Save As…"));
 
 		// Give the non-default button keyboard focus so that it can be activated by spacebar.

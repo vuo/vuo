@@ -2196,8 +2196,8 @@ At the top of the Node Library is a search bar. When you type in a search phrase
 
 You can search by node title, node class name, and a variety of keywords:
 
-| Type of search | Example search phrase | Example search results |
-|----------------|-----------------------|------------------------|
+| Type of search        | Example search phrase | Example search results                        |
+|-----------------------|-----------------------|-----------------------------------------------|
 | Keyword | *trigonometry* | \vuoNode{Calculate Sine}, |
 |         |                | \vuoNode{Calculate Cosine}, |
 |         |                | and others |
@@ -2215,20 +2215,13 @@ You can search by node title, node class name, and a variety of keywords:
 | Input port type | *in:videoframe* | \vuoNode{Save Frames to Movie}, |
 |                 |                 | \vuoNode{Get Frame Values (Video)}, |
 |                 |                 | and others |
-| Output port type | *out:point3d* | \vuoNode{Curve}, |
-|                  |               | \vuoNode{Scale}, |
-|                  |               | and others |
-| Nodes with triggers | *trigger*, | Nodes that have one or more trigger ports |
-|                     | *fire*, or | |
-|                     | *bang*     | |
+| Output port type | *out:point3d* | \vuoNode{Curve}, \vuoNode{Scale}, and others |
+| Nodes with triggers | *trigger*, *fire*, or *bang* | Nodes that have one or more trigger ports |
 | Input and output nodes | *i/o* | Nodes whose title begins with *Receive* or *Send* |
-| Image filters | *filter* | Nodes that input one image and output a |
-|               |          | filtered image |
+| Image filters | *filter* | Nodes that input one image and output a filtered image |
 | Image generators | *generator* | Nodes that produce an image |
-| Image transitions | *transition* | Nodes that input two images and output an |
-|                   |              | in-between image |
-| Pro nodes | *pro* or  | Nodes that are only available with a Pro license |
-|           | *premium* | |
+| Image transitions | *transition* | Nodes that input two images and output an in-between image |
+| Pro nodes | *pro* or *premium* | Nodes that are only available with a Pro license |
 | Subcompositions | *subcomposition* or | Nodes that are subcompositions |
 |                 | *source:.vuo*       | |
 | Community nodes | *source:.vuonode*, | Nodes installed as `.vuonode`, `.fs`, or `.c` files |
@@ -2331,8 +2324,8 @@ You can change how a trigger port should behave when it's firing events faster t
 
 Using \menu{Edit > Find > Find…}, you can search the canvas for nodes matching a search phrase.
 
-| Type of search | Example search phrase | Example search results |
-|----------------|-----------------------|------------------------|
+| Type of search | Example search phrase | Example search results                 |
+|----------------|-----------------------|----------------------------------------|
 | Node title | *blur image rad* | \vuoNode{Blur Image Radially} |
 | Node class name | *vuo.mouse* | \vuoNode{Receive Mouse Moves} (\vuoNodeClass{vuo.mouse.move2}), |
 |                 |             | \vuoNode{Receive Mouse Buttons} (\vuoNodeClass{vuo.mouse.button2}), |
@@ -2341,9 +2334,7 @@ Using \menu{Edit > Find > Find…}, you can search the canvas for nodes matching
 |           |         | \vuoNode{Make Date-Time}, |
 |           |         | and others |
 | Subcompositions | *.vuo* | Nodes that are subcompositions |
-| Community nodes | *.vuonode*, | Nodes installed as `.vuonode`, `.fs`, or `.c` files |
-|                 | *.fs*, or   | |
-|                 | *.c*        | |
+| Community nodes | *.vuonode*, *.fs*, or *.c* | Nodes installed as `.vuonode`, `.fs`, or `.c` files |
 | Deprecated nodes | *deprecated* | Nodes that are deprecated |
 
 ### Viewing a composition
@@ -2521,8 +2512,8 @@ In the keyboard shortcuts below, these symbols represent keys in macOS:
 
 ### Creating and editing compositions
 
-| Shortcut | Definition                     |
-| -------: | ------------------------------ |
+| Shortcut       | Definition                     |
+| -------------: | ------------------------------ |
 | ⌘A | Select all |
 | ⇧⌘A | Select none |
 | ⌘C | Copy |

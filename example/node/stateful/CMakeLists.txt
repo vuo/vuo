@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.16...3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_policy(VERSION 3.16...3.20)
+
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
 project(Stateful LANGUAGES NONE)
 

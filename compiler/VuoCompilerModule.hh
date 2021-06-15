@@ -23,7 +23,6 @@ class VuoCompilerModule
 {
 private:
 	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
-	VuoCompilerCompatibility compatibleTargets;  ///< The set of targets with which this module is compatible.
 	bool builtIn;  ///< True if this is one of the modules built-in to Vuo.
 	string modulePath;  ///< The file from which the LLVM module was loaded, if any.
 
@@ -32,6 +31,7 @@ private:
 protected:
 	struct json_object *moduleDetails;  ///< This module's metadata, found in the argument to @c VuoModuleMetadata in the module definition.
 	set<string> dependencies;  ///< The dependencies found in this module's metadata
+	VuoCompilerCompatibility compatibleTargets;  ///< The set of targets with which this module is compatible.
 	Module *module;  ///< The LLVM module that defines this node class or type
 	VuoCompilerBitcodeParser *parser;  ///< The parser of the LLVM module
 
@@ -49,7 +49,7 @@ protected:
 	friend class TestModules;
 
 public:
-	static VuoCompilerModule * newModule(const string &moduleKey, Module *module, const string &modulePath);
+	static VuoCompilerModule * newModule(const string &moduleKey, Module *module, const string &modulePath, const VuoCompilerCompatibility &moduleCompatibility);
 	virtual ~VuoCompilerModule(void);
 
 	VuoCompilerCompatibility parseCompatibility(json_object *o, string key);

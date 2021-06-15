@@ -8,13 +8,15 @@
  */
 
 #include "VuoCompilerCompatibility.hh"
-#include "VuoFileUtilitiesCocoa.hh"
 #include "VuoStringUtilities.hh"
-
-#include <sstream>
 
 const map<string, string> VuoCompilerCompatibility::knownPlatforms = {
 	{"macos", "macOS"}
+};
+
+const map<string, string> VuoCompilerCompatibility::knownArchitectures = {
+	{"x86_64", "an Intel (X86-64) CPU"},
+	{"arm64", "an Apple Silicon (M1/ARM64) CPU"}
 };
 
 /**
@@ -266,15 +268,36 @@ VuoCompilerCompatibility VuoCompilerCompatibility::intersection(const VuoCompile
  */
 string VuoCompilerCompatibility::toString(void)
 {
+	if (! json)
+		return "any system that Vuo supports";
+
+	auto labelForKey = [](const string &key, const map<string, string> &keysAndLabels)
+	{
+		auto iter = keysAndLabels.find(key);
+		if (iter != keysAndLabels.end())
+			return iter->second;
+		else
+			return key;
+	};
+
+	auto macOSDisplayName = [](const string &version) {
+		if (version < "10.16" || version >= "11")
+			return version;
+
+		// Map "10.16" to "11", and "10.17" to "12", …
+		auto parts = VuoStringUtilities::split(version, '.');
+		if (parts.size() < 2)
+			return version;
+
+		return to_string(stoi(parts[1]) - 5);
+	};
+
 	vector<string> platformStrings;
 	json_object_object_foreach(json, platformKey, platformVal)
 	{
 		// Platform
 
-		string p;
-		auto iter = knownPlatforms.find(platformKey);
-		if (iter != knownPlatforms.end())
-			p = iter->second;
+		string p = labelForKey(platformKey, knownPlatforms);
 
 		// OS versions
 
@@ -284,6 +307,11 @@ string VuoCompilerCompatibility::toString(void)
 		string versions;
 		if (! min.empty() || ! max.empty())
 		{
+			if (! min.empty())
+				min = macOSDisplayName(min);
+			if (! max.empty())
+				max = macOSDisplayName(max);
+
 			if (min == max)
 				versions = min;
 			else if (min.empty())
@@ -296,8 +324,12 @@ string VuoCompilerCompatibility::toString(void)
 
 		// Architectures
 
-		vector<string> archList = findArchitectures(platformVal);
-		string architectures = VuoStringUtilities::join(archList, ",");
+		vector<string> archKeys = findArchitectures(platformVal);
+		vector<string> archList;
+		std::transform(archKeys.begin(), archKeys.end(),
+					   std::back_inserter(archList),
+					   [&](string a) { return labelForKey(a, knownArchitectures); });
+		string architectures = VuoStringUtilities::join(archList, " or ");
 
 		if (! versions.empty())
 			p += " " + versions;
@@ -306,7 +338,25 @@ string VuoCompilerCompatibility::toString(void)
 		platformStrings.push_back(p);
 	}
 
-	return VuoStringUtilities::join(platformStrings, "; ");
+	return VuoStringUtilities::join(platformStrings, ", or ");
+}
+
+/**
+ * Returns a JSON-formatted string as it would appear in `VuoModuleMetadata`.
+ */
+string VuoCompilerCompatibility::toJsonString(void)
+{
+	return json_object_to_json_string_ext(json, JSON_C_TO_STRING_PLAIN);
+}
+
+/**
+ * Returns true if at least one OS version and architecture is compatible on @a platform.
+ */
+bool VuoCompilerCompatibility::isCompatibleWithPlatform(const string &platform)
+{
+	bool isPlatformCompatible;
+	findPlatform(json, platform.c_str(), isPlatformCompatible);
+	return isPlatformCompatible;
 }
 
 /**
@@ -327,40 +377,86 @@ string VuoCompilerCompatibility::getMinVersionOnPlatform(const string &platform)
 }
 
 /**
- * Returns a representation of the current system as a compilation target.
+ * Returns a representation of the single platform, OS version, and architecture described by
+ * the LLVM target triple @a target.
  */
-VuoCompilerCompatibility VuoCompilerCompatibility::currentSystem()
+VuoCompilerCompatibility VuoCompilerCompatibility::compatibilityWithTargetTriple(const string &target)
 {
+	vector<string> parts = VuoStringUtilities::split(target, '-');
+
+	string arch = parts.at(0);
+
+	string platform;
+	string version;
+	if (VuoStringUtilities::beginsWith(parts.at(2), "macosx"))
+	{
+		platform = "macos";
+
+		version = parts.at(2).substr(6);
+		version = version.substr(0, version.rfind("."));
+	}
+
 	json_object *json = json_object_new_object();
-
-	// Platform
-
-	string platform = "macos";
 
 	json_object *platformVal = json_object_new_object();
 	json_object_object_add(json, platform.c_str(), platformVal);
-
-	// Architecture
-
-	string arch = VuoFileUtilitiesCocoa_getArchitecture();
 
 	json_object *archVal = json_object_new_string(arch.c_str());
 	json_object *archArray = json_object_new_array_ext(1);
 	json_object_array_put_idx(archArray, 0, archVal);
 	json_object_object_add(platformVal, "arch", archArray);
 
-	// OS version
-
-	int major = VuoFileUtilitiesCocoa_getOSVersionMajor();
-	int minor = VuoFileUtilitiesCocoa_getOSVersionMinor();
-
-	ostringstream version;
-	version << major << "." << minor;
-
-	json_object *minVal = json_object_new_string(version.str().c_str());
-	json_object *maxVal = json_object_new_string(version.str().c_str());
+	json_object *minVal = json_object_new_string(version.c_str());
+	json_object *maxVal = json_object_new_string(version.c_str());
 	json_object_object_add(platformVal, "min", minVal);
 	json_object_object_add(platformVal, "max", maxVal);
+
+	return VuoCompilerCompatibility(json);
+}
+
+/**
+ * Returns a representation of compatibility with any target that Vuo supports.
+ */
+VuoCompilerCompatibility VuoCompilerCompatibility::compatibilityWithAnySystem(void)
+{
+	return VuoCompilerCompatibility(nullptr);
+}
+
+/**
+ * Returns a representation of compatibility with @a architectures on each platform that Vuo supports.
+ */
+VuoCompilerCompatibility VuoCompilerCompatibility::compatibilityWithArchitectures(const set<string> &architectures)
+{
+	if (architectures.empty())
+		return VuoCompilerCompatibility(nullptr);
+
+	set<string> knownArchitectureKeys;
+	std::transform(knownArchitectures.begin(), knownArchitectures.end(),
+				   std::inserter(knownArchitectureKeys, knownArchitectureKeys.end()),
+				   [](const pair<string, string> &p) { return p.first; });
+	if (knownArchitectureKeys == architectures)
+		return VuoCompilerCompatibility(nullptr);
+
+	json_object *archArray = json_object_new_array_ext(architectures.size());
+	int i = 0;
+	for (string arch : architectures)
+	{
+		json_object *archVal = json_object_new_string(arch.c_str());
+		json_object_array_put_idx(archArray, i++, archVal);
+	}
+
+	json_object *json = json_object_new_object();
+
+	for (auto platform : knownPlatforms)
+	{
+		json_object *platformVal = json_object_new_object();
+		json_object_object_add(json, platform.first.c_str(), platformVal);
+
+		json_object_object_add(platformVal, "arch", archArray);
+		json_object_get(archArray);
+	}
+
+	json_object_put(archArray);
 
 	return VuoCompilerCompatibility(json);
 }

@@ -879,7 +879,7 @@ private slots:
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, isOpenGL32Core, -1);
 		CGLContextObj cgl_ctx;
- 		CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
+		CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
 		if (error != kCGLNoError)
 			QFAIL(CGLErrorString(error));
 		QVERIFY(cgl_ctx);

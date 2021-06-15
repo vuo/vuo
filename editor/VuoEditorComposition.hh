@@ -277,6 +277,7 @@ private:
 	void setCustomConstantsForNewNode(VuoRendererNode *newNode);
 	void openSelectedEditableNodes();
 	string getNonProtocolVariantForPortName(string portName);
+	void populateSpecializePortMenu(QMenu *menu, VuoRendererPort *port, bool limitInitialOptions);
 	set<string> getRespecializationOptionsForPortInNetwork(VuoRendererPort *port);
 	bool canConnectDirectlyWithRespecializationNondestructively(VuoRendererPort *fromPort,
 																VuoRendererPort *toPort,
@@ -337,6 +338,7 @@ private slots:
 	void updatePortAnimation(qreal value);
 	void endPortAnimation(void);
 	void expandChangeNodeMenu();
+	void expandSpecializePortMenu();
 
 	// Popovers
 	void updatePopoversForActiveWindowChange(QWidget *old, QWidget *now);
@@ -376,6 +378,7 @@ private:
 	QAction *contextMenuSetPortConstant;
 	QAction *contextMenuEditSelectedComments;
 	QMenu *contextMenuChangeNode;
+	QMenu *contextMenuSpecializeGenericType;
 	QList<QAction *> contextMenuThrottlingActions;
 	QList<QAction *> contextMenuTintActions;
 	bool duplicateOnNextMouseMove;

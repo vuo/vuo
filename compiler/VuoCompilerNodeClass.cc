@@ -95,6 +95,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	getBase()->setCompiler(this);
 
 	this->dependencies = compilerNodeClass->dependencies;
+	this->compatibleTargets = compilerNodeClass->compatibleTargets;
 	this->eventFunction = compilerNodeClass->eventFunction;
 	this->initFunction = compilerNodeClass->initFunction;
 	this->finiFunction = compilerNodeClass->finiFunction;

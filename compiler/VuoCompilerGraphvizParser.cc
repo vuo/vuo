@@ -81,13 +81,59 @@ VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionF
  */
 VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionString(const string &composition, VuoCompiler *compiler)
 {
-	set<string> nodeClassNames = getNodeClassNamesFromCompositionString(composition);
+	// First pass: Just parse the names of node classes and types.
 
-	// Get off of graphvizQueue when loading node classes to avoid deadlock when loading subcompositions.
-	for (set<string>::iterator i = nodeClassNames.begin(); i != nodeClassNames.end(); ++i)
-		compiler->getNodeClass(*i);
+	VuoCompilerGraphvizParser partialParser;
+	partialParser.parse(composition);
 
-	return new VuoCompilerGraphvizParser(composition, compiler, false);
+	// Look up the node classes and types from the compiler. Doing this now, instead of later when we're on graphvizQueue,
+	// avoids deadlock when loading subcompositions. (VuoCompiler::environmentQueue can call graphvizQueue, but not vice versa.)
+
+	map<string, VuoCompilerNodeClass *> compilerNodeClasses;
+	map<string, VuoCompilerType *> compilerTypes;
+	set<string> compilerProNodeClassNames;
+
+	auto addPortTypes = [&](const vector<VuoPortClass *> &portClasses)
+	{
+		for (VuoPortClass *portClass : portClasses)
+		{
+			VuoType *type = static_cast<VuoCompilerPortClass *>(portClass->getCompiler())->getDataVuoType();
+			if (type)
+				compilerTypes[type->getModuleKey()] = type->getCompiler();
+		}
+	};
+
+	for (auto nodeClass : partialParser.dummyNodeClassForName)
+	{
+		VuoCompilerNodeClass *compilerNodeClass = compiler->getNodeClass(nodeClass.first);
+		compilerNodeClasses[nodeClass.first] = compilerNodeClass;
+
+		if (compilerNodeClass)
+		{
+			addPortTypes(compilerNodeClass->getBase()->getInputPortClasses());
+			addPortTypes(compilerNodeClass->getBase()->getOutputPortClasses());
+		}
+	}
+
+	for (auto type : partialParser.typeForPublishedInputPort)
+		if (type.second != "event")
+			compilerTypes[type.second] = compiler->getType(type.second);
+
+	for (auto type : partialParser.typeForPublishedOutputPort)
+		if (type.second != "event")
+			compilerTypes[type.second] = compiler->getType(type.second);
+
+#if VUO_PRO
+	for (auto nodeClass : partialParser.dummyNodeClassForName)
+		if (compiler->isProModule(nodeClass.first))
+			compilerProNodeClassNames.insert(nodeClass.first);
+#endif
+
+	// Second pass: Do the full parsing.
+
+	VuoCompilerGraphvizParser *fullParser = new VuoCompilerGraphvizParser(compiler, compilerNodeClasses, compilerTypes, compilerProNodeClassNames);
+	fullParser->parse(composition);
+	return fullParser;
 }
 
 /**
@@ -102,7 +148,12 @@ set<string> VuoCompilerGraphvizParser::getNodeClassNamesFromCompositionFile(cons
 	try
 	{
 		string composition = VuoFileUtilities::readFileToString(path);
-		nodeClassNames = getNodeClassNamesFromCompositionString(composition);
+
+		VuoCompilerGraphvizParser parser;
+		parser.parse(composition);
+
+		for (auto i : parser.dummyNodeClassForName)
+			nodeClassNames.insert(i.first);
 	}
 	catch (VuoCompilerException &e)
 	{
@@ -119,23 +170,6 @@ set<string> VuoCompilerGraphvizParser::getNodeClassNamesFromCompositionFile(cons
 	return nodeClassNames;
 }
 
-/**
- * Parses just the node class names from a .vuo-formatted string.
- *
- * @throw VuoCompilerException Couldn't read the composition file or couldn't parse the composition.
- */
-set<string> VuoCompilerGraphvizParser::getNodeClassNamesFromCompositionString(const string &composition)
-{
-	VuoCompilerGraphvizParser parser(composition, NULL, true);
-
-	set<string> nodeClassNames;
-	for (map<string, VuoNodeClass *>::iterator i = parser.dummyNodeClassForName.begin(); i != parser.dummyNodeClassForName.end(); ++i)
-		nodeClassNames.insert(i->first);
-
-	return nodeClassNames;
-}
-
-
 static std::string VuoCompilerGraphvizParser_lastError;	///< The most recent error from Graphviz. Set this to emptystring before calling into Graphviz.
 
 /**
@@ -150,23 +184,55 @@ static int VuoCompilerGraphvizParser_error(char *message)
 }
 
 /**
- * Parses a .vuo-formatted string, using the node classes provided by the compiler.
- *
- * @throw VuoCompilerException Couldn't parse the composition.
- *
- * @threadNoQueue{graphvizQueue}
+ * Constructs an object that can only parse preliminary information from a composition (e.g. node class names),
+ * which can then be used to call the other constructor.
  */
-VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAsStringOrig, VuoCompiler *compiler, bool nodeClassNamesOnly)
+VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(void) :
+	compiler(nullptr)
 {
-	if (compositionAsStringOrig.empty())
-		throw VuoCompilerException(VuoCompilerIssue(VuoCompilerIssue::Error, "parsing composition string", "", "composition string is empty", ""));
+	init();
+}
 
-	this->compiler = compiler;
+/**
+ * Constructs an object that is fully capable of parsing a composition.
+ *
+ * This object will only call @a compiler functions that don't use `environmentQueue`.
+ */
+VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(VuoCompiler *compiler,
+													 const map<string, VuoCompilerNodeClass *> &compilerNodeClasses,
+													 const map<string, VuoCompilerType *> &compilerTypes,
+													 const set<string> &compilerProNodeClassNames) :
+	compiler(compiler),
+	compilerNodeClasses(compilerNodeClasses),
+	compilerTypes(compilerTypes),
+	compilerProNodeClassNames(compilerProNodeClassNames)
+{
+	init();
+}
+
+/**
+ * Helper for constructors.
+ */
+void VuoCompilerGraphvizParser::init(void)
+{
 	publishedInputNode = nullptr;
 	publishedOutputNode = nullptr;
 	manuallyFirableInputNode = nullptr;
 	manuallyFirableInputPort = nullptr;
 	metadata = nullptr;
+}
+
+/**
+ * Parses a .vuo-formatted string.
+ *
+ * @throw VuoCompilerException Couldn't parse the composition.
+ *
+ * @threadNoQueue{graphvizQueue}
+ */
+void VuoCompilerGraphvizParser::parse(const string &compositionAsStringOrig)
+{
+	if (compositionAsStringOrig.empty())
+		throw VuoCompilerException(VuoCompilerIssue(VuoCompilerIssue::Error, "parsing composition string", "", "composition string is empty", ""));
 
 	// Backwards compatibility:
 	// If the composition contains the 'manuallyFirable' attribute name without a value, add an empty value so graphviz can parse it.
@@ -208,6 +274,7 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 					  try
 					  {
 						  makeDummyNodeClasses();
+						  parsePublishedPortTypes();
 					  }
 					  catch (VuoCompilerException &e)
 					  {
@@ -218,7 +285,7 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 						  return;
 					  }
 
-					  if (! nodeClassNamesOnly)
+					  if (compiler)
 					  {
 						  makeNodeClasses();
 						  makeNodes();
@@ -326,9 +393,7 @@ void VuoCompilerGraphvizParser::makeNodeClasses(void)
 		string dummyNodeClassName = i->first;
 		VuoNodeClass *dummyNodeClass = i->second;
 
-		VuoCompilerNodeClass *nodeClass = NULL;
-		if (compiler)
-			nodeClass = compiler->getNodeClass(dummyNodeClassName);
+		VuoCompilerNodeClass *nodeClass = compilerNodeClasses[dummyNodeClassName];
 
 		if (nodeClass)
 		{
@@ -342,7 +407,8 @@ void VuoCompilerGraphvizParser::makeNodeClasses(void)
 			nodeClassForName[dummyNodeClassName] = dummyNodeClass;
 
 #if VUO_PRO
-			dummyNodeClass->setPro(compiler->isProModule(dummyNodeClassName));
+			if (compilerProNodeClassNames.find(dummyNodeClassName) != compilerProNodeClassNames.end())
+				dummyNodeClass->setPro(true);
 #endif
 		}
 	}
@@ -560,6 +626,39 @@ void VuoCompilerGraphvizParser::makeComments(void)
 	}
 }
 
+/**
+ * Parses the data types of published ports that are explicitly specified in the composition source.
+ */
+void VuoCompilerGraphvizParser::parsePublishedPortTypes(void)
+{
+	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
+	{
+		string nodeClassName = agget(n, (char *)"type");
+		if (! (nodeClassName == VuoNodeClass::publishedInputNodeClassName || nodeClassName == VuoNodeClass::publishedOutputNodeClassName) )
+			continue;
+
+		bool isPublishedInputNode = (nodeClassName == VuoNodeClass::publishedInputNodeClassName);
+		VuoNodeClass *nodeClass = dummyNodeClassForName[nodeClassName];
+		vector<VuoPortClass *> publishedPorts = isPublishedInputNode ?
+													nodeClass->getOutputPortClasses() :
+													nodeClass->getInputPortClasses();
+
+		for (VuoPortClass *port : publishedPorts)
+		{
+			string portName = port->getName();
+			string typeName;
+			parseAttributeOfPort(n, portName, "type", typeName);
+
+			if (! typeName.empty())
+			{
+				if (isPublishedInputNode)
+					typeForPublishedInputPort[portName] = typeName;
+				else
+					typeForPublishedOutputPort[portName] = typeName;
+			}
+		}
+	}
+}
 
 /**
  * Creates a published input port for each outgoing edge of the pubished input node,
@@ -589,46 +688,44 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 		/// @todo https://b33p.net/kosada/node/7756
 	}
 
-	map<string, VuoType *> typeForPublishedInputPort;
-	map<string, VuoType *> typeForPublishedOutputPort;
-	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
+	auto inferPublishedPortTypes = [&](VuoNode *publishedNode)
 	{
-		string nodeClassName = agget(n, (char *)"type");
-		if (nodeClassName == VuoComment::commentTypeName)
-			continue;
+		if (! publishedNode)
+			return;
 
-		string nodeName(agnameof(n));
-		VuoNode *node = nodeForName[nodeName];
-		if (node != publishedInputNode && node != publishedOutputNode)
-			continue;
+		bool isPublishedInputNode = (publishedNode == publishedInputNode);
 
-		vector<VuoPort *> publishedPorts = (node == publishedInputNode ? node->getOutputPorts() : node->getInputPorts());
-		for (vector<VuoPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
+		vector<VuoPortClass *> publishedPorts = isPublishedInputNode ?
+													publishedNode->getNodeClass()->getOutputPortClasses() :
+													publishedNode->getNodeClass()->getInputPortClasses();
+
+		for (VuoPortClass *port : publishedPorts)
 		{
-			string portName = (*i)->getClass()->getName();
-			VuoType *portType = NULL;
-			string portTypeStr = "";
-			parseAttributeOfPort(n, portName, "type", portTypeStr);
-			if (portTypeStr.empty())
-			{
-				set<VuoCompilerPort *> connectedPorts = (node == publishedInputNode ?
-															 connectedPortsForPublishedInputPort[portName] :
-															 connectedPortsForPublishedOutputPort[portName]);
-				portType = inferTypeForPublishedPort(portName, connectedPorts);
-			}
-			else if (portTypeStr != "event")
-			{
-				VuoCompilerType *portCompilerType = compiler->getType(portTypeStr);
-				if (portCompilerType)
-					portType = portCompilerType->getBase();
-			}
+			string portName = port->getName();
+			string typeName = isPublishedInputNode ?
+								  typeForPublishedInputPort[portName] :
+								  typeForPublishedOutputPort[portName];
 
-			if (node == publishedInputNode)
-				typeForPublishedInputPort[portName] = portType;
-			else
-				typeForPublishedOutputPort[portName] = portType;
+			if (typeName.empty())
+			{
+				set<VuoCompilerPort *> connectedPorts = isPublishedInputNode ?
+															connectedPortsForPublishedInputPort[portName] :
+															connectedPortsForPublishedOutputPort[portName];
+				VuoType *type = inferTypeForPublishedPort(portName, connectedPorts);
+				if (type)
+				{
+					typeName = type->getModuleKey();
+
+					if (isPublishedInputNode)
+						typeForPublishedInputPort[portName] = typeName;
+					else
+						typeForPublishedOutputPort[portName] = typeName;
+				}
+			}
 		}
-	}
+	};
+	inferPublishedPortTypes(publishedInputNode);
+	inferPublishedPortTypes(publishedOutputNode);
 
 	map<string, VuoPort *> publishedInputPortForName;
 	map<string, VuoPort *> publishedOutputPortForName;
@@ -653,10 +750,13 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 		for (int j = startIndex; j < basePorts.size(); ++j)
 		{
 			string portName = basePorts[j]->getClass()->getName();
-			VuoType *vuoType = (i == 0 ? typeForPublishedInputPort[portName] : typeForPublishedOutputPort[portName]);
-			VuoPortClass::PortType eventOrData = (vuoType == NULL ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort);
+			string typeName = (i == 0 ? typeForPublishedInputPort[portName] : typeForPublishedOutputPort[portName]);
+			VuoCompilerType *type = (typeName.empty() || typeName == "event" ? nullptr : compilerTypes[typeName]);
+			VuoPortClass::PortType eventOrData = (type == nullptr ? VuoPortClass::eventOnlyPort : VuoPortClass::dataAndEventPort);
 			VuoCompilerPublishedPortClass *portClass = new VuoCompilerPublishedPortClass(portName, eventOrData);
-			portClass->setDataVuoType(vuoType);
+			if (type)
+				portClass->setDataVuoType(type->getBase());
+
 			VuoCompilerPublishedPort *publishedPort = static_cast<VuoCompilerPublishedPort *>( portClass->newPort() );
 			if (i == 0)
 			{

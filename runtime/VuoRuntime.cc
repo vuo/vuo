@@ -240,6 +240,7 @@ void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *tele
 	if (! runtimeState)
 	{
 		runtimeState = new VuoRuntimeState();
+		VuoEventLoop_setLimits();
 		VuoEventLoop_installSignalHandlers();
 		VuoEventLoop_installSleepHandlers();
 		VuoEventLoop_disableAppNap();

@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en-us</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.vuo.Editor.help</string>
+	<string>org.vuo.Editor.help.@VUO_VERSION_AND_BUILD@</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleVersion</key>
-	<string>@BUNDLE_VERSION@</string>
+	<string>@Vuo_VERSION@</string>
 	<key>CFBundleShortVersionString</key>
-	<string>@BUNDLE_SHORT_VERSION_STRING@</string>
+	<string>@VUO_VERSION_AND_BUILD@</string>
 	<key>CFBundleSignature</key>
 	<string>hbwr</string>
 	<key>HPDBookAccessPath</key>

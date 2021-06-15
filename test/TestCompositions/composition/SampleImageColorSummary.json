@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Expected outputs for SampleImageColorSummary.vuo.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":{
+	/* Sampling a single pixel from an opaque image should output an opaque color (alpha=255). */
+	"opaque":{
+		"firingPort": "Image",
+		"inputPortValues": {
+			"Image": {
+				"color": {"r":1, "g":1, "b":1, "a":1},
+				"pixelsWide": 1024,
+				"pixelsHigh": 768,
+			},
+		},
+		"outputPortValues": {
+			"Summary": "         Red Green Blue Alpha \n  Normalized: 1.000 1.000 1.000 1.000 \n  8-bit: 255 255 255 255 \n  Hex:  #ffffff  ",
+		}
+	},
+}}

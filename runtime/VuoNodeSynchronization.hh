@@ -25,17 +25,17 @@ public:
 	void unlockNode(VuoCompositionState *compositionState, unsigned long nodeIndex);
 
 private:
-	void recordWaiting(unsigned long eventId, unsigned long nodeIndex);
-	void recordLocked(unsigned long eventId, unsigned long nodeIndex);
-	void recordUnlocked(unsigned long eventId, unsigned long nodeIndex);
+	void recordWaiting(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex);
+	void recordLocked(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex);
+	void recordUnlocked(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex);
 	void print(void);
 
 	/// @{
 	/**
 	 * For debugging.
 	 */
-	map< unsigned long, vector<unsigned long> > statusLocked;
-	map< unsigned long, vector<unsigned long> > statusWaiting;
+	map<string, map<unsigned long, vector<unsigned long>>> statusLocked;
+	map<string, map<unsigned long, vector<unsigned long>>> statusWaiting;
 	std::mutex statusMutex;
 	/// @}
 };

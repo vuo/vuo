@@ -90,6 +90,11 @@ foreach(line ${output_lines})
     string(APPEND ctest_script_content
       "set_tests_properties(\"${generated_name}\" PROPERTIES WORKING_DIRECTORY \"${TEST_WORKING_DIR}\")\n"
     )
+    if(generated_name MATCHES "test.*Performance")
+        string(APPEND ctest_script_content
+          "set_tests_properties(\"${generated_name}\" PROPERTIES RUN_SERIAL ON)\n"
+        )
+    endif()
     string(REPLACE ";" " " external_properties "${TEST_PROPERTIES}")
     string(APPEND ctest_script_content
       "set_tests_properties(\"${generated_name}\" PROPERTIES ${external_properties})\n"

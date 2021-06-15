@@ -85,6 +85,15 @@ const QString VuoEditor::vuoTutorialURL = "https://vuo.org/tutorials"; ///< The 
 string VuoEditor::documentationGenerationDirectory = "";
 
 /**
+ * The current version's MacHelp book bundle identifier.
+ *
+ * Using a unique bundle identifier for each version
+ * (hopefully) enables MacHelp to consistently open the correct help book
+ * when there are multiple Vuo versions installed.
+ */
+const CFStringRef VuoEditor_helpBundleIdentifier = CFSTR("org.vuo.Editor.help." VUO_VERSION_AND_BUILD_STRING);
+
+/**
  * Sets up the Vuo Editor at launch time.
  */
 VuoEditor::VuoEditor(int &argc, char *argv[])
@@ -1053,7 +1062,7 @@ void VuoEditor::populateHelpMenu(QMenu *m)
  */
 void VuoEditor::openHelpBook()
 {
-	OSStatus ret = AHGotoPage(CFSTR("org.vuo.Editor.help"), NULL, NULL);
+	OSStatus ret = AHGotoPage(VuoEditor_helpBundleIdentifier, NULL, NULL);
 	if (ret)
 	{
 		char *description = VuoOsStatus_getText(ret);
@@ -1070,7 +1079,7 @@ void VuoEditor::openHelpBook()
 void VuoEditor::openHelpBookPageFromUrl(const QUrl &url)
 {
 	CFStringRef relativePath = CFStringCreateWithCString(NULL, url.url(QUrl::RemoveScheme).toUtf8().constData(), kCFStringEncodingUTF8);
-	OSStatus ret = AHGotoPage(CFSTR("org.vuo.Editor.help"), relativePath, NULL);
+	OSStatus ret = AHGotoPage(VuoEditor_helpBundleIdentifier, relativePath, NULL);
 	if (ret)
 	{
 		char *description = VuoOsStatus_getText(ret);

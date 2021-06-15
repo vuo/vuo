@@ -5015,6 +5015,26 @@ Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Mo
 ///@}
 
 /**
+ * Returns true and outputs the struct type if @a type is a pointer to a struct.
+ */
+bool VuoCompilerCodeGenUtilities::isPointerToStruct(Type *type, StructType **structType)
+{
+	if (type->isPointerTy())
+	{
+		Type *elementType = cast<PointerType>(type)->getElementType();
+		if (elementType->isStructTy())
+		{
+			if (structType)
+				*structType = cast<StructType>(elementType);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Generates a call to the function, whose first parameter is assumed to have LLVM's @c sret attribute.
  */
 Value * VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(Function *function, vector<Value *> args, BasicBlock *block)

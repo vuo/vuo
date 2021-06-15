@@ -1055,6 +1055,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 
 			audioBufferSamplesPerChannel = 0;
 			free(audioBufferList);
+			CFRelease(audioBlockBuffer);
 			CFRelease(audioSampleBuffer);
 
 			return false;
@@ -1088,6 +1089,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			if (!(audioBuffer = realloc(audioBuffer, dataByteSize)))
 			{
 				free(audioBufferList);
+				CFRelease(audioBlockBuffer);
 				CFRelease(audioSampleBuffer);
 				audioBufferSamplesPerChannel = 0;
 				VUserLog("AvFoundation video decoder is out of memory.");
@@ -1101,6 +1103,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 		memcpy(audioBuffer, samples, audioBufferList->mBuffers[curBuffer].mDataByteSize);
 
 		free(audioBufferList);
+		CFRelease(audioBlockBuffer);
 		CFRelease(audioSampleBuffer);
 
 

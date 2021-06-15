@@ -53,8 +53,15 @@ VuoCompilerModule::~VuoCompilerModule(void)
  * Instantiates a VuoCompilerModule (or child class) corresponding to the type of
  * VuoCompilerModule defined in the LLVM module. If no type of VuoCompilerModule is defined,
  * returns NULL.
+ *
+ * @a moduleKey The node class name, type name, or library module key.
+ * @a module The LLVM module containing the module implementation.
+ * @a modulePath The path of the file from which this module was loaded (empty if none).
+ * @a moduleCompatibility Any restrictions to compatibility known just from loading the module (e.g. architecture),
+ *    not including further restrictions that may be declared in the module's `VuoModuleMetadata`.
  */
-VuoCompilerModule * VuoCompilerModule::newModule(const string &moduleKey, Module *module, const string &modulePath)
+VuoCompilerModule * VuoCompilerModule::newModule(const string &moduleKey, Module *module, const string &modulePath,
+												 const VuoCompilerCompatibility &moduleCompatibility)
 {
 	VuoCompilerModule *m = NULL;
 
@@ -73,6 +80,7 @@ VuoCompilerModule * VuoCompilerModule::newModule(const string &moduleKey, Module
 		}
 
 		m->modulePath = modulePath;
+		m->compatibleTargets = m->compatibleTargets.intersection(moduleCompatibility);
 	}
 	else if (moduleKey != "libmodule")
 		VUserLog("Warning: No VuoModuleMetadata found in \"%s\" so I'm not going to load it.", moduleKey.c_str());
@@ -135,7 +143,7 @@ VuoCompilerCompatibility VuoCompilerModule::parseCompatibility(json_object *o, s
 	if (json_object_object_get_ex(o, key.c_str(), &compatibilityObject))
 		return VuoCompilerCompatibility(compatibilityObject);
 
-	return VuoCompilerCompatibility(nullptr);
+	return VuoCompilerCompatibility::compatibilityWithAnySystem();
 }
 
 /**
@@ -247,6 +255,8 @@ string VuoCompilerModule::getDependencyName(void)
 
 /**
  * Returns the set of targets (operating system versions) with which this module is compatible.
+ *
+ * Only checks the compatibility of the module itself, not its dependencies.
  */
 VuoCompilerCompatibility VuoCompilerModule::getCompatibleTargets(void)
 {

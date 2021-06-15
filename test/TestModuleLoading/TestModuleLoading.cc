@@ -138,13 +138,15 @@ private:
 
 	QString getUserCachedModulesPath(void)
 	{
-		return QString::fromStdString( VuoFileUtilities::getCachePath() + "/User/Modules" );
+		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
+		return QString::fromStdString( VuoFileUtilities::getCachePath() + "/User/Modules/" + arch );
 	}
 
 	QString getCustomCachedModulesPath(void)
 	{
 		string cachedModulesName = VuoFileUtilities::getTmpDir() + "/TestModuleLoading";
-		return QString::fromStdString(VuoCompiler::getCachePathForComposition(cachedModulesName) + "/Modules");
+		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
+		return QString::fromStdString( VuoCompiler::getCachePathForComposition(cachedModulesName) + "/Modules/" + arch );
 	}
 
 	void uninstallModules(void)

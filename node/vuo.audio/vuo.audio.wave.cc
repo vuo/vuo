@@ -16,7 +16,7 @@ extern "C" {
 VuoModuleMetadata({
 					  "title" : "Make Audio Wave",
 					  "keywords" : [ "sine", "cosine", "sawtooth", "triangle", "phase accumulator", "oscillator", "frequency", "period", "LFO", "VCO", "DCO", "NCO" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "Gamma"
 					  ],
@@ -112,7 +112,24 @@ extern "C" void nodeInstanceEvent
 		else if (wave == VuoWave_Sawtooth)
 			samples->samples[i] = saw;
 		else if (wave == VuoWave_Triangle)
-			samples->samples[i] = (gam::scl::triangle(UINT32_MAX * (sawOsc->phase() / (M_PI * 2))) - 0.833) * 6.;
+		{
+			float phaseFloat = UINT32_MAX * (sawOsc->phase() / (M_PI * 2));
+			uint32_t phaseInt;
+#if __x86_64__
+			phaseInt = phaseFloat;
+#elif __arm64__
+			// `fjcvtzs` (__builtin_arm_jcvt) isn't supported until LLVM/Clang 9.
+			// phaseInt = __builtin_arm_jcvt(phaseFloat);
+			// __asm__ ("fjcvtzs %w0, %d1" : "=r" (phaseInt) : "w" (phaseFloat) : "cc");
+			if (phaseFloat >= 0)
+				phaseInt = phaseFloat;
+			else
+				phaseInt = (double)UINT32_MAX + 1 + phaseFloat;
+#else
+#error "Unsupported CPU architecture"
+#endif
+			samples->samples[i] = (gam::scl::triangle(phaseInt) - 0.833) * 6.;
+		}
 	}
 }
 

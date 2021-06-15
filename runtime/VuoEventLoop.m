@@ -207,6 +207,21 @@ dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void)
  *
  * @threadMain
  */
+void VuoEventLoop_setLimits(void)
+{
+	// Increase the open-files limit (macOS defaults to 256).
+	struct rlimit rl = {OPEN_MAX, OPEN_MAX};
+	getrlimit(RLIMIT_NOFILE, &rl);
+	rl.rlim_cur = MIN(OPEN_MAX, rl.rlim_max);
+	if (setrlimit(RLIMIT_NOFILE, &rl))
+		VUserLog("Warning: Couldn't set open-files limit: %s", strerror(errno));
+}
+
+/**
+ * Installs SIGINT and SIGTERM handlers, to cleanly shut down the composition.
+ *
+ * @threadMain
+ */
 void VuoEventLoop_installSignalHandlers(void)
 {
 	typedef void (*vuoStopCompositionType)(struct VuoCompositionState *);

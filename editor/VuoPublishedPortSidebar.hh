@@ -40,6 +40,7 @@ public:
 	static QColor getActiveProtocolPortColor(int protocolIndex, bool isInput);
 	string showPublishedPortNameEditor(VuoRendererPublishedPort *port);
 	void limitAllowedPortTypes(const set<string> &allowedPortTypes);
+	void limitInitialTypeOptions(bool limit);
 
 signals:
 	void newPublishedPortRequested(string typeName, bool isInput);  ///< Emitted when a new externally visible published port is to be added.
@@ -66,6 +67,7 @@ public slots:
 
 private slots:
 	void populatePortTypeMenus();
+	void expandPortTypeMenu();
 	void newPublishedPortTypeSelected();
 	void updateColor(bool isDark);
 
@@ -84,13 +86,15 @@ private:
 	QMenu *contextMenuPortOptions;
 	QMenu *menuChangeProtocol;
 	QMenu *menuAddPort;
+	QMenu *menuNonListType;
+	QMenu *menuListType;
 
 	QMenu *contextMenuRemoveProtocol;
 	QAction *contextMenuActionRemoveProtocol;
 
 	bool isInput;
-	bool portTypeMenusPopulated;
 	bool menuSelectionInProgress;
+	bool limitTypeMenuOptions;
 	set<string> allowedPortTypes;
 
 	bool canListPublishedPortAliasFor(VuoRendererPort *port);
@@ -99,6 +103,7 @@ private:
 	void appendPublishedPortToList(VuoPublishedPort *port, bool select);
 	static QColor getActiveProtocolHeadingColor(int protocolIndex, bool isInput);
 	void showPublishedPortDetailsEditor(VuoRendererPublishedPort *port);
+	void populatePortTypeMenu(QMenu *menu, bool lists, bool limitInitialOptions);
 
 #ifdef VUO_PRO
 #include "pro/VuoPublishedPortSidebar_Pro.hh"

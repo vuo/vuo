@@ -16,9 +16,6 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [ ],
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 void nodeEvent

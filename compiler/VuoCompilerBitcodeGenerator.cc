@@ -568,6 +568,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionMetadata(void)
 		json_object_array_add(dependenciesJson, json_object_new_string(dependency.c_str()));
 	json_object_object_add(metadataJson, "dependencies", dependenciesJson);
 
+	json_object *compatibilityJson = json_tokener_parse(composition->getCompatibleTargets().toJsonString().c_str());
+	json_object_object_add(metadataJson, "compatibility", compatibilityJson);
+
 	if (! isTopLevelComposition)
 	{
 #if VUO_PRO
@@ -835,9 +838,7 @@ void VuoCompilerBitcodeGenerator::generateSetInputDataFromNodeFunctionArguments(
 		if (publishedInputPort->getClass()->getPortType() == VuoPortClass::dataAndEventPort)
 		{
 			size_t dataArgIndex = indexOfParameter[ modelInputPorts[i] ];
-			VuoCompilerType *type = static_cast<VuoCompilerPort *>( publishedInputPort->getCompiler() )->getDataVuoType()->getCompiler();
-
-			Value *dataPointer = type->convertArgsToPortData(module, block, function, dataArgIndex);
+			Value *dataPointer = inputEventPort->getDataType()->convertArgsToPortData(module, block, function, dataArgIndex);
 
 			inputEventPort->generateReplaceData(module, block, publishedNodeContextValue, dataPointer);
 		}

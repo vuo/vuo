@@ -14,6 +14,7 @@
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerPortClass.hh"
+#include "VuoCompilerType.hh"
 #include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 #include "VuoPort.hh"
@@ -169,7 +170,10 @@ void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, V
 	VuoCompilerInputEventPort *inputEventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getToPort()->getCompiler());
 
 	if (outputDataPointer)
+	{
+		outputDataPointer = inputEventPort->getDataType()->convertToPortData(block, outputDataPointer);
 		inputEventPort->generateReplaceData(module, block, toNodeContextValue, outputDataPointer, toPortContextValue);
+	}
 
 	if (shouldTransmitEvent)
 		inputEventPort->generateStoreEvent(module, block, toNodeContextValue, true, toPortContextValue);

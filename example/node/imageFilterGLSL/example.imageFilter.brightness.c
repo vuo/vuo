@@ -19,9 +19,6 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "VuoImageRenderer"
 					 ],
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 #include "node.h"

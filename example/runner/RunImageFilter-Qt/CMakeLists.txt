@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.14...3.17 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_policy(VERSION 3.16...3.20)
+
 project(RunImageFilterQt)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)

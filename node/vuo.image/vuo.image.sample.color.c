@@ -25,7 +25,7 @@ VuoModuleMetadata({
 						  "maximum", "lighter", "lightest", "brighter", "brightest",
 						  "box", "rectangle", "square", "area", "pixel",
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "ShowColorFromImage.vuo" ]
 					  }
@@ -36,7 +36,7 @@ static inline int clampi(int value, int min, int max)
 	return value < min ? min : (value > max ? max : value);
 }
 
-static const float UINT_TO_FLOAT_COLOR = .0039215686;
+static const float UINT_TO_FLOAT_COLOR = 1.f / 255.f;
 
 static void colorAtCoordinate(const unsigned char* pixels,
 						const unsigned int width,

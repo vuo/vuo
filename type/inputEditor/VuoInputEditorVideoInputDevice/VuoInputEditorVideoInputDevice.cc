@@ -21,7 +21,9 @@ extern "C"
  */
 void __attribute__((constructor)) VuoInputEditorVideoInputDevice_init()
 {
-	VuoVideoCapture_getInputDevices();
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		VuoVideoCapture_getInputDevices();
+	});
 }
 
 /**

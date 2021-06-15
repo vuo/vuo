@@ -192,10 +192,10 @@ char *VuoColor_getSummary(const VuoColor value)
 			</tr>\n
 			<tr>
 				<th>Normalized:</th>
-				<td>%4.03f</td>
-				<td>%4.03f</td>
-				<td>%4.03f</td>
-				<td>%4.03f</td>
+				<td width=40>%4.03f</td>
+				<td width=40>%4.03f</td>
+				<td width=40>%4.03f</td>
+				<td width=40>%4.03f</td>
 			</tr>\n
 			<tr>
 				<th>8-bit:</th>
@@ -206,13 +206,19 @@ char *VuoColor_getSummary(const VuoColor value)
 			</tr>\n
 			<tr>
 				<th>Hex:</th>
-				<td class='left' colspan=4>&nbsp;%s</td>
+				<td class='left' colspan=4>&nbsp;<code>%s</code></td>
 			</tr>
 		</table>
 	);
 
 	VuoText hex = VuoColor_getHex(value, false);
 	VuoLocal(hex);
+
+	VuoText hexWithOptionalAlpha = hex;
+	if (value.a < 1)
+		hexWithOptionalAlpha = VuoColor_getHex(value, true);
+	VuoLocal(hexWithOptionalAlpha);
+
 	return VuoText_format(t,
 						  hex,
 						  value.r, value.g, value.b, value.a,
@@ -220,7 +226,7 @@ char *VuoColor_getSummary(const VuoColor value)
 						  (unsigned int)(VuoReal_clamp(value.g,0,1) * 255),
 						  (unsigned int)(VuoReal_clamp(value.b,0,1) * 255),
 						  (unsigned int)(VuoReal_clamp(value.a,0,1) * 255),
-						  hex
+						  hexWithOptionalAlpha
 						  );
 }
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>180</height>
+    <height>190</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>20</y>
+     <y>10</y>
      <width>421</width>
-     <height>21</height>
+     <height>51</height>
     </rect>
    </property>
    <property name="palette">
@@ -67,13 +67,16 @@
    <property name="text">
     <string>Save Subcomposition to User Library</string>
    </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="nodeTitleLabel">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>60</y>
-     <width>71</width>
+     <y>70</y>
+     <width>101</width>
      <height>20</height>
     </rect>
    </property>
@@ -84,9 +87,9 @@
   <widget class="QLineEdit" name="nodeTitleLineEdit">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>60</y>
-     <width>351</width>
+     <x>120</x>
+     <y>70</y>
+     <width>321</width>
      <height>21</height>
     </rect>
    </property>
@@ -95,7 +98,7 @@
    <property name="geometry">
     <rect>
      <x>23</x>
-     <y>140</y>
+     <y>150</y>
      <width>421</width>
      <height>32</height>
     </rect>
@@ -108,7 +111,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>120</y>
+     <y>130</y>
      <width>421</width>
      <height>21</height>
     </rect>
@@ -125,8 +128,8 @@ color: rgb(102, 102, 102)</string>
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>90</y>
-     <width>71</width>
+     <y>100</y>
+     <width>101</width>
      <height>20</height>
     </rect>
    </property>
@@ -137,8 +140,8 @@ color: rgb(102, 102, 102)</string>
   <widget class="QLineEdit" name="nodeCategoryLineEdit">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>90</y>
+     <x>120</x>
+     <y>100</y>
      <width>181</width>
      <height>21</height>
     </rect>

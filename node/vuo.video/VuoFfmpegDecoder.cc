@@ -37,16 +37,51 @@ VuoModuleMetadata({
 /// Used in calculating audio offset.
 #define AUDIO_DIFF_AVG_NB 20
 
+/**
+ * Sends FFmpeg log messages through Vuo's logging system.
+ */
+void VuoFFmpeg_log(void *avcl, int level, const char *format, va_list args)
+{
+	if (level > AV_LOG_VERBOSE)
+		return;
+
+	if (strcmp(format, "deprecated pixel format used, make sure you did set range correctly\n") == 0)
+		// Quell this warning; it appears to be internal to FFmpeg.
+		// The only pixel format Vuo requests is AV_PIX_FMT_RGBA, which isn't deprecated.
+		return;
+
+	va_list args2;
+	va_copy(args2, args);
+	int size = vsnprintf(NULL, 0, format, args2);
+	va_end(args2);
+
+	char *formattedString = (char *)malloc(size + 1);
+	vsnprintf(formattedString, size + 1, format, args);
+
+	// Trim trailing linebreak, since VUserLog() adds one.
+	if (formattedString[size - 1] == '\n')
+		formattedString[size - 1] = 0;
+
+	VUserLog("%s%s%s%s%s",
+		 avcl ? "[" : "",
+		 avcl ? av_default_item_name(avcl) : "",
+		 avcl ? "] " : "",
+		 level <= AV_LOG_ERROR ? "Error: " : (level == AV_LOG_WARNING ? "Warning: " : ""),
+		 formattedString);
+
+	free(formattedString);
+}
+
+/**
+ * Installs the custom logger.
+ */
+static void __attribute__((constructor)) VuoFfmpegDecoder_init()
+{
+    av_log_set_callback(VuoFFmpeg_log);
+}
+
 VuoFfmpegDecoder::VuoFfmpegDecoder(VuoUrl url)
 {
-	static dispatch_once_t pred;
-	dispatch_once(&pred, ^
-	{
-		avformat_network_init();
-
-		av_log_set_level(VuoIsDebugEnabled() ? AV_LOG_VERBOSE : AV_LOG_FATAL);
-	});
-
 	mPlaybackRate = 1.;
 	mVideoPath = url;
 	VuoRetain(mVideoPath);
@@ -325,7 +360,7 @@ bool VuoFfmpegDecoder::InitializeVideoInfo()
 {
 	if( !DecodeVideoFrame() )
 	{
-		VDebugLog("Coudn't find first video frame!");
+		VDebugLog("Couldn't find first video frame!");
 		return false;
 	}
 
@@ -413,6 +448,9 @@ VuoFfmpegDecoder::~VuoFfmpegDecoder()
 	}
 
 	if(container.formatCtx != NULL) avformat_close_input(&container.formatCtx);
+
+	avcodec_free_context(&container.videoCodecCtx);
+	avcodec_free_context(&container.audioCodecCtx);
 }
 
 /**
@@ -638,22 +676,21 @@ bool VuoFfmpegDecoder::DecodeVideoFrame()
 {
 	AVFrame* frame = av_frame_alloc();
 	int frameFinished = 0;
-	AVPacket packet;
-	av_init_packet(&packet);
+	AVPacket *packet = av_packet_alloc();
 	unsigned int skips = 0;
 
 SKIP_VIDEO_FRAME:
 
 	while(!frameFinished)
 	{
-		while(!videoPackets.Shift(&packet))
+		while(!videoPackets.Shift(packet))
 		{
 			if(!NextPacket())
 			{
 				// https://b33p.net/kosada/node/12217
 				// No next packet is available, but FFmpeg may still have a few frames in its internal buffer.
 				// So instead of giving up now, call avcodec_decode_video2() with an empty packet to flush it.
-				av_new_packet(&packet, 0);
+				av_new_packet(packet, 0);
 				break;
 			}
 		}
@@ -661,10 +698,10 @@ SKIP_VIDEO_FRAME:
 #if 1
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		avcodec_decode_video2(container.videoCodecCtx, frame, &frameFinished, &packet);
+		avcodec_decode_video2(container.videoCodecCtx, frame, &frameFinished, packet);
 #pragma clang diagnostic pop
 #else
-		int ret = avcodec_send_packet(container.videoCodecCtx, &packet);
+		int ret = avcodec_send_packet(container.videoCodecCtx, packet);
 		if (ret == 0
 		 || ret == AVERROR(EAGAIN))
 		{
@@ -684,7 +721,7 @@ SKIP_VIDEO_FRAME:
 			VUserLog("avcodec_send_packet error: %s", av_err2str(ret));
 #endif
 
-		if (frameFinished == 0 && packet.size == 0)
+		if (frameFinished == 0 && packet->size == 0)
 		{
 			// After we fed it an empty packet, FFmpeg says it doesn't have a frame for us,
 			// so decoding is maybe actually finished now.
@@ -696,11 +733,12 @@ SKIP_VIDEO_FRAME:
 				v.last_pts = v.max_pts;
 
 			av_frame_free(&frame);
+			av_packet_free(&packet);
 			return false;
 		}
 
 		if (!frameFinished)
-			av_packet_unref(&packet);
+			av_packet_unref(packet);
 	}
 
 	if( frameFinished && frame != NULL)
@@ -711,9 +749,9 @@ SKIP_VIDEO_FRAME:
 		// For unknown reasons, FFmpeg sometimes returns large PTS gaps when playing an RTSP stream.
 		// https://b33p.net/kosada/node/13972
 		int64_t ptsDelta = pts - lastDecodedVideoPts;
-		if (packet.duration > 0
+		if (packet->duration > 0
 		 && lastDecodedVideoPts > 0
-		 && ptsDelta > packet.duration * 100
+		 && ptsDelta > packet->duration * 100
 		 && ptsDelta < 0x7000000000000000) // Don't apply this workaround during preroll, which commonly has bogus timestamps.
 		{
 			if (!showedTimestampGapWarning)
@@ -721,10 +759,10 @@ SKIP_VIDEO_FRAME:
 				VUserLog("Warning: The video stream has a large timestamp gap.  Using estimated timestamps instead.");
 				showedTimestampGapWarning = true;
 			}
-			pts = lastDecodedVideoPts + packet.duration;
+			pts = lastDecodedVideoPts + packet->duration;
 		}
 
-		int64_t duration = packet.duration == 0 ? pts - lastDecodedVideoPts : packet.duration;
+		int64_t duration = packet->duration == 0 ? pts - lastDecodedVideoPts : packet->duration;
 		lastDecodedVideoPts = pts;
 
 		if( container.videoInfo.max_pts == AV_NOPTS_VALUE || lastDecodedVideoPts > container.videoInfo.max_pts )
@@ -738,17 +776,16 @@ SKIP_VIDEO_FRAME:
 			// happen if the video frame duration is greater than (abs(MAX_AUDIO_LATENCY) + MAX_AUDIO_LEAD).
 			if( lastAudioTimestamp - predicted_timestamp > MAX_AUDIO_LATENCY )
 			{
-				av_packet_unref(&packet);
-				av_init_packet(&packet);
+				av_packet_unref(packet);
 				av_frame_free(&frame);
 				frame = av_frame_alloc();
-				skips++;	// don't skip more than MAX_SFRAME_KIPS frame per-decode
+				skips++;  // don't skip more than MAX_FRAME_SKIP frame per-decode
 				frameFinished = false;
 				goto SKIP_VIDEO_FRAME;
 			}
 		}
 
-		av_packet_unref(&packet);
+		av_packet_unref(packet);
 
 		// if seeking and going forward in time, it's okay to skip decoding the image
 		VideoFrame vframe = (VideoFrame)
@@ -768,15 +805,17 @@ SKIP_VIDEO_FRAME:
 		if(skips > 0)
 			VDebugLog("skip frame: v:%f  a:%f  ==> %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
 
+		av_packet_free(&packet);
 		return true;
 	}
 	else
 	{
 		if (frame)
 			av_frame_free(&frame);
-		av_packet_unref(&packet);
+		av_packet_unref(packet);
 	}
 
+	av_packet_free(&packet);
 	return false;
 }
 

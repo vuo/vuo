@@ -43,6 +43,7 @@ class VuoCompilerException : public VuoException
 public:
 	VuoCompilerException(const VuoCompilerIssue &issue);
 	VuoCompilerException(VuoCompilerIssues *issues, bool ownsIssues);
+	VuoCompilerException(const VuoCompilerException &other);
 //	VuoCompilerException(void) throw() { }  ///< Needed for this class to be the value type in an STL map.
 	~VuoCompilerException(void) throw();  ///< Needed to prevent a build error.
 	VuoCompilerIssues * getIssues(void) const;

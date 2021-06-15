@@ -44,6 +44,7 @@ add_library(VuoCompiler STATIC
 	VuoCompilerPublishedOutputNodeClass.cc
 	VuoCompilerPublishedPort.cc
 	VuoCompilerPublishedPortClass.cc
+	VuoCompilerGroup.cc
 	VuoCompilerSpecializedNodeClass.cc
 	VuoCompilerTriggerDescription.cc
 	VuoCompilerTriggerPort.cc
@@ -86,8 +87,30 @@ if (VuoPro)
 endif()
 VuoPCH(VuoCompiler LLVM)
 
+VuoDefineArchitectureMacros(VuoCompiler)
+
 add_subdirectory(isf)
-add_subdirectory(vuo-compile)
-add_subdirectory(vuo-compile-for-framework)
 add_subdirectory(vuo-debug)
 add_subdirectory(vuo-link)
+
+set(compilerSourcesAndDependencies
+	${PROJECT_SOURCE_DIR}/base/*.hh
+	${PROJECT_SOURCE_DIR}/base/*.cc
+	${PROJECT_SOURCE_DIR}/base/*.mm
+	${PROJECT_SOURCE_DIR}/compiler/*.hh
+	${PROJECT_SOURCE_DIR}/compiler/*.cc
+	${PROJECT_SOURCE_DIR}/compiler/*.mm
+)
+add_custom_command(
+	DEPENDS ${compilerSourcesAndDependencies}
+	COMMENT "Calculating hash of compiler source code"
+	COMMAND
+		cat ${compilerSourcesAndDependencies}
+		| /usr/bin/shasum --algorithm 256
+		| perl -pe "s/^\\(.*\\)  -$$/const char *VuoCompilerHash = '\"'\\\\1'\"'\;/"
+		> VuoCompilerHash.h
+	OUTPUT VuoCompilerHash.h
+)
+add_custom_target(VuoCompilerHash DEPENDS VuoCompilerHash.h)
+add_subdirectory(vuo-compile)
+add_subdirectory(vuo-compile-for-framework)

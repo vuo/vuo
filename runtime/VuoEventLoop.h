@@ -34,6 +34,8 @@ void VuoEventLoop_switchToAppMode(void);
 bool VuoEventLoop_mayBeTerminated(void);
 
 dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void);
+
+void VuoEventLoop_setLimits(void);
 void VuoEventLoop_installSignalHandlers(void);
 
 void VuoEventLoop_disableAppNap(void);

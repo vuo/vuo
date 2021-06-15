@@ -187,8 +187,7 @@ void VuoInputEditorReal::setIsAuto(int state)
 	if(state == Qt::Unchecked)
 	{
 		spinbox->setSpecialValueText("");
-		spinbox->setMinimum(suggestedMin);
-		spinbox->setMaximum(suggestedMax);
+		spinbox->unsetLineEditBounds();
 
 		if(previous != automatic)
 			current = previous;

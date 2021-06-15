@@ -157,7 +157,6 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 						  // }
 
 						  BasicBlock *block = &(eventFunction->getEntryBlock());
-						  PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 						  string itemBackingTypeName;
 						  if (VuoGenericType::isGenericTypeName(itemTypeStr))
@@ -170,26 +169,12 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 						  }
 
 						  string listCreateFunctionName = "VuoListCreate_" + itemBackingTypeName;
-						  Function *listCreateFunction = module->getFunction(listCreateFunctionName);
-						  if (! listCreateFunction)
-						  {
-							  vector<Type *> functionParams;
-							  FunctionType *functionType = FunctionType::get(voidPointerType, functionParams, false);
-							  listCreateFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listCreateFunctionName, module);
-						  }
+						  Function *listCreateFunctionSrc = listType->getModule()->getFunction(listCreateFunctionName);
+						  Function *listCreateFunction = declareFunctionInModule(module, listCreateFunctionSrc);
 
 						  string listAppendFunctionName = "VuoListAppendValue_" + itemBackingTypeName;
-						  Function *listAppendFunction = module->getFunction(listAppendFunctionName);
-						  if (! listAppendFunction)
-						  {
-							  vector<Type *> functionParams;
-							  functionParams.push_back(voidPointerType);
-							  functionParams.insert(functionParams.end(), itemParamTypes.begin(), itemParamTypes.end());
-							  FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-							  listAppendFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listAppendFunctionName, module);
-
-							  VuoCompilerCodeGenUtilities::copyParameterAttributes(module, itemFunctionAttributes, 0, functionParams.size() - 1, listAppendFunction, 1);
-						  }
+						  Function *listAppendFunctionSrc = listType->getModule()->getFunction(listAppendFunctionName);
+						  Function *listAppendFunction = declareFunctionInModule(module, listAppendFunctionSrc);
 
 						  vector<Value *> itemValues;
 						  for (VuoPort *itemPort : modelInputPorts)
@@ -212,17 +197,24 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 						  for (unsigned long i = 0; i < itemCount; ++i)
 						  {
-							  int itemValuesIndex = (itemParamTypes.size() > 1 ? 2*i : i);
-							  vector<Value *> listAppendParams;
-							  listAppendParams.push_back(listValue);
-							  listAppendParams.push_back(itemValues[itemValuesIndex]);
-							  if (itemParamTypes.size() > 1)
-							  {
-								  listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
-							  }
-							  CallInst *call = CallInst::Create(listAppendFunction, listAppendParams, "", block);
+							  vector<Value *> listAppendArgs;
+							  listAppendArgs.push_back(listValue);
 
-							  VuoCompilerCodeGenUtilities::copyParameterAttributes(module, itemFunctionAttributes, 0, listAppendParams.size() - 1, call, 1);
+							  int itemValuesIndex = (itemParamTypes.size() > 1 ? 2*i : i);
+
+							  Value *itemArg = itemValues[itemValuesIndex];
+
+							  if (VuoCompilerCodeGenUtilities::isPointerToStruct(itemArg->getType()))
+								  itemArg = new BitCastInst(itemArg, listAppendFunction->getFunctionType()->getParamType(1), "", block);
+
+							  listAppendArgs.push_back(itemArg);
+
+							  if (itemParamTypes.size() > 1)
+								  listAppendArgs.push_back(itemValues[itemValuesIndex + 1]);
+
+							  CallInst *call = CallInst::Create(listAppendFunction, listAppendArgs, "", block);
+
+							  VuoCompilerCodeGenUtilities::copyParameterAttributes(module, itemFunctionAttributes, 0, listAppendArgs.size()-1, call, 1);
 						  }
 
 						  ReturnInst::Create(module->getContext(), block);

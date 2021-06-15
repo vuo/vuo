@@ -35,8 +35,8 @@ VuoPublishedPortSidebar::VuoPublishedPortSidebar(QWidget *parent, VuoEditorCompo
 	ui->setupUi(this);
 	this->composition = composition;
 	this->isInput = isInput;
-	this->portTypeMenusPopulated = false;
 	this->menuSelectionInProgress = false;
+	this->limitTypeMenuOptions = true;
 
 	setWindowTitle(isInput ? tr("Inputs") : tr("Outputs"));
 	updateActiveProtocol();
@@ -55,6 +55,9 @@ VuoPublishedPortSidebar::VuoPublishedPortSidebar(QWidget *parent, VuoEditorCompo
 	menuAddPort->setTitle(tr("New Port"));
 	ui->newPublishedPortButton->setMenu(menuAddPort);
 	connect(menuAddPort, &QMenu::aboutToShow, this, &VuoPublishedPortSidebar::populatePortTypeMenus);
+
+	menuNonListType = NULL;
+	menuListType = NULL;
 
 #ifdef __APPLE__
 	// Disable standard OS X focus 'glow', since it looks bad when the contents margins are so narrow.
@@ -892,10 +895,13 @@ void VuoPublishedPortSidebar::newPublishedPortTypeSelected()
  */
 void VuoPublishedPortSidebar::populatePortTypeMenus()
 {
-	if (this->portTypeMenusPopulated)
-		return;
-
 	menuAddPort->clear();
+
+	if (menuNonListType)
+		menuNonListType->deleteLater();
+
+	if (menuListType)
+		menuListType->deleteLater();
 
 	// Event-only option
 	QAction *addEventOnlyPortAction = menuAddPort->addAction(tr("Event-Only"));
@@ -904,129 +910,121 @@ void VuoPublishedPortSidebar::populatePortTypeMenus()
 	portAndSpecializedType.append(qVariantFromValue((void *)NULL));
 	portAndSpecializedType.append(typeName.c_str());
 	addEventOnlyPortAction->setData(QVariant(portAndSpecializedType));
-
-	// Non-list type submenu
-	QMenu *menuNonListType = new QMenu(menuAddPort);
-	menuNonListType->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
-	menuNonListType->setTitle(tr("Single Value"));
-	menuNonListType->setToolTipsVisible(true);
-	menuAddPort->addMenu(menuNonListType);
-
-	// List-type submenu
-	QMenu *menuListType = new QMenu(menuAddPort);
-	menuListType->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
-	menuListType->setTitle(tr("List"));
-	menuListType->setToolTipsVisible(true);
-	menuAddPort->addMenu(menuListType);
-
-	// Non-list type options
-	{
-		vector<string> singleValueTypes = composition->getAllSpecializedTypeOptions(false);
-
-		set<string> types;
-		if (allowedPortTypes.empty())
-			types.insert(singleValueTypes.begin(), singleValueTypes.end());
-		else
-		{
-			vector<string> sortedAllowedPortTypes(allowedPortTypes.begin(), allowedPortTypes.end());
-			std::sort(sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end());
-			std::sort(singleValueTypes.begin(), singleValueTypes.end());
-
-			std::set_intersection(singleValueTypes.begin(), singleValueTypes.end(),
-								  sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end(),
-								  std::inserter(types, types.begin()));
-		}
-
-		// First list compatible types that don't belong to any specific node set.
-		QList<QAction *> actions = composition->getCompatibleTypesForMenu(NULL, types, types, true, "", menuNonListType);
-		composition->addTypeActionsToMenu(actions, menuNonListType);
-
-		// Now add a submenu for each node set that contains compatible types.
-		composition->getModuleManager()->updateWithAlreadyLoadedModules();
-		map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = composition->getModuleManager()->getLoadedTypesForNodeSet();
-		QList<QAction *> allNodeSetActionsToAdd;
-		for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
-		{
-			string nodeSetName = i->first;
-			if (!nodeSetName.empty())
-				allNodeSetActionsToAdd += composition->getCompatibleTypesForMenu(NULL, types, types, true, nodeSetName, menuNonListType);
-		}
-
-		if ((menuNonListType->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
-			menuNonListType->addSeparator();
-
-		composition->addTypeActionsToMenu(allNodeSetActionsToAdd, menuNonListType);
-	}
-
-	// List type options
-	{
-		vector<string> listTypes = composition->getAllSpecializedTypeOptions(true);
-
-		set<string> types;
-		if (allowedPortTypes.empty())
-			types.insert(listTypes.begin(), listTypes.end());
-		else
-		{
-			vector<string> sortedAllowedPortTypes(allowedPortTypes.begin(), allowedPortTypes.end());
-			std::sort(sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end());
-			std::sort(listTypes.begin(), listTypes.end());
-
-			std::set_intersection(listTypes.begin(), listTypes.end(),
-								  sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end(),
-								  std::inserter(types, types.begin()));
-		}
-
-		// First list compatible types that don't belong to any specific node set.
-		QList<QAction *> actions = composition->getCompatibleTypesForMenu(NULL, types, types, true, "", menuListType);
-		composition->addTypeActionsToMenu(actions, menuListType);
-
-		// Now add a submenu for each node set that contains compatible types.
-		composition->getModuleManager()->updateWithAlreadyLoadedModules();
-		map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = composition->getModuleManager()->getLoadedTypesForNodeSet();
-		QList<QAction *> allNodeSetActionsToAdd;
-		for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
-		{
-			string nodeSetName = i->first;
-			if (!nodeSetName.empty())
-				allNodeSetActionsToAdd += composition->getCompatibleTypesForMenu(NULL, types, types, true, nodeSetName, menuListType);
-		}
-
-		if ((menuListType->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
-			menuListType->addSeparator();
-
-		composition->addTypeActionsToMenu(allNodeSetActionsToAdd, menuListType);
-	}
-
-	// Set up context menu item connections.
 	connect(addEventOnlyPortAction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
 	addEventOnlyPortAction->setCheckable(false);
 
-	foreach (QAction *setTypeAction, menuAddPort->actions())
+	// Non-list type submenu
+	menuNonListType = new QMenu(menuAddPort);
+	menuNonListType->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
+	menuNonListType->setTitle(tr("Single Value"));
+	menuNonListType->setToolTipsVisible(true);
+	populatePortTypeMenu(menuNonListType, false, limitTypeMenuOptions);
+	menuAddPort->addMenu(menuNonListType);
+
+	// List-type submenu
+	menuListType = new QMenu(menuAddPort);
+	menuListType->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
+	menuListType->setTitle(tr("List"));
+	menuListType->setToolTipsVisible(true);
+	populatePortTypeMenu(menuListType, true, limitTypeMenuOptions);
+	menuAddPort->addMenu(menuListType);
+}
+
+/**
+ * Populates the "Set Data Type" @c menu for the provided @c port.
+ *
+ * If @c lists is true, populates the menu with list data types. Otherwise, populates it
+ * with single-value types.
+ * If @c limitInitialOptions is true, displays only the type options "above the fold,"
+ * (i.e., core types), and adds a "More…" option at the end to display the full menu.
+ */
+void VuoPublishedPortSidebar::populatePortTypeMenu(QMenu *menu, bool lists, bool limitInitialOptions)
+{
+	menu->clear();
+
+	// Populate menu with list or single-value type options.
 	{
-		QMenu *setTypeSubmenu = setTypeAction->menu();
-		if (setTypeSubmenu)
+		vector<string> allTypes = composition->getAllSpecializedTypeOptions(lists);
+
+		set<string> types;
+		if (allowedPortTypes.empty())
+			types.insert(allTypes.begin(), allTypes.end());
+		else
 		{
-			foreach (QAction *setTypeSubaction, setTypeSubmenu->actions())
+			vector<string> sortedAllowedPortTypes(allowedPortTypes.begin(), allowedPortTypes.end());
+			std::sort(sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end());
+			std::sort(allTypes.begin(), allTypes.end());
+
+			std::set_intersection(allTypes.begin(), allTypes.end(),
+								  sortedAllowedPortTypes.begin(), sortedAllowedPortTypes.end(),
+								  std::inserter(types, types.begin()));
+		}
+
+		// First list compatible types that don't belong to any specific node set.
+		QList<QAction *> actions = composition->getCompatibleTypesForMenu(NULL, types, types, true, "", menu);
+		composition->addTypeActionsToMenu(actions, menu);
+
+		// Now add a submenu for each node set that contains compatible types.
+		composition->getModuleManager()->updateWithAlreadyLoadedModules();
+		map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = composition->getModuleManager()->getLoadedTypesForNodeSet();
+		QList<QAction *> allNodeSetActionsToAdd;
+		for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
+		{
+			string nodeSetName = i->first;
+			if (!nodeSetName.empty())
+				allNodeSetActionsToAdd += composition->getCompatibleTypesForMenu(NULL, types, types, true, nodeSetName, menu);
+		}
+
+		bool usingExpansionMenu = false;
+		if ((menu->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
+		{
+			menu->addSeparator();
+
+			if (limitInitialOptions)
 			{
-				QMenu *setTypeSubmenu = setTypeSubaction->menu();
-				if (setTypeSubmenu)
-				{
-					foreach (QAction *setTypeSubSubaction, setTypeSubmenu->actions())
-					{
-						connect(setTypeSubSubaction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
-						setTypeSubSubaction->setCheckable(false);
-					}
-				}
-				else
-				{
-					connect(setTypeSubaction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
-					setTypeSubaction->setCheckable(false);
-				}
+				//: Appears at the bottom of the "Set Data Type" menu when there are additional options to display.
+				QAction *showMoreAction = menu->addAction(tr("More…"));
+				showMoreAction->setData(qVariantFromValue(lists));
+				connect(showMoreAction, &QAction::triggered, this, &VuoPublishedPortSidebar::expandPortTypeMenu);
+				usingExpansionMenu = true;
 			}
 		}
+
+		if (!usingExpansionMenu)
+			composition->addTypeActionsToMenu(allNodeSetActionsToAdd, menu);
 	}
 
-	this->portTypeMenusPopulated = true;
+	// Set up context menu item connections.
+	foreach (QAction *setTypeSubaction, menu->actions())
+	{
+		QMenu *setTypeSubmenu = setTypeSubaction->menu();
+		if (setTypeSubmenu)
+		{
+			foreach (QAction *setTypeSubSubaction, setTypeSubmenu->actions())
+			{
+				connect(setTypeSubSubaction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
+				setTypeSubSubaction->setCheckable(false);
+			}
+		}
+		else
+		{
+			connect(setTypeSubaction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
+			setTypeSubaction->setCheckable(false);
+		}
+	}
+}
+
+/**
+ * Expands the port's type menu to include additional specialization options, and redisplays the menu.
+ */
+void VuoPublishedPortSidebar::expandPortTypeMenu()
+{
+	QAction *sender = (QAction *)QObject::sender();
+	bool listTypes = static_cast<bool>(sender->data().value<bool>());
+
+	QMenu *menu = (listTypes? menuListType : menuNonListType);
+	populatePortTypeMenu(menu, listTypes, false);
+	menu->exec();
 }
 
 /**
@@ -1037,6 +1035,17 @@ void VuoPublishedPortSidebar::populatePortTypeMenus()
 void VuoPublishedPortSidebar::limitAllowedPortTypes(const set<string> &allowedPortTypes)
 {
 	this->allowedPortTypes = allowedPortTypes;
+}
+
+/**
+ * Limits the menu options displayed in the initial type menu to core types only,
+ * with a "More…" option to expand the menu.
+ *
+ * Must be called before the first time the menu is shown.
+ */
+void VuoPublishedPortSidebar::limitInitialTypeOptions(bool limit)
+{
+	this->limitTypeMenuOptions = limit;
 }
 
 /**

@@ -30,6 +30,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	this->_showArrow = showArrow;
 
 	setStyleSheet(getStyleSheet(isDark));
+	respondingToKeypress = false;
 }
 
 /**
@@ -314,11 +315,13 @@ void VuoDialogForInputEditor::showEvent(QShowEvent *event)
  */
 void VuoDialogForInputEditor::keyPressEvent(QKeyEvent *e)
 {
+	respondingToKeypress = true;
 	if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
 		accept();
 	}
 
 	QDialog::keyPressEvent(e);
+	respondingToKeypress = false;
 }
 
 /**
@@ -328,7 +331,11 @@ bool VuoDialogForInputEditor::event(QEvent *e)
 {
 	if (e->type() == QEvent::WindowDeactivate)
 	{
-		accept();
+		// If this deactivation was triggered by a keypress, don't override the
+		// accept/reject decision already made in keyPressEvent().
+		if (!respondingToKeypress)
+			accept();
+
 		return true;
 	}
 

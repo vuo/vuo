@@ -20,7 +20,9 @@ class VuoPublishedPort;
 class VuoType;
 class VuoCompiler;
 class VuoCompilerCable;
+class VuoCompilerNodeClass;
 class VuoCompilerPort;
+class VuoCompilerType;
 
 typedef struct Agraph_s Agraph_t;  ///< From `graphviz/cgraph.h`.
 typedef struct Agnode_s Agnode_t;  ///< From `graphviz/cgraph.h`.
@@ -43,6 +45,8 @@ private:
 	vector<VuoNode *> orderedNodes;
 	vector<VuoCable *> orderedCables;
 	vector<VuoComment *> orderedComments;
+	map<string, string> typeForPublishedInputPort;
+	map<string, string> typeForPublishedOutputPort;
 	vector<VuoPublishedPort *> publishedInputPorts;
 	vector<VuoPublishedPort *> publishedOutputPorts;
 	VuoNode *publishedInputNode;
@@ -52,12 +56,20 @@ private:
 	VuoPort *manuallyFirableInputPort;
 	VuoCompositionMetadata *metadata;
 
-	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler, bool nodeClassNamesOnly);
+	map<string, VuoCompilerNodeClass *> compilerNodeClasses;
+	map<string, VuoCompilerType *> compilerTypes;
+	set<string> compilerProNodeClassNames;
+
+	VuoCompilerGraphvizParser(void);
+	VuoCompilerGraphvizParser(VuoCompiler *compiler, const map<string, VuoCompilerNodeClass *> &compilerNodeClasses, const map<string, VuoCompilerType *> &compilerTypes, const set<string> &compilerProNodeClassNames);
+	void init(void);
+	void parse(const string &compositionAsStringOrig);
 	void makeDummyNodeClasses(void);
 	void makeNodeClasses(void);
 	void makeNodes(void);
 	void makeCables(void);
 	void makeComments(void);
+	void parsePublishedPortTypes(void);
 	void makePublishedPorts(void);
 	void setInputPortConstantValues(void);
 	void setPublishedPortDetails(void);
@@ -73,7 +85,6 @@ public:
 	static VuoCompilerGraphvizParser * newParserFromCompositionFile(const string &path, VuoCompiler *compiler);
 	static VuoCompilerGraphvizParser * newParserFromCompositionString(const string &composition, VuoCompiler *compiler);
 	static set<string> getNodeClassNamesFromCompositionFile(const string &path);
-	static set<string> getNodeClassNamesFromCompositionString(const string &composition);
 	vector<VuoNode *> getNodes(void);
 	vector<VuoCable *> getCables(void);
 	vector<VuoComment *> getComments(void);

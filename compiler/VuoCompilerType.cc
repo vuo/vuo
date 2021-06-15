@@ -330,7 +330,7 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 
 		if (!llvmSecondArgumentType)
 		{
-			if (isReturnPassedAsArgument && arg->getType()->isPointerTy() && static_cast<PointerType *>(arg->getType())->getElementType()->isStructTy())
+			if (isReturnPassedAsArgument && VuoCompilerCodeGenUtilities::isPointerToStruct(arg->getType()))
 			{
 				// The data type is a struct that is passed by reference (LLVM's `byval` attribute on x86_64).
 				arg = new LoadInst(arg, "unloweredStruct", false, block);
@@ -575,7 +575,7 @@ Value * VuoCompilerType::convertArgsToPortData(Module *module, BasicBlock *block
 Value * VuoCompilerType::generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction)
 {
 	Function *function = declareFunctionInModule(module, sourceFunction);
-	vector<Value *> args = convertPortDataToArgs(module, block, arg, sourceFunction->getFunctionType(), 0, false);
+	vector<Value *> args = convertPortDataToArgs(module, block, arg, function->getFunctionType(), 0, false);
 	return CallInst::Create(function, args, "", block);
 }
 

@@ -84,6 +84,7 @@ add_custom_command(
 	DEPENDS
 		${CMAKE_BINARY_DIR}/editor/VuoNodeClassFrequencyMap.hh
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/documentation
+	COMMENT "Generating documentation/doxygen/index.html"
 	COMMAND /usr/local/bin/doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		2>&1
 		# New warnings in Doxygen 1.8.16 and 1.8.18; seem to be harmless.
@@ -116,8 +117,19 @@ add_custom_command(
 
 	COMMAND cp ${PROJECT_SOURCE_DIR}/documentation/VuoManualColors-${colors}.tex VuoManualColors.tex
 
+	COMMAND cat ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
+		| perl -p
+			# Render the contributor lists compactly in multiple columns.
+			-e "'s/(people.who.have.contributed.to.bringing.Vuo.to.fruition\.)$$/\\1\\n\\n```{=latex}\\n\\\\begin{multicols}{3}\\n```/;'"
+			-e "'s/(Thanks.to.our.contributors!)$$/```{=latex}\\n\\\\end{multicols}\\n```\\n\\n\\1/;'"
+			-e "'s/(Software.Vuo.uses)$$/\\1\\n\\n```{=latex}\\n\\\\begin{multicols}{3}\\n```\\n/;'"
+			-e "'s/(\#\# Resources Vuo uses)$$/```{=latex}\\n\\\\end{multicols}\\n```\\n\\n\\1/;'"
+		> ${CMAKE_CURRENT_BINARY_DIR}/CONTRIBUTORS-processed.md
+
 	COMMAND echo Running pandoc
-		&& cat ${PROJECT_SOURCE_DIR}/documentation/VuoManual.txt ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
+		&& cat
+			${PROJECT_SOURCE_DIR}/documentation/VuoManual.txt
+			${CMAKE_CURRENT_BINARY_DIR}/CONTRIBUTORS-processed.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 		| fgrep -v '<abstract>'
 		| ${PROJECT_SOURCE_DIR}/documentation/VuoManualTranslate.php

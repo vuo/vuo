@@ -472,6 +472,9 @@ int main(int argc, char *argv[])
 	VuoEditor app(argc, argv);
 	TestEditorCommands t;
 
+	// VuoModuleManager::loadedModules needs to run a block on the main thread.
+	QTest::qWait(10000);
+
 	return QTest::qExec(&t, argc, argv);
 }
 

@@ -19,8 +19,7 @@ VuoSpinBox::VuoSpinBox(QWidget *parent)
 	buttonMaximum = INT_MAX;
 
 	setKeyboardTracking(false);
-	setMinimum(buttonMinimum);
-	setMaximum(buttonMaximum);
+	unsetLineEditBounds();
 }
 
 /**
@@ -60,6 +59,15 @@ void VuoSpinBox::stepBy(int steps)
 	}
 
 	QSpinBox::stepBy(steps);
+}
+
+/**
+ * Unsets the minimum and maximum values that can be typed into the line edit.
+ */
+void VuoSpinBox::unsetLineEditBounds()
+{
+	setMinimum(INT_MIN);
+	setMaximum(INT_MAX);
 }
 
 /**

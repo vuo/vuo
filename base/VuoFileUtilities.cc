@@ -1535,7 +1535,7 @@ string VuoFileUtilities::buildModuleCacheIndexPath(const string &moduleCachePath
 	string moduleCachePathCanonical = moduleCachePath;
 	canonicalizePath(moduleCachePathCanonical);
 
-	return moduleCachePathCanonical + "/moduleCache-" + (generated ? "generated" : "installed") + ".txt";
+	return moduleCachePathCanonical + "/libVuoModuleCache-" + (generated ? "generated" : "installed") + ".txt";
 }
 
 /**

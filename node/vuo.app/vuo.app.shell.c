@@ -19,7 +19,7 @@ VuoModuleMetadata({
 		"BASH", "AppleScript", "JavaScript", "Perl", "PHP", "Python", "Ruby", "cURL",
 		"``", "$()",
 	],
-	"version" : "1.0.0",
+	"version" : "1.0.1",
 	"node" : {
 		"exampleCompositions" : [ "ShowTextBanner.vuo" ]
 	}
@@ -59,6 +59,7 @@ void nodeEvent(
 			(subpath "/System")
 			(subpath "/bin")
 			(subpath "/etc")
+			(subpath "/opt")
 			(subpath "/private/etc")
 			(subpath "/private/tmp")
 			(subpath "/private/var")

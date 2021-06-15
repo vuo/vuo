@@ -118,9 +118,6 @@ void VuoCodeIssueList::updateColor(bool isDark)
 	QColor background = e->gutterColor.lighter(isDark ? 50 : 150);
 	p.setColor(QPalette::All,      QPalette::Base,            background);
 
-	// Fade out normal text a little, so keywords and operators stand out more.
-	p.setColor(QPalette::All,      QPalette::Text,            isDark ? "#a0a0a0" : "#606060");
-
 	p.setColor(QPalette::Active,   QPalette::Highlight,       isDark ? "#12418c" : "#74acec");
 	p.setColor(QPalette::Inactive, QPalette::Highlight,       isDark ? "#606060" : "#e0e0e0");
 	p.setColor(QPalette::Active,   QPalette::HighlightedText, isDark ? "#c0c0c0" : "#404040");
@@ -134,6 +131,8 @@ void VuoCodeIssueList::updateColor(bool isDark)
 			border: none;
 			border-top: 3px solid %1;
 			background: %1;
+			color: %2;
 		}
-	).arg(background.name()));
+	).arg(background.name(),
+		  isDark ? "#a0a0a0" : "#606060"));
 }

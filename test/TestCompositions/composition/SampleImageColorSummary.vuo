@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="315,-75" fillcolor="orange" _center="\{\"x\":0,\"y\":0\}" _width="0.10000000000000001" _sampleType="\"average\""];
+SummarizeValue [type="vuo.data.summarize.VuoColor" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="510,-75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Image>Image\r" _Image_type="VuoImage"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Summary>Summary\l" _Summary_type="VuoText"];
+
+PublishedInputs:Image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> SummarizeValue:value;
+SummarizeValue:summary -> PublishedOutputs:Summary;
+}

@@ -1,8 +1,7 @@
 /**
  * @file
  *
- *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.3.0
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
@@ -11,8 +10,8 @@ digraph G
 AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="15,105"];
 FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-15,30" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="449,146" fillcolor="blue"];
-ReceiveMouseButtons [type="vuo.mouse.button2" version="2.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-15,270" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-15,195" fillcolor="lime" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+ReceiveMouseButtons [type="vuo.mouse.button2" version="2.1.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<forcePressed>forcePressed\r|<pressureChanged>pressureChanged\r|<released>released\r" pos="-15,270" fillcolor="lime" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _forcePressed_eventThrottling="enqueue" _pressureChanged_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move2" version="2.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<appFocus>appFocus\l|<movedTo>movedTo\r" pos="-15,180" fillcolor="lime" _modifierKey="\"any\"" _appFocus="0" _movedTo_eventThrottling="drop"];
 RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="495,135" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
 FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;

@@ -120,13 +120,27 @@ static VuoPoint2d VuoMouse_convertWindowToScreenCoordinates(NSPoint pointInWindo
 	*shouldFire = false;
 	NSInteger windowNumberForPoint = [NSWindow windowNumberAtPoint:pointInScreen belowWindowWithWindowNumber:0];
 	for (NSWindow *w in [NSApp windows])
+	{
+		NSRect windowRectInScreen = [w convertRectToScreen:[[w contentView] frame]];
+
+		// When the mouse is along the very top or right of the screen,
+		// the mouse position reported by +[NSEvent addLocalMonitorForEventsMatchingMask:]
+		// is one pixel _beyond_ the screen bounds.
+		// For example, on a 1920x1200 screen, the mouse can occupy point (0,0) (bottom-left)
+		// through point (1920,1200) (top-right), rather than the expected (1919,1199).
+		// Enlarge the rect to include that extra row/column of pixels.
+		// https://b33p.net/kosada/vuo/vuo/-/issues/18322
+		++windowRectInScreen.size.width;
+		++windowRectInScreen.size.height;
+
 		if ([w windowNumber] == windowNumberForPoint
 		 && [w isKindOfClass:[VuoGraphicsWindow class]]
-		 && NSPointInRect(pointInScreen, [w convertRectToScreen:[[w contentView] frame]]))
+		 && NSPointInRect(pointInScreen, windowRectInScreen))
 		{
 			*shouldFire = true;
 			break;
 		}
+	}
 
 	pointInScreen.y = [[NSScreen mainScreen] frame].size.height - pointInScreen.y;
 

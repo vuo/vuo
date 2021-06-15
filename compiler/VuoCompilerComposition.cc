@@ -308,8 +308,12 @@ void VuoCompilerComposition::checkForMissingNodeClasses(VuoCompilerIssues *issue
 		issue.setHint(hint);
 		issue.setLink(linkUrl, linkText);
 		if (issues)
+		{
 			issues->append(issue);
-		throw VuoCompilerException(issue);
+			throw VuoCompilerException(issues, false);
+		}
+		else
+			throw VuoCompilerException(issue);
 	}
 }
 
@@ -978,12 +982,18 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 
 /**
  * Returns the set of targets (platforms, operating system versions, architectures) with which this composition is compatible.
+ *
+ * @throw VuoCompilerException One or more nodes have an unknown node class.
  */
 VuoCompilerCompatibility VuoCompilerComposition::getCompatibleTargets()
 {
+	VuoCompilerIssues *issues = new VuoCompilerIssues;
+	checkForMissingNodeClasses(issues);
+
 	VuoCompilerCompatibility compositeTarget(nullptr);
 	for (auto node : getBase()->getNodes())
 		compositeTarget = compositeTarget.intersection( node->getNodeClass()->getCompiler()->getCompatibleTargets() );
+
 	return compositeTarget;
 }
 

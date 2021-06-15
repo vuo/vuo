@@ -1,6 +1,7 @@
 # To install the dependencies listed in this file, install Homebrew and run `brew bundle`.
 
 brew 'alexjs'
+brew 'ccache'
 brew 'checkbashisms'
 brew "cmake"
 brew "conan"

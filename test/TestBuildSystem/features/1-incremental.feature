@@ -29,6 +29,9 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a core type header (VuoShader.h)
       Given a completed build
       When  I edit type/VuoShader.h
@@ -47,6 +50,9 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a core type implementation
       Given a completed build
       When  I edit type/VuoInteger.c
@@ -59,12 +65,18 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a node in a node set
       Given a completed build
       When  I edit node/vuo.event/vuo.event.fireOnStart.c
       And   I build
       Then  it should update the vuo.event node set
       And   it should update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing a type in a node set
       Given a completed build
@@ -73,6 +85,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       Then  it should update the vuo.color node set
       And   it should update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a description in a node set
       Given a completed build
       When  I edit node/vuo.color/descriptions/vuo.color.average.md
@@ -80,12 +95,18 @@ Check that modifying certain source files causes certain build steps to be perfo
       Then  it should update the vuo.color node set
       But   it shouldn't update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing an example in a node set
       Given a completed build
       When  I edit node/vuo.motion/examples/CompareEasingCurves.vuo
       And   I build
       Then  it should update the vuo.motion node set
       But   it shouldn't update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing the list type template implementation
       Given a completed build
@@ -101,6 +122,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.o
 
       And   it should update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing the list type template header
       Given a completed build
@@ -126,12 +150,18 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing the master framework header
       Given a completed build
       When  I edit framework/Vuo.stub.h
       And   I build
       Then  it should update lib/Vuo.framework/Headers/Vuo.h
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Headers/Vuo.h
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing VuoCompositionLoader
       Given a completed build
@@ -141,6 +171,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update lib/Vuo.framework/Helpers/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Helpers/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing an input editor
       Given a completed build
       When  I edit type/inputEditor/VuoInputEditorReal/VuoInputEditorReal.cc
@@ -148,6 +181,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       Then  it should update lib/libVuoInputEditorReal.dylib
       And   it should update bin/Vuo.app/Contents/Resources/InputEditors/libVuoInputEditorReal.dylib
       But   it shouldn't update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing a type used by an input editor
       Given a completed build
@@ -164,6 +200,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it shouldn't update bin/Vuo.app/Contents/Resources/InputEditors/libVuoInputEditorDispersion.dylib
       And   it shouldn't update bin/Vuo.app/Contents/MacOS/Vuo
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a module-compiler
       Given a completed build
       When  I edit compiler/isf/VuoIsfModuleCompiler.cc
@@ -172,6 +211,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update lib/Vuo.framework/Helpers/ModuleCompiler/libVuoIsfModuleCompiler.dylib
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Helpers/ModuleCompiler/libVuoIsfModuleCompiler.dylib
       But   it shouldn't update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
 
    Scenario: Editing a stub
       Given a completed build
@@ -182,6 +224,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Resources/VuoFxFilter
       But   it shouldn't update the built-in cache
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a .ui file
       Given a completed build
       When  I edit editor/VuoEditorWindow.ui
@@ -191,6 +236,9 @@ Check that modifying certain source files causes certain build steps to be perfo
       But   it shouldn't update the built-in cache
       # Fails when building with Ninja due to CMake bug: https://gitlab.kitware.com/cmake/cmake/issues/16776
 
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a shader template
       Given a completed build
       When  I edit framework/templates/GLSLImageTransition.fs
@@ -199,7 +247,5 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Resources/GLSLImageTransition.fs
       But   it shouldn't update the built-in cache
 
-   Scenario: No changes, after all of the above
-      Given a completed build
       When  I build
       Then  it shouldn't do anything

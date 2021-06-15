@@ -18,6 +18,7 @@ public:
 	VuoDoubleSpinBox(QWidget *parent, int precision);
 	void stepBy(int steps);
 	QString textFromValue(double value) const;
+	void unsetLineEditBounds();
 	void setButtonMinimum(double buttonMinimum);
 	void setButtonMaximum(double buttonMaximum);
 
@@ -34,4 +35,3 @@ private:
 	double buttonMaximum;
 	int precision;
 };
-

@@ -24,7 +24,6 @@ VuoModuleMetadata({
 						 "macosx" : { "min": "10.10" }
 					 },
 					 "node" : {
- 						  "isInterface" : false,
 						  "exampleCompositions" : [ ]
 					 }
 				 });

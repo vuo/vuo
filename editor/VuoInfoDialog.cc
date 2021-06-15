@@ -30,15 +30,35 @@ VuoInfoDialog::VuoInfoDialog(QWidget *parent, QString summary, QString details, 
 }
 
 /**
+ * Creates a dialog without a checkbox that is ready to be shown.
+ *
+ * @param parent Parent widget.
+ * @param summary Brief message, translated.
+ * @param details Longer message, translated and wrapped in `<p>` tags.
+ */
+VuoInfoDialog::VuoInfoDialog(QWidget *parent, QString summary, QString details)
+	: QMessageBox(parent)
+{
+	this->summary = summary;
+	this->details = details;
+}
+
+/**
  * Displays a modal dialog, unless the user has previously unchecked the box to show it.
  */
 void VuoInfoDialog::show()
 {
-	auto settings = new QSettings;
-	if (!settings->value(settingsKey, true).toBool())
+	bool hasCheckbox = ! settingsKey.isEmpty() && ! checkboxLabel.isEmpty();
+
+	QSettings *settings = nullptr;
+	if (hasCheckbox)
 	{
-		emit notShown();
-		return;
+		settings = new QSettings;
+		if (!settings->value(settingsKey, true).toBool())
+		{
+			emit notShown();
+			return;
+		}
 	}
 
 	VuoRendererFonts *fonts = VuoRendererFonts::getSharedFonts();
@@ -51,17 +71,27 @@ void VuoInfoDialog::show()
 	setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style>" + details);
 	setIcon(QMessageBox::Information);
 
-	QCheckBox *cb = new QCheckBox(this);
-	cb->setFont(fonts->dialogBodyFont());
-	cb->setText(checkboxLabel);
-	cb->setChecked(true);
-	setCheckBox(cb);
+	// Make the dialog wide enough to show "⚠️ The app requires macOS on an Apple Silicon (M1/ARM64) CPU." without wrapping.
+	setStyleSheet("QLabel{min-width: 350px;}");
 
-	connect(this, &QMessageBox::finished, [=](){
-		if (!cb->isChecked())
-			settings->setValue(settingsKey, false);
-		delete settings;
-	});
+	QCheckBox *cb = nullptr;
+	if (hasCheckbox)
+	{
+		cb = new QCheckBox(this);
+		cb->setFont(fonts->dialogBodyFont());
+		cb->setText(checkboxLabel);
+		cb->setChecked(true);
+		setCheckBox(cb);
+	}
+
+	if (hasCheckbox)
+	{
+		connect(this, &QMessageBox::finished, [=](){
+			if (!cb->isChecked())
+				settings->setValue(settingsKey, false);
+			delete settings;
+		});
+	}
 
 	open();
 }

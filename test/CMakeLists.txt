@@ -134,7 +134,9 @@ add_subdirectory(TestCompositionExecution)
 
 add_subdirectory(TestHeap)
 add_subdirectory(TestModules)
-add_subdirectory(TestExamples)
+if (VUO_EXAMPLES)
+	add_subdirectory(TestExamples)
+endif()
 add_subdirectory(TestDocumentation)
 
 # Long.

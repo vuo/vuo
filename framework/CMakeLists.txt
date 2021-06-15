@@ -734,9 +734,14 @@ if (NOT VUO_NODE_DEVELOPER)
 	endif()
 	get_property(VuoCacheableObjects GLOBAL PROPERTY VuoCacheableObjects)
 
+	set(frameworkCacheInstalledParts "")
+	set(frameworkCacheGeneratedParts "")
 	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
-	if (archCount EQUAL 1)
-		list(GET CMAKE_OSX_ARCHITECTURES 0 arch)
+	foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+		set(frameworkCacheInstalledPart ${frameworkCacheInstalled}-${arch})
+		set(frameworkCacheGeneratedPart ${frameworkCacheGenerated}-${arch})
+		set(frameworkCacheInstalledPartBuild ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.dylib-${arch})
+		set(frameworkCacheGeneratedPartBuild ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.dylib-${arch})
 		add_custom_command(
 			DEPENDS
 				${dependsOnVuoCompile}
@@ -752,63 +757,57 @@ if (NOT VUO_NODE_DEVELOPER)
 				${VuoCacheableObjects}
 			COMMENT "Generating built-in module caches (${arch})"
 			COMMAND rm -f
-				${frameworkCacheInstalled}*
-				${frameworkCacheGenerated}*
+				${frameworkCacheInstalledPart}
+				${frameworkCacheGeneratedPart}
 			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target ${arch}-apple-macosx10.10.0 --generate-builtin-module-caches "${frameworkPath}"
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-installed.dylib              ${frameworkCacheInstalled}
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib              ${frameworkCacheGenerated}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                                          ${frameworkCacheInstalled}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                                          ${frameworkCacheGenerated}
-			COMMAND install_name_tool -change ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheInstalled}
-			COMMAND ${codesignAdHoc} ${frameworkCacheInstalled}
-			COMMAND ${codesignAdHoc} ${frameworkCacheGenerated}
-			COMMAND chmod 644 ${frameworkCacheInstalled} ${frameworkCacheGenerated}
+			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-installed.dylib ${frameworkCacheInstalledPart}
+			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheGeneratedPart}
+			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                             ${frameworkCacheInstalledPart}
+			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                             ${frameworkCacheGeneratedPart}
+			COMMAND install_name_tool -change ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib-${arch} @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheInstalledPart}
+			COMMAND ${codesignAdHoc} ${frameworkCacheInstalledPart}
+			COMMAND ${codesignAdHoc} ${frameworkCacheGeneratedPart}
+			COMMAND chmod 644 ${frameworkCacheInstalledPart} ${frameworkCacheGeneratedPart}
+			# vuo-compile generates them inside the framework;
+			# move them aside so that only the final merged dylib is in the framework.
+			COMMAND mv ${frameworkCacheInstalledPart} ${frameworkCacheInstalledPartBuild}
+			COMMAND mv ${frameworkCacheGeneratedPart} ${frameworkCacheGeneratedPartBuild}
+			COMMAND mv ${frameworkCacheInstalledPrefix}.txt-${arch} ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-${arch}
+			COMMAND mv ${frameworkCacheGeneratedPrefix}.txt-${arch} ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-${arch}
 			OUTPUT
-				${frameworkCacheInstalled}
-				${frameworkCacheGenerated}
+				${frameworkCacheInstalledPartBuild}
+				${frameworkCacheGeneratedPartBuild}
+		)
+		list(APPEND frameworkCacheInstalledParts ${frameworkCacheInstalledPartBuild})
+		list(APPEND frameworkCacheGeneratedParts ${frameworkCacheGeneratedPartBuild})
+	endforeach()
+
+	if (archCount GREATER 1)
+		# The index files should be the same; pick one to include.
+		list(GET CMAKE_OSX_ARCHITECTURES 0 arch)
+		add_custom_command(
+			DEPENDS ${frameworkCacheInstalledParts}
+			COMMENT "Merging built-in installed module cache"
+			COMMAND lipo -create ${frameworkCacheInstalledParts} -output ${frameworkCacheInstalled}
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-${arch} ${frameworkCacheInstalledPrefix}.txt
+			OUTPUT ${frameworkCacheInstalled}
+		)
+		add_custom_command(
+			DEPENDS ${frameworkCacheGeneratedParts}
+			COMMENT "Merging built-in generated module cache"
+			COMMAND lipo -create ${frameworkCacheGeneratedParts} -output ${frameworkCacheGenerated}
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-${arch} ${frameworkCacheGeneratedPrefix}.txt
+			OUTPUT ${frameworkCacheGenerated}
 		)
 	else()
 		add_custom_command(
-			DEPENDS
-				${dependsOnVuoCompile}
-				VuoFrameworkCompilerCLI
-				VuoFrameworkDependencyFrameworks
-				VuoFrameworkNodeSets
-				VuoFrameworkCore
-				VuoFrameworkConanLibraries
-				vuo.core.libraries
-				vuo.core.list.types
-				vuo.core.runtime.objects
-				vuo.core.types
-				${VuoCacheableObjects}
-			COMMENT "Generating built-in module caches (x86_64 + arm64)"
-			COMMAND rm -f
-				${frameworkCacheInstalledPrefix}*.dylib
-				${frameworkCacheGeneratedPrefix}*.dylib
-
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target x86_64-apple-macosx10.10.0 --generate-builtin-module-caches "${frameworkPath}"
-			COMMAND mv ${frameworkCacheInstalledPrefix}.dylib ${frameworkCacheInstalledPrefix}-x86_64.dylib
-			COMMAND mv ${frameworkCacheGeneratedPrefix}.dylib ${frameworkCacheGeneratedPrefix}-x86_64.dylib
-
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target arm64-apple-macosx10.10.0  --generate-builtin-module-caches "${frameworkPath}"
-			COMMAND mv ${frameworkCacheInstalledPrefix}.dylib ${frameworkCacheInstalledPrefix}-arm64.dylib
-			COMMAND mv ${frameworkCacheGeneratedPrefix}.dylib ${frameworkCacheGeneratedPrefix}-arm64.dylib
-
-			COMMAND lipo -create ${frameworkCacheInstalledPrefix}-x86_64.dylib ${frameworkCacheInstalledPrefix}-arm64.dylib -output ${frameworkCacheInstalled}
-			COMMAND lipo -create ${frameworkCacheGeneratedPrefix}-x86_64.dylib ${frameworkCacheGeneratedPrefix}-arm64.dylib -output ${frameworkCacheGenerated}
-			COMMAND rm -f ${frameworkCacheInstalledPrefix}-*.dylib ${frameworkCacheGeneratedPrefix}-*.dylib
-
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-installed.dylib              ${frameworkCacheInstalled}
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib              ${frameworkCacheGenerated}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                                          ${frameworkCacheInstalled}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                                          ${frameworkCacheGenerated}
-			COMMAND install_name_tool -change ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheInstalled}
-			COMMAND ${codesignAdHoc} ${frameworkCacheInstalled}
-			COMMAND ${codesignAdHoc} ${frameworkCacheGenerated}
-			COMMAND chmod 644 ${frameworkCacheInstalled} ${frameworkCacheGenerated}
-			OUTPUT
-				${frameworkCacheInstalled}
-				${frameworkCacheGenerated}
+			DEPENDS ${frameworkCacheInstalledParts} ${frameworkCacheGeneratedParts}
+			COMMENT "Copying built-in module caches into framework"
+			COMMAND cp ${frameworkCacheInstalledParts} ${frameworkCacheInstalled}
+			COMMAND cp ${frameworkCacheGeneratedParts} ${frameworkCacheGenerated}
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-* ${frameworkCacheInstalledPrefix}.txt
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-* ${frameworkCacheGeneratedPrefix}.txt
+			OUTPUT ${frameworkCacheInstalled} ${frameworkCacheGenerated}
 		)
 	endif()
 
@@ -816,6 +815,7 @@ if (NOT VUO_NODE_DEVELOPER)
 		DEPENDS
 			${frameworkCacheInstalled}
 			${frameworkCacheGenerated}
+			VuoFrameworkCompilerCLI
 	)
 	list(APPEND generatedFiles
 		${frameworkCacheInstalled}

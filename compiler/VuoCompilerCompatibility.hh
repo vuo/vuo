@@ -25,9 +25,13 @@ public:
 	bool isCompatibleWith(const VuoCompilerCompatibility &other);
 	VuoCompilerCompatibility intersection(const VuoCompilerCompatibility &other);
 	string toString(void);
+	string toJsonString(void);
+	bool isCompatibleWithPlatform(const string &platform);
 	string getMinVersionOnPlatform(const string &platform);
 
-	static VuoCompilerCompatibility currentSystem();
+	static VuoCompilerCompatibility compatibilityWithAnySystem(void);
+	static VuoCompilerCompatibility compatibilityWithArchitectures(const set<string> &architectures);
+	static VuoCompilerCompatibility compatibilityWithTargetTriple(const string &target);
 
 private:
 	/**
@@ -79,5 +83,6 @@ private:
 	string findVersion(json_object *platformVal, const string &minOrMax);
 	vector<string> findArchitectures(json_object *platformVal);
 
-	static const map<string, string> knownPlatforms;  ///< 'compatilibity' keys and human-readable names of platforms recognized by this class
+	static const map<string, string> knownPlatforms;  ///< 'compatibility' keys and human-readable names of platforms recognized by this class
+	static const map<string, string> knownArchitectures;  ///< 'compatibility' keys and human-readable names of architectures recognized by this class
 };

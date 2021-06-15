@@ -8,6 +8,8 @@
  */
 
 #include "VuoCompilerInputDataClass.hh"
+
+#include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerInputData.hh"
 #include "VuoStringUtilities.hh"
 #include "VuoType.hh"
@@ -96,18 +98,15 @@ bool VuoCompilerInputDataClass::getAutoSupersedesDefaultValue(void)
  */
 void VuoCompilerInputDataClass::setUnloweredStructPointer(Type *firstParameterType, bool &unloweredStructPointer)
 {
-	if (firstParameterType->isPointerTy())
+	StructType *elementType = nullptr;
+	if (VuoCompilerCodeGenUtilities::isPointerToStruct(firstParameterType, &elementType))
 	{
-		Type *elementType = cast<PointerType>(firstParameterType)->getElementType();
-		if (elementType->isStructTy())
-		{
-			// Check if the LLVM type name looks like e.g. "struct.VuoRange" or "struct.VuoRange.123" (hopefully faster than regex).
-			vector<string> parts = VuoStringUtilities::split(elementType->getStructName().str(), '.');
-			unloweredStructPointer = (parts.size() >= 2
-									  && parts[0] == "struct"
-									  && parts[1] == getVuoType()->getModuleKey()
-									  && std::all_of(parts.begin() + 2, parts.end(), [](const string &s) { return s.find_first_not_of("0123456789") == string::npos; }));
-		}
+		// Check if the LLVM type name looks like e.g. "struct.VuoRange" or "struct.VuoRange.123" (hopefully faster than regex).
+		vector<string> parts = VuoStringUtilities::split(elementType->getStructName().str(), '.');
+		unloweredStructPointer = (parts.size() >= 2
+								  && parts[0] == "struct"
+								  && parts[1] == getVuoType()->getModuleKey()
+								  && std::all_of(parts.begin() + 2, parts.end(), [](const string &s) { return s.find_first_not_of("0123456789") == string::npos; }));
 	}
 }
 

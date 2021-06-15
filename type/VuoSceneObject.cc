@@ -2598,6 +2598,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject sceneObject)
 										 childObjectCount, childObjectPlural,
 										 descendants, shaderNamesSummary);
 
+	free(name);
 	free(descendants);
 	free(transform);
 	free(shaderNamesSummary);

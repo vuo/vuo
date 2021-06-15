@@ -18,6 +18,7 @@ class VuoInfoDialog : public QMessageBox
 
 public:
 	VuoInfoDialog(QWidget *parent, QString summary, QString details, QString checkboxLabel, QString settingsKey);
+	VuoInfoDialog(QWidget *parent, QString summary, QString details);
 	void show();
 
 signals:

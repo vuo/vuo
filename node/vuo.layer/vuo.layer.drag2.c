@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 	"title" : "Receive Mouse Drags on Layer",
 	"keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "hit test" ],
-	"version" : "2.0.0",
+	"version" : "2.0.1",
 	"dependencies" : [ "VuoMouse" ],
 	"node": {
 		"exampleCompositions" : [
@@ -218,7 +218,7 @@ void nodeInstanceEvent
 	VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
 
 	VuoOutputTrigger(startedDrag, VuoPoint2d),
-	VuoOutputTrigger(draggedCenterTo, VuoPoint2d, {"eventThrottling":"drop", "name":"Dragged Position To"}),
+	VuoOutputTrigger(draggedCenterTo, VuoPoint2d, {"eventThrottling":"drop", "name":"Dragged To"}),
 	VuoOutputTrigger(endedDrag, VuoPoint2d)
 )
 {

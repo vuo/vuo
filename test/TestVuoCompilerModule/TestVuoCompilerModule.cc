@@ -156,6 +156,36 @@ private slots:
 		QCOMPARE(QString(actualJoined.c_str()), QString(expectedJoined.c_str()));
 	}
 
+	void testCompatibleTargets_data()
+	{
+		QTest::addColumn<QString>("moduleKey");
+		QTest::addColumn<QString>("expectedCompatibility");
+
+		QTest::newRow("no restrictions") << "vuo.event.fireOnStart" << "any system that Vuo supports";
+		QTest::newRow("node class is restricted") << "vuo.image.make.web" << "macOS 10.13 and above";
+		QTest::newRow("library is restricted") << "VuoNdi" << "macOS on an Intel (X86-64) CPU";
+		QTest::newRow("dependency of node class is restricted") << "vuo.ndi.receive" << "any system that Vuo supports";
+	}
+	void testCompatibleTargets()
+	{
+		QFETCH(QString, moduleKey);
+		QFETCH(QString, expectedCompatibility);
+
+		// Skip this test on single-architecture builds, since modules will be reported as only compatible with that architecture.
+		QStringList availableArchitectures;
+		VuoCompilerGroup *compilers = VuoCompilerGroup::compilersForAllDeploymentArchitectures();
+		compilers->doForEach([&](VuoCompiler *compiler) {
+			availableArchitectures.append(QString::fromStdString(compiler->getArch()));
+		});
+		if (! (availableArchitectures.contains("x86_64") && availableArchitectures.contains("arm64")) )
+			QSKIP("Not testing module compatibility since this is a single-arch build.");
+
+		compiler->getNodeClasses();
+		VuoCompilerModule *module = compiler->getModule(moduleKey.toStdString());
+
+		QCOMPARE(QString::fromStdString(module->getCompatibleTargets().toString()), expectedCompatibility);
+	}
+
 	void testKeywords_data()
 	{
 		QTest::addColumn< QString >("nodeClass");

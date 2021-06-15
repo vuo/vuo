@@ -18,14 +18,13 @@ VuoCompilerException::VuoCompilerException(const VuoCompilerIssue &issue)
 {
 	issues = new VuoCompilerIssues(issue);
 	ownsIssues = true;
-	if (issues)
-		shortDescription = strdup(issues->getShortDescription(false).c_str());
+	shortDescription = issues ? strdup(issues->getShortDescription(false).c_str()) : nullptr;
 }
 
 /**
  * Constructor.
  *
- * If @a isOwner is true, the created VuoCompilerException is responsible for deallocating @a issues.
+ * If @a ownsIssues is true, the created VuoCompilerException is responsible for deallocating @a issues.
  * Otherwise, the caller is responsible.
  */
 VuoCompilerException::VuoCompilerException(VuoCompilerIssues *issues, bool ownsIssues)
@@ -33,8 +32,19 @@ VuoCompilerException::VuoCompilerException(VuoCompilerIssues *issues, bool ownsI
 {
 	this->issues = issues;
 	this->ownsIssues = ownsIssues;
-	if (issues)
-		this->shortDescription = strdup(issues->getShortDescription(false).c_str());
+	this->shortDescription = issues ? strdup(issues->getShortDescription(false).c_str()) : nullptr;
+}
+
+/**
+ * Copy constructor.
+ */
+VuoCompilerException::VuoCompilerException(const VuoCompilerException &other)
+	: VuoException(other)
+{
+	VUserLog("This shouldn't be called. You may need to replace `throw e` with `throw`.");
+	this->issues = nullptr;
+	this->ownsIssues = false;
+	this->shortDescription = nullptr;
 }
 
 /**

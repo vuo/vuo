@@ -4,7 +4,7 @@ foreach (feature ${features})
 	get_filename_component(featureName "${feature}" NAME_WLE)
 	set(testName "TestBuildSystem-${featureName}")
 	add_test(NAME "${testName}"
-		COMMAND behat --colors --format=pretty --out=std ${feature}
+		COMMAND behat --stop-on-failure --colors --format=pretty --out=std ${feature}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	)
 	set_tests_properties("${testName}" PROPERTIES

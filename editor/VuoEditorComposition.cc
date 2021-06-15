@@ -124,6 +124,7 @@ VuoEditorComposition::VuoEditorComposition(VuoMainWindow *window, VuoComposition
 	contextMenuEditSelectedComments = new QAction(NULL);
 
 	contextMenuChangeNode = NULL;
+	contextMenuSpecializeGenericType = NULL;
 
 	contextMenuFireEvent->setText(tr("Fire Event"));
 	contextMenuHideSelectedCables->setText(tr("Hide"));
@@ -3429,151 +3430,18 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 		}
 
 		// Allow the user to specialize, respecialize, or unspecialize generic data types.
-		VuoGenericType *genericDataType = dynamic_cast<VuoGenericType *>(port->getDataType());
-		if (genericDataType || isPortCurrentlyRevertible(port))
+		if (dynamic_cast<VuoGenericType *>(port->getDataType()) || isPortCurrentlyRevertible(port))
 		{
-			QMenu *contextMenuSpecializeGenericType = new QMenu(&contextMenu);
+			if (contextMenuSpecializeGenericType)
+				contextMenuSpecializeGenericType->deleteLater();
+
+			contextMenuSpecializeGenericType = new QMenu(VuoEditorWindow::getMostRecentActiveEditorWindow());
 			contextMenuSpecializeGenericType->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
 			contextMenuSpecializeGenericType->setTitle(tr("Set Data Type"));
 			contextMenuSpecializeGenericType->setToolTipsVisible(true);
 
-			QAction *unspecializeAction = contextMenuSpecializeGenericType->addAction(tr("Generic"));
-
-			// It is safe to assume that there will be types listed after the "Generic" option
-			// since any network of connected generic/specialized ports has at least one compatible
-			// data type in common, so the separator can be added here without forward-checking.
-			contextMenuSpecializeGenericType->addSeparator();
-
-			unspecializeAction->setData(qVariantFromValue((void *)port));
-			unspecializeAction->setCheckable(true);
-			unspecializeAction->setChecked(genericDataType);
-
+			populateSpecializePortMenu(contextMenuSpecializeGenericType, port, true);
 			contextMenu.addMenu(contextMenuSpecializeGenericType);
-
-			VuoGenericType *genericTypeFromPortClass = NULL; // Original generic type of the port
-			set<string> compatibleTypes; // Compatible types in the context of the connected generic port network
-			set<string> compatibleTypesInIsolation; // Compatible types for the port in isolation
-
-			// Allow the user to specialize generic ports.
-			if (genericDataType)
-			{
-				VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
-				genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
-
-				// Determine compatible types in the context of the connected generic port network.
-				VuoGenericType::Compatibility compatibility;
-				vector<string> compatibleTypesVector = genericDataType->getCompatibleSpecializedTypes(compatibility);
-				compatibleTypes = set<string>(compatibleTypesVector.begin(), compatibleTypesVector.end());
-
-				// If all types or all list types are compatible, add them to (currently empty) compatibleTypes.
-				if (compatibility == VuoGenericType::anyType || compatibility == VuoGenericType::anyListType)
-				{
-					vector<string> compatibleTypeNames = getAllSpecializedTypeOptions(compatibility == VuoGenericType::anyListType);
-					compatibleTypes.insert(compatibleTypeNames.begin(), compatibleTypeNames.end());
-				}
-			}
-
-			// Allow the user to re-specialize already specialized ports.
-			else if (isPortCurrentlyRevertible(port))
-			{
-				map<VuoNode *, string> nodesToReplace;
-				set<VuoCable *> cablesToDelete;
-				createReplacementsToUnspecializePort(port->getBase(), false, nodesToReplace, cablesToDelete);
-				if (cablesToDelete.size() >= 1)
-				{
-					// @todo https://b33p.net/kosada/node/8895 : Note that this specialization will break connections.
-				}
-
-				VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(
-																			port->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler());
-				genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(port->getBase()->getClass()) );
-				compatibleTypes = getRespecializationOptionsForPortInNetwork(port);
-			}
-
-			// Determine compatible types in isolation.
-			if (genericTypeFromPortClass)
-			{
-				// "Make List" drawer child ports require special handling, since technically they are compatible with all types
-				// but practically they are limited to types compatible with their host ports.
-				VuoRendererInputListDrawer *drawer = dynamic_cast<VuoRendererInputListDrawer *>(port->getUnderlyingParentNode());
-				if (drawer)
-				{
-					VuoPort *hostPort = drawer->getUnderlyingHostPort();
-					if (hostPort && hostPort->hasRenderer())
-					{
-						VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(hostPort->getClass()->getCompiler());
-						VuoGenericType *genericHostPortDataType = dynamic_cast<VuoGenericType *>(hostPort->getRenderer()->getDataType());
-						if (genericHostPortDataType)
-							genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
-						else if (isPortCurrentlyRevertible(hostPort->getRenderer()))
-						{
-							VuoCompilerNodeClass *nodeClass = hostPort->getRenderer()->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler();
-							VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
-							genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass->getBase()) );
-						}
-					}
-				}
-
-				VuoGenericType::Compatibility compatibilityInIsolation = VuoGenericType::whitelistedTypes;
-				vector<string> compatibleTypesInIsolationVector;
-				if (genericTypeFromPortClass)
-					compatibleTypesInIsolationVector = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibilityInIsolation);
-
-				// If all types or all list types are compatible, add them to (currently empty) compatibleTypesInIsolationVector.
-				if (compatibilityInIsolation == VuoGenericType::anyType || compatibilityInIsolation == VuoGenericType::anyListType)
-					compatibleTypesInIsolationVector = getAllSpecializedTypeOptions(compatibilityInIsolation == VuoGenericType::anyListType);
-
-				foreach (string type, compatibleTypesInIsolationVector)
-					compatibleTypesInIsolation.insert(drawer? VuoType::extractInnermostTypeName(type) : type);
-			}
-
-			// List the compatible types in the menu.
-			{
-				// If there are only a handful of eligible types, display them all in a flat menu.
-				const int maxTypeCountForFlatMenuDisplay = 10;
-				if (compatibleTypesInIsolation.size() <= maxTypeCountForFlatMenuDisplay)
-				{
-					QList<QAction *> actions = getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, false, "", contextMenuSpecializeGenericType);
-					addTypeActionsToMenu(actions, contextMenuSpecializeGenericType);
-				}
-
-				// Otherwise, organize them by node set.
-				else
-				{
-					// First list compatible types that don't belong to any specific node set.
-					QList<QAction *> actions = getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, "", contextMenuSpecializeGenericType);
-					addTypeActionsToMenu(actions, contextMenuSpecializeGenericType);
-
-					// Now add a submenu for each node set that contains compatible types.
-					map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = moduleManager->getLoadedTypesForNodeSet();
-					QList<QAction *> allNodeSetActionsToAdd;
-					for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
-					{
-						string nodeSetName = i->first;
-						if (!nodeSetName.empty())
-							allNodeSetActionsToAdd += getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, nodeSetName, contextMenuSpecializeGenericType);
-					}
-
-					if ((contextMenuSpecializeGenericType->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
-						contextMenuSpecializeGenericType->addSeparator();
-
-					addTypeActionsToMenu(allNodeSetActionsToAdd, contextMenuSpecializeGenericType);
-				}
-
-				foreach (QAction *action, contextMenuSpecializeGenericType->actions())
-				{
-					QMenu *specializeSubmenu = action->menu();
-					if (specializeSubmenu)
-					{
-						foreach (QAction *specializeSubaction, specializeSubmenu->actions())
-							connect(specializeSubaction, &QAction::triggered, this, &VuoEditorComposition::specializeGenericPortType);
-					}
-					else if (action == unspecializeAction)
-						connect(action, &QAction::triggered, this, &VuoEditorComposition::unspecializePortType);
-					else
-						connect(action, &QAction::triggered, this, &VuoEditorComposition::specializeGenericPortType);
-				}
-			}
 		}
 
 		// Allow the user to hide, unhide, or delete cables connected directly to the port or, if the
@@ -3864,6 +3732,183 @@ void VuoEditorComposition::emitNodeSourceEditorRequested()
 	QAction *sender = (QAction *)QObject::sender();
 	VuoRendererNode *node = sender->data().value<VuoRendererNode *>();
 	emit nodeSourceEditorRequested(node);
+}
+
+/**
+ * Expands the port's "Set Data Type" menu to include additional specialization options, and redisplays the menu.
+ */
+void VuoEditorComposition::expandSpecializePortMenu()
+{
+	QAction *sender = (QAction *)QObject::sender();
+	VuoRendererPort *port = static_cast<VuoRendererPort *>(sender->data().value<void *>());
+
+	populateSpecializePortMenu(contextMenuSpecializeGenericType, port, false);
+	contextMenuSpecializeGenericType->exec();
+}
+
+/**
+ * Populates the "Set Data Type" @c menu for the provided @c port.
+ *
+ * If @c limitInitialOptions is true, displays only the specialization options "above the fold,"
+ * (i.e., core types, or all compatible types if there are only a small number),
+ * and adds a "More…" option at the end to display the full menu.
+ */
+void VuoEditorComposition::populateSpecializePortMenu(QMenu *menu, VuoRendererPort *port, bool limitInitialOptions)
+{
+	menu->clear();
+
+	if (!port)
+		return;
+
+	VuoGenericType *genericDataType = dynamic_cast<VuoGenericType *>(port->getDataType());
+	QAction *unspecializeAction = menu->addAction(tr("Generic"));
+
+	// It is safe to assume that there will be types listed after the "Generic" option
+	// since any network of connected generic/specialized ports has at least one compatible
+	// data type in common, so the separator can be added here without forward-checking.
+	menu->addSeparator();
+
+	unspecializeAction->setData(qVariantFromValue((void *)port));
+	unspecializeAction->setCheckable(true);
+	unspecializeAction->setChecked(genericDataType);
+
+	VuoGenericType *genericTypeFromPortClass = NULL; // Original generic type of the port
+	set<string> compatibleTypes; // Compatible types in the context of the connected generic port network
+	set<string> compatibleTypesInIsolation; // Compatible types for the port in isolation
+
+	// Allow the user to specialize generic ports.
+	if (genericDataType)
+	{
+		VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
+		genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
+
+		// Determine compatible types in the context of the connected generic port network.
+		VuoGenericType::Compatibility compatibility;
+		vector<string> compatibleTypesVector = genericDataType->getCompatibleSpecializedTypes(compatibility);
+		compatibleTypes = set<string>(compatibleTypesVector.begin(), compatibleTypesVector.end());
+
+		// If all types or all list types are compatible, add them to (currently empty) compatibleTypes.
+		if (compatibility == VuoGenericType::anyType || compatibility == VuoGenericType::anyListType)
+		{
+			vector<string> compatibleTypeNames = getAllSpecializedTypeOptions(compatibility == VuoGenericType::anyListType);
+			compatibleTypes.insert(compatibleTypeNames.begin(), compatibleTypeNames.end());
+		}
+	}
+
+	// Allow the user to re-specialize already specialized ports.
+	else if (isPortCurrentlyRevertible(port))
+	{
+		map<VuoNode *, string> nodesToReplace;
+		set<VuoCable *> cablesToDelete;
+		createReplacementsToUnspecializePort(port->getBase(), false, nodesToReplace, cablesToDelete);
+		if (cablesToDelete.size() >= 1)
+		{
+			// @todo https://b33p.net/kosada/node/8895 : Note that this specialization will break connections.
+		}
+
+		VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(
+																	port->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler());
+		genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(port->getBase()->getClass()) );
+		compatibleTypes = getRespecializationOptionsForPortInNetwork(port);
+	}
+
+	// Determine compatible types in isolation.
+	if (genericTypeFromPortClass)
+	{
+		// "Make List" drawer child ports require special handling, since technically they are compatible with all types
+		// but practically they are limited to types compatible with their host ports.
+		VuoRendererInputListDrawer *drawer = dynamic_cast<VuoRendererInputListDrawer *>(port->getUnderlyingParentNode());
+		if (drawer)
+		{
+			VuoPort *hostPort = drawer->getUnderlyingHostPort();
+			if (hostPort && hostPort->hasRenderer())
+			{
+				VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(hostPort->getClass()->getCompiler());
+				VuoGenericType *genericHostPortDataType = dynamic_cast<VuoGenericType *>(hostPort->getRenderer()->getDataType());
+				if (genericHostPortDataType)
+					genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
+				else if (isPortCurrentlyRevertible(hostPort->getRenderer()))
+				{
+					VuoCompilerNodeClass *nodeClass = hostPort->getRenderer()->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler();
+					VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
+					genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass->getBase()) );
+				}
+			}
+		}
+
+		VuoGenericType::Compatibility compatibilityInIsolation = VuoGenericType::whitelistedTypes;
+		vector<string> compatibleTypesInIsolationVector;
+		if (genericTypeFromPortClass)
+			compatibleTypesInIsolationVector = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibilityInIsolation);
+
+		// If all types or all list types are compatible, add them to (currently empty) compatibleTypesInIsolationVector.
+		if (compatibilityInIsolation == VuoGenericType::anyType || compatibilityInIsolation == VuoGenericType::anyListType)
+			compatibleTypesInIsolationVector = getAllSpecializedTypeOptions(compatibilityInIsolation == VuoGenericType::anyListType);
+
+		foreach (string type, compatibleTypesInIsolationVector)
+			compatibleTypesInIsolation.insert(drawer? VuoType::extractInnermostTypeName(type) : type);
+	}
+
+	// List the compatible types in the menu.
+	{
+		// If there are only a handful of eligible types, display them all in a flat menu.
+		const int maxTypeCountForFlatMenuDisplay = 10;
+		if (compatibleTypesInIsolation.size() <= maxTypeCountForFlatMenuDisplay)
+		{
+			QList<QAction *> actions = getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, false, "", menu);
+			addTypeActionsToMenu(actions, menu);
+		}
+
+		// Otherwise, organize them by node set.
+		else
+		{
+			// First list compatible types that don't belong to any specific node set.
+			QList<QAction *> actions = getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, "", menu);
+			addTypeActionsToMenu(actions, menu);
+
+			// Now add a submenu for each node set that contains compatible types.
+			map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = moduleManager->getLoadedTypesForNodeSet();
+			QList<QAction *> allNodeSetActionsToAdd;
+			for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
+			{
+				string nodeSetName = i->first;
+				if (!nodeSetName.empty())
+					allNodeSetActionsToAdd += getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, nodeSetName, menu);
+			}
+
+			bool usingExpansionMenu = false;
+			if ((menu->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
+			{
+				menu->addSeparator();
+
+				if (limitInitialOptions)
+				{
+					//: Appears at the bottom of the "Set Data Type" menu when there are additional options to display.
+					QAction *showMoreAction = menu->addAction(tr("More…"));
+					showMoreAction->setData(qVariantFromValue(static_cast<void *>(port)));
+					connect(showMoreAction, &QAction::triggered, this, &VuoEditorComposition::expandSpecializePortMenu);
+					usingExpansionMenu = true;
+				}
+			}
+
+			if (!usingExpansionMenu)
+				addTypeActionsToMenu(allNodeSetActionsToAdd, menu);
+		}
+
+		foreach (QAction *action, menu->actions())
+		{
+			QMenu *specializeSubmenu = action->menu();
+			if (specializeSubmenu)
+			{
+				foreach (QAction *specializeSubaction, specializeSubmenu->actions())
+					connect(specializeSubaction, &QAction::triggered, this, &VuoEditorComposition::specializeGenericPortType);
+			}
+			else if (action == unspecializeAction)
+				connect(action, &QAction::triggered, this, &VuoEditorComposition::unspecializePortType);
+			else
+				connect(action, &QAction::triggered, this, &VuoEditorComposition::specializeGenericPortType);
+		}
+	}
 }
 
 /**

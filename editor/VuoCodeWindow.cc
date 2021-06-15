@@ -93,6 +93,7 @@ VuoCodeWindow::VuoCodeWindow(const string &sourcePath)
 	inputPortSidebar = new VuoPublishedPortSidebar(this, wrapperComposition, true, false);
 	addDockWidget(Qt::LeftDockWidgetArea, inputPortSidebar);
 	inputPortSidebar->limitAllowedPortTypes(VuoShaderFile::supportedVuoTypes());
+	inputPortSidebar->limitInitialTypeOptions(false);
 
 	setSourcePath(sourcePath);
 

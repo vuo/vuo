@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.16...3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_policy(VERSION 3.16...3.20)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.3.0 LANGUAGES NONE)
+project(Vuo VERSION 2.3.1 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -21,6 +22,8 @@ option(VUO_HEAP_TRACE_ALL     "Logs all reference-counting operations.  Very noi
 option(VUO_PROFILE            "Add instrumentation for performance profiling." OFF)
 option(VUO_ANALYZE            "Run Clang Analyzer and other time-consuming analysis tools." OFF)
 option(VUO_ADHOC_CODESIGN     "If enabled, executables and dylibs will be ad-hoc code-signed during the normal build, to support running on ARM64/Apple Silicon.  If disabled, code-signing will only happen for the VuoPackage target (which isn't part of the normal build)." ${VUO_ADHOC_CODESIGN_DEFAULT})
+option(VUO_DOCUMENTATION      "Whether to build the user manual (PDF, HTML, MacHelp), node documentation, and Doxygen documentation." OFF)
+option(VUO_EXAMPLES           "Whether to build the example compositions." OFF)
 
 
 # Commands ===================================================================
@@ -37,30 +40,30 @@ endif()
 
 
 # Cache and package version identifier =======================================
-set(VUO_VERSION_AND_BUILD "${Vuo_VERSION}")
-# `VUO_VERSION_AND_BUILD` affects `VuoFileUtilities::getCachePath`;
-# changing it causes the entire project to rebuild.
-# Use the `GIT_BRANCH` environment variable (set by Jenkins)
-# instead of `git rev-parse --abbrev-ref HEAD`, so the entire project
-# doesn't rebuild every time we switch branches during local development.
-if (NOT "$ENV{GIT_BRANCH}" STREQUAL "" AND NOT "$ENV{GIT_BRANCH}" STREQUAL "main")
-	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.$ENV{GIT_BRANCH}")
+# Changing `VUO_VERSION_AND_BUILD` or `VUO_GIT_COMMIT` causes
+# the entire project to rebuild because they're used in `base/VuoConfig.h`.
+# Store those values in the cache, so they don't change unintentionally,
+# such as when making manual changes in a tree that was first built by Jenkins.
+if (NOT VUO_VERSION_AND_BUILD)
+	if (DEFINED ENV{BRANCH_NAME})
+		if ("$ENV{BRANCH_NAME}" STREQUAL "main")
+			set(id "${Vuo_VERSION}.$ENV{BUILD_ID}")     # e.g., `2.3.0.11546`
+		else()
+			set(id "$ENV{BRANCH_NAME}.$ENV{BUILD_ID}")  # e.g., `17996-jenkins-various.2`
+			set(VUO_BRANCH_BUILD ON CACHE BOOL "True if this Jenkins build is from a Git branch other than `main`.")
+		endif()
+
+		execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE commit OUTPUT_STRIP_TRAILING_WHITESPACE)
+		set(VUO_GIT_COMMIT "${commit}" CACHE STRING "The Git commit hash for this Jenkins build")
+	else()
+		cmake_host_system_information(RESULT hostname QUERY HOSTNAME)
+		string(REGEX REPLACE "\\..*$" "" hostname "${hostname}")
+		get_filename_component(dir "${PROJECT_SOURCE_DIR}" NAME)
+		set(id "${hostname}.${dir}")                    # e.g., `joku.vuo3`
+	endif()
+	set(VUO_VERSION_AND_BUILD "${id}" CACHE STRING "The Vuo cache/package version identifier")
 endif()
-if ("$ENV{BUILD_ID}" STREQUAL "")
-	# For local builds, include the hostname to help distinguish them
-	# from official Jenkins builds.
-	cmake_host_system_information(RESULT hostname QUERY HOSTNAME)
-	string(REGEX REPLACE "\\..*$" "" hostname "${hostname}")
-	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.${hostname}")
-else()
-	set(VUO_VERSION_AND_BUILD "${VUO_VERSION_AND_BUILD}.$ENV{BUILD_ID}")
-endif()
-message(STATUS "Vuo build: ${VUO_VERSION_AND_BUILD}")
-if (NOT "$ENV{GIT_COMMIT}" STREQUAL "")
-	set(VUO_GIT_COMMIT "$ENV{GIT_COMMIT}")
-	string(SUBSTRING "${VUO_GIT_COMMIT}" 0 7 VUO_GIT_COMMIT)
-	message(STATUS "Vuo commit: ${VUO_GIT_COMMIT}")
-endif()
+message(STATUS "Vuo build: ${VUO_VERSION_AND_BUILD} ${VUO_GIT_COMMIT}")
 
 
 # Conan ======================================================================
@@ -109,10 +112,9 @@ include(CTest)
 set(CMAKE_OSX_SYSROOT "${CONAN_MACOS-SDK_ROOT}" CACHE STRING "" FORCE)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "" FORCE)
 
+execute_process(COMMAND /usr/bin/uname -m OUTPUT_VARIABLE VUO_HOST_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (NOT CMAKE_OSX_ARCHITECTURES)
-	execute_process(COMMAND /usr/bin/uname -m OUTPUT_VARIABLE systemArch)
-	string(STRIP ${systemArch} systemArch)
-	set(CMAKE_OSX_ARCHITECTURES ${systemArch} CACHE STRING "" FORCE)
+	set(CMAKE_OSX_ARCHITECTURES ${VUO_HOST_ARCH} CACHE STRING "" FORCE)
 endif()
 list(JOIN CMAKE_OSX_ARCHITECTURES " " buildArch)
 message(STATUS "Building to run on: ${buildArch}")
@@ -296,6 +298,14 @@ function (VuoGeneratePCH target)
 		target_compile_options(${arg_TARGET} PRIVATE "SHELL:-F ${PROJECT_BINARY_DIR}/lib")
 		add_dependencies(${arg_TARGET} VuoFrameworkDylib)
 	endif()
+
+	# When the OSX_ARCHITECTURES target property is set (even to a single arch),
+	# CMake outputs the `-Xarch_*` Clang argument, which `ccache` doesn't support.
+	# If we're building for a single arch that's the same as the host arch,
+	# unset OSX_ARCHITECTURES, enabling `ccache` to do its thing.
+	if (CMAKE_OSX_ARCHITECTURES STREQUAL VUO_HOST_ARCH)
+		set_property(TARGET ${arg_TARGET} PROPERTY OSX_ARCHITECTURES)
+	endif()
 endfunction()
 VuoGeneratePCH(TARGET VuoPCHDefault              LANGUAGES C CXX OBJCXX    DEFINITIONS                                             )
 VuoGeneratePCH(TARGET VuoPCHLLVM                 LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM                                )
@@ -323,6 +333,14 @@ function (VuoPCH target)
 	get_target_property(includes ${pch} INCLUDE_DIRECTORIES)
 	if (includs)
 		target_include_directories(${target} PRIVATE ${includes})
+	endif()
+
+	# When the OSX_ARCHITECTURES target property is set (even to a single arch),
+	# CMake outputs the `-Xarch_*` Clang argument, which `ccache` doesn't support.
+	# If we're building for a single arch that's the same as the host arch,
+	# unset OSX_ARCHITECTURES, enabling `ccache` to do its thing.
+	if (CMAKE_OSX_ARCHITECTURES STREQUAL VUO_HOST_ARCH)
+		set_property(TARGET ${target} PROPERTY OSX_ARCHITECTURES)
 	endif()
 endfunction()
 
@@ -371,7 +389,9 @@ add_subdirectory(framework)
 add_subdirectory(translation)
 add_subdirectory(editor)
 add_subdirectory(test)
-add_subdirectory(documentation)
+if (VUO_DOCUMENTATION)
+	add_subdirectory(documentation)
+endif()
 if (EXISTS ${PROJECT_SOURCE_DIR}/package)
 	add_subdirectory(package)
 endif()

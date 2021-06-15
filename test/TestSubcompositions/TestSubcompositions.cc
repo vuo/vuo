@@ -57,7 +57,8 @@ private:
 	 */
 	string getCachedCompiledCompositionPath(string nodeClassName)
 	{
-		return VuoFileUtilities::getCachePath() + "/User/Modules/" + nodeClassName + ".vuonode";
+		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
+		return VuoFileUtilities::getCachePath() + "/User/Modules/" + arch + "/" + nodeClassName + ".vuonode";
 	}
 
 	/**

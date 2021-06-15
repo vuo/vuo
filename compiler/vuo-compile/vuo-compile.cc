@@ -19,6 +19,8 @@
 	#include "VuoModuleCompiler.hh"
 #endif
 
+#include "VuoCompilerHash.h"
+
 #include <iostream>
 
 class VuoCompileCLIDelegate : public VuoCompilerDelegate
@@ -90,7 +92,7 @@ int main (int argc, char * const argv[])
 		};
 		int optionIndex=-1;
 		int ret;
-		while ((ret = getopt_long(argc, argv, "o:I:v", options, &optionIndex)) != -1)
+		while ((ret = getopt_long(argc, argv, "o:I:vcE", options, &optionIndex)) != -1)
 		{
 			if (ret == '?')
 				continue;
@@ -136,6 +138,39 @@ int main (int argc, char * const argv[])
 						case 'v':
 							isVerbose = true;
 							break;
+						case 'c':
+							// Silently ignore `-c`, to support clang-style `vuo-compile -c foo.c -o foo.o` invocations,
+							// enabling `ccache` to do its thing.
+							break;
+						case 'E':
+						{
+							// `ccache` first tries to invoke the precompiler (`-E`);
+							// pass the node/type/library source along to clang.
+
+							printf("#pragma vuo-compile %s %s\n", VuoCompilerHash, target.c_str());
+							fflush(stdout);
+
+							char **argvForClang = (char **)malloc(sizeof(char *) * (argc + 6));
+							int inArgIndex = 1;
+							int outArgIndex = 0;
+							argvForClang[outArgIndex++] = (char *)"clang";
+							while (inArgIndex < argc)
+							{
+								if (strcmp(argv[inArgIndex], "--target") == 0)
+									++inArgIndex;  // also skip `--target`'s argument
+								else
+									argvForClang[outArgIndex++] = argv[inArgIndex];
+								++inArgIndex;
+							}
+							argvForClang[outArgIndex++] = (char *)"-I" VUO_SOURCE_DIR "/node";
+							argvForClang[outArgIndex++] = (char *)"-I" VUO_SOURCE_DIR "/library";
+							argvForClang[outArgIndex++] = (char *)"-I" VUO_SOURCE_DIR "/type";
+							argvForClang[outArgIndex++] = (char *)"-I" MACOS_SDK_ROOT "/usr/include";
+							argvForClang[outArgIndex++] = (char *)"-F" MACOS_SDK_ROOT "/System/Library/Frameworks";
+							argvForClang[outArgIndex++] = nullptr;
+							execvp(LLVM_ROOT "/bin/clang", argvForClang);
+							break;
+						}
 						default:
 							VUserLog("Error: Unknown option '%c'.", ret);
 							break;

@@ -1,4 +1,4 @@
-Nodes for sending and receiving [Open Sound Control (OSC)](http://opensoundcontrol.org/) messages.
+Nodes for sending and receiving [Open Sound Control (OSC)](https://en.wikipedia.org/wiki/Open_Sound_Control) messages.
 
 These nodes allow your composition to send messages to and receive messages from OSC-enabled devices and applications. Devices include sound synthesizers, stage lighting equipment, and control surfaces (including iPhone/iPad and Android apps). Applications include [TouchOSC](http://hexler.net/software/touchosc), [Lemur](http://liine.net/en/products/lemur/), and [Vezér](http://www.vezerapp.hu/).
 
@@ -23,7 +23,7 @@ The **address** is a piece of text beginning with `/`. Often, it looks like a fi
 
 Each **data value** is a simple piece of information (integer, real, boolean, or text). For example, a data value of 0.3 accompanying the address `/1/fader` could indicate that a fader control has been set to position 0.3. 
 
-These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org/).
+These nodes are based on the [OSC 1.0 specification](https://web.archive.org/web/20201211193930/http://opensoundcontrol.org/spec-1_0).
 
 ### Data types
 

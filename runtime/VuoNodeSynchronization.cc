@@ -28,7 +28,7 @@ void VuoNodeSynchronization::lockNodes(VuoCompositionState *compositionState, un
  */
 void VuoNodeSynchronization::lockNode(VuoCompositionState *compositionState, unsigned long nodeIndex, unsigned long eventId)
 {
-	recordWaiting(eventId, nodeIndex);
+	recordWaiting(compositionState, eventId, nodeIndex);
 
 	{
 		NodeContext *nodeContext = vuoGetNodeContext(compositionState, nodeIndex);
@@ -43,7 +43,7 @@ void VuoNodeSynchronization::lockNode(VuoCompositionState *compositionState, uns
 		});
 	}
 
-	recordLocked(eventId, nodeIndex);
+	recordLocked(compositionState, eventId, nodeIndex);
 }
 
 /**
@@ -73,84 +73,104 @@ void VuoNodeSynchronization::unlockNode(VuoCompositionState *compositionState, u
 		static_cast<std::condition_variable *>(nodeContext->nodeConditionVariable)->notify_all();
 	}
 
-	recordUnlocked(eventId, nodeIndex);
+	recordUnlocked(compositionState, eventId, nodeIndex);
 }
 
 /**
  * If debugging is enabled, records the node's change in status.
  */
-void VuoNodeSynchronization::recordWaiting(unsigned long eventId, unsigned long nodeIndex)
+void VuoNodeSynchronization::recordWaiting(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex)
 {
 	if (! VuoIsDebugEnabled())
 		return;
 
 	std::lock_guard<std::mutex> lock(statusMutex);
 
-	auto i = statusWaiting.find(eventId);
+	auto i = statusWaiting.find(compositionState->compositionIdentifier);
 	if (i != statusWaiting.end())
 	{
-		auto j = std::find(i->second.begin(), i->second.end(), nodeIndex);
-		if (j != i->second.end())
-			return;
-	}
-
-	statusWaiting[eventId].push_back(nodeIndex);
-}
-
-/**
- * If debugging is enabled, records the node's change in status.
- */
-void VuoNodeSynchronization::recordLocked(unsigned long eventId, unsigned long nodeIndex)
-{
-	if (! VuoIsDebugEnabled())
-		return;
-
-	std::lock_guard<std::mutex> lock(statusMutex);
-
-	auto i = statusWaiting.find(eventId);
-	if (i != statusWaiting.end())
-	{
-		auto j = std::find(i->second.begin(), i->second.end(), nodeIndex);
+		auto j = i->second.find(eventId);
 		if (j != i->second.end())
 		{
-			i->second.erase(j);
-			if (i->second.empty())
-				statusWaiting.erase(i);
+			auto k = std::find(j->second.begin(), j->second.end(), nodeIndex);
+			if (k != j->second.end())
+				return;
 		}
 	}
 
-	i = statusLocked.find(eventId);
-	if (i != statusLocked.end())
-	{
-		auto j = std::find(i->second.begin(), i->second.end(), nodeIndex);
-		if (j != i->second.end())
-			return;
-	}
-
-	statusLocked[eventId].push_back(nodeIndex);
+	statusWaiting[compositionState->compositionIdentifier][eventId].push_back(nodeIndex);
 }
 
 /**
  * If debugging is enabled, records the node's change in status.
  */
-void VuoNodeSynchronization::recordUnlocked(unsigned long eventId, unsigned long nodeIndex)
+void VuoNodeSynchronization::recordLocked(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex)
 {
 	if (! VuoIsDebugEnabled())
 		return;
 
 	std::lock_guard<std::mutex> lock(statusMutex);
 
-	auto i = statusLocked.find(eventId);
-	if (i != statusLocked.end())
+	auto i = statusWaiting.find(compositionState->compositionIdentifier);
+	if (i != statusWaiting.end())
 	{
-		auto j = std::find(i->second.begin(), i->second.end(), nodeIndex);
+		auto j = i->second.find(eventId);
 		if (j != i->second.end())
 		{
-			i->second.erase(j);
-			if (i->second.empty())
-				statusLocked.erase(i);
+			auto k = std::find(j->second.begin(), j->second.end(), nodeIndex);
+			if (k != j->second.end())
+			{
+				j->second.erase(k);
+				if (j->second.empty())
+					i->second.erase(j);
+				if (i->second.empty())
+					statusWaiting.erase(i);
+			}
+		}
+	}
 
-			return;
+	i = statusLocked.find(compositionState->compositionIdentifier);
+	if (i != statusLocked.end())
+	{
+		auto j = i->second.find(eventId);
+		if (j != i->second.end())
+		{
+			auto k = std::find(j->second.begin(), j->second.end(), nodeIndex);
+			if (k != j->second.end())
+				return;
+		}
+	}
+
+	statusLocked[compositionState->compositionIdentifier][eventId].push_back(nodeIndex);
+}
+
+/**
+ * If debugging is enabled, records the node's change in status.
+ */
+void VuoNodeSynchronization::recordUnlocked(VuoCompositionState *compositionState, unsigned long eventId, unsigned long nodeIndex)
+{
+	if (! VuoIsDebugEnabled())
+		return;
+
+	std::lock_guard<std::mutex> lock(statusMutex);
+
+	auto i = statusLocked.find(compositionState->compositionIdentifier);
+	if (i != statusLocked.end())
+	{
+		auto j = i->second.find(eventId);
+		if (j != i->second.end())
+		{
+			auto k = std::find(j->second.begin(), j->second.end(), nodeIndex);
+			if (k != j->second.end())
+			{
+				j->second.erase(k);
+				if (j->second.empty())
+					i->second.erase(j);
+				if (i->second.empty())
+					statusLocked.erase(i);
+
+				return;
+			}
 		}
 	}
 
@@ -174,9 +194,14 @@ void VuoNodeSynchronization::print(void)
 	oss << "=== locked ===" << endl << endl;
 	for (auto i : statusLocked)
 	{
-		oss << "eventId " << i.first << ":";
-		for (unsigned long nodeIndex : i.second)
-			oss << " " << nodeIndex;
+		oss << i.first << ":" << endl;
+		for (auto j : i.second)
+		{
+			oss << "   eventId " << j.first << ":";
+			for (unsigned long nodeIndex : j.second)
+				oss << " " << nodeIndex;
+			oss << endl;
+		}
 		oss << endl;
 	}
 	oss << endl;
@@ -184,9 +209,14 @@ void VuoNodeSynchronization::print(void)
 	oss << "=== waiting to lock ===" << endl << endl;
 	for (auto i : statusWaiting)
 	{
-		oss << "eventId " << i.first << ":";
-		for (unsigned long nodeIndex : i.second)
-			oss << " " << nodeIndex;
+		oss << i.first << ":" << endl;
+		for (auto j : i.second)
+		{
+			oss << "   eventId " << j.first << ":";
+			for (unsigned long nodeIndex : j.second)
+				oss << " " << nodeIndex;
+			oss << endl;
+		}
 		oss << endl;
 	}
 	oss << endl;

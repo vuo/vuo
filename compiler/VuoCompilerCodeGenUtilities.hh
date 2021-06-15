@@ -258,6 +258,7 @@ public:
 	static Function * getCompositionSetPublishedInputPortValueFunction(Module *module);
 	static Function * getSetPublishedInputPortValueFunction(Module *module);
 
+	static bool isPointerToStruct(Type *type, StructType **structType = nullptr);
 	static Value * callFunctionWithStructReturn(Function *function, vector<Value *> args, BasicBlock *block);
 	static bool isFunctionReturningStructViaParameter(Function *function);
 	static void copyParameterAttributes(Function *srcFunction, Function *dstFunction);

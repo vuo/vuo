@@ -41,19 +41,22 @@ class FeatureContext implements Context {
 
   private function filterOutput(&$output) {
     $output = array_filter($output, function($v) {
-      return !strpos($v, 'cotire 1.8.0 loaded.')
-          && !strpos($v, 'Enabled support for Vuo Pro.')
-          && !strpos($v, 'Configuring done')
-          && !strpos($v, 'Generating done')
-          && !strpos($v, 'Build files have been written to:')
-          && !strpos($v, 'Built target ')
-          && !strpos($v, 'Automatic MOC ');
+      return strpos($v, '-- Vuo build:') === false
+          && strpos($v, '-- Building to run on:') === false
+          && strpos($v, '-- Enabled support for Vuo Pro.') === false
+          && strpos($v, 'Configuring done') === false
+          && strpos($v, 'Generating done') === false
+          && strpos($v, 'Build files have been written to:') === false
+          && strpos($v, 'Built target ') === false
+          && strpos($v, 'Scanning dependencies of target') === false
+          && strpos($v, 'Consolidate compiler generated dependencies') === false
+          && strpos($v, 'Automatic MOC ') === false;
     });
   }
 
   private function build($args) {
     $this->lastBuildStarted = time();
-    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && CLICOLOR_FORCE=1 /usr/bin/make ' . $args, $output, $returnCode);
+    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && CLICOLOR_FORCE=1 /usr/bin/make ' . $args . ' 2>&1', $output, $returnCode);
     $this->filterOutput($output);
     $this->lastBuildOutput = $output;
     foreach ($output as $l)
@@ -93,7 +96,7 @@ class FeatureContext implements Context {
    * @When /I run CMake with arguments "([^"]*)"/
    */
   public function iRunCMakeWithArguments($args) {
-    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && cmake .. ' . $args, $output, $returnCode);
+    exec('cd ' . escapeshellarg($this->testDir . '/src/build') . ' && cmake -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache .. ' . $args . ' 2>&1', $output, $returnCode);
     $this->filterOutput($output);
     foreach ($output as $l)
       print $l . "\n";
@@ -119,7 +122,7 @@ class FeatureContext implements Context {
    * @When I build
    */
   public function iBuild() {
-    $this->build('-j8');
+    $this->build('-j' . trim(shell_exec('sysctl -n hw.ncpu')));
   }
 
   /**
@@ -176,12 +179,12 @@ class FeatureContext implements Context {
   public function itShouldUpdateTheBuiltInCache() {
     $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
     $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/moduleCache-generated.txt');
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/moduleCache-installed.txt');
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
     $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
     $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/moduleCache-generated.txt');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/moduleCache-installed.txt');
+    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
+    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
   }
 
   /**
@@ -190,12 +193,12 @@ class FeatureContext implements Context {
   public function itShouldntUpdateTheBuiltInCache() {
     $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
     $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/moduleCache-generated.txt');
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/moduleCache-installed.txt');
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
     $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
     $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/moduleCache-generated.txt');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/moduleCache-installed.txt');
+    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
+    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
   }
 
   /**

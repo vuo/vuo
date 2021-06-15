@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+MakeList3 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="218,71" _1="\{\"x\":0.0,\"y\":0.0\}"];
+MakeList4 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="252,86" _1="\"#fff\""];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="448,26"];
+MakePointsObject [type="vuo.scene.make.points.VuoPoint2d.VuoShader" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="285,15" _pointSize="2.0"];
+MakeWireframeShader [type="vuo.shader.make.wireframe" version="1.1.0" label="Make Wireframe Shader|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<uniformWidth>uniformWidth\l|<shader>shader\r" pos="15,30" _frontColor="\{\"r\":1.0,\"g\":0.999969482421875,\"b\":0.9999847412109375,\"a\":1.0\}" _backColor="\{\"r\":0.00010681315325200558,\"g\":0.0017547875177115202,\"b\":0.9982147216796875,\"a\":1.0\}" _width="1.0" _standoffWidth="0.0" _showThirdEdge="true" _uniformWidth="false" _frontColor_manuallyFirable="yes"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="510,15" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="720,15" _center="\{\"x\":0,\"y\":0\}" _width="0" _sampleType="\"average\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Color>Color\l" _Color_type="VuoColor"];
+
+MakeList3:list -> MakePointsObject:positions;
+MakeList4:list -> MakePointsObject:colors;
+MakeList5:list -> RenderSceneToImage:objects;
+MakePointsObject:object -> MakeList5:1;
+MakeWireframeShader:shader -> MakePointsObject:material;
+PublishedInputs:Event -> MakeWireframeShader:frontColor;
+RenderSceneToImage:image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> PublishedOutputs:Color;
+}

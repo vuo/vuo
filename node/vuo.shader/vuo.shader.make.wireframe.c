@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						 "outline", "edges", "lines", "skeletal",
 						 "worldspace", "perspective", "screenspace",
 					 ],
-					 "version" : "1.1.0",
+					 "version" : "1.1.1",
 					 "dependencies" : [
 					 ],
 					 "node": {
@@ -79,7 +79,7 @@ static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float primitiveHalfSize;
 
 	// Inputs from vertex shader
-	varying vec4 geometryVertexColor[1];
+	varying in vec4 geometryVertexColor[1];
 
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
@@ -123,7 +123,7 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform bool useFisheyeProjection;
 
 	// Inputs from vertex shader
-	varying vec4 geometryVertexColor[2];
+	varying in vec4 geometryVertexColor[2];
 
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;

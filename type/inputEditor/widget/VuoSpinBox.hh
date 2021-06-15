@@ -17,6 +17,7 @@ class VuoSpinBox : public QSpinBox
 public:
 	VuoSpinBox(QWidget *parent = 0);
 	void stepBy(int steps);
+	void unsetLineEditBounds();
 	void setButtonMinimum(int buttonMinimum);
 	void setButtonMaximum(int buttonMaximum);
 
@@ -29,4 +30,3 @@ private:
 	int buttonMinimum;
 	int buttonMaximum;
 };
-

@@ -33,7 +33,7 @@ private:
 
 	bool isCompatibleWithCurrentTarget(VuoCompilerModule *module)
 	{
-		VuoCompilerCompatibility currentTarget = VuoCompilerCompatibility::currentSystem();
+		VuoCompilerCompatibility currentTarget = VuoCompilerCompatibility::compatibilityWithTargetTriple(VuoCompiler::getProcessTarget());
 		return module->getCompatibleTargets().isCompatibleWith(currentTarget);
 	}
 

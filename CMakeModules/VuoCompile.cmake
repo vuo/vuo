@@ -214,12 +214,13 @@ function (VuoCompileTypes)
 				IMPLICIT_DEPENDS CXX ${arg_BASEDIR}/${typeSource}
 				COMMENT "Compiling ${nodeSetName} type ${typeSource} (${arch})"
 				COMMAND_EXPAND_LISTS
-				COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile
+				COMMAND ${CMAKE_C_COMPILER_LAUNCHER}
+					${PROJECT_BINARY_DIR}/bin/vuo-compile
 					--target ${arch}-apple-macosx10.10.0
 					-I${PROJECT_BINARY_DIR}/type/list
 					"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
-					${arg_BASEDIR}/${typeSource}
-					-o ${typeBitcode}
+					-c ${arg_BASEDIR}/${typeSource}
+					-o ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
 				OUTPUT ${typeBitcode}
 			)
 
@@ -240,7 +241,7 @@ function (VuoCompileTypes)
 					-target ${arch}-apple-macosx10.10.0
 					-Oz
 					-c ${typeBitcode}
-					-o ${typeObject}
+					-o ${CMAKE_CURRENT_BINARY_DIR}/${typeObject}
 				OUTPUT ${typeObject}
 			)
 			if (archCount EQUAL 1)
@@ -352,6 +353,7 @@ function (VuoCompileLibrariesWithTarget target)
 			add_custom_command(
 				DEPENDS
 					VuoCoreTypesHeader
+					${PROJECT_SOURCE_DIR}/type/list/VuoList.h
 					${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				COMMENT "Compiling ${target} (${arch} bitcode) ${source}"
@@ -368,7 +370,7 @@ function (VuoCompileLibrariesWithTarget target)
 					-emit-llvm
 					-isysroot ${CMAKE_OSX_SYSROOT}
 					-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-					-o ${bitcode}
+					-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
 				OUTPUT ${bitcode}
 			)
 			if (archCount EQUAL 1)
@@ -400,10 +402,10 @@ function (VuoCompileLibrariesWithTarget target)
 	foreach (source ${sources})
 		# Choose the compiler.
 		get_filename_component(filetype ${source} LAST_EXT)
-		set(compiler "${CMAKE_C_COMPILER}")
+		set(compiler ${CMAKE_C_COMPILER_LAUNCHER} ${CMAKE_C_COMPILER})
 		set(flags "${cFlags}")
 		if (filetype STREQUAL ".cc" OR filetype STREQUAL ".mm")
-			set(compiler "${CMAKE_CXX_COMPILER}")
+			set(compiler ${CMAKE_CXX_COMPILER_LAUNCHER} ${CMAKE_CXX_COMPILER})
 			set(flags "${cxxFlags}")
 		endif()
 
@@ -413,6 +415,7 @@ function (VuoCompileLibrariesWithTarget target)
 		add_custom_command(
 			DEPENDS
 				VuoCoreTypesHeader
+				${PROJECT_SOURCE_DIR}/type/list/VuoList.h
 				${CMAKE_CURRENT_SOURCE_DIR}/${source}
 			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 			COMMENT "Compiling ${target} (native) ${source}"
@@ -427,7 +430,7 @@ function (VuoCompileLibrariesWithTarget target)
 				-fexceptions
 				-isysroot ${CMAKE_OSX_SYSROOT}
 				-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				-o ${object}
+				-o ${CMAKE_CURRENT_BINARY_DIR}/${object}
 			OUTPUT ${object}
 		)
 		if (VuoPackage)
@@ -505,12 +508,13 @@ function (VuoCompileNodes)
 				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				COMMENT "Compiling ${nodeSetName} node ${source} (${arch})"
 				COMMAND_EXPAND_LISTS
-				COMMAND ${thisCompiler}
+				COMMAND ${CMAKE_C_COMPILER_LAUNCHER}
+					${thisCompiler}
 					-I${CMAKE_CURRENT_SOURCE_DIR}
 					"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
 					--target ${arch}-apple-macosx10.10.0
-					${CMAKE_CURRENT_SOURCE_DIR}/${source}
-					-o ${bitcode}
+					-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
+					-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
 				OUTPUT ${bitcode}
 			)
 			if (archCount EQUAL 1)

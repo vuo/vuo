@@ -9,7 +9,7 @@ Vuo comes with several resources for text-based programming:
 
    - [The Vuo SDK](https://vuo.org/releases), which includes:
       - The Vuo framework (including nodes, compiler, and runner)
-      - [Command-line tools](https://doc.vuo.org/2.0.2/manual/the-command-line-tools.xhtml)
+      - [Command-line tools](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml)
       - Example projects for [creating add-ons to Vuo](@ref DevelopingNodeClassesTypes)
       - Example projects for [using Vuo inside another application](@ref DevelopingApplications)
    - [Source code](https://github.com/vuo/vuo) for everything in the SDK, plus the Vuo editor

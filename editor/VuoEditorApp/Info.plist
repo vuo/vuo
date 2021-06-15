@@ -208,7 +208,7 @@
 	<key>CFBundleHelpBookFolder</key>
 	<string>Vuo.help</string>
 	<key>CFBundleHelpBookName</key>
-	<string>org.vuo.Editor.help</string>
+	<string>org.vuo.Editor.help.@VUO_VERSION_AND_BUILD@</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This Vuo composition would like to use your Mac&apos;s camera for live video processing or recording.</string>
 	<key>NSMicrophoneUsageDescription</key>

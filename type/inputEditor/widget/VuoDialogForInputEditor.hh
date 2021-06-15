@@ -35,5 +35,5 @@ private:
 	int arrowPixelsFromTopOrLeft;
 	bool _isDark;
 	bool _showArrow;
+	bool respondingToKeypress;
 };
-
