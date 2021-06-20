@@ -8,7 +8,7 @@ class VuoConan(ConanFile):
 
     def requirements(self):
         self.requires('blackmagic/12.0-0@vuo+conan+blackmagic/stable')
-        self.requires('curl/7.73.0-0@vuo+conan+curl/stable')
+        self.requires('curl/7.73.0-1@vuo+conan+curl/stable')
         self.requires('discount/2.2.6-0@vuo+conan+discount/stable')
         self.requires('ffmpeg/4.4-3@vuo+conan+ffmpeg/stable')
         self.requires('freeframe/1.6-1@vuo+conan+freeframe/stable')

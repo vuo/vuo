@@ -3,7 +3,7 @@ cmake_policy(VERSION 3.16...3.20)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.3.1 LANGUAGES NONE)
+project(Vuo VERSION 2.3.2 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).

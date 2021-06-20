@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					"title" : "Make Tube",
 					"keywords" : [ "3D", "pipe", "cylinder", "capsule", "barrel", "tubular", "shape" ],
-					"version" : "1.1.0",
+					"version" : "1.1.1",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -68,7 +68,7 @@ static VuoMesh makePipeShell(const unsigned int columns,
 							const float radius,
 							const float height,
 							const unsigned int winding,
-							const int culling)
+							VuoMesh_FaceCulling culling)
 {
 	float *circle = makeCircleTemplate(columns, radius);
 
@@ -398,7 +398,7 @@ void nodeInstanceEvent
 	VuoList_VuoSceneObject meshes = VuoListCreate_VuoSceneObject();
 
 	// generate the outer shell
-	outer = makePipeShell(columns2, rows2, radius, height, WINDING_CW, VuoReal_areEqual(thickness2, 0) ? GL_NONE : GL_BACK);
+	outer = makePipeShell(columns2, rows2, radius, height, WINDING_CW, VuoReal_areEqual(thickness2, 0) ? VuoMesh_CullNone : VuoMesh_CullBackfaces);
 	VuoListAppendValue_VuoSceneObject(meshes, VuoSceneObject_makeMesh(outer,
 		VuoShader_make_VuoGenericType1(outsideMaterial),
 		VuoTransform_makeIdentity()));
@@ -406,7 +406,7 @@ void nodeInstanceEvent
 	// if thickness isn't 0 or 1, generate an inner surface (wound counterclockwise)
 	if( !VuoReal_areEqual(thickness2, 0) && !VuoReal_areEqual(thickness2, radius) )
 	{
-		inner = makePipeShell(columns2, rows2, radius-thickness2, height, WINDING_CCW, GL_BACK);
+		inner = makePipeShell(columns2, rows2, radius-thickness2, height, WINDING_CCW, VuoMesh_CullBackfaces);
 		VuoListAppendValue_VuoSceneObject(meshes, VuoSceneObject_makeMesh(inner,
 			VuoShader_make_VuoGenericType2(insideMaterial),
 			VuoTransform_makeIdentity()));

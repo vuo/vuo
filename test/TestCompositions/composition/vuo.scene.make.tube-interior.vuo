@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="269,116"];
+MakeTube [type="vuo.scene.make.tube.VuoGenericType1.VuoGenericType2.VuoGenericType3.VuoGenericType4" version="1.1.0" label="Make Tube|<refresh>refresh\l|<transform>transform\l|<outsideMaterial>outsideMaterial\l|<insideMaterial>insideMaterial\l|<topMaterial>topMaterial\l|<bottomMaterial>bottomMaterial\l|<rows>rows\l|<columns>columns\l|<thickness>thickness\l|<object>object\r" pos="120,105" _transform="\{\"translation\":[0.0,0.0,1.3500000238418579],\"eulerRotation\":[0.0,0.0,0.0],\"scale\":[1.0,1.0,1.0]\}" _rows="16" _columns="32" _thickness="0.29999999999999999"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="330,105" _width="512" _height="512" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="555,105" _center="\{\"x\":0,\"y\":0\}" _width="0" _sampleType="\"average\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Color>Color\l" _Color_type="VuoColor"];
+
+MakeList2:list -> RenderSceneToImage:objects;
+MakeTube:object -> MakeList2:1;
+PublishedInputs:Event -> MakeTube:transform;
+RenderSceneToImage:image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> PublishedOutputs:Color;
+}

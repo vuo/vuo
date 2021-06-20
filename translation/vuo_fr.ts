@@ -48,7 +48,7 @@ et gagner des points de vote !</translation>
     <message>
         <location line="+22"/>
         <source>Use Vuo Community Edition</source>
-        <translation>Utiliser Vuo Edición comunitaria</translation>
+        <translation>Utilisez la version Communauté de Vuo.</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -182,7 +182,7 @@ Merci à nos contributeurs !</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../editor/VuoEditor.cc" line="+103"/>
+        <location filename="../editor/VuoEditor.cc" line="+112"/>
         <source>Untitled Composition</source>
         <translation>Composition sans titre</translation>
     </message>
@@ -241,7 +241,7 @@ Merci à nos contributeurs !</translation>
 <context>
     <name>VuoCodeWindow</name>
     <message>
-        <location filename="../editor/VuoCodeWindow.cc" line="+173"/>
+        <location filename="../editor/VuoCodeWindow.cc" line="+174"/>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
@@ -735,7 +735,7 @@ Merci à nos contributeurs !</translation>
         <location line="+176"/>
         <location filename="../editor/pro/VuoEditorFreeTrialButton.mm" line="+40"/>
         <source>Vuo Community Edition</source>
-        <translation>Vuo Edición comunitaria</translation>
+        <translation>Vuo version Communauté</translation>
     </message>
     <message>
         <location line="+126"/>
@@ -1088,7 +1088,7 @@ Plus d&apos;informations à %1.</translation>
 <context>
     <name>VuoEditorComposition</name>
     <message>
-        <location filename="../editor/VuoEditorComposition.cc" line="+128"/>
+        <location filename="../editor/VuoEditorComposition.cc" line="+129"/>
         <source>Fire Event</source>
         <translation>Émettre un évènement</translation>
     </message>
@@ -1268,22 +1268,22 @@ Plus d&apos;informations à %1.</translation>
         <translation>Définir la régulation d&apos;évènement</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>Set Data Type</source>
         <translation>Définir le type de données</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+324"/>
         <source>Generic</source>
         <translation>Générique</translation>
     </message>
     <message>
-        <location line="+370"/>
+        <location line="-86"/>
         <source>Change To</source>
         <translation>Modifier en</translation>
     </message>
     <message>
-        <location line="+4042"/>
+        <location line="+4219"/>
         <source>&lt;b&gt;This composition doesn&apos;t send any images to &lt;code&gt;outputImage&lt;/code&gt;.&lt;/b&gt;</source>
         <translation>&lt;b&gt;Cette composition ne transmet aucune image à &lt;code&gt;outputImage&lt;/code&gt;.&lt;/b&gt;</translation>
     </message>
@@ -1308,46 +1308,24 @@ Plus d&apos;informations à %1.</translation>
         <translation>Teinte</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="+161"/>
-        <source>&lt;p&gt;The app was exported.&lt;br&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;L&apos;application a été exportée.&lt;br&gt;&lt;/p&gt;</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <source>&lt;p&gt;The plugin was exported to “%1”.&lt;/p&gt;&lt;p&gt;You may need to re-launch your FFGL host to use the plugin.&lt;br&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Le plug-in a été exporté dans « %1 ».&lt;/p&gt;&lt;p&gt;Il se peut que vous deviez relancer votre hôte FFGL pour l&apos;utiliser.&lt;br&gt;&lt;/p&gt;</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <source>&lt;p&gt;Please re-launch System Preferences to use the screen saver.&lt;br&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Veuillez relancer Préférences Système pour utiliser l&apos;économiseur d&apos;écran.&lt;br&gt;&lt;/p&gt;</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&lt;p&gt;&lt;b&gt;Warning:&lt;/b&gt; Vuo screen savers require Mac OS X 10.11 or later.&lt;br&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;&lt;b&gt;Attention :&lt;/b&gt; les économiseurs d&apos;écran Vuo nécessitent macOS 10.11 ou ultérieur&lt;br&gt;&lt;/p&gt;</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&lt;p&gt;The screen saver was exported to “%1”.&lt;/p&gt;%2</source>
-        <translation>&lt;p&gt;L&apos;économiseur d&apos;écran a été exporté dans « %1 ».&lt;/p&gt;%2</translation>
-    </message>
-    <message>
-        <location filename="../editor/VuoEditorComposition.cc" line="-3308"/>
+        <location line="-3352"/>
         <source>Insert &quot;%1&quot; Node</source>
         <extracomment>Appears in a popup menu when dragging files from Finder onto the composition canvas.</extracomment>
         <translation>Insérer un nœud « %1 »</translation>
     </message>
     <message>
-        <location line="+2243"/>
+        <location line="+2287"/>
         <source>To change to this type, disconnect the cable from this port and from this node&apos;s other ports of the same type.</source>
         <extracomment>Appears in a tooltip when hovering over a menu item for a type specialization that&apos;s prevented by a cable connection.</extracomment>
         <translation>Pour modifier vers ce type, déconnectez le câble de ce port et de tous les autres ports du même type de ce nœud.</translation>
     </message>
     <message>
-        <location line="+1187"/>
+        <location line="-221"/>
+        <location line="+1408"/>
         <source>More…</source>
-        <extracomment>Appears at the bottom of the &quot;Change Node&quot; menu when there are more options than can fit onscreen.</extracomment>
+        <extracomment>Appears at the bottom of the &quot;Set Data Type&quot; menu when there are additional options to display.
+----------
+Appears at the bottom of the &quot;Change Node&quot; menu when there are more options than can fit onscreen.</extracomment>
         <translation>Plus...</translation>
     </message>
     <message>
@@ -1375,13 +1353,13 @@ Plus d&apos;informations à %1.</translation>
         <translation>Modifier le port de sortie en %1</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="+101"/>
+        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="+382"/>
         <source>Exporting frame %1 of %2 (%3% done).</source>
         <extracomment>Appears in the File &gt; Export &gt; Movie progress dialog. Example: &quot;Exporting frame 2 of 10 (20% done).&quot;</extracomment>
         <translation>Exportation des images %1 de %2 (%3% terminé).</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorComposition.cc" line="-6739"/>
+        <location filename="../editor/VuoEditorComposition.cc" line="-6783"/>
         <source>Enqueue Events</source>
         <translation>Placer les évènements dans la file</translation>
     </message>
@@ -1391,9 +1369,40 @@ Plus d&apos;informations à %1.</translation>
         <translation>Ignorer des évènements</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-54"/>
-        <source>&lt;p&gt;The plugin was exported to “%1”.&lt;/p&gt;&lt;p&gt;A Motion Template was created at “%2”.&lt;/p&gt;&lt;p&gt;Please re-launch Motion or Final Cut Pro X to use the plugin.&lt;br&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Le plug-in a été exporté dans « %1 ».&lt;/p&gt;&lt;p&gt;Un modèle de Motion a été créé dans « %2 ».&lt;/p&gt;&lt;p&gt;Veuillez relancer Motion ou Final Cut Pro X pour l&apos;utiliser.&lt;br&gt;&lt;/p&gt;</translation>
+        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-202"/>
+        <source>The app was exported.</source>
+        <translation>L&apos;application a été exportée.</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <location line="+97"/>
+        <source>The plugin was exported to “%1”.</source>
+        <translation>Le plug-in a été exporté dans « %1 ».</translation>
+    </message>
+    <message>
+        <location line="-96"/>
+        <source>You may need to re-launch your FFGL host to use the plugin.</source>
+        <translation>Il se peut que vous deviez relancer votre hôte FFGL pour l&apos;utiliser.</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>The screen saver was exported to “%1”.</source>
+        <translation>L&apos;économiseur d&apos;écran a été exporté dans « %1 ».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please re-launch System Preferences to use the screen saver.</source>
+        <translation>Veuillez relancer Préférences Système pour utiliser l&apos;économiseur d&apos;écran.</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <source>A Motion Template was created at “%2”.</source>
+        <translation>Le plug-in a été exporté dans « %1 ».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please re-launch Motion or Final Cut Pro X to use the plugin.</source>
+        <translation>Le plug-in a été exporté dans « %1 ».</translation>
     </message>
 </context>
 <context>
@@ -1918,12 +1927,12 @@ Plus d&apos;informations à %1.</translation>
         <translation>&lt;b&gt;Exportation terminée.&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+5"/>
         <source>Show this window when exporting %1</source>
         <translation>Afficher cette fenêtre lors de l&apos;exportation %1</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+85"/>
         <source>&lt;b&gt;Not enough memory&lt;/b&gt;</source>
         <translation>&lt;b&gt;Mémoire insuffisante&lt;/b&gt;</translation>
     </message>
@@ -2072,7 +2081,7 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
         <translation>Enregistrer la sous-composition dans la bibliothèque Système</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorWindow_Pro.cc" line="-449"/>
+        <location filename="../editor/pro/VuoEditorWindow_Pro.cc" line="-464"/>
         <location line="+18"/>
         <location line="+18"/>
         <source>Activate Vuo Pro to Export</source>
@@ -2099,7 +2108,8 @@ go to Edit &gt; Composition Information.</source>
         <location line="+4"/>
         <source>The exported app will briefly show
 the Vuo Community Edition splash screen upon launch.</source>
-        <translation>L&apos;application exportée affichera brièvement l&apos;écran d&apos;accueil de la Vuo Edición comunitaria au démarrage</translation>
+        <translation>L&apos;application exportée affichera brièvement
+l&apos;écran d&apos;accueil de la Vuo version Communauté au démarrage.</translation>
     </message>
     <message>
         <location filename="../editor/VuoEditorWindow.cc" line="-3076"/>
@@ -2696,7 +2706,7 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <translation>Nouveau port</translation>
     </message>
     <message>
-        <location filename="../editor/VuoPublishedPortSidebar.cc" line="+20"/>
+        <location filename="../editor/VuoPublishedPortSidebar.cc" line="+23"/>
         <source>Remove Protocol</source>
         <translation>Supprimer le protocole</translation>
     </message>
@@ -2826,22 +2836,22 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <translation>Changer de protocole</translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+835"/>
         <source>Event-Only</source>
         <translation>Évènement seulement</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>Single Value</source>
         <translation>Valeur unique</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>List</source>
         <translation>Liste</translation>
     </message>
     <message>
-        <location line="-877"/>
+        <location line="-886"/>
         <source>Inputs</source>
         <translation>Entrées</translation>
     </message>
@@ -2851,10 +2861,16 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <translation>Sorties</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+115"/>
         <source>Data type</source>
         <extracomment>Appears in the tooltip on published input and output ports.</extracomment>
         <translation>Type de données</translation>
+    </message>
+    <message>
+        <location line="+830"/>
+        <source>More…</source>
+        <extracomment>Appears at the bottom of the &quot;Set Data Type&quot; menu when there are additional options to display.</extracomment>
+        <translation>Plus...</translation>
     </message>
 </context>
 <context>
@@ -2893,7 +2909,7 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <translation>Enregistrer la sous-composition dans la bibliothèque utilisateur</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Node Title</source>
         <translation>Titre du nœud</translation>
     </message>
