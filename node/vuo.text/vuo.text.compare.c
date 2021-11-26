@@ -10,20 +10,21 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Compare Texts",
-					 "keywords" : [
-						"comparison", "same", "identical", "equivalent", "match", "approximate",
-						"unequal", "inequality", "different",
-						"contains", "begins with", "starts with", "ends with", "prefix", "suffix",
-						"case", "sensitive", "insensitive",
-						"glob", "wildcard",
-						"grep", "regex", "regular expression",
-					 ],
-					 "version" : "1.1.0",
-					 "node": {
-						  "exampleCompositions" : [ ]
-					 }
-				 });
+	"title": "Compare Texts",
+	"keywords": [
+		"string",
+		"comparison", "same", "identical", "equivalent", "match", "approximate",
+		"unequal", "inequality", "different",
+		"contains", "begins with", "starts with", "ends with", "prefix", "suffix",
+		"case", "sensitive", "insensitive",
+		"glob", "wildcard",
+		"grep", "regex", "regular expression",
+	],
+	"version" : "1.1.0",
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

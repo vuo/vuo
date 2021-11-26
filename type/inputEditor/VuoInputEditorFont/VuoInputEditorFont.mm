@@ -187,6 +187,8 @@ static NSDictionary *getCurrentAttributes(void)
 
 /**
  * Displays a Font-picker dialog.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
@@ -394,7 +396,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	if (result == QDialog::Accepted)
 		return VuoFont_getJson(getCurrentVuoFont());
 	else
-		return originalValue;
+		return json_object_get(originalValue);
 }
 
 /**

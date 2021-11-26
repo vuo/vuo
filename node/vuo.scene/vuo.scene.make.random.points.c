@@ -12,20 +12,20 @@
 #include "VuoDistribution3d.h"
 
 VuoModuleMetadata({
-					"title" : "Make Random Points Object",
-					"keywords" : [
-						"stars", "starfield", "shape"
-					],
-					"version" : "1.1.0",
-					"genericTypes" : {
-						"VuoGenericType1" : {
-							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
-						}
-					},
-					"node": {
-						"exampleCompositions" : [ "ShowRandomPoints.vuo" ]
-					}
-				 });
+	"title": "Make Random Points Object",
+	"keywords": [
+		"3D", "stars", "starfield", "shape",
+	],
+	"version": "1.1.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"compatibleTypes": [ "VuoShader", "VuoColor", "VuoImage" ],
+		},
+	},
+	"node": {
+		"exampleCompositions": [ "ShowRandomPoints.vuo" ],
+	},
+});
 
 struct nodeInstanceData
 {

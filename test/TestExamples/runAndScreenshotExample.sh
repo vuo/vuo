@@ -1,11 +1,12 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 set -o nounset
 set -o errexit
 
 binaryDir="$1"
 outputDir="$2"
 exampleName="$3"
-if [ -z "$binaryDir" ] || [ -z "$outputDir" ] || [ -z "$exampleName" ]; then
+useGMalloc="$4"
+if [ -z "$binaryDir" ] || [ -z "$outputDir" ] || [ -z "$exampleName" ] || [ -z "$useGMalloc" ]; then
 	echo "Instead of invoking this script directly, use:"
 	echo "    ctest -R TestExample_QuickStart"
 	exit 1
@@ -16,7 +17,11 @@ fi
 "$binaryDir/vuo-link" --optimization fast-build-existing-cache "$outputDir/$exampleName.bc"
 
 # Start the composition.
+if [ "$useGMalloc" == "ON" ]; then
+	export DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib
+fi
 "$outputDir/$exampleName" &
+export -n DYLD_INSERT_LIBRARIES
 
 # Wait for the composition's window to appear.
 windowID=""

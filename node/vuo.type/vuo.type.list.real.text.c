@@ -10,10 +10,13 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title": "Convert Real List to Text List",
-					  "description": "Outputs a list containing text representing the input list's real numbers.",
-					  "version": "1.0.0"
-				 });
+	"title": "Convert Real List to Text List",
+	"description": "Outputs a list containing text representing the input list's real numbers.",
+	"keywords": [
+		"string",
+	],
+	"version": "1.0.0",
+});
 
 void nodeEvent
 (

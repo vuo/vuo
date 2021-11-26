@@ -87,8 +87,8 @@ endif()
 if (VUO_HEAP_TRACE_ALL)
 	target_compile_definitions(VuoHeap PRIVATE VUOHEAP_TRACEALL)
 endif()
-if (VUO_COMPILER_DEVELOPER)
-	# Recompile VuoHeap.cc when `VUO_HEAP_TRACE*` change.
+if (VUO_COMPILER_DEVELOPER AND CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+	# Recompile VuoHeap.cc when any of `VUO_HEAP_TRACE*` change.
 	# Normally this happens automatically, but VUO_COMPILER_DEVELOPER sets CMAKE_SKIP_RULE_DEPENDENCY.
 	set_source_files_properties(VuoHeap.cc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/VuoHeap.dir/flags.make")
 endif()

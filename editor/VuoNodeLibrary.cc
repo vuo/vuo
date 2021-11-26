@@ -255,7 +255,7 @@ void VuoNodeLibrary::populateList(vector<VuoCompilerNodeClass *> nodeClasses, bo
 		item->setData(Qt::DisplayRole, className.c_str());	// used for sort order
 		item->setData(VuoNodeClassListItemDelegate::humanReadableNameIndex, humanReadableName.c_str());
 		item->setData(VuoNodeClassListItemDelegate::classNameIndex, className.c_str());		// node class name, for drag-and-drop operations
-		item->setData(VuoNodeClassListItemDelegate::nodeClassPointerIndex, qVariantFromValue((void *)nodeClass));
+		item->setData(VuoNodeClassListItemDelegate::nodeClassPointerIndex, QVariant::fromValue(nodeClass));
 
 		ui->nodeClassList->addItem(item);
 
@@ -1196,7 +1196,7 @@ void VuoNodeLibrary::highlightNodeClass(string targetNodeClassName, bool highlig
 	// Avoid bug where the final set of selected items in the QListWidget is apparently
 	// sensitive to the order in which their selection status is set:
 	// First iterate through the entire list and select only the target node class.
-	bool searchDone = !targetNodeClassName.empty();
+	bool searchDone = targetNodeClassName.empty();
 	for (int i = 0; i < ui->nodeClassList->count() && !searchDone; ++i)
 	{
 		QListWidgetItem *currentItem = ui->nodeClassList->item(i);

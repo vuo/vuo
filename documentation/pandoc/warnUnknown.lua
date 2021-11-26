@@ -6,8 +6,8 @@ function warnUnknown(type, elem)
 		['\\hfill']       = true,
 		['\\columnwidth'] = true,
 	}
-	if elem.c[1] == 'tex' and not ignore[elem.c[2]] then
-		io.stderr:write(string.format("warning: unknown TeX %s tag: %s\n", type, elem.c[2]))
+	if elem.format == 'tex' and not ignore[elem.text] then
+		io.stderr:write(string.format("warning: unknown TeX %s tag: %s\n", type, elem.text))
 	end
 end
 

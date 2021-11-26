@@ -27,7 +27,7 @@ foreach (example ${examples})
 	set(testName TestExample_${exampleName})
 	add_test(NAME ${testName}
 		WORKING_DIRECTORY ${exampleDir}
-		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runAndScreenshotExample.sh "${PROJECT_BINARY_DIR}/bin" "${CMAKE_CURRENT_BINARY_DIR}" "${exampleName}"
+		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runAndScreenshotExample.sh "${PROJECT_BINARY_DIR}/bin" "${CMAKE_CURRENT_BINARY_DIR}" "${exampleName}" "${VUO_TEST_WITH_GMALLOC}"
 	)
 	set_tests_properties(${testName} PROPERTIES
 		FIXTURES_REQUIRED "TestExamples;TestScreenshots"

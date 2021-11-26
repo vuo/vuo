@@ -15,7 +15,7 @@ VuoModuleMetadata({
         "product", "times", "*", "•", "×", "x", "arithmetic", "calculate",
         "component-wise", "element-wise", "entrywise", "Hadamard product", "Schur product", "array", "vector",
     ],
-    "version": "2.1.0",
+    "version": "2.1.1",
     "genericTypes": {
         "VuoGenericType1": {
             "defaultType": "VuoReal",
@@ -36,6 +36,9 @@ void nodeEvent
 	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
 	*product = 1;
 	if (termsCount)
-		for (unsigned long i = 1; i <= termsCount; ++i)
-			*product *= VuoListGetValue_VuoGenericType1(values, i);
+	{
+		VuoGenericType1 *valuesData = VuoListGetData_VuoGenericType1(values);
+		for (unsigned long i = 0; i < termsCount; ++i)
+			*product *= valuesData[i];
+	}
 }

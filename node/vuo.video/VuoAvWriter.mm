@@ -8,8 +8,11 @@
  */
 
 #include "module.h"
+#include "VuoApp.h"
 #include "VuoAvWriter.h"
 #include "VuoAvWriterObject.h"
+
+#include <VideoToolbox/VideoToolbox.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -19,6 +22,7 @@ VuoModuleMetadata({
 						"VuoAudioSamples",
 						"VuoAvWriterObject",
 						"CoreMedia.framework",
+						"VideoToolbox.framework",
 						"AVFoundation.framework"
 					  ]
 				 });
@@ -29,10 +33,19 @@ VuoModuleMetadata({
  */
 void VuoAvWriter_free(VuoAvWriter writer);
 
+static dispatch_once_t VuoAvWriter_initOnce = 0;  ///< Synchronizes initialization.
+
 VuoAvWriter VuoAvWriter_make()
 {
 	VuoAvWriterObject* av = [[VuoAvWriterObject alloc] init];
 	VuoRegister(av, VuoAvWriter_free);
+
+	dispatch_once(&VuoAvWriter_initOnce, ^{
+		VuoApp_executeOnMainThread(^{
+			VTRegisterProfessionalVideoWorkflowVideoEncoders();
+		});
+	});
+
 	return (void*) av;
 }
 

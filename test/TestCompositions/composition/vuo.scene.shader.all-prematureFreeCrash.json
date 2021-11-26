@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Expected outputs for the vuo.scene.shader.all-prematureFreeCrash composition.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":{
+	// In my testing on Joku mk5, Laittaa, and Käsi,
+	// prior to fixing https://b33p.net/kosada/vuo/vuo/-/issues/18906,
+	// it would typically crash within 10 seconds.
+	"wait":{"outputPortValues":{"timeElapsed":null}}
+}}

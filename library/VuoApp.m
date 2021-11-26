@@ -195,11 +195,10 @@ void VuoApp_fini(void);
 /**
  * Creates an NSApplication instance (if one doesn't already exist).
  *
- * This causes the process's icon to appear in the dock.
- *
  * VuoWindow methods call this automatically as needed,
- * so you only need to call this if you need an NSApplication without using VuoWindow
- * (like, for example, @ref VuoAudioFile does).
+ * so you only need to call this if you need an NSApplication instance without using VuoWindow
+ * (such as when using certain Cocoa/AppKit services —
+ * like, for example, @ref VuoAudioFile and @ref VuoScreen_getName do).
  *
  * If `requiresDockIcon` is true, the app will show up in the dock.
  * If `requiresDockIcon` is false, the app won't necessarily show up in the dock

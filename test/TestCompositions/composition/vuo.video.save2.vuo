@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.3.2
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ConvertImageToVideoFrame [type="vuo.type.image.videoframe" version="1.0.0" label="Convert Image to Video Frame|<refresh>refresh\l|<image>image\l|<videoFrame>videoFrame\r" pos="720,135"];
+ConvertRealListToAudio [type="vuo.type.audio.list.real" version="1.0.0" label="Convert Real List to Audio|<refresh>refresh\l|<reals>reals\l|<samples>samples\r" pos="345,255"];
+CopyListItems [type="vuo.list.spread.VuoAudioSamples" version="1.0.1" label="Copy List Items|<refresh>refresh\l|<list>list\l|<copies>copies\l|<outputList>outputList\r" pos="135,105"];
+MakeAudioFrame [type="vuo.video.make.audioframe" version="1.0.0" label="Make Audio Frame|<refresh>refresh\l|<channels>channels\l|<timestamp>timestamp\l|<audioFrame>audioFrame\r" pos="315,105" _timestamp="\"-inf\""];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="270,-75" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="640" _height="480"];
+MakeList2 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="83,116"];
+MakeRandomList [type="vuo.noise.random.list.VuoReal" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="-180,105" _minimum="-0.10000000000000001" _maximum="0.10000000000000001" _count="512"];
+SaveFramesToMovie [type="vuo.video.save2" version="2.0.0" label="Save Frames to Movie|<refresh>refresh\l|<url>url\l|<saveVideoFrame>saveVideoFrame\l|<saveAudioFrame>saveAudioFrame\l|<finalize>finalize\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<finalized>finalized\r" pos="600,-90" _url="\"\\/tmp\\/test.mov\"" _overwriteUrl="true" _format="\{\"imageEncoding\":\"H264\",\"imageQuality\":1,\"audioEncoding\":\"LinearPCM\",\"audioQuality\":1\}" _finalized_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<SaveVideoFrame>SaveVideoFrame\r|<SaveAudioFrame>SaveAudioFrame\r|<Finalize>Finalize\r" _SaveVideoFrame_type="event" _SaveAudioFrame_type="VuoInteger" _SaveAudioFrame_suggestedMin="1" _Finalize_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Finalized>Finalized\l" _Finalized_type="event"];
+
+ConvertImageToVideoFrame:videoFrame -> SaveFramesToMovie:saveVideoFrame;
+ConvertRealListToAudio:samples -> MakeList2:1;
+CopyListItems:outputList -> MakeAudioFrame:channels;
+MakeAudioFrame:audioFrame -> SaveFramesToMovie:saveAudioFrame;
+MakeCheckerboardImage:image -> ConvertImageToVideoFrame:image;
+MakeList2:list -> CopyListItems:list;
+MakeRandomList:list -> ConvertRealListToAudio:reals;
+PublishedInputs:Finalize -> SaveFramesToMovie:finalize;
+PublishedInputs:SaveAudioFrame -> CopyListItems:copies;
+PublishedInputs:SaveAudioFrame -> MakeRandomList:minimum [event=true];
+PublishedInputs:SaveVideoFrame -> MakeCheckerboardImage:upperLeftColor;
+SaveFramesToMovie:finalized -> PublishedOutputs:Finalized;
+}

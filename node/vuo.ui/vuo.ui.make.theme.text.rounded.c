@@ -12,13 +12,15 @@
 #include "VuoList_VuoUiTheme.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Text Field Theme (Rounded)",
-					  "keywords" : [ ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Make Text Field Theme (Rounded)",
+	"keywords": [
+		"string",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions" : [ ],
+	},
+});
 
 void nodeEvent
 (

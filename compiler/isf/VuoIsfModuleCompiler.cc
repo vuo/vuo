@@ -16,6 +16,7 @@
 void __attribute__((constructor)) VuoIsfModuleCompiler::init()
 {
 	VuoModuleCompiler::registerModuleCompiler("isf", &VuoIsfModuleCompiler::newModuleCompiler);
+	VuoGlContext_setInfoLogging(false);
 }
 
 /**

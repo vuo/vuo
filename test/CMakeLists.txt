@@ -1,11 +1,17 @@
 add_custom_target(VuoTest)
 
+option(VUO_TEST_WITH_GMALLOC  "Whether to run tests using libgmalloc, to help detect buffer overruns and use-after-free errors." OFF)
+
 include(QtTest)
 configure_file("CTestCustom.cmake.in" "${PROJECT_BINARY_DIR}/CTestCustom.cmake")
 
 # Adds steps to build and run a test.
+#
+# If the GMALLOC_ELIGIBLE option is specified, the entire test executable will run with libgmalloc when the VUO_TEST_WITH_GMALLOC option is also enabled.
+# Tests that use LLVM/VuoCompiler shouldn't specify GMALLOC_ELIGIBLE, since LLVM makes a huge number of tiny allocations, overwhelming the macOS kernel.
+# Instead, those tests should call `VuoRunner::setRuntimeChecking(true)`, to run just the composition (not the compiler) with libgmalloc.
 function (VuoTest)
-	cmake_parse_arguments(arg "" "NAME;SOURCE;TIMEOUT;FIXTURE;RUN_SERIAL" "" ${ARGV})
+	cmake_parse_arguments(arg "GMALLOC_ELIGIBLE" "NAME;SOURCE;TIMEOUT;FIXTURE;RUN_SERIAL" "" ${ARGV})
 
 	add_executable(${arg_NAME} EXCLUDE_FROM_ALL ${arg_SOURCE})
 	set(rpaths
@@ -55,6 +61,7 @@ function (VuoTest)
 		vuo.core.libraries
 	)
 	if (arg_NAME STREQUAL TestBuiltProducts
+	 OR arg_NAME STREQUAL TestConsole
 	 OR arg_NAME STREQUAL TestEditorCommands
 	 OR arg_NAME STREQUAL TestExport
 	 OR arg_NAME STREQUAL TestInputEditors
@@ -81,8 +88,14 @@ function (VuoTest)
 		list(APPEND testProperties FIXTURES_REQUIRED ${arg_FIXTURE})
 	endif()
 
-	if (EXISTS /Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
-		list(APPEND testProperties ENVIRONMENT DYLD_INSERT_LIBRARIES=/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
+	if (VUO_TEST_WITH_GMALLOC)
+		list(APPEND testEnvironment VUO_RUNTIME_CHECKING=/usr/lib/libgmalloc.dylib)
+	endif()
+
+	if (GMALLOC_ELIGIBLE AND VUO_TEST_WITH_GMALLOC)
+		list(APPEND testEnvironment DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib)
+	elseif (EXISTS /Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
+		list(APPEND testEnvironment DYLD_INSERT_LIBRARIES=/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib)
 		list(APPEND testFailRegexes "Main Thread Checker: UI API called on a background thread")
 	endif()
 
@@ -99,6 +112,7 @@ function (VuoTest)
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		DISCOVERY_TIMEOUT 600
 		PROPERTIES ${testProperties}
+		ENVIRONMENT ${testEnvironment}
 	)
 endfunction()
 
@@ -156,6 +170,7 @@ add_subdirectory(TestProtocolDrivers)
 add_subdirectory(TestWindow)
 add_subdirectory(TestEditorCommands)
 add_subdirectory(TestInputEditors)
+add_subdirectory(TestConsole)
 add_subdirectory(TestCompositions)
 add_subdirectory(TestNodes)
 

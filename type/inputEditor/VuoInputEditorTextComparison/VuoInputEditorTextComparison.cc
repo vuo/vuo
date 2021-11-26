@@ -25,7 +25,7 @@ void VuoInputEditorTextComparison::setUpDialog(QDialog &dialog, json_object *ori
 {
 	VuoTextComparison originalTextComparison = VuoTextComparison_makeFromJson(originalValue);
 
-	comboBoxComparisonType = new VuoComboBox();
+	comboBoxComparisonType = new VuoComboBox(&dialog);
 	comboBoxComparisonType->addItem("Equals");
 	comboBoxComparisonType->addItem("Contains");
 	comboBoxComparisonType->addItem("Begins with");
@@ -40,7 +40,7 @@ void VuoInputEditorTextComparison::setUpDialog(QDialog &dialog, json_object *ori
 	QGridLayout *layout = new QGridLayout;
 	dialog.setLayout(layout);
 
-	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setContentsMargins(4, 3, 12, 5);
 	layout->setSpacing(4);
 
 	layout->addWidget(comboBoxComparisonType, 0, 0);

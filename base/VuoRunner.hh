@@ -14,7 +14,7 @@
 
 #include "VuoMacOSSDKWorkaround.h"
 #include <dispatch/dispatch.h>
-#include "VuoTelemetry.h"
+#include "VuoTelemetry.hh"
 class VuoRunnerDelegate;
 class VuoRunningCompositionLibraries;
 
@@ -248,9 +248,8 @@ class VuoRunnerDelegate
 public:
 	/**
 	 * This delegate method is invoked twice per second, to provide a heartbeat indicating that the composition is still alive.
-	 * It also provides some basic usage stats.
-	 * @param utime The number of microseconds this process has spent in user-mode execution.
-	 * @param stime The number of microseconds spent in the system executing on behalf of this process.
+	 *
+	 * (It formerly provided some basic usage stats, but the parameter values are now always 0.)
 	 */
 	virtual void receivedTelemetryStats(unsigned long utime, unsigned long stime) = 0;
 

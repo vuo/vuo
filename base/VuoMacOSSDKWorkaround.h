@@ -25,3 +25,4 @@
 #ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER                                                                                               ///< @copydoc API_AVAILABLE
 #endif
+#define __FILE_NAME__ __FILE__

@@ -25,12 +25,14 @@
 
 int main(int argc, char *argv[])
 {
-	// Qt 5.11 attempts to use threaded rendering.
-	// Disable it since it causes deadlock on macOS 11.
-	// https://bugreports.qt.io/browse/QTBUG-75037
-	// https://bugreports.qt.io/browse/QTBUG-42162
-	// Possibly fixed in Qt 5.12 (https://github.com/qt/qtbase/commit/ee3c66ca917b77f759acea7c6b27d15066f0b814).
-	qputenv("QSG_RENDER_LOOP", "basic");
+	// The content view of `VuoEditorWindow`s needs to be layer-backed instead of surface-backed to avoid glitchy
+	// rendering of the toolbar when transparent. However, setting `NSView.wantsLayer` in our code prevents the
+	// window content from rendering in Qt 5.12. So instead, have Qt set `wantsLayer` globally for all `NSView`s.
+	// (This should no longer be necessary in Qt 6, since there will no longer be surface-backed views.)
+	// https://b33p.net/kosada/vuo/vuo/-/issues/17855
+	// https://b33p.net/kosada/vuo/vuo/-/issues/13819
+	// https://bugreports.qt.io/browse/QTBUG-81370
+	qputenv("QT_MAC_WANTS_LAYER", "1");
 
 	// Qt 5.11 places compiled QML files (.qmlc) next to the QML source files,
 	// which breaks the app bundle's code signature.
@@ -176,7 +178,7 @@ int main(int argc, char *argv[])
 			VuoProtocol *protocol = VuoProtocol::getProtocol(doOpenTemplate.toStdString());
 			if (protocol)
 			{
-				templateAction->setData(qVariantFromValue(static_cast<void *>(protocol)));
+				templateAction->setData(QVariant::fromValue(protocol));
 				QObject::connect(templateAction, &QAction::triggered, &v, &VuoEditor::newCompositionWithProtocol);
 			}
 			else

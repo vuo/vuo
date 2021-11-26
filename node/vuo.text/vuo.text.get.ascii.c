@@ -11,15 +11,16 @@
 #include <string.h>
 
 VuoModuleMetadata({
-					 "title" : "Get ASCII Code",
-					 "keywords" : [
-						"symbol",
-					 ],
-					 "version" : "1.0.0",
-					 "node" : {
-						"exampleCompositions" : [ ]
-					 }
-				 });
+	"title": "Get ASCII Code",
+	"keywords": [
+		"string",
+		"symbol",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

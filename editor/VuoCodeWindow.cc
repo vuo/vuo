@@ -27,6 +27,7 @@
 #include "VuoDocumentationSidebar.hh"
 #include "VuoEditor.hh"
 #include "VuoEditorComposition.hh"
+#include "VuoConsole.hh"
 #include "VuoEditorUtilities.hh"
 #include "VuoEditorWindowToolbar.hh"
 #include "VuoErrorDialog.hh"
@@ -87,7 +88,7 @@ VuoCodeWindow::VuoCodeWindow(const string &sourcePath)
 	connect(raiseDocumentAction, &QAction::triggered, this, &VuoCodeWindow::setAsActiveWindow);
 
 	toolbar = nullptr;  // VuoEditorWindowToolbar constructor indirectly calls resizeEvent, which uses toolbar if non-null
-	toolbar = new VuoEditorWindowToolbar(this, true);
+	toolbar = VuoEditorWindowToolbar::create(this, true);
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	inputPortSidebar = new VuoPublishedPortSidebar(this, wrapperComposition, true, false);
@@ -215,9 +216,22 @@ void VuoCodeWindow::populateMenus(void)
 		m->addSeparator();
 		m->addAction(tr("Close"), this, &VuoCodeWindow::close, QKeySequence("Ctrl+W"));
 
-		m->addAction(tr("Quit"), static_cast<VuoEditor *>(qApp), &VuoEditor::quitCleanly, QKeySequence("Ctrl+Q"));
+		// "About" menu item.
+		// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::AboutRole`.
+		QAction *aboutAction = new QAction(nullptr);
+		aboutAction->setText(tr("About Vuo…"));
+		connect(aboutAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::about);
+		aboutAction->setMenuRole(QAction::AboutRole);
+		m->addAction(aboutAction);
 
-		m->addAction(tr("About Vuo…"), static_cast<VuoEditor *>(qApp), &VuoEditor::about);
+		// Connect the "Quit" menu item action to our customized quit method.
+		// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::QuitRole`.
+		QAction *quitAction = new QAction(nullptr);
+		quitAction->setText(tr("&Quit"));
+		quitAction->setShortcut(QKeySequence("Ctrl+Q"));
+		connect(quitAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::quitCleanly);
+		quitAction->setMenuRole(QAction::QuitRole);
+		m->addAction(quitAction);
 
 		menuBar()->addAction(m->menuAction());
 	}
@@ -286,7 +300,14 @@ void VuoCodeWindow::populateMenus(void)
 		m->setTitle(tr("Run"));
 
 		runAction = m->addAction(tr("Run"), this, &VuoCodeWindow::on_runComposition_triggered, QKeySequence("Ctrl+R"));
-		stopAction = m->addAction(tr("Stop"), this, &VuoCodeWindow::on_stopComposition_triggered, QKeySequence("Ctrl+."));
+
+		stopAction = new QAction(nullptr);
+		stopAction->setText(tr("Stop"));
+		stopAction->setShortcut(QKeySequence("Ctrl+."));
+		connect(stopAction, &QAction::triggered, this, &VuoCodeWindow::on_stopComposition_triggered);
+		stopAction->setMenuRole(QAction::NoRole);
+		m->addAction(stopAction);
+
 		restartAction = m->addAction(tr("Restart"), this, &VuoCodeWindow::on_restartComposition_triggered, QKeySequence("Ctrl+Shift+R"));
 
 		m->addSeparator();
@@ -311,6 +332,9 @@ void VuoCodeWindow::populateMenus(void)
 
 		m->addAction(tr("Open User Library in Finder"), &VuoEditorUtilities::openUserModulesFolder);
 		m->addAction(tr("Open System Library in Finder"), &VuoEditorUtilities::openSystemModulesFolder);
+
+		m->addSeparator();
+		m->addAction(tr("Show Console"), [this](){ VuoConsole::show(this); });
 
 		menuBar()->addAction(m->menuAction());
 	}

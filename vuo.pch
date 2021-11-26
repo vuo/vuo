@@ -94,6 +94,10 @@ using namespace llvm;
 #pragma clang diagnostic ignored "-Winvalid-constexpr"
 
 #include "VuoMacOSSDKWorkaround.h"
+
+// Include file, line, and function in qDebug() messages.
+#define QT_MESSAGELOGCONTEXT
+
 #include <QtCore/QtCore>
 
 // So we can call QPixmapCache::totalUsed().
@@ -109,6 +113,7 @@ using namespace llvm;
 #include <QtNetwork/QNetworkReply>
 
 #include <QtQuick/QtQuick>
+#include <QtQuickWidgets/QtQuickWidgets>
 
 #pragma clang diagnostic pop
 #endif

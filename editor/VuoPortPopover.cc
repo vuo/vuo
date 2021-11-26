@@ -393,6 +393,16 @@ QString VuoPortPopover::generatePortPopoverText(bool includeEventIndicator)
 	if (!port)
 		return QString();
 
+	json_object *details = nullptr;
+	VuoCompilerInputEventPortClass *portClass = dynamic_cast<VuoCompilerInputEventPortClass *>(port->getClass()->getCompiler());
+	if (portClass)
+		details = (portClass->getDataClass()? portClass->getDataClass()->getDetails() : nullptr);
+
+	bool isCodeEditor = false;
+	json_object *codeEditorValue = nullptr;
+	if (details && json_object_object_get_ex(details, "isCodeEditor", &codeEditorValue))
+		isCodeEditor = json_object_get_boolean(codeEditorValue);
+
 	bool isDark = editor->isInterfaceDark();
 	QString textColor        = isDark ? "#cacaca" : "#000000";
 	QString subtleTextColor  = isDark ? "#808080" : "#808080";
@@ -410,7 +420,7 @@ QString VuoPortPopover::generatePortPopoverText(bool includeEventIndicator)
 		string nodeClass = parentNode->getNodeClass()->getClassName();
 		VuoType *dataType = port->getRenderer()->getDataType();
 		QString dataTypeDescription = composition->formatTypeNameForDisplay(dataType);
-		bool displayValue = (dataType && (cachedDataValueSnapshot != noDisplayableDataValue));
+		bool displayValue = (dataType && (cachedDataValueSnapshot != noDisplayableDataValue) && !isCodeEditor);
 
 		//: Appears in port popovers.
 		//: Refers to whether any events passed through this port in a running composition while the popover was open.
@@ -558,10 +568,6 @@ QString VuoPortPopover::generatePortPopoverText(bool includeEventIndicator)
 
 		// Special formatting for named enum types
 		{
-			json_object *details = NULL;
-			VuoCompilerInputEventPortClass *portClass = dynamic_cast<VuoCompilerInputEventPortClass *>(port->getClass()->getCompiler());
-			if (portClass)
-				details = (portClass->getDataClass()? portClass->getDataClass()->getDetails() : NULL);
 			json_object *menuItemsValue = NULL;
 			if (details && dataType && dataType->getModuleKey() == "VuoInteger" && json_object_object_get_ex(details, "menuItems", &menuItemsValue))
 			{

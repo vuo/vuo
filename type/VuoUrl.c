@@ -642,17 +642,19 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 			// If it does, proceed under the assumption that we are.
 			if (access(cleanedResourcesPath, 0) == 0)
 			{
-				compositionIsExportedAppOrPlugin = true;
-
 				if (flags & VuoUrlNormalize_forSaving)
 				{
 					char *homeDir = getenv("HOME");
-					const char *desktop = "/Desktop/";
-					size_t mallocSize = strlen(homeDir) + strlen(desktop) + strlen(trimmedUrl) + 1;
-					absolutePath = (char *)malloc(mallocSize);
-					strlcpy(absolutePath, homeDir, mallocSize);
-					strlcat(absolutePath, desktop, mallocSize);
-					strlcat(absolutePath, trimmedUrl, mallocSize);
+					if (homeDir)
+					{
+						const char *desktop = "/Desktop/";
+						size_t mallocSize   = strlen(homeDir) + strlen(desktop) + strlen(trimmedUrl) + 1;
+						absolutePath        = (char *)malloc(mallocSize);
+						strlcpy(absolutePath, homeDir, mallocSize);
+						strlcat(absolutePath, desktop, mallocSize);
+						strlcat(absolutePath, trimmedUrl, mallocSize);
+						compositionIsExportedAppOrPlugin = true;
+					}
 				}
 				else
 				{
@@ -661,6 +663,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 					strlcpy(absolutePath, cleanedResourcesPath, mallocSize);
 					strlcat(absolutePath, "/", mallocSize);
 					strlcat(absolutePath, trimmedUrl, mallocSize);
+					compositionIsExportedAppOrPlugin = true;
 				}
 			}
 		}
@@ -680,8 +683,9 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 		if ((flags & VuoUrlNormalize_forLaunching) && access(absolutePath, 0) != 0)
 		{
 			// Check `~/Applications`.
+			char *homeDir = getenv("HOME");
+			if (homeDir)
 			{
-				char *homeDir = getenv("HOME");
 				const char *applicationsPrefix = "/Applications/";
 				size_t homeDirLen = strlen(homeDir);
 				size_t applicationsPrefixLen = strlen(applicationsPrefix);

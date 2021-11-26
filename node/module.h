@@ -86,7 +86,7 @@ extern "C" {
  *   - "compatibility" — A set of operating systems on which this module can run. Unless this key is present, the module is assumed to run on all operating systems and CPU architectures.
  *      This object contains keys for operating system names and values for the range of versions and CPU architectures supported. Each range may specify "min", "max", "arch", or any combination.
  *      The operating systems and versions currently supported are:
- *      - "macos" — "10.11", "10.12", "10.13", "10.14", "10.15", "11.0"
+ *      - "macos" — "10.12", "10.13", "10.14", "10.15", "11.0", "12.0"
  *      The CPU architectures currently supported are:
  *      - "arch" — "x86_64", "arm64"
  *   - "genericTypes" — Information about generic types used by this module.

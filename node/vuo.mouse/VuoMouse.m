@@ -9,20 +9,6 @@
 
 #include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
-#include <AvailabilityMacros.h>
-
-#ifndef MAC_OS_X_VERSION_10_10_3
-/// Defined in OS X 10.11 SDK but available on 10.10.3+.
-const int NSEventTypePressure = 34;
-/// Defined in OS X 10.11 SDK but available on 10.10.3+.
-const uint64_t NSEventMaskPressure = 1ULL << NSEventTypePressure;
-#endif
-
-/// Defined in OS X 10.11 SDK but available on 10.10.3+.
-@interface NSEvent (VuoMouse)
-/// Defined in OS X 10.11 SDK but available on 10.10.3+.
-@property (readonly) NSInteger stage;
-@end
 
 #include "VuoMouse.h"
 #include "VuoGraphicsWindow.h"
@@ -142,7 +128,7 @@ static VuoPoint2d VuoMouse_convertWindowToScreenCoordinates(NSPoint pointInWindo
 		}
 	}
 
-	pointInScreen.y = [[NSScreen mainScreen] frame].size.height - pointInScreen.y;
+	pointInScreen.y = NSScreen.screens[0].frame.size.height - pointInScreen.y;
 
 	return VuoPoint2d_make(pointInScreen.x, pointInScreen.y);
 }

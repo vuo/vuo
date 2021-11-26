@@ -11,18 +11,20 @@
 #include <OpenGL/CGLMacro.h>	// GL_NONE
 
 VuoModuleMetadata({
-					"title" : "Make Grid Points Object",
-					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle", "shape" ],
-					"version" : "1.1.1",
-					"genericTypes" : {
-						"VuoGenericType1" : {
-							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
-						}
-					},
-					"node": {
-						"exampleCompositions" : [ "PinchRectangles.vuo" ]
-					}
-				 });
+	"title": "Make Grid Points Object",
+	"keywords": [
+		"3D", "heightmap", "plane", "subdivision", "square", "rectangle", "shape",
+	],
+	"version": "1.1.1",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"compatibleTypes": [ "VuoShader", "VuoColor", "VuoImage" ],
+		}
+	},
+	"node": {
+		"exampleCompositions": [ "PinchRectangles.vuo" ],
+	},
+});
 
 struct nodeInstanceData
 {

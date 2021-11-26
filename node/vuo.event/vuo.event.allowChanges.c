@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Allow Changes",
 					  "keywords" : [ "pulse", "watcher", "filter", "hold", "block", "prevent", "unchanged", "same", "duplicate", "pass" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [
@@ -55,6 +55,7 @@ VuoGenericType1 * nodeInstanceInit
 	VuoGenericType1 *lastValue = (VuoGenericType1 *)malloc(sizeof(VuoGenericType1));
 	VuoRegister(lastValue, free);
 	*lastValue = value;
+	VuoGenericType1_retain(*lastValue);
 	return lastValue;
 }
 
@@ -71,7 +72,9 @@ void nodeInstanceEvent
 	{
 		*changedValue = value;
 		*changedValueEvent = true;
+		VuoGenericType1_release(**lastValue);
 		**lastValue = value;
+		VuoGenericType1_retain(**lastValue);
 	}
 }
 
@@ -80,4 +83,5 @@ void nodeInstanceFini
 		VuoInstanceData(VuoGenericType1 *) lastValue
 )
 {
+	VuoGenericType1_release(**lastValue);
 }

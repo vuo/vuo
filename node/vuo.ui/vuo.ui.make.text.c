@@ -17,17 +17,18 @@
 #include "VuoTextField.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Text Field",
-					  "keywords" : [
-						  "gui", "user interface", "interact", "widget", "control", "form",
-						  "enter", "input", "write", "submit", "type", "edit"
-					  ],
-					  "version" : "1.0.0",
-					  "dependencies" : [ "VuoTextField" ],
-					  "node" : {
-						  "exampleCompositions": [ "EnterURLAndShowImage.vuo" ],
-					  }
-				 });
+	"title": "Make Text Field",
+	"keywords": [
+		"string",
+		"gui", "user interface", "interact", "widget", "control", "form",
+		"enter", "input", "write", "submit", "type", "edit",
+	],
+	"version": "1.0.0",
+	"dependencies": [ "VuoTextField" ],
+	"node": {
+		"exampleCompositions": [ "EnterURLAndShowImage.vuo" ],
+	},
+});
 
 typedef struct
 {

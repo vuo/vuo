@@ -652,7 +652,7 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 			QRect stickerRect;
 			stickerRect.setSize(QSize(16,16));
 			stickerRect.moveCenter(frameRect.center().toPoint());
-			stickerRect.translate(-fm.width(text)/2 - 12, -2);
+			stickerRect.translate(-fm.boundingRect(text).width()/2 - 12, -2);
 			QIcon(":/Icons/menuitem-pro.svg").paint(painter, stickerRect);
 		}
 #endif

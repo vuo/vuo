@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Add Lists",
 					  "keywords" : [ "sum", "plus", "total", "+", "arithmetic", "calculate", "vector", "point", "combine" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ ],
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -31,22 +31,26 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) summedList
 )
 {
-	*summedList = VuoListCreate_VuoGenericType1();
 	unsigned long list1Count = VuoListGetCount_VuoGenericType1(list1);
 	unsigned long list2Count = VuoListGetCount_VuoGenericType1(list2);
 	unsigned long maxCount = MAX(list1Count, list2Count);
-	for (unsigned long i = 1; i <= maxCount; ++i)
-	{
-		VuoGenericType1 sum = VuoGenericType1_makeFromJson(NULL);
-		if (i <= list1Count && i <= list2Count)
-			sum = VuoGenericType1_add(
-						VuoListGetValue_VuoGenericType1(list1, i),
-						VuoListGetValue_VuoGenericType1(list2, i));
-		else if (i <= list1Count)
-			sum = VuoListGetValue_VuoGenericType1(list1, i);
-		else if (i <= list2Count)
-			sum = VuoListGetValue_VuoGenericType1(list2, i);
 
-		VuoListAppendValue_VuoGenericType1(*summedList, sum);
+	VuoGenericType1 *list1Data = VuoListGetData_VuoGenericType1(list1);
+	VuoGenericType1 *list2Data = VuoListGetData_VuoGenericType1(list2);
+
+	*summedList = VuoListCreateWithCount_VuoGenericType1(maxCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *summedListData = VuoListGetData_VuoGenericType1(*summedList);
+
+	VuoGenericType1 defaultValue = VuoGenericType1_makeFromJson(NULL);
+	for (unsigned long i = 0; i < maxCount; ++i)
+	{
+		if (i < list1Count && i < list2Count)
+			summedListData[i] = list1Data[i] + list2Data[i];
+		else if (i < list1Count)
+			summedListData[i] = list1Data[i];
+		else if (i < list2Count)
+			summedListData[i] = list2Data[i];
+		else
+			summedListData[i] = defaultValue;
 	}
 }

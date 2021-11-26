@@ -11,23 +11,23 @@
 #include "VuoTable.h"
 
 VuoModuleMetadata({
-					  "title" : "Sort Table",
-					  "keywords" : [
-						  "organize", "order", "alphabetical", "lexicographical",
-						  "ascending", "descending", "increasing", "decreasing",
-						  "row", "cell", "item"
-					  ],
-					  "version" : "1.0.0",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "compatibleTypes" : [ "VuoInteger", "VuoText" ],
-							  "defaultType" : "VuoInteger"
-						  }
-					  },
-					  "node" : {
-						  "exampleCompositions" : [ "GraphColdestTemperatures.vuo" ]
-					  }
-				 });
+	"title": "Sort Table",
+	"keywords": [
+		"organize", "order", "reorder", "alphabetical", "lexicographical",
+		"ascending", "descending", "increasing", "decreasing",
+		"row", "cell", "item",
+	],
+	"version": "1.0.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"compatibleTypes": [ "VuoInteger", "VuoText" ],
+			"defaultType": "VuoInteger",
+		},
+	},
+	"node": {
+		"exampleCompositions": [ "GraphColdestTemperatures.vuo" ],
+	},
+});
 
 void nodeEvent
 (

@@ -11,12 +11,14 @@
 #define JSONC_ROOT                   "@CONAN_JSONC_ROOT@"
 #define OPENSSL_ROOT                 "@CONAN_OPENSSL_ROOT@"
 #define MACOS_SDK_ROOT               "@CMAKE_OSX_SYSROOT@"
+#define MACOS_DEPLOYMENT_TARGET      "@CMAKE_OSX_DEPLOYMENT_TARGET@"
+#define MACOS_SDK_VERSION            "@CONAN_macos-sdk_VERSION@"
 
 #define CONAN_LIBRARY_PATHS          "@CONAN_LIB_DIRS@"
 
 // Issue warnings for deprecated APIs.
 #define QT_DEPRECATED_WARNINGS
-// Issue errors for APIs deprecated prior to Qt 5.6.
-#define QT_DISABLE_DEPRECATED_BEFORE 0x050600
+// Issue errors for APIs deprecated prior to Qt 5.12.
+#define QT_DISABLE_DEPRECATED_BEFORE 0x051200
 
 #include "VuoLog.h"

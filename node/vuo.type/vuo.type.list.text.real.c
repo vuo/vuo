@@ -11,10 +11,13 @@
 #include "json-c/json.h"
 
 VuoModuleMetadata({
-					  "title": "Convert Text List to Real List",
-					  "description": "Outputs a list containing real numbers representing the input list's text numbers.  See [Convert Text to Real](vuo-node://vuo.type.text.real) for info on how the text is interpreted.",
-					  "version": "1.0.0"
-				 });
+	"title": "Convert Text List to Real List",
+	"description": "Outputs a list containing real numbers representing the input list's text numbers.  See [Convert Text to Real](vuo-node://vuo.type.text.real) for info on how the text is interpreted.",
+	"keywords": [
+		"string",
+	],
+	"version": "1.0.0",
+});
 
 void nodeEvent
 (

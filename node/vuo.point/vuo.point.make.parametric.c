@@ -13,16 +13,18 @@
 #include "VuoPointsParametric.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Parametric Points",
-					 "keywords" : [ "math", "expression", "shape", "list" ],
-					 "version" : "1.0.1",
-					 "dependencies" : [
-						 "VuoPointsParametric"
-					 ],
-					  "node": {
-						  "exampleCompositions" : [ "MakeSpiral.vuo", "vuo-example://vuo.audio/GenerateParametricAudio.vuo" ]
-					  }
-				 });
+    "title": "Make Parametric Points",
+    "keywords": [
+        "3D", "math", "expression", "shape", "list",
+    ],
+    "version": "1.0.2",
+    "dependencies": [
+        "VuoPointsParametric",
+    ],
+    "node": {
+        "exampleCompositions": [ "MakeSpiral.vuo", "vuo-example://vuo.audio/GenerateParametricAudio.vuo" ],
+    },
+});
 
 void nodeEvent
 (

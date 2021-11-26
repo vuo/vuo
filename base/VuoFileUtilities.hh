@@ -121,6 +121,7 @@ public:
 	static set<File *> findFilesInArchive(string archivePath, string dirPath, set<string> extensions);
 	static string getArchiveFileContentsAsString(string archivePath, string filePath);
 	static size_t getAvailableSpaceOnVolumeContainingPath(string path);
+	static void adHocCodeSign(string path, vector<string> environment, string entitlementsPath="");
 
 	static void focusProcess(pid_t pid, bool force=false);
 	static void executeProcess(vector<string> processAndArgs, vector<string> environment = {});

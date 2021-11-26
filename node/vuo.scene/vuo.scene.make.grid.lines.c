@@ -12,18 +12,20 @@
 #include "VuoGridType.h"
 
 VuoModuleMetadata({
-					"title" : "Make Grid Lines Object",
-					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle", "shape" ],
-					"version" : "1.1.0",
-					"genericTypes" : {
-						"VuoGenericType1" : {
-							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
-						}
-					},
-					"node": {
-						"exampleCompositions" : [ "MakeRuggedTerrain.vuo", "PinchRectangles.vuo" ]
-					}
-				 });
+	"title": "Make Grid Lines Object",
+	"keywords": [
+		"3D", "heightmap", "plane", "subdivision", "square", "rectangle", "shape",
+	],
+	"version": "1.1.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"compatibleTypes": [ "VuoShader", "VuoColor", "VuoImage" ],
+		}
+	},
+	"node": {
+		"exampleCompositions": [ "MakeRuggedTerrain.vuo", "PinchRectangles.vuo" ],
+	},
+});
 
 struct nodeInstanceData
 {

@@ -38,11 +38,25 @@ vector<CGLContextObj> VuoGlContext_avaialbleSharedContexts;  ///< All unused con
 static dispatch_once_t VuoGlContextPoolCreated = 0;	///< Make sure this process only has a single GL Context Pool.
 static pthread_key_t VuoGlContextPerformKey; ///< Tracks whether perform is already in the current thread's callstack.
 
+static bool VuoGlContext_infoLogging = true;  ///< Whether to log info about each OpenGL Renderer and Metal Device.
+
+/**
+ * Specifies whether to log general info about each OpenGL Renderer and Metal Device.
+ * (Errors and warnings are always logged regardless of this value.)
+ */
+void VuoGlContext_setInfoLogging(bool enabled)
+{
+    VuoGlContext_infoLogging = enabled;
+}
+
 /**
  * Logs info about all available renderers.
  */
 static void VuoGlContext_renderers(void)
 {
+	if (!VuoGlContext_infoLogging)
+		return;
+
 	VuoList_VuoScreen screensList = VuoScreen_getList();
 	unsigned long screenCount = VuoListGetCount_VuoScreen(screensList);
 	VuoScreen *screens = VuoListGetData_VuoScreen(screensList);
@@ -133,15 +147,12 @@ static void VuoGlContext_renderers(void)
 		}
 		else
 			VUserLog("    (Can't create an OpenGL Core Profile context on this renderer.)");
-
-		GLint cl = 0;
-		if (CGLDescribeRenderer(ri, i, kCGLRPAcceleratedCompute, &cl) == kCGLNoError)
-			VUserLog("    OpenCL supported   : %s", cl ? "yes" : "no");
 	}
 	CGLDestroyRendererInfo(ri);
 #pragma clang diagnostic pop
 
 
+	VUserLog("OpenGL driver binaries:");
 	const char *gldriver = "GLDriver";
 	size_t gldriverLen = strlen(gldriver);
 	uint32_t imageCount = _dyld_image_count();
@@ -155,7 +166,7 @@ static void VuoGlContext_renderers(void)
 			// Trim off the path and the common "GLDriver" suffix.
 			char *z = strdup(strrchr(dylibPath, '/')+1);
 			z[strlen(z)-gldriverLen] = 0;
-			VUserLog("Driver: %s", z);
+			VUserLog("    %s", z);
 			free(z);
 		}
 	}
@@ -176,12 +187,18 @@ static void VuoGlContext_renderers(void)
 			VUserLog("    %s:", devNameZ);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("registryID")))
 			VUserLog("        ID                                  : %p", ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("registryID")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("peerGroupID")))
+			VUserLog("        Peer group                          : %llu", ((uint64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("peerGroupID")));
+
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("recommendedMaxWorkingSetSize")))
 			VUserLog("        Recommended max working-set size    : %lld MiB", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("recommendedMaxWorkingSetSize"))/1048576);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxBufferLength")))
 			VUserLog("        Max buffer length                   : %lld MiB", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxBufferLength"))/1048576);
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxThreadgroupMemoryLength")))
 			VUserLog("        Threadgroup memory                  : %lld B", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxThreadgroupMemoryLength")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("sparseTileSizeInBytes")))
+			VUserLog("        Sparse tile size                    : %llu B", ((uint64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("sparseTileSizeInBytes")));
+
 			VUserLog("        Low-power                           : %s", ((bool (*)(id, SEL))objc_msgSend) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("isRemovable")))
 			VUserLog("        Removable                           : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("isRemovable")) ? "yes" : "no");
@@ -200,6 +217,40 @@ static void VuoGlContext_renderers(void)
 			else
 			VUserLog("        Feature set                         : (unknown)");
 
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsFamily:")))
+			{
+			// "A higher GPU version is always a superset of an earlier version in the same GPU family."
+			// https://developer.apple.com/documentation/metal/mtldevice/detecting_gpu_features_and_metal_software_versions
+			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1008))
+			VUserLog("        Family                              : Apple 8");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1007))
+			VUserLog("        Family                              : Apple 7");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1006))
+			VUserLog("        Family                              : Apple 6");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1005))
+			VUserLog("        Family                              : Apple 5");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1004))
+			VUserLog("        Family                              : Apple 4");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1003))
+			VUserLog("        Family                              : Apple 3");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1002))
+			VUserLog("        Family                              : Apple 2");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 1001))
+			VUserLog("        Family                              : Apple 1");
+
+			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 2002))
+			VUserLog("        Family                              : Mac 2");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 2001))
+			VUserLog("        Family                              : Mac 1");
+
+			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 3003))
+			VUserLog("        Family                              : Common 3");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 3002))
+			VUserLog("        Family                              : Common 2");
+			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 3001))
+			VUserLog("        Family                              : Common 1");
+			}
+
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("readWriteTextureSupport")))
 			VUserLog("        Read-write texture support tier     : %lld", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("readWriteTextureSupport")));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("argumentBuffersSupport")))
@@ -210,6 +261,13 @@ static void VuoGlContext_renderers(void)
 			VUserLog("        Programmable sample position support: %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("areProgrammableSamplePositionsSupported")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("areRasterOrderGroupsSupported")))
 			VUserLog("        Raster order group support          : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("areRasterOrderGroupsSupported")) ? "yes" : "no");
+
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsDynamicLibraries")))
+			VUserLog("        Dynamic library support             : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsDynamicLibraries")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsFunctionPointers")))
+			VUserLog("        Function pointer support            : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsFunctionPointers")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsRaytracing")))
+			VUserLog("        Raytracing support                  : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsRaytracing")) ? "yes" : "no");
 		}
 		CFRelease(mtlDevices);
 	}
@@ -459,22 +517,19 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		static dispatch_once_t info = 0;
 		dispatch_once(&info, ^{
-			if (VuoIsDebugEnabled())
-			{
-				VuoGlContext_renderers();
-
-				CGDisplayRegisterReconfigurationCallback(VuoGlContext_reconfig, NULL);
-			}
+			VuoGlContext_renderers();
+			CGDisplayRegisterReconfigurationCallback(VuoGlContext_reconfig, NULL);
 		});
 
 		CGLPixelFormatObj pf;
 		bool shouldDestroyPixelFormat = false;
+		GLint displayMask;
 		if (rootContext)
 			pf = CGLGetPixelFormat(rootContext);
 		else
 		{
 			Boolean overridden = false;
-			GLint displayMask = (int)CFPreferencesGetAppIntegerValue(CFSTR("displayMask"), CFSTR("org.vuo.Editor"), &overridden);
+			displayMask = (int)CFPreferencesGetAppIntegerValue(CFSTR("displayMask"), CFSTR("org.vuo.Editor"), &overridden);
 			if (!overridden)
 			{
 				// Maybe the preference is a hex string…
@@ -490,10 +545,6 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 					// Still no preference, so let macOS automatically choose what it thinks is the best GPU.
 					displayMask = -1;
 			}
-
-			VDebugLog("displayMask = %s (0x%x)%s",
-				std::bitset<32>(displayMask).to_string().c_str(),
-				displayMask, (displayMask & 0xff) == 0xff ? " (any)" : "");
 
 			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false, displayMask);
 			shouldDestroyPixelFormat = true;
@@ -511,14 +562,15 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 			}
 		}
 
-		if (VuoIsDebugEnabled())
+		if (VuoGlContext_infoLogging)
 		{
 			GLint rendererID;
 			CGLGetParameter(context, kCGLCPCurrentRendererID, &rendererID);
-			VUserLog("Created OpenGL context %p%s on %s",
-					 context,
-					 rootContext ? VuoText_format(" (shared with %p)", rootContext) : " (not shared)",
-					 VuoCglRenderer_getText(rendererID));
+			char *sharingText = rootContext ? VuoText_format(" (shared with %p)", rootContext) : strdup(" (not shared)");
+			char *displayMaskText = rootContext ? nullptr : (displayMask == -1 ? strdup(" (macOS default)") : VuoText_format(" (selected using displayMask %s)", std::bitset<32>(displayMask).to_string().c_str()));
+			VUserLog("Created OpenGL context %p%s on %s%s", context, sharingText, VuoCglRenderer_getText(rendererID), displayMaskText);
+			free(sharingText);
+			free(displayMaskText);
 		}
 
 		// https://developer.apple.com/library/content/technotes/tn2085/_index.html
@@ -561,7 +613,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 		return;
 	}
 
-	VDebugLog("Setting global root context to %p", rootContext);
+	VUserLog("Setting global root context to %p", rootContext);
 	VuoGlContext_root = VuoGlContext_create((CGLContextObj)rootContext);
 }
 
@@ -575,7 +627,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 	glGetIntegerv(pname, &value);																						\
 	if (value)																											\
 	{																																		\
-		VuoLog(file, linenumber, func, #pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
+		VuoLog(VuoLog_moduleName, file, linenumber, func, #pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
 		VuoLog_backtrace();																													\
 	}																																		\
 }
@@ -590,7 +642,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 	glGetIntegerv(pname, &value);																											\
 	if (value)																																\
 	{																																		\
-		VuoLog(file, linenumber, func, #pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
+		VuoLog(VuoLog_moduleName, file, linenumber, func, #pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
 		VuoLog_backtrace();																													\
 	}																																		\
 }
@@ -789,10 +841,10 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber
 	GLint vertexOnGPU, fragmentOnGPU;
 	CGLGetParameter(cgl_ctx, kCGLCPGPUVertexProcessing, &vertexOnGPU);
 	if (!vertexOnGPU)
-		VuoLog(file, linenumber, func, "OpenGL warning: Falling back to software renderer for vertex shader.  This will slow things down.");
+		VuoLog(VuoLog_moduleName, file, linenumber, func, "OpenGL warning: Falling back to software renderer for vertex shader.  This will slow things down.");
 	CGLGetParameter(cgl_ctx, kCGLCPGPUFragmentProcessing, &fragmentOnGPU);
 	if (!fragmentOnGPU)
-		VuoLog(file, linenumber, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
+		VuoLog(VuoLog_moduleName, file, linenumber, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
 #pragma clang diagnostic pop
 
 	bool foundError = false;
@@ -825,7 +877,7 @@ void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const 
 	else if (error == GL_INVALID_FRAMEBUFFER_OPERATION)
 	{
 		errorString = "GL_INVALID_FRAMEBUFFER_OPERATION (The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.)";
-		VuoLog(file, linenumber, func, "OpenGL error %d: %s", error, errorString);
+		VuoLog(VuoLog_moduleName, file, linenumber, func, "OpenGL error %d: %s", error, errorString);
 
 		GLenum framebufferError = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		// Text from http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
@@ -842,7 +894,7 @@ void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const 
 			framebufferErrorString = "GL_FRAMEBUFFER_COMPLETE (?)";
 		else if (framebufferError == GL_FRAMEBUFFER_UNDEFINED)
 			framebufferErrorString = "GL_FRAMEBUFFER_UNDEFINED";
-		VuoLog(file, linenumber, func, "OpenGL framebuffer error %d: %s", framebufferError, framebufferErrorString);
+		VuoLog(VuoLog_moduleName, file, linenumber, func, "OpenGL framebuffer error %d: %s", framebufferError, framebufferErrorString);
 
 		return;
 	}
@@ -853,7 +905,7 @@ void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const 
 	else if (error == GL_STACK_OVERFLOW)
 		errorString = "GL_STACK_OVERFLOW (An attempt has been made to perform an operation that would cause an internal stack to overflow.)";
 
-	VuoLog(file, linenumber, func, "OpenGL error %d: %s", error, errorString);
+	VuoLog(VuoLog_moduleName, file, linenumber, func, "OpenGL error %d: %s", error, errorString);
 	VuoLog_backtrace();
 }
 

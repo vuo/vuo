@@ -102,7 +102,7 @@ static void __attribute__((constructor)) VuoCompiler_init(void)
 							  else
 								  severityName = "note";
 
-							  VuoLog(__FILE__, __LINE__, "llvmDiagnosticHandler", "%s: %s", severityName, message.c_str());
+							  VuoLog(VuoLog_moduleName, __FILE__, __LINE__, "llvmDiagnosticHandler", "%s: %s", severityName, message.c_str());
 						  }
 					  });
 
@@ -1135,20 +1135,20 @@ vector<string> VuoCompiler::Environment::getBuiltInHeaderSearchPaths(void)
 	string vuoFrameworkPath = getVuoFrameworkPath();
 	if (! vuoFrameworkPath.empty())
 	{
+		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Frameworks/llvm.framework/Versions/A/Headers/lib/c++/v1");
 		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers");
 		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers/macos");          // system headers installed by Xcode Command Line Tools
 		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Headers/macos/pthread");  //
-		builtInHeaderSearchPaths.push_back(vuoFrameworkPath + "/Frameworks/llvm.framework/Versions/A/Headers/lib/c++/v1");
 	}
 	else
 	{
+		builtInHeaderSearchPaths.push_back(LLVM_ROOT "/include/c++/v1");
 		builtInHeaderSearchPaths.push_back(VUO_SOURCE_DIR "/library");
 		builtInHeaderSearchPaths.push_back(VUO_SOURCE_DIR "/node");
 		builtInHeaderSearchPaths.push_back(VUO_SOURCE_DIR "/type");
 		builtInHeaderSearchPaths.push_back(VUO_SOURCE_DIR "/type/list");
 		builtInHeaderSearchPaths.push_back(VUO_SOURCE_DIR "/runtime");
 		builtInHeaderSearchPaths.push_back(JSONC_ROOT "/include");
-		builtInHeaderSearchPaths.push_back(LLVM_ROOT "/include/c++/v1");
 	}
 
 	return builtInHeaderSearchPaths;
@@ -1590,7 +1590,9 @@ set<dispatch_group_t> VuoCompiler::Environment::loadSpecializedModules(const set
 	{
 		// Skip if it's not a node class.
 
-		if (moduleKey.find(".") == string::npos || VuoStringUtilities::endsWith(moduleKey, ".framework"))
+		if (moduleKey.find(".") == string::npos ||
+				VuoStringUtilities::endsWith(moduleKey, ".framework") ||
+				VuoStringUtilities::endsWith(moduleKey, ".dylib"))
 			continue;
 
 		// Skip the module if it's already been loaded.
@@ -2476,7 +2478,7 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 		}
 
 		dispatch_async(moduleCacheBuildingQueue, ^{
-			VDebugLog("Rebuilding %s…", cacheDescription.c_str());
+			VUserLog("Rebuilding %s…", cacheDescription.c_str());
 
 			set<Module *> modulesToLink;
 			set<string> librariesToLink;
@@ -2503,8 +2505,9 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 				string dir, file, ext;
 				VuoFileUtilities::splitPath(currentModuleCacheDylib, dir, file, ext);
 				string tmpPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+				vector<string> rPaths = compiler->getRunPathSearchPaths(this);
 				VuoCompilerIssues *issues = new VuoCompilerIssues;
-				compiler->link(tmpPath, modulesToLink, librariesToLink, frameworksToLink, true, "", false, issues);
+				compiler->link(tmpPath, modulesToLink, librariesToLink, frameworksToLink, true, rPaths, false, issues);
 
 				if (! issues->isEmpty())
 					VUserLog("Warning: May not have fully rebuilt %s for the \"faster build\" optimization:\n%s", cacheDescription.c_str(), issues->getLongDescription(false).c_str());
@@ -2553,7 +2556,7 @@ void VuoCompiler::Environment::useModuleCache(bool shouldUseExistingCache, VuoCo
 				VUserLog("Warning: Couldn't rebuild %s for the \"faster build\" optimization: %s", cacheDescription.c_str(), e.what());
 			}
 
-			VDebugLog("Done.");
+			VUserLog("Done.");
 		});
 	}
 	catch (VuoException &e)
@@ -4118,6 +4121,11 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 				dispatch_sync(llvmQueue, ^{
 					setTargetForModule(module, target);
 					writeModuleToBitcode(module, outputPath);
+					if (!dependencyOutputPath.empty())
+					{
+						string outputObjectPath = dependencyOutputPath.substr(0, dependencyOutputPath.length() - 2);
+						VuoFileUtilities::writeStringToFile(outputObjectPath + ": " + inputPath, dependencyOutputPath);
+					}
 				});
 
 			if (!issues->isEmpty())
@@ -4257,7 +4265,7 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 void VuoCompiler::compileComposition(string inputPath, string outputPath, bool isTopLevelComposition,
 									 VuoCompilerIssues *issues)
 {
-	VDebugLog("Compiling '%s' (%s)…", inputPath.c_str(), target.c_str());
+	VUserLog("Compiling '%s' (%s)…", inputPath.c_str(), target.c_str());
 	if (isVerbose)
 		print();
 
@@ -4285,7 +4293,7 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
 		throw;
 	}
 
-	VDebugLog("Done.");
+	VUserLog("Done.");
 }
 
 /**
@@ -4317,7 +4325,8 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
  * @param outputPath Path where the resulting executable should be placed.
  * @param optimization Controls the time it takes to link the composition and the size and dependencies of the
  *			resulting executable.
- * @param rPath An optional @c -rpath argument to be passed to clang.
+ * @param rPath An optional @c -rpath argument to be passed to `ld`. If empty, defaults to all run-path search paths available
+ *          to this compiler's environments.
  * @param shouldAdHocCodeSign  Whether to ad-hoc code-sign the generated executable.  Disable to improve performance (e.g., for systems that don't require code-signing, or if you will later be code-signing the whole bundle).
  * @throw VuoCompilerException At least one of the dependencies is incompatible with the targets for building the composition,
  *			or the linker encountered errors and failed.
@@ -4325,7 +4334,8 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
  */
 void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, Optimization optimization, string rPath, bool shouldAdHocCodeSign)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, false, rPath, shouldAdHocCodeSign);
+	vector<string> rPaths = ! rPath.empty() ? vector<string>(1, rPath) : getRunPathSearchPaths(environments.back().front());
+	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, false, rPaths, shouldAdHocCodeSign);
 }
 
 /**
@@ -4347,7 +4357,8 @@ void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string out
  */
 void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization, bool shouldAdHocCodeSign)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, true, "", shouldAdHocCodeSign);
+	vector<string> rPaths = getRunPathSearchPaths(environments.back().front());
+	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, true, rPaths, shouldAdHocCodeSign);
 }
 
 /**
@@ -4360,12 +4371,13 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  * @param optimization Controls the time it takes to link the composition and the size and dependencies of the
  *			resulting executable or dynamic library.
  * @param isDylib True if creating a dynamic library, false if creating an executable.
- * @param rPath An optional @c -rpath argument to be passed to clang.
+ * @param rPaths The `-rpath` arguments to be passed to `ld`.
  * @throw VuoCompilerException At least one of the dependencies is incompatible with the targets for building the composition,
  *			or the linker encountered errors and failed.
  */
 void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath,
-																	Optimization optimization, bool isDylib, string rPath, bool shouldAdHocCodeSign)
+																	Optimization optimization, bool isDylib, const vector<string> &rPaths,
+																	bool shouldAdHocCodeSign)
 {
 	if (isVerbose)
 		print();
@@ -4385,7 +4397,7 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 
 	libraries.insert(compiledCompositionPath);
 
-	link(linkedCompositionPath, modules, libraries, frameworks, isDylib, rPath, shouldAdHocCodeSign);
+	link(linkedCompositionPath, modules, libraries, frameworks, isDylib, rPaths, shouldAdHocCodeSign);
 }
 
 /**
@@ -4536,7 +4548,9 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 			librariesForNonUnloadableResource.insert(carriedOverExternalLibraries.begin(), carriedOverExternalLibraries.end());
 			librariesForNonUnloadableResource.insert(addedExternalLibraries.begin(), addedExternalLibraries.end());
 
-			link(nonUnloadableResourcePath, builtInModules, librariesForNonUnloadableResource, allFrameworks, true, "", shouldAdHocCodeSign);
+			vector<string> rPaths = getRunPathSearchPaths(environments.front().front());
+
+			link(nonUnloadableResourcePath, builtInModules, librariesForNonUnloadableResource, allFrameworks, true, rPaths, shouldAdHocCodeSign);
 
 			for (set<string>::iterator i = builtInLibraries.begin(); i != builtInLibraries.end(); )
 			{
@@ -4571,7 +4585,12 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 			if (! nonUnloadableResourcePath.empty())
 				librariesForUnloadableResource.insert(nonUnloadableResourcePath);
 
-			link(unloadableResourcePath, userModules, librariesForUnloadableResource, allFrameworks, true, "", shouldAdHocCodeSign);
+			// This is usually correct, but may fail in the case where there are two identically-named dylibs at different
+			// levels of scope. However, it's the best we can do as long as modules at the system, user, and composition
+			// levels of scope are all combined into one resource dylib. (https://b33p.net/kosada/vuo/vuo/-/merge_requests/196#note_2148884)
+			vector<string> rPaths = getRunPathSearchPaths(environments.back().front());
+
+			link(unloadableResourcePath, userModules, librariesForUnloadableResource, allFrameworks, true, rPaths, shouldAdHocCodeSign);
 
 			for (set<string>::iterator i = userLibraries.begin(); i != userLibraries.end(); )
 			{
@@ -4615,7 +4634,8 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		if (! unloadableResourcePath.empty())
 			libraries.insert(unloadableResourcePath);
 		libraries.insert(vuoRuntimePaths.begin(), vuoRuntimePaths.end());
-		link(linkedCompositionPath, modules, libraries, allFrameworks, true, "", shouldAdHocCodeSign);
+		vector<string> rPaths = getRunPathSearchPaths(environments.front().front());
+		link(linkedCompositionPath, modules, libraries, allFrameworks, true, rPaths, shouldAdHocCodeSign);
 	}
 
 	// Now that we're past the point where an exception can be thrown, update the RunningCompositionLibraries.
@@ -4644,7 +4664,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
  */
 set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCompositionPath)
 {
-	VDebugLog("Gathering dependencies for '%s'…", compiledCompositionPath.c_str());
+	double t0 = VuoLogGetTime();
 
 	// Add the node classes in the top-level composition and their dependencies.
 	__block set<string> directDependencies;
@@ -4660,7 +4680,7 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 	try
 	{
 		auto deps = getDependenciesForComposition(directDependencies, true);
-		VDebugLog("Done.");
+		VUserLog("Gathering dependencies for '%s' took %5.2fs", compiledCompositionPath.c_str(), VuoLogGetTime() - t0);
 		return deps;
 	}
 	catch (VuoCompilerException &e)
@@ -5306,13 +5326,13 @@ void VuoCompiler::setLoadAllModules(bool shouldLoadAllModules)
  * @param libraries The libraries to link in. If building an executable, one of them should contain a main function.
  * @param frameworks The frameworks to link in.
  * @param isDylib If true, the output file will be a dynamic library. Otherwise, it will be an executable.
- * @param rPath The @c -rpath argument to be passed to clang. If empty, the folder containing the Vuo framework on the build system will be used.
+ * @param rPaths The `-rpath` (run-path search path) arguments to be passed to `ld`.
  * @param shouldAdHocCodeSign  Whether to ad-hoc code-sign the generated binary.  Disable to improve performance (e.g., for live-editing on systems that don't require code-signing).
  * @throw VuoCompilerException clang or ld failed to link the given dependencies.
  */
-void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath, bool shouldAdHocCodeSign, VuoCompilerIssues *issues)
+void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, const vector<string> &rPaths, bool shouldAdHocCodeSign, VuoCompilerIssues *issues)
 {
-	VDebugLog("Linking '%s' (%s)…", outputPath.c_str(), getTargetArch(target).c_str());
+	VUserLog("Linking '%s' (%s)…", outputPath.c_str(), getTargetArch(target).c_str());
 	// https://stackoverflow.com/questions/11657529/how-to-generate-an-executable-from-an-llvmmodule
 
 	bool ownsIssues = false;
@@ -5344,7 +5364,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 					  writeModuleToBitcode(compositeModule.get(), compositeModulePath);
 
-					  VDebugLog("\tLinkModules took %5.2fs", VuoLogGetTime() - t0);
+					  VUserLog("\tLinkModules took %5.2fs", VuoLogGetTime() - t0);
 				  });
 
 
@@ -5424,8 +5444,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	// When linking on a development workstation or Jenkins or an end-user system,
 	// use the partial macOS SDK bundled in Vuo.framework, since it includes all the TBDs we need.
 	string vuoFrameworkPath = getVuoFrameworkPath();
-	string vuoFrameworkContainingFolder = vuoFrameworkPath + "/..";
-	string frameworkMacOSSDKFolder = vuoFrameworkPath + "/SDKs/MacOSX10.11.sdk";
+	string frameworkMacOSSDKFolder = vuoFrameworkPath + "/SDKs/MacOSX.sdk";
 	if (!VuoFileUtilities::fileExists(frameworkMacOSSDKFolder))
 		throw VuoException("Couldn't find the macOS SDK.");
 
@@ -5436,6 +5455,18 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back(frameworkMacOSSDKFolderZ);
 	argsToFree.push_back(frameworkMacOSSDKFolderZ);
 
+	args.push_back("-Xlinker");
+	args.push_back("-platform_version");
+	args.push_back("-Xlinker");
+	args.push_back("macos");
+	args.push_back("-Xlinker");
+	char *deploymentTargetZ = strdup(MACOS_DEPLOYMENT_TARGET);
+	args.push_back(deploymentTargetZ);
+	argsToFree.push_back(deploymentTargetZ);
+	args.push_back("-Xlinker");
+	char *sdkVersionZ = strdup(MACOS_SDK_VERSION);
+	args.push_back(sdkVersionZ);
+	argsToFree.push_back(sdkVersionZ);
 
 	// Linker option necessary for compatibility with our bundled version of ld64:
 	args.push_back("-Xlinker");
@@ -5450,10 +5481,12 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back("-Xlinker");
 	args.push_back("-headerpad_max_install_names");
 
-	// Tell the built dylib/executable where to find Vuo.framework
-	args.push_back("-rpath");
-	string rPathArg = (rPath.empty() ? vuoFrameworkContainingFolder : rPath);
-	args.push_back(rPathArg.c_str());
+	// Tell the built dylib/executable where to find dylibs that it depends on
+	for (const string &rPath : rPaths)
+	{
+		args.push_back("-rpath");
+		args.push_back(rPath.c_str());
+	}
 
 #ifdef COVERAGE
 	args.push_back("-rpath");
@@ -5463,7 +5496,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	args.push_back("-target");
 	args.push_back(target.c_str());
 
-	args.push_back("-std=c++11");
+	args.push_back("-std=c++14");
 	args.push_back("-stdlib=libc++");
 	args.push_back("-mmacosx-version-min=10.10");
 
@@ -5535,7 +5568,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	}
 
 	VuoFileUtilities::deleteFile(stdoutFile);
-	VDebugLog("\tLinking     took %5.2fs", VuoLogGetTime() - t0);
+	VUserLog("\tLinking     took %5.2fs", VuoLogGetTime() - t0);
 
 	if (shouldAdHocCodeSign)
 		adHocCodeSign(outputPath);
@@ -5546,19 +5579,11 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
  */
 void VuoCompiler::adHocCodeSign(string path)
 {
-	double t0 = VuoLogGetTime();
-	VuoFileUtilities::executeProcess({
-		"/usr/bin/codesign",
-		"--sign",
-		"-",  // "-" = ad-hoc
-		path,
-	}, {
+	VuoFileUtilities::adHocCodeSign(path, {
 #if VUO_PRO
 		"CODESIGN_ALLOCATE=" + getCodesignAllocatePath(),
 #endif
 	});
-
-	VDebugLog("\tAd-hoc code-signing took %5.2fs", VuoLogGetTime() - t0);
 }
 
 /**
@@ -5571,6 +5596,8 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	// llvm-3.1/llvm/tools/clang/examples/clang-interpreter/main.cpp
 
 	vector<const char *> args;
+	vector<char *> argsToFree;
+
 	args.push_back(inputPath.c_str());
 	args.push_back("-DVUO_COMPILER");
 	args.push_back("-fblocks");
@@ -5580,20 +5607,34 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	args.push_back("-Wextra");
 	args.push_back("-Wimplicit-fallthrough");
 	args.push_back("-Wno-unused-parameter");
-	args.push_back("-Wno-c++11-extensions");
 	args.push_back("-Wno-sign-compare");
 	args.push_back("-Werror=implicit");
 
 	if (VuoStringUtilities::endsWith(inputPath, ".cc"))
 	{
-		args.push_back("-std=c++11");
+		args.push_back("-std=c++14");
 		args.push_back("-stdlib=libc++");
+		args.push_back("-fexceptions");
+		args.push_back("-fcxx-exceptions");
 	}
 
 	for (vector<string>::const_iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)
 	{
 		args.push_back("-I");
 		args.push_back(i->c_str());
+	}
+
+	if (!dependencyOutputPath.empty())
+	{
+		char *outputObjectPath = strdup(dependencyOutputPath.substr(0, dependencyOutputPath.length() - 2).c_str());
+		argsToFree.push_back(outputObjectPath);
+
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1340588#c4
+		// https://lists.llvm.org/pipermail/cfe-users/2018-March/001268.html
+		args.push_back("-MT");
+		args.push_back(outputObjectPath);
+		args.push_back("-dependency-file");
+		args.push_back(dependencyOutputPath.c_str());
 	}
 
 	if (isVerbose)
@@ -5607,6 +5648,7 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
 	clang::DiagnosticsEngine *diags = new clang::DiagnosticsEngine(DiagID, diagOptions, diagnosticConsumer);
 
+	// This invokes `clang -cc1`.  See `clang -cc1 --help` for available options.
 	shared_ptr<clang::CompilerInvocation> compilerInvocation(new clang::CompilerInvocation);
 	clang::CompilerInvocation::CreateFromArgs(*compilerInvocation, &args[0], &args[0] + args.size(), *diags);
 	compilerInvocation->TargetOpts->Triple = target;
@@ -5638,6 +5680,9 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	clang::CodeGenAction *Act = new clang::EmitLLVMOnlyAction();
 	if (!Clang.ExecuteAction(*Act))
 		return NULL;
+
+	for (auto i : argsToFree)
+		free(i);
 
 	unique_ptr<Module> module = Act->takeModule();
 	if (!module)
@@ -6390,6 +6435,46 @@ void VuoCompiler::listNodeClasses(const string &format)
 }
 
 /**
+ * Returns the run-path search paths (a.k.a. `-rpath` arguments) that need to be passed when linking
+ * a dynamic library or executable so that it can locate the dynamic libraries that it depends on
+ * (the built-in dylibs in Vuo.framework and any dylibs provided with custom node classes).
+ *
+ * @param narrowestScope The original or generated environment at the narrowest level of scope for which
+ *     run-path search paths should be returned.
+ * @return The run-path search paths in order from narrowest to broadest scope (i.e., the order in which
+ *     they should be passed to the linker).
+ */
+vector<string> VuoCompiler::getRunPathSearchPaths(Environment *narrowestScope)
+{
+	vector<string> rPaths;
+	for (size_t i = 0; i < environments.size(); ++i)
+	{
+		if (i == 0)
+		{
+			string vuoFrameworkPath = getVuoFrameworkPath();
+			if (! vuoFrameworkPath.empty())
+				rPaths.push_back(vuoFrameworkPath + "/..");
+		}
+		else if (i == 1)
+			rPaths.push_back(VuoFileUtilities::getSystemModulesPath());
+		else if (i == 2)
+			rPaths.push_back(VuoFileUtilities::getUserModulesPath());
+		else if (i == 3)
+		{
+			string localModulesPath = getCompositionLocalModulesPath();
+			if (! localModulesPath.empty())
+				rPaths.push_back(localModulesPath);
+		}
+
+		if (std::find(environments[i].begin(), environments[i].end(), narrowestScope) != environments[i].end())
+			break;
+	}
+
+	std::reverse(rPaths.begin(), rPaths.end());
+	return rPaths;
+}
+
+/**
  * Returns the file names of bitcode dependencies needed by every linked Vuo composition.
  *
  * These dependencies are added to the cache (`libVuoResources.dylib`)
@@ -6601,6 +6686,16 @@ void VuoCompiler::setShouldPotentiallyShowSplashWindow(bool potentiallyShow)
 #endif
 
 	_shouldShowSplashWindow = potentiallyShow;
+}
+
+/**
+ * Specifies the path at which to create a GCC-style Makefile-depfile
+ * that lists the source/header files this module depends on.
+ * Only effective when compiling C/C++/Objective-C files.
+ */
+void VuoCompiler::setDependencyOutput(const string &path)
+{
+    dependencyOutputPath = path;
 }
 
 /**

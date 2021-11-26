@@ -176,3 +176,4 @@ protected:
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };
+Q_DECLARE_METATYPE(VuoRendererPort *)

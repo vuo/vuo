@@ -1,0 +1,49 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="1020,-855"];
+ChangeAllShaders [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="585,-675"];
+ChangeAllShaders2 [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="585,-600"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="120,0"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="120,195"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-135,-270" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,-570" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-165,-120" _seconds="0.001" _fired_eventThrottling="drop"];
+IsGreaterThan [type="vuo.data.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="840,-855" _b="10.0"];
+Make3DTriangle [type="vuo.scene.make.triangle.VuoColor" version="1.0.0" label="Make 3D Triangle|<refresh>refresh\l|<transform>transform\l|<material>material\l|<object>object\r" pos="120,-675" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}"];
+Make3DTriangle2 [type="vuo.scene.make.triangle.VuoColor" version="1.0.0" label="Make 3D Triangle|<refresh>refresh\l|<transform>transform\l|<material>material\l|<object>object\r" pos="120,-600" _material="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="120,-360" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _width="32" _height="32"];
+MakeCheckerboardImage2 [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="120,-180" _upperLeftColor="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _upperRightColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _width="32" _height="32"];
+MakeList2 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="794,-664"];
+MakeLitImageShader [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="345,-180" _opacity="1.0" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
+MakeLitImageShader2 [type="vuo.shader.make.image" version="3.0.0" label="Make Lit Image Shader|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="345,-360" _opacity="1.0" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="840,-675" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<timeElapsed>timeElapsed\l" _timeElapsed_type="event"];
+
+BecameTrue:becameTrue -> PublishedOutputs:timeElapsed;
+ChangeAllShaders2:shadedObject -> MakeList2:2;
+ChangeAllShaders:shadedObject -> MakeList2:1;
+ConvertRealTo2DPoint2:point2d -> MakeCheckerboardImage2:center;
+ConvertRealTo2DPoint:point2d -> MakeCheckerboardImage:center;
+FireOnDisplayRefresh:requestedFrame -> ConvertRealTo2DPoint:x;
+FireOnDisplayRefresh:requestedFrame -> IsGreaterThan:a;
+FireOnStart:started -> Make3DTriangle2:transform;
+FireOnStart:started -> Make3DTriangle:transform;
+FirePeriodically:fired -> ConvertRealTo2DPoint2:x;
+IsGreaterThan:greaterThan -> BecameTrue:value;
+Make3DTriangle2:object -> ChangeAllShaders2:object;
+Make3DTriangle:object -> ChangeAllShaders:object;
+MakeCheckerboardImage2:image -> MakeLitImageShader:image;
+MakeCheckerboardImage:image -> MakeLitImageShader2:image;
+MakeList2:list -> RenderSceneToWindow:objects;
+MakeLitImageShader2:shader -> ChangeAllShaders2:shader;
+MakeLitImageShader:shader -> ChangeAllShaders:shader;
+}

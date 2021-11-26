@@ -7,6 +7,7 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 			-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
 			-DCONAN_QT_ROOT=${CONAN_QT_ROOT}
 			-DVUO_VERSION_AND_BUILD=${VUO_VERSION_AND_BUILD}
+			-DVUO_TEST_WITH_GMALLOC=${VUO_TEST_WITH_GMALLOC}
 			-DVuoFrameworkVersion=${VuoFrameworkVersion}
 			-DVuoPro=${VuoPro}
 			-P ${CMAKE_CURRENT_LIST_FILE}
@@ -34,12 +35,17 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 else()
 
 	function(execute)
-		cmake_parse_arguments(arg "TIMEOUT" "" "COMMAND" ${ARGV})
+		cmake_parse_arguments(arg "TIMEOUT;GMALLOC_ELIGIBLE" "" "COMMAND" ${ARGV})
 		if (arg_TIMEOUT)
 			set(timeout TIMEOUT 6)
 		endif()
 
+		if(GMALLOC_ELIGIBLE AND VUO_TEST_WITH_GMALLOC)
+			message(WARNING "using libgmalloc")
+			set(ENV{DYLD_INSERT_LIBRARIES} /usr/lib/libgmalloc.dylib)
+		endif()
 		execute_process(WORKING_DIRECTORY ${buildDir} COMMAND ${arg_COMMAND} ${timeout} RESULT_VARIABLE ret)
+		unset(ENV{DYLD_INSERT_LIBRARIES})
 		if (ret STREQUAL "Process terminated due to timeout")
 			message("Stopping normally after timeout")
 		elseif (ret)
@@ -59,6 +65,7 @@ else()
 		node/stateless
 		runner/CompileAndRunInCurrentProcess
 		runner/CompileAndRunInNewProcess
+		runner/DumpTelemetryMessages
 		runner/ListPublishedPorts
 		runner/RunImageFilter-GLFW
 		runner/RunImageFilter-Qt
@@ -68,16 +75,16 @@ else()
 		execute(COMMAND cmake .. -DCMAKE_FRAMEWORK_PATH=../../../framework -DCMAKE_PREFIX_PATH=${CONAN_QT_ROOT}/lib/cmake)
 		execute(COMMAND make -j9)
 		if (example STREQUAL "runner/RunImageFilter-GLFW")
-			execute(TIMEOUT COMMAND ./RunImageFilter-current-makeFromJson               )
-			execute(TIMEOUT COMMAND ./RunImageFilter-current-makeFromJsonWithDimensions )
-			execute(TIMEOUT COMMAND ./RunImageFilter-separate-makeFromJson              )
-			execute(TIMEOUT COMMAND ./RunImageFilter-separate-makeFromJsonWithDimensions)
-			execute(TIMEOUT COMMAND ./RunImageFilter-separate-interprocessToFramebuffer )
-			execute(TIMEOUT COMMAND ./RunImageFilter-separate-interprocessToTexture     )
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-current-makeFromJson               )
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-current-makeFromJsonWithDimensions )
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-separate-makeFromJson              )
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-separate-makeFromJsonWithDimensions)
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-separate-interprocessToFramebuffer )
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./RunImageFilter-separate-interprocessToTexture     )
 		elseif (example MATCHES "^runner/")
 			file(COPY ${PROJECT_BINARY_DIR}/bin/qt.conf DESTINATION ${buildDir})
 			get_filename_component(exampleBinary ${example} NAME)
-			execute(TIMEOUT COMMAND ./${exampleBinary})
+			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./${exampleBinary})
 		endif()
 	endforeach()
 
@@ -91,7 +98,7 @@ else()
 	string(REPLACE "/Library/Developer/Vuo/framework" "../../../framework" xcodeProjectContents "${xcodeProjectContents}")
 	file(WRITE ${xcodeProjectFile} "${xcodeProjectContents}")
 	execute(COMMAND xcodebuild)
-	execute(TIMEOUT COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
+	execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
 
 	if (VuoPro)
 		include(${PROJECT_SOURCE_DIR}/test/TestSDK/pro/pro.cmake)

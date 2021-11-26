@@ -15,17 +15,18 @@ target_include_directories(vuo.video.libraries
 )
 target_link_libraries(vuo.video.libraries
 	PUBLIC
-	"-framework Cocoa"
-	"-framework AVFoundation"
-	"-framework CoreMedia"
-	"-framework CoreMediaIO"
-	"-framework CoreVideo"
-	"-framework OpenGL"
-	CONAN_PKG::ffmpeg
-	VuoApp
-	VuoGlContext
-	VuoGlPool
-	vuo.hid.libraries
+		"-framework Cocoa"
+		"-framework AVFoundation"
+		"-framework CoreMedia"
+		"-framework CoreMediaIO"
+		"-framework CoreVideo"
+		"-framework OpenGL"
+		"-framework VideoToolbox"
+		CONAN_PKG::ffmpeg
+		VuoApp
+		VuoGlContext
+		VuoGlPool
+		vuo.hid.libraries
 )
 
 VuoCompileTypes(

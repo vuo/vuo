@@ -14,9 +14,9 @@ VuoModuleMetadata({
 	"title" : "Make Parametric Object",
 	"keywords" : [
 		"segments", "points",
-		"mesh", "model", "vertices", "shader", "texture", "draw", "opengl", "scenegraph", "graphics",
+		"3D", "mesh", "model", "vertices", "shader", "texture", "draw", "opengl", "scenegraph", "graphics",
 	],
-	"version" : "1.0.0",
+	"version" : "1.0.1",
 	"dependencies" : [
 		"VuoMeshParametric",
 	],

@@ -15,7 +15,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>@BUNDLE_SHORT_VERSION_STRING@</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.11</string>
+	<string>10.12</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSHighResolutionCapable</key>
@@ -202,6 +202,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>vuo-example</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Vuo Node Documentation</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vuo-node</string>
 			</array>
 		</dict>
 	</array>

@@ -19,7 +19,7 @@ extern "C" {
 #include <objc/runtime.h>
 #include <objc/message.h>
 #include <pthread.h>
-#include "VuoTelemetry.h"
+#include "VuoTelemetry.hh"
 #include "VuoEventLoop.h"
 #include "VuoRuntime.h"
 #include "VuoCompositionState.h"

@@ -203,7 +203,9 @@ dispatch_queue_attr_t VuoEventLoop_getDispatchInteractiveAttribute(void)
 }
 
 /**
- * Installs SIGINT and SIGTERM handlers, to cleanly shut down the composition.
+ * Increases the open-files limit, allowing each process to use (for example)
+ * more NDI connections (https://b33p.net/kosada/vuo/vuo/-/issues/18179)
+ * and more VuoRunner instances (https://b33p.net/kosada/vuo/vuo/-/issues/16635).
  *
  * @threadMain
  */
@@ -271,7 +273,7 @@ static void VuoShowSystemPowerEvent(void *refcon, io_service_t root_domain, natu
 	CFRelease(d);
 
 	if (cpuSpeedLimit >= 0)
-		VDebugLog("The system changed the CPU speed limit to %d%%.", cpuSpeedLimit);
+		VUserLog("The system changed the CPU speed limit to %d%%.", cpuSpeedLimit);
 }
 
 /**
@@ -282,13 +284,13 @@ static void VuoThermalState(void)
 {
 	void (^logThermalState)(int thermalState) = ^(int thermalState){
 		if (thermalState == 0)
-			VDebugLog("thermalState = nominal");
+			VUserLog("thermalState = nominal");
 		else if (thermalState == 1)
-			VDebugLog("thermalState = fair (\"fans audible\")");
+			VUserLog("thermalState = fair (\"fans audible\")");
 		else if (thermalState == 2)
-			VDebugLog("thermalState = serious (\"fans at maximum speed\")");
+			VUserLog("thermalState = serious (\"fans at maximum speed\")");
 		else if (thermalState == 3)
-			VDebugLog("thermalState = critical (\"system needs to cool down\")");
+			VUserLog("thermalState = critical (\"system needs to cool down\")");
 	};
 	if ([NSProcessInfo.processInfo respondsToSelector:@selector(thermalState)])
 	{
@@ -325,11 +327,11 @@ static void VuoMemoryPressure(void)
 	dispatch_source_set_event_handler(memoryPressureWatcher, ^{
 		int pressure = dispatch_source_get_data(memoryPressureWatcher);
 		if (pressure == DISPATCH_MEMORYPRESSURE_NORMAL)
-			VDebugLog("memoryPressure = normal");
+			VUserLog("memoryPressure = normal");
 		else if (pressure == DISPATCH_MEMORYPRESSURE_WARN)
-			VDebugLog("memoryPressure = warning");
+			VUserLog("memoryPressure = warning");
 		else if (pressure == DISPATCH_MEMORYPRESSURE_CRITICAL)
-			VDebugLog("memoryPressure = critical");
+			VUserLog("memoryPressure = critical");
 	});
 	dispatch_resume(memoryPressureWatcher);
 }
@@ -340,30 +342,30 @@ static void VuoMemoryPressure(void)
 static void VuoWorkspaceState(void)
 {
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceWillSleepNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system is going to sleep.");
+		VUserLog("The system is going to sleep.");
 		VuoEventLoop_systemAsleep = true;
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system is waking up.");
+		VUserLog("The system is waking up.");
 		VuoEventLoop_systemAsleep = false;
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceWillPowerOffNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system is powering off");
+		VUserLog("The system is powering off");
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceScreensDidSleepNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The screens are going to sleep.");
+		VUserLog("The screens are going to sleep.");
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceScreensDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The screens are waking up.");
+		VUserLog("The screens are waking up.");
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceSessionDidBecomeActiveNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system is switching back to this user account.");
+		VUserLog("The system is switching back to this user account.");
 	}];
 	[NSWorkspace.sharedWorkspace.notificationCenter addObserverForName:NSWorkspaceSessionDidResignActiveNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system is switching to another user account.");
+		VUserLog("The system is switching away to another user account.");
 	}];
 	[NSNotificationCenter.defaultCenter addObserverForName:NSSystemClockDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note){
-		VDebugLog("The system's clock changed to %s", NSDate.date.description.UTF8String);
+		VUserLog("The system's clock changed to %s", NSDate.date.description.UTF8String);
 	}];
 }
 

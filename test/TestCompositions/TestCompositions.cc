@@ -66,6 +66,7 @@ public:
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
+		runner->setRuntimeChecking(true);
 
 		runner->setDelegate(this);
 
@@ -123,6 +124,50 @@ public:
 	}
 };
 
+/**
+ * A runner delegate that compiles and executes a composition,
+ * then fires an `Init` event followed by a series of `Test` events,
+ * to measure performance of part of the composition.
+ */
+class TestCompositionPerformanceDelegate : public TestRunnerDelegate
+{
+private:
+    VuoRunner *runner;  ///< The runner created and used by this TestCompositionPerformanceDelegate.
+
+public:
+
+	/**
+	 * Starts the composition, fires the `Init` event, and waits for it to complete.
+	 */
+	TestCompositionPerformanceDelegate(string composition, string compositionDir, VuoCompiler *compiler)
+	{
+		runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(composition, "TestCompositionPerformance", compositionDir, nullptr);
+		runner->setRuntimeChecking(false);  // This test is for performance, not correctness.
+		runner->setDelegate(this);
+		runner->start();
+
+		runner->firePublishedInputPortEvent(runner->getPublishedInputPortWithName("Init"));
+		runner->waitForFiredPublishedInputPortEvent();
+	}
+
+	/**
+	 * Fires the `Test` event and waits for it to complete.
+	 */
+	void fireAndWaitForTest()
+	{
+		runner->firePublishedInputPortEvent(runner->getPublishedInputPortWithName("Test"));
+		runner->waitForFiredPublishedInputPortEvent();
+	}
+
+	~TestCompositionPerformanceDelegate()
+	{
+		runner->stop();
+		runner->waitUntilStopped();
+		delete runner;
+	}
+};
+
+
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(string);
@@ -140,6 +185,7 @@ public:
 
 	TestCompositions(int argc, char *argv[])
 	{
+		compiler = nullptr;
 		if (argc > 1)
 		{
 			// If a single test is specified on the command line,
@@ -250,6 +296,60 @@ private slots:
 		try
 		{
 			TestCompositionsRunnerDelegate delegate(composition, compositionDir, portConfigurations, compiler);
+		}
+		catch (VuoException &e)
+		{
+			QFAIL(e.what());
+		}
+	}
+
+	/**
+	 * Compiles and runs each composition named `*-benchmark.vuo`,
+	 * first sending a single `Init` event,
+	 * then repeatedly sending `Test` events and measuring the time each event takes.
+	 */
+	void testCompositionPerformance_data()
+	{
+		QTest::addColumn< string >("benchmarkPath");
+		QTest::addColumn< string >("composition");
+
+		QDir compositionDir = getCompositionDir();
+		QStringList filter("*-benchmark.vuo");
+		QStringList benchmarkFileNames = compositionDir.entryList(filter);
+		auto addTestsForBenchmark = ^(QString benchmarkFileName){
+			string benchmarkPath = getCompositionPath(benchmarkFileName.toStdString());
+
+			string dir, name, extension;
+			VuoFileUtilities::splitPath(benchmarkPath, dir, name, extension);
+			string compositionPath = getCompositionPath(name + ".vuo");
+
+			string composition;
+			ifstream fin(compositionPath.c_str());
+			composition.append(istreambuf_iterator<char>(fin), istreambuf_iterator<char>());
+			fin.close();
+
+			QTest::newRow(name.c_str()) << benchmarkPath << composition;
+		};
+
+		if (singleTestDatum.isEmpty())
+			for (auto benchmarkFileName : benchmarkFileNames)
+				addTestsForBenchmark(benchmarkFileName);
+		else
+			addTestsForBenchmark(singleTestDatum + ".vuo");
+	}
+	void testCompositionPerformance()
+	{
+		QFETCH(string, benchmarkPath);
+		QFETCH(string, composition);
+		printf("\t%s\n", QTest::currentDataTag()); fflush(stdout);
+
+		QVERIFY(! composition.empty());
+		try
+		{
+			TestCompositionPerformanceDelegate delegate(composition, getCompositionDir().path().toStdString(), compiler);
+			QBENCHMARK {
+				delegate.fireAndWaitForTest();
+			}
 		}
 		catch (VuoException &e)
 		{

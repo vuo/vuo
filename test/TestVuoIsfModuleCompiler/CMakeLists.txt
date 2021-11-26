@@ -1,5 +1,6 @@
 VuoTest(NAME TestVuoIsfModuleCompiler
 	SOURCE TestVuoIsfModuleCompiler.cc
+	GMALLOC_ELIGIBLE
 )
 target_link_libraries(TestVuoIsfModuleCompiler
 	PRIVATE

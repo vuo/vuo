@@ -13,6 +13,8 @@
 /**
  * Convenience function for @c VuoInputEditorWithLineEdit::show(portLeftCenter, originalValue, details, portNamesAndValues) ,
  * useful for title editors since the @a portNamesAndValues does not apply.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object * VuoTitleEditor::show(QPoint portLeftCenter, json_object *originalValue, json_object *details)
 {

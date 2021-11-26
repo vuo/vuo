@@ -25,3 +25,24 @@ add_dependencies(TestCompilingAndLinking
 	TestCompilingAndLinking.nodes
 	TestCompilingAndLinking.types
 )
+
+add_library(UserDylib SHARED
+	EXCLUDE_FROM_ALL
+	node-TestCompilingAndLinking/userDylib.c
+)
+set_target_properties(UserDylib PROPERTIES
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/test/TestCompilingAndLinking
+)
+add_dependencies(TestCompilingAndLinking
+	UserDylib
+)
+
+# Delete modules installed by this test.
+add_test(NAME TestCompilingAndLinkingCleanup
+	COMMAND rm -f
+		$ENV{HOME}/Library/Application\ Support/Vuo/Modules/vuo.test.dependsOnUserDylib.c
+		$ENV{HOME}/Library/Application\ Support/Vuo/Modules/libUserDylib.dylib
+)
+set_tests_properties(TestCompilingAndLinkingCleanup PROPERTIES
+	FIXTURES_CLEANUP TestCompilingAndLinking
+)

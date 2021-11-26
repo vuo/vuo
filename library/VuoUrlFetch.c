@@ -96,7 +96,6 @@ void VuoUrlFetch_convertToUTF8(struct VuoUrl_curlBuffer *buffer, CFStringEncodin
 	buffer->memory = outBuffer;
 	buffer->size = strlen(outBuffer);
 
-	if (VuoIsDebugEnabled())
 	{
 		VuoText sourceEncodingName = VuoText_makeFromCFString(CFStringGetNameOfEncoding(sourceEncoding));
 		VuoLocal(sourceEncodingName);

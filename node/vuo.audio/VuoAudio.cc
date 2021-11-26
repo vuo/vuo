@@ -634,7 +634,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device:          %s", json_object_to_json_string(VuoAudioInputDevice_getJson(device)));
+	VUserLog("Requested device:          %s", json_object_to_json_string(VuoAudioInputDevice_getJson(device)));
 	VuoList_VuoAudioInputDevice devices = VuoAudio_getInputDevices();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -643,7 +643,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 	VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
 		if (device.id != -1 && device.id == item.id)
 		{
-			VDebugLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+			VUserLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 			return false;
@@ -659,7 +659,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 			 && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid)
 			 && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+				VUserLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -673,7 +673,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid))
 			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name)))
 			{
-				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+				VUserLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -697,7 +697,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 			VuoListForeach_VuoAudioInputDevice(devices, ^(const VuoAudioInputDevice item){
 				if (item.id == defaultID)
 				{
-					VDebugLog("Using default device:      %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
+					VUserLog("Using default device:      %s",json_object_to_json_string(VuoAudioInputDevice_getJson(item)));
 					setRealizedDevice(item);
 					found = true;
 					return false;
@@ -715,7 +715,7 @@ bool VuoAudioInputDevice_realize(VuoAudioInputDevice device, VuoAudioInputDevice
 	}
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }
@@ -743,7 +743,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device:          %s", json_object_to_json_string(VuoAudioOutputDevice_getJson(device)));
+	VUserLog("Requested device:          %s", json_object_to_json_string(VuoAudioOutputDevice_getJson(device)));
 	VuoList_VuoAudioOutputDevice devices = VuoAudio_getOutputDevices();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -752,7 +752,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 	VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
 		if (device.id != -1 && device.id == item.id)
 		{
-			VDebugLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+			VUserLog("Matched by ID:             %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 			return false;
@@ -768,7 +768,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 				&& VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid)
 				&& VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+				VUserLog("Matched by model and name: %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -782,7 +782,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 			if ((!VuoText_isEmpty(device.modelUid) && VuoText_compare(item.modelUid, (VuoTextComparison){VuoTextComparison_Contains, true}, device.modelUid))
 			 || (!VuoText_isEmpty(device.name)     && VuoText_compare(item.name,     (VuoTextComparison){VuoTextComparison_Contains, true}, device.name)))
 			{
-				VDebugLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+				VUserLog("Matched by model or name:  %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -806,7 +806,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 			VuoListForeach_VuoAudioOutputDevice(devices, ^(const VuoAudioOutputDevice item){
 				if (item.id == defaultID)
 				{
-					VDebugLog("Using default device:      %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
+					VUserLog("Using default device:      %s",json_object_to_json_string(VuoAudioOutputDevice_getJson(item)));
 					setRealizedDevice(item);
 					found = true;
 					return false;
@@ -824,7 +824,7 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
 	}
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }

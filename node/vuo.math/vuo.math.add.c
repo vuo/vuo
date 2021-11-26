@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Add",
 					 "keywords" : [ "sum", "plus", "total", "+", "arithmetic", "calculate", "vector", "point" ],
-					 "version" : "2.1.0",
+					 "version" : "2.1.1",
 					 "genericTypes" : {
 						 "VuoGenericType1" : {
 							"defaultType" : "VuoReal",
@@ -33,6 +33,7 @@ void nodeEvent
 	VuoGenericType1 tmp = VuoGenericType1_makeFromJson(NULL);
 	*sum = tmp;
 	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
-	for (unsigned long i = 1; i <= termsCount; ++i)
-		*sum = VuoGenericType1_add(*sum, (VuoGenericType1)VuoListGetValue_VuoGenericType1(values, i));
+	VuoGenericType1 *valuesData = VuoListGetData_VuoGenericType1(values);
+	for (unsigned long i = 0; i < termsCount; ++i)
+		*sum += valuesData[i];
 }

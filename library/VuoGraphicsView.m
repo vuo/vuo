@@ -47,12 +47,7 @@ VuoModuleMetadata({
 	{
 		self.wantsLayer = true;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		// Replaced by acceptsTouchEvents, which isn't available in OS X 10.11.
-		self.acceptsTouchEvents = YES;
-#pragma clang diagnostic pop
-
+		self.allowedTouchTypes = NSTouchTypeMaskIndirect;
 		self.wantsRestingTouches = YES;
 		_touchTriggers = [NSMutableSet new];
 		_zoomedTriggers = [NSMutableSet new];

@@ -5,7 +5,7 @@
         <file>Icons/dockwidget-close-dark.png</file>
         <file>Icons/dockwidget-close-dark@2x.png</file>
         <file>Icons/checkmark.svg</file>
-		<file>Icons/vuo.svg</file>
+        <file>Icons/vuo.svg</file>
         <file>Icons/spinbox-dec-disabled.png</file>
         <file>Icons/spinbox-dec-disabled@2x.png</file>
         <file>Icons/spinbox-dec.png</file>
@@ -23,7 +23,11 @@
         <file>Icons/checkmark-black.svg</file>
         <file>Icons/chevron-black.svg</file>
         <file>Icons/chevron-white.svg</file>
-        <file>Vuo.qss</file>
         <file>Icons/chevron-lightgray.svg</file>
+        <file>qml/common/qmldir</file>
+        <file>qml/common/VuoButtonLight.qml</file>
+        <file>qml/common/VuoStyle.qml</file>
+        <file>qml/console/VuoConsole.qml</file>
+        <file>Vuo.qss</file>
     </qresource>
 </RCC>

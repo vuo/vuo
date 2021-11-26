@@ -14,6 +14,8 @@
 #include "VuoInputEditorManager.hh"
 #include "VuoRendererPublishedPort.hh"
 
+Q_DECLARE_METATYPE(QListWidgetItem *)
+
 /**
  * Class for customizing the appearance of the list insertion indicator.
  */
@@ -120,7 +122,7 @@ void VuoPublishedPortList::contextMenuEvent(QContextMenuEvent *event)
 	QMenu contextMenu(this);
 	contextMenu.setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
 
-	VuoRendererPublishedPort *rendererPort = static_cast<VuoRendererPublishedPort *>(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+	VuoRendererPublishedPort *rendererPort = activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	VuoPublishedPort *port = static_cast<VuoPublishedPort *>(rendererPort->getBase());
 	if (!port->isProtocolPort())
 	{
@@ -139,7 +141,7 @@ void VuoPublishedPortList::contextMenuEvent(QContextMenuEvent *event)
 		// Associate the right-clicked VuoRendererPublishedPort item with the context menu actions.
 		contextMenuSetPortConstant->setData(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex));
 		contextMenuSetPortDetails->setData(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex));
-		contextMenuRenamePublishedPort->setData(qVariantFromValue((void *)activeListItem));
+		contextMenuRenamePublishedPort->setData(QVariant::fromValue(activeListItem));
 		contextMenuUnpublishPort->setData(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex));
 	}
 
@@ -213,7 +215,7 @@ void VuoPublishedPortList::mouseDoubleClickEvent(QMouseEvent *event)
 
 	if (activeListItem)
 	{
-		VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *port = activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		if (valueEditableForPublishedPort(dynamic_cast<VuoPublishedPort *>(port->getBase())))
 			editPublishedPortValue(port);
 	}
@@ -314,7 +316,7 @@ void VuoPublishedPortList::dragMoveEvent(QDragMoveEvent *event)
 	QListWidgetItem* activeListItem = (count()? itemAt(event->pos()+QPoint(0,0.5*sizeHintForRow(0))) : NULL);
 	if (activeListItem)
 	{
-		VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *port = activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		if (port && dynamic_cast<VuoPublishedPort *>(port->getBase())->isProtocolPort())
 			dropWouldFallWithinProtocolPorts = true;
 	}
@@ -353,7 +355,7 @@ void VuoPublishedPortList::dropEvent(QDropEvent *event)
 	QListWidgetItem* activeListItem = itemAt(event->pos()+QPoint(0,0.5*sizeHintForRow(0)));
 	if (activeListItem)
 	{
-		VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>(activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *port = activeListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		if (port && dynamic_cast<VuoPublishedPort *>(port->getBase())->isProtocolPort())
 		{
 			// Shift down one row at a time while we're still within the protocol port section.
@@ -396,7 +398,7 @@ void VuoPublishedPortList::keyPressEvent(QKeyEvent *event)
 		QList<QListWidgetItem *> selectedPorts = selectedItems();
 		for (QList<QListWidgetItem *>::iterator portItem = selectedPorts.begin(); portItem != selectedPorts.end(); ++portItem)
 		{
-			VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>((*portItem)->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+			VuoRendererPublishedPort *port = (*portItem)->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 			if (valueEditableForPublishedPort(dynamic_cast<VuoPublishedPort *>(port->getBase())))
 				editPublishedPortValue(port);
 		}
@@ -429,7 +431,7 @@ void VuoPublishedPortList::keyReleaseEvent(QKeyEvent *event)
 void VuoPublishedPortList::editPublishedPortValue()
 {
 	QAction *sender = static_cast<QAction *>(QObject::sender());
-	VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>(sender->data().value<void *>());
+	VuoRendererPublishedPort *port = sender->data().value<VuoRendererPublishedPort *>();
 
 	editPublishedPortValue(port);
 }
@@ -448,7 +450,7 @@ void VuoPublishedPortList::editPublishedPortValue(VuoRendererPublishedPort *port
 void VuoPublishedPortList::editPublishedPortDetails()
 {
 	QAction *sender = static_cast<QAction *>(QObject::sender());
-	VuoRendererPublishedPort *port = static_cast<VuoRendererPublishedPort *>(sender->data().value<void *>());
+	VuoRendererPublishedPort *port = sender->data().value<VuoRendererPublishedPort *>();
 
 	emit publishedPortDetailsEditorRequested(port);
 }
@@ -460,7 +462,7 @@ void VuoPublishedPortList::editPublishedPortDetails()
 void VuoPublishedPortList::renamePublishedPort()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	QListWidgetItem * portListItem = (QListWidgetItem *)(sender->data().value<void *>());
+	QListWidgetItem * portListItem = sender->data().value<QListWidgetItem *>();
 	renamePublishedPort(portListItem);
 }
 
@@ -469,7 +471,7 @@ void VuoPublishedPortList::renamePublishedPort()
  */
 void VuoPublishedPortList::renamePublishedPort(QListWidgetItem* portListItem)
 {
-	VuoRendererPublishedPort *port = (VuoRendererPublishedPort *)(portListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+	VuoRendererPublishedPort *port = portListItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	if (!dynamic_cast<VuoPublishedPort *>(port->getBase())->isProtocolPort())
 		emit publishedPortNameEditorRequested(port, true);
 }
@@ -485,7 +487,7 @@ void VuoPublishedPortList::updatePortOrder()
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *currentPortItem = this->item(portIndex);
-		VuoRendererPublishedPort *currentRenderedPublishedPort = ((VuoRendererPublishedPort *)(currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>()));
+		VuoRendererPublishedPort *currentRenderedPublishedPort = currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		publishedPorts.push_back(dynamic_cast<VuoPublishedPort *>(currentRenderedPublishedPort->getBase()));
 	}
 
@@ -499,7 +501,7 @@ void VuoPublishedPortList::updatePortOrder()
 void VuoPublishedPortList::unpublishExternalPort()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPublishedPort *port = (VuoRendererPublishedPort *)(sender->data().value<void *>());
+	VuoRendererPublishedPort *port = sender->data().value<VuoRendererPublishedPort *>();
 
 	emit externalPortUnpublicationRequested(port);
 	emit publishedPortModified();
@@ -534,7 +536,7 @@ void VuoPublishedPortList::updatePublishedPortLocs()
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *currentPortItem = this->item(portIndex);
-		VuoRendererPublishedPort *currentRenderedPublishedPort = ((VuoRendererPublishedPort *)(currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>()));
+		VuoRendererPublishedPort *currentRenderedPublishedPort = currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		QPoint connectionPoint = QPoint(isInput? viewport()->geometry().right() :
 												 viewport()->geometry().left(),
 										viewport()->mapToParent(visualItemRect(currentPortItem).center()).y());
@@ -595,7 +597,7 @@ VuoRendererPublishedPort * VuoPublishedPortList::getPublishedPortAtGlobalPos(QPo
 		currentPortRect.adjust(-xTolerance, 0, xTolerance, 0);
 
 		if (currentPortRect.contains(localPos))
-			return ((VuoRendererPublishedPort *)(currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>()));
+			return currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	}
 
 	return NULL;
@@ -610,7 +612,7 @@ QPoint VuoPublishedPortList::getGlobalPosOfPublishedPort(VuoRendererPublishedPor
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *currentPortItem = this->item(portIndex);
-		VuoRendererPublishedPort *currentPort = static_cast<VuoRendererPublishedPort *>( currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>() );
+		VuoRendererPublishedPort *currentPort = currentPortItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 		if (currentPort == port)
 		{
 			QPoint connectionPoint = QPoint(isInput? viewport()->geometry().right() :

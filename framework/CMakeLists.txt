@@ -204,6 +204,7 @@ add_custom_command(
 		${PROJECT_BINARY_DIR}/bin/install_name_tool
 		${PROJECT_BINARY_DIR}/bin/ld
 		${PROJECT_BINARY_DIR}/bin/lipo
+		${PROJECT_SOURCE_DIR}/base/codesignWrapper.sh
 		"${frameworkVersionPath}/Helpers"
 
 	COMMAND install_name_tool -rpath @loader_path/../lib @loader_path/../Modules ${frameworkVersionPath}/Helpers/clang
@@ -219,6 +220,8 @@ add_custom_command(
 	COMMAND install_name_tool -rpath @executable_path/../lib/ @loader_path/../Modules ${frameworkVersionPath}/Helpers/ld
 		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/ld ${codesignAdHocIgnoreReplace}
+
+	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/codesignWrapper.sh
 
 	OUTPUT "${frameworkVersionPath}/Helpers/clang"
 )
@@ -296,6 +299,8 @@ set(dependencyFrameworksDest
 	${frameworkVersionPath}/Frameworks/clang.framework/Versions/Current/clang
 	${frameworkVersionPath}/Frameworks/llvm-c.framework/Versions/Current/llvm-c
 	${frameworkVersionPath}/Frameworks/llvm.framework/Versions/Current/llvm
+	${frameworkVersionPath}/Frameworks/FxPlug.framework/Versions/Current/FxPlug
+	${frameworkVersionPath}/Frameworks/PluginManager.framework/Versions/Current/PluginManager
 	${frameworkVersionPath}/Frameworks/Syphon.framework/Versions/Current/Syphon
 	${frameworkVersionPath}/Frameworks/HapInAVFoundation.framework/Versions/Current/HapInAVFoundation
 )
@@ -312,6 +317,8 @@ add_custom_command(
 		${PROJECT_BINARY_DIR}/lib/clang.framework
 		${PROJECT_BINARY_DIR}/lib/llvm-c.framework
 		${PROJECT_BINARY_DIR}/lib/llvm.framework
+		${CONAN_FXPLUG_ROOT}/Library/Developer/Frameworks/FxPlug.framework
+		${CONAN_FXPLUG_ROOT}/Library/Developer/Frameworks/PluginManager.framework
 		${CONAN_HAP_ROOT}/lib/HapInAVFoundation.framework
 		${CONAN_SYPHON_ROOT}/lib/Syphon.framework
 		${frameworkVersionPath}/Frameworks
@@ -453,6 +460,7 @@ list(REMOVE_ITEM conanDependencies wjelement)
 # Exclude OpenSSL (for US export compliance).
 list(REMOVE_ITEM conanDependencies openssl)
 # Exclude frameworks since they're copied by VuoFrameworkDependencyFrameworks.
+list(REMOVE_ITEM conanDependencies fxplug)
 list(REMOVE_ITEM conanDependencies hap)
 list(REMOVE_ITEM conanDependencies syphon)
 # Find the absolute path to each library.
@@ -560,7 +568,7 @@ add_dependencies(VuoFrameworkDylib VuoFrameworkMacOSHeaders)
 
 # Copy macOS SDK text-based dylib stubs into Vuo.framework,
 # so we can link on platforms that don't include system dylibs (macOS 11).
-set(macOSSDKDestination "${frameworkVersionPath}/SDKs/MacOSX10.11.sdk")
+set(macOSSDKDestination "${frameworkVersionPath}/SDKs/MacOSX.sdk")
 add_custom_command(
 	COMMENT "Copying macOS SDK TBDs into Vuo.framework"
 	WORKING_DIRECTORY ${CONAN_MACOS-SDK_ROOT}
@@ -606,6 +614,7 @@ add_custom_command(
 		System/Library/Frameworks/Quartz.framework
 		System/Library/Frameworks/QuartzCore.framework
 		System/Library/Frameworks/QuickLook.framework
+		System/Library/Frameworks/VideoToolbox.framework
 		System/Library/Frameworks/WebKit.framework
 		System/Library/PrivateFrameworks/UIFoundation.framework
 		usr/lib/libSystem.tbd

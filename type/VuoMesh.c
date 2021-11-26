@@ -1403,6 +1403,8 @@ static void VuoMesh_download(VuoMesh_internal *m)
 			memcpy(m->colors, (char *)vertexData + (int)m->glUpload.colorOffset, sizeof(float) * 4 * m->vertexCount);
 		}
 
+		free(vertexData);
+
 		if (!m->elements && m->glUpload.elementBuffer)
 		{
 			m->elements = malloc(m->glUpload.elementBufferSize);

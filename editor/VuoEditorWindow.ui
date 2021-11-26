@@ -169,6 +169,8 @@
     </property>
     <addaction name="openUserModulesFolder"/>
     <addaction name="openSystemModulesFolder"/>
+    <addaction name="separator"/>
+    <addaction name="showConsole"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -300,6 +302,9 @@
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+.</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
@@ -509,6 +514,11 @@
    </property>
    <property name="text">
     <string>Change To</string>
+   </property>
+  </action>
+  <action name="showConsole">
+   <property name="text">
+    <string>Show Console</string>
    </property>
   </action>
  </widget>

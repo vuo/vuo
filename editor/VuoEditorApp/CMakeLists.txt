@@ -48,6 +48,10 @@ VuoBundleFiles(VuoEditorApp "Resources"
 	Icons/zoom-fit.pdf
 	Icons/zoom-in.pdf
 	Icons/zoom-out.pdf
+	Icons/fontawesome/copy.pdf
+	Icons/fontawesome/download.pdf
+	Icons/fontawesome/external-link-square.pdf
+	Icons/fontawesome/times-circle.pdf
 	qt.conf
 )
 
@@ -98,6 +102,7 @@ add_custom_command(
 		${CONAN_LIB_DIRS_QT}/QtPrintSupport.framework
 		${CONAN_LIB_DIRS_QT}/QtQml.framework
 		${CONAN_LIB_DIRS_QT}/QtQuick.framework
+		${CONAN_LIB_DIRS_QT}/QtQuickWidgets.framework
 		${CONAN_LIB_DIRS_QT}/QtSvg.framework
 		${CONAN_LIB_DIRS_QT}/QtWidgets.framework
 		${CONAN_LIB_DIRS_QT}/QtXml.framework
@@ -126,8 +131,10 @@ add_custom_command(
 	COMMAND rsync --recursive --links --perms --delete
 		--exclude '*.dSYM'
 		--exclude '*.qmltypes'
-		--exclude Qt/labs/calendar
 		--exclude Qt/labs/folderlistmodel
+		--exclude Qt/labs/qmlmodels
+		--exclude Qt/labs/sharedimage
+		--exclude Qt/labs/wavefrontmesh
 		--exclude QtAudioEngine
 		--exclude QtQml
 		--exclude QtQuick/Dialogs

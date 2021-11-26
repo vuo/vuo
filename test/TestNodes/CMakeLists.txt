@@ -1,6 +1,7 @@
 VuoTest(NAME TestNodes
 	SOURCE TestNodes.cc
 	FIXTURE TestNodes
+	TIMEOUT 300
 )
 target_link_libraries(TestNodes
 	PRIVATE

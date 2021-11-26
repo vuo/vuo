@@ -14,6 +14,7 @@ extern "C" {
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoInteger);
+Q_DECLARE_METATYPE(VuoList_VuoInteger);
 
 /**
  * Tests the VuoInteger type.
@@ -74,6 +75,24 @@ private slots:
 		json_object_put(o);
 
 		QCOMPARE(v, value);
+	}
+
+	void testAverage_data()
+	{
+		QTest::addColumn<VuoList_VuoInteger>("values");
+		QTest::addColumn<VuoInteger>("average");
+
+		QTest::newRow("empty list") << VuoListCreate_VuoInteger() << (VuoInteger)0;
+		QTest::newRow("multiple items") << VuoList_VuoInteger_makeFromString("[-20, 5, 40, 15]") << (VuoInteger)10;
+		QTest::newRow("division with remainder") << VuoList_VuoInteger_makeFromString("[1, 2, 5]") << (VuoInteger)2;
+	}
+	void testAverage()
+	{
+		QFETCH(VuoList_VuoInteger, values);
+		QFETCH(VuoInteger, average);
+
+		QCOMPARE(VuoInteger_average(values), average);
+		VuoLocal(values);
 	}
 
 	void testRandom_data()

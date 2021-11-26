@@ -15,8 +15,10 @@
 #include "VuoComposition.hh"
 #include "VuoCompositionMetadata.hh"
 #include "VuoCompilerComposition.hh"
+#include "VuoConsoleWindow.hh"
 #include "VuoEditorAboutBox.hh"
 #include "VuoEditorComposition.hh"
+#include "VuoConsole.hh"
 #include "VuoEditorUtilities.hh"
 #include "VuoEditorWindow.hh"
 #include "VuoErrorDialog.hh"
@@ -99,6 +101,8 @@ const CFStringRef VuoEditor_helpBundleIdentifier = CFSTR("org.vuo.Editor.help." 
 VuoEditor::VuoEditor(int &argc, char *argv[])
 	: QApplication(argc,argv)
 {
+	VuoConsole::startListening();
+
 	compilerQueue = dispatch_queue_create("org.vuo.editor.compiler", DISPATCH_QUEUE_SERIAL);
 
 	// Load stored application settings.
@@ -288,30 +292,21 @@ VuoEditor::VuoEditor(int &argc, char *argv[])
 		connect(menuOpenExample, &VuoExampleMenu::exampleSelected, this, &VuoEditor::openUrl);
 		menuFile->addMenu(menuOpenExample);
 
-		// Connect the "Quit" menu item action to our customized quit method.  On Mac OS X, this menu
-		// item will automatically be moved from the "File" menu to the Application menu.
-		menuFile->addAction(tr("Quit"), this, SLOT(quitCleanly()), QKeySequence("Ctrl+Q"));
-
-		// "About" menu item
-		menuFile->addAction(tr("About Vuo…"), this, SLOT(about()));
-
-		// Workaround for bug preventing the "Quit" and "About" menu items from appearing within the Application menu:
-		// Add them again to the "File" menu, this time with Qt's automatic menu merging behavior disabled;
-		// this at least gains us a functional keyboard shortcut for the "Quit" item. (@todo: Fix properly; see
-		// https://b33p.net/kosada/node/5260 ).
-		QAction *aboutAction = new QAction(NULL);
+		// "About" menu item.
+		// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::AboutRole`.
+		QAction *aboutAction = new QAction(nullptr);
 		aboutAction->setText(tr("About Vuo…"));
 		connect(aboutAction, &QAction::triggered, this, &VuoEditor::about);
-		aboutAction->setMenuRole(QAction::NoRole); // Disable automatic menu merging for this item.
-		menuFile->addSeparator();
+		aboutAction->setMenuRole(QAction::AboutRole);
 		menuFile->addAction(aboutAction);
 
-		QAction *quitAction = new QAction(NULL);
-		quitAction->setText(tr("&Quit Vuo"));
+		// Connect the "Quit" menu item action to our customized quit method.
+		// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::QuitRole`.
+		QAction *quitAction = new QAction(nullptr);
+		quitAction->setText(tr("&Quit"));
 		quitAction->setShortcut(QKeySequence("Ctrl+Q"));
 		connect(quitAction, &QAction::triggered, this, &VuoEditor::quitCleanly);
-		quitAction->setMenuRole(QAction::NoRole); // Disable automatic menu merging for this item.
-		menuFile->addSeparator();
+		quitAction->setMenuRole(QAction::QuitRole);
 		menuFile->addAction(quitAction);
 
 		menuBar->addAction(menuFile->menuAction());
@@ -612,7 +607,6 @@ void VuoEditor::loadTranslations()
 	if (settings->value("translation/enable", true).toBool())
 	{
 		QLocale locale = QLocale::system();
-		if (VuoIsDebugEnabled())
 		{
 			VUserLog("C locale:");
 			VUserLog("    NL codeset         : %s", nl_langinfo(CODESET));
@@ -657,27 +651,27 @@ void VuoEditor::loadTranslations()
 		QString suffix(".qm");
 		foreach (QString context, contexts)
 		{
-			VDebugLog("Context %s:", context.toUtf8().data());
+			VUserLog("Context %s:", context.toUtf8().data());
 
 			QTranslator *t = new QTranslator();
 			QString translationFilename = qtFindTranslation(locale, context, prefix, translationsPath, suffix);
 			if (translationFilename.isEmpty())
 			{
-				VDebugLog("    No translation file found.");
+				VUserLog("    No translation file found.");
 				continue;
 			}
 
 			bool loaded = t->load(locale, context, prefix, translationsPath, suffix);
-			VDebugLog("    Loading    '%s': %s", translationFilename.toUtf8().data(), loaded ? "ok" : "error");
+			VUserLog("    Loading    '%s': %s", translationFilename.toUtf8().data(), loaded ? "ok" : "error");
 			if (!loaded)
 				continue;
 
 			bool installed = installTranslator(t);
-			VDebugLog("    Installing '%s': %s", translationFilename.toUtf8().data(), installed ? "ok" : "error");
+			VUserLog("    Installing '%s': %s", translationFilename.toUtf8().data(), installed ? "ok" : "error");
 		}
 	}
 	else
-		VDebugLog("Disabling translations since preference `translation.enable` is false.");
+		VUserLog("Disabling translations since preference `translation.enable` is false.");
 }
 
 /**
@@ -735,7 +729,7 @@ void VuoEditor::loadTranslations()
 			 bool isQuitOrHelp = action->text().contains("Quit") || action->text().contains("About");
 			 bool isTemplateHeader = (menu == menuNewCompositionWithTemplate) &&
 									 action->data().value<QString>().isEmpty() &&
-									 !action->data().value<void *>();
+									 !action->data().value<VuoProtocol *>();
 			 if (!(isQuitOrHelp || isTemplateHeader))
 				 action->setEnabled(enable);
 		 }
@@ -1323,7 +1317,7 @@ VuoEditorWindow * VuoEditor::newCompositionWithContent(string content, string co
 void VuoEditor::newCompositionWithProtocol(void)
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoProtocol *selectedProtocol = static_cast<VuoProtocol *>(sender->data().value<void *>());
+	VuoProtocol *selectedProtocol = sender->data().value<VuoProtocol *>();
 
 	closeUnmodifiedUntitledComposition();
 #if VUO_PRO
@@ -1852,6 +1846,10 @@ void VuoEditor::openUrl(const QString &url)
 				installationSuccessMessageBox.setIconPixmap(VuoEditorUtilities::vuoLogoForDialogs());
 				installationSuccessMessageBox.exec();
 			}
+
+#if VUO_PRO
+			closeWelcomeWindow(true);
+#endif
 		}
 
 		else if (VuoFileUtilities::isCompositionExtension(ext) || VuoFileUtilities::isIsfSourceExtension(ext))
@@ -2327,8 +2325,15 @@ void VuoEditor::pruneAllOpenRecentFileMenus()
  */
 void VuoEditor::synchronizeOpenRecentFileMenus()
 {
-	for (QMainWindow *openWindow : VuoEditorUtilities::getOpenEditingWindows())
-		VuoEditorUtilities::getRecentFileMenuForWindow(openWindow)->setRecentFiles(menuOpenRecent->getRecentFiles());
+	for (QMainWindow *openEditingWindow : VuoEditorUtilities::getOpenEditingWindows())
+		VuoEditorUtilities::getRecentFileMenuForWindow(openEditingWindow)->setRecentFiles(menuOpenRecent->getRecentFiles());
+
+	for (QWidget *openWindow : QApplication::topLevelWidgets())
+	{
+		VuoConsoleWindow *consoleWindow = dynamic_cast<VuoConsoleWindow *>(openWindow);
+		if (consoleWindow)
+			consoleWindow->getRecentFileMenu()->setRecentFiles(menuOpenRecent->getRecentFiles());
+	}
 
 	settings->setValue(recentFileListSettingsKey, menuOpenRecent->getRecentFiles());
 }
@@ -2488,13 +2493,31 @@ void VuoEditor::showNodeSetDocumentationFromUrl(const QUrl &url)
  */
 void VuoEditor::showNodeDocumentationFromUrl(const QUrl &url)
 {
-	string nodeClassName = url.host().toUtf8().constData();
-	VuoNodeLibrary *topmostNodeLibrary = (VuoEditorWindow::getMostRecentActiveEditorWindow()?
-											  VuoEditorWindow::getMostRecentActiveEditorWindow()->getCurrentNodeLibrary() :
-											  NULL);
+#if VUO_PRO
+	if (!closeWelcomeWindow())
+		return;
+#endif
 
-	if (topmostNodeLibrary)
-		topmostNodeLibrary->prepareAndDisplayNodePopoverForClass(nodeClassName);
+	string nodeClassName = url.host().toUtf8().constData();
+
+	VuoNodeLibrary *nodeLibraryToUpdate;
+	if (currentFloatingNodeLibrary)
+	{
+		nodeLibraryToUpdate = currentFloatingNodeLibrary;
+		showNodeLibrary();
+	}
+	else
+	{
+		VuoEditorWindow *topmostEditorWindow = VuoEditorWindow::getMostRecentActiveEditorWindow();
+		if (!topmostEditorWindow)
+			topmostEditorWindow = createEditorWindow(assignUntitledDocumentIdentifier(), "", "", nullptr);
+
+		nodeLibraryToUpdate = topmostEditorWindow->getCurrentNodeLibrary();
+		topmostEditorWindow->on_showNodeLibrary_triggered();
+	}
+
+	if (nodeLibraryToUpdate)
+		nodeLibraryToUpdate->setState(QString::fromStdString(nodeClassName), { nodeClassName }, nodeClassName);
 }
 
 /**
@@ -2946,47 +2969,9 @@ VuoSubcompositionMessageRouter * VuoEditor::getSubcompositionRouter(void)
  */
 void VuoEditor::initializeBuiltInDrivers()
 {
-	// Image filter driver
-	VuoProtocol *imageFilterProtocol = VuoProtocol::getProtocol(VuoProtocol::imageFilter);
-	string imageFilterDriverPath = VuoFileUtilities::getVuoFrameworkPath() + "/Resources/" + "imageFilterDriver.vuo";
-	string imageFilterDriverAsString = (VuoFileUtilities::fileExists(imageFilterDriverPath)?
-											VuoFileUtilities::readFileToString(imageFilterDriverPath) :
-											"");
-
-	if (!imageFilterDriverAsString.empty())
-	{
-		VuoCompilerDriver *imageFilterDriver = new VuoCompilerDriver(compiler, imageFilterDriverAsString);
-		if (imageFilterDriver->isValidDriverForProtocol(imageFilterProtocol))
-			builtInDriverForProtocol[imageFilterProtocol] = imageFilterDriver;
-	}
-
-	// Image generator driver
-	VuoProtocol *imageGeneratorProtocol = VuoProtocol::getProtocol(VuoProtocol::imageGenerator);
-	string imageGeneratorDriverPath = VuoFileUtilities::getVuoFrameworkPath() + "/Resources/" + "imageGeneratorDriver.vuo";
-	string imageGeneratorDriverAsString = (VuoFileUtilities::fileExists(imageGeneratorDriverPath)?
-											   VuoFileUtilities::readFileToString(imageGeneratorDriverPath) :
-											   "");
-
-	if (!imageGeneratorDriverAsString.empty())
-	{
-		VuoCompilerDriver *imageGeneratorDriver = new VuoCompilerDriver(compiler, imageGeneratorDriverAsString);
-		if (imageGeneratorDriver->isValidDriverForProtocol(imageGeneratorProtocol))
-			builtInDriverForProtocol[imageGeneratorProtocol] = imageGeneratorDriver;
-	}
-
-	// Image transition driver
-	VuoProtocol *imageTransitionProtocol = VuoProtocol::getProtocol(VuoProtocol::imageTransition);
-	string imageTransitionDriverPath = VuoFileUtilities::getVuoFrameworkPath() + "/Resources/" + "imageTransitionDriver.vuo";
-	string imageTransitionDriverAsString = (VuoFileUtilities::fileExists(imageTransitionDriverPath)?
-											   VuoFileUtilities::readFileToString(imageTransitionDriverPath) :
-											   "");
-
-	if (!imageTransitionDriverAsString.empty())
-	{
-		VuoCompilerDriver *imageTransitionDriver = new VuoCompilerDriver(compiler, imageTransitionDriverAsString);
-		if (imageTransitionDriver->isValidDriverForProtocol(imageTransitionProtocol))
-			builtInDriverForProtocol[imageTransitionProtocol] = imageTransitionDriver;
-	}
+	builtInDriverForProtocol[VuoProtocol::getProtocol(VuoProtocol::imageFilter    )] = VuoCompilerDriver::driverForProtocol(compiler, VuoProtocol::imageFilter);
+	builtInDriverForProtocol[VuoProtocol::getProtocol(VuoProtocol::imageGenerator )] = VuoCompilerDriver::driverForProtocol(compiler, VuoProtocol::imageGenerator);
+	builtInDriverForProtocol[VuoProtocol::getProtocol(VuoProtocol::imageTransition)] = VuoCompilerDriver::driverForProtocol(compiler, VuoProtocol::imageTransition);
 
 	// Extract built-in images to be used by protocol drivers.
 	VuoNodeSet *imageNodeSet = compiler->getNodeSetForName("vuo.image");
@@ -3068,7 +3053,7 @@ void VuoEditor::populateNewCompositionWithTemplateMenu(QMenu *m)
 	{
 		QAction *protocolAction = new QAction(this);
 		protocolAction->setText(tr(protocol->getName().c_str()));
-		protocolAction->setData(qVariantFromValue(static_cast<void *>(protocol)));
+		protocolAction->setData(QVariant::fromValue(protocol));
 		protocolAction->setIcon(indentIcon);
 		connect(protocolAction, &QAction::triggered, this, &VuoEditor::newCompositionWithProtocol);
 		m->addAction(protocolAction);
@@ -3313,22 +3298,7 @@ void VuoEditor::updateColor(bool isDark)
 
 	VuoRendererColors::setDark(isDark);
 
-	{
-		QFile f(":/Vuo.qss");
-		f.open(QFile::ReadOnly | QFile::Text);
-		QTextStream ts(&f);
-		QString styles = ts.readAll();
-
-		if (isDark)
-		{
-			QFile f(":/pro/VuoDark.qss");
-			f.open(QFile::ReadOnly | QFile::Text);
-			QTextStream ts(&f);
-			styles += ts.readAll();
-		}
-
-		setStyleSheet(styles);
-	}
+	setStyleSheet(VuoRendererCommon::getStyleSheet(isDark));
 }
 
 /**
@@ -3439,7 +3409,10 @@ string VuoEditor::getUserName()
 #if VUO_PRO
 	return getStoredUserName_Pro();
 #else
-	return getenv("USER");
+	const char *user = getenv("USER");
+	if (!user)
+		return string();
+	return user;
 #endif
 }
 

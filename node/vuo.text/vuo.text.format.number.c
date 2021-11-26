@@ -11,17 +11,18 @@
 #include "VuoNumberFormat.h"
 
 VuoModuleMetadata({
-					  "title" : "Format Number",
-					  "keywords" : [
-						  "currency", "dollar", "euro", "percentage", "round",
-						  "convert", "real", // so it shows up when searching for "convert real text"
-					  ],
-					  "version" : "1.1.0",
-					  "dependencies" : [],
-					  "node" : {
-						  "exampleCompositions" : [ "ShowMousePosition.vuo" ]
-					  }
-				  });
+	"title": "Format Number",
+	"keywords": [
+		"string",
+		"currency", "dollar", "euro", "percentage", "round",
+		"convert", "real", // so it shows up when searching for "convert real text"
+	],
+	"version": "1.1.0",
+	"dependencies": [],
+	"node": {
+		"exampleCompositions": [ "ShowMousePosition.vuo" ],
+	},
+});
 
 void nodeEvent
 (

@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Changes the size of a rectangle layer when you drag a slider in the Vuo editor.
+ *
+ * @createdInVuoVersion 2.4.0
+ * @lastSavedInVuoVersion 2.4.0
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="45,195" fillcolor="lime" _started_eventThrottling="enqueue"];
+FireWhenValueEdited [type="vuo.event.fireWhenValueEdited" version="1.0.0" label="Fire when Value Edited|<refresh>refresh\l|<value>value\l|<scale>scale\l|<valueEdited>valueEdited\r" pos="150,405" fillcolor="orange" _value="0.0" _scale="\{\"minimum\":0,\"maximum\":1\}" _valueEdited_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="546,236" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="360,345" _color="\{\"r\":0.66196686029434204,\"g\":0.23002976179122925,\"b\":0.25772488117218018,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _sharpness="1.0" _roundness="0.20000000000000001" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="195,225" _text="\"In the Vuo editor, double-click on the \\\"Fire when Value Edited\\\" node's \\\"Value\\\" port, and drag the slider.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":0.99999994039535522,\"a\":1.0\},\"alignment\":\"center\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _wrapWidth="0.69999999999999996" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="600,225" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+FireOnStart:started -> MakeTextLayer:text;
+FireWhenValueEdited:valueEdited -> MakeRectangleLayer:height;
+FireWhenValueEdited:valueEdited -> MakeRectangleLayer:width;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeRectangleLayer:layer -> MakeList:1;
+MakeTextLayer:layer -> MakeList:2;
+}

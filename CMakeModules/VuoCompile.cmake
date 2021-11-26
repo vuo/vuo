@@ -211,7 +211,6 @@ function (VuoCompileTypes)
 					${dependsOnVuoCompile}
 					VuoCoreTypesHeader
 					${arg_BASEDIR}/${typeSource}
-				IMPLICIT_DEPENDS CXX ${arg_BASEDIR}/${typeSource}
 				COMMENT "Compiling ${nodeSetName} type ${typeSource} (${arch})"
 				COMMAND_EXPAND_LISTS
 				COMMAND ${CMAKE_C_COMPILER_LAUNCHER}
@@ -221,6 +220,8 @@ function (VuoCompileTypes)
 					"-I$<JOIN:$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>,;-I>"
 					-c ${arg_BASEDIR}/${typeSource}
 					-o ${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}
+					--dependency-output "${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}.d"
+				DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/${typeBitcode}.d"
 				OUTPUT ${typeBitcode}
 			)
 
@@ -355,7 +356,6 @@ function (VuoCompileLibrariesWithTarget target)
 					VuoCoreTypesHeader
 					${PROJECT_SOURCE_DIR}/type/list/VuoList.h
 					${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				COMMENT "Compiling ${target} (${arch} bitcode) ${source}"
 				COMMAND_EXPAND_LISTS
 				COMMAND ${compiler}
@@ -365,12 +365,12 @@ function (VuoCompileLibrariesWithTarget target)
 					"$<$<BOOL:${includeGen}>:-I$<JOIN:${includeGen},;-I>>"
 					-arch ${arch}
 					-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}
-					-fblocks
-					-fexceptions
 					-emit-llvm
 					-isysroot ${CMAKE_OSX_SYSROOT}
 					-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 					-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
+					-MD -MF "${CMAKE_CURRENT_BINARY_DIR}/${bitcode}.d"
+				DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/${bitcode}.d"
 				OUTPUT ${bitcode}
 			)
 			if (archCount EQUAL 1)
@@ -417,7 +417,6 @@ function (VuoCompileLibrariesWithTarget target)
 				VuoCoreTypesHeader
 				${PROJECT_SOURCE_DIR}/type/list/VuoList.h
 				${CMAKE_CURRENT_SOURCE_DIR}/${source}
-			IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 			COMMENT "Compiling ${target} (native) ${source}"
 			COMMAND_EXPAND_LISTS
 			COMMAND ${compiler}
@@ -426,11 +425,11 @@ function (VuoCompileLibrariesWithTarget target)
 				"$<$<BOOL:${includeGen}>:-I$<JOIN:${includeGen},;-I>>"
 				${archFlags}
 				-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}
-				-fblocks
-				-fexceptions
 				-isysroot ${CMAKE_OSX_SYSROOT}
 				-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				-o ${CMAKE_CURRENT_BINARY_DIR}/${object}
+				-MD -MF "${CMAKE_CURRENT_BINARY_DIR}/${object}.d"
+			DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/${object}.d"
 			OUTPUT ${object}
 		)
 		if (VuoPackage)
@@ -505,7 +504,6 @@ function (VuoCompileNodes)
 					${thisDep}
 					VuoCoreTypesHeader
 					${CMAKE_CURRENT_SOURCE_DIR}/${source}
-				IMPLICIT_DEPENDS CXX ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 				COMMENT "Compiling ${nodeSetName} node ${source} (${arch})"
 				COMMAND_EXPAND_LISTS
 				COMMAND ${CMAKE_C_COMPILER_LAUNCHER}
@@ -515,6 +513,8 @@ function (VuoCompileNodes)
 					--target ${arch}-apple-macosx10.10.0
 					-c ${CMAKE_CURRENT_SOURCE_DIR}/${source}
 					-o ${CMAKE_CURRENT_BINARY_DIR}/${bitcode}
+					--dependency-output "${CMAKE_CURRENT_BINARY_DIR}/${bitcode}.d"
+				DEPFILE "${CMAKE_CURRENT_BINARY_DIR}/${bitcode}.d"
 				OUTPUT ${bitcode}
 			)
 			if (archCount EQUAL 1)

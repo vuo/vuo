@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 	"title" : "Sort List",
 	"keywords" : [
-		"organize", "order", "alphabetical", "lexicographical",
+		"organize", "order", "reorder", "alphabetical", "lexicographical",
 		"ascending", "descending", "increasing", "decreasing",
 		"item",
 	],

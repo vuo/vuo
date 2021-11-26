@@ -163,8 +163,8 @@ private slots:
 
 		QTest::newRow("no restrictions") << "vuo.event.fireOnStart" << "any system that Vuo supports";
 		QTest::newRow("node class is restricted") << "vuo.image.make.web" << "macOS 10.13 and above";
-		QTest::newRow("library is restricted") << "VuoNdi" << "macOS on an Intel (X86-64) CPU";
-		QTest::newRow("dependency of node class is restricted") << "vuo.ndi.receive" << "any system that Vuo supports";
+		QTest::newRow("library is restricted") << "VuoLeap" << "macOS on an Intel (X86-64) CPU";
+		QTest::newRow("dependency of node class is restricted") << "vuo.leap.receive" << "any system that Vuo supports";  // VuoCompilerModule::getCompatibleTargets() only checks the compatibility of the module itself, not its dependencies.
 	}
 	void testCompatibleTargets()
 	{

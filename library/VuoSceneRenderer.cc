@@ -1688,7 +1688,7 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 				force2DDepth = true;
 		}
 
-		VDebugLog("force2DDepth = %d", force2DDepth);
+		VUserLog("force2DDepth = %d", force2DDepth);
 	});
 
 	unsigned char colorBytesPerPixel = VuoGlTexture_getBytesPerPixel(imageGlInternalFormat, GL_BGRA);

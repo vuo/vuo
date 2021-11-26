@@ -47,6 +47,7 @@ VuoCompileNodes(
 	vuo.scene.fetch.list.c
 	vuo.scene.find.c
 	vuo.scene.get.child.c
+	vuo.scene.get.mesh.c
 	vuo.scene.get2.c
 	vuo.scene.make.c
 	vuo.scene.make.camera.drag.c

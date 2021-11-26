@@ -320,7 +320,7 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 	float backingScaleFactor = _window.backingScaleFactor;
 	if (backingScaleFactor != _window.backingScaleFactorCached)
 	{
-		VDebugLog("backingScaleFactor changed from %g to %g", _window.backingScaleFactorCached, backingScaleFactor);
+		VUserLog("backingScaleFactor changed from %g to %g", _window.backingScaleFactorCached, backingScaleFactor);
 		float oldBackingScaleFactor = _window.backingScaleFactorCached;
 		NSSize contentSize = [_window contentRectForFrameRect:_window.frame].size;
 

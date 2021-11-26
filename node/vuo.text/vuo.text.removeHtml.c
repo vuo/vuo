@@ -11,19 +11,20 @@
 #include "VuoTextHtml.h"
 
 VuoModuleMetadata({
-					  "title" : "Remove HTML",
-					  "keywords" : [
-						  "strip", "filter", "interpret",
-						  "xml", "markup", "tags", "character", "entity", "reference"
-					  ],
-					  "version" : "1.0.0",
-					  "node": {
-						  "exampleCompositions" : [ "vuo-example://vuo.rss/DisplayRssItems.vuo" ]
-					  },
-					  "dependencies" : [
-						  "VuoTextHtml"
-					  ]
-				 });
+	"title": "Remove HTML",
+	"keywords": [
+		"string",
+		"strip", "filter", "interpret",
+		"xml", "markup", "tags", "character", "entity", "reference",
+	],
+	"version" : "1.0.0",
+	"node": {
+		"exampleCompositions": [ "vuo-example://vuo.rss/DisplayRssItems.vuo" ],
+	},
+	"dependencies": [
+		"VuoTextHtml",
+	],
+});
 
 void nodeEvent
 (

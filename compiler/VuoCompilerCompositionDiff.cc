@@ -25,7 +25,7 @@
 /**
  * Returns a JSON-formatted comparison between the old and the new composition, including subcompositions.
  *
- * The comparison is a JSON array loosely based on the [JSON Patch](http://tools.ietf.org/html/draft-ietf-appsawg-json-patch-02) format.
+ * The comparison is a JSON array loosely based on the [JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) format.
  * The key used for each node is a path constructed from its Graphviz identifier and the identifiers of the (sub)compositions
  * containing the node. Unlike the examples below (spaced for readability), the returned string contains no whitespace.
  *

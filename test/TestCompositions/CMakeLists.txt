@@ -12,6 +12,7 @@ target_link_libraries(TestCompositions
 )
 
 VuoCompileNodes(
+	node-TestCompositions/vuo.test.cxxException.cc
 	node-TestCompositions/vuo.test.delay.c
 	node-TestCompositions/vuo.test.mesh.c
 	node-TestCompositions/vuo.test.wallTime.c

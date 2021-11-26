@@ -10,14 +10,17 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Replace Text",
-					 "keywords" : [ "character", "letter", "search", "find", "locate", "where", "place",
-						 "replace", "substitute", "alter", "change" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "exampleCompositions" : [ ]
-					 }
-				 });
+	"title": "Replace Text",
+	"keywords": [
+		"string", "character", "letter",
+		"search", "find", "locate", "where", "place",
+		"replace", "substitute", "alter", "change",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

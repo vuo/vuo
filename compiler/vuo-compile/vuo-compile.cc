@@ -12,8 +12,10 @@
 	#include <Vuo/Vuo.h>
 #else
 	#include "VuoCompiler.hh"
+	#include "VuoCompilerComposition.hh"
 	#include "VuoCompilerException.hh"
 	#include "VuoCompilerIssue.hh"
+	#include "VuoComposition.hh"
 	#include "VuoException.hh"
 	#include "VuoFileUtilities.hh"
 	#include "VuoModuleCompiler.hh"
@@ -75,6 +77,7 @@ int main (int argc, char * const argv[])
 		string listNodeClassesOption = "";
 		string target = "";
 		vector<char *> headerSearchPaths;
+		string dependencyOutputPath;
 		bool doPrintHelp = false;
 		bool isVerbose = false;
 		string optimization = "off";
@@ -88,6 +91,7 @@ int main (int argc, char * const argv[])
 			{"verbose", no_argument, NULL, 0},
 			{"optimization", required_argument, NULL, 0},
 			{"generate-builtin-module-caches", required_argument, NULL, 0},
+			{"dependency-output", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -125,6 +129,9 @@ int main (int argc, char * const argv[])
 				case 7:  // --generate-builtin-module-caches
 					VuoCompiler::generateBuiltInModuleCaches(optarg, target);
 					return 0;
+				case 8:  // --dependency-output
+					dependencyOutputPath = optarg;
+					break;
 
 				case -1:  // Short option
 					switch (ret)
@@ -194,6 +201,8 @@ int main (int argc, char * const argv[])
 
 		compiler.setVerbose(isVerbose);
 		compiler.setDelegate(&delegate);
+		if (!dependencyOutputPath.empty())
+			compiler.setDependencyOutput(dependencyOutputPath);
 
 #ifdef USING_VUO_FRAMEWORK
 		compiler.addHeaderSearchPath(VuoFileUtilities::getVuoFrameworkPath() + "/Headers");
@@ -249,8 +258,24 @@ int main (int argc, char * const argv[])
 
 				if (inputExtension == "vuo")
 				{
+					string compositionString = VuoFileUtilities::readFileToString(inputPath);
+					auto composition         = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, &compiler);
+
+#ifdef USING_VUO_FRAMEWORK
+					for (auto protocol : VuoProtocol::getCompositionProtocols(compositionString))
+					{
+						auto driver = VuoCompilerDriver::driverForProtocol(&compiler, protocol->getId());
+						driver->applyToComposition(composition, &compiler, false);
+						delete driver;
+					}
+#endif
+
 					compiler.setCompositionPath(inputPath);
-					compiler.compileComposition(inputPath, outputPath, true, issues);
+					compiler.compileComposition(composition, outputPath, true, issues);
+
+					VuoComposition *baseComposition = composition->getBase();
+					delete composition;
+					delete baseComposition;
 				}
 				else if (VuoFileUtilities::isCSourceExtension(inputExtension) || inputExtension == "fs")
 					compiler.compileModule(inputPath, outputPath);

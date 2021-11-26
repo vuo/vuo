@@ -12,13 +12,19 @@
 #include "VuoControlCode.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Text from Control Code",
-					 "keywords" : [ "ASCII", "carriage", "return", "newline", "linebreak", "\n", "\r", "tab", "em", "en", "space", "break", "invisible" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "exampleCompositions" : [ "SeparateWords.vuo" ]
-					 }
-				 });
+	"title": "Make Text from Control Code",
+	"keywords": [
+		"string",
+		"ASCII",
+		"carriage return", "newline", "linebreak", "break", "\n", "\r",
+		"horizontal tab",
+		"em", "en", "space", "invisible",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "SeparateWords.vuo" ],
+	},
+});
 
 void nodeEvent
 (

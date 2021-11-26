@@ -62,6 +62,7 @@ MakeWireframeShader:shader -> MakeIcosphere2:material;
 PublishedInputs:height -> RenderSceneToImage2:height;
 PublishedInputs:time -> AllowFirstEvent2:event;
 PublishedInputs:time -> ChangeSpeed2:time;
+PublishedInputs:time -> ChangeSpeed:time;
 PublishedInputs:time -> Wave2:time;
 PublishedInputs:time -> Wave3:time;
 PublishedInputs:time -> Wave:time;

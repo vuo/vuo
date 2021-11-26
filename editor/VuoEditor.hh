@@ -293,3 +293,10 @@ private:
 #include "pro/VuoEditor_Pro.hh"
 #endif
 };
+
+// Ideally these should go in the individual base and compiler header files,
+// but base and compiler don't have access to Qt.
+Q_DECLARE_OPAQUE_POINTER(VuoProtocol *)
+Q_DECLARE_METATYPE(VuoProtocol *)
+Q_DECLARE_OPAQUE_POINTER(VuoCompilerNodeClass *)
+Q_DECLARE_METATYPE(VuoCompilerNodeClass *)

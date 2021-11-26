@@ -5,6 +5,8 @@ VuoTest(NAME TestWindow
 	# This test controls the mouse cursor
 	# and expects its windows to be in the foreground without interruption.
 	RUN_SERIAL ON
+
+	GMALLOC_ELIGIBLE
 )
 target_link_libraries(TestWindow
 	PRIVATE

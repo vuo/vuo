@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Changed",
 					  "keywords" : [ "pulse", "watcher" ],
-					  "version" : "1.2.0",
+					  "version" : "1.2.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [
@@ -54,6 +54,7 @@ VuoGenericType1 * nodeInstanceInit
 	VuoGenericType1 *lastValue = (VuoGenericType1 *)malloc(sizeof(VuoGenericType1));
 	VuoRegister(lastValue, free);
 	*lastValue = value;
+	VuoGenericType1_retain(*lastValue);
 	return lastValue;
 }
 
@@ -66,7 +67,9 @@ void nodeInstanceEvent
 )
 {
 	*changed = (! VuoGenericType1_areEqual(**lastValue, value));
+	VuoGenericType1_release(**lastValue);
 	**lastValue = value;
+	VuoGenericType1_retain(**lastValue);
 }
 
 void nodeInstanceFini
@@ -74,4 +77,5 @@ void nodeInstanceFini
 		VuoInstanceData(VuoGenericType1 *) lastValue
 )
 {
+	VuoGenericType1_release(**lastValue);
 }

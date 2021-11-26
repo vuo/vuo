@@ -255,6 +255,86 @@ private slots:
 		remove(linkedCompositionPath.c_str());
 	}
 
+	void testNodeClassThatDependsOnDylib_data()
+	{
+		QTest::addColumn< QString >("linkType");
+		QTest::addColumn< VuoCompiler::Optimization >("optimization");
+
+		QTest::newRow("C node class, dynamic libraries for live editing") << "COMPOSITION_DYLIB_AND_RESOURCE_DYLIB" << VuoCompiler::Optimization_FastBuild;
+		QTest::newRow("C node class, dynamic library, fast build") << "COMBINED_DYLIB" << VuoCompiler::Optimization_FastBuild;
+		QTest::newRow("C node class, dynamic library, small binary") << "COMBINED_DYLIB" << VuoCompiler::Optimization_SmallBinary;
+		QTest::newRow("C node class, executable, fast build") << "EXECUTABLE" << VuoCompiler::Optimization_FastBuild;
+		QTest::newRow("C node class, executable, small binary") << "EXECUTABLE" << VuoCompiler::Optimization_SmallBinary;
+	}
+	void testNodeClassThatDependsOnDylib()
+	{
+		QFETCH(QString, linkType);
+		QFETCH(VuoCompiler::Optimization, optimization);
+
+		QDir nodeClassDir(QDir::current().filePath("node-TestCompilingAndLinking"));
+		QString nodeClassName = "vuo.test.dependsOnUserDylib";
+		QString nodeClassFile = nodeClassName + ".c";
+		string nodeClassSrcPath = nodeClassDir.filePath(nodeClassFile).toStdString();
+		string nodeClassDstPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassFile.toStdString();
+		QDir dylibDir(BINARY_DIR "/test/TestCompilingAndLinking");
+		QString dylibFile = "libUserDylib.dylib";
+		string dylibSrcPath = dylibDir.filePath(dylibFile).toStdString();
+		string dylibDstPath = VuoFileUtilities::getUserModulesPath() + "/" + dylibFile.toStdString();
+		VuoFileUtilities::copyFile(nodeClassSrcPath, nodeClassDstPath);
+		VuoFileUtilities::copyFile(dylibSrcPath, dylibDstPath);
+
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+		string compositionString = wrapNodeInComposition(nodeClass, compiler);
+
+		VuoRunner *runner = nullptr;
+		string processName = "testNodeClassThatDependsOnDylib";
+		string workingDirectory = "";
+
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(processName, "bc");
+		VuoCompilerIssues issues;
+		compiler->compileCompositionString(compositionString, compiledCompositionPath, true, &issues);
+		QVERIFY2(issues.isEmpty(), issues.getLongDescription(false).c_str());
+
+		if (linkType == "COMPOSITION_DYLIB_AND_RESOURCE_DYLIB")
+		{
+			string linkedCompositionPath = VuoFileUtilities::makeTmpFile(processName, "dylib");
+			std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries = std::make_shared<VuoRunningCompositionLibraries>();
+			runningCompositionLibraries->setDeleteResourceLibraries(true);
+			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, runningCompositionLibraries.get());
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), linkedCompositionPath, runningCompositionLibraries, workingDirectory, false, true);
+		}
+		else if (linkType == "COMBINED_DYLIB")
+		{
+			string linkedCompositionPath = VuoFileUtilities::makeTmpFile(processName, "dylib");
+			compiler->linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, optimization);
+			runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, workingDirectory, true);
+		}
+		else if (linkType == "EXECUTABLE")
+		{
+			string linkedCompositionPath = VuoFileUtilities::makeTmpFile(processName, "");
+			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, optimization);
+			runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, workingDirectory, false, true);
+		}
+
+		runner->start();
+		json_object *inValue = VuoInteger_getJson(100);
+		VuoRunner::Port *inPort = runner->getPublishedInputPortWithName("in");
+		runner->setPublishedInputPortValues({{ inPort, inValue }});
+		runner->firePublishedInputPortEvent(inPort);
+		runner->waitForFiredPublishedInputPortEvent();
+		VuoRunner::Port *outPort = runner->getPublishedOutputPortWithName("out");
+		json_object *outValue = runner->getPublishedOutputPortValue(outPort);
+		runner->stop();
+
+		QCOMPARE(VuoInteger_makeFromJson(outValue), 200);
+		json_object_put(inValue);
+		json_object_put(outValue);
+
+		VuoFileUtilities::deleteFile(compiledCompositionPath);
+		VuoFileUtilities::deleteFile(nodeClassDstPath);
+		VuoFileUtilities::deleteFile(dylibDstPath);
+	}
+
 	void testCompilingPerformance_data()
 	{
 		QTest::addColumn< QString >("compositionName");

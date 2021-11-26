@@ -1,39 +1,48 @@
 /**
  * @file
- * Draws points at random positions (blue) and a crosshair (white) at the average of all the positions so far.
+ * Draws points at random positions (blue) and 2 crosshairs:
+ * (white) at the average of all the positions so far, (magenta) at the average of the most recent positions.
  *
- * @lastSavedInVuoVersion 2.0.3
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @lastSavedInVuoVersion 2.3.2
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
 
 digraph G
 {
-CombineLayers2 [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1530,390"];
-Enqueue [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="930,330" _maxItemCount="250"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="885,510" fillcolor="lime" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="300,165" fillcolor="lime" _seconds="0.250000" _fired_eventThrottling="drop"];
-KeepAverage4 [type="vuo.math.keep.average.VuoPoint2d" version="1.1.0" label="Keep Average|<refresh>refresh\l|<value>value\l|<reset>reset\l|<average>average\r" pos="720,165" fillcolor="orange"];
-LockWindowAspectRatio2 [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="1080,495" _width="1" _height="1"];
-MakeList2 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1251,311" fillcolor="blue"];
-MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="735,345" _color="\{\"r\":0,\"g\":0,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.02" _height="0.02" _sharpness="0.94999999999999996" _opacity="1.0"];
-MakeRandomValue3 [type="vuo.noise.random.VuoPoint2d" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="525,165" _minimum="\{\"x\":-1.000000,\"y\":-1.000000\}" _maximum="\{\"x\":1.000000,\"y\":1.000000\}"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="930,-60" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
-MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="930,135" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="90" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1305,300" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1350,465"];
+Enqueue [type="vuo.list.enqueue.VuoLayer" version="1.1.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="930,420" _maxItemCount="250"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="885,630" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,165" fillcolor="lime" _seconds="0.250000" _fired_eventThrottling="drop"];
+KeepAverage2 [type="vuo.math.keep.average2.VuoPoint2d" version="2.0.0" label="Keep Average|<refresh>refresh\l|<value>value\l|<lookback>lookback\l|<reset>reset\l|<average>average\r" pos="720,-255" fillcolor="orange" _lookback="-1"];
+KeepAverage4 [type="vuo.math.keep.average2.VuoPoint2d" version="2.0.0" label="Keep Average|<refresh>refresh\l|<value>value\l|<lookback>lookback\l|<reset>reset\l|<average>average\r" pos="720,165" fillcolor="orange" _lookback="5"];
+LockWindowAspectRatio2 [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="1080,615" _width="1" _height="1"];
+MakeList2 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1251,191" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="720,435" _color="\{\"r\":0,\"g\":0,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.02" _height="0.02" _sharpness="0.94999999999999996" _opacity="1.0"];
+MakeRandomValue3 [type="vuo.noise.random.VuoPoint2d" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="480,165" _minimum="\{\"x\":-1.000000,\"y\":-1.000000\}" _maximum="\{\"x\":1.000000,\"y\":1.000000\}"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="915,15" _color="\{\"r\":0.9855344295501709,\"g\":0.0092927441000938416,\"b\":0.999176025390625,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="915,210" _color="\{\"r\":0.9855344295501709,\"g\":0.0092927441000938416,\"b\":0.999176025390625,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="90" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer3 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="915,-210" _color="\{\"r\":1,\"g\":0.999969482421875,\"b\":0.9999847412109375,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="90" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer4 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="915,-405" _color="\{\"r\":1,\"g\":0.999969482421875,\"b\":0.9999847412109375,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.01" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1305,180" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
-CombineLayers2:combinedLayer -> MakeList2:3;
-Enqueue:list -> CombineLayers2:layers;
+CombineLayers:combinedLayer -> MakeList2:5;
+Enqueue:list -> CombineLayers:layers;
 FireOnStart2:started -> LockWindowAspectRatio2:width;
 FirePeriodically:fired -> MakeRandomValue3:minimum [event=true];
+KeepAverage2:average -> MakeRectangleLayer3:center;
+KeepAverage2:average -> MakeRectangleLayer4:center;
 KeepAverage4:average -> MakeRectangleLayer2:center;
 KeepAverage4:average -> MakeRectangleLayer:center;
 LockWindowAspectRatio2:changedWindowDescription -> RenderLayersToWindow:setWindowDescription;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeOvalLayer:layer -> Enqueue:addItem;
+MakeRandomValue3:value -> KeepAverage2:value;
 MakeRandomValue3:value -> KeepAverage4:value;
 MakeRandomValue3:value -> MakeOvalLayer:center;
-MakeRectangleLayer2:layer -> MakeList2:2;
-MakeRectangleLayer:layer -> MakeList2:1;
+MakeRectangleLayer2:layer -> MakeList2:4;
+MakeRectangleLayer3:layer -> MakeList2:2;
+MakeRectangleLayer4:layer -> MakeList2:1;
+MakeRectangleLayer:layer -> MakeList2:3;
 }

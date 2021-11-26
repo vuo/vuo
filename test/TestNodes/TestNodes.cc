@@ -13,7 +13,6 @@
 #include "VuoRendererCommon.hh"
 
 // Be able to use these types in QTest::addColumn()
-Q_DECLARE_METATYPE(VuoCompilerNodeClass *);
 Q_DECLARE_METATYPE(VuoNodeSet *);
 Q_DECLARE_METATYPE(string);
 
@@ -326,6 +325,14 @@ private slots:
 		if (nodeClassName == "vuo.video.receive")
 			QSKIP("Not testing events on this node since it sporadically fails.");
 
+		// https://b33p.net/kosada/vuo/vuo/-/issues/18815
+		if (nodeClassName == "vuo.audio.split.frequency")
+			QSKIP("Skipping due to a not-yet-diagnosed memory error.");
+
+		// https://b33p.net/kosada/vuo/vuo/-/issues/18816
+		if (nodeClassName == "vuo.image.make.web")
+			QSKIP("Skipping due to a not-yet-diagnosed memory error.");
+
 		string composition = wrapNodeInComposition(nodeClass, compiler);
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode", "bc");
@@ -341,37 +348,52 @@ private slots:
 		runner->setRuntimeChecking(true);
 		runner->start();
 
+		vector<json_object *> portValuesToTest{
+			nullptr,
+			json_object_new_int(0),
+			json_object_new_int(1),
+			json_object_new_int(-1),
+			json_object_new_double(0.5),
+			json_object_new_double(NAN),
+			json_object_new_array(),
+			json_object_new_object(),
+			json_object_new_string(""),
+		};
+
 		try
 		{
+			// Test executing the node with its default port values.
+			VUserLog("    defaults");
+			fireEventsThroughInputPorts(runner, nodeClass);
 
-		fireEventsThroughInputPorts(runner, nodeClass);
-
-		foreach (VuoPortClass *portClass, nodeClass->getBase()->getInputPortClasses())
-		{
-			VuoCompilerInputDataClass *dataClass = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->getDataClass();
-			if (dataClass)
+			for (auto portClass : nodeClass->getBase()->getInputPortClasses())
 			{
-				string defaultValue = dataClass->getDefaultValue();
-				if (! defaultValue.empty())
+				VuoCompilerInputDataClass *dataClass = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->getDataClass();
+				if (dataClass)
 				{
+					string defaultValue = dataClass->getDefaultValue();
+
+					// Test executing the node with a few specific values in each port.
 					map<VuoRunner::Port *, json_object *> m;
-					VuoRunner::Port *port = runner->getPublishedInputPortWithName( portClass->getName() );
-					m[port] = NULL;
-					runner->setPublishedInputPortValues(m);
+					VuoRunner::Port *port = runner->getPublishedInputPortWithName(portClass->getName());
+					for (auto portValue : portValuesToTest)
+					{
+						VUserLog("    %s -> %s", port->getName().c_str(), json_object_to_json_string(portValue));
+						m[port] = portValue;
+						runner->setPublishedInputPortValues(m);
+						fireEventsThroughInputPorts(runner, nodeClass);
+					}
 
-					fireEventsThroughInputPorts(runner, nodeClass);
-
+					// Restore the port's default value before testing the next port.
 					json_object *defaultValueObject = json_tokener_parse(defaultValue.c_str());
 					m[port] = defaultValueObject;
 					runner->setPublishedInputPortValues(m);
 					json_object_put(defaultValueObject);
 				}
 			}
-		}
 
-		runner->stop();
-		delete runner;
-
+			runner->stop();
+			delete runner;
 		}
 		catch (VuoException &e)
 		{

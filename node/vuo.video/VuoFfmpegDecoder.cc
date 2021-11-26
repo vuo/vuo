@@ -1137,7 +1137,7 @@ void VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 		ret = av_seek_frame(container.formatCtx, container.videoStreamIndex, target_pts, AVSEEK_FLAG_BACKWARD);
 
 	if(ret < 0)
-		VDebugLog("Warning: av_seek_frame() failed: %s", av_err2str(ret));
+		VUserLog("Warning: av_seek_frame() failed: %s", av_err2str(ret));
 
 //	seeking = true;
 

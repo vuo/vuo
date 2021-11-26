@@ -11,10 +11,12 @@
 #include "json-c/json.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert Text to Integer",
-					 "keywords" : [ ],
-					 "version" : "1.0.1"
-				 });
+	"title": "Convert Text to Integer",
+	"keywords": [
+		"string",
+	],
+	"version": "1.0.1",
+});
 
 void nodeEvent
 (

@@ -41,6 +41,7 @@ The main function is :command:`qtest_discover_tests`.
                          [TEST_PREFIX prefix]
                          [TEST_SUFFIX suffix]
                          [PROPERTIES name1 value1...]
+						 [ENVIRONMENT name1 value1...]
                          [DISCOVERY_TIMEOUT seconds])
 
   ``qtest_discover_tests`` sets up a post-build command on the test executable
@@ -75,6 +76,10 @@ The main function is :command:`qtest_discover_tests`.
     invocation of ``qtest_discover_tests``. You can specify a timeout for the
     test execution by setting the TIMEOUT property here, as supported by ctest.
 
+  ``ENVIRONMENT name1 value1...``
+    Specifies environment variables to be set on all tests discovered by this
+    invocation.
+
   ``DISCOVERY_TIMEOUT sec``
     Specifies how long (in seconds) CMake will wait for the test to enumerate
     available tests. If the test takes longer than this, discovery (and your
@@ -90,7 +95,7 @@ function(qtest_discover_tests TARGET)
     ""
     ""
     "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;DISCOVERY_TIMEOUT"
-    "PROPERTIES"
+	"PROPERTIES;ENVIRONMENT"
     ${ARGN}
   )
 
@@ -109,6 +114,7 @@ function(qtest_discover_tests TARGET)
       -D "\"TEST_EXECUTABLE:FILEPATH=$<TARGET_FILE:${TARGET}>\""
       -D "\"CTEST_FILE:FILEPATH=${ctest_include_file}\""
       -D "'TEST_PROPERTIES=${_PROPERTIES}'"
+      -D "'TEST_ENVIRONMENT=${_ENVIRONMENT}'"
       -D "\"TEST_DISCOVERY_TIMEOUT=${_DISCOVERY_TIMEOUT}\""
       -D "\"TEST_PREFIX=${_TEST_PREFIX}\""
       -D "\"TEST_SUFFIX=${_TEST_SUFFIX}\""

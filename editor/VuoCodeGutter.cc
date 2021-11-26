@@ -122,9 +122,9 @@ void VuoCodeGutter::textChanged()
 void VuoCodeGutter::resizeEvent(QResizeEvent *event)
 {
 	int lineNumberDigits = MAX(2, log10(codeEditor->document()->lineCount()) + 1);
-	QFontMetrics lineNumberFontMetrics(lineNumberFont);
+	QFontMetricsF lineNumberFontMetrics(lineNumberFont);
 	int iconSize = codeEditor->errorIcon->height() / window()->devicePixelRatio();
-	int width = leftMargin + iconSize + leftMargin + lineNumberFontMetrics.width('0') * lineNumberDigits + rightMargin;
+	int width = leftMargin + iconSize + leftMargin + lineNumberFontMetrics.horizontalAdvance('0') * lineNumberDigits + rightMargin;
 
 	if (width == size().width())
 		return;

@@ -98,7 +98,7 @@ public:
 					action->setIcon(*(*it)->icon);
 				action->setEnabled((*it)->isEnabled);
 				action->setCheckable((*it)->isEnabled);
-				action->setData(QVariant::fromValue((void *)(*it)->value));
+				action->setData(QVariant::fromValue((*it)->value));
 				menu->addAction(action);
 				action->setActionGroup(actionGroup);
 			}

@@ -72,8 +72,6 @@ static void __attribute__((constructor)) VuoRunner_init()
 
 	if (VuoStringUtilities::makeFromCFString(CFBundleGetIdentifier(CFBundleGetMainBundle())) == "com.vidvox.VDMX5")
 		VuoRunner_isHostVDMX = true;
-
-	VuoEventLoop_installSleepHandlers();
 }
 
 /**
@@ -87,15 +85,8 @@ static bool isMainThread(void)
 /**
  * Applies standard settings to the specified ZMQ socket.
  */
-static void VuoRunner_configureSocket(void *zmqSocket, int timeoutInSeconds)
+static void VuoRunner_configureSocket(void *zmqSocket)
 {
-	if (timeoutInSeconds >= 0)
-	{
-		int timeoutInMilliseconds = timeoutInSeconds * 1000;
-		zmq_setsockopt(zmqSocket, ZMQ_RCVTIMEO, &timeoutInMilliseconds, sizeof timeoutInMilliseconds);
-		zmq_setsockopt(zmqSocket, ZMQ_SNDTIMEO, &timeoutInMilliseconds, sizeof timeoutInMilliseconds);
-	}
-
 	int linger = 0;  // avoid having zmq_term block if the runner has tried to send a message on a broken connection
 	zmq_setsockopt(zmqSocket, ZMQ_LINGER, &linger, sizeof linger);
 }
@@ -115,8 +106,8 @@ public:
 	once_flag vuoImageFunctionsInitialized;  ///< Ensures we only try to initialize the below functions once.
 	typedef void *(*vuoImageMakeFromJsonWithDimensionsType)(json_object *, unsigned int, unsigned int);  ///< VuoImage_makeFromJsonWithDimensions
 	vuoImageMakeFromJsonWithDimensionsType vuoImageMakeFromJsonWithDimensions;  ///< VuoImage_makeFromJsonWithDimensions
-	typedef json_object *(*vuoImageGetJsonType)(void *);  ///< VuoImage_getJson
-	vuoImageGetJsonType vuoImageGetJson;  ///< VuoImage_getJson
+	typedef json_object *(*vuoImageGetInterprocessJsonType)(void *);  ///< VuoImage_getInterprocessJson
+	vuoImageGetInterprocessJsonType vuoImageGetInterprocessJson;  ///< VuoImage_getInterprocessJson
 
 	uint64_t lastWidth;   ///< The most recent image size provided to `setPublishedInputPortValues`.
 	uint64_t lastHeight;  ///< The most recent image size provided to `setPublishedInputPortValues`.
@@ -255,6 +246,11 @@ VuoRunner::VuoRunner(void)
 	delegateQueue = dispatch_queue_create("org.vuo.runner.delegate", NULL);
 	arePublishedInputPortsCached = false;
 	arePublishedOutputPortsCached = false;
+
+	static once_flag sleepHandlersInstalled;
+	call_once(sleepHandlersInstalled, [](){
+		VuoEventLoop_installSleepHandlers();
+	});
 }
 
 /**
@@ -594,7 +590,13 @@ void VuoRunner::startInternal(void)
 				}
 
 				if (isRuntimeCheckingEnabled)
-					setenv("DYLD_INSERT_LIBRARIES", mainThreadChecker, 1);
+				{
+					const char *vuoRuntimeChecking = getenv("VUO_RUNTIME_CHECKING");
+					if (vuoRuntimeChecking)
+						setenv("DYLD_INSERT_LIBRARIES", vuoRuntimeChecking, 1);
+					else
+						setenv("DYLD_INSERT_LIBRARIES", mainThreadChecker, 1);
+				}
 
 				ret = execv(executablePath.c_str(), argv);
 				if (ret)
@@ -682,7 +684,7 @@ void VuoRunner::startInternal(void)
 	if (isUsingCompositionLoader())
 	{
 		ZMQLoaderControl = zmq_socket(ZMQContext,ZMQ_REQ);
-		VuoRunner_configureSocket(ZMQLoaderControl, 5);
+		VuoRunner_configureSocket(ZMQLoaderControl);
 
 		// Try to connect to the composition loader. If at first we don't succeed, give the composition loader a little more time to set up the socket.
 		int numTries = 0;
@@ -693,6 +695,8 @@ void VuoRunner::startInternal(void)
 			usleep(USEC_PER_SEC / 1000);
 		}
 
+		// Actually start the composition.
+		// Since we don't know how long this will take, the socket has an infinite timeout (https://b33p.net/kosada/vuo/vuo/-/issues/18450).
 		replaceComposition(dylibPath, "");
 	}
 	else
@@ -730,7 +734,7 @@ void *VuoRunner_listen(void *context)
 void VuoRunner::setUpConnections(void)
 {
 	ZMQControl = zmq_socket(ZMQContext,ZMQ_REQ);
-	VuoRunner_configureSocket(ZMQControl, -1);
+	VuoRunner_configureSocket(ZMQControl);
 
 	// Try to connect to the composition. If at first we don't succeed, give the composition a little more time to set up the socket.
 	int numTries = 0;
@@ -935,7 +939,7 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
 						  return;
 					  }
 
-					  VDebugLog("Loading composition…");
+					  VUserLog("Loading composition…");
 
 					  if (dylibPath != compositionDylibPath)
 					  {
@@ -953,7 +957,7 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
 					  {
 						  if (! paused)
 						  {
-							  VDebugLog("	Pausing…");
+							  VUserLog("	Pausing…");
 							  vuoControlRequestSend(VuoControlRequestCompositionPause,NULL,0);
 							  vuoControlReplyReceive(VuoControlReplyCompositionPaused);
 						  }
@@ -982,7 +986,7 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
 						  vuoInitMessageWithString(&messages[index], compositionDiff.c_str());
 
 						  if (! paused)
-							  VDebugLog("	Replacing composition…");
+							  VUserLog("	Replacing composition…");
 
 						  vuoLoaderControlRequestSend(VuoLoaderControlRequestCompositionReplace,messages,messageCount);
 						  vuoLoaderControlReplyReceive(VuoLoaderControlReplyCompositionReplaced);
@@ -991,12 +995,12 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
 
 						  if (! paused)
 						  {
-							  VDebugLog("	Unpausing…");
+							  VUserLog("	Unpausing…");
 							  vuoControlRequestSend(VuoControlRequestCompositionUnpause,NULL,0);
 							  vuoControlReplyReceive(VuoControlReplyCompositionUnpaused);
 						  }
 
-						  VDebugLog("	Done.");
+						  VUserLog("	Done.");
 					  }
 					  catch (VuoException &e)
 					  {
@@ -1951,25 +1955,25 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 			&& (actualWidth != p->lastWidth || actualHeight != p->lastHeight))
 		{
 			call_once(p->vuoImageFunctionsInitialized, [=](){
-				p->vuoImageMakeFromJsonWithDimensions = (Private::vuoImageMakeFromJsonWithDimensionsType)dlsym(RTLD_DEFAULT, "VuoImage_makeFromJsonWithDimensions");
+				p->vuoImageMakeFromJsonWithDimensions = (Private::vuoImageMakeFromJsonWithDimensionsType)dlsym(RTLD_SELF, "VuoImage_makeFromJsonWithDimensions");
 				if (!p->vuoImageMakeFromJsonWithDimensions)
 				{
 					VUserLog("Error: Couldn't find VuoImage_makeFromJsonWithDimensions.");
 					return;
 				}
 
-				p->vuoImageGetJson = (Private::vuoImageGetJsonType)dlsym(RTLD_DEFAULT, "VuoImage_getJson");
-				if (!p->vuoImageGetJson)
+				p->vuoImageGetInterprocessJson = (Private::vuoImageGetInterprocessJsonType)dlsym(RTLD_SELF, "VuoImage_getInterprocessJson");
+				if (!p->vuoImageGetInterprocessJson)
 				{
-					VUserLog("Error: Couldn't find VuoImage_getJson.");
+					VUserLog("Error: Couldn't find VuoImage_getInterprocessJson.");
 					return;
 				}
 			});
 
-			if (p->vuoImageMakeFromJsonWithDimensions && p->vuoImageGetJson)
+			if (p->vuoImageMakeFromJsonWithDimensions && p->vuoImageGetInterprocessJson)
 			{
 				void *vi = p->vuoImageMakeFromJsonWithDimensions(js, p->lastWidth, p->lastHeight);
-				return p->vuoImageGetJson(vi);
+				return p->vuoImageGetInterprocessJson(vi);
 			}
 		}
 	}
@@ -2195,7 +2199,7 @@ void VuoRunner::listen()
 	}
 
 	ZMQSelfReceive = zmq_socket(ZMQContext, ZMQ_PAIR);
-	VuoRunner_configureSocket(ZMQSelfReceive, -1);
+	VuoRunner_configureSocket(ZMQSelfReceive);
 	if (zmq_bind(ZMQSelfReceive, "inproc://vuo-runner-self") != 0)
 	{
 		listenError = strerror(errno);
@@ -2204,7 +2208,7 @@ void VuoRunner::listen()
 	}
 
 	ZMQSelfSend = zmq_socket(ZMQContext, ZMQ_PAIR);
-	VuoRunner_configureSocket(ZMQSelfSend, -1);
+	VuoRunner_configureSocket(ZMQSelfSend);
 	if (zmq_connect(ZMQSelfSend, "inproc://vuo-runner-self") != 0)
 	{
 		listenError = strerror(errno);
@@ -2214,7 +2218,7 @@ void VuoRunner::listen()
 
 	{
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_SUB);
-		VuoRunner_configureSocket(ZMQTelemetry, -1);
+		VuoRunner_configureSocket(ZMQTelemetry);
 		if(zmq_connect(ZMQTelemetry,ZMQTelemetryURL.c_str()))
 		{
 			listenError = strerror(errno);
@@ -2233,7 +2237,7 @@ void VuoRunner::listen()
 
 	{
 		// subscribe to all types of telemetry
-		char type = VuoTelemetryStats;
+		char type = VuoTelemetryHeartbeat;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryNodeExecutionStarted;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
@@ -2297,13 +2301,11 @@ void VuoRunner::listen()
 			// Receive telemetry arguments and forward to VuoRunnerDelegate.
 			switch (type)
 			{
-				case VuoTelemetryStats:
+				case VuoTelemetryHeartbeat:
 				{
-					unsigned long utime = vuoReceiveUnsignedInt64(ZMQTelemetry, NULL);
-					unsigned long stime = vuoReceiveUnsignedInt64(ZMQTelemetry, NULL);
 					dispatch_sync(delegateQueue, ^{
 									  if (delegate)
-										  delegate->receivedTelemetryStats(utime, stime);
+										  delegate->receivedTelemetryStats(0, 0);
 								  });
 					break;
 				}

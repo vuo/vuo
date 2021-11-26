@@ -8,15 +8,15 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies":-1}, "outputPortValues":{"outputList":[       ]}},
-	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 0}, "outputPortValues":{"outputList":[       ]}},
-	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 1}, "outputPortValues":{"outputList":[       ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies":-1}, "outputPortValues":{"outputList":null     }},
+	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 0}, "outputPortValues":{"outputList":null     }},
+	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 1}, "outputPortValues":{"outputList":null     }},
 
-	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies":-1}, "outputPortValues":{"outputList":[       ]}},
-	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies": 0}, "outputPortValues":{"outputList":[       ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies":-1}, "outputPortValues":{"outputList":null     }},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies": 0}, "outputPortValues":{"outputList":null     }},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies": 1}, "outputPortValues":{"outputList":[1,2    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2], "copies": 2}, "outputPortValues":{"outputList":[1,1,2,2]}},
 
 	// Ensure an empty input list actually clears the output list (rather than doing nothing).
-	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 1}, "outputPortValues":{"outputList":[       ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[   ], "copies": 1}, "outputPortValues":{"outputList":null     }},
 ]}

@@ -20,9 +20,10 @@ VuoModuleMetadata({
 	"title" : "Speak",
 	"keywords" : [
 		"sound",
-		"speech synthesis", "say", "talk", "pronounce", "vocal"
+		"speech synthesis", "say", "talk", "pronounce", "vocal",
+		"string",
 	],
-	"version" : "1.0.0",
+	"version" : "1.0.1",
 	"dependencies" : [
 		"VuoAudioFile"
 	],
@@ -102,7 +103,7 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceTriggerStart
 (
 	VuoInstanceData(struct nodeInstanceData *) context,
-	VuoOutputTrigger(spokenChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"}),
+	VuoOutputTrigger(spokenChannels, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"}),
 	VuoOutputTrigger(finishedSpeaking, void)
 )
 {
@@ -140,7 +141,7 @@ void nodeInstanceEvent
 	if (!(*context)->triggersEnabled)
 		return;
 
-	if (speak && text)
+	if (speak && !VuoText_isEmpty(text))
 	{
 		NSString *voiceNS = [NSString stringWithUTF8String:voice];
 

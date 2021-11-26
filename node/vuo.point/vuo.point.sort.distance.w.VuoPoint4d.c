@@ -11,16 +11,18 @@
 #include "VuoSort.h"
 
 VuoModuleMetadata({
-					  "title" : "Sort Points by W Distance",
-					  "keywords" : [ "organize", "order", "nearest" ],
-					  "version" : "1.0.1",
-					  "dependencies" : [
-						  "VuoSort"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Sort Points by W Distance",
+	"keywords": [
+		"organize", "order", "reorder", "nearest",
+	],
+	"version": "1.0.1",
+	"dependencies": [
+		"VuoSort",
+	],
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

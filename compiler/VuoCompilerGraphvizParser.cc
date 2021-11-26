@@ -179,7 +179,7 @@ static int VuoCompilerGraphvizParser_error(char *message)
 {
 	VuoCompilerGraphvizParser_lastError += message;
 	if (VuoCompilerGraphvizParser_lastError.find('\n') != string::npos)
-		VDebugLog("%s", VuoCompilerGraphvizParser_lastError.c_str());
+		VUserLog("%s", VuoCompilerGraphvizParser_lastError.c_str());
 	return 0;
 }
 

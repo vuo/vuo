@@ -1,5 +1,6 @@
 VuoTest(NAME TestVuoCompilerNodeClass
 	SOURCE TestVuoCompilerNodeClass.cc
+	GMALLOC_ELIGIBLE
 )
 target_link_libraries(TestVuoCompilerNodeClass
 	PRIVATE

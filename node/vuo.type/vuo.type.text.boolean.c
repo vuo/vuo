@@ -11,10 +11,13 @@
 #include <stdlib.h>
 
 VuoModuleMetadata({
-					 "title" : "Convert Text to Boolean",
-					 "keywords" : [ "0", "1", "true", "false" ],
-					 "version" : "1.0.0"
-				 });
+	"title": "Convert Text to Boolean",
+	"keywords": [
+		"string",
+		"0", "1", "true", "false",
+	],
+	"version": "1.0.0",
+});
 
 void nodeEvent
 (

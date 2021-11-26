@@ -131,7 +131,7 @@ void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int linen
 		++VuoGlPool_referenceCounts[glBufferName];
 
 	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
-//	VuoLog(file, linenumber, func, "VuoGlPool_retain(%d)", glBufferName);
+//	VuoLog(VuoLog_moduleName, file, linenumber, func, "VuoGlPool_retain(%d)", glBufferName);
 }
 
 /**
@@ -146,7 +146,7 @@ void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferN
 
 	VuoGlPoolReferenceCounts::iterator it = VuoGlPool_referenceCounts.find(glBufferName);
 	if (it == VuoGlPool_referenceCounts.end())
-		VuoLog(file, linenumber, func, "Error: VuoGlPool_release() was called with OpenGL Buffer Object %d, which was never retained.", glBufferName);
+		VuoLog(VuoLog_moduleName, file, linenumber, func, "Error: VuoGlPool_release() was called with OpenGL Buffer Object %d, which was never retained.", glBufferName);
 	else
 	{
 		if (--VuoGlPool_referenceCounts[glBufferName] == 0)
@@ -154,7 +154,7 @@ void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferN
 	}
 
 	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
-//	VuoLog(file, linenumber, func, "VuoGlPool_release(%d)", glBufferName);
+//	VuoLog(VuoLog_moduleName, file, linenumber, func, "VuoGlPool_release(%d)", glBufferName);
 }
 
 
@@ -414,7 +414,7 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 									  fudge = .74;
 
 								  maximumTextureBytes = (textureMegabytes - 85) * 1048576UL * fudge;
-								  VDebugLog("%ld MB", maximumTextureBytes / 1024 / 1024);
+								  VUserLog("%ld MB", maximumTextureBytes / 1024 / 1024);
 								  break;
 							  }
 						  }

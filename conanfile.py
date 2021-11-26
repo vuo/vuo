@@ -1,9 +1,12 @@
 from conans import ConanFile, CMake, tools
+from conans.model.settings import Settings
+from conan.tools.cmake import CMakeToolchain
 import os
 import platform
 import shutil
 
 class VuoConan(ConanFile):
+    settings_build = Settings()  # Quell warning about not selecting a profile.
     generators = 'cmake'
 
     def requirements(self):
@@ -28,11 +31,11 @@ class VuoConan(ConanFile):
         self.requires('libxml2/2.9.10-0@vuo+conan+libxml2/stable')
         self.requires('llvm/5.0.2-5@vuo+conan+llvm/stable')
         self.requires('muparser/2.3.2-0@vuo+conan+muparser/stable')
-        self.requires('ndi/4.6.0-0@vuo+conan+ndi/stable')
+        self.requires('ndi/5.0.0-0@vuo+conan+ndi/stable')
         self.requires('oai/5.0.1-1@vuo+conan+oai/stable')
         self.requires('openssl/1.1.1h-0@vuo+conan+openssl/stable')
         self.requires('oscpack/0-5@vuo+conan+oscpack/stable')
-        self.requires('qt/5.11.3-8@vuo+conan+qt/stable')
+        self.requires('qt/5.12.11-3@vuo+conan+qt/stable')
         self.requires('rtaudio/5.1.0-1@vuo+conan+rtaudio/stable')
         self.requires('rtmidi/4.0.0-1@vuo+conan+rtmidi/stable')
         self.requires('wjelement/1.3-2@vuo+conan+wjelement/stable')
@@ -44,6 +47,7 @@ class VuoConan(ConanFile):
             self.requires('ld64/530-5@vuo+conan+ld64/stable')
             self.requires('cctools/949.0.1-2@vuo+conan+cctools/stable')
             self.requires('codesign_allocate/10.3+12.4-0@vuo+conan+codesign_allocate/stable')
+            self.requires('fxplug/4.2.2-1@vuo+conan+fxplug/stable')
             self.requires('hap/1.5.3-1@vuo+conan+hap/stable')
             self.requires('macos-sdk/11.0-0@vuo+conan+macos-sdk/stable')
             self.requires('syphon/5-1@vuo+conan+syphon/stable')
@@ -98,3 +102,9 @@ class VuoConan(ConanFile):
         # https://reviews.llvm.org/D82610
         self.run('rm -f %s/lib/clang/5.0.2/lib/darwin/libclang_rt.osx.a'
                  % self.deps_cpp_info["llvm"].rootpath)
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        for k, v in self.deps_cpp_info.dependencies:
+            tc.variables["CONAN_%s_VERSION" % k] = v.version.split('-')[0]
+        tc.generate()

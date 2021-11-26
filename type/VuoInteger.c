@@ -261,10 +261,14 @@ void VuoInteger_setRandomState(unsigned short state[3], const VuoInteger seed)
  * Seed it by providing 3 x 16-bit values to `state`, which is modified upon return.
  * Pass the modified `state` back to this function to retrieve the next value in the sequence.
  *
- * Both `maximum` and `maximum - minimum` must be `INT_MAX` (2^31) or less.
+ * `maximum` must be between INT_MIN and INT_MAX,
+ * and `maximum - minimum` must be `INT_MAX` (2^31) or less.
  */
 VuoInteger VuoInteger_randomWithState(unsigned short state[3], const VuoInteger minimum, const VuoInteger maximum)
 {
+	if (maximum < INT_MIN || maximum > INT_MAX || llabs(maximum - minimum) > INT_MAX)
+		return 0;
+
 	if (minimum == maximum)
 		return minimum;
 

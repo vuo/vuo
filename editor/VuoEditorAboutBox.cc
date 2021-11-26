@@ -70,9 +70,9 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 	licenseFont.setFixedPitch(true);
 	licenseFont.setPointSize(11);
 
-	const int tabStop = 8;  // 8 characters/tab
-	QFontMetrics licenseFontMetrics(licenseFont);
-	ui->textEdit->setTabStopDistance(tabStop * licenseFontMetrics.width(' '));
+	int spacesPerTab = 8;
+	QFontMetricsF fontMetrics(licenseFont);
+	ui->textEdit->setTabStopDistance(spacesPerTab * fontMetrics.horizontalAdvance(' '));
 
 	// Set the introductory text.
 	ui->textLabel->setText(descriptiveText);

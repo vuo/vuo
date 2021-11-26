@@ -1,0 +1,221 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.keep.average.list node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"unlimited lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":-1},
+	},
+	"add first value":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[10]},
+		"outputPortValues":{"averages":[10]}
+	},
+	"add another value":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[20]},
+		"outputPortValues":{"averages":[15]}
+	},
+	"reset":{
+		"firingPort":"reset"
+	},
+	"add value after resetting":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[30]},
+		"outputPortValues":{"averages":[30]}
+	},
+
+	"zero lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":0},
+	},
+	"add value with zero lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[40]},
+		"outputPortValues":{"averages":[40]}
+	},
+	"add another value with zero lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[50]},
+		"outputPortValues":{"averages":[50]}
+	},
+
+	"non-zero lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":1},
+	},
+	"add value after setting non-zero lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[60]},
+		"outputPortValues":{"averages":[60]}
+	},
+	"add value without exceeding lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[70]},
+		"outputPortValues":{"averages":[65]}
+	},
+	"add value that goes beyond lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[80]},
+		"outputPortValues":{"averages":[75]}
+	},
+	"increase lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after increasing lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[90]},
+		"outputPortValues":{"averages":[85]}
+	},
+	"add another value after increasing lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[100]},
+		"outputPortValues":{"averages":[90]}
+	},
+	"decrease lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":1},
+	},
+	"add value after decreasing lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[110]},
+		"outputPortValues":{"averages":[105]}
+	},
+	"reset with limited lookback":{
+		"firingPort":"reset"
+	},
+	"add value after resetting with limited lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[120]},
+		"outputPortValues":{"averages":[120]}
+	},
+
+	"remove lookback limit":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":-1},
+	},
+	"add value after removing lookback limit":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[130]},
+		"outputPortValues":{"averages":[125]}
+	},
+	"add another value after removing lookback limit":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[140]},
+		"outputPortValues":{"averages":[130]}
+	},
+
+	"limit lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after limiting lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[150]},
+		"outputPortValues":{"averages":[136]}
+	},
+
+	"change lookback to zero to clear history":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":0},
+	},
+	"change lookback back to its previous value":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after clearing history with lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[160]},
+		"outputPortValues":{"averages":[160]}
+	},
+
+	"remove lookback limit and add value":{
+		"firingPort":"values",
+		"inputPortValues":{"lookback":-1,"values":[170]},
+		"outputPortValues":{"averages":[165]}
+	},
+	"reset with unlimited lookback":{
+		"firingPort":"reset"
+	},
+	"limit lookback and add value":{
+		"firingPort":"values",
+		"inputPortValues":{"lookback":2,"values":[180]},
+		"outputPortValues":{"averages":[180]}
+	},
+
+	"reset before changing list size":{
+		"firingPort":"reset"
+	},
+	"add a multi-item list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[10,100]},
+		"outputPortValues":{"averages":[10,100]}
+	},
+	"add a list of the same size":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[20,200]},
+		"outputPortValues":{"averages":[15,150]}
+	},
+	"add a larger list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[33,330,3300]},
+		"outputPortValues":{"averages":[21,210,3300]}
+	},
+	"add an even larger list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[40,400,4000,40000,400000]},
+		"outputPortValues":{"averages":[31,310,3650,40000,400000]}
+	},
+	"add a smaller list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[50,500,5000,50000]},
+		"outputPortValues":{"averages":[41,410,4100,45000]}
+	},
+	"add an empty list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[]},
+		"outputPortValues":{"averages":[]}
+	},
+	"add a non-empty list":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[60,600]},
+		"outputPortValues":{"averages":[60,600]}
+	},
+
+	"remove lookback limit with multi-item list":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":-1},
+	},
+	"add a list with infinite lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[70,700]},
+		"outputPortValues":{"averages":[65,650]}
+	},
+	"add a larger list with infinite lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[83,830,8300,83000]},
+		"outputPortValues":{"averages":[71,710,8300,83000]}
+	},
+	"add a smaller list with infinite lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[91,910,9100]},
+		"outputPortValues":{"averages":[76,760,8700]}
+	},
+	"add an empty list with infinite lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[]},
+		"outputPortValues":{"averages":[]}
+	},
+	"add a non-empty list with infinite lookback":{
+		"firingPort":"values",
+		"inputPortValues":{"values":[99,990]},
+		"outputPortValues":{"averages":[99,990]}
+	},
+}}

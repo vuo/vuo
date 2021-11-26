@@ -219,7 +219,7 @@ Check that modifying certain source files causes certain build steps to be perfo
       Given a completed build
       When  I edit renderer/stub/VuoFxFilter.mm
       And   I build
-      Then  it should update lib/VuoFxFilter
+      Then  it should update bin/VuoFxFilter
       And   it should update lib/Vuo.framework/Resources/VuoFxFilter
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Resources/VuoFxFilter
       But   it shouldn't update the built-in cache

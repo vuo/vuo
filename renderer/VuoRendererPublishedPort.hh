@@ -45,3 +45,4 @@ private:
 	bool isActive;
 	bool permanent;
 };
+Q_DECLARE_METATYPE(VuoRendererPublishedPort *)

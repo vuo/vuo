@@ -2,7 +2,7 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.3.0
  * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
@@ -11,12 +11,12 @@
 
 digraph G
 {
-AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="15,165" fillcolor="orange"];
-Enqueue [type="vuo.list.enqueue.VuoPoint2d" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="240,255" fillcolor="orange"];
-MakeLineStripsObject [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoShader" version="1.0.0" label="Make Line Strips Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="435,210" fillcolor="orange" _lineWidth="0.01"];
-MakeList2 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="402,281" fillcolor="orange" _1="\"#fff\""];
-MakeLitColorShader [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="195,165" fillcolor="orange" _color="\{\"r\":0.38939496874809265,\"g\":0.7790188193321228,\"b\":0.9989013671875,\"a\":1\}" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<MaxRecentPoints>MaxRecentPoints\r|<AddPoint>AddPoint\r" _MaxRecentPoints_type="VuoInteger" _MaxRecentPoints_suggestedMin="0" _MaxRecentPoints="10" _AddPoint_type="VuoPoint2d"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-30,180" fillcolor="orange"];
+Enqueue [type="vuo.list.enqueue.VuoPoint2d" version="1.2.0" label="Enqueue|<refresh>refresh\l|<addItem>addItem\l|<maxItemCount>maxItemCount\l|<discardWhenFull>discardWhenFull\l|<clearList>clearList\l|<list>list\r" pos="195,270" fillcolor="orange" _discardWhenFull="0"];
+MakeLineStripsObject [type="vuo.scene.make.lineStrips.VuoPoint2d.VuoShader" version="1.0.0" label="Make Line Strips Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="390,225" fillcolor="orange" _lineWidth="0.01"];
+MakeList2 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="357,296" fillcolor="orange" _1="\"#fff\""];
+MakeLitColorShader [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="150,180" fillcolor="orange" _color="\{\"r\":0.38939496874809265,\"g\":0.7790188193321228,\"b\":0.9989013671875,\"a\":1\}" _highlightColor="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _shininess="0.9"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<MaxRecentPoints>MaxRecentPoints\r|<AddPoint>AddPoint\r" _MaxRecentPoints_type="VuoInteger" _MaxRecentPoints_suggestedMin="0" _MaxRecentPoints_auto="Infinity" _MaxRecentPoints="10" _AddPoint_type="VuoPoint2d"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Object>Object\l" _Object_type="VuoSceneObject"];
 
 AllowFirstEvent:firstEvent -> MakeLitColorShader:color;

@@ -9,6 +9,7 @@ function texToDocbook(s)
 	s = s:gsub('\\vuoPort{([^}]+)}', '<phrase role="vuo-port">%1</phrase>')
 	s = s:gsub('\\keys{([^}]+)}', '<shortcut>%1</shortcut>')
 	s = s:gsub('\\code{([^}]+)}', '<code>%1</code>')
+	s = s:gsub('\\hyperlink{([^}]+)}{([^}]+)}', '<link linkend="%1">%2</link>')
 	s = s:gsub('\\doublequote', '"')
 	s = s:gsub('\\textbackslash', '\\')
 	s = s:gsub('\\textgreater', '&gt;')
@@ -27,8 +28,8 @@ end
 
 function replaceTag(blocks, elem, tag, prefix, suffix, matchOnlyAtBeginning)
 	matchOnlyAtBeginning = matchOnlyAtBeginning or false
-	for tagContent in elem.c[2]:gmatch('\\' .. tag .. '{([^\n]+)}') do
-		if matchOnlyAtBeginning and not stringStartsWith(elem.c[2], '\\' .. tag .. '{') then
+	for tagContent in elem.text:gmatch('\\' .. tag .. '{([^\n]+)}') do
+		if matchOnlyAtBeginning and not stringStartsWith(elem.text, '\\' .. tag .. '{') then
 			goto continue
 		end
 
@@ -45,10 +46,10 @@ end
 
 return {
 	{RawBlock = function(elem)
-		if elem.c[1] == 'tex' then
+		if elem.format == 'tex' then
 			local blocks = {}
 
-			for language, caption, code in elem.c[2]:gmatch('\\begin{lstlisting}%[language=([A-Za-z]+),caption=([^]]+)%](.+)\\end{lstlisting}') do
+			for language, caption, code in elem.text:gmatch('\\begin{lstlisting}%[language=([A-Za-z]+),caption=([^]]+)%](.+)\\end{lstlisting}') do
 				table.insert(blocks, pandoc.RawBlock('docbook',
 					'<example>'
 						.. '<title>' .. caption .. '</title>'

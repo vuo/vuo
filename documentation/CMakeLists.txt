@@ -99,6 +99,14 @@ add_dependencies(VuoDocumentation VuoDoxygen)
 
 
 # Build the PDF manual =======================================================
+file(GLOB basictexPath "/usr/local/texlive/20*basic")
+if (EXISTS "${basictexPath}")
+	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution (not BasicTeX).  Please run:\n    brew uninstall basictex\n    brew install mactex\n…or delete ${basictexPath} and download the standard installer from https://www.tug.org/mactex/")
+endif()
+file(GLOB mactexPath "/usr/local/texlive/20*")
+if (NOT EXISTS "${mactexPath}")
+	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution.  Please run:\n    brew install mactex\n…or download the standard (not BasicTeX) installer from https://www.tug.org/mactex/")
+endif()
 get_directory_property(languages DIRECTORY ../translation DEFINITION languages)
 foreach (language ${languages})
 	foreach (colors solarized highContrast)
@@ -274,7 +282,7 @@ add_custom_command(
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook
-		| /usr/local/bin/pandoc
+		| LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua /usr/local/bin/pandoc
 			--from markdown+smart
 			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
 			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua
@@ -351,7 +359,7 @@ add_custom_command(
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook
-		| /usr/local/bin/pandoc
+		| LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua /usr/local/bin/pandoc
 			--from markdown+smart
 			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
 			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua

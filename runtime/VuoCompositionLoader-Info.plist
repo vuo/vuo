@@ -16,6 +16,8 @@
 	<true/>
 	<key>NSRequiresAquaSystemAppearance</key>
 	<false/>
+	<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
+	<true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 </dict>

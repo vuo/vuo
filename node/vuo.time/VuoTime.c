@@ -202,6 +202,11 @@ static bool VuoTime_isLeapYear(VuoInteger year)
  * Creates a date-time from component values.
  *
  * See @ref VuoTime_getComponents for parameter definitions.
+ *
+ * Date-times are interpreted using the system's current local timezone.
+ *
+ * If you specify out-of-range values (e.g., March 42nd at 27 o'clock),
+ * the values are adjusted to the valid corresponding date-time (e.g., April 12th at 03:00 AM).
  */
 VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, VuoInteger hour, VuoInteger minute, VuoReal second)
 {
@@ -227,8 +232,9 @@ VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, V
 		// For non-leap years.
 		char daysPerMonth[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
+		int wrappedMonth = VuoInteger_wrap(month, 1, 12);
 		int dayOfYear = 0;
-		for (int m = 0; m < month-1; ++m)
+		for (int m = 0; m < wrappedMonth - 1; ++m)
 			dayOfYear += daysPerMonth[m];
 		dayOfYear += dayOfMonth;
 

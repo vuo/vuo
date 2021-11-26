@@ -1,5 +1,6 @@
 VuoTest(NAME TestEditorCommands
 	SOURCE TestEditorCommands.cc
+	GMALLOC_ELIGIBLE
 )
 set_target_properties(TestEditorCommands PROPERTIES
 	AUTORCC ON

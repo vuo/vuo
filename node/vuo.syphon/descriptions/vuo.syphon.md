@@ -14,4 +14,4 @@ To send images from a Vuo composition to Syphon clients, use the [Send Syphon Vi
 
 To see the available Syphon servers, use the [List Syphon Servers](vuo-node://vuo.syphon.listServers) node. 
 
-Syphon is developed by [Tom Butterworth](http://kriss.cx/tom) and [Anton Marini](http://vade.info/).
+Syphon is developed by [Tom Butterworth](http://web.archive.org/web/20210430073124/http://kriss.cx/tom/) and [Anton Marini](http://vade.info/).

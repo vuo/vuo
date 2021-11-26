@@ -1,19 +1,27 @@
+/**********************************************************************/
+/* Styles (and light-mode colors) for widgets everywhere **************/
+/**********************************************************************/
+
+/* Context menus, including text editor, canvas background, node, port, cable, and comment.  Does not include the overhead menubar or overhead dropdown menus (Qt can't affect those), or input editor menus (see below). */
 QMenu {
 	background-color: #f0f0f0;
 	border-radius: 7px;
+}
+QMenu::scroller {
+	background-color: #f0f0f0;
 }
 QMenu::item {
 	color: #202020;
 	margin-left: 5px;
 	margin-right: 5px;
-	padding: 2px 36px 2px 22px;
+	padding: 2px 36px 2px 0;
 	height: 21px;
 }
 QMenu::item:disabled {
 	color: #a0a0a0;
 }
 QMenu::item:selected {
-	background-color: #469cfe;
+	background-color: #3d7ee6;
 	color: #ffffff;
 	border-radius: 4px;
 }
@@ -50,9 +58,164 @@ QMenu::separator {
 	background: #c0c0c0;
 }
 
+QProgressDialog QLabel {
+	/* Use a font with fixed-width numerals, so the text doesn't shift when the frame number / percentage changes. */
+	font: 14pt "PT Sans";
+}
+
+
+
+/**********************************************************************/
+/* Styles for input editors *******************************************/
+/**********************************************************************/
+
+/* Input editor widgets have explicit styles to emulate the macOS 11 "Big Sur" style, and respond to Vuo's light/dark mode.  (Non-input-editor widgets do not.) */
+
+VuoDialogForInputEditor * {
+	font-family: 'PT Sans';
+	font-size: 12pt;
+	font-weight: 200;
+}
+
+/* Combo box base widget (excluding the popup menu). */
+VuoDialogForInputEditor QComboBox {
+	border: 2px solid #cfcfcf;
+	border-radius: 4px;
+	padding: 0 22px 0 4px;
+	background: #ffffff;
+	color: #000000;
+	min-height: 22px;
+	margin: 2px 0 3px 0;
+}
+VuoDialogForInputEditor QComboBox:on,
+VuoDialogForInputEditor QComboBox:off {
+	color: black;
+}
+VuoDialogForInputEditor QComboBox:focus {
+	border: 2px solid #3d7ee6;
+}
+VuoDialogForInputEditor QComboBox::drop-down {
+	width: 22px;
+	background: #ffffff;
+}
+VuoDialogForInputEditor QComboBox::down-arrow {
+	image: url(:/Icons/spinbox-dec.png);
+}
+
+/* Combo box popup menu. */
+VuoDialogForInputEditor QComboBox * {
+	/* Affects the arrows at the top and bottom of the popup menu, allowing the user to scroll when the items don't all fit onscreen. */
+	background-color: #f0f0f0;
+	color: #202020;
+}
+VuoDialogForInputEditor QComboBox QAbstractItemView {
+	background-color: #f0f0f0;
+	border-top: 4px solid #f0f0f0;
+	border-bottom: 4px solid #f0f0f0;
+	border-radius: 7px;
+}
+VuoDialogForInputEditor QComboBox::item {
+	color: #202020;
+	margin-left: 5px;
+	margin-right: 5px;
+	padding: 2px 28px 2px -22px;
+	height: 21px;
+}
+VuoDialogForInputEditor QComboBox::item:disabled {
+	color: #a0a0a0;
+}
+VuoDialogForInputEditor QComboBox::item:selected {
+	background-color: #3d7ee6;
+	color: #ffffff;
+	border-radius: 4px;
+}
+VuoDialogForInputEditor QComboBox::indicator:checked {
+	image: url(:/Icons/checkmark-black.svg);
+	width: 11px;
+}
+VuoDialogForInputEditor QComboBox::indicator:checked:selected {
+	image: url(:/Icons/checkmark.svg);
+}
+VuoDialogForInputEditor QComboBox::indicator:checked,
+VuoDialogForInputEditor QComboBox::icon {
+	margin-left: 6px;
+}
+VuoDialogForInputEditor QComboBox::icon:checked,
+VuoDialogForInputEditor QComboBox::icon:unchecked {
+	margin-left: 0;
+}
+VuoDialogForInputEditor QComboBox::separator {
+	margin: 5px 21px 5px 27px;
+	height: 1px;
+	background: #c0c0c0;
+}
+
+VuoDialogForInputEditor QDoubleSpinBox,
+VuoDialogForInputEditor QSpinBox {
+	padding-right: -1px;
+	padding-bottom: 1px;
+}
+
+VuoDialogForInputEditor QDoubleSpinBox::up-button,
+VuoDialogForInputEditor QSpinBox::up-button {
+	subcontrol-origin: content;
+	subcontrol-position: top right;
+	border: none;
+}
+VuoDialogForInputEditor QDoubleSpinBox::up-arrow,
+VuoDialogForInputEditor QSpinBox::up-arrow {
+	image: url(:/Icons/spinbox-inc.png);
+	width: 11px;
+	height: 7px;
+}
+VuoDialogForInputEditor QDoubleSpinBox::down-button,
+VuoDialogForInputEditor QSpinBox::down-button {
+	subcontrol-origin: content;
+	subcontrol-position: bottom right;
+	border: none;
+}
+VuoDialogForInputEditor QDoubleSpinBox::down-arrow,
+VuoDialogForInputEditor QSpinBox::down-arrow {
+	image: url(:/Icons/spinbox-dec.png);
+	width: 11px;
+	height: 7px;
+}
+
+VuoDialogForInputEditor QDoubleSpinBox::up-arrow:hover,
+VuoDialogForInputEditor QDoubleSpinBox::down-arrow:hover,
+VuoDialogForInputEditor QSpinBox::up-arrow:hover,
+VuoDialogForInputEditor QSpinBox::down-arrow:hover {
+	background: #c4c4c4;
+}
+
+/* The `off` state is applied when the current value is at the max/min of the range. */
+VuoDialogForInputEditor QDoubleSpinBox::up-arrow:disabled,
+VuoDialogForInputEditor QSpinBox::up-arrow:disabled,
+VuoDialogForInputEditor QDoubleSpinBox::up-arrow:off,
+VuoDialogForInputEditor QSpinBox::up-arrow:off {
+	image: url(:/Icons/spinbox-inc-disabled.png);
+}
+VuoDialogForInputEditor QDoubleSpinBox::down-arrow:disabled,
+VuoDialogForInputEditor QSpinBox::down-arrow:disabled,
+VuoDialogForInputEditor QDoubleSpinBox::down-arrow:off,
+VuoDialogForInputEditor QSpinBox::down-arrow:off {
+	image: url(:/Icons/spinbox-dec-disabled.png);
+}
+
+VuoDialogForInputEditor QDoubleSpinBox,
+VuoDialogForInputEditor QSpinBox {
+	border: 1px solid #c9c9c9;
+	border-radius: 1px;
+}
+
+
+
+/**********************************************************************/
+/* Styles for the "Composition Information" dialog ********************/
+/**********************************************************************/
 
 /* The frame around the contents of each tab. */
-.VuoMetadataEditor QTabWidget::pane {
+VuoMetadataEditor QTabWidget::pane {
 	color: #bbb;
 	background: #e3e3e3;
 	border: 1px solid #d8d8d8;
@@ -62,38 +225,32 @@ QMenu::separator {
 }
 
 /* The background area behind the contents of each tab. */
-.VuoMetadataEditor QTabWidget > QWidget > QWidget {
+VuoMetadataEditor QTabWidget > QWidget > QWidget {
 	background-color: #e6e6e6;
 }
 
-.VuoMetadataEditor QTabBar::tab {
+VuoMetadataEditor QTabBar::tab {
 	background: rgba(208,208,208,0.5);
 	border: 1px solid #d0d0d0;
 	padding: 2px 12px;
 }
 
-.VuoMetadataEditor QTabBar::tab:first {
+VuoMetadataEditor QTabBar::tab:first {
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
 	border-right: none;
 }
-.VuoMetadataEditor QTabBar::tab:middle {
+VuoMetadataEditor QTabBar::tab:middle {
 	border-right: none;
 }
-.VuoMetadataEditor QTabBar::tab:last {
+VuoMetadataEditor QTabBar::tab:last {
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
 }
 
-.VuoMetadataEditor QTabBar::tab:pressed {
+VuoMetadataEditor QTabBar::tab:pressed {
 	background: rgba(255,255,255,0.5);
 }
-.VuoMetadataEditor QTabBar::tab:selected {
+VuoMetadataEditor QTabBar::tab:selected {
 	background: #ffffff;
-}
-
-
-/* Use a font with fixed-width numerals, so the text doesn't shift when the frame number / percentage changes. */
-QProgressDialog QLabel {
-	font: 14pt "PT Sans";
 }

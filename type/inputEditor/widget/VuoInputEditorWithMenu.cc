@@ -11,10 +11,12 @@
 
 /**
  * Displays a menu.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
-	acceptedValue = originalValue;
+	acceptedValue = json_object_get(originalValue);
 	this->details = details;
 	VuoInputEditorMenuItem *menuTree = setUpMenuTree(details);
 
@@ -35,7 +37,7 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	string originalValueAsString = json_object_to_json_string_ext(originalValue, JSON_C_TO_STRING_PLAIN);
 	foreach (QAction *action, menuActionGroup->actions())
 	{
-		json_object *actionValue = (json_object *)action->data().value<void *>();
+		json_object *actionValue = action->data().value<json_object *>();
 		string actionValueAsString = json_object_to_json_string_ext(actionValue, JSON_C_TO_STRING_PLAIN);
 
 		bool isOriginalValue = (actionValueAsString == originalValueAsString)
@@ -73,7 +75,8 @@ VuoInputEditorMenuItem *VuoInputEditorWithMenu::setUpMenuTree(void)
  */
 void VuoInputEditorWithMenu::acceptAction(QAction *action)
 {
-	acceptedValue = (json_object *)action->data().value<void *>();
+	json_object_put(acceptedValue);
+	acceptedValue = json_object_get(action->data().value<json_object *>());
 }
 
 /**

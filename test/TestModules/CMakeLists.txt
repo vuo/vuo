@@ -1,5 +1,6 @@
 VuoTest(NAME TestModules
 	SOURCE TestModules.cc
+	GMALLOC_ELIGIBLE
 )
 target_link_libraries(TestModules
 	PRIVATE

@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-cmake_policy(VERSION 3.16...3.20)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.3.2 LANGUAGES NONE)
+project(Vuo VERSION 2.4.0 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -69,6 +68,7 @@ message(STATUS "Vuo build: ${VUO_VERSION_AND_BUILD} ${VUO_GIT_COMMIT}")
 # Conan ======================================================================
 set(conanFile "${PROJECT_SOURCE_DIR}/conanfile.py")
 set(conanBuildInfo "${PROJECT_BINARY_DIR}/conanbuildinfo.cmake")
+set(CMAKE_TOOLCHAIN_FILE "${PROJECT_BINARY_DIR}/conan_toolchain.cmake")
 set_directory_properties(PROPERTIES CMAKE_CONFIGURE_DEPENDS ${conanFile})
 if (NOT EXISTS ${conanBuildInfo} OR ${conanFile} IS_NEWER_THAN ${conanBuildInfo})
 	execute_process(COMMAND /usr/local/bin/conan install ${PROJECT_SOURCE_DIR} RESULT_VARIABLE conanStatus)
@@ -86,6 +86,7 @@ set(CONAN_COMPILER clang)
 set(CONAN_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 set(CONAN_CMAKE_SILENT_OUTPUT TRUE)
 include("${conanBuildInfo}")
+include("${CMAKE_TOOLCHAIN_FILE}")
 conan_basic_setup(KEEP_RPATHS TARGETS)
 
 # Exclude unneeded LLVM/Clang libraries.
@@ -110,7 +111,7 @@ list(REMOVE_ITEM CONAN_LIBS_LLVM
 include(CTest)
 
 set(CMAKE_OSX_SYSROOT "${CONAN_MACOS-SDK_ROOT}" CACHE STRING "" FORCE)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "" FORCE)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "" FORCE)
 
 execute_process(COMMAND /usr/bin/uname -m OUTPUT_VARIABLE VUO_HOST_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (NOT CMAKE_OSX_ARCHITECTURES)
@@ -135,6 +136,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 string(JOIN " " commonFlags
+	-fblocks
 	-fcolor-diagnostics
 	-fvisibility-inlines-hidden
 	-g
@@ -149,7 +151,6 @@ string(JOIN " " commonFlags
 	-Wextra
 	-Wimplicit-fallthrough
 	-Wno-unused-parameter
-	-Wno-c++11-extensions
 	-Wno-sign-compare
 	-Werror=implicit
 )
@@ -159,7 +160,9 @@ string(JOIN " " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}"
 )
 string(JOIN " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}"
 	-stdlib=libc++
-	-std=c++11
+	-std=c++14
+	-fexceptions
+	-fcxx-exceptions
 	${commonFlags}
 )
 string(JOIN " " CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS}"
@@ -168,7 +171,7 @@ string(JOIN " " CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS}"
 )
 string(JOIN " " CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS}"
 	-stdlib=libc++
-	-std=c++11
+	-std=c++14
 	${commonFlags}
 )
 set(CMAKE_C_FLAGS_RELEASE -Oz)
@@ -201,6 +204,16 @@ enable_language(C)
 enable_language(CXX)
 enable_language(OBJC)
 enable_language(OBJCXX)
+
+# Use the standard library utilities,
+# since CMake sometimes picks the `llvm-*` versions,
+# which encode multi-CPU-architecture variants in a different/not-yet-supported-by-Vuo manner.
+set(CMAKE_AR     /usr/bin/ar                 CACHE STRING "" FORCE)
+set(CMAKE_NM     /usr/bin/nm                 CACHE STRING "" FORCE)
+set(CMAKE_RANLIB /usr/bin/ranlib             CACHE STRING "" FORCE)
+
+# Use our custom-built linker that works on all of Vuo's supported macOS versions.
+set(CMAKE_LINKER "${CONAN_BIN_DIRS_LD64}/ld" CACHE STRING "" FORCE)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
@@ -251,7 +264,7 @@ endfunction()
 
 # Qt =========================================================================
 set(_qt5gui_OPENGL_INCLUDE_DIR "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers" CACHE STRING "" FORCE)
-find_package(Qt5 REQUIRED COMPONENTS Widgets Test MacExtras Network PrintSupport Quick LinguistTools Svg)
+find_package(Qt5 REQUIRED COMPONENTS Widgets Test MacExtras Network PrintSupport Quick QuickWidgets LinguistTools Svg)
 
 
 # Precompiled prefix header ==================================================
@@ -275,7 +288,6 @@ function (VuoGeneratePCH target)
 			${PROJECT_SOURCE_DIR}/type
 			${PROJECT_BINARY_DIR}/base/config
 			${PROJECT_BINARY_DIR}/type/list
-			${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers
 	)
 	target_precompile_headers(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/vuo.pch)
 
@@ -296,6 +308,7 @@ function (VuoGeneratePCH target)
 
 	if ("VUO_PCH_FRAMEWORK" IN_LIST arg_DEFINITIONS)
 		target_compile_options(${arg_TARGET} PRIVATE "SHELL:-F ${PROJECT_BINARY_DIR}/lib")
+		target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers)
 		add_dependencies(${arg_TARGET} VuoFrameworkDylib)
 	endif()
 
@@ -406,7 +419,9 @@ mark_as_advanced(FORCE
 	BUILD_TESTING
 	CMAKE_BUILD_TYPE
 	CMAKE_EXECUTABLE_FORMAT
+	CONAN_FRAMEWORK_FxPlug_FOUND
 	CONAN_FRAMEWORK_HapInAVFoundation_FOUND
+	CONAN_FRAMEWORK_PluginManager_FOUND
 	CONAN_FRAMEWORK_Syphon_FOUND
 	CMAKE_INSTALL_PREFIX
 	CMAKE_OSX_DEPLOYMENT_TARGET
@@ -419,8 +434,16 @@ mark_as_advanced(FORCE
 	Qt5PrintSupport_DIR
 	Qt5Qml_DIR
 	Qt5Quick_DIR
+	Qt5QuickWidgets_DIR
 	Qt5Svg_DIR
 	Qt5Test_DIR
 	Qt5Widgets_DIR
 	Qt5_DIR
 )
+
+get_directory_property(VARIABLES VARIABLES)
+foreach(VARIABLE ${VARIABLES})
+	if (VARIABLE MATCHES "^CONAN_.*_VERSION$")
+		mark_as_advanced(FORCE ${VARIABLE})
+	endif()
+endforeach()

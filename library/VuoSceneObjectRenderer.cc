@@ -715,7 +715,7 @@ bool VuoSceneObjectRenderer_usingGPU(void)
 				gpuTransformFeedback = true;
 		}
 
-		VDebugLog("gpuTransformFeedback = %d", gpuTransformFeedback);
+		VUserLog("gpuTransformFeedback = %d", gpuTransformFeedback);
 	});
 
 	return gpuTransformFeedback;

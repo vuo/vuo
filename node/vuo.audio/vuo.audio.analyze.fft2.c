@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						"VuoDsp"
 					 ],
 					 "node" : {
-						 "exampleCompositions" : [ "ShowAudioFrequencies.vuo" ],
+						 "exampleCompositions" : [ "ShowAudioFrequencies.vuo", "CompareScaledAudioFrequencies.vuo" ],
 					 }
 				 });
 

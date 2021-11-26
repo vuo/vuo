@@ -152,3 +152,4 @@ private:
 
 	QPointF getPortPoint(VuoRendererPort *port, unsigned int portIndex) const;
 };
+Q_DECLARE_METATYPE(VuoRendererNode *)

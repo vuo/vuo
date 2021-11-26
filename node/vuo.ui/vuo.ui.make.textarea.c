@@ -17,18 +17,19 @@
 #include "VuoTextField.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Text Area",
-					  "keywords" : [
-						  "gui", "user interface", "interact", "widget", "control", "form",
-						  "enter", "input", "write", "submit", "type", "edit"
-					  ],
-					  "version" : "1.0.0",
-					  "dependencies" : [ "VuoKeyboard", "VuoClipboard", "VuoTextField" ],
-					  "node" : {
-						  "isDeprecated": true,  // Not ready for release yet. https://b33p.net/kosada/vuo/vuo/-/issues/11630#note_2116791
-						  "exampleCompositions" : [ ]
-					  }
-				 });
+	"title": "Make Text Area",
+	"keywords": [
+		"string",
+		"gui", "user interface", "interact", "widget", "control", "form",
+		"enter", "input", "write", "submit", "type", "edit",
+	],
+	"version": "1.0.0",
+	"dependencies": [ "VuoKeyboard", "VuoClipboard", "VuoTextField" ],
+	"node": {
+		"isDeprecated": true,  // Not ready for release yet. https://b33p.net/kosada/vuo/vuo/-/issues/11630#note_2116791
+		"exampleCompositions" : [ ],
+	},
+});
 
 typedef struct
 {

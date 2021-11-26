@@ -276,8 +276,7 @@ void VuoNodeClassList::setFilterText(QString filterText)
  */
 VuoCompilerNodeClass * VuoNodeClassList::getNodeClassForItem(QListWidgetItem *item)
 {
-	return (item? (VuoCompilerNodeClass *)item->data(VuoNodeClassListItemDelegate::nodeClassPointerIndex).value<void *>() :
-										NULL);
+	return item ? item->data(VuoNodeClassListItemDelegate::nodeClassPointerIndex).value<VuoCompilerNodeClass *>() : nullptr;
 }
 
 /**
@@ -402,7 +401,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 	{
 		QAction *contextMenuEdit = new QAction(NULL);
 		contextMenuEdit->setText(actionText);
-		contextMenuEdit->setData(qVariantFromValue(sourcePath));
+		contextMenuEdit->setData(QVariant::fromValue(sourcePath));
 		connect(contextMenuEdit, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openFileFromSenderData);
 		contextMenu->addAction(contextMenuEdit);
 	}
@@ -416,7 +415,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 
 			QAction *contextMenuOpenEnclosingFolder = new QAction(NULL);
 			contextMenuOpenEnclosingFolder->setText(tr("Show in Finder"));
-			contextMenuOpenEnclosingFolder->setData(qVariantFromValue(enclosingDirUrl));
+			contextMenuOpenEnclosingFolder->setData(QVariant::fromValue(enclosingDirUrl));
 			connect(contextMenuOpenEnclosingFolder, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openExternalUrlFromSenderData);
 			contextMenu->addAction(contextMenuOpenEnclosingFolder);
 
@@ -424,7 +423,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 
 			QAction *contextMenuRemove = new QAction(NULL);
 			contextMenuRemove->setText(tr("Move to Trash"));
-			contextMenuRemove->setData(qVariantFromValue(modulePath));
+			contextMenuRemove->setData(QVariant::fromValue(modulePath));
 			connect(contextMenuRemove, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::removeFileFromSenderData);
 			contextMenu->addAction(contextMenuRemove);
 		}

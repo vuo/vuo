@@ -38,6 +38,9 @@ add_library(VuoEditor STATIC
 	VuoCommandUnpublishPort.cc
 	VuoCommentEditor.cc
 	VuoCompositionMetadataPanel.cc
+	VuoConsole.cc
+	VuoConsoleToolbar.mm
+	VuoConsoleWindow.cc
 	VuoDetailsEditorNumeric.cc
 	VuoDetailsEditorPoint.cc
 	VuoDialogWithoutTitlebar.mm
@@ -90,6 +93,8 @@ add_library(VuoEditor STATIC
 	VuoSubcompositionSaveAsDialog.cc
 	VuoSubcompositionSaveAsDialog.ui
 	VuoTitleEditor.cc
+	VuoToolbar.mm
+	VuoToolbarTitleCell.mm
 
 	VuoNodeClassFrequencyMap.hh
 )
@@ -121,6 +126,7 @@ target_link_libraries(VuoEditor
 	Qt5::MacExtras
 	Qt5::Network
 	Qt5::Quick
+	Qt5::QuickWidgets
 	CONAN_PKG::jsonc
 	CONAN_PKG::openssl
 	VuoRenderer

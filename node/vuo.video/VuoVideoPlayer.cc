@@ -67,9 +67,9 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 			player->decoder = alt;
 
 			if(player->preferFfmpeg)
-				VDebugLog("Using AvFoundation video decoder despite optimization preference.");
+				VUserLog("Using AvFoundation video decoder despite optimization preference.");
 			else
-				VDebugLog("Using FFmpeg video decoder despite optimization preference.");
+				VUserLog("Using FFmpeg video decoder despite optimization preference.");
 		}
 		else if (!player->decoder && !alt)
 		{
@@ -80,9 +80,9 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 	else
 	{
 		if(player->preferFfmpeg)
-			VDebugLog("Using first choice video decoder FFmpeg");
+			VUserLog("Using first choice video decoder FFmpeg");
 		else
-			VDebugLog("Using first choice video decoder AVFoundation");
+			VUserLog("Using first choice video decoder AVFoundation");
 	}
 
 	player->isReady = player->decoder != NULL && player->decoder->IsReady();

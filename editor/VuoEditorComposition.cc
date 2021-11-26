@@ -67,9 +67,6 @@ const qreal VuoEditorComposition::componentCollisionRange = 10;
 const qreal VuoEditorComposition::showEventsModeUpdateInterval = 1000/20.; // interval, in ms, after which to update component transparency levels and animations while in 'Show Events' mode
 const int VuoEditorComposition::initialChangeNodeSuggestionCount = 10; // The initial number of suggestions to list in the "Change (Node) To" context menu
 
-Q_DECLARE_METATYPE(VuoRendererNode *)
-Q_DECLARE_METATYPE(VuoRendererPort *)
-
 /**
  * Creates an empty canvas upon which nodes and cables can be rendered.
  */
@@ -969,7 +966,7 @@ void VuoEditorComposition::insertSubcomposition()
 void VuoEditorComposition::togglePortPublicationStatus()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 
 	if (isPortPublished(port))
 		emit portUnpublicationRequested(port->getBase());
@@ -986,7 +983,7 @@ void VuoEditorComposition::togglePortPublicationStatus()
 void VuoEditorComposition::deleteConnectedCables()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 	vector<VuoCable *> connectedCables = port->getBase()->getConnectedCables(true);
 	QList<QGraphicsItem *> cablesToRemove;
 
@@ -1022,7 +1019,7 @@ void VuoEditorComposition::deleteConnectedCables()
 void VuoEditorComposition::hideConnectedCables()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 	set<VuoRendererCable *> cablesToHide;
 
 	// Hide visible directly connected cables.
@@ -1057,7 +1054,7 @@ void VuoEditorComposition::hideConnectedCables()
 void VuoEditorComposition::unhideConnectedCables()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 	set<VuoRendererCable *> cablesToUnhide;
 
 	// Unhide visible directly connected cables.
@@ -1090,7 +1087,7 @@ void VuoEditorComposition::unhideConnectedCables()
 void VuoEditorComposition::fireTriggerPortEvent()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 	fireTriggerPortEvent(port->getBase());
 }
 
@@ -1137,7 +1134,7 @@ void VuoEditorComposition::setTriggerPortToRefire(VuoPort *port)
 void VuoEditorComposition::setPortConstant()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 
 	if (port->isConstant())
 		emit inputEditorRequested(port);
@@ -1161,7 +1158,7 @@ void VuoEditorComposition::specializeGenericPortType()
 {
 	QAction *sender = (QAction *)QObject::sender();
 	QList<QVariant> portAndSpecializedType= sender->data().toList();
-	VuoRendererPort *port = (VuoRendererPort *)portAndSpecializedType[0].value<void *>();
+	VuoRendererPort *port = portAndSpecializedType[0].value<VuoRendererPort *>();
 	QString specializedTypeName = portAndSpecializedType[1].toString();
 
 	// If the port is already specialized to the target type, do nothing.
@@ -1184,7 +1181,7 @@ void VuoEditorComposition::specializeGenericPortType()
 void VuoEditorComposition::unspecializePortType()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = (VuoRendererPort *)(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 
 	// If the port is already generic, do nothing.
 	if (port && dynamic_cast<VuoGenericType *>(port->getDataType()))
@@ -1369,7 +1366,7 @@ void VuoEditorComposition::fireTriggerPortEvent(VuoPort *port)
 void VuoEditorComposition::addInputPort()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererNode *node = (VuoRendererNode *)(sender->data().value<void *>());
+	VuoRendererNode *node = sender->data().value<VuoRendererNode *>();
 	emit inputPortCountAdjustmentRequested(node, 1, false);
 }
 
@@ -1380,7 +1377,7 @@ void VuoEditorComposition::addInputPort()
 void VuoEditorComposition::removeInputPort()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererNode *node = (VuoRendererNode *)(sender->data().value<void *>());
+	VuoRendererNode *node = sender->data().value<VuoRendererNode *>();
 	emit inputPortCountAdjustmentRequested(node, -1, false);
 }
 
@@ -1392,7 +1389,7 @@ void VuoEditorComposition::swapNode()
 {
 	QAction *sender = (QAction *)QObject::sender();
 	QList<QVariant> nodeAndReplacementType= sender->data().toList();
-	VuoRendererNode *node = static_cast<VuoRendererNode *>(nodeAndReplacementType[0].value<void *>());
+	VuoRendererNode *node = nodeAndReplacementType[0].value<VuoRendererNode *>();
 	QString newNodeClassName = nodeAndReplacementType[1].toString();
 	emit nodeSwapRequested(node, newNodeClassName.toUtf8().constData());
 }
@@ -3249,21 +3246,21 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 			{
 				QAction *action = new QAction(tr("Share Value"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.share"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.share"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				shareMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Share List"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.share.list"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.share.list"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				shareMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Share Event"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.share"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.share"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				shareMenu->addAction(action);
 			}
@@ -3278,14 +3275,14 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 			{
 				QAction *action = new QAction(tr("Hold Value"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.hold2"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.hold2"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				holdMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Hold List"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.hold.list2"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.data.hold.list2"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				holdMenu->addAction(action);
 			}
@@ -3300,28 +3297,28 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 			{
 				QAction *action = new QAction(tr("Allow First Event"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowFirst"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowFirst"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				allowMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Allow First Value"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowFirstValue"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowFirstValue"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				allowMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Allow Periodic Events"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.time.allowPeriodic"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.time.allowPeriodic"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				allowMenu->addAction(action);
 			}
 
 			{
 				QAction *action = new QAction(tr("Allow Changes"), NULL);
-				action->setData(qVariantFromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowChanges2"))));
+				action->setData(QVariant::fromValue(qMakePair(event->scenePos(), QStringLiteral("vuo.event.allowChanges2"))));
 				connect(action, &QAction::triggered, this, &VuoEditorComposition::insertNode);
 				allowMenu->addAction(action);
 			}
@@ -3331,13 +3328,13 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 		QAction *contextMenuInsertComment = new QAction(NULL);
 		contextMenuInsertComment->setText(tr("Insert Comment"));
-		contextMenuInsertComment->setData(qVariantFromValue(event->scenePos()));
+		contextMenuInsertComment->setData(QVariant::fromValue(event->scenePos()));
 		connect(contextMenuInsertComment, &QAction::triggered, this, &VuoEditorComposition::insertComment);
 		contextMenu.addAction(contextMenuInsertComment);
 
 		QAction *contextMenuInsertSubcomposition = new QAction(NULL);
 		contextMenuInsertSubcomposition->setText(tr("Insert Subcomposition"));
-		contextMenuInsertSubcomposition->setData(qVariantFromValue(event->scenePos()));
+		contextMenuInsertSubcomposition->setData(QVariant::fromValue(event->scenePos()));
 		connect(contextMenuInsertSubcomposition, &QAction::triggered, this, &VuoEditorComposition::insertSubcomposition);
 		contextMenu.addAction(contextMenuInsertSubcomposition);
 	}
@@ -3357,7 +3354,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			VuoInputEditor *inputEditorLoadedForPortDataType = inputEditorManager->newInputEditor(dataType);
 			if (inputEditorLoadedForPortDataType)
 			{
-				contextMenuSetPortConstant->setData(qVariantFromValue((void *)port));
+				contextMenuSetPortConstant->setData(QVariant::fromValue(port));
 				contextMenu.addAction(contextMenuSetPortConstant);
 
 				inputEditorLoadedForPortDataType->deleteLater();
@@ -3367,7 +3364,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 		if (!isPortPublished(port) && port->getPublishable())
 		{
 			contextMenuPublishPort->setText(tr("Publish Port"));
-			contextMenuPublishPort->setData(qVariantFromValue((void *)port));
+			contextMenuPublishPort->setData(QVariant::fromValue(port));
 			contextMenu.addAction(contextMenuPublishPort);
 		}
 
@@ -3392,7 +3389,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			if (!hasExternalPublishedPortWithMultipleInternalPorts &&!hasExternalPublishedPortBelongingToActiveProtocol)
 			{
 				contextMenuPublishPort->setText(tr("Delete Published Port"));
-				contextMenuPublishPort->setData(qVariantFromValue((void *)port));
+				contextMenuPublishPort->setData(QVariant::fromValue(port));
 				contextMenu.addAction(contextMenuPublishPort);
 			}
 		}
@@ -3408,7 +3405,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 			if (isTopLevelCompositionRunning)
 			{
-				contextMenuFireEvent->setData(qVariantFromValue((void *)port));
+				contextMenuFireEvent->setData(QVariant::fromValue(port));
 				contextMenu.addAction(contextMenuFireEvent);
 			}
 		}
@@ -3422,7 +3419,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			foreach (QAction *action, contextMenuThrottlingActions)
 			{
 				contextMenuThrottling->addAction(action);
-				action->setData(qVariantFromValue(port));
+				action->setData(QVariant::fromValue(port));
 				action->setCheckable(true);
 				action->setChecked( i++ == port->getBase()->getEventThrottling() );
 			}
@@ -3510,7 +3507,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 				// impact visible published cables.
 				int numApparentlyHidableConnectedCables = numVisibleConnectedCables + numUnhidableConnectedCables;
 				contextMenuHideCables->setText(numApparentlyHidableConnectedCables > 1? "Hide Cables" : "Hide Cable");
-				contextMenuHideCables->setData(qVariantFromValue((void *)port));
+				contextMenuHideCables->setData(QVariant::fromValue(port));
 				contextMenu.addAction(contextMenuHideCables);
 			}
 
@@ -3518,7 +3515,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 			{
 				int numApparentlyUnhidableConnectedCables = numVisibleConnectedCables + numUnhidableConnectedCables;
 				contextMenuUnhideCables->setText(numApparentlyUnhidableConnectedCables > 1? "Unhide Cables" : "Unhide Cable");
-				contextMenuUnhideCables->setData(qVariantFromValue((void *)port));
+				contextMenuUnhideCables->setData(QVariant::fromValue(port));
 				contextMenu.addAction(contextMenuUnhideCables);
 			}
 		}
@@ -3526,7 +3523,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 		if (numVisibleConnectedCables >= 1)
 		{
 			contextMenuDeleteCables->setText(numVisibleConnectedCables > 1? "Delete Cables" : "Delete Cable");
-			contextMenuDeleteCables->setData(qVariantFromValue((void *)port));
+			contextMenuDeleteCables->setData(QVariant::fromValue(port));
 			contextMenu.addAction(contextMenuDeleteCables);
 		}
 	}
@@ -3606,8 +3603,8 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 				// Offer "Add/Remove Input Port" options for resizable list input drawers.
 				if (dynamic_cast<VuoRendererInputListDrawer *>(node))
 				{
-					contextMenuAddInputPort->setData(qVariantFromValue((void *)node));
-					contextMenuRemoveInputPort->setData(qVariantFromValue((void *)node));
+					contextMenuAddInputPort->setData(QVariant::fromValue(node));
+					contextMenuRemoveInputPort->setData(QVariant::fromValue(node));
 
 					int listItemCount = ((VuoCompilerMakeListNodeClass *)(node->getBase()->getNodeClass()->getCompiler()))->getItemCount();
 					contextMenuRemoveInputPort->setEnabled(listItemCount >= 1);
@@ -3651,7 +3648,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 					// Option: Edit an installed subcomposition, shader, or text-code node.
 					QAction *editAction = new QAction(NULL);
 					editAction->setText(actionText);
-					editAction->setData(qVariantFromValue(node));
+					editAction->setData(QVariant::fromValue(node));
 					connect(editAction, &QAction::triggered, this, &VuoEditorComposition::emitNodeSourceEditorRequested);
 
 					contextMenu.addAction(editAction);
@@ -3695,7 +3692,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 						QString enclosingDirUrl = "file://" + QFileInfo(modulePath).dir().absolutePath();
 						QAction *openEnclosingFolderAction = new QAction(NULL);
 						openEnclosingFolderAction->setText("Show in Finder");
-						openEnclosingFolderAction->setData(qVariantFromValue(enclosingDirUrl));
+						openEnclosingFolderAction->setData(QVariant::fromValue(enclosingDirUrl));
 						connect(openEnclosingFolderAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openExternalUrlFromSenderData);
 						contextMenu.addAction(openEnclosingFolderAction);
 					}
@@ -3740,7 +3737,7 @@ void VuoEditorComposition::emitNodeSourceEditorRequested()
 void VuoEditorComposition::expandSpecializePortMenu()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererPort *port = static_cast<VuoRendererPort *>(sender->data().value<void *>());
+	VuoRendererPort *port = sender->data().value<VuoRendererPort *>();
 
 	populateSpecializePortMenu(contextMenuSpecializeGenericType, port, false);
 	contextMenuSpecializeGenericType->exec();
@@ -3768,7 +3765,7 @@ void VuoEditorComposition::populateSpecializePortMenu(QMenu *menu, VuoRendererPo
 	// data type in common, so the separator can be added here without forward-checking.
 	menu->addSeparator();
 
-	unspecializeAction->setData(qVariantFromValue((void *)port));
+	unspecializeAction->setData(QVariant::fromValue(port));
 	unspecializeAction->setCheckable(true);
 	unspecializeAction->setChecked(genericDataType);
 
@@ -3885,7 +3882,7 @@ void VuoEditorComposition::populateSpecializePortMenu(QMenu *menu, VuoRendererPo
 				{
 					//: Appears at the bottom of the "Set Data Type" menu when there are additional options to display.
 					QAction *showMoreAction = menu->addAction(tr("More…"));
-					showMoreAction->setData(qVariantFromValue(static_cast<void *>(port)));
+					showMoreAction->setData(QVariant::fromValue(port));
 					connect(showMoreAction, &QAction::triggered, this, &VuoEditorComposition::expandSpecializePortMenu);
 					usingExpansionMenu = true;
 				}
@@ -4041,7 +4038,7 @@ QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPor
 	foreach (string typeName, compatibleTypesInIsolation)
 	{
 		VuoCompilerType *type = allTypes[typeName];
-		if ((!limitToNodeSet || (loadedTypesForNodeSet[nodeSetName].find(type) != loadedTypesForNodeSet[nodeSetName].end())) &&
+		if (type && (!limitToNodeSet || (loadedTypesForNodeSet[nodeSetName].find(type) != loadedTypesForNodeSet[nodeSetName].end())) &&
 				(! VuoGenericType::isGenericTypeName(typeName)) &&
 				// @todo: Re-enable listing of VuoUrl type for https://b33p.net/kosada/node/9204
 				(typeName != "VuoUrl" && typeName != "VuoList_VuoUrl"
@@ -4077,7 +4074,7 @@ QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPor
 		{
 			string typeName = type->getBase()->getModuleKey();
 			QList<QVariant> portAndSpecializedType;
-			portAndSpecializedType.append(qVariantFromValue((void *)genericPort));
+			portAndSpecializedType.append(QVariant::fromValue(genericPort));
 			portAndSpecializedType.append(typeName.c_str());
 
 			QAction *specializeAction;
@@ -4099,7 +4096,7 @@ QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPor
 
 			specializeAction->setData(QVariant(portAndSpecializedType));
 			specializeAction->setCheckable(true);
-			specializeAction->setChecked(genericPort && (genericPort->getDataType()->getModuleKey() == type->getBase()->getModuleKey()));
+			specializeAction->setChecked(genericPort && genericPort->getDataType() && (genericPort->getDataType()->getModuleKey() == type->getBase()->getModuleKey()));
 
 			if (compatibleTypesInContext.find(typeName) == compatibleTypesInContext.end())
 			{
@@ -5147,6 +5144,7 @@ void VuoEditorComposition::updatePublishedInputPortConstantInRunningComposition(
 							   map<VuoRunner::Port *, json_object *> m;
 							   m[publishedPort] = constantObject;
 							   runner->setPublishedInputPortValues(m);
+							   json_object_put(constantObject);
 						   }
 					   }
 				   });
@@ -5184,7 +5182,7 @@ QMenu * VuoEditorComposition::getContextMenuTints(QMenu *parent)
 void VuoEditorComposition::expandChangeNodeMenu()
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoRendererNode *node = static_cast<VuoRendererNode *>(sender->data().value<void *>());
+	VuoRendererNode *node = sender->data().value<VuoRendererNode *>();
 
 	// If the menu hasn't been expanded previously, expand it enough now to fill
 	// the available vertical screenspace.
@@ -5282,7 +5280,7 @@ void VuoEditorComposition::populateChangeNodeMenu(QMenu *menu, VuoRendererNode *
 			QAction *changeAction = menu->addAction(matchDisplayText);
 
 			QList<QVariant> currentNodeAndNewClass;
-			currentNodeAndNewClass.append(qVariantFromValue((void *)node));
+			currentNodeAndNewClass.append(QVariant::fromValue(node));
 			currentNodeAndNewClass.append(bestMatches[i].c_str());
 			changeAction->setData(QVariant(currentNodeAndNewClass));
 			connect(changeAction, &QAction::triggered, this, &VuoEditorComposition::swapNode);
@@ -5293,7 +5291,7 @@ void VuoEditorComposition::populateChangeNodeMenu(QMenu *menu, VuoRendererNode *
 	{
 		//: Appears at the bottom of the "Change Node" menu when there are more options than can fit onscreen.
 		QAction *showMoreAction = menu->addAction(tr("More…"));
-		showMoreAction->setData(qVariantFromValue(static_cast<void *>(node)));
+		showMoreAction->setData(QVariant::fromValue(node));
 		connect(showMoreAction, &QAction::triggered, this, &VuoEditorComposition::expandChangeNodeMenu);
 	}
 }
@@ -5655,7 +5653,8 @@ void VuoEditorComposition::addActiveProtocol(VuoProtocol *protocol, bool useUndo
 
 		if (!compositionHadCompatiblePort)
 		{
-			VuoType *type = compiler->getType(portType)->getBase();
+			VuoCompilerType *ctype = compiler->getType(portType);
+			VuoType *type = (ctype? ctype->getBase() : NULL);
 			VuoPublishedPort *publishedPort = static_cast<VuoPublishedPort *>(VuoCompilerPublishedPort::newPort(getUniquePublishedPortName(portName), type)->getBase());
 			publishedPort->setProtocolPort(true);
 
@@ -5695,7 +5694,8 @@ void VuoEditorComposition::addActiveProtocol(VuoProtocol *protocol, bool useUndo
 
 		if (!compositionHadCompatiblePort)
 		{
-			VuoType *type = compiler->getType(portType)->getBase();
+			VuoCompilerType *ctype = compiler->getType(portType);
+			VuoType *type = (ctype? ctype->getBase() : NULL);
 			VuoPublishedPort *publishedPort = static_cast<VuoPublishedPort *>(VuoCompilerPublishedPort::newPort(getUniquePublishedPortName(portName), type)->getBase());
 			publishedPort->setProtocolPort(true);
 
@@ -6746,11 +6746,12 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 		VuoCompilerType *compatibleSpecializedType = types[compatibleTypeName];
 		if (!compatibleSpecializedType)
 			compatibleSpecializedType = compiler->getType(compatibleTypeName);
-		VuoType *candidateFromType = specializeToPort? currentFromDataType : compatibleSpecializedType->getBase();
-		VuoType *candidateToType = specializeToPort? compatibleSpecializedType->getBase() : currentToDataType;
 
 		if (compatibleSpecializedType)
 		{
+			VuoType *candidateFromType = specializeToPort? currentFromDataType : compatibleSpecializedType->getBase();
+			VuoType *candidateToType = specializeToPort? compatibleSpecializedType->getBase() : currentToDataType;
+
 			// Re-specialization without typeconversion may be possible.
 			if (candidateFromType == candidateToType)
 			{

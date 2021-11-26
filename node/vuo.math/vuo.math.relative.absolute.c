@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Convert Relative to Absolute",
 					  "keywords" : [ "sum", "plus", "+", "difference", "minus", "-", "arithmetic", "calculate", "offset", "vector", "point", "cumulative", "accumulative" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ ],
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -31,15 +31,20 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) absoluteValues
 )
 {
-	*absoluteValues = VuoListCreate_VuoGenericType1();
-	VuoGenericType1 cumulativeSum = VuoGenericType1_makeFromJson(NULL); // 0 / (0,0) / (0,0,0) / (0,0,0,0)
 	unsigned long listCount = VuoListGetCount_VuoGenericType1(relativeValues);
-
-	for (unsigned long i = 1; i <= listCount; ++i)
+	if (listCount == 0)
 	{
-		cumulativeSum = VuoGenericType1_add(cumulativeSum,
-											  VuoListGetValue_VuoGenericType1(relativeValues, i));
+		*absoluteValues = NULL;
+		return;
+	}
 
-		VuoListAppendValue_VuoGenericType1(*absoluteValues, cumulativeSum);
+	VuoGenericType1 cumulativeSum = VuoGenericType1_makeFromJson(NULL); // 0 / (0,0) / (0,0,0) / (0,0,0,0)
+	VuoGenericType1 *relativeValuesData = VuoListGetData_VuoGenericType1(relativeValues);
+	*absoluteValues = VuoListCreateWithCount_VuoGenericType1(listCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *absoluteValuesData = VuoListGetData_VuoGenericType1(*absoluteValues);
+	for (unsigned long i = 0; i < listCount; ++i)
+	{
+		cumulativeSum += relativeValuesData[i];
+		absoluteValuesData[i] = cumulativeSum;
 	}
 }

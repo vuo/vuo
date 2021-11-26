@@ -24,6 +24,20 @@
 #include "VuoType.hh"
 
 /**
+ * Creates a new driver for the specified protocol.
+ */
+VuoCompilerDriver *VuoCompilerDriver::driverForProtocol(VuoCompiler *compiler, string protocolId)
+{
+	map<string, string> drivers{
+		{ VuoProtocol::imageFilter,     "imageFilterDriver.vuo"     },
+		{ VuoProtocol::imageGenerator,  "imageGeneratorDriver.vuo"  },
+		{ VuoProtocol::imageTransition, "imageTransitionDriver.vuo" },
+	};
+	string driverAsString = VuoFileUtilities::readFileToString(VuoFileUtilities::getVuoFrameworkPath() + "/Resources/" + drivers[protocolId]);
+	return new VuoCompilerDriver(compiler, driverAsString);
+}
+
+/**
  * Creates a driver.
  *
  * @param compiler The compiler to use for looking up node classes.

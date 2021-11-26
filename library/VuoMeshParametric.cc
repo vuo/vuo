@@ -42,7 +42,7 @@ static inline void add(float *normals, int index, VuoPoint3d normal)
  */
 VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax, VuoDictionary_VuoText_VuoReal *constants)
 {
-	if (uSubdivisions < 2 || vSubdivisions < 2 || !xExp || !yExp || !zExp)
+	if (uSubdivisions < 2 || vSubdivisions < 2 || VuoText_isEmpty(xExp) || VuoText_isEmpty(yExp) || VuoText_isEmpty(zExp))
 		return nullptr;
 
 	mu::Parser xParser, yParser, zParser;

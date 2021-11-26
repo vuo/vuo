@@ -75,7 +75,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoKey, {"default":"any"}) key,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
-		VuoInputData(VuoBoolean, {"default":false}) repeatWhenHeld,
+		VuoInputData(VuoBoolean, {"default":false, "name":"Repeat when Held"}) repeatWhenHeld,
 		VuoOutputTrigger(pressed, void),
 		VuoOutputTrigger(released, void)
 )

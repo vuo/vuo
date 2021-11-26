@@ -2,7 +2,7 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.3.0
  * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
@@ -13,7 +13,7 @@ digraph G
 {
 AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="0,300"];
 CopyLayer [type="vuo.layer.copy.trs" version="2.1.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="450,300"];
-Enqueue2 [type="vuo.list.enqueue.VuoPoint2d" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="225,135" fillcolor="orange" _maxItemCount="5"];
+Enqueue2 [type="vuo.list.enqueue.VuoPoint2d" version="1.2.0" label="Enqueue|<refresh>refresh\l|<addItem>addItem\l|<maxItemCount>maxItemCount\l|<discardWhenFull>discardWhenFull\l|<clearList>clearList\l|<list>list\r" pos="255,150" fillcolor="orange" _maxItemCount="5" _discardWhenFull="0"];
 MakeList4 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="417,356" _1="\{\"x\":1,\"y\":1\}"];
 MakeList5 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="363,341" _1="0"];
 MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="569,311" fillcolor="blue"];

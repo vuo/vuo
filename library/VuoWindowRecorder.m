@@ -337,11 +337,8 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 
 	VuoRelease(_resize);
 
-	if (VuoIsDebugEnabled())
-	{
-		VUserLog("Average render-blocking record time per frame: %g", _totalSyncTime  / _frameCount);
-		VUserLog("Average background      record time per frame: %g", _totalAsyncTime / _frameCount);
-	}
+	VUserLog("Average render-blocking record time per frame: %g", _totalSyncTime  / _frameCount);
+	VUserLog("Average background      record time per frame: %g", _totalAsyncTime / _frameCount);
 }
 
 @end

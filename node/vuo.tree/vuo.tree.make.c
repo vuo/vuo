@@ -11,16 +11,17 @@
 #include "VuoTree.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Tree",
-					  "keywords" : [
-						"hierarchy", "hierarchical", "structure", "parent", "descendant", "leaf",
-						"xml", "json", "html", "dom", "element", "tag", "object"
-					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "RecordMouseClicksToJsonFile.vuo" ]
-					  }
-				 });
+	"title": "Make Tree",
+	"keywords": [
+		"hierarchy", "hierarchical", "structure", "parent", "descendant", "leaf",
+		"xml", "json", "html", "dom", "element", "tag", "object",
+		"text", "string",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "RecordMouseClicksToJsonFile.vuo" ],
+	},
+});
 
 void nodeEvent
 (

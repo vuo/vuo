@@ -11,17 +11,18 @@
 #include "VuoTree.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Tree from JSON",
-					  "keywords" : [
-						"hierarchy", "hierarchical", "structure", "parent", "descendant", "leaf",
-						"xml", "json", "html", "dom", "element", "tag", "object",
-						"parse", "convert", "read"
-					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "ListCountries.vuo", "LookUpCountry.vuo", "LookUpSisterCities.vuo" ]
-					  }
-				 });
+	"title": "Make Tree from JSON",
+	"keywords": [
+		"hierarchy", "hierarchical", "structure", "parent", "descendant", "leaf",
+		"xml", "json", "html", "dom", "element", "tag", "object",
+		"parse", "convert", "read",
+		"string",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "ListCountries.vuo", "LookUpCountry.vuo", "LookUpSisterCities.vuo" ],
+	},
+});
 
 void nodeEvent
 (

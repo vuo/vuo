@@ -21,7 +21,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Add Noise to 3D Object",
-					 "keywords" : [ "perturb", "random", "pseudorandom", "natural", "displace", "filter" ],
+					 "keywords" : [ "perturb", "random", "pseudorandom", "natural", "organic", "displace", "filter" ],
 					 "version" : "1.0.1",
 					 "node": {
 						 "exampleCompositions" : [ "AddNoiseToClay.vuo" ]

@@ -1,0 +1,38 @@
+/**
+ * @file
+ * @brief Travel through Infinite Grid
+ * Moves a continually replenishing 3D grid past the camera.
+ *
+ * @createdInVuoVersion 2.2.1
+ * @lastSavedInVuoVersion 2.3.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="765,390" _speed="0.5"];
+ConvertRealTo3DPoint3 [type="vuo.type.real.point3d.z" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<z>z\l|<point3d>point3d\r" pos="1110,540"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="540,390" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="285,-45" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1214,11" fillcolor="blue"];
+MakeList3 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="702,191" _1="\"#fff\""];
+MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="945,-45" _name="\"camera\"" _position="\{\"x\":0.0,\"y\":0.0,\"z\":5.0\}" _rotation="\{\"x\":0.0,\"y\":0.0,\"z\":0.0\}" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0"];
+MakePointsObject [type="vuo.scene.make.points.VuoPoint3d.VuoColor" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="735,120" _material="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":0.25000381469726562\}" _pointSize="0.02"];
+MakePointsOn3DGrid [type="vuo.point.make.grid.3d" version="1.0.0" label="Make Points in 3D Grid|<refresh>refresh\l|<xRange>xRange\l|<yRange>yRange\l|<zRange>zRange\l|<xCurve>xCurve\l|<yCurve>yCurve\l|<zCurve>zCurve\l|<xEasing>xEasing\l|<yEasing>yEasing\l|<zEasing>zEasing\l|<xPointCount>xPointCount\l|<yPointCount>yPointCount\l|<zPointCount>zPointCount\l|<points>points\r" pos="480,120" fillcolor="orange" _xRange="\{\"minimum\":-1.0,\"maximum\":1.0\}" _yRange="\{\"minimum\":-1.0,\"maximum\":1.0\}" _zRange="\{\"minimum\":-1.0,\"maximum\":1.0\}" _xCurve="\"linear\"" _yCurve="\"linear\"" _zCurve="\"exponential\"" _xEasing="\"in\"" _yEasing="\"in\"" _zEasing="\"in+out\"" _xPointCount="5" _yPointCount="5" _zPointCount="50"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1260,0" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Tile3DObject [type="vuo.scene.tile" version="1.0.0" label="Tile 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<spacing>spacing\l|<fieldSize>fieldSize\l|<tiledObject>tiledObject\r" pos="1020,120" _spacing="\{\"x\":2.0,\"y\":2.0,\"z\":2.0\}" _fieldSize="\{\"x\":2.0,\"y\":2.0,\"z\":9.0\}"];
+
+ChangeSpeed:changedTime -> ConvertRealTo3DPoint3:z;
+ConvertRealTo3DPoint3:point3d -> Tile3DObject:center;
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time;
+FireOnStart:started -> MakePerspectiveCamera:name;
+FireOnStart:started -> MakePointsOn3DGrid:xRange;
+MakeList3:list -> MakePointsObject:colors;
+MakeList:list -> RenderSceneToWindow:objects;
+MakePerspectiveCamera:object -> MakeList:1;
+MakePointsObject:object -> Tile3DObject:object;
+MakePointsOn3DGrid:points -> MakePointsObject:positions;
+Tile3DObject:tiledObject -> MakeList:2;
+}

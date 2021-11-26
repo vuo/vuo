@@ -21,7 +21,7 @@ VuoModuleMetadata({
 		"html",
 		"webkit",
 	],
-	"version" : "1.0.0",
+	"version" : "1.0.1",
 	"dependencies" : [
 		"WebKit.framework",
 		"VuoUrl",
@@ -238,7 +238,7 @@ struct nodeInstanceData
 	// Flip the image data (CGImage is unflipped, but VuoImage_makeFromBuffer() expects flipped).
 	char *flippedBitmapData = (char *)malloc(bytesPerRow * height);
 	for (unsigned long y = 0; y < height; ++y)
-		memcpy(flippedBitmapData + bytesPerRow * (height - y - 1), bitmapData + bytesPerRow * y, bytesPerRow);
+		memcpy(flippedBitmapData + width * 4 * (height - y - 1), bitmapData + bytesPerRow * y, width * 4);
 
 	CFRelease(dataFromImageDataProvider);
 

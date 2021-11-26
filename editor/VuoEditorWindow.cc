@@ -52,11 +52,13 @@
 #include "VuoCompositionMetadataPanel.hh"
 #include "VuoEditorUtilities.hh"
 #include "VuoEditorComposition.hh"
+#include "VuoConsole.hh"
 #include "VuoErrorDialog.hh"
 #include "VuoGlPool.h"
 #include "VuoMetadataEditor.hh"
 #include "VuoModuleManager.hh"
 #include "VuoRendererComment.hh"
+#include "VuoRendererCommon.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoRendererInputListDrawer.hh"
 #include "VuoRendererTypecastPort.hh"
@@ -119,6 +121,7 @@ VuoEditorWindow::VuoEditorWindow(QString documentIdentifier, QString composition
 
 	// Initialize the compiler.
 	this->compiler = new VuoCompiler(compositionPath.toStdString());
+	this->composition = nullptr;  // Initialized later in this constructor.
 
 	this->compositionUpgradedSinceLastSave = false;
 	this->protocolComplianceReevaluationPending = false;
@@ -164,12 +167,22 @@ VuoEditorWindow::VuoEditorWindow(QString documentIdentifier, QString composition
 	connect(ui->newComposition,  &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::newComposition);
 	connect(ui->openComposition, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openFile);
 
-	// Connect the "Quit" menu item action to our customized quit method.  On Mac OS X, this menu
-	// item will automatically be moved from the "File" menu to the Application menu.
-	quitAction = ui->menuFile->addAction(tr("&Quit"), static_cast<VuoEditor *>(qApp), &VuoEditor::quitCleanly, QKeySequence("Ctrl+Q"));
+	// "About" menu item.
+	// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::AboutRole`.
+	QAction *aboutAction = new QAction(nullptr);
+	aboutAction->setText(tr("About Vuo…"));
+	connect(aboutAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::about);
+	aboutAction->setMenuRole(QAction::AboutRole);
+	ui->menuFile->addAction(aboutAction);
 
-	// "About" menu item
-	ui->menuFile->addAction(tr("About Vuo…"), static_cast<VuoEditor *>(qApp), &VuoEditor::about);
+	// Connect the "Quit" menu item action to our customized quit method.
+	// On macOS, this menu item will automatically be moved from the "File" menu to the Application menu by way of `QAction::QuitRole`.
+	quitAction = new QAction(nullptr);
+	quitAction->setText(tr("&Quit"));
+	quitAction->setShortcut(QKeySequence("Ctrl+Q"));
+	connect(quitAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::quitCleanly);
+	quitAction->setMenuRole(QAction::QuitRole);
+	ui->menuFile->addAction(quitAction);
 
 	VuoEditor *editor = (VuoEditor *)qApp;
 
@@ -601,7 +614,7 @@ VuoEditorWindow::VuoEditorWindow(QString documentIdentifier, QString composition
 	setPublishedPortSidebarVisibility(displayPublishedPorts);
 
 	// The toolbar must be initialized after the composition, since it triggers moveEvent(), which assumes the composition exists.
-	toolbar = new VuoEditorWindowToolbar(this);
+	toolbar = VuoEditorWindowToolbar::create(this);
 
 	doneInitializing = true;
 	updateColor(editor->isInterfaceDark());
@@ -3546,6 +3559,7 @@ void VuoEditorWindow::initializeNodeLibrary(VuoCompiler *nodeLibraryCompiler, Vu
 void VuoEditorWindow::on_compositionInformation_triggered()
 {
 	metadataEditor->show();
+	updateUI();
 }
 
 /**
@@ -4058,6 +4072,8 @@ void VuoEditorWindow::editMetadata(int dialogResult)
 {
 	if (dialogResult == QDialog::Accepted)
 		undoStack->push(new VuoCommandSetMetadata(metadataEditor->toMetadata(), this));
+
+	updateUI();
 }
 
 /**
@@ -4298,7 +4314,7 @@ void VuoEditorWindow::populateProtocolsMenu(QMenu *m)
 	{
 		QAction *protocolAction = new QAction(this);
 		protocolAction->setText(VuoEditor::tr(protocol->getName().c_str()));
-		protocolAction->setData(qVariantFromValue(static_cast<void *>(protocol)));
+		protocolAction->setData(QVariant::fromValue(protocol));
 		protocolAction->setCheckable(true);
 		connect(protocolAction, &QAction::triggered, this, &VuoEditorWindow::changeActiveProtocol);
 		m->addAction(protocolAction);
@@ -4312,7 +4328,7 @@ void VuoEditorWindow::updateProtocolsMenu(QMenu *m)
 {
 	foreach (QAction *protocolAction, m->actions())
 	{
-		VuoProtocol *currentProtocol = static_cast<VuoProtocol *>(protocolAction->data().value<void *>());
+		VuoProtocol *currentProtocol = protocolAction->data().value<VuoProtocol *>();
 		protocolAction->setChecked(composition->getActiveProtocol() == currentProtocol);
 	}
 }
@@ -4324,7 +4340,7 @@ void VuoEditorWindow::updateProtocolsMenu(QMenu *m)
 void VuoEditorWindow::changeActiveProtocol(void)
 {
 	QAction *sender = (QAction *)QObject::sender();
-	VuoProtocol *selectedProtocol = static_cast<VuoProtocol *>(sender->data().value<void *>());
+	VuoProtocol *selectedProtocol = sender->data().value<VuoProtocol *>();
 
 	VUserLog("%s:      %s protocol %s {",
 		getWindowTitleWithoutPlaceholder().toUtf8().data(),
@@ -4589,6 +4605,11 @@ void VuoEditorWindow::on_openUserModulesFolder_triggered()
 void VuoEditorWindow::on_openSystemModulesFolder_triggered()
 {
 	VuoEditorUtilities::openSystemModulesFolder();
+}
+
+void VuoEditorWindow::on_showConsole_triggered()
+{
+	VuoConsole::show(this);
 }
 
 /**
@@ -4897,6 +4918,7 @@ void VuoEditorWindow::closeEvent(QCloseEvent *event)
 	// If an input editor or popup menu is open, ignore the user's click on the composition window's red X, since it leads to a crash.
 	// https://b33p.net/kosada/node/15831
 	if (inputEditorSession
+	 || metadataEditor->isVisible()
 	 || composition->getMenuSelectionInProgress()
 	 || inputPortSidebar->getMenuSelectionInProgress()
 	 || outputPortSidebar->getMenuSelectionInProgress())
@@ -6321,8 +6343,14 @@ void VuoEditorWindow::restoreDefaultLeftDockedWidgetWidths()
  */
 void VuoEditorWindow::moveEvent(QMoveEvent *event)
 {
-	QPoint positionChange = event->pos() - event->oldPos();
-	composition->movePopoversBy(positionChange.x(), positionChange.y());
+	// If a screen other than the main screen is focused,
+	// `ui->setupUI` will invoke `QMainWindow::setUnifiedTitleAndToolBarOnMac`,
+	// which will invoke `moveEvent` before the VuoEditorComposition has been initialized.
+	if (composition)
+	{
+		QPoint positionChange = event->pos() - event->oldPos();
+		composition->movePopoversBy(positionChange.x(), positionChange.y());
+	}
 
 	QMainWindow::moveEvent(event);
 }
@@ -6396,18 +6424,7 @@ void VuoEditorWindow::updateColor(bool isDark)
 	QString scrollBarColor                 = isDark ? "#505050" : "#dfdfdf";
 	QString dockwidgetTitleBackgroundColor = isDark ? "#919191" : "#efefef";
 
-	QFile f(":/Vuo.qss");
-	f.open(QFile::ReadOnly | QFile::Text);
-	QTextStream ts(&f);
-	QString styles = ts.readAll();
-
-	if (isDark)
-	{
-		QFile f(":/pro/VuoDark.qss");
-		f.open(QFile::ReadOnly | QFile::Text);
-		QTextStream ts(&f);
-		styles += ts.readAll();
-	}
+	QString styles = VuoRendererCommon::getStyleSheet(isDark);
 
 	if (doneInitializing)
 		setStyleSheet(VUO_QSTRINGIFY(

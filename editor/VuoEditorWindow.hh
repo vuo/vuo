@@ -184,6 +184,7 @@ private slots:
 
 	void on_openUserModulesFolder_triggered();
 	void on_openSystemModulesFolder_triggered();
+	void on_showConsole_triggered();
 
 	void on_showPublishedPorts_triggered();
 	void on_showHiddenCables_triggered();

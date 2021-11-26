@@ -1638,7 +1638,7 @@ To export a movie:
 
 \newInVersion{2.0}
 
-You can turn your Vuo compositions into screen savers that will run on macOS 10.11 and later.
+You can turn your Vuo compositions into screen savers that will run on macOS Sierra (10.12) and later.
 
    - In Vuo, go to \menu{File > New Composition from Template > Export > Screen Saver}. This creates a composition that conforms to the [Image Generator protocol](#making-compositions-fit-a-mold-with-protocols).
    - Add nodes to the composition to make it output a stream of images.
@@ -1668,6 +1668,8 @@ Alternatively, the person installing the screen saver can navigate to the \direc
 \newInVersion{2.0}
 
 You can turn your Vuo compositions into custom effects, transitions, and generators for Final Cut Pro X and Motion.
+
+\changedInVersion{2.4}{Vuo now exports FxPlug version 4 plugins.  These plugins work on both X86-64 and Apple Silicon (M1/ARM64), and require Motion or Final Cut Pro version 10.5 or later.}
 
 ### Video effects
 
@@ -1735,10 +1737,8 @@ Vuo creates Motion Templates with resolution 5120x2700.  If, for example, your F
 
 You can share FxPlug plugins you've created in Vuo with other people, even if they don't have Vuo. There are two files associated with a plugin. To find them:
 
-   - FxPlug file
-      - In Finder, hold down \keys{⌥} and go to \menu{Go > Library}.
-      - In that folder, navigate to \directory{Plug-Ins > FxPlug}.
-      - Locate the plugin (a `.fxplug` file).
+   - FxPlug wrapper app
+      - When exporting a composition, Vuo asks you to choose where to place the wrapper app
    - Motion template
       - In Finder, go to \menu{Go > Home}.
       - In that folder, navigate to \directory{Movies > Motion Templates}.
@@ -1834,7 +1834,7 @@ To uninstall an FFGL plugin that was exported from Vuo, locate the `.bundle` fil
 ## Exporting an application
 <abstract>Creating a standalone macOS application</abstract>
 
-Using the \menu{File > Export > Mac App…} menu item, you can turn your composition into an macOS application (`.app` file).
+Using the \menu{File > Export > Mac App…} menu item, you can turn your composition into an macOS application (`.app` file) that will run on macOS Sierra (10.12) and later.
 
 When exporting a composition that refers to files on your computer (such as images, scenes, or movies), typically Vuo will know to copy those into the exported app. If you've added these files to your composition by [dragging them onto the canvas](#adding-nodes-to-the-canvas-by-dropping-files) (without holding down \keys{⌥}) — creating a node such as \vuoNode{Fetch Image} or \vuoNode{Play Movie} — then the files will automatically be copied into the exported app. In fact, Vuo will automatically copy files and folders for all relative paths found in ports named \vuoPort{URL}, \vuoPort{URLs}, or \vuoPort{Folder} on nodes that read files.
 
@@ -1880,7 +1880,7 @@ If there are any problems with your shader that prevent it from compiling, the e
 
 To change the title, keywords, description, and other metadata of the ISF node, go to \menu{Edit > Composition Information…}.
 
-If you'd prefer, you can edit the ISF source code in a text editor of your choice. Be aware that changes will only take effect in Vuo when you save the file. You won't see errors reported in your text editor, only in the Console app. If you're using TextEdit, be sure to disable Smart Quotes.
+If you'd prefer, you can edit the ISF source code in a text editor of your choice. Be aware that changes will only take effect in Vuo when you save the file. You won't see errors reported in your text editor, only in \menu{Tools > Show Console}. If you're using TextEdit, be sure to disable Smart Quotes.
 
 ## Saving an ISF node
 <abstract>Saving a shader to a Library folder</abstract>
@@ -2161,6 +2161,8 @@ When you open a new composition, the Node Library is on the left. The Node Libra
 
 By default, the node library is docked within each open composition window. You can undock the node library by dragging or double-clicking its title bar. While undocked, only a single node library will be displayed no matter how many composition windows are open.  You can re-dock the node library by double-clicking its title bar.
 
+\tip{The symbols that represent macOS keys are listed in the introduction to \hyperlink{keyboard-shortcuts}{Keyboard Shortcuts}.}
+
 You can hide the node library by clicking the circle within its title bar, or by pressing \keys{⎋} once (if the search bar is empty) or twice (first to clear the search bar, then to close the node library). Once hidden, you can re-display it by selecting \menu{View > Node Library > Show Node Library} or using \keys{⌘↵}. The same command or shortcut, \keys{⌘↵}, will put your cursor in the node library's search box.
 
 Whether you have left your library docked or undocked, visible or hidden, your preference will be remembered the next time you launch Vuo.
@@ -2266,9 +2268,9 @@ Sometimes existing cables may also be re-routed by dragging (or "yanking") them 
 ### Adding a comment
 You can add a comment to a composition by using the \menu{Edit > Insert Comment} menu option, or by right-clicking on the canvas and selecting \menu{Insert Comment} from the menu.
 
-When you create a comment, you will be in editing mode, and can start typing the comment's text.  You can press \keys{⌥↵} to continue on a new line.  To end editing, either press \keys{↵} or click outside the comment area.  To reenter editing mode, double click within the comment area or right-click on the comment and pick \menu{Edit…} from the menu.
+When you create a comment, you will be in editing mode, and can start typing the comment's text.  Text inside a comment uses [Markdown formatting](https://www.markdownguide.org/cheat-sheet).  This is especially useful if you want to include a link, or make the text larger by using headings.  To start a new line, finish the line with two or more trailing spaces, then press \keys{⌥↵} to continue on a new line.  To start a new paragraph, add a blank line after the previous line of text, \keys{⌥↵⌥↵}. 
 
-Text inside a comment can accommodate [Markdown formatting](https://www.markdownguide.org/cheat-sheet). This is especially useful if you want to include a link, or make the text larger by using headings.
+To end editing, either press \keys{↵} or click outside the comment area.  To reenter editing mode, double click within the comment area or right-click on the comment and pick \menu{Edit…} from the menu.
 
 To change the color of a comment, right-click on the comment and pick \menu{Tint} from the menu.
 
@@ -2363,12 +2365,14 @@ The published ports in a protocol appear in a tinted area of the published port 
 
 
 ## Running a composition
-<abstract>Starting and stopping a composition, firing events manually, and troubleshooting</abstract>
+<abstract>Starting and stopping a composition and firing events manually</abstract>
 
 After you've built your composition (or while you're building it), you can run it to see it in action. 
 
 
 ### Starting and stopping a composition
+
+\tip{If your composition doesn't work as expected, see \hyperlink{troubleshooting}{Troubleshooting}.}
 
 You can run a composition by clicking the Run button. (Or go to \menu{Run > Run}.) 
 
@@ -2386,14 +2390,6 @@ You can cause a trigger port to fire an event by right-clicking on the trigger p
 You can also fire an event directly into an input port (as if it had an incoming cable from an invisible trigger port). To do this, you can right-click on the input port and choose \menu{Fire Event}, or you can hold down \keys{⌘} and left-click on the input port.
 
 If you've already manually fired an event, you can fire another event through the same port by going to \menu{Run > Re-fire Event}. This fires an event through the trigger port or input port that most recently had an event manually fired.
-
-
-### Understanding and troubleshooting a running composition
-
-\definition{Show Events mode}{Lets you watch the events flow through your composition}
-\definition{port popover}{A panel that shows a port's current value, shown when you click on a port}
-
-Vuo has several [helpful tools](#helpful-tools), such as the \term{Show Events mode} and \term{port popover}s to help you understand in more depth what is happening in your composition. These features can help you see exactly what events and data are flowing through your composition. For more information on troubleshooting steps see the section on [Troubleshooting](#troubleshooting).
 
 
 ## Editing composition information
@@ -2586,7 +2582,7 @@ A Vuo composition (.vuo file) is actually a text file based on the [Graphviz DOT
    - Under the section for the most recent version, download the SDK package (`vuo-VUO_VERSION-sdk.pkg`)
    - Install the package file (double-click on it in Finder)
    - Open the `/Library/Developer/Vuo` folder
-      - You can move the `/Library/Developer/Vuo` folder, but in order for the command-line binaries (`vuo-compile`, `vuo-debug`, `vuo-export`, `vuo-link`) to work, they must be in the same folder as the Framework (`Vuo.framework`) and `resources` folder.
+      - You can move the `/Library/Developer/Vuo` folder, but in order for the command-line binaries (`vuo-compile`, `vuo-link`, `vuo-export`) to work, they must be in the same folder as the Framework (`Vuo.framework`) and `resources` folder.
    - Next, add the command-line binaries to your `PATH` so you can easily run them from any folder.  In Terminal, run this command if you're using the ZSH shell (default in macOS 10.15 and later):
 
 \code{echo \doublequote{}export PATH=\textbackslash\$PATH:/Library/Developer/Vuo/framework\doublequote\ \textgreater\textgreater\ \textasciitilde/.zprofile}
@@ -2627,18 +2623,12 @@ If you're editing a composition in a text editor, the `--list-node-classes=dot` 
 
 
 ## Running a composition on the command line
-<abstract>Launching and debugging a composition</abstract>
+<abstract>Launching a composition</abstract>
 
 You can run the executable you created just like any other executable:
 
 \begin{lstlisting}[language=bash,caption=Running a Vuo composition]
 ./RenderTextLayer
-\end{lstlisting}
-
-Using the `vuo-debug` command, you can run the composition and get a printout of node executions and other debugging information:
-
-\begin{lstlisting}[language=bash,caption=Running a Vuo composition]
-vuo-debug ./RenderTextLayer
 \end{lstlisting}
 
 
@@ -2891,24 +2881,47 @@ Here's an example (\menu{File > Open Example > Event > Load Image Asynchronously
 # Troubleshooting
 <abstract>Helpful tools for troubleshooting</abstract>
 
-What if you run into problems using Vuo? This section describes some common problems and how you can fix them. If you need help, you can always check out the additional resources on the [Vuo Support](https://vuo.org/support) page.
+What if you run into problems using Vuo? This section describes several ways to figure out why a composition isn't working correctly. For further help, you can visit our [community page](https://vuo.org/community).
 
-## Helpful tools
+## Tools for troubleshooting compositions
+
+Several features of the Vuo editor can help you understand and debug the behavior of your compositions.
+
+### Watch events with Show Events mode
+
+\definition{Show Events mode}{Lets you watch the events flow through your composition}
+
+\term{Show Events mode} lets you watch the events flow through your composition. You can turn it on and off with the \menu{Run > Show Events} and \menu{Run > Hide Events} menu items. In Show Events mode, trigger ports are animated as they fire events. Nodes turn opaque as they're executed and gradually become more transparent as time passes since their most recent execution. Using Show Events mode, you can see if certain parts of your composition are executing.
+
+### Watch data and events with port popovers
+
+\definition{port popover}{A panel that shows a port's current value, shown when you click on a port}
+
+\Term{port popover}s let you inspect the data and events flowing through individual ports. A port popover pops up when you click on a port. If you want to keep the port popover open for a while, for example to look at several port popovers at once, click on the popover. While the composition is running, the port popover shows several pieces of information that can help with debugging:
+
+   - Last event — The time of the most recent event through the port, and the average number of events per second.
+   - Value — For ports that carry data, the most recent data through the port.
+   - Event throttling — For trigger ports, whether the port enqueues or drops events.
+
+### Watch data and events with \vuoNode{Display Console Window}
+
+The \vuoNode{Display Console Window} node shows a window in which your composition can write text. You can use this node to observe values that are hard to see in port popovers because they're changing too rapidly. The \vuoNode{Allow Changes} node can help by filtering out repeated data.
+
+\tip{To find other nodes that can help with troubleshooting, search the Node Library for "debug" or "troubleshoot".}
+
+### Check for errors in the Console
+
+\newInVersion{2.4}
+
+\definition{Console}{A window that displays log messages.}
+
+\menu{Tools > Show Console} opens a \term{Console} window that displays log messages from Vuo. These can help explain why a composition isn't working as expected. For example, if you run a composition containing a \vuoNode{Fetch Image} node, and the image file that you're trying to fetch doesn't exist, the node will log an error that appears in the Console.
+
+### Check your assumptions by reading node descriptions
 
 \definition{node description}{Tells you how a node is supposed to work; appears in the \term{Node Documentation Panel} whenever you select the node in the Node Library or on the canvas}
 
-Vuo provides several helpful tools for troubleshooting:
-
-   - \term{Show Events mode} lets you watch the events flow through your composition. You can turn it on and off with the \menu{Run > Show Events} and \menu{Run > Hide Events} menu items. In Show Events mode, trigger ports are animated as they fire events. Nodes turn opaque as they're executed and gradually become more transparent as time passes since their most recent execution. Using Show Events mode, you can see if certain parts of your composition are executing.
-   - \Term{port popover}s let you inspect the data and events flowing through individual ports. A port popover pops up when you click on a port. If you want to keep the port popover open for a while, for example to look at several port popovers at once, click on the popover. While the composition is running, the port popover shows several pieces of information that can help with debugging:
-      - Last event — The time of the most recent event through the port, and the average number of events per second. 
-      - Value — For data-and-event ports only, the most recent data through the port. 
-      - Event throttling — For trigger ports only, whether the port enqueues or drops events. 
-   - \Term{node description}s tell you how the node is supposed to work. The node description appears in the lower panel of the Node Library whenever you select the node in the Node Library or on the canvas.
-
-\tip{When watching data with the \vuoNode{Display Console Window} node, you can use the \vuoNode{Allow Changes} node to filter out repeated data.}
-
-There are nodes to help with troubleshooting, too. One is \vuoNode{Display Console Window}, which shows a text window that your composition can write text on. You can use \vuoNode{Display Console Window} to observe values that are hard to see in port popovers because they're changing too rapidly. To find other nodes that can help with troubleshooting, search the Node Library for "debug" or "troubleshoot".
+When you select a node in the Node Library or on the canvas, the \term{node description} appears in the lower panel of the Node Library. The node description tells you in detail how the node is intended to work.
 
 ## Common problems
 <abstract>Some common problems and how you can fix them</abstract>
@@ -2989,10 +3002,15 @@ To mitigate this, consider trying some of the following options:
 
 ### Various compositions won't run
 
-If compositions fail to start, the problem could be that you have a node installed that for some reason prevents Vuo from running compositions. The node might be outdated or broken, or it might trigger a latent bug in Vuo. In any case, you can check if this is the problem by uninstalling all nodes, including subcompositions. See [Installing a node](#installing-a-node).
+If compositions fail to start, the problem could be that you have a node installed that for some reason prevents Vuo from running compositions. The node might be outdated or broken, or it might trigger a latent bug in Vuo.
 
-If uninstalling all nodes enables your compositions to run again, the next step is to figure out which node was the problem. You can do this efficiently by first reinstalling half of your nodes. If the problem returns, then the problematic node must be in that half, so uninstall half of them and see what happens. Otherwise, reinstall half of the remaining nodes. Continue working by halves until you've narrowed the problem down to one node. If you downloaded the node from another Vuo community member, you can contact that person for help. If the problem is a node or subcomposition that you created, you can contact [Vuo Support](https://vuo.org/support).
+If Vuo is unable to deal with one of your installed nodes, then it may write a log message that you can find in \menu{Tools > Show Console}. If you don't see any relevant messages, try relaunching Vuo and checking the Console again. The log message may point out the problematic node.
 
+If the Console messages don't help you identify the problem, another thing you can try is to uninstall all nodes, including subcompositions. The quickest way to do this is to rename your \term{User Library folder} and \term{System Library folder} (if not empty}. (For more information, see [Installing a node](#installing-a-node).) Then relaunch Vuo. If you're now able to run compositions, then one of the nodes that you just uninstalled must have been the problem.
+
+From there, the next step is to figure out which node is the problem. You can do this efficiently by first reinstalling half of your nodes. If the problem returns, then the problematic node must be in that half, so uninstall half of them and see what happens. Otherwise, reinstall half of the remaining nodes. Continue working by halves until you've narrowed the problem down to one node.
+
+Once you've pinpointed the problematic node or subcomposition, the best way to get help depends on where the node came from. If you downloaded it from another Vuo community member, try contacting them for help. If you created the node yourself, you can ask for help on the [community page](https://vuo.org/community).
 
 ## General tips
 <abstract>More tips to help you troubleshoot compositions</abstract>
@@ -3000,12 +3018,11 @@ If uninstalling all nodes enables your compositions to run again, the next step 
 Finally, here are a few more tips to help you troubleshoot compositions: 
 
    - If you're having trouble with a large and complicated composition, try to simplify the problem. Create a new composition and copy a small piece of your original composition into it. It's much easier to troubleshoot a small composition than a large one. 
-   - If you're having trouble with a composition that has rapidly firing trigger ports, try to slow things down. For example, in place of the \vuoNode{Fire on Display Refresh} node's \vuoPort{Refreshed at Time} trigger port, use a \vuoNode{Fire Periodically} node's \vuoPort{Fired at Time} trigger port connected to a \vuoNode{Count} node's \vuoPort{Increment} port.
+   - If you're having trouble with a composition that has rapidly firing trigger ports, try to slow things down. For example, in place of the \vuoNode{Fire on Display Refresh} node, use a \vuoNode{Fire Periodically} node set to fire once per second.
    - If your composition used to work but now it doesn't, figure out exactly what changed. Did you add or remove some cables? Were you using a different version of Vuo? Knowing what changed will help you narrow down the problem. 
-   - Check the Console application (in Finder, \directory{Applications > Utilities > Console.app}) while running your composition. Some nodes send console messages when they have problems.
    - Try rearranging your nodes and cables so you can see the flow of events more clearly. If your nodes and cables are nicely laid out, then it can be easier to spot problems. 
    - Don't hesitate to experiment (but first save a copy of your composition). If you're not sure if a node is working as you expect, try it with various inputs.
-   - You're welcome to ask questions. For help, go to [Vuo Support](https://vuo.org/support).
+   - You're welcome to [ask questions](https://vuo.org/community) or [report a bug](https://vuo.org/bug).
 
 # Contributors
 <abstract>People who have contributed to bringing Vuo to fruition</abstract>

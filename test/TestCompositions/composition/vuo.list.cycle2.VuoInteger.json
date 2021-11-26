@@ -1,0 +1,157 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.cycle2 node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"go forward in list":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[11,22,33]},
+		"outputPortValues":{"item":11,"position":1}
+	},
+	"go forward to middle of list":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":22,"position":2}
+	},
+	"go forward to end of list":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":33,"position":3}
+	},
+	"wrap forward at end of list":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":11,"position":1}
+	},
+	"wrap backward at beginning of list":{
+		"firingPort":"goBackward",
+		"outputPortValues":{"item":33,"position":3}
+	},
+	"go to first":{
+		"firingPort":"goToFirst",
+	},
+	"go forward after go to first":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":11,"position":1}
+	},
+	"saturate backward at beginning of list":{
+		"firingPort":"goBackward",
+		"inputPortValues":{"wrapMode":"saturate"},
+		"outputPortValues":{"item":11,"position":1}
+	},
+	"go forward to middle of list again":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":22,"position":2}
+	},
+	"go forward to end of list again":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":33,"position":3}
+	},
+	"saturate at end of list":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":33,"position":3}
+	},
+
+	"switch from longer to shorter list (saturate, forward) [1]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[111,222,333,444]},
+		"outputPortValues":{"item":444,"position":4}
+	},
+	"switch from longer to shorter list (saturate, forward) [2]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[1111,2222]},
+		"outputPortValues":{"item":2222,"position":2}
+	},
+
+	"switch from longer to shorter list (wrap, forward) [1]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[111,222,333,444],"wrapMode":"wrap"},
+		"outputPortValues":{"item":333,"position":3}
+	},
+	"switch from longer to shorter list (wrap, forward) [3]":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":444,"position":4}
+	},
+	"switch from longer to shorter list (wrap, forward) [4]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[1111,2222]},
+		"outputPortValues":{"item":1111,"position":1}
+	},
+
+	"switch from longer to shorter list (saturate, backward) [1]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[111,222,333,444],"wrapMode":"saturate"},
+		"outputPortValues":{"item":222,"position":2}
+	},
+	"switch from longer to shorter list (saturate, backward) [2]":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":333,"position":3}
+	},
+	"switch from longer to shorter list (saturate, backward) [3]":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":444,"position":4}
+	},
+	"switch from longer to shorter list (saturate, backward) [4]":{
+		"firingPort":"goBackward",
+		"inputPortValues":{"list":[1111,2222]},
+		"outputPortValues":{"item":1111,"position":1}
+	},
+
+	"switch from longer to shorter list (wrap, backward) [1]":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[111,222,333,444],"wrapMode":"wrap"},
+		"outputPortValues":{"item":222,"position":2}
+	},
+	"switch from longer to shorter list (wrap, backward) [2]":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":333,"position":3}
+	},
+	"switch from longer to shorter list (wrap, backward) [3]":{
+		"firingPort":"goForward",
+		"outputPortValues":{"item":444,"position":4}
+	},
+	"switch from longer to shorter list (wrap, backward) [4]":{
+		"firingPort":"goBackward",
+		"inputPortValues":{"list":[1111,2222]},
+		"outputPortValues":{"item":1111,"position":1}
+	},
+
+	"go to first then backward (wrap) [1]":{
+		"firingPort":"goToFirst",
+		"inputPortValues":{"list":[11,22,33],"wrapMode":"wrap"},
+	},
+	"go to first then backward (wrap) [2]":{
+		"firingPort":"goBackward",
+		"outputPortValues":{"item":33,"position":3},
+	},
+
+	"go to first then backward (saturate) [1]":{
+		"firingPort":"goToFirst",
+		"inputPortValues":{"wrapMode":"saturate"},
+	},
+	"go to first then backward (saturate) [2]":{
+		"firingPort":"goBackward",
+		"outputPortValues":{"item":11,"position":1},
+	},
+
+	"go forward in 1-item list (wrap)":{
+		"firingPort":"goForward",
+		"inputPortValues":{"list":[11111]},
+		"outputPortValues":{"item":11111,"position":1}
+	},
+	"go backward in 1-item list (wrap)":{
+		"firingPort":"goBackward",
+		"outputPortValues":{"item":11111,"position":1}
+	},
+	"go forward in 1-item list (saturate)":{
+		"firingPort":"goForward",
+		"inputPortValues":{"wrapMode":"saturate"},
+		"outputPortValues":{"item":11111,"position":1}
+	},
+	"go backward in 1-item list (saturate)":{
+		"firingPort":"goBackward",
+		"outputPortValues":{"item":11111,"position":1}
+	},
+}}

@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Gradient Noise",
-					  "keywords" : [ "perlin", "simplex", "random", "pseudo", "natural" ],
+					  "keywords" : [ "perlin", "simplex", "random", "pseudo", "natural", "organic" ],
 					  "version" : "2.0.0",
 					  "dependencies" : [ "VuoGradientNoiseCommon" ],
 					  "genericTypes" : {

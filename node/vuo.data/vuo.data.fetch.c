@@ -13,20 +13,20 @@
 #include "VuoData.h"
 
 VuoModuleMetadata({
-					 "title" : "Fetch Data",
-					 "keywords" : [
-						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
-						 "text", "binary",
-						 "csv", "tsv", "xml", "json",
-					 ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoUrlFetch"
-					 ],
-					 "node": {
-						 "exampleCompositions" : [ "ShowBarChart.vuo" ]
-					 }
-				 });
+	"title": "Fetch Data",
+	"keywords": [
+		"download", "open", "load", "import", "http", "url", "file", "get", "read",
+		"text", "string", "binary",
+		"csv", "tsv", "xml", "json",
+	],
+	"version": "1.0.0",
+	"dependencies": [
+		"VuoUrlFetch"
+	],
+	"node": {
+		"exampleCompositions": [ "ShowBarChart.vuo" ],
+	},
+});
 
 void nodeEvent
 (

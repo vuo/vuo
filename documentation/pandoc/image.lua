@@ -2,26 +2,26 @@
 
 return {
 	{RawBlock = function(elem)
-		if elem.c[1] == 'tex' then
+		if elem.format == 'tex' then
 			local images = {}
 
-			for name in elem.c[2]:gmatch('\\vuoScreenshot{([^}]+)}') do
+			for name in elem.text:gmatch('\\vuoScreenshot{([^}]+)}') do
 				table.insert(images, pandoc.Image({}, string.format('image/%s.png', name)))
 			end
 
-			for name in elem.c[2]:gmatch('\\vuoCompositionImage{([^}]+)}') do
+			for name in elem.text:gmatch('\\vuoCompositionImage{([^}]+)}') do
 				table.insert(images, pandoc.Image({}, string.format('image-generated/%s.png', name)))
 			end
 
-			for name in elem.c[2]:gmatch('\\vuoNodeClassImage{([^}]+)}') do
+			for name in elem.text:gmatch('\\vuoNodeClassImage{([^}]+)}') do
 				table.insert(images, pandoc.Image({}, string.format('image-generated/%s.png', name)))
 			end
 
-			for size, name in elem.c[2]:gmatch('\\vuoImage{([0-9.]+)}{([^}]+).png}') do
+			for size, name in elem.text:gmatch('\\vuoImage{([0-9.]+)}{([^}]+).png}') do
 				table.insert(images, pandoc.Image({}, string.format('image/%s.png', name)))
 			end
 
-			for size, name in elem.c[2]:gmatch('\\vuoImage{([0-9.]+)}{([^}]+).pdf}') do
+			for size, name in elem.text:gmatch('\\vuoImage{([0-9.]+)}{([^}]+).pdf}') do
 				table.insert(images, pandoc.Image({}, string.format('image-generated/%s.png', name)))
 			end
 

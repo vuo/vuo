@@ -36,7 +36,30 @@ void VuoRendererCommon::messageHandler(QtMsgType type, const QMessageLogContext 
 			func = "?";
 	}
 
-	VuoLog(context.file ? context.file : (context.category ? context.category : "?"),
+	if (context.category && strcmp(context.category, "qt.network.ssl") == 0
+	 && message == "Error receiving trust for a CA certificate")
+		// Quell this warning; a Qt developer says:
+		// "you can ignore this message … it's a result of some certificates removed on OS X 10.11."
+		// https://bugreports.qt.io/browse/QTBUG-54161
+		return;
+
+	if (type == QtWarningMsg && message.startsWith("QVariant::save: unable to save type 'VuoRendererPublishedPort*' (type id:"))
+		// Quell this warning; VuoRendererPorts only exist within a single editor process lifetime; we don't need to serialize them.
+		return;
+
+	if (type == QtWarningMsg && message.startsWith("Layer-backing can not be explicitly controlled"))
+		// Quell this warning; `QT_MAC_WANTS_LAYER` does still make a difference.
+		// https://b33p.net/kosada/vuo/vuo/-/issues/17855
+		// https://b33p.net/kosada/vuo/vuo/-/issues/13819
+		// https://bugreports.qt.io/browse/QTBUG-81370
+		return;
+
+	if (type == QtWarningMsg && message.startsWith("Display non non-main thread! Deferring to main thread"))
+		// Quell this warning; it's internal to Qt.
+		return;
+
+	VuoLog(VuoLog_moduleName,
+		   context.file ? context.file : (context.category ? context.category : "?"),
 		   context.line,
 		   func,
 		   "%s", message.toUtf8().constData());
@@ -104,4 +127,25 @@ QString VuoRendererCommon::externalizeVuoNodeLinks(VuoCompiler *compiler, QStrin
 	}
 
 	return filteredText;
+}
+
+/**
+ * Returns the app-wide stylesheet.
+ */
+QString VuoRendererCommon::getStyleSheet(bool isDark)
+{
+	QFile f(":/Vuo.qss");
+	f.open(QFile::ReadOnly | QFile::Text);
+	QTextStream ts(&f);
+	QString styles = ts.readAll();
+
+	if (isDark)
+	{
+		QFile fDark(":/pro/VuoDark.qss");
+		fDark.open(QFile::ReadOnly | QFile::Text);
+		QTextStream tsDark(&fDark);
+		styles += tsDark.readAll();
+	}
+
+	return styles;
 }

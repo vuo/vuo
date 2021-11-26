@@ -9,27 +9,27 @@
 
 #pragma once
 
+#include "VuoToolbar.hh"
+
 /// @{ Stub.
-Q_FORWARD_DECLARE_OBJC_CLASS(NSWindow);
 Q_FORWARD_DECLARE_OBJC_CLASS(NSColor);
 Q_FORWARD_DECLARE_OBJC_CLASS(NSSegmentedControl);
-Q_FORWARD_DECLARE_OBJC_CLASS(NSTextField);
-Q_FORWARD_DECLARE_OBJC_CLASS(NSTitlebarAccessoryViewController);
 Q_FORWARD_DECLARE_OBJC_CLASS(NSView);
 Q_FORWARD_DECLARE_OBJC_CLASS(NSViewController);
 Q_FORWARD_DECLARE_OBJC_CLASS(VuoEditorFreeTrialButton);
 /// @}
 
 /**
- * Represents the toolbar for a VuoEditorWindow.
+ * Toolbar for a composition- or code-editing window.
  */
-class VuoEditorWindowToolbar : public QObject
+class VuoEditorWindowToolbar : public VuoToolbar
 {
 	Q_OBJECT
 
 public:
-	VuoEditorWindowToolbar(QMainWindow *window, bool isCodeEditor=false);
+	static VuoEditorWindowToolbar * create(QMainWindow *window, bool isCodeEditor=false);
 	~VuoEditorWindowToolbar();
+
 	void update(bool eventsShown, bool zoomedToActualSize, bool zoomedToFit);
 
 	void changeStateToBuildPending();
@@ -45,18 +45,24 @@ public:
 
 	static bool usingOverlayScrollers(void);
 
+protected:
+	VuoEditorWindowToolbar(QMainWindow *window, bool isCodeEditor);
+	virtual void addToolbarItems(void) override;
+	virtual bool allowsTabbingWithOtherWindows(void) override;
+	virtual NSString * getTabbingIdentifier(void) override;
+	virtual void updateColor(bool isDark) override;
+
 private:
+	bool isCodeEditor;
+
 	bool buildPending;
 	bool buildInProgress;
 	bool running;
 	bool stopInProgress;
 
-	NSWindow *nsWindow;
-
 	NSImage *runImage;
 	NSImage *stopImage;
 
-	QMacToolBar *toolBar;
 	QMacToolBarItem *toolbarRunItem;
 	QMacToolBarItem *toolbarStopItem;
 	QMacToolBarItem *toolbarEventsItem;
@@ -76,5 +82,4 @@ private:
 
 private slots:
 	void updateActivityIndicators(void);
-	void updateColor(bool isDark);
 };

@@ -22,6 +22,9 @@ $runAnalyzers = true;
 $skipRegexes = array(
 	'@-x (objective-)?c(\+\+)?-header@', // Don't need to analyze precompiled headers.
 	'@csgjs\.c@', // Not our code.
+	'@empty\.c@',             // Nothing to analyze.
+	'@empty\.cc@',            // Nothing to analyze.
+	'@empty\.mm@',            // Nothing to analyze.
 	'@miniz\.c@', // Not our code.
 	'@VuoBase64\.cc@',  // Not our code.
 	'@VuoBeatDetektor\.cc@',  // Not our code.
@@ -50,7 +53,7 @@ if ($runAnalyzers)
 	$tag = '[includedirs]';
 	$tagPos = strpos($buildInfo, $tag);
 	$tagLen = strlen($tag);
-	$includeDirs = '-I' . implode(' -I', explode("\n", trim(substr($buildInfo, $tagPos + $tagLen, strpos($buildInfo, '[libdirs]') - $tagPos - $tagLen))));
+	$includeDirs = '-isystem ' . implode(' -isystem ', explode("\n", trim(substr($buildInfo, $tagPos + $tagLen, strpos($buildInfo, '[libdirs]') - $tagPos - $tagLen))));
 
 /*
 	if (preg_match('/[A-Za-z]+\.c\b/', $clangArgs))
@@ -73,7 +76,7 @@ exit(0);
 */
 
 
-	$stdcppRegex = '@(-I|-isystem )/Users/[^/]*/\.conan/data/llvm/[^/]*/vuo/stable/package/[^/]*/include/c\+\+/v1@';
+	$stdcppRegex = '@(-I|-isystem )/Users/[^/]*/\.conan/data/llvm/[^/]*/vuo\+conan\+llvm/stable/package/[^/]*/include/c\+\+/v1@';
 	$clangArgsMinusSTDCPP = preg_replace($stdcppRegex, '', $clangArgs);
 	$includeDirsMinusSTDCPP = preg_replace($stdcppRegex, '', $includeDirs);
 
@@ -118,26 +121,13 @@ exit(0);
 			-- \
 			$clangArgsMinusFilename \
 			$includeDirsMinusSTDCPP \
+			-include $sourceDir/vuo.pch \
 			2>&1 \
-			| egrep -v -e \"^$\" \
-					   -e \"unused local variable.*VuoDeferScopeVar\" \
-					   -e \"unused local variable.*guard\" \
-					   -e \"unused local variable.*lock\" \
-					   -e \"^oclint: error: violations exceed threshold$\" \
-					   -e \"^P1=.+ P2=.+ P3=\" \
-					   -e \"^/Users/.+/.conan/data/\" \
-					   -e \"^OCLint Report$\" \
-					   -e \"^Compiler Warnings:\" \
-					   -e \"^Compiler Errors:\" \
-					   -e \"^Summary: \" \
-					   -e \"^\[OCLint .+\]$\" \
-					   -e 'VuoCompiler.cc.*DEAD_STORE' \
-					   -e 'VuoMacFFGL.mm:.*: missing break in switch statement' \
-					   -e 'VuoSceneRenderer.cc:.*: constant if expression' \
-					   -e 'variable .__dso_handle. has internal linkage but is not defined' \
-					   -e '^/Applications/Xcode\.app/' \
-					   -e '^/usr/local/' \
-					   -e '/llvm.framework/' \
+			| egrep -v \
+				-e \"^$\" \
+				-e \"^OCLint Report$\" \
+				-e \"^Summary: \" \
+				-e \"^\[OCLint .+\]$\" \
 			|| true
 		";
 
@@ -167,25 +157,6 @@ exit(0);
 		2>&1 \
 		| grep -E -v \
 			-e \"^$\" \
-			-e \"^clang: warning: .+ 'linker' input unused$\" \
-			-e \"^clang: warning: argument unused during compilation:\" \
-			-e \"^/Applications/Xcode\.app/.+: warning: \" \
-			-e \"^/usr/local/Cellar/.+: warning: \" \
-			-e \"/.conan/data/.+: (warning|note): \" \
-			-e \"^Leap/.+: warning: \" \
-			-e \"^\d+ warnings? generated.$\" \
-			-e \"^Assertion failed:\" \
-			-e \"^Stack dump:\" \
-			-e \"^\d+\.\t\" \
-			-e \"\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\" \
-			-e \"PLEASE ATTACH THE FOLLOWING FILES TO THE BUG REPORT:\" \
-			-e \"Preprocessed source.s. and associated run script.s. are located at:\" \
-			-e \"Target:\" \
-			-e \"Thread model: posix\" \
-			-e \"clang version\" \
-			-e \"clang: error: clang frontend command failed due to signal\" \
-			-e \"clang: error: unable to execute command: (Abort trap|Segmentation fault)\" \
-			-e \"clang: note: diagnostic msg:\" \
 		|| true
 	";
 
@@ -202,7 +173,7 @@ exit(0);
 		--headers \
 		--keep-going \
 		--pulse \
-		--call-graph-schedule \
+		--scheduler callgraph \
 		--report-blacklist-path-regex '/Users/.+/\.conan/data/.+' \
 		--report-blacklist-path-regex '/usr/local/Cellar/.+' \
 		--report-blacklist-path-regex '/Applications/Xcode\.app/.+' \
@@ -215,30 +186,14 @@ exit(0);
 		2>&1 \
 		| grep -E -v \
 			-e \"^Capturing in make/cc mode\" \
-			-e \"^Starting analysis\" \
 			-e \"^Building call graph\" \
 			-e \"^Built call graph in\" \
 			-e \"^Finished call graph scheduling\" \
-			-e \"^Analysis finished in\" \
-			-e \"^ *[A-Z_]+: \d+$\" \
+			-e \"^ *[A-Za-z ]+\([A-Z_]+\): (\d+|#)$\" \
 			-e \"^$\" \
-			-e \"^legend:\" \
-			-e \" analyzing a (file|procedure)$\" \
 			-e \"^Found \d+ source files?\" \
-			-e \"^  No issues found  $\" \
-			-e \"ERROR translating statement\" \
-			-e \"Aborting translation of method\" \
 			-e \"^Found \d+ issue\" \
-			-e \"Summary of the reports\" \
-			-e \"^Uncaught Internal Error\" \
-			-e \"^Error backtrace\" \
-			-e \"^Called from file \" \
-			-e \"^Raised at file \" \
-			-e \"^Raised by primitive operation at file \" \
-			-e \"infer.tmp.*: No such file or directory\" \
-			-e \"dirname .*/infer/specs\" \
-			-e \"VuoLog.cc:.*error: variable .__dso_handle. is used but not defined in this translation unit\" \
-			-e \"Known incorrect assumption in the frontend\"";
+	";
 
 	// https://github.com/facebook/infer/issues/8
 	$inferCommand .= " | pcregrep -Mv 'DEAD_STORE(.|\\n)*?VuoDeferScopeVar(.|\\n)*?>.*?(VuoDefer|VuoLocal).*?(\\n\\s+\\d+\\..*){2}'";

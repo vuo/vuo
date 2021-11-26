@@ -13,16 +13,18 @@
 #include "VuoSort.h"
 
 VuoModuleMetadata({
-					  "title" : "Sort Pointables by Z Distance",
-					  "keywords" : [ "organize", "order", "nearest", "point" ],
-					  "version" : "1.0.1",
-					  "dependencies" : [
-						  "VuoSort"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Sort Pointables by Z Distance",
+	"keywords": [
+		"organize", "order", "reorder", "nearest", "point",
+	],
+	"version": "1.0.1",
+	"dependencies": [
+		"VuoSort",
+	],
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

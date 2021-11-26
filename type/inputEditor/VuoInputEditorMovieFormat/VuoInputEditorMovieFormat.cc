@@ -255,8 +255,8 @@ json_object * VuoInputEditorMovieFormat::convertFromSubwidgetFormats(const QVari
 																	const QString &audioQualityAsString)
 {
 	VuoMovieFormat format;
-	format.imageEncoding = VuoMovieImageEncoding_makeFromJson((json_object *)imageEncoding.value<void *>());
-	format.audioEncoding = VuoAudioEncoding_makeFromJson((json_object *)audioEncoding.value<void *>());
+	format.imageEncoding = VuoMovieImageEncoding_makeFromJson(imageEncoding.value<json_object *>());
+	format.audioEncoding = VuoAudioEncoding_makeFromJson(audioEncoding.value<json_object *>());
 	format.imageQuality = QLocale().toDouble(imageQualityAsString);
 	format.audioQuality = QLocale().toDouble(audioQualityAsString);
 	return VuoMovieFormat_getJson(format);
@@ -503,12 +503,12 @@ QComboBox * VuoInputEditorMovieFormat::setUpComboBoxForType(QComboBox *comboBox,
 		{
 			int value = listValueFunction(allowedValues, i);
 			char *summary = summaryFunction(value);
-			QVariant variantValue = QVariant::fromValue((void *)jsonFunction(value));
+			QVariant variantValue = QVariant::fromValue(jsonFunction(value));
 
 			// Hide HEVC on OS versions where it isn't supported.
 			if (type == "VuoMovieImageEncoding"
 				&& value == VuoMovieImageEncoding_HEVC
-				&& QSysInfo::macVersion() < Q_MV_OSX(10, 13))
+				&& QOperatingSystemVersion::current() < QOperatingSystemVersion::MacOSHighSierra)  // 10.13
 			{
 				free(summary);
 				continue;
@@ -518,7 +518,7 @@ QComboBox * VuoInputEditorMovieFormat::setUpComboBoxForType(QComboBox *comboBox,
 				 || value == VuoMovieImageEncoding_ProRes422HQ
 				 || value == VuoMovieImageEncoding_ProRes422LT
 				 || value == VuoMovieImageEncoding_ProRes422Proxy)
-				&& QSysInfo::macVersion() < Q_MV_OSX(10, 15))
+				&& QOperatingSystemVersion::current() < QOperatingSystemVersion::MacOSCatalina)  // 10.15
 			{
 				free(summary);
 				continue;

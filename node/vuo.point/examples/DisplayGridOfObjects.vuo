@@ -1,0 +1,42 @@
+/**
+ * @file
+ * @brief Display Grid of Objects
+ * Displays a 2D grid of cones with a little springiness.
+ *
+ * @createdInVuoVersion 2.2.1
+ * @lastSavedInVuoVersion 2.3.0
+ * @copyright Copyright © 2012–2020 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Convert2DPointListTo3DPointList [type="vuo.type.list.point2d.point3d.xy" version="1.0.2" label="Convert 2D Point List to 3D Point List|<refresh>refresh\l|<xy>xy\l|<xyz>xyz\r" pos="750,360"];
+Copy3DObject [type="vuo.scene.copy.trs" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="675,210"];
+Curve [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="-240,255" _startPosition="-0.55000000000000004" _endPosition="-0.66500000000000004" _duration="2.0" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-465,255" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,105" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeCone2 [type="vuo.scene.make.cone.VuoShader" version="1.1.0" label="Make Cone|<refresh>refresh\l|<transform>transform\l|<material>material\l|<columns>columns\l|<rows>rows\l|<cone>cone\r" pos="465,90" _columns="12" _rows="6"];
+MakeEdgeShader [type="vuo.shader.make.edge.color" version="1.0.0" label="Make Edge Shader|<refresh>refresh\l|<color>color\l|<width>width\l|<sharpness>sharpness\l|<interiorOpacity>interiorOpacity\l|<shader>shader\r" pos="255,105" _color="\{\"r\":0.88062864542007446,\"g\":0.69208818674087524,\"b\":1.0,\"a\":1.0\}" _width="0.5" _sharpness="0.5" _interiorOpacity="0.0"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="839,221" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="642,266" _1="\{\"x\":0.029999999329447746,\"y\":0.029999999329447746,\"z\":0.029999999329447746\}"];
+MakeList3 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="539,251" _1="\{\"x\":90.0,\"y\":0.0,\"z\":0.0\}"];
+MakePointsOn2DGrid [type="vuo.point.make.grid.2d" version="1.0.0" label="Make Points in 2D Grid|<refresh>refresh\l|<xRange>xRange\l|<yRange>yRange\l|<xCurve>xCurve\l|<yCurve>yCurve\l|<xEasing>xEasing\l|<yEasing>yEasing\l|<xPointCount>xPointCount\l|<yPointCount>yPointCount\l|<points>points\r" pos="225,225" fillcolor="orange" _xRange="\{\"minimum\":-0.80000000000000004,\"maximum\":0.80000000000000004\}" _xCurve="\"linear\"" _yCurve="\"quadratic\"" _xEasing="\"in\"" _yEasing="\"in\"" _xPointCount="32" _yPointCount="50"];
+MakeRange2 [type="vuo.math.make.range.VuoReal" version="1.0.0" label="Make Range|<refresh>refresh\l|<hasMinimum>hasMinimum\l|<minimum>minimum\l|<hasMaximum>hasMaximum\l|<maximum>maximum\l|<range>range\r" pos="-45,240" _hasMinimum="true" _hasMaximum="true" _maximum="0.59999999999999998"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="885,210" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+
+Convert2DPointListTo3DPointList:xyz -> Copy3DObject:translations;
+Copy3DObject:copies -> MakeList:1;
+Curve:value -> MakeRange2:minimum;
+FireOnDisplayRefresh:requestedFrame -> Curve:time;
+FireOnStart2:started -> MakeEdgeShader:color;
+FireOnStart2:started -> MakePointsOn2DGrid:xRange;
+MakeCone2:cone -> Copy3DObject:object;
+MakeEdgeShader:shader -> MakeCone2:material;
+MakeList2:list -> Copy3DObject:scales;
+MakeList3:list -> Copy3DObject:rotations;
+MakeList:list -> RenderSceneToWindow:objects;
+MakePointsOn2DGrid:points -> Convert2DPointListTo3DPointList:xy;
+MakeRange2:range -> MakePointsOn2DGrid:yRange;
+}

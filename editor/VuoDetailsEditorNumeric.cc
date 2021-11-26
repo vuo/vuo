@@ -25,6 +25,8 @@ VuoDetailsEditorNumeric::VuoDetailsEditorNumeric(VuoType *type, QWidget *parent)
 
 /**
  * Displays a frameless dialog.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object * VuoDetailsEditorNumeric::show(QPoint portLeftCenter, json_object *originalDetails)
 {
@@ -54,7 +56,7 @@ json_object * VuoDetailsEditorNumeric::show(QPoint portLeftCenter, json_object *
 	dialog.show();  // Needed to position the dialog. (https://bugreports.qt-project.org/browse/QTBUG-31406)
 	dialog.exec();
 
-	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : originalDetails);
+	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : json_object_get(originalDetails));
 }
 
 /**

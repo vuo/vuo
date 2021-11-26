@@ -36,7 +36,7 @@ public:
 	}
 	void receivedTelemetryStats(unsigned long utime, unsigned long stime)
 	{
-		fout << "VuoTelemetryStats " << utime << " " << stime << endl;
+		fout << "VuoTelemetryHeartbeat" << endl;
 	}
 	void receivedTelemetryNodeExecutionStarted(string compositionIdentifier, string nodeIdentifier)
 	{
@@ -79,6 +79,7 @@ private:
 	VuoRunner * setupRunner(void)
 	{
 		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, "", true, false);
+		runner->setRuntimeChecking(true);
 		return runner;
 	}
 
@@ -113,6 +114,7 @@ private slots:
 		}
 
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, "", true, false);
+		runner->setRuntimeChecking(true);
 		runner->start();
 		runner->stop();
 
@@ -171,14 +173,14 @@ private slots:
 			string line = actualLines.at(i);
 			istringstream sin(line);
 			sin >> actualTelemetryType;
-			if (actualTelemetryType != "VuoTelemetryStats")
+			if (actualTelemetryType != "VuoTelemetryHeartbeat")
 			{
 				startLine = i;
 				break;
 			}
 		}
 		QVERIFY2(startLine > 0 && actualLines.size() - startLine >= EXPECTED_TELEMETRY_TYPES * (SLEEP_SEC * TELEMETRY_PER_SEC - 1),
-				 qPrintable(QString("actualLines from first non-VuoTelemetryStats to the end: %1").arg(actualLines.size() - startLine)));
+				 qPrintable(QString("actualLines from first non-VuoTelemetryHeartbeat to the end: %1").arg(actualLines.size() - startLine)));
 
 		string expectedTelemetryType = "VuoTelemetryNodeExecutionStarted";
 		for (uint i = startLine; i < actualLines.size(); ++i)
@@ -187,13 +189,10 @@ private slots:
 			istringstream sin(line);
 			string telemetryType;
 
-			if (expectedTelemetryType == "VuoTelemetryStats")
+			if (expectedTelemetryType == "VuoTelemetryHeartbeat")
 			{
-				unsigned long utime, stime;
-				sin >> telemetryType >> utime >> stime;
-				QCOMPARE(QString(telemetryType.c_str()), QString("VuoTelemetryStats"));
-				QVERIFY(0 <= utime && utime <= SLEEP_SEC * 1000000);
-				QVERIFY(0 <= stime && stime <= SLEEP_SEC * 1000000);
+				sin >> telemetryType;
+				QCOMPARE(QString(telemetryType.c_str()), QString("VuoTelemetryHeartbeat"));
 				expectedTelemetryType = "VuoTelemetryNodeExecutionStarted";
 			}
 			else if (expectedTelemetryType == "VuoTelemetryNodeExecutionStarted")
@@ -210,7 +209,7 @@ private slots:
 				sin >> telemetryType >> edgeIdentifier;
 				QCOMPARE(QString(telemetryType.c_str()), QString("VuoTelemetryNodeExecutionFinished"));
 				QCOMPARE(QString(edgeIdentifier.c_str()), QString("node.finished"));
-				expectedTelemetryType = "VuoTelemetryStats";
+				expectedTelemetryType = "VuoTelemetryHeartbeat";
 			}
 			else
 			{
@@ -274,6 +273,7 @@ private slots:
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(BINARY_DIR "/test/TestVuoRunner/PublishedPorts", ".", true, false);
 		QVERIFY(runner);
 
+		runner->setRuntimeChecking(true);
 		runner->start();
 
 		// A port with no suggestions.
@@ -463,6 +463,7 @@ private slots:
 		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(("composition/" + composition).toUtf8().data(), issues);
 		QVERIFY(runner);
 
+		runner->setRuntimeChecking(true);
 		runner->start();
 
 		vector<VuoRunner::Port *> inputPortsVec = runner->getPublishedInputPorts();

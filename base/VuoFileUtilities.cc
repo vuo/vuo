@@ -240,8 +240,9 @@ void VuoFileUtilities::makeDir(string path)
 	// `mkdir` ANDs the mode with the process's umask,
 	// so by default the created directory's mode will end up being 0755.
 	int ret = mkdir(path.c_str(), 0777);
+	int mkdirErrno = errno;
 	if (ret != 0 && ! dirExists(path))
-		throw VuoException((string("Couldn't create directory \"" + path + "\": ") + strerror(errno)).c_str());
+		throw VuoException((string("Couldn't create directory \"" + path + "\": ") + strerror(mkdirErrno)).c_str());
 }
 
 /**
@@ -400,10 +401,19 @@ string VuoFileUtilities::getCompositionLocalModulesPath(const string &compositio
 
 /**
  * Returns the filesystem path to the user-specific Vuo Modules folder (without a trailing slash).
+ *
+ * The folder does not necessarily exist yet.
+ *
+ * If the process is running in a sandbox, the user's home folder may not be available,
+ * in which case this method returns an empty string.
  */
 string VuoFileUtilities::getUserModulesPath()
 {
-	return string(getenv("HOME")) + "/Library/Application Support/Vuo/Modules";
+	const char *home = getenv("HOME");
+	if (!home)
+		return string();
+
+	return string(home) + "/Library/Application Support/Vuo/Modules";
 }
 
 /**
@@ -416,10 +426,19 @@ string VuoFileUtilities::getSystemModulesPath()
 
 /**
  * Returns the filesystem path to the folder that Vuo uses to cache data (without a trailing slash).
+ *
+ * The folder does not necessarily exist yet.
+ *
+ * If the process is running in a sandbox, the user's home folder may not be available,
+ * in which case this method returns an empty string.
  */
 string VuoFileUtilities::getCachePath(void)
 {
-	return string(getenv("HOME")) + "/Library/Caches/org.vuo/" + VUO_VERSION_AND_BUILD_STRING;
+	const char *home = getenv("HOME");
+	if (!home)
+		return string();
+
+	return string(home) + "/Library/Caches/org.vuo/" + VUO_VERSION_AND_BUILD_STRING;
 }
 
 /**
@@ -1083,6 +1102,28 @@ string VuoFileUtilities::getArchiveFileContentsAsString(string archivePath, stri
 size_t VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(string path)
 {
 	return VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(path);
+}
+
+/**
+ * Ad-hoc code-signs the specified binary.
+ */
+void VuoFileUtilities::adHocCodeSign(string path, vector<string> environment, string entitlementsPath)
+{
+	double t0 = VuoLogGetTime();
+	vector<string> processAndArgs{
+		getVuoFrameworkPath() + "/Helpers/codesignWrapper.sh",
+		"--sign",
+		"-",  // "-" = ad-hoc
+		path,
+	};
+	if (!entitlementsPath.empty())
+	{
+		processAndArgs.push_back("--entitlements");
+		processAndArgs.push_back(entitlementsPath);
+	}
+	executeProcess(processAndArgs, environment);
+
+	VDebugLog("\tAd-hoc code-signing took %5.2fs", VuoLogGetTime() - t0);
 }
 
 /**

@@ -13,6 +13,8 @@
 #pragma clang diagnostic ignored "-Wdocumentation"
 #include <json-c/json.h>
 #pragma clang diagnostic pop
+Q_DECLARE_OPAQUE_POINTER(json_object *)
+Q_DECLARE_METATYPE(json_object *)
 
 class VuoInputEditor;
 
@@ -78,7 +80,6 @@ public:
 	virtual bool supportsTabbingBetweenPorts(void);
 
 	static QFont getDefaultFont(void);
-	static QString getDefaultFontCss(void);
 
 
 signals:
@@ -106,4 +107,3 @@ signals:
 	 */
 	void tabbedBackwardPastFirstWidget();
 };
-

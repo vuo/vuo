@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Expected outputs for the vuo.points.make.phyllotaxis node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration":{
+	"invalid"        :{"firingPort":"center", "inputPortValues":{"numberOfPoints":-1,                 "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":null                            }},
+	"empty"          :{"firingPort":"center", "inputPortValues":{"numberOfPoints": 0,                 "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":null                            }},
+	"1 point"        :{"firingPort":"center", "inputPortValues":{"numberOfPoints": 1,                 "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":[{"x":0  ,"y":0}               ]}},
+	"2 points"       :{"firingPort":"center", "inputPortValues":{"numberOfPoints": 2,                 "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":[{"x":0  ,"y":0}, {"x":1,"y":0}]}},
+	"5 points"       :{"firingPort":"center", "inputPortValues":{"numberOfPoints": 5,                 "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":[{"x":0  ,"y":0}, {"x":0.5,"y":0}, {"x":0.707107,"y":0}, {"x":0.866025,"y":0}, {"x":1,"y":0}]}},
+	"4 points offset":{"firingPort":"center", "inputPortValues":{"numberOfPoints": 4, "startPoint":2, "angle":  0  }, "outputPortValues":{"phyllotaxisPoints":[{"x":0.5,"y":0}, {"x":0.707107,"y":0}, {"x":0.866025,"y":0}, {"x":1,"y":0}]}},
+	"5 points angle" :{"firingPort":"center", "inputPortValues":{"numberOfPoints": 5, "startPoint":1, "angle":137.5}, "outputPortValues":{"phyllotaxisPoints":[{"x":0  ,"y":0}, {"x":-0.368639,"y":0.337795}, {"x":0.0616284,"y":-0.704416}, {"x":0.527203,"y":0.687064}, {"x":-0.984808,"y":-0.173648}]}},
+}}

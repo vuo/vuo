@@ -14,6 +14,7 @@ extern "C" {
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoReal);
+Q_DECLARE_METATYPE(VuoList_VuoReal);
 
 /**
  * Tests the VuoReal type.
@@ -87,6 +88,23 @@ private slots:
 		json_object_put(o);
 
 		QCOMPARE( VuoReal_areEqual(t, value), compareResult );
+	}
+
+	void testAverage_data()
+	{
+		QTest::addColumn<VuoList_VuoReal>("values");
+		QTest::addColumn<VuoReal>("average");
+
+		QTest::newRow("empty list") << VuoListCreate_VuoReal() << (VuoReal)0;
+		QTest::newRow("multiple items") << VuoList_VuoReal_makeFromString("[1, -2, 3.4]") << (VuoReal)0.8;
+	}
+	void testAverage()
+	{
+		QFETCH(VuoList_VuoReal, values);
+		QFETCH(VuoReal, average);
+
+		QCOMPARE(VuoReal_average(values), average);
+		VuoLocal(values);
 	}
 
 	void testRandom_data()

@@ -14,6 +14,7 @@ extern "C" {
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoPoint2d);
+Q_DECLARE_METATYPE(VuoList_VuoPoint2d);
 
 /**
  * Tests the VuoPoint2d type.
@@ -88,6 +89,22 @@ private slots:
 
 		if (testStringFromValue)
 			QCOMPARE(VuoPoint2d_getString(p), initializer.toUtf8().constData());
+	}
+
+	void testAverage_data()
+	{
+		QTest::addColumn<VuoList_VuoPoint2d>("values");
+		QTest::addColumn<VuoPoint2d>("average");
+
+		QTest::newRow("empty list") << VuoListCreate_VuoPoint2d() << VuoPoint2d_make(0, 0);
+		QTest::newRow("multiple items") << VuoList_VuoPoint2d_makeFromString("[[-2, 20], [1, -10]]") << VuoPoint2d_make(-0.5, 5);
+	}
+	void testAverage()
+	{
+		QFETCH(VuoList_VuoPoint2d, values);
+		QFETCH(VuoPoint2d, average);
+
+		QVERIFY(VuoPoint2d_areEqual(VuoPoint2d_average(values), average));
 	}
 };
 

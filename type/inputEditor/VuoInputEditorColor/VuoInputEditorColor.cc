@@ -27,6 +27,8 @@ VuoColor VuoInputEditorColor::vuoColorFromQColor(const QColor &qtColor)
 
 /**
  * Displays a color-picker dialog.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
@@ -53,7 +55,7 @@ json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *origi
 	if (dialog.result() == QDialog::Accepted)
 		return VuoColor_getJson(vuoColorFromQColor(dialog.selectedColor()));
 
-	return originalValue;
+	return json_object_get(originalValue);
 }
 
 /**

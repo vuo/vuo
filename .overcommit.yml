@@ -30,32 +30,13 @@ PreCommit:
     Cppcheck:
         enabled: true
         description: 'Run cppcheck'
-        required_executable: cppcheck
+        required_executable: base/run-cppcheck
         flags:
-            - --platform=unix64
-            - --enable=information,warning,style,performance,portability
-            - --std=c11
-            - --std=c++11
-            - --library=qt
-            - --library=posix
-            - --library=std
-            - --suppressions-list=.cppcheck
-            - --template=cppcheck1
-            - -Inode
-            - -Itype
-            - -Ilibrary
-            - -Ibuild/base/config
-            - -Ibuild/type/list
-            - -UVuoLocal
-            - --max-configs=1
-        install_command: 'brew install cppcheck'
+            - '-'
         include:
             - '**/*.c'
             - '**/*.cc'
-            - '**/*.h'
-            - '**/*.hh'
-            - '**/*.m'
-            - '**/*.mm'
+        install_command: 'brew install cppcheck'
     EndOfFile:
         enabled: true
         description: 'Check linebreaks at end of file'
@@ -68,6 +49,7 @@ PreCommit:
             - '**/*.pl'
             - '**/*.sh'
             - base/build-and-analyze
+            - base/run-cppcheck
             - compiler/binary/install_name_tool
             - framework/vuo-run
             - node/vuo.blackmagic/generateVideoModes

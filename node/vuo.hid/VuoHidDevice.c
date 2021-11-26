@@ -189,7 +189,7 @@ bool VuoHidDevice_isLessThan(const VuoHidDevice a, const VuoHidDevice b)
  */
 bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 {
-	VDebugLog("Matching by %s:  name=%s  location=%08llx  product=%04llx:%04llx  usage=%04llx:%04llx", VuoHidDevice_getStringForMatchType(device.matchType), device.name, device.location, device.vendorID, device.productID, device.usagePage, device.usage);
+	VUserLog("Matching by %s:  name=%s  location=%08llx  product=%04llx:%04llx  usage=%04llx:%04llx", VuoHidDevice_getStringForMatchType(device.matchType), device.name, device.location, device.vendorID, device.productID, device.usagePage, device.usage);
 
 	// Already have a location; nothing to do.
 	if (device.matchType == VuoHidDevice_MatchLocation)
@@ -246,12 +246,12 @@ bool VuoHidDevice_realize(VuoHidDevice device, VuoHidDevice *realizedDevice)
 
 	if (found)
 	{
-		VDebugLog("Matched \"%s\".", realizedDevice->name);
+		VUserLog("Matched \"%s\".", realizedDevice->name);
 		VuoRelease(devices);
 		return true;
 	}
 
-	VDebugLog("Warning: Didn't find a device matching those criteria.");
+	VUserLog("Warning: Didn't find a device matching those criteria.");
 	VuoRelease(devices);
 	return false;
 }

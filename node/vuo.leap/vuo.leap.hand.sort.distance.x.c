@@ -13,16 +13,18 @@
 #include "VuoSort.h"
 
 VuoModuleMetadata({
-					  "title" : "Sort Hands by X Distance",
-					  "keywords" : [ "organize", "order", "nearest", "point" ],
-					  "version" : "1.0.1",
-					  "dependencies" : [
-						  "VuoSort"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo" ]
-					  }
-				  });
+	"title": "Sort Hands by X Distance",
+	"keywords": [
+		"organize", "order", "reorder", "nearest", "point",
+	],
+	"version": "1.0.1",
+	"dependencies": [
+		"VuoSort",
+	],
+	"node": {
+		"exampleCompositions": [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo" ],
+	},
+});
 
 void nodeEvent
 (

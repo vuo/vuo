@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.average.group node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"null":               {"firingPort":"list", "inputPortValues":{"list":null,      "itemsPerGroup":1}, "outputPortValues":{"averageValues":[             ]}},
+	"0 items, group of 1":{"firingPort":"list", "inputPortValues":{"list":[        ],"itemsPerGroup":1}, "outputPortValues":{"averageValues":[             ]}},
+	"1 item, group of 1": {"firingPort":"list", "inputPortValues":{"list":[1       ],"itemsPerGroup":1}, "outputPortValues":{"averageValues":[ 1           ]}},
+	"2 items, group of 1":{"firingPort":"list", "inputPortValues":{"list":[1,-2    ],"itemsPerGroup":1}, "outputPortValues":{"averageValues":[ 1,      -2  ]}},
+	"2 items, group of 2":{"firingPort":"list", "inputPortValues":{"list":[1,-2    ],"itemsPerGroup":2}, "outputPortValues":{"averageValues":[-0.5         ]}},
+	"2 items, group of 3":{"firingPort":"list", "inputPortValues":{"list":[1,-2    ],"itemsPerGroup":3}, "outputPortValues":{"averageValues":[-0.5         ]}},
+	"3 items, group of 2":{"firingPort":"list", "inputPortValues":{"list":[1,-2,3  ],"itemsPerGroup":2}, "outputPortValues":{"averageValues":[-0.5,     3  ]}},
+	"4 items, group of 2":{"firingPort":"list", "inputPortValues":{"list":[1,-2,3,4],"itemsPerGroup":2}, "outputPortValues":{"averageValues":[-0.5,     3.5]}},
+	"4 items, group of 3":{"firingPort":"list", "inputPortValues":{"list":[1,-2,3,4],"itemsPerGroup":3}, "outputPortValues":{"averageValues":[ 0.66666, 4  ]}},
+	"4 items, group of 4":{"firingPort":"list", "inputPortValues":{"list":[1,-2,3,4],"itemsPerGroup":4}, "outputPortValues":{"averageValues":[ 1.5         ]}},
+	"4 items, group of 5":{"firingPort":"list", "inputPortValues":{"list":[1,-2,3,4],"itemsPerGroup":5}, "outputPortValues":{"averageValues":[ 1.5         ]}},
+}}

@@ -645,32 +645,11 @@ char * VuoRuntimeCommunicator::mergeEnumDetails(string type, const char *details
 
 void VuoRuntimeCommunicator::sendHeartbeat(bool blocking)
 {
-	struct rusage r;
-	if(getrusage(RUSAGE_SELF,&r))
-	{
-		VUserLog("The composition couldn't get the information to send for VuoTelemetryStats : %s", strerror(errno));
-		return;
-	}
-
-	zmq_msg_t messages[2];
-
-	{
-		uint64_t utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
-		zmq_msg_init_size(&messages[0], sizeof utime);
-		memcpy(zmq_msg_data(&messages[0]), &utime, sizeof utime);
-	}
-
-	{
-		uint64_t stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
-		zmq_msg_init_size(&messages[1], sizeof stime);
-		memcpy(zmq_msg_data(&messages[1]), &stime, sizeof stime);
-	}
-
 	if (blocking)
 		// When called with blocking=true, we're already on telemetryQueue.
-		vuoSend("VuoTelemetry", zmqTelemetry, VuoTelemetryStats, messages, 2, false, NULL);
+		vuoSend("VuoTelemetry", zmqTelemetry, VuoTelemetryHeartbeat, nullptr, 0, false, nullptr);
 	else
-		sendTelemetry(VuoTelemetryStats, messages, 2);
+		sendTelemetry(VuoTelemetryHeartbeat, nullptr, 0);
 }
 
 /**

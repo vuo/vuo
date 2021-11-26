@@ -29,14 +29,14 @@ return {
 
 	-- Then, convert block asides to HTML.
 	{RawBlock = function(elem)
-		if elem.c[1] == 'tex' then
+		if elem.format == 'tex' then
 			local blocks = {}
 
-			for version in elem.c[2]:gmatch('\\newInVersion{([0-9.]+)}') do
+			for version in elem.text:gmatch('\\newInVersion{([0-9.]+)}') do
 				table.insert(blocks, pandoc.RawBlock('html', '<para role="vuo-note-new"><phrase role="title">New in Vuo ' .. version .. '</phrase></para>'))
 			end
 
-			for version, changed in elem.c[2]:gmatch('\\changedInVersion{([0-9.]+)}{([^\n]+)}') do
+			for version, changed in elem.text:gmatch('\\changedInVersion{([0-9.]+)}{([^\n]+)}') do
 				table.insert(blocks, pandoc.RawBlock('html', '<para role="vuo-note-changed"><phrase role="title">Changed in Vuo ' .. version .. '</phrase>' .. changed .. '</para>'))
 			end
 

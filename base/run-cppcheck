@@ -1,0 +1,154 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]; then
+	app="$(basename $0)"
+	echo "usage:"
+	echo "        $app <tag> <…cppcheck args…>"
+	echo "           where <tag> is '-' for stdout, or 'xml' to write to an XML file"
+	exit 1
+fi
+tag="$1"
+shift 1
+
+[ -f build/conanbuildinfo.txt ] && buildDir=build
+[ -f $(pwd)-build/conanbuildinfo.txt ] && buildDir=$(pwd)-build
+if [ -z "$buildDir" ]; then
+	echo "error: Couldn't find conanbuildinfo.txt.  Please run this script from the root of your Vuo source folder."
+	exit 1
+fi
+
+conanBuildDirs="$(pcregrep --multiline --only-matching=1 '\[builddirs\]\n([^[]*\n)\n\[' "$buildDir/conanbuildinfo.txt")"
+blackmagicDir="$(echo "$conanBuildDirs" | grep blackmagic)"
+ffmpegDir="$(echo "$conanBuildDirs" | grep ffmpeg)"
+gammaDir="$(echo "$conanBuildDirs" | grep gamma)"
+glibDir="$(echo "$conanBuildDirs" | grep glib)"
+jsoncDir="$(echo "$conanBuildDirs" | grep jsonc)"
+llvmDir="$(echo "$conanBuildDirs" | grep llvm)"
+macossdkDir="$(echo "$conanBuildDirs" | grep macos-sdk)"
+qtDir="$(echo "$conanBuildDirs" | grep qt)"
+zxingDir="$(echo "$conanBuildDirs" | grep zxing)"
+
+function runCPPCheck
+{
+	tag="$1"
+	language="$2"
+	pch="$3"
+	shift 3
+
+	if [ "$language" = "c" ]; then
+		cppcheckLanguage="--language=c --std=c99"
+		clangSTD="-std=gnu99"
+		clangPCH="-include-pch $buildDir/CMakeFiles/VuoPCH${pch}.dir/cmake_pch.h.pch"
+	elif [ "$language" = "c++" ]; then
+		cppcheckLanguage="--language=c++ --std=c++11"
+		clangSTD="-std=c++11"
+		clangPCH="-include-pch $buildDir/CMakeFiles/VuoPCH${pch}.dir/cmake_pch.hxx.pch"
+	else
+		echo "error: unknown language '$language'"
+		exit 1
+	fi
+
+	if [ "$tag" != "-" ]; then
+		cppcheckOutput="--xml --output-file=$buildDir/cppcheck-$language-$pch.xml"
+		echo "cppcheck $language-$pch"
+	fi
+
+	# Disable parallelism (-j1) for now, due to https://trac.cppcheck.net/ticket/10535.
+	cppcheck \
+		--quiet \
+		-j1 \
+		--platform=unix64 \
+		--enable=information,warning,style,performance,portability \
+		$cppcheckLanguage \
+		--library=qt \
+		--library=posix \
+		--library=std \
+		--max-configs=1 \
+		--suppress-xml=.cppcheck.xml \
+		--suppress="*:${blackmagicDir}include/*" \
+		--suppress="*:${ffmpegDir}include/*/*" \
+		--suppress="*:${gammaDir}include/Gamma/*" \
+		--suppress="*:${glibDir}include/glib/*" \
+		--suppress="*:${jsoncDir}include/*/*" \
+		--suppress="*:${llvmDir}include/*/*" \
+		--suppress="*:${llvmDir}include/*/*/*" \
+		--suppress="*:${llvmDir}lib/clang/5.0.2/include/*" \
+		--suppress="*:${macossdkDir}System/Library/Frameworks/CoreServices.framework/Frameworks/SearchKit.framework/Headers/SKAnalysis.h" \
+		--suppress="*:${macossdkDir}usr/include/*" \
+		--suppress="*:${zxingDir}include/zxing/common/*" \
+		--clang="$llvmDir/bin/clang++ $clangSTD $(pcregrep --multiline --only-matching=1 '\[includedirs\]\n([^[]*\n)\n\[' "$buildDir/conanbuildinfo.txt" | perl -pe "s/^\//-isystem \//; s/\n/ /g") -F "$qtDir/lib" -F "$buildDir/lib" -isysroot "$macossdkDir" $clangPCH -Oz -target x86_64-apple-macosx10.12.0" \
+		-I $buildDir/base/config \
+		-I $buildDir/compiler \
+		-I $buildDir/editor \
+		-I $buildDir/editor/VuoEditor_autogen/include \
+		-I $buildDir/type/list \
+		-I base \
+		-I compiler \
+		-I compiler/pro \
+		-I editor \
+		-I editor/VuoEditorApp \
+		-I library \
+		-I licensetools \
+		-I node \
+		-I node/vuo.artnet \
+		-I node/vuo.audio \
+		-I node/vuo.bcf2000 \
+		-I node/vuo.blackmagic \
+		-I node/vuo.data \
+		-I node/vuo.file \
+		-I node/vuo.image \
+		-I node/vuo.layer \
+		-I node/vuo.leap/Leap \
+		-I node/vuo.math \
+		-I node/vuo.midi \
+		-I node/vuo.mouse \
+		-I node/vuo.ndi \
+		-I node/vuo.noise \
+		-I node/vuo.scene \
+		-I node/vuo.time \
+		-I node/vuo.video \
+		-I renderer \
+		-I renderer/pro \
+		-I runtime \
+		-I type \
+		-I type/inputEditor/widget \
+		-D SOURCE_DIR="" \
+		-D VUO_PRO \
+		-D VuoColorspace_getICC_VuoGenericType1=VuoColorspace_getICC_VuoInteger \
+		-D VuoGenericType1=VuoInteger \
+		-D VuoListCreate_VuoGenericType1=VuoListCreate_VuoInteger \
+		-D VuoList_VuoGenericType1=VuoList_VuoInteger \
+		$cppcheckOutput \
+		$@
+}
+
+# Split into separate batches for C and C++ files (since they require different arguments),
+# and for C++ files that use LLVM and Qt (so it can run faster on files that don't require them).
+declare -a files_C files_CC files_CC_LLVM files_CC_LLVM_Qt
+for file do
+	# Skip files that aren't our code or are templates.
+	# Use the `.cppcheck` suppressions list to ignore headers.
+	[[ \
+		"$file" =~ /VuoBase64\.cc$ \
+	 || "$file" =~ /VuoBeatDetektor\.cc$ \
+	 || "$file" =~ /VuoList\.cc$ \
+	 || "$file" =~ /VuoUsbVendor\.c$ \
+	 || "$file" =~ /csgjs\.cc$ \
+	 || "$file" =~ /miniz\.c$ \
+	]] && continue
+
+	if [[ "$file" =~ \.c$ ]]; then
+		files_C+=($file)
+	elif [[ "$file" =~ compiler\/.*\.cc$ ]]; then
+		files_CC_LLVM+=($file)
+	elif [[ "$file" =~ (renderer|editor|type/inputEditor)\/.*\.cc$ ]]; then
+		files_CC_LLVM_Qt+=($file)
+	elif [[ "$file" =~ \.cc$ ]]; then
+		files_CC+=($file)
+	fi
+done
+
+[ ${#files_C[@]}          -gt 0 ] && runCPPCheck $tag c   Default "${files_C[@]}"
+[ ${#files_CC[@]}         -gt 0 ] && runCPPCheck $tag c++ Default "${files_CC[@]}"
+[ ${#files_CC_LLVM[@]}    -gt 0 ] && runCPPCheck $tag c++ LLVM    "${files_CC_LLVM[@]}"
+[ ${#files_CC_LLVM_Qt[@]} -gt 0 ] && runCPPCheck $tag c++ LLVMQt  "${files_CC_LLVM_Qt[@]}"

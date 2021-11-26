@@ -13,7 +13,8 @@
 VuoModuleMetadata({
 	"title": "Summarize List Items",
 	"keywords": [
-		"convert", "text", "brief", "shorten", "debug", "troubleshoot",
+		"convert", "brief", "shorten", "debug", "troubleshoot",
+		"text", "string",
 		"show", "items", "contents",
 	],
 	"version": "1.0.0",

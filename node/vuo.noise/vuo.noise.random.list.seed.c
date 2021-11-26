@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "title" : "Make Random List with Seed",
 					  "keywords" : [ "uncorrelated", "arbitrary", "aleatoric", "chance", "pseudorandom",
 							"number", "generate", "prng", "rng", "arc4random", "uniform", "distribution", "white" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",

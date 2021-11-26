@@ -240,9 +240,23 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 									   );
 		self.audio_fmt_desc = fmt;
 
-		AudioChannelLayout acl;
-		bzero( &acl, sizeof(acl));
-		acl.mChannelLayoutTag = channels > 1 ? kAudioChannelLayoutTag_Stereo : kAudioChannelLayoutTag_Mono;
+		size_t aclSize = sizeof(AudioChannelLayout);
+		AudioChannelLayout *acl = malloc(aclSize);
+		bzero(acl, aclSize);
+		if (channels == 1)
+			acl->mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
+		else if (channels == 2)
+			acl->mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
+		else
+		{
+			aclSize = sizeof(AudioChannelLayout) + sizeof(AudioChannelDescription) * (channels - 1);
+			acl = realloc(acl, aclSize);
+			bzero(acl, aclSize);
+			acl->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+			acl->mNumberChannelDescriptions = channels;
+			for (int i = 0; i < channels; ++i)
+				acl->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_Discrete_0 + i;
+		}
 
 		int audioEncoding = kAudioFormatLinearPCM;
 		NSDictionary* audioOutputSettings;
@@ -259,7 +273,7 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 										[NSNumber numberWithBool:NO], AVLinearPCMIsBigEndianKey,
 										[NSNumber numberWithBool:NO], AVLinearPCMIsFloatKey,
 										[NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
-										[ NSData dataWithBytes: &acl length: sizeof( acl ) ], AVChannelLayoutKey,
+										[NSData dataWithBytes:acl length:aclSize], AVChannelLayoutKey,
 										nil];
 		}
 		else
@@ -272,9 +286,10 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 										[ NSNumber numberWithInt: channels ], AVNumberOfChannelsKey,
 										[ NSNumber numberWithFloat: VuoAudioSamples_sampleRate], AVSampleRateKey,
 										[ NSNumber numberWithInt:audioBitrate], AVEncoderBitRateKey,
-										[ NSData dataWithBytes: &acl length: sizeof( acl ) ], AVChannelLayoutKey,
+										[NSData dataWithBytes:acl length:aclSize], AVChannelLayoutKey,
 										nil];
 		}
+		free(acl);
 
 		self.audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioOutputSettings];
 		self.audioInput.expectsMediaDataInRealTime=YES;
@@ -386,6 +401,8 @@ const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when enco
 {
 	long sampleCount = VuoAudioSamples_bufferSize;
 	long channelCount = VuoListGetCount_VuoAudioSamples(samples);
+	if (channelCount == 0)
+		return;
 
 	if(channelCount != self.originalChannelCount)
 	{

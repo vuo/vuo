@@ -666,8 +666,7 @@ void VuoSearchBox::updateColor(bool isDark)
 	QString pressedToolButtonBackgroundColor =	isDark ? "#aaaaaa" : "#d4d4d4";
 	QString disabledToolButtonArrowColor     =	isDark ? "#707070" : "#c0c0c0";
 
-	QString styleSheet = VuoDialogForInputEditor::getStyleSheet(isDark)
-		+ VUO_QSTRINGIFY(
+	QString styleSheet = VUO_QSTRINGIFY(
 			QWidget#searchBoxContents {
 				background-color: %1;
 			}

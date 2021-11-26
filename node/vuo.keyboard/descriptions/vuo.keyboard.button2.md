@@ -5,6 +5,6 @@ This node can be used to provide keyboard controls for a composition. The `Key` 
    - `Window` — If a window is provided, then keyboard buttons are only tracked when the window is active. Otherwise, keyboard buttons are tracked whenever the composition is the active (frontmost) application.
    - `Key` — The key(s) to track. 
    - `Modifier Key` — The modifier key (if any) that must be held for the key to be tracked. 
-   - `Repeat When Held` — If *true*, the `Pressed` trigger port fires events repeatedly while the key is held down. If *false*, the `Pressed` trigger port only fires when the key is first pressed. 
+   - `Repeat when Held` — If *true*, the `Pressed` trigger port fires events repeatedly while the key is held down. If *false*, the `Pressed` trigger port only fires when the key is first pressed.
    - `Pressed` — When the key is pressed (or held, if `Repeat When Held` is *true*), fires an event. 
    - `Released` — When the key is released, fires an event. 

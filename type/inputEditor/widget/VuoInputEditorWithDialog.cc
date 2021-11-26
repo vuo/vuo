@@ -23,6 +23,8 @@ VuoInputEditorWithDialog::VuoInputEditorWithDialog(void)
 
 /**
  * Displays a frameless dialog.
+ *
+ * Returns a json_object with retain count +1; the caller is responsible for releasing it.
  */
 json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
@@ -77,7 +79,7 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 
 	dialogPointer = NULL;
 
-	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : originalValue);
+	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : json_object_get(originalValue));
 }
 
 /**

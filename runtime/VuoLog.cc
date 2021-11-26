@@ -13,10 +13,12 @@
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <execinfo.h>
+#include <libgen.h>
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
 #include <math.h>
 #include <objc/objc-runtime.h>
+#include <os/log.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -115,16 +117,25 @@ static VuoLogProfileType *VuoLogProfile;	///< Keeps track of profiler times.
 static dispatch_queue_t VuoLogProfileQueue;			///< Serializes access to @ref VuoLogProfile.
 #endif
 
+static pthread_t VuoLog_mainThread       = nullptr;  ///< To later identify which is the main thread.
+static const char *VuoLog_executableName = nullptr;  ///< The process's main executable name (as opposed to @ref VuoLog_moduleName, the dylib the log function was called from).
+
 /**
- * Stores the time at which this module was loaded, for use by @ref VuoLogGetElapsedTime().
- *
- * Installs our C++ exception handler.
+ * Initializes logging and exception handling.
  */
 static void __attribute__((constructor)) VuoLog_init(void)
 {
+	// Store the time at which this module was loaded, for use by @ref VuoLogGetElapsedTime().
 	VuoLogStartTime = VuoLogGetTime();
 
 	nextTerminateHandler = std::set_terminate(&VuoTerminateHandler);
+
+	VuoLog_mainThread = pthread_self();
+
+	char executablePath[PATH_MAX + 1];
+	uint32_t size = sizeof(executablePath);
+	if (!_NSGetExecutablePath(executablePath, &size))
+		VuoLog_executableName = basename_r(executablePath, (char *)malloc(size));
 
 #ifdef VUO_PROFILE
 	VuoLogProfileQueue = dispatch_queue_create("VuoLogProfile", NULL);
@@ -202,7 +213,7 @@ typedef struct {
 /// Data to be inserted into macOS crash reports.
 VuoCrashReport_infoType VuoCrashReport __attribute__((section("__DATA,__crash_info"))) = { 4, NULL, NULL, NULL, NULL, NULL, NULL };
 
-void VuoLog_statusF(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
+void VuoLog_statusF(const char *moduleName, const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
 	static dispatch_once_t statusInitialized = 0;
 	static dispatch_queue_t statusQueue;
@@ -294,8 +305,33 @@ bool VuoLog_isDebuggerAttached(void)
 
 extern struct mach_header __dso_handle;
 
-void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
+void VuoLog(const char *moduleName, const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
+	if (!VuoHeap_isPointerReadable(moduleName))
+	{
+		fprintf(stderr, "VuoLog() error: Invalid 'moduleName' argument (%p).  You may need to rebuild the module calling VuoLog().\n", moduleName);
+		VuoLog_backtrace();
+		return;
+	}
+	if (!VuoHeap_isPointerReadable(file))
+	{
+		fprintf(stderr, "VuoLog() error: Invalid 'file' argument (%p).  You may need to rebuild the module calling VuoLog().\n", file);
+		VuoLog_backtrace();
+		return;
+	}
+	if (!VuoHeap_isPointerReadable(function))
+	{
+		fprintf(stderr, "VuoLog() error: Invalid 'function' argument (%p).  You may need to rebuild the module calling VuoLog().\n", function);
+		VuoLog_backtrace();
+		return;
+	}
+	if (!VuoHeap_isPointerReadable(format))
+	{
+		fprintf(stderr, "VuoLog() error: Invalid 'format' argument (%p).  You may need to rebuild the module calling VuoLog().\n", format);
+		VuoLog_backtrace();
+		return;
+	}
+
 	va_list args;
 
 	va_start(args, format);
@@ -336,6 +372,12 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 			formattedFunction = f2;
 		}
 	}
+	else
+	{
+		const char *blockInvokePos = strstr(function, "_block_invoke");
+		if (blockInvokePos)
+			formattedFunction = strndup(function, blockInvokePos - function);
+	}
 
 	// Add a trailing `()`, unless it's an Objective-C method.
 	if (function)
@@ -372,28 +414,75 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 		separator = "\n";
 	priorTime = time;
 
+	// Decide on a name for the thread emitting the log message.
+	pthread_t thread = pthread_self();
+	char threadName[256];
+	if (pthread_equal(thread, VuoLog_mainThread))
+		strcpy(threadName, "main");
+	else
+	{
+		bzero(threadName, 256);
+		int ret = pthread_getname_np(thread, threadName, 256);
+		if (!(ret == 0 && strlen(threadName)))
+			snprintf(threadName, 256, "%llx", (uint64_t)thread);
+	}
+
+	// Use a bright color for the main text.
+	const char *mainColor = "\033[97m";
+	// Use a medium color for the metadata.
+	const char *metadataColor = "\033[38;5;249m";
+	// Use a darker color for separators.
+	const char *separatorColor = "\033[90m";
+	// Try to give each process a unique color, to distinguish the host and the running composition(s).
 	// ANSI-256's 6x6x6 color cube begins at index 16 and spans 216 indices.
 	// Skip the first 72 indices, which are darker (illegible against a black terminal background).
-	fprintf(stderr, "%s\033[38;5;%dm# pid=%5d  t=%8.4fs %27.27s:%-4u  %41.41s  %s\033[0m\n", separator, getpid()%144+88, getpid(), time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+	int pidColor = getpid() % 144 + 88;
+	// Color the main thread the same as the process; choose a unique color for each other thread.
+	int threadColor = pthread_equal(thread, VuoLog_mainThread)
+		? pidColor
+		: ((uint64_t)thread) % 144 + 88;
+
+	fprintf(stderr, "%s%s[%s%8.3fs%s] %s%12.12s%s:%s%-12.12s %s[\033[38;5;%dm%5d%s:\033[38;5;%dm%-8.8s%s]  %s%20.20s%s:%s%-4u  %32.32s  %s%s\033[0m\n",
+		separator,
+		separatorColor,
+		metadataColor,
+		time,
+		separatorColor,
+		metadataColor,
+		VuoLog_executableName,
+		separatorColor,
+		metadataColor,
+		moduleName ? moduleName : "Vuo",
+		separatorColor,
+		pidColor,
+		getpid(),
+		separatorColor,
+		threadColor,
+		threadName,
+		separatorColor,
+		metadataColor,
+		formattedFile,
+		separatorColor,
+		metadataColor,
+		linenumber,
+		formattedFunction ? formattedFunction : function,
+		mainColor,
+		formattedString);
 
 
 	// Also send it to the macOS Console.
 	{
-		// Can't just call this directly because (1) it only exists on 10.12+,
-		// and (2) it relies on Apple-specific complier extensions that aren't available in Clang 3.2.
+		// Can't just call this directly because it relies on Apple-specific compiler extensions that aren't available in Clang 3.2.
 		// os_log(OS_LOG_DEFAULT, "...", ...);
 
-		typedef void *(*vuoMacOsLogCreateType)(const char *subsystem, const char *category);
 		typedef void (*vuoMacOsLogInternalType)(void *dso, void *log, uint8_t type, const char *message, ...);
 		typedef void (*vuoMacOsLogImplType)(void *dso, void *log, uint8_t type, const char *format, uint8_t *buf, uint32_t size);
-		static vuoMacOsLogCreateType vuoMacOsLogCreate = NULL;
 		static vuoMacOsLogInternalType vuoMacOsLogInternal = NULL;
 		static vuoMacOsLogImplType vuoMacOsLogImpl = NULL;
 		static dispatch_once_t once = 0;
 		static bool debuggerAttached = false;
 		dispatch_once(&once, ^{
 			debuggerAttached = VuoLog_isDebuggerAttached();
-			vuoMacOsLogCreate = (vuoMacOsLogCreateType)dlsym(RTLD_SELF, "os_log_create");
 			NSOperatingSystemVersion operatingSystemVersion = VuoLog_getOSVersion();
 			if (operatingSystemVersion.majorVersion == 10 && operatingSystemVersion.minorVersion == 12)
 				// _os_log_impl doesn't work on macOS 10.12.
@@ -404,9 +493,9 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 				vuoMacOsLogImpl = (vuoMacOsLogImplType)dlsym(RTLD_SELF, "_os_log_impl");
 		});
 
-		if (!debuggerAttached && vuoMacOsLogCreate)
+		if (!debuggerAttached)
 		{
-			void *log = vuoMacOsLogCreate("org.vuo", formattedFile);
+			void *log = os_log_create("org.vuo", formattedFile);
 
 			if (vuoMacOsLogInternal)
 				vuoMacOsLogInternal(&__dso_handle, log, 0 /*OS_LOG_TYPE_DEFAULT*/, "%{public}41s:%-4u  %{public}s", formattedFunction ? formattedFunction : function, linenumber, formattedString);
@@ -431,14 +520,6 @@ void VuoLog(const char *file, const unsigned int linenumber, const char *functio
 			}
 
 			os_release(log);
-		}
-
-		else if (!debuggerAttached) // For Mac OS X 10.11 and prior
-		{
-			aslmsg msg = asl_new(ASL_TYPE_MSG);
-			asl_set(msg, ASL_KEY_READ_UID, "-1");
-			asl_log(NULL, msg, ASL_LEVEL_WARNING, "%27s:%-4u  %41s  %s", formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
-			asl_free(msg);
 		}
 	}
 

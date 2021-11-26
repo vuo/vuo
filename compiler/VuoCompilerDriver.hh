@@ -20,12 +20,14 @@ class VuoProtocol;
 class VuoCompilerDriver
 {
 public:
-	VuoCompilerDriver(VuoCompiler *compiler, const string &driverAsCompositionString);
+	static VuoCompilerDriver *driverForProtocol(VuoCompiler *compiler, string protocolId);
 
 	bool isValidDriverForProtocol(VuoProtocol *protocol);
 	void applyToComposition(VuoCompilerComposition *composition, VuoCompiler *compiler, bool canPublishedInputsBeEdited = true);
 
 private:
+	VuoCompilerDriver(VuoCompiler *compiler, const string &driverAsCompositionString);
+
 	VuoCompiler *compiler;
 	VuoCompilerGraphvizParser *parser;
 	string compositionString;

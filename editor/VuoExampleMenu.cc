@@ -127,7 +127,7 @@ void VuoExampleMenu::populateMenus()
 	this->addSeparator();
 
 	// Randomly selected example composition.
-	qsrand(QDateTime::currentDateTime().toTime_t());
+	qsrand(QDateTime::currentDateTime().toSecsSinceEpoch());
 	QAction *randomExampleAction = new QAction(this);
 	randomExampleAction->setText(randomCompositionIdentifier);
 	randomExampleAction->setShortcut(QKeySequence("Alt+Ctrl+O"));

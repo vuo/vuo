@@ -55,13 +55,8 @@ void VuoCodeEditor::setFontSize(int fontSize)
 
 	int spacesPerTab = 4;
 	QFontMetricsF fontMetrics(font);
-	qreal spaceWidth = fontMetrics.width(' ');
-	qreal tabWidth = spacesPerTab * spaceWidth;
-	setTabStopDistance(ceil(tabWidth));
+	setTabStopDistance(spacesPerTab * fontMetrics.horizontalAdvance(' '));
 
-	// Align characters to pixels.
-	qreal pitch = (ceil(tabWidth) - tabWidth) / spacesPerTab;
-	font.setLetterSpacing(QFont::AbsoluteSpacing, pitch);
 	setFont(font);
 
 	// A little thicker / more visible than the default 1px.

@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Ensures that `Save Frames to Movie` can write movies with various combinations of video and audio tracks.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"video-only":{"firingPort":"SaveVideoFrame"},
+	"finalize-v":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"audio-only":{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":1}},
+	"finalize-a":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"video0"    :{"firingPort":"SaveVideoFrame"},
+	"audio0"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":0}},
+	"finalize0" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"video1"    :{"firingPort":"SaveVideoFrame"},
+	"audio1"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":1}},
+	"finalize1" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"video2"    :{"firingPort":"SaveVideoFrame"},
+	"audio2"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":2}},
+	"finalize2" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"video3"    :{"firingPort":"SaveVideoFrame"},
+	"audio3"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":3}},
+	"finalize3" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"video5"    :{"firingPort":"SaveVideoFrame"},
+	"audio5"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":5}},
+	"finalize5" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+}}

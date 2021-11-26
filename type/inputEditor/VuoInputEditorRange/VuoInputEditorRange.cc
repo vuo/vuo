@@ -224,6 +224,7 @@ void VuoInputEditorRange::setUpDialog(QDialog &dialog, json_object *originalValu
 	setLastWidgetInTabOrder(spinbox_max);
 
 	spinbox_min->setFocus();
+	spinbox_min->selectAll();
 }
 
 void VuoInputEditorRange::setHasMinBound(int state)

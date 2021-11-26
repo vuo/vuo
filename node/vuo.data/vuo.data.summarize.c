@@ -11,18 +11,20 @@
 #include "VuoTextHtml.h"
 
 VuoModuleMetadata({
-					  "title" : "Summarize Value",
-					  "keywords" : [ "convert", "text", "brief", "shorten", "debug", "troubleshoot",
-						  "real", "number", // since we deprecated vuo.type.real.text
-					  ],
-					  "version" : "1.0.1",
-					  "dependencies": [
-						  "VuoTextHtml"
-					  ],
-					  "node" : {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Summarize Value",
+	"keywords": [
+		"convert", "brief", "shorten", "debug", "troubleshoot",
+		"text", "string",
+		"real", "number", // since we deprecated vuo.type.real.text
+	],
+	"version": "1.0.1",
+	"dependencies": [
+		"VuoTextHtml",
+	],
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

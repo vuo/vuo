@@ -13,16 +13,18 @@
 #include "VuoPointsParametric.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Parametric Grid Points",
-					 "keywords" : [ "math", "expression", "shape", "list" ],
-					 "version" : "1.0.1",
-					 "dependencies" : [
-						 "VuoPointsParametric"
-					 ],
-					  "node": {
-						  "exampleCompositions" : [ "MakeSmoothTerrain.vuo" ]
-					  }
-				 });
+	"title": "Make Parametric Grid Points",
+	"keywords": [
+		"3D", "math", "expression", "shape", "list",
+	],
+	"version": "1.0.2",
+	"dependencies": [
+		"VuoPointsParametric",
+	],
+	"node": {
+		"exampleCompositions": [ "MakeSmoothTerrain.vuo" ],
+	},
+});
 
 void nodeEvent
 (

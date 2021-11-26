@@ -41,7 +41,7 @@ private:
 			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 			remove(compiledCompositionPath.c_str());
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, directory, false, true);
-
+			runner->setRuntimeChecking(true);
 			runner->setDelegate(this);
 			runner->start();
 			runner->subscribeToEventTelemetry("");

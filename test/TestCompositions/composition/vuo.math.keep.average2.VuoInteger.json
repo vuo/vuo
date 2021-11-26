@@ -1,0 +1,152 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.keep.average2 node.
+ *
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"unlimited lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":-1},
+	},
+	"add first value":{
+		"firingPort":"value",
+		"inputPortValues":{"value":10},
+		"outputPortValues":{"average":10}
+	},
+	"add another value":{
+		"firingPort":"value",
+		"inputPortValues":{"value":20},
+		"outputPortValues":{"average":15}
+	},
+	"reset":{
+		"firingPort":"reset"
+	},
+	"add value after resetting":{
+		"firingPort":"value",
+		"inputPortValues":{"value":30},
+		"outputPortValues":{"average":30}
+	},
+
+	"zero lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":0},
+	},
+	"add value with zero lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":40},
+		"outputPortValues":{"average":40}
+	},
+	"add another value with zero lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":50},
+		"outputPortValues":{"average":50}
+	},
+
+	"non-zero lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":1},
+	},
+	"add value after setting non-zero lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":60},
+		"outputPortValues":{"average":60}
+	},
+	"add value without exceeding lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":70},
+		"outputPortValues":{"average":65}
+	},
+	"add value that goes beyond lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":80},
+		"outputPortValues":{"average":75}
+	},
+	"increase lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after increasing lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":90},
+		"outputPortValues":{"average":85}
+	},
+	"add another value after increasing lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":100},
+		"outputPortValues":{"average":90}
+	},
+	"decrease lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":1},
+	},
+	"add value after decreasing lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":110},
+		"outputPortValues":{"average":105}
+	},
+	"reset with limited lookback":{
+		"firingPort":"reset"
+	},
+	"add value after resetting with limited lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":120},
+		"outputPortValues":{"average":120}
+	},
+
+	"remove lookback limit":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":-1},
+	},
+	"add value after removing lookback limit":{
+		"firingPort":"value",
+		"inputPortValues":{"value":130},
+		"outputPortValues":{"average":125}
+	},
+	"add another value after removing lookback limit":{
+		"firingPort":"value",
+		"inputPortValues":{"value":140},
+		"outputPortValues":{"average":130}
+	},
+
+	"limit lookback":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after limiting lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":150},
+		"outputPortValues":{"average":136}
+	},
+
+	"change lookback to zero to clear history":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":0},
+	},
+	"change lookback back to its previous value":{
+		"firingPort":"lookback",
+		"inputPortValues":{"lookback":2},
+	},
+	"add value after clearing history with lookback":{
+		"firingPort":"value",
+		"inputPortValues":{"value":160},
+		"outputPortValues":{"average":160}
+	},
+
+	"remove lookback limit and add value":{
+		"firingPort":"value",
+		"inputPortValues":{"lookback":-1,"value":170},
+		"outputPortValues":{"average":165}
+	},
+	"reset with unlimited lookback":{
+		"firingPort":"reset"
+	},
+	"limit lookback and add value":{
+		"firingPort":"value",
+		"inputPortValues":{"lookback":2,"value":180},
+		"outputPortValues":{"average":180}
+	},
+}}

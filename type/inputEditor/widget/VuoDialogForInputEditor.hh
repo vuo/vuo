@@ -21,7 +21,6 @@ public:
 	QMargins getPopoverContentsMargins(void) const;
 	QSize sizeHint(void) const;
 	void setShowArrow(bool show);
-	static QString getStyleSheet(bool isDark);
 
 public slots:
 	virtual void keyPressEvent(QKeyEvent *e);

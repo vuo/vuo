@@ -64,7 +64,7 @@ private slots:
 			QStringList protocolAllEvents;
 			protocolAllEvents << "protocolTime" << "protocolImage";
 
-			QTest::newRow("image filter") << "imageFilter" << comparable << QStringList() << nonComparable + protocolAllEvents;
+			QTest::newRow("image filter") << QString::fromStdString(VuoProtocol::imageFilter) << comparable << QStringList() << nonComparable + protocolAllEvents;
 		}
 		{
 			QStringList protocolAllEvents;
@@ -72,13 +72,13 @@ private slots:
 			QStringList protocolFewEvents;
 			protocolFewEvents << "protocolWidth" << "protocolHeight";
 
-			QTest::newRow("image generator") << "imageGenerator" << comparable << protocolFewEvents << nonComparable + protocolAllEvents;
+			QTest::newRow("image generator") << QString::fromStdString(VuoProtocol::imageGenerator) << comparable << protocolFewEvents << nonComparable + protocolAllEvents;
 		}
 		{
 			QStringList protocolAllEvents;
 			protocolAllEvents << "protocolTime" << "protocolProgress" << "protocolStartImage" << "protocolEndImage";
 
-			QTest::newRow("image transition") << "imageTransition" << comparable << QStringList() << nonComparable + protocolAllEvents;
+			QTest::newRow("image transition") << QString::fromStdString(VuoProtocol::imageTransition) << comparable << QStringList() << nonComparable + protocolAllEvents;
 		}
 	}
 	void testPublishedInputEvents()
@@ -90,9 +90,7 @@ private slots:
 
 		VuoCompiler *compiler = new VuoCompiler();
 
-		string imageFilterDriverPath = VuoFileUtilities::getVuoFrameworkPath() + "/Resources/" + protocolName.toStdString() + "Driver.vuo";
-		string imageFilterDriverAsString = VuoFileUtilities::readFileToString(imageFilterDriverPath);
-		VuoCompilerDriver *driver = new VuoCompilerDriver(compiler, imageFilterDriverAsString);
+		VuoCompilerDriver *driver = VuoCompilerDriver::driverForProtocol(compiler, protocolName.toStdString());
 
 		string compositionName = protocolName.toStdString() + "CommonTypes";
 		string compositionPath = getCompositionPath(compositionName + ".vuo");

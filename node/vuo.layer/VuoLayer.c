@@ -543,6 +543,9 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
  */
 VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
 {
+	if (!child)
+		return NULL;
+
 	if (VuoAnchor_areEqual(anchor, VuoAnchor_makeCentered()))
 		return child;
 

@@ -10,7 +10,7 @@
 #pragma once
 
 #include "VuoCompositionState.h"
-#include "VuoTelemetry.h"
+#include "VuoTelemetry.hh"
 
 class VuoRuntimePersistentState;
 struct NodeContext;

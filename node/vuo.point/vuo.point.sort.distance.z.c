@@ -11,21 +11,23 @@
 #include "VuoSort.h"
 
 VuoModuleMetadata({
-					  "title" : "Sort Points by Z Distance",
-					  "keywords" : [ "organize", "order", "nearest" ],
-					  "version" : "1.0.1",
-					  "genericTypes" : {
-						  "VuoGenericType1" : {
-							  "compatibleTypes" : [ "VuoPoint3d", "VuoPoint4d" ]
-						  }
-					  },
-					  "dependencies" : [
-						  "VuoSort"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ ]
-					  }
-				  });
+	"title": "Sort Points by Z Distance",
+	"keywords": [
+		"organize", "order", "reorder", "nearest",
+	],
+	"version": "1.0.1",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"compatibleTypes": [ "VuoPoint3d", "VuoPoint4d" ],
+		},
+	},
+	"dependencies": [
+		"VuoSort",
+	],
+	"node": {
+		"exampleCompositions": [ ],
+	},
+});
 
 void nodeEvent
 (

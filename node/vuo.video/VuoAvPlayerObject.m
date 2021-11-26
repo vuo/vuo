@@ -20,10 +20,14 @@
 #include <QuartzCore/CVImageBuffer.h>
 #include "VuoAvPlayerInterface.h"
 #include <Accelerate/Accelerate.h>
+#include <VideoToolbox/VideoToolbox.h>
 #include "VuoWindow.h"
 #include "VuoOsStatus.h"
 #include "VuoApp.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include "HapInAVFoundation.h"
+#pragma clang diagnostic pop
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -37,6 +41,7 @@ VuoModuleMetadata({
 						"CoreMedia.framework",
 						"VuoGlContext",
 						"Accelerate.framework",
+						"VideoToolbox.framework",
 						"VuoOsStatus",
 
 						// @todo
@@ -54,6 +59,7 @@ const unsigned int AUDIO_BUFFER_SIZE = 16384;
 /// The number of preceeding frames to decode when playing video in reverse.
 const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
+static dispatch_once_t VuoAvPlayerObject_initOnce = 0;  ///< Synchronizes initialization.
 
 /**
  * Allows us to call methods on HapDecoderFrame without linking to the framework at compile-time
@@ -214,6 +220,12 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 		audioBufferCapacity = sizeof(Float32) * AUDIO_BUFFER_SIZE;
 		audioBuffer = (Float32*) malloc(audioBufferCapacity);
+
+		dispatch_once(&VuoAvPlayerObject_initOnce, ^{
+			VuoApp_executeOnMainThread(^{
+				VTRegisterProfessionalVideoWorkflowVideoDecoders();
+			});
+		});
 	}
 
 	return self;
@@ -315,7 +327,6 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 				hasAlpha = true;
 		}
 
-		if (VuoIsDebugEnabled())
 		{
 			char *codecZ = VuoOsStatus_getText(codec);
 			int bitsPerComponent = ((NSNumber *)CMFormatDescriptionGetExtension(desc, CFSTR("BitsPerComponent"))).intValue;

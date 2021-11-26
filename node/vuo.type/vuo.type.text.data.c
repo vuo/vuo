@@ -11,10 +11,12 @@
 #include "VuoData.h"
 
 VuoModuleMetadata({
-					  "title" : "Convert Text to Data",
-					  "keywords" : [ ],
-					  "version" : "1.0.0",
-				  });
+	"title": "Convert Text to Data",
+	"keywords": [
+		"string",
+	],
+	"version": "1.0.0",
+});
 
 void nodeEvent
 (
@@ -27,4 +29,3 @@ void nodeEvent
 
 	*data = VuoData_makeFromText(text);
 }
-

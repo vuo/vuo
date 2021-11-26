@@ -17,11 +17,6 @@ VuoModuleMetadata({
 					  "dependencies" : [
 						  "VuoLeap"
 					  ],
-					  "compatibility": {
-						  "macos": {
-							  "arch": ["x86_64"],
-						  },
-					  },
 					  "node": {
 						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "TwirlImageWithLeap.vuo" ]
 					  }

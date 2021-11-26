@@ -11,15 +11,16 @@
 #include "VuoTree.h"
 
 VuoModuleMetadata({
-					  "title" : "Format Tree as XML",
-					  "keywords" : [
-						"text", "convert", "serialize", "export", "save", "write"
-					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "RecordMouseClicksToJsonFile.vuo" ]
-					  }
-				 });
+	"title": "Format Tree as XML",
+	"keywords": [
+		"text", "string",
+		"convert", "serialize", "export", "save", "write",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "RecordMouseClicksToJsonFile.vuo" ],
+	},
+});
 
 void nodeEvent
 (

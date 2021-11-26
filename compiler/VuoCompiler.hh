@@ -344,6 +344,7 @@ private:
 	string target;
 	bool isVerbose;
 	bool _shouldShowSplashWindow;
+	string dependencyOutputPath;
 	VuoCompilerDelegate *delegate;
 	dispatch_queue_t delegateQueue;  ///< Synchronizes access to @ref delegate.
 
@@ -361,7 +362,7 @@ private:
 	void reifyGenericPortTypes(VuoCompilerComposition *composition);
 	void reifyGenericPortTypes(VuoNode *node);
 	Module * compileCompositionToModule(VuoCompilerComposition *composition, const string &moduleKey, bool isTopLevelComposition, VuoCompilerIssues *issues);
-	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, Optimization optimization, bool isDylib, string rPath="", bool shouldAdHocCodeSign = true);
+	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, Optimization optimization, bool isDylib, const vector<string> &rPaths, bool shouldAdHocCodeSign = true);
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	set<string> getDependenciesForComposition(const set<string> &directDependencies, bool checkCompatibility);
 	void getLinkerInputs(const set<string> &dependencies, Optimization optimization, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
@@ -369,7 +370,7 @@ private:
 	static string getLibraryPath(const string &dependency, vector<string> librarySearchPaths);
 	void useModuleCache(bool shouldUseExistingBuiltInCaches, bool shouldUseExistingOtherCaches);
 	bool findInModuleCache(const string &moduleOrDependency, string &cachePath, bool &isBuiltinCache) VuoWarnUnusedResult;
-	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="", bool shouldAdHocCodeSign = true, VuoCompilerIssues *issues = nullptr);
+	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, const vector<string> &rPaths, bool shouldAdHocCodeSign = true, VuoCompilerIssues *issues = nullptr);
 	static void adHocCodeSign(string path);
 	Module *readModuleFromC(string inputPath, const vector<string> &headerSearchPaths, const vector<string> &extraArgs, VuoCompilerIssues *issues);
 	static Module *readModuleFromBitcode(VuoFileUtilities::File *inputFile, string arch);
@@ -380,6 +381,7 @@ private:
 	static string getTargetArch(string target);
 	static string getProcessTarget(void);
 	VuoCompilerModule * getModule(const string &moduleKey);
+	vector<string> getRunPathSearchPaths(Environment *narrowestScope);
 	static vector<string> getCoreVuoDependencies(void);
 	static string getRuntimeMainDependency(void);
 	static string getRuntimeDependency(void);
@@ -456,6 +458,7 @@ public:
 	void setTelemetry(const string &telemetry);
 	void setVerbose(bool isVerbose);
 	void setShouldPotentiallyShowSplashWindow(bool potentiallyShow);
+	void setDependencyOutput(const string &path);
 	bool shouldShowSplashWindow();
 	string getCompositionLoaderPath(void);
 	void print(void);

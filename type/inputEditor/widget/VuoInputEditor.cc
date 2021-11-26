@@ -18,14 +18,6 @@ QFont VuoInputEditor::getDefaultFont(void)
 	return QFont("PT Sans", 12, QFont::Light, false);
 }
 
-/**
- * Returns a CSS representation of the font that input editors are recommended to use.
- */
-QString VuoInputEditor::getDefaultFontCss(void)
-{
-	return QString("font-family: 'PT Sans'; font-size: 12pt; font-weight: 200;");
-}
-
 bool VuoInputEditor::supportsTabbingBetweenPorts(void)
 {
 	return false;

@@ -16,9 +16,9 @@ end
 filters = {
 	-- First, collect all the definitions into a term => definition table.
 	{RawBlock = function(elem)
-		if elem.c[1] == 'tex' then
+		if elem.format == 'tex' then
 			foundAny = false
-			for term, definition in elem.c[2]:gmatch('\\definition{([^}]+)}{([^\n]+)}') do
+			for term, definition in elem.text:gmatch('\\definition{([^}]+)}{([^\n]+)}') do
 				foundAny = true
 				if glossary[term] then
 					io.stderr:write(string.format('error: term "%s" is defined multiple times.\n', term))
@@ -33,8 +33,8 @@ filters = {
 
 	-- Then, make terms link to their definitions.
 	{RawInline = function(elem)
-		if elem.c[1] == 'tex' then
-			term = elem.c[2]:gmatch('\\term{([^}]+)}')()
+		if elem.format == 'tex' then
+			term = elem.text:gmatch('\\term{([^}]+)}')()
 			if term then
 				return pandoc.Link(
 					pandoc.RawInline('html', '<phrase role="vuo-term">' .. term .. '</phrase>'),
@@ -42,7 +42,7 @@ filters = {
 			end
 
 			-- \Term refers to a term beginning with a lowercase letter, but capitalizes just this current instance.
-			term = elem.c[2]:gmatch('\\Term{([^}]+)}')()
+			term = elem.text:gmatch('\\Term{([^}]+)}')()
 			if term then
 				term = string.upper(term:sub(1, 1)) .. term:sub(2)
 				return pandoc.Link(

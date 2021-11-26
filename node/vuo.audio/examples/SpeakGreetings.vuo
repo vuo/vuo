@@ -21,7 +21,7 @@ MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Laye
 RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="705,420" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="720,90" fillcolor="blue"];
 ShareEvent [type="vuo.event.share" version="1.0.0" label="Share Event|<refresh>refresh\l|<event>event\l|<sameEvent>sameEvent\r" pos="-75,15"];
-Speak [type="vuo.audio.speak" version="1.0.0" label="Speak|<refresh>refresh\l|<speak>speak\l|<stop>stop\l|<text>text\l|<voice>voice\l|<wordsPerMinute>wordsPerMinute\l|<pitch>pitch\l|<modulation>modulation\l|<spokenChannels>spokenChannels\r|<finishedSpeaking>finishedSpeaking\r" pos="435,105" fillcolor="orange" _wordsPerMinute="\"inf\"" _pitch="\"inf\"" _modulation="Infinity" _spokenChannels_eventThrottling="drop" _finishedSpeaking_eventThrottling="enqueue"];
+Speak [type="vuo.audio.speak" version="1.0.0" label="Speak|<refresh>refresh\l|<speak>speak\l|<stop>stop\l|<text>text\l|<voice>voice\l|<wordsPerMinute>wordsPerMinute\l|<pitch>pitch\l|<modulation>modulation\l|<spokenChannels>spokenChannels\r|<finishedSpeaking>finishedSpeaking\r" pos="435,105" fillcolor="orange" _wordsPerMinute="\"inf\"" _pitch="\"inf\"" _modulation="Infinity" _spokenChannels_eventThrottling="enqueue" _finishedSpeaking_eventThrottling="enqueue"];
 
 CycleThroughList2:item -> MakeTextLayer:text;
 CycleThroughList2:item -> Speak:text;

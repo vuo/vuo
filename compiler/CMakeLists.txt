@@ -90,10 +90,9 @@ VuoPCH(VuoCompiler LLVM)
 VuoDefineArchitectureMacros(VuoCompiler)
 
 add_subdirectory(isf)
-add_subdirectory(vuo-debug)
 add_subdirectory(vuo-link)
 
-set(compilerSourcesAndDependencies
+file(GLOB compilerSourcesAndDependencies
 	${PROJECT_SOURCE_DIR}/base/*.hh
 	${PROJECT_SOURCE_DIR}/base/*.cc
 	${PROJECT_SOURCE_DIR}/base/*.mm

@@ -21,6 +21,8 @@ VuoCompileGenericNodes(
 	vuo.math.isLessThan.c
 	vuo.math.isWithinRange.c
 	vuo.math.keep.average.c
+	vuo.math.keep.average2.c
+	vuo.math.keep.average.list.c
 	vuo.math.keep.max.c
 	vuo.math.keep.min.c
 	vuo.math.limitToRange.c

@@ -42,6 +42,8 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Cor
 
 bool VuoGlContext_isOpenGL32Core(VuoGlContext context);
 
+void VuoGlContext_setInfoLogging(bool enabled);
+
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber, const char *func);
 
 /**

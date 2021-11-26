@@ -411,7 +411,7 @@ bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *real
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device: %s", json_object_to_json_string(VuoOscInputDevice_getJson(device)));
+	VUserLog("Requested device: %s", json_object_to_json_string(VuoOscInputDevice_getJson(device)));
 	VuoList_VuoOscInputDevice devices = VuoOsc_getInputDeviceList();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -421,7 +421,7 @@ bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *real
 		VuoListForeach_VuoOscInputDevice(devices, ^(const VuoOscInputDevice item){
 			if (device.port == item.port)
 			{
-				VDebugLog("Matched by port:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
+				VUserLog("Matched by port:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -434,7 +434,7 @@ bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *real
 		VuoListForeach_VuoOscInputDevice(devices, ^(const VuoOscInputDevice item){
 			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
+				VUserLog("Matched by name:    %s",json_object_to_json_string(VuoOscInputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -443,7 +443,7 @@ bool VuoOscInputDevice_realize(VuoOscInputDevice device, VuoOscInputDevice *real
 		});
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }
@@ -472,7 +472,7 @@ bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *r
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device: %s", json_object_to_json_string(VuoOscOutputDevice_getJson(device)));
+	VUserLog("Requested device: %s", json_object_to_json_string(VuoOscOutputDevice_getJson(device)));
 	VuoList_VuoOscOutputDevice devices = VuoOsc_getOutputDeviceList();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -482,7 +482,7 @@ bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *r
 		VuoListForeach_VuoOscOutputDevice(devices, ^(const VuoOscOutputDevice item){
 			if (device.port == item.port)
 			{
-				VDebugLog("Matched by port:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
+				VUserLog("Matched by port:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -495,7 +495,7 @@ bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *r
 		VuoListForeach_VuoOscOutputDevice(devices, ^(const VuoOscOutputDevice item){
 			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
+				VUserLog("Matched by name:    %s",json_object_to_json_string(VuoOscOutputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -504,7 +504,7 @@ bool VuoOscOutputDevice_realize(VuoOscOutputDevice device, VuoOscOutputDevice *r
 		});
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }

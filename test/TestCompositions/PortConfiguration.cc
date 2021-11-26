@@ -65,7 +65,8 @@ void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 	for (map<string, string>::iterator i = valueForInputPortName.begin(); i != valueForInputPortName.end(); ++i)
 	{
 		VuoRunner::Port *port = runner->getPublishedInputPortWithName(i->first);
-		QVERIFY2(port != NULL, ("Unknown input port: " + i->first + " ( " + toString() + " )").c_str());
+		if (!port)
+			throw runtime_error(("Unknown input port: " + i->first + " ( " + toString() + " )").c_str());
 		string valueAsString = i->second;
 		json_object *value = json_tokener_parse(valueAsString.c_str());
 		m[port] = value;
@@ -85,7 +86,8 @@ void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 		else
 		{
 			VuoRunner::Port *firingPort = runner->getPublishedInputPortWithName(firingPortName);
-			QVERIFY2(firingPort != NULL, ("Unknown firing port: " + firingPortName + " ( " + toString() + " )").c_str());
+			if (!firingPort)
+				throw runtime_error(("Unknown firing port: " + firingPortName + " ( " + toString() + " )").c_str());
 			firingPorts.insert(firingPort);
 		}
 		runner->firePublishedInputPortEvent(firingPorts);
@@ -100,7 +102,8 @@ void PortConfiguration::checkOutputValue(VuoRunner *runner, VuoRunner::Port *por
 	json_object *actualValue = runner->getPublishedOutputPortValue(port);
 
 	map<string, string>::iterator i = valueForOutputPortName.find(port->getName());
-	QVERIFY2(i != valueForOutputPortName.end(), ("Unexpected output port: " + port->getName() + " ( " + toString() + " )").c_str());
+	if (i == valueForOutputPortName.end())
+		throw runtime_error(("Unexpected output port: " + port->getName() + " ( " + toString() + " )").c_str());
 	json_object *expectedValue = json_tokener_parse(i->second.c_str());
 
 	TestCompositionExecution::checkEqual(toString(), port->getType(), actualValue, expectedValue);
@@ -123,7 +126,8 @@ bool PortConfiguration::isDoneChecking(void)
  */
 void PortConfiguration::readValueForPortNameFromJSONObject(json_object *portValuesObject, map<string, string> &valueForPort)
 {
-	QCOMPARE(json_object_get_type(portValuesObject), json_type_object);
+	if (json_object_get_type(portValuesObject) != json_type_object)
+		throw runtime_error("The port value isn't an object.");
 
 	json_object_object_foreach(portValuesObject, key, val)
 	{
@@ -144,16 +148,19 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 
 	enum json_tokener_error error;
 	json_object *rootObject = json_tokener_parse_verbose(fileContents.c_str(), &error);
-	QVERIFY2(rootObject != NULL, json_tokener_error_desc(error));
+	if (!rootObject)
+		throw runtime_error(json_tokener_error_desc(error));
 
 	json_object *tolerance;
 	if (json_object_object_get_ex(rootObject, "tolerance", &tolerance))
 		TestCompositionExecution::setTolerance(json_object_get_double(tolerance));
 
 	json_object *portConfigurationListObject;
-	QVERIFY( json_object_object_get_ex(rootObject, "portConfiguration", &portConfigurationListObject) );
+	if (!json_object_object_get_ex(rootObject, "portConfiguration", &portConfigurationListObject))
+		throw runtime_error("The JSON file doesn't have a 'portConfiguration' key.");
 	json_type type = json_object_get_type(portConfigurationListObject);
-	QVERIFY2(type == json_type_array || type == json_type_object, "The portConfiguration key must contain either an array [] or object {}.");
+	if (!(type == json_type_array || type == json_type_object))
+		throw runtime_error("The portConfiguration key must contain either an array [] or object {}.");
 
 	int numPortConfigurationObjects;
 	struct lh_entry *it;
@@ -177,7 +184,8 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 			itemName = (char *)it->k;
 			it = it->next;
 		}
-		QVERIFY(portConfigurationObject != NULL);
+		if (!portConfigurationObject)
+			throw runtime_error("Couldn't get the portConfigurationObject.");
 
 		string firingPortName;
 		json_object *firingPortObject;
@@ -200,7 +208,8 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 		portConfigurations.push_back(p);
 	}
 
-	QVERIFY(! portConfigurations.empty());
+	if (portConfigurations.empty())
+		throw runtime_error("The JSON file doesn't contain any port configurations.");
 }
 
 /**

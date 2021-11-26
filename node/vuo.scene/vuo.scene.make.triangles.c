@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 	"title": "Make Triangles Object",
 	"keywords": [
-		"3-gon", "3gon", "shape", "polygon",
+		"3D", "3-gon", "3gon", "shape", "polygon",
 		"mesh", "model", "vertices", "shader", "texture", "draw", "opengl", "scenegraph", "graphics",
 	],
 	"version": "1.0.0",

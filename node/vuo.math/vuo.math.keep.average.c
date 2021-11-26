@@ -24,6 +24,7 @@ VuoModuleMetadata({
         },
     },
     "node": {
+        "isDeprecated" : true,
         "exampleCompositions": [ "AverageRandomPoints.vuo" ],
     },
 });

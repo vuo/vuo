@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration": [
-	{"firingPort":"list", "inputPortValues":{"list":[               ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[       ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[               ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":null     }},
 	{"firingPort":"list", "inputPortValues":{"list":[1              ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[1      ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2            ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[1,2    ]}},
 
@@ -23,12 +23,14 @@
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6    ], "pickCount":1, "skipCount":2}, "outputPortValues":{"pickedItems":[1,4    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6,7  ], "pickCount":1, "skipCount":2}, "outputPortValues":{"pickedItems":[1,4,7  ]}},
 
+	{"firingPort":"list", "inputPortValues":{"list":[1              ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1      ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2            ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1,2    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1,2    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4        ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1,2,4  ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5      ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1,2,4,5]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6    ], "pickCount":2, "skipCount":1}, "outputPortValues":{"pickedItems":[1,2,4,5]}},
 
+	{"firingPort":"list", "inputPortValues":{"list":[1              ], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1      ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4        ], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2    ]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5      ], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2,5  ]}},
@@ -36,7 +38,13 @@
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6,7  ], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2,5,6]}},
 	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4,5,6,7,8], "pickCount":2, "skipCount":2}, "outputPortValues":{"pickedItems":[1,2,5,6]}},
 
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":   0, "skipCount":   9}, "outputPortValues":{"pickedItems":null   }},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":   1, "skipCount":   9}, "outputPortValues":{"pickedItems":[1    ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":  -1, "skipCount":   9}, "outputPortValues":{"pickedItems":null   }},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":-999, "skipCount":   9}, "outputPortValues":{"pickedItems":null   }},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3          ], "pickCount":   1, "skipCount":-999}, "outputPortValues":{"pickedItems":[1,2,3]}},
+
 	// Ensure an empty input list actually clears the output list (rather than doing nothing).
-	{"firingPort":"list", "inputPortValues":{"list":null,              "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[       ]}},
-	{"firingPort":"list", "inputPortValues":{"list":[               ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":[       ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,              "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":null     }},
+	{"firingPort":"list", "inputPortValues":{"list":[               ], "pickCount":1, "skipCount":0}, "outputPortValues":{"pickedItems":null     }},
 ]}

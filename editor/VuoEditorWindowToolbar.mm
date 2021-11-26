@@ -1,6 +1,6 @@
 /**
  * @file
- * VuoEditorWindowCocoa implementation.
+ * VuoEditorWindowToolbar implementation.
  *
  * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
@@ -23,8 +23,6 @@
 
 #include "VuoMacOSSDKWorkaround.h"
 #include <AppKit/AppKit.h>
-#include <objc/message.h>
-
 
 /**
  * A multi-segment button control containing the 4 zoom operations.
@@ -49,6 +47,8 @@
 	_toolBarItem = toolBarItem;
 	_isDark = false;
 	_isCodeEditor = codeEditor;
+
+	self.accessibilityLabel = [NSString stringWithUTF8String:VuoEditor::tr("Zoom").toUtf8().data()];
 
 	NSImage *zoomOutImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"zoom-out" ofType:@"pdf"]];
 	[zoomOutImage setTemplate:YES];
@@ -208,6 +208,7 @@
 	[[button cell] setImageScaling:NSImageScaleNone];
 	[[button cell] setShowsStateBy:NSContentsCellMask];
 
+	button.cell.accessibilityLabel = [NSString stringWithUTF8String:VuoEditor::tr("Show Events").toUtf8().data()];
 
 	// Wrap the button in a fixed-width subview, so the toolbar item doesn't change width when the label changes.
 	[self setFrame:NSMakeRect(0,0,32,24)];
@@ -315,51 +316,22 @@
 @end
 
 /**
- * Positions the sheet directly beneath the titlebar/toolbar.
+ * Creates a toolbar and adds it to @a window.
  */
-NSRect windowWillPositionSheetUsingRect(id self, SEL _cmd, NSWindow *window, NSWindow *sheet, NSRect rect)
+VuoEditorWindowToolbar * VuoEditorWindowToolbar::create(QMainWindow *window, bool isCodeEditor)
 {
-	rect.origin.y += ((NSApplication *)NSApp).mainMenu.menuBarHeight;
-
-	if (! [NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
-	{
-		float titleAndToolbarHeight = window.frame.size.height - [window contentRectForFrameRect:window.frame].size.height;
-		rect.origin.y -= titleAndToolbarHeight;
-	}
-
-	return rect;
+	VuoEditorWindowToolbar *toolbar = new VuoEditorWindowToolbar(window, isCodeEditor);
+	toolbar->setUp();
+	return toolbar;
 }
 
 /**
- * Renders text vertically centered in the cell.
- *
- * From https://stackoverflow.com/a/33788973 .
- */
-@interface VuoEditorTitleCell : NSTextFieldCell
-@end
-@implementation VuoEditorTitleCell
-- (NSRect)titleRectForBounds:(NSRect)frame
-{
-	CGFloat stringHeight = self.attributedStringValue.size.height;
-	NSRect titleRect = [super titleRectForBounds:frame];
-	CGFloat oldOriginY = frame.origin.y;
-	titleRect.origin.y = frame.origin.y + (frame.size.height - stringHeight) / 2.0;
-	titleRect.size.height = titleRect.size.height - (titleRect.origin.y - oldOriginY);
-	return titleRect;
-}
-- (void)drawInteriorWithFrame:(NSRect)cFrame inView:(NSView*)cView
-{
-	[super drawInteriorWithFrame:[self titleRectForBounds:cFrame] inView:cView];
-}
-@end
-
-/**
- * Initializes the toolbar for this editor window.
+ * Initializes an empty toolbar.
  */
 VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeEditor)
+	: VuoToolbar(window)
 {
-	NSView *nsView = (NSView *)window->winId();
-	nsWindow = [nsView window];
+	this->isCodeEditor = isCodeEditor;
 
 	activityIndicatorTimer = NULL;
 
@@ -368,28 +340,21 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 	buildPending = false;
 	stopInProgress = false;
 
-	titleView = [NSTextField new];
-	titleView.cell = [VuoEditorTitleCell new];
-	titleView.font = [NSFont titleBarFontOfSize:0];
-	titleView.selectable = NO;
-	titleViewController = nil;
+#if VUO_PRO
+	VuoEditorWindowToolbar_Pro();
+#endif
+}
 
-	toolBar = new QMacToolBar(window);
-	{
-		NSToolbar *tb = toolBar->nativeToolbar();
-
-		// Workaround for apparent Qt bug, where QCocoaIntegration::clearToolbars() releases the toolbar after it's already been deallocated.
-		[tb retain];
-
-		[tb setAllowsUserCustomization:NO];
-	}
-
-
+/**
+ * Populates the toolbar and adds it to the window.
+ */
+void VuoEditorWindowToolbar::addToolbarItems(void)
+{
 	{
 		runImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"run" ofType:@"pdf"]];
 		[runImage setTemplate:YES];
 
-		toolbarRunItem = toolBar->addItem(QIcon(), VuoEditor::tr("Run"));
+		toolbarRunItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Run"));
 		NSToolbarItem *ti = toolbarRunItem->nativeToolBarItem();
 		[ti setImage:runImage];
 		[ti setAutovalidates:NO];
@@ -403,7 +368,7 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 		stopImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"stop" ofType:@"pdf"]];
 		[stopImage setTemplate:YES];
 
-		toolbarStopItem = toolBar->addItem(QIcon(), VuoEditor::tr("Stop"));
+		toolbarStopItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Stop"));
 		NSToolbarItem *ti = toolbarStopItem->nativeToolBarItem();
 		[ti setImage:stopImage];
 		[ti setAutovalidates:NO];
@@ -417,11 +382,11 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 	{
 		eventsButton = NULL;
 		toolbarEventsItem = NULL;
-		toolBar->addSeparator();
+		qtToolbar->addSeparator();
 	}
 	else
 	{
-		toolbarEventsItem = toolBar->addItem(QIcon(), VuoEditor::tr("Show Events"));
+		toolbarEventsItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Show Events"));
 		NSToolbarItem *ti = toolbarEventsItem->nativeToolBarItem();
 		eventsButton = [[VuoEditorEventsButton alloc] initWithQMacToolBarItem:toolbarEventsItem];
 		[ti setView:eventsButton];
@@ -435,7 +400,7 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 
 
 	{
-		toolbarZoomItem = toolBar->addItem(QIcon(), VuoEditor::tr("Zoom"));
+		toolbarZoomItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Zoom"));
 		NSToolbarItem *ti = toolbarZoomItem->nativeToolBarItem();
 		zoomButtons = [[VuoEditorZoomButtons alloc] initWithQMacToolBarItem:toolbarZoomItem isCodeEditor:isCodeEditor];
 		[ti setView:zoomButtons];
@@ -447,21 +412,9 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 	}
 
 
-	VuoEditor *editor = (VuoEditor *)qApp;
-	connect(editor, &VuoEditor::darkInterfaceToggled, this, &VuoEditorWindowToolbar::updateColor);
-	updateColor(editor->isInterfaceDark());
-
 #if VUO_PRO
-	VuoEditorWindowToolbar_Pro();
+	addToolbarItems_Pro();
 #endif
-
-	toolBar->attachToWindow(window->windowHandle());
-
-
-	class_addMethod(nsWindow.delegate.class,
-					@selector(window:willPositionSheet:usingRect:),
-					(IMP)windowWillPositionSheetUsingRect,
-					"{CGRect={CGPoint=dd}{CGSize=dd}}@:@@{CGRect={CGPoint=dd}{CGSize=dd}}");
 }
 
 /**
@@ -475,7 +428,23 @@ VuoEditorWindowToolbar::~VuoEditorWindowToolbar()
 }
 
 /**
- * Initializes the toolbar for this editor window.
+ * Always allows tabbing.
+ */
+bool VuoEditorWindowToolbar::allowsTabbingWithOtherWindows(void)
+{
+	return true;
+}
+
+/**
+ * Identifier for grouping composition- and code-editing windows.
+ */
+NSString * VuoEditorWindowToolbar::getTabbingIdentifier(void)
+{
+	return @"Vuo Composition";
+}
+
+/**
+ * Updates the toolbar buttons' states.
  */
 void VuoEditorWindowToolbar::update(bool eventsShown, bool zoomedToActualSize, bool zoomedToFit)
 {
@@ -658,38 +627,12 @@ void VuoEditorWindowToolbar::updateActivityIndicators(void)
 }
 
 /**
- * Makes the titlebar/toolbar dark (Digital Color Meter set to "Display native values" reads 0x808080).
+ * Updates the light/dark styling of the toolbar, including custom button types.
  */
 void VuoEditorWindowToolbar::updateColor(bool isDark)
 {
+	VuoToolbar::updateColor(isDark);
+
 	[(VuoEditorEventsButton *)eventsButton updateColor:isDark];
 	[(VuoEditorEventsButton *)zoomButtons updateColor:isDark];
-
-	{
-		// Request a transparent titlebar (and toolbar) so the window's background color (set below) shows through.
-		// "Previously NSWindow would make the titlebar transparent for certain windows with NSWindowStyleMaskTexturedBackground set,
-		// even if titlebarAppearsTransparent was NO.  When linking against the 10.13 SDK, textured windows must
-		// explicitly set titlebarAppearsTransparent to YES for this behavior."
-		// - https://developer.apple.com/library/content/releasenotes/AppKit/RN-AppKit/
-		nsWindow.titlebarAppearsTransparent = YES;
-
-		// Requesting a transparent titlebar causes toolbar drawing to glitch (icons change color when defocused; text looks anemic).
-		// Enabling Core Animation seems to avoid that Cocoa bug.
-		((NSView *)nsWindow.contentView).wantsLayer = YES;
-
-		if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,12,0}])
-		{
-			// "A window with titlebarAppearsTransparent is normally opted-out of automatic window tabbing."
-			// - https://developer.apple.com/library/archive/releasenotes/AppKit/RN-AppKit/index.html
-			// …but it works fine for us, so reenable it.
-			// https://b33p.net/kosada/node/15412
-			nsWindow.tabbingMode = NSWindowTabbingModeAutomatic;
-			nsWindow.tabbingIdentifier = @"Vuo Composition";
-		}
-	}
-
-	if (isDark)
-		[nsWindow setBackgroundColor:[NSColor colorWithCalibratedWhite:.47 alpha:1]];
-	else
-		[nsWindow setBackgroundColor:[NSColor colorWithCalibratedWhite:.92 alpha:1]];
 }

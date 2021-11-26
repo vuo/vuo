@@ -99,6 +99,9 @@ foreach(line ${output_lines})
     string(APPEND ctest_script_content
       "set_tests_properties(\"${generated_name}\" PROPERTIES ${external_properties})\n"
     )
+    string(APPEND ctest_script_content
+      "set_tests_properties(\"${generated_name}\" PROPERTIES ENVIRONMENT \"${TEST_ENVIRONMENT}\")\n"
+    )
   endif()
 endforeach()
 

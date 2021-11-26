@@ -11,17 +11,18 @@
 #include "VuoTable.h"
 
 VuoModuleMetadata({
-					  "title" : "Format Table",
-					  "keywords" : [
-						"row", "column", "grid", "spreadsheet", "structure",
-						"csv", "tsv", "comma", "tab", "separated",
-						"convert", "serialize", "export", "save", "write"
-					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "ChangeTableDataToMetric.vuo", "RecordMouseClicksToCsvFile.vuo", "PerformCoinFlipExperiment.vuo" ]
-					  }
-				 });
+	"title": "Format Table",
+	"keywords": [
+		"row", "column", "grid", "spreadsheet", "structure",
+		"csv", "tsv", "comma", "tab", "separated",
+		"convert", "serialize", "export", "save", "write",
+		"string",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "ChangeTableDataToMetric.vuo", "RecordMouseClicksToCsvFile.vuo", "PerformCoinFlipExperiment.vuo" ],
+	},
+});
 
 void nodeEvent
 (

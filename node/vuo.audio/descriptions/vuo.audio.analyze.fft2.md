@@ -9,6 +9,7 @@ This node performs a calculation called a [Fourier transform](http://nautil.us/b
    - `Frequency Bin Averaging` — How the amplitudes per bin are aggregated into the output list.
       - `None` does not aggregate. The output contains an item for each bin.
       - `Quadratic` and `Logarithmic` combine the results for bins, with more bins being combined at higher frequencies. The output more closely matches how humans perceive audio.
+   - `Amplitudes` — The amplitude for each bin, in order from lowest to highest frequency. The amplitudes are linearly scaled.
 
 If you want a specific number of outputs, use the table below to pick the right `Frequency Bins` and `Frequency Bin Averaging`.<br>
 

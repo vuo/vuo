@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Scale List",
 					  "keywords" : [ "multiply", "product", "times", "*", "•", "×", "x", "arithmetic", "calculate" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ]
@@ -30,13 +30,16 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) scaledList
 )
 {
-	*scaledList = VuoListCreate_VuoGenericType1();
 	unsigned long listCount = VuoListGetCount_VuoGenericType1(list);
-	for (unsigned long i = 1; i <= listCount; ++i)
+	if (listCount == 0)
 	{
-		VuoGenericType1 product = VuoGenericType1_scale(
-						VuoListGetValue_VuoGenericType1(list, i),
-						scale);
-		VuoListAppendValue_VuoGenericType1(*scaledList, product);
+		*scaledList = NULL;
+		return;
 	}
+
+	VuoGenericType1 *listData = VuoListGetData_VuoGenericType1(list);
+	*scaledList = VuoListCreateWithCount_VuoGenericType1(listCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *scaledListData = VuoListGetData_VuoGenericType1(*scaledList);
+	for (unsigned long i = 0; i < listCount; ++i)
+		scaledListData[i] = listData[i] * scale;
 }

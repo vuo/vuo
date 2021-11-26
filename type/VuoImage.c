@@ -1244,6 +1244,7 @@ bool VuoImage_resolveInterprocessJsonOntoFramebuffer(json_object *js, VuoGlConte
 		return false;
 	}
 
+	VuoShader_resetContext(context);
 	bool ret = VuoImage_resolveInterprocessJsonOntoFramebufferInternal(surf, context, pixelsWide, pixelsHigh, flip, stretch);
 
 	VuoIoSurfacePool_signal(surf);

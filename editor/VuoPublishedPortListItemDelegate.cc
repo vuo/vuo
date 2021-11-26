@@ -31,7 +31,7 @@ void VuoPublishedPortListItemDelegate::paint(QPainter *painter, const QStyleOpti
 
 	setUpSelectionHighlighting(painter, option, index);
 
-	VuoRendererPublishedPort *publishedPort = (VuoRendererPublishedPort *)(index.data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+	VuoRendererPublishedPort *publishedPort = index.data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	if (!publishedPort)
 		return;
 
@@ -64,7 +64,7 @@ void VuoPublishedPortListItemDelegate::setUpSelectionHighlighting(QPainter *pain
 	VuoEditor *editor = (VuoEditor *)qApp;
 	bool isDark = editor->isInterfaceDark();
 
-	VuoRendererPublishedPort *publishedPort = (VuoRendererPublishedPort *)(index.data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+	VuoRendererPublishedPort *publishedPort = index.data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	if (!publishedPort)
 		return;
 
@@ -95,7 +95,7 @@ void VuoPublishedPortListItemDelegate::setUpSelectionHighlighting(QPainter *pain
 QSize VuoPublishedPortListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	double heightScalingFactor = 1.5;
-	VuoRendererPublishedPort *publishedPort = (VuoRendererPublishedPort *)(index.data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+	VuoRendererPublishedPort *publishedPort = index.data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>();
 	if (!publishedPort)
 		return QSize(0,0);
 

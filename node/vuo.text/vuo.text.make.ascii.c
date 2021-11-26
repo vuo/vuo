@@ -11,16 +11,19 @@
 #include <string.h>
 
 VuoModuleMetadata({
-					 "title" : "Make Text from ASCII",
-					 "keywords" : [ "utf", "unicode", "symbol",
-						"carriage", "return", "newline",
-						"line", "tab", "em", "en",
-						"space", "break", "invisible" ],
-					 "version" : "1.0.0",
-					 "node" : {
-						"exampleCompositions" : [ "ShowAsciiCharacters.vuo" ]
-					 }
-				 });
+	"title": "Make Text from ASCII",
+	"keywords": [
+		"string",
+		"utf", "unicode", "symbol",
+		"carriage", "return", "newline",
+		"line", "tab", "em", "en",
+		"space", "break", "invisible",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions" : [ "ShowAsciiCharacters.vuo" ],
+	},
+});
 
 void nodeEvent
 (

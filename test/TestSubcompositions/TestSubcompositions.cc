@@ -780,6 +780,7 @@ private slots:
 		remove(compiledCompositionPath.c_str());
 		delete issues;
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
+		runner->setRuntimeChecking(true);
 
 		QStringList expectedOutputPortEvents[2] = { expectedOutputPortEvents0, expectedOutputPortEvents1 };
 		QStringList expectedOutputPortEventsRenamed[2];

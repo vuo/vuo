@@ -7,6 +7,7 @@ VuoCompileGenericNodes(
 	vuo.event.decreased.c
 	vuo.event.decreased2.c
 	vuo.event.emptyList.c
+	vuo.event.fireWhenValueEdited.c
 	vuo.event.increased.c
 	vuo.event.increased2.c
 	vuo.event.spinOffValue.c

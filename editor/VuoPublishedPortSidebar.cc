@@ -148,7 +148,7 @@ void VuoPublishedPortSidebar::appendPublishedPortToList(VuoPublishedPort *port, 
 	QListWidgetItem *item = new QListWidgetItem(ui->publishedPortList);
 
 	item->setData(Qt::DisplayRole, publishedPortName.c_str());	// used for sort order
-	item->setData(VuoPublishedPortList::publishedPortPointerIndex, qVariantFromValue((void *)port->getRenderer()));
+	item->setData(VuoPublishedPortList::publishedPortPointerIndex, QVariant::fromValue(static_cast<VuoRendererPublishedPort *>(port->getRenderer())));
 
 	QString formattedPublishedPortName = QString("<b><font size=+2>%1</font></b>").arg(publishedPortName.c_str());
 
@@ -297,7 +297,7 @@ void VuoPublishedPortSidebar::highlightEligibleDropLocations(VuoRendererPort *in
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *portItem = ui->publishedPortList->item(portIndex);
-		VuoRendererPublishedPort *publishedPortToHighlight = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *publishedPortToHighlight = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>());
 
 		QGraphicsItem::CacheMode normalCacheMode = publishedPortToHighlight->cacheMode();
 		publishedPortToHighlight->setCacheMode(QGraphicsItem::NoCache);
@@ -329,7 +329,7 @@ void VuoPublishedPortSidebar::clearEligibleDropLocationHighlighting()
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *portItem = ui->publishedPortList->item(portIndex);
-		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>());
 
 		QGraphicsItem::CacheMode normalCacheMode = publishedPort->cacheMode();
 		publishedPort->setCacheMode(QGraphicsItem::NoCache);
@@ -410,7 +410,7 @@ void VuoPublishedPortSidebar::updateHoverHighlighting(QMouseEvent *event, qreal 
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *portItem = ui->publishedPortList->item(portIndex);
-		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>());
 
 		if (publishedPort == publishedPortUnderCursor)
 			publishedPort->extendedHoverMoveEvent(cableInProgress);
@@ -440,7 +440,7 @@ void VuoPublishedPortSidebar::clearHoverHighlighting()
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
 		QListWidgetItem *portItem = ui->publishedPortList->item(portIndex);
-		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<void *>());
+		VuoRendererPublishedPort *publishedPort = static_cast<VuoRendererPublishedPort *>(portItem->data(VuoPublishedPortList::publishedPortPointerIndex).value<VuoRendererPublishedPort *>());
 		publishedPort->extendedHoverLeaveEvent();
 	}
 
@@ -586,7 +586,7 @@ void VuoPublishedPortSidebar::contextMenuEvent(QContextMenuEvent *event)
 	// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
 	if (isActiveProtocolLabelUnderCursorForEvent(event))
 	{
-		contextMenuActionRemoveProtocol->setData(qVariantFromValue((void *)composition->getActiveProtocol()));
+		contextMenuActionRemoveProtocol->setData(QVariant::fromValue(composition->getActiveProtocol()));
 		contextMenuRemoveProtocol->exec(event->globalPos());
 	}
 	else
@@ -907,7 +907,7 @@ void VuoPublishedPortSidebar::populatePortTypeMenus()
 	QAction *addEventOnlyPortAction = menuAddPort->addAction(tr("Event-Only"));
 	string typeName = "";
 	QList<QVariant> portAndSpecializedType;
-	portAndSpecializedType.append(qVariantFromValue((void *)NULL));
+	portAndSpecializedType.append(QVariant::fromValue(static_cast<VuoRendererPort *>(nullptr)));
 	portAndSpecializedType.append(typeName.c_str());
 	addEventOnlyPortAction->setData(QVariant(portAndSpecializedType));
 	connect(addEventOnlyPortAction, &QAction::triggered, this, &VuoPublishedPortSidebar::newPublishedPortTypeSelected);
@@ -984,7 +984,7 @@ void VuoPublishedPortSidebar::populatePortTypeMenu(QMenu *menu, bool lists, bool
 			{
 				//: Appears at the bottom of the "Set Data Type" menu when there are additional options to display.
 				QAction *showMoreAction = menu->addAction(tr("More…"));
-				showMoreAction->setData(qVariantFromValue(lists));
+				showMoreAction->setData(QVariant::fromValue(lists));
 				connect(showMoreAction, &QAction::triggered, this, &VuoPublishedPortSidebar::expandPortTypeMenu);
 				usingExpansionMenu = true;
 			}

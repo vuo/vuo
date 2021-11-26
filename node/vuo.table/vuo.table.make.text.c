@@ -11,17 +11,18 @@
 #include "VuoTable.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Table from Text",
-					  "keywords" : [
-						"row", "column", "grid", "spreadsheet", "structure",
-						"csv", "tsv", "comma", "tab", "separated",
-						"parse", "convert", "read"
-					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "ChangeTableDataToMetric.vuo", "GraphColdestTemperatures.vuo", "PerformCoinFlipExperiment.vuo" ]
-					  }
-				 });
+	"title": "Make Table from Text",
+	"keywords": [
+		"row", "column", "grid", "spreadsheet", "structure",
+		"csv", "tsv", "comma", "tab", "separated",
+		"parse", "convert", "read",
+		"string",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "ChangeTableDataToMetric.vuo", "GraphColdestTemperatures.vuo", "PerformCoinFlipExperiment.vuo" ],
+	},
+});
 
 void nodeEvent
 (

@@ -144,7 +144,7 @@ VuoText VuoBarcode_read(VuoImage image, VuoInteger format, VuoText *outputFormat
 	{
 		// Why does zxing throw an exception for the perfectly normal no-code-detected situation.
 		if (strcmp(e.what(), "No code detected"))
-			VDebugLog("Exception: %s", e.what());
+			VUserLog("Exception: %s", e.what());
 	}
 
 	free(lumaFlipped);

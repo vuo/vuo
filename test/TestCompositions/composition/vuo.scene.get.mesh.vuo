@@ -1,0 +1,73 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @createdInVuoVersion 2.3.2
+ * @lastSavedInVuoVersion 2.3.2
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="315,510"];
+Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="315,585" _transform="\{\"translation\":[1.0,0.0,0.0],\"eulerRotation\":[1.5707963705062866,0.0,0.0],\"scale\":[2.0,2.0,2.0]\}"];
+GetMeshValues [type="vuo.scene.get.mesh" version="1.0.0" label="Get Mesh Values|<refresh>refresh\l|<object>object\l|<positions>positions\r|<normals>normals\r" pos="855,120"];
+Make3DSquare [type="vuo.scene.make.square.VuoGenericType1" version="1.1.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="45,255" _rows="2" _columns="2"];
+Make3DSquare2 [type="vuo.scene.make.square.VuoGenericType1" version="1.1.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="45,795" _rows="2" _columns="2"];
+MakeList [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-18,431" _1="\"#fff\""];
+MakeList10 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-37,686" _1="\{\"x\":1.1000000238418579,\"y\":-1.2000000476837158\}" _2="\{\"x\":1.2999999523162842,\"y\":-1.3999999761581421\}"];
+MakeList2 [type="vuo.list.make.6.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="-52,416" _1="\{\"x\":0.0,\"y\":0.0,\"z\":0.0\}" _2="\{\"x\":0.0,\"y\":1.0,\"z\":0.0\}" _3="\{\"x\":0.0,\"y\":0.0,\"z\":1.0\}" _5="\{\"x\":0.0,\"y\":1.0,\"z\":0.0\}" _6="\{\"x\":1.0,\"y\":0.0,\"z\":0.0\}"];
+MakeList3 [type="vuo.list.make.3.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-37,191" _1="\{\"x\":-0.10000000149011612,\"y\":0.20000000298023224\}" _2="\{\"x\":-0.30000001192092896,\"y\":0.40000000596046448\}" _3="\{\"x\":-0.5,\"y\":0.60000002384185791\}"];
+MakeList4 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-3,206" _1="\"#fff\""];
+MakeList5 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="282,536"];
+MakeList6 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="282,611"];
+MakeList7 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-3,581" _1="\"#fff\""];
+MakeList8 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-37,566" _1="\{\"x\":-0.10000000149011612,\"y\":0.20000000298023224\}" _2="\{\"x\":-0.30000001192092896,\"y\":0.40000000596046448\}"];
+MakeList9 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-3,701" _1="\"#fff\""];
+MakePointLight [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="30,945" _color="\{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.\}" _brightness="1.0" _position="\{\"x\":-1.,\"y\":1.,\"z\":1.\}" _range="10." _sharpness="0.9"];
+MakePointsObject [type="vuo.scene.make.points.VuoPoint2d.VuoGenericType2" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="30,135" _pointSize="0.01"];
+MakePointsObject2 [type="vuo.scene.make.points.VuoPoint2d.VuoGenericType2" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="30,510" _pointSize="0.01"];
+MakePointsObject3 [type="vuo.scene.make.points.VuoPoint2d.VuoGenericType2" version="1.0.0" label="Make Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<pointSize>pointSize\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="30,630" _pointSize="0.01"];
+MakeTrianglesObject [type="vuo.scene.make.triangles.VuoPoint3d.VuoGenericType2" version="1.0.0" label="Make Triangles Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<textureMapping>textureMapping\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="15,360" _textureMapping="0"];
+SelectInput [type="vuo.select.in.8.VuoSceneObject" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<out>out\r" pos="720,120"];
+Spike3DObject [type="vuo.scene.spike" version="1.0.0" label="Spike 3D Object|<refresh>refresh\l|<object>object\l|<distance>distance\l|<spikedObject>spikedObject\r" pos="225,795" _distance="0.25"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Which>Which\r" _Which_type="VuoInteger" _Which_suggestedMin="1" _Which_suggestedMax="8" _Which="1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Positions>Positions\l|<Normals>Normals\l" _Positions_type="VuoList_VuoPoint3d" _Normals_type="VuoList_VuoPoint3d"];
+
+Combine3DObjects2:object -> SelectInput:option5;
+Combine3DObjects:object -> SelectInput:option4;
+GetMeshValues:normals -> PublishedOutputs:Normals;
+GetMeshValues:positions -> PublishedOutputs:Positions;
+Make3DSquare2:object -> Spike3DObject:object;
+Make3DSquare:object -> SelectInput:option2;
+MakeList10:list -> MakePointsObject3:positions;
+MakeList2:list -> MakeTrianglesObject:positions;
+MakeList3:list -> MakePointsObject:positions;
+MakeList4:list -> MakePointsObject:colors;
+MakeList5:list -> Combine3DObjects:childObjects;
+MakeList6:list -> Combine3DObjects2:childObjects;
+MakeList7:list -> MakePointsObject2:colors;
+MakeList8:list -> MakePointsObject2:positions;
+MakeList9:list -> MakePointsObject3:colors;
+MakeList:list -> MakeTrianglesObject:colors;
+MakePointLight:object -> SelectInput:option7;
+MakePointsObject2:object -> MakeList5:1;
+MakePointsObject2:object -> MakeList6:1;
+MakePointsObject3:object -> MakeList5:2;
+MakePointsObject3:object -> MakeList6:2;
+MakePointsObject:object -> SelectInput:option1;
+MakeTrianglesObject:object -> SelectInput:option3;
+PublishedInputs:Which -> Make3DSquare2:transform [event=true];
+PublishedInputs:Which -> Make3DSquare:transform [event=true];
+PublishedInputs:Which -> MakePointLight:color [event=true];
+PublishedInputs:Which -> MakePointsObject2:transform [event=true];
+PublishedInputs:Which -> MakePointsObject3:transform [event=true];
+PublishedInputs:Which -> MakePointsObject:transform [event=true];
+PublishedInputs:Which -> MakeTrianglesObject:transform [event=true];
+PublishedInputs:Which -> SelectInput:which;
+SelectInput:out -> GetMeshValues:object;
+Spike3DObject:spikedObject -> SelectInput:option6;
+}

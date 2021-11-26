@@ -43,7 +43,7 @@ VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 	VuoReal uMin,
 	VuoReal uMax)
 {
-	if (subdivisions <= 0 || !xExp || !yExp || !zExp)
+	if (subdivisions <= 0 || VuoText_isEmpty(xExp) || VuoText_isEmpty(yExp) || VuoText_isEmpty(zExp))
 		return VuoListCreate_VuoPoint3d();
 
 	mu::Parser xParser, yParser, zParser;
@@ -114,7 +114,7 @@ VuoList_VuoPoint3d VuoPointsParametric2d_generate(
 	VuoReal vMin,
 	VuoReal vMax)
 {
-	if (rows <= 0 || columns <= 0 || !xExp || !yExp || !zExp)
+	if (rows <= 0 || columns <= 0 || VuoText_isEmpty(xExp) || VuoText_isEmpty(yExp) || VuoText_isEmpty(zExp))
 		return VuoListCreate_VuoPoint3d();
 
 	mu::Parser xParser, yParser, zParser;

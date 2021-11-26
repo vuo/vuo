@@ -460,7 +460,7 @@ bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *r
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device:   %s", json_object_to_json_string(VuoMidiInputDevice_getJson(device)));
+	VUserLog("Requested device:   %s", json_object_to_json_string(VuoMidiInputDevice_getJson(device)));
 	VuoList_VuoMidiInputDevice devices = VuoMidi_getInputDevices();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -469,7 +469,7 @@ bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *r
 	VuoListForeach_VuoMidiInputDevice(devices, ^(const VuoMidiInputDevice item){
 		if (device.id != -1 && device.id == item.id)
 		{
-			VDebugLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+			VUserLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 			return false;
@@ -482,7 +482,7 @@ bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *r
 		VuoListForeach_VuoMidiInputDevice(devices, ^(const VuoMidiInputDevice item){
 			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+				VUserLog("Matched by name:    %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -496,14 +496,14 @@ bool VuoMidiInputDevice_realize(VuoMidiInputDevice device, VuoMidiInputDevice *r
 		if (VuoListGetCount_VuoMidiInputDevice(devices))
 		{
 			VuoMidiInputDevice item = VuoListGetValue_VuoMidiInputDevice(devices, 1);
-			VDebugLog("Using first device: %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
+			VUserLog("Using first device: %s",json_object_to_json_string(VuoMidiInputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 		}
 	}
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }
@@ -531,7 +531,7 @@ bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice
 
 	// Otherwise, try to find a matching device.
 
-	VDebugLog("Requested device:   %s", json_object_to_json_string(VuoMidiOutputDevice_getJson(device)));
+	VUserLog("Requested device:   %s", json_object_to_json_string(VuoMidiOutputDevice_getJson(device)));
 	VuoList_VuoMidiOutputDevice devices = VuoMidi_getOutputDevices();
 	VuoLocal(devices);
 	__block bool found = false;
@@ -540,7 +540,7 @@ bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice
 	VuoListForeach_VuoMidiOutputDevice(devices, ^(const VuoMidiOutputDevice item){
 		if (device.id != -1 && device.id == item.id)
 		{
-			VDebugLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+			VUserLog("Matched by ID:      %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 			return false;
@@ -553,7 +553,7 @@ bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice
 		VuoListForeach_VuoMidiOutputDevice(devices, ^(const VuoMidiOutputDevice item){
 			if (!VuoText_isEmpty(device.name) && VuoText_compare(item.name, (VuoTextComparison){VuoTextComparison_Contains, true}, device.name))
 			{
-				VDebugLog("Matched by name:    %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+				VUserLog("Matched by name:    %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
 				setRealizedDevice(item);
 				found = true;
 				return false;
@@ -567,14 +567,14 @@ bool VuoMidiOutputDevice_realize(VuoMidiOutputDevice device, VuoMidiOutputDevice
 		if (VuoListGetCount_VuoMidiOutputDevice(devices))
 		{
 			VuoMidiOutputDevice item = VuoListGetValue_VuoMidiOutputDevice(devices, 1);
-			VDebugLog("Using first device: %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
+			VUserLog("Using first device: %s",json_object_to_json_string(VuoMidiOutputDevice_getJson(item)));
 			setRealizedDevice(item);
 			found = true;
 		}
 	}
 
 	if (!found)
-		VDebugLog("No matching device found.");
+		VUserLog("No matching device found.");
 
 	return found;
 }

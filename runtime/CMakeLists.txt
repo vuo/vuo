@@ -29,7 +29,7 @@ VuoCompileLibraries(
 	VuoThreadManager.cc
 	VuoCompositionState.c
 	../base/VuoException.cc
-	../base/VuoTelemetry.c
+	../base/VuoTelemetry.cc
 )
 target_compile_definitions(vuo.core.runtime.libraries
 	PUBLIC

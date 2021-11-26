@@ -16,6 +16,7 @@ set(types
 	VuoReal
 	VuoRectangle
 	VuoSceneObject
+	VuoScreen
 	VuoShader
 	VuoTable
 	VuoText
@@ -33,7 +34,10 @@ if (VuoPro)
 endif()
 
 foreach (type ${types})
-	VuoTest(NAME Test${type} SOURCE Test${type}.cc)
+	VuoTest(NAME Test${type}
+		SOURCE Test${type}.cc
+		GMALLOC_ELIGIBLE
+	)
 	add_dependencies(Test${type} VuoEditorApp)
 endforeach()
 

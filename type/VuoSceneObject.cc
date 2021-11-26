@@ -3005,7 +3005,7 @@ static csgjs_model VuoSceneObject_getCsgjsModel(const VuoSceneObject so)
 		if (normals)
 			v.normal = csgjs_vector(normals[n * 3], normals[n * 3 + 1], normals[n * 3 + 2]);
 		if (textureCoordinates)
-			v.uv = csgjs_vector(textureCoordinates[n * 3], textureCoordinates[n * 3 + 1], 0);
+			v.uv = csgjs_vector(textureCoordinates[n * 2], textureCoordinates[n * 2 + 1], 0);
 		cm.vertices.push_back(v);
 	}
 	for (unsigned int n = 0; n < elementCount; ++n)

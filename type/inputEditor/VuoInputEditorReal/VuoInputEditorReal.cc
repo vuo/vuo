@@ -177,6 +177,7 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 	setLastWidgetInTabOrder(spinbox);
 
 	spinbox->setFocus();
+	spinbox->selectAll();
 }
 
 /**

@@ -31,7 +31,7 @@ VuoModuleMetadata({
  */
 char *VuoOsStatus_getText(int32_t error)
 {
-	if (error == 0)
+	if (error == noErr)
 		return strdup("(no error)");
 	else if (error == bdNamErr)
 		return strdup("Bad file name");

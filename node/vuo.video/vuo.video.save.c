@@ -20,7 +20,7 @@ VuoModuleMetadata({
 					"keywords" : [
 						"record", "screen capture", "screencast", "video", "fraps", "append", "write", "export"
 					],
-					"version" : "1.0.1",
+					"version" : "1.0.2",
 					"dependencies" : [
 						"VuoAvWriter",
 						"VuoImageResize"

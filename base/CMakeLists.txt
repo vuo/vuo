@@ -44,7 +44,7 @@ add_library(VuoBase STATIC
 
 	# These are part of vuo.core.runtime.libraries, which is linked into the VuoHeap target.
 #	VuoException.cc
-#	VuoTelemetry.c
+#	VuoTelemetry.cc
 #	../runtime/VuoEventLoop.m
 #	../runtime/VuoLog.cc
 )

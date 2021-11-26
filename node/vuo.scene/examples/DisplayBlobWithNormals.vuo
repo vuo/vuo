@@ -1,0 +1,59 @@
+/**
+ * @file
+ * @brief Display Blob with Normals
+ * Displays a scary, hairy blob that glides and slides across the screen.  Uses the `Get Mesh Values` node to draw a line segment for each normal vector originating from each vertex.
+ *
+ * @createdInVuoVersion 2.3.2
+ * @lastSavedInVuoVersion 2.3.2
+ * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddLists [type="vuo.math.add.list.2.VuoPoint3d" version="1.0.0" label="Add Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<summedList>summedList\r" pos="120,630"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-285,255"];
+Change3DObjectBlending [type="vuo.scene.blendMode" version="1.0.0" label="Change 3D Object Blending|<refresh>refresh\l|<object>object\l|<blendMode>blendMode\l|<blendedObject>blendedObject\r" pos="660,540" _blendMode="\"linear-dodge\""];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="525,255"];
+Convert3DPointToTranslation [type="vuo.type.translate.point3d.transform" version="1.0.0" label="Convert 3D Point to Translation|<refresh>refresh\l|<translation>translation\l|<transform>transform\r" pos="720,270"];
+Curve [type="vuo.motion.curve.VuoPoint3d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="240,105" _startPosition="\{\"x\":1.3999999761581421,\"y\":-1.3999999761581421,\"z\":0.0\}" _endPosition="\{\"x\":-1.3999999761581421,\"y\":1.3999999761581421,\"z\":0.0\}" _duration="10.0" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-345,330" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+GetMeshValues [type="vuo.scene.get.mesh" version="1.0.0" label="Get Mesh Values|<refresh>refresh\l|<object>object\l|<positions>positions\r|<normals>normals\r" pos="-255,585" fillcolor="orange"];
+InterleaveLists [type="vuo.list.interleave.VuoPoint3d" version="1.0.0" label="Interleave Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<interleavedList>interleavedList\r" pos="255,585"];
+MakeEdgeShader [type="vuo.shader.make.edge.color" version="1.0.0" label="Make Edge Shader|<refresh>refresh\l|<color>color\l|<width>width\l|<sharpness>sharpness\l|<interiorOpacity>interiorOpacity\l|<shader>shader\r" pos="-135,270" _color="\{\"r\":0.50379186868667603,\"g\":0.15181200206279755,\"b\":0.30310520529747009,\"a\":1.0\}" _width="0.59999999999999998" _sharpness="0.0" _interiorOpacity="0.20000000000000001"];
+MakeIcosphere [type="vuo.scene.make.sphere.VuoShader" version="1.1.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="60,210" _transform="\{\"translation\":[0.0,0.0,0.0],\"eulerRotation\":[0.0,0.0,0.78539818525314331],\"scale\":[1.0,1.0,1.0]\}" _rows="48" _columns="48"];
+MakeLinesObject [type="vuo.scene.make.lines.VuoPoint3d.VuoShader" version="1.0.0" label="Make Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<lineWidth>lineWidth\l|<positions>positions\l|<colors>colors\l|<object>object\r" pos="435,540" _lineWidth="0.0080000000000000002"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="689,266" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="492,281"];
+MakeList8 [type="vuo.list.make.1.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="402,611" _1="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":0.28853285312652588\}"];
+RenderSceneToWindow [type="vuo.scene.render.window2" version="3.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="735,255" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Ripple3DObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="240,270" _angle="135.0" _amplitude="0.040000000000000001" _wavelength="0.01" _dispersion="\"linear\"" _displacement="\"longitudinal\""];
+ScaleList [type="vuo.math.scale.list.VuoPoint3d" version="1.0.0" label="Scale List|<refresh>refresh\l|<scale>scale\l|<list>list\l|<scaledList>scaledList\r" pos="-15,675" _scale="\{\"x\":0.039999999105930328,\"y\":0.039999999105930328,\"z\":0.039999999105930328\}"];
+
+Comment [type="vuo.comment" label="\"Draw a line segment for each normal vector \ \\noriginating from each vertex.\"" pos="-300,450" width="1170" height="285"];
+
+AddLists:summedList -> InterleaveLists:list2;
+AllowFirstEvent:firstEvent -> MakeEdgeShader:color;
+Change3DObjectBlending:blendedObject -> MakeList2:2;
+Combine3DObjects:object -> MakeList:1;
+Convert3DPointToTranslation:transform -> Combine3DObjects:transform;
+Curve:value -> Convert3DPointToTranslation:translation;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> Curve:time;
+FireOnDisplayRefresh:requestedFrame -> Ripple3DObject:phase;
+GetMeshValues:normals -> ScaleList:list;
+GetMeshValues:positions -> AddLists:list1;
+GetMeshValues:positions -> InterleaveLists:list1;
+InterleaveLists:interleavedList -> MakeLinesObject:positions;
+MakeEdgeShader:shader -> MakeIcosphere:material;
+MakeEdgeShader:shader -> MakeLinesObject:material;
+MakeIcosphere:object -> Ripple3DObject:object;
+MakeLinesObject:object -> Change3DObjectBlending:object;
+MakeList2:list -> Combine3DObjects:childObjects;
+MakeList8:list -> MakeLinesObject:colors;
+MakeList:list -> RenderSceneToWindow:objects;
+Ripple3DObject:rippledObject -> GetMeshValues:object;
+Ripple3DObject:rippledObject -> MakeList2:1;
+ScaleList:scaledList -> AddLists:list2;
+}

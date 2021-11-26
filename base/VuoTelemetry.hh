@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * VuoTelemetry interface.
  *
@@ -485,13 +485,9 @@ enum VuoLoaderControlReply
 enum VuoTelemetry
 {
 	/**
-	 * General information about the composition process, published every half-second.
-	 *
-	 * Includes data message-parts:
-	 *		@arg @c unsigned long utime;
-	 *		@arg @c unsigned long stime;
+	 * An acknowledgment that the composition is still running.
 	 */
-	VuoTelemetryStats,
+	VuoTelemetryHeartbeat,
 
 	/**
 	 * Published just prior to calling each node's nodeEvent/nodeInstanceEvent function.
@@ -594,9 +590,7 @@ enum VuoTelemetry
 };
 
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 
 char * vuoCopyStringFromMessage(zmq_msg_t *message);
 void vuoInitMessageWithString(zmq_msg_t *message, const char *string);
@@ -610,6 +604,4 @@ bool vuoReceiveBool(void *socket, char **error);
 void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsigned int messageCount, bool isNonBlocking, char **error);
 void vuoMemoryBarrier(void);
 
-#ifdef __cplusplus
 }
-#endif

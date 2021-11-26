@@ -48,6 +48,20 @@ unsigned int VuoScreen_useCount = 0;  ///< Process-wide count of callers (typica
  */
 static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 {
+	NSString *modelName        = nil;
+	NSString *manufacturerName = nil;
+	NSString *transport        = nil;
+	NSString *serialString     = nil;
+	uint32_t serialNumber      = 0;
+	uint8_t  manufacturedWeek  = 0;
+	uint16_t manufacturedYear  = 0;
+
+
+	// x86_64 supports getting extended display info via `IODisplayCreateInfoDictionary`, but arm64 doesn't support that.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/18596
+
+#if __x86_64__
+
 	// Deprecated on 10.9, but there's no alternative.
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -58,10 +72,6 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 
 	NSData *edid = [deviceInfo objectForKey:@kIODisplayEDIDKey];
 	NSString *displayLocation = [deviceInfo objectForKey:@kIODisplayLocationKey];
-	NSString *manufacturerName = nil;
-	uint32_t serialNumber = 0;
-	uint8_t manufacturedWeek = 0;
-	uint16_t manufacturedYear = 0;
 	if (edid)
 	{
 		const unsigned char *bytes = (const unsigned char *)[edid bytes];
@@ -94,35 +104,97 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 
 	[deviceInfo autorelease];
 	NSDictionary *localizedNames = [deviceInfo objectForKey:@kDisplayProductName];
-	NSString *name = nil;
 	if ([localizedNames count] > 0)
+		modelName = [localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]];
+
+#elif __arm64__
+
+	CFMutableDictionaryRef matching = IOServiceMatching("IOMobileFramebuffer");
+
+	io_iterator_t it  = 0;
+	kern_return_t ret = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &it);
+	if (ret == noErr)
 	{
-		NSString *modelName = [localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]];
-		if ([modelName length] > 0)
+		while (io_object_t ioo = IOIteratorNext(it))
 		{
-			if (manufacturerName)
-				name = [NSString stringWithFormat:@"%@: %@", manufacturerName, modelName];
-			else
-				name = modelName;
+			NSDictionary *properties = nil;
+			kern_return_t ret        = IORegistryEntryCreateCFProperties(ioo, (CFMutableDictionaryRef *)&properties, NULL, 0);
+			if (ret == noErr)
+			{
+				uint32_t ioregSerialNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"SerialNumber"]).unsignedLongValue;
+				uint32_t ioregVendorNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"LegacyManufacturerID"]).unsignedLongValue;
+				uint32_t ioregModelNumber  = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductID"]).unsignedLongValue;
+				if (ioregSerialNumber == CGDisplaySerialNumber(displayID)
+					&& ioregVendorNumber == CGDisplayVendorNumber(displayID)
+					&& ioregModelNumber == CGDisplayModelNumber(displayID))
+				{
+					modelName        = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductName"] retain] autorelease];
+					manufacturerName = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ManufacturerID"] retain] autorelease];
+					transport        = [[properties[@"Transport"][@"Downstream"] retain] autorelease];
+					serialString     = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"AlphanumericSerialNumber"] retain] autorelease];
+					serialNumber     = ioregSerialNumber;
+					manufacturedWeek = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"WeekOfManufacture"]).unsignedIntValue;
+					manufacturedYear = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"YearOfManufacture"]).unsignedIntValue;
+				}
+			}
+			[properties release];
+			IOObjectRelease(ioo);
 		}
+		IOObjectRelease(it);
 	}
 
-	if (!name)
+#else
+#error "Unsupported CPU architecture"
+#endif
+
+
+	NSString *name = nil;
+	if (modelName.length > 0)
+	{
+		if (manufacturerName.length > 0)
+			name = [NSString stringWithFormat:@"%@: %@", manufacturerName, modelName];
+		else
+			name = modelName;
+	}
+
+	if (name.length == 0)
 	{
 		if (manufacturerName)
 			name = manufacturerName;
 		else
-			name = @"";
+		{
+			name = @"?";
+
+			// As a last resort, upgrade to an NSApplication-app and check whether `NSScreen` reports anything.
+			VuoApp_init(false);
+			for (NSScreen *nsscreen in [NSScreen screens])
+				if (nsscreen.deviceId == displayID)
+					name = [nsscreen.localizedName autorelease];
+		}
 	}
 
-	if (serialNumber && manufacturedYear)
-		return VuoText_make([[NSString stringWithFormat:@"%@ (%d, %d-W%02d)", name, serialNumber, manufacturedYear, manufacturedWeek] UTF8String]);
+
+	NSMutableArray *parentheticalComponents = [NSMutableArray new];
+
+	if (transport.length > 0)
+		[parentheticalComponents addObject:transport];
+
+	if (serialString.length > 0)
+		[parentheticalComponents addObject:serialString];
 	else if (serialNumber)
-		return VuoText_make([[NSString stringWithFormat:@"%@ (%d)", name, serialNumber] UTF8String]);
-	else if (manufacturedYear)
-		return VuoText_make([[NSString stringWithFormat:@"%@ (%d-W%02d)", name, manufacturedYear, manufacturedWeek] UTF8String]);
-	else
-		return VuoText_make([name UTF8String]);
+		[parentheticalComponents addObject:[NSString stringWithFormat:@"%d", serialNumber]];
+
+	if (manufacturedYear)
+		[parentheticalComponents addObject:[NSString stringWithFormat:@"%d-W%02d", manufacturedYear, manufacturedWeek]];
+
+
+	NSString *compositeName = name;
+	NSString *parenthetical = [parentheticalComponents componentsJoinedByString:@", "];
+	[parentheticalComponents release];
+	if (parenthetical.length > 0)
+		compositeName = [name stringByAppendingFormat:@" (%@)", parenthetical];
+
+	return VuoText_make([compositeName UTF8String]);
 }
 
 @implementation NSScreen (VuoAdditions)
@@ -279,7 +351,6 @@ void VuoScreen_reconfigurationCallback(CGDirectDisplayID display, CGDisplayChang
 	if (flags == kCGDisplayBeginConfigurationFlag)
 		return;
 
-	if (VuoIsDebugEnabled())
 	{
 		VUserLog("display %x, flags %x", display, flags);
 		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayBeginConfigurationFlag );

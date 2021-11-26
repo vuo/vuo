@@ -89,6 +89,23 @@ for filename in "${COMPOSITIONS[@]}"; do
 		exit 1
 	fi
 
+	# Add the `com.apple.security.get-task-allow` entitlement, to support Instruments > Leaks on macOS 11+.
+	if [[ $(sw_vers -productVersion) > 11 ]] ; then
+		COMPOSITION_ENTITLEMENTS="/tmp/${COMPOSITION_BASENAME}.entitlements"
+		cat <<EOF >"$COMPOSITION_ENTITLEMENTS"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.get-task-allow</key>
+	<true/>
+</dict>
+</plist>
+EOF
+		codesign -s - -f --entitlements "$COMPOSITION_ENTITLEMENTS" "$COMPOSITION_LINKED" \
+			2>&1 | fgrep -v 'replacing existing signature'
+	fi
+
 	pushd . > /dev/null
 	cd "$(dirname "$filename")"
 	if [ -z "$STOP_AFTER" ]; then

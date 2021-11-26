@@ -469,6 +469,9 @@ int main(int argc, char *argv[])
 	// https://bugreports.qt-project.org/browse/QTBUG-29197
 	qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1");
 
+	// https://bugreports.qt.io/browse/QTBUG-81370
+	qputenv("QT_MAC_WANTS_LAYER", "1");
+
 	VuoEditor app(argc, argv);
 	TestEditorCommands t;
 
