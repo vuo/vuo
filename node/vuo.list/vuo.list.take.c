@@ -37,12 +37,12 @@ void nodeEvent
 	*modifiedList = VuoListCopy_VuoGenericType1(list);
 	if (position == VuoListPosition_Beginning)
 	{
-		*removedItem = VuoListGetData_VuoGenericType1(*modifiedList)[0];
+		*removedItem = VuoListGetValue_VuoGenericType1(*modifiedList, 1);
 		VuoListRemoveFirstValue_VuoGenericType1(*modifiedList);
 	}
 	else
 	{
-		*removedItem = VuoListGetData_VuoGenericType1(*modifiedList)[VuoListGetCount_VuoGenericType1(*modifiedList) - 1];
+		*removedItem = VuoListGetValue_VuoGenericType1(*modifiedList, VuoListGetCount_VuoGenericType1(*modifiedList));
 		VuoListRemoveLastValue_VuoGenericType1(*modifiedList);
 	}
 }

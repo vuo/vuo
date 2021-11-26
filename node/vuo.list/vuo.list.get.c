@@ -26,8 +26,5 @@ void nodeEvent
 )
 {
 	unsigned long whichUnsigned = MAX(0, which);
-	
-	unsigned long listSize = VuoListGetCount_VuoGenericType1(list);
-	unsigned long index = VuoListIndexToCArrayIndex(whichUnsigned, listSize);
-	*item = VuoListGetData_VuoGenericType1(list)[index];
+	*item = VuoListGetValue_VuoGenericType1(list, whichUnsigned);
 }

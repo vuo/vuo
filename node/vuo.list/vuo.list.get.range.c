@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Item Ranges from List",
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices" ],
-					 "version" : "1.0.1",
+					 "version" : "1.0.2",
 					 "node": {
 						  "exampleCompositions" : [ "ReorderRangesOfItems.vuo" ]
 					 }
@@ -33,14 +33,32 @@ void nodeEvent
 		return;
 	}
 
-	*items = VuoListCreate_VuoGenericType1();
-
-	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
-	for(unsigned long i = 1; i <= rangeCount; ++i)
+	VuoIntegerRange *rangeData = VuoListGetData_VuoIntegerRange(ranges);
+	unsigned long outputItemCount = 0;
+	for (unsigned long i = 0; i < rangeCount; ++i)
 	{
-		VuoIntegerRange range = VuoIntegerRange_getOrderedRange(VuoListGetValue_VuoIntegerRange(ranges, i));
+		VuoIntegerRange range = VuoIntegerRange_getOrderedRange(rangeData[i]);
+		for (VuoInteger n = MAX(range.minimum, 1); n <= MIN(range.maximum, listCount); n++)
+			++outputItemCount;
+	}
+	if (outputItemCount == 0)
+	{
+		*items = NULL;
+		return;
+	}
 
-		for(VuoInteger n = MAX(range.minimum, 1); n <= MIN(range.maximum, listCount); n++)
-			VuoListAppendValue_VuoGenericType1(*items, listCopy[n-1]);
+	*items = VuoListCreateWithCount_VuoGenericType1(outputItemCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *itemsData = VuoListGetData_VuoGenericType1(*items);
+
+	VuoGenericType1 *listData = VuoListGetData_VuoGenericType1(list);
+	unsigned long m = 0;
+	for (unsigned long i = 0; i < rangeCount; ++i)
+	{
+		VuoIntegerRange range = VuoIntegerRange_getOrderedRange(rangeData[i]);
+		for (VuoInteger n = MAX(range.minimum, 1); n <= MIN(range.maximum, listCount); n++)
+		{
+			itemsData[m] = listData[VuoListIndexToCArrayIndex(n, listCount)];
+			VuoGenericType1_retain(itemsData[m++]);
+		}
 	}
 }

@@ -200,23 +200,6 @@ void VuoListDestroy_ELEMENT_TYPE(void *list)
 	delete l;
 }
 
-#ifndef VUOLISTINDEXTOCARRAYINDEX
-#define VUOLISTINDEXTOCARRAYINDEX
-
-static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount) __attribute__((const));
-static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount)
-{
-	if (index == 0)
-		return 0;
-
-	if (index > listCount)
-		return listCount - 1;
-
-	return index - 1;
-}
-
-#endif
-
 ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned long index)
 {
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
@@ -381,7 +364,7 @@ bool LIST_TYPE_areEqual(const LIST_TYPE _a, const LIST_TYPE _b)
 		return true;
 
 	if (!_a || !_b)
-		return _a == _b;
+		return false;
 
 	std::vector<ELEMENT_TYPE> *a = (std::vector<ELEMENT_TYPE> *)_a;
 	std::vector<ELEMENT_TYPE> *b = (std::vector<ELEMENT_TYPE> *)_b;

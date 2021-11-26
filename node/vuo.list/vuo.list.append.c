@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Append Lists",
 					 "keywords" : [ "push", "append", "prepend", "insert", "combine", "concatenate", "join", "together", "merge" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node" : {
 						  "exampleCompositions" : [ "SpliceSquares.vuo" ]
 					 }
@@ -25,15 +25,22 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) combinedList
 )
 {
-	*combinedList = VuoListCreate_VuoGenericType1();
-
 	unsigned long list1Count = VuoListGetCount_VuoGenericType1(list1);
-	VuoGenericType1* list1Copy = VuoListGetData_VuoGenericType1(list1);
-	for (unsigned long i = 1; i <= list1Count; ++i)
-		VuoListAppendValue_VuoGenericType1(*combinedList, list1Copy[i-1]);
-
 	unsigned long list2Count = VuoListGetCount_VuoGenericType1(list2);
-	VuoGenericType1* list2Copy = VuoListGetData_VuoGenericType1(list2);
-	for (unsigned long i = 1; i <= list2Count; ++i)
-		VuoListAppendValue_VuoGenericType1(*combinedList, list2Copy[i-1]);
+	*combinedList = VuoListCreateWithCount_VuoGenericType1(list1Count + list2Count, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *combinedListData = VuoListGetData_VuoGenericType1(*combinedList);
+
+	VuoGenericType1 *list1Data = VuoListGetData_VuoGenericType1(list1);
+	for (unsigned long i = 0; i < list1Count; ++i)
+	{
+		combinedListData[i] = list1Data[i];
+		VuoGenericType1_retain(combinedListData[i]);
+	}
+
+	VuoGenericType1 *list2Data = VuoListGetData_VuoGenericType1(list2);
+	for (unsigned long i = 0; i < list2Count; ++i)
+	{
+		combinedListData[list1Count + i] = list2Data[i];
+		VuoGenericType1_retain(combinedListData[list1Count + i]);
+	}
 }

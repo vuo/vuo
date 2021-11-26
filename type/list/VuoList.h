@@ -50,11 +50,25 @@ LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const E
  */
 LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list);
 
+#ifndef VUO_LIST_INDEX_TO_C_ARRAY_INDEX
+#define VUO_LIST_INDEX_TO_C_ARRAY_INDEX
 /**
- * Returns a c index
- * If the index is larger than the size of the list, size of the list minus 1 is used to get the index
+ * Converts a Vuo-style `[1..n]` list index into a C-style `[0..n-1]` list index.
+ *
+ * If the index is less than 1, or larger than the size of the list, the returned index is clamped.
  */
-static inline unsigned long VuoListIndexToCArrayIndex(unsigned long index, unsigned long listCount) __attribute__((const));
+static inline unsigned long VuoListIndexToCArrayIndex(long index, unsigned long listCount) __attribute__((const));
+static inline unsigned long VuoListIndexToCArrayIndex(long index, unsigned long listCount)
+{
+    if (index <= 0)
+        return 0;
+
+    if (index > listCount)
+        return listCount - 1;
+
+    return index - 1;
+}
+#endif
 
 /**
  * Returns the @ref ELEMENT_TYPE at @c index.

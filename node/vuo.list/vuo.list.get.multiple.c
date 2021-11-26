@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Items from List",
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index", "indices", "reorder", "rearrange", "shuffle", "combination" ],
-					 "version" : "1.0.1",
+					 "version" : "1.0.2",
 					 "node": {
 						  "exampleCompositions" : [ "SelectLayerFromList.vuo" ]
 					 }
@@ -25,23 +25,26 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) items
 )
 {
-	if (VuoListGetCount_VuoInteger(positions) == 0)
+	unsigned long positionCount = VuoListGetCount_VuoInteger(positions);
+	if (positionCount == 0)
 	{
 		*items = NULL;
 		return;
 	}
 
-	*items = VuoListCreate_VuoGenericType1();
-	
-	VuoGenericType1* listCopy = VuoListGetData_VuoGenericType1(list);
-	VuoInteger* positionsList = VuoListGetData_VuoInteger(positions);
-	unsigned long listSize = VuoListGetCount_VuoInteger(list);
-	for(int i = 1; i <= VuoListGetCount_VuoInteger(positions); i++)
-	{
-		VuoInteger index = positionsList[i - 1];
-		unsigned long indexUnsigned = MAX(0, index);
+	*items = VuoListCreateWithCount_VuoGenericType1(positionCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *itemsData = VuoListGetData_VuoGenericType1(*items);
 
-		unsigned long realIndex = VuoListIndexToCArrayIndex(indexUnsigned, listSize);
-		VuoListAppendValue_VuoGenericType1(*items, listCopy[realIndex]);
+	unsigned long listCount = VuoListGetCount_VuoGenericType1(list);
+	if (listCount == 0)
+		return;
+
+	VuoGenericType1 *listData = VuoListGetData_VuoGenericType1(list);
+
+	VuoInteger *positionsData = VuoListGetData_VuoInteger(positions);
+	for (int i = 0; i < positionCount; ++i)
+	{
+		itemsData[i] = listData[VuoListIndexToCArrayIndex(positionsData[i], listCount)];
+		VuoGenericType1_retain(itemsData[i]);
 	}
 }

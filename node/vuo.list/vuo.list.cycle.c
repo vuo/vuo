@@ -83,6 +83,6 @@ void nodeInstanceEvent
 	if (goToFirst)
 		**index = 0;
 
-	*item = VuoListGetData_VuoGenericType1(list)[**index - 1];
+	*item = VuoListGetValue_VuoGenericType1(list, **index);
 	*position = MAX(1, **index);
 }

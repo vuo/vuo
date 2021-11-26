@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Cycle through List",
 					 "keywords" : [ "step", "pick", "select", "choose", "count", "item", "element", "member", "index" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node": {
 						 "exampleCompositions": [ "CycleSeasons.vuo" ]
 					 }
@@ -40,49 +40,39 @@ void nodeInstanceEvent
 		VuoOutputData(VuoInteger) position
 )
 {
-	int len = VuoListGetCount_VuoGenericType1(list);
+	// Upon return from this function, the index is either a number between 1 and the list length
+	// (indicating the current position within the list) or 0 (indicating a "go to first" event,
+	// which puts us just before the first item in the list).
 
-	if(goForward)
+	if (goForward || goBackward)
 	{
-		(**index)++;
+		unsigned long len = VuoListGetCount_VuoGenericType1(list);
 
-		if(**index > len)
+		// Adjust the index in case the list size has decreased since the previous call.
+		if (**index > len)
+			**index = len;
+
+		if (goForward)
+			(**index)++;
+
+		if (goBackward && **index != 0)
+			(**index)--;
+
+		// Wrap after moving the index to ensure that it's still within the list.
+		switch (wrapMode)
 		{
-			switch(wrapMode)
-			{
-				case VuoWrapMode_Saturate:
-					**index = len;
-					break;
-
-				default:
-					**index = 1;
-					break;
-			}
-		}
-	}
-
-	if(goBackward)
-	{
-		(**index)--;
-
-		if(**index < 1)
-		{
-			switch(wrapMode)
-			{
-				case VuoWrapMode_Saturate:
-					**index = 1;
-					break;
-
-				default:
-					**index = len;
-					break;
-			}
+			case VuoWrapMode_Wrap:
+				**index = VuoInteger_wrap(**index, 1, len);
+				break;
+			case VuoWrapMode_Saturate:
+				**index = VuoInteger_clamp(**index, 1, len);
+				break;
 		}
 	}
 
 	if (goToFirst)
 		**index = 0;
 
-	*item = VuoListGetData_VuoGenericType1(list)[**index - 1];
-	*position = MAX(1, **index);
+	*item = VuoListGetValue_VuoGenericType1(list, **index);
+	*position = **index;
 }

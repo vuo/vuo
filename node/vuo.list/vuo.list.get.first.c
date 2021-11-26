@@ -24,5 +24,5 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) firstItem
 )
 {
-	*firstItem = VuoListGetData_VuoGenericType1(list)[0];
+	*firstItem = VuoListGetValue_VuoGenericType1(list, 1);
 }

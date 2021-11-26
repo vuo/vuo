@@ -80,7 +80,7 @@ void nodeInstanceEvent
 		VuoRetain((*context)->processedList);
 
 		(*context)->count = 1;
-		processItem(VuoListGetData_VuoGenericType1(fire)[(*context)->count - 1]);
+		processItem(VuoListGetValue_VuoGenericType1(fire, (*context)->count));
 	}
 
 	if (processedItemEvent && (*context)->processedList && (*context)->count <= (*context)->total)
@@ -89,7 +89,7 @@ void nodeInstanceEvent
 
 		++(*context)->count;
 		if ((*context)->count <=  (*context)->total)
-			processItem(VuoListGetData_VuoGenericType1((*context)->inputList)[(*context)->count - 1]);
+			processItem(VuoListGetValue_VuoGenericType1((*context)->inputList, (*context)->count));
 		else
 		{
 			processedList((*context)->processedList);
