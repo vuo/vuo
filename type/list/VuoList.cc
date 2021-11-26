@@ -364,7 +364,7 @@ bool LIST_TYPE_areEqual(const LIST_TYPE _a, const LIST_TYPE _b)
 		return true;
 
 	if (!_a || !_b)
-		return _a == _b;
+		return false;
 
 	std::vector<ELEMENT_TYPE> *a = (std::vector<ELEMENT_TYPE> *)_a;
 	std::vector<ELEMENT_TYPE> *b = (std::vector<ELEMENT_TYPE> *)_b;

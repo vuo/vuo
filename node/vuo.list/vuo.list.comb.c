@@ -16,7 +16,7 @@ VuoModuleMetadata({
 						 "element", "member", "index",
 						 "alternate", "alternating", "every other", "some", "nth"
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]
 					 }
@@ -30,21 +30,30 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) pickedItems
 )
 {
-	*pickedItems = VuoListCreate_VuoGenericType1();
+	if (pickCount < 1)
+	{
+		*pickedItems = NULL;
+		return;
+	}
 
 	unsigned long count = VuoListGetCount_VuoGenericType1(list);
-	if (!count)
+	if (count == 0)
+	{
+		*pickedItems = NULL;
 		return;
+	}
 
+	unsigned long skipCountClamped = MAX(0, skipCount);
 	unsigned long picked = 0;
 	unsigned long skipped = 0;
-	for (unsigned long i = 1; i <= count; ++i)
+	unsigned long pickedItemCount = 0;
+	for (unsigned long i = 0; i < count; ++i)
 	{
 		if (picked < pickCount)
 			++picked;
 		else
 		{
-			if (skipped < skipCount)
+			if (skipped < skipCountClamped)
 			{
 				++skipped;
 				continue;
@@ -56,7 +65,40 @@ void nodeEvent
 			}
 		}
 
-		VuoListAppendValue_VuoGenericType1(*pickedItems,
-			VuoListGetValue_VuoGenericType1(list, i));
+		++pickedItemCount;
+	}
+	if (pickedItemCount == 0)
+	{
+		*pickedItems = NULL;
+		return;
+	}
+
+	*pickedItems = VuoListCreateWithCount_VuoGenericType1(pickedItemCount, VuoGenericType1_makeFromJson(NULL));
+	VuoGenericType1 *pickedItemsData = VuoListGetData_VuoGenericType1(*pickedItems);
+
+	VuoGenericType1 *listData = VuoListGetData_VuoGenericType1(list);
+	picked = 0;
+	skipped = 0;
+	unsigned long m = 0;
+	for (unsigned long i = 0; i < count; ++i)
+	{
+		if (picked < pickCount)
+			++picked;
+		else
+		{
+			if (skipped < skipCountClamped)
+			{
+				++skipped;
+				continue;
+			}
+			else
+			{
+				skipped = 0;
+				picked = 1;
+			}
+		}
+
+		pickedItemsData[m] = listData[i];
+		VuoGenericType1_retain(pickedItemsData[m++]);
 	}
 }
