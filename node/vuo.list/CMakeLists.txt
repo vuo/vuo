@@ -29,6 +29,7 @@ VuoCompileGenericNodes(
 	vuo.list.spread.group.c
 	vuo.list.summarize.c
 	vuo.list.take.c
+	vuo.list.wrap.c
 )
 
 VuoNodeSet()
