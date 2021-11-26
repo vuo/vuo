@@ -1,6 +1,6 @@
 /**
  * @file
- * Sort by index implementation.
+ * vuo.point.split.VuoPoint2d node implementation.
  *
  * @copyright Copyright © 2012–2021 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -10,36 +10,34 @@
 #include "node.h"
 
 VuoModuleMetadata({
-                      "title" : "Split XY Lists",
-                      "keywords" : [ "sort", "indecies", "big", "high", "small", "most", ">", "<", "upper", "limit", "bound", "range" ],
-                      "version" : "1.0.0",
-                      "genericTypes" : {
-                          "VuoGenericType1" : {
-                              "defaultType" : "VuoReal",
-                              "compatibleTypes" : [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d", "VuoImage", "VuoLayer" ]
-                          }
-                      },
-                      "node": {
-                          "exampleCompositions" : ["SplitXYList.vuo"]
-                      }
-                  });
+	"title": "Split XY List",
+	"keywords": [
+		"divide", "separate", "disjoin", "part", "piece", "component", "coordinate", "channel",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions" : [ ]
+	}
+});
 
 void nodeEvent
 (
-        VuoInputData(VuoList_VuoPoint2d) points,
-        VuoOutputData(VuoList_VuoReal) x,
-        VuoOutputData(VuoList_VuoReal) y
+	VuoInputData(VuoList_VuoPoint2d) points,
+	VuoOutputData(VuoList_VuoReal) x,
+	VuoOutputData(VuoList_VuoReal) y
 )
-
 {
-    *x = VuoListCreate_VuoReal();
-    *y = VuoListCreate_VuoReal();
-    VuoInteger listSize = VuoListGetCount_VuoPoint2d(points);
+	unsigned long count = VuoListGetCount_VuoPoint2d(points);
+	*x = VuoListCreateWithCount_VuoReal(count, 0);
+	*y = VuoListCreateWithCount_VuoReal(count, 0);
 
-    for(int i = 1; i <= listSize; i++)
+	VuoReal *xArr = VuoListGetData_VuoReal(*x);
+	VuoReal *yArr = VuoListGetData_VuoReal(*y);
+	VuoPoint2d *pointsArr = VuoListGetData_VuoPoint2d(points);
+
+	for (unsigned long i = 0; i < count; ++i)
     {
-        VuoPoint2d point = VuoListGetData_VuoPoint2d(points)[i -1];
-        VuoListAppendValue_VuoReal(*x, point.x);
-        VuoListAppendValue_VuoReal(*y, point.y);
-    }
+		xArr[i] = pointsArr[i].x;
+		yArr[i] = pointsArr[i].y;
+	}
 }
