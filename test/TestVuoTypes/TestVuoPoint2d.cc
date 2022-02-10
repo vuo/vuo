@@ -2,7 +2,7 @@
  * @file
  * TestVuoPoint2d implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -82,7 +82,7 @@ private slots:
 		QFETCH(VuoPoint2d, value);
 		QFETCH(bool, testStringFromValue);
 
-		VuoPoint2d p = VuoPoint2d_makeFromString(initializer.toUtf8().constData());
+		VuoPoint2d p = VuoMakeRetainedFromString(initializer.toUtf8().constData(), VuoPoint2d);
 
 		QCOMPARE(p.x,value.x);
 		QCOMPARE(p.y,value.y);
@@ -96,8 +96,15 @@ private slots:
 		QTest::addColumn<VuoList_VuoPoint2d>("values");
 		QTest::addColumn<VuoPoint2d>("average");
 
-		QTest::newRow("empty list") << VuoListCreate_VuoPoint2d() << VuoPoint2d_make(0, 0);
-		QTest::newRow("multiple items") << VuoList_VuoPoint2d_makeFromString("[[-2, 20], [1, -10]]") << VuoPoint2d_make(-0.5, 5);
+		{
+			VuoList_VuoPoint2d values = VuoListCreate_VuoPoint2d();
+			QTest::newRow("empty list") << values << VuoPoint2d_make(0, 0);
+			VuoRetain(values);
+		}
+		{
+			VuoList_VuoPoint2d values = VuoMakeRetainedFromString("[[-2, 20], [1, -10]]", VuoList_VuoPoint2d);
+			QTest::newRow("multiple items") << values << VuoPoint2d_make(-0.5, 5);
+		}
 	}
 	void testAverage()
 	{
@@ -105,6 +112,7 @@ private slots:
 		QFETCH(VuoPoint2d, average);
 
 		QVERIFY(VuoPoint2d_areEqual(VuoPoint2d_average(values), average));
+		VuoRelease(values);
 	}
 };
 

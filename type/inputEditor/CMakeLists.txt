@@ -5,8 +5,9 @@ add_custom_target(VuoInputEditors)
 # Adds steps to build an input editor.
 function (VuoInputEditor)
 	cmake_parse_arguments(arg "" "NAME;SOURCE" "" ${ARGV})
+	string(REGEX REPLACE "\.(cc|mm)$" ".hh" header ${arg_SOURCE})
 
-	add_library(${arg_NAME} SHARED ${arg_SOURCE})
+	add_library(${arg_NAME} SHARED ${arg_SOURCE} ${header})
 	set_target_properties(${arg_NAME} PROPERTIES
 		AUTOMOC ON
 

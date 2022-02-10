@@ -2,7 +2,7 @@
  * @file
  * VuoBlendMode C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -64,7 +64,6 @@ char * VuoBlendMode_getSummary(const VuoBlendMode value);
 /**
  * Automatically generated function.
  */
-VuoBlendMode VuoBlendMode_makeFromString(const char *str);
 char * VuoBlendMode_getString(const VuoBlendMode value);
 void VuoBlendMode_retain(VuoBlendMode value);
 void VuoBlendMode_release(VuoBlendMode value);

@@ -60,7 +60,7 @@ return {
 			replaceTag(blocks, elem, 'tip', '<para role="vuo-tip">', '</para>')
 			replaceTag(blocks, elem, 'noteTextProgrammers', '<para role="vuo-note-text">', '</para>')
 			replaceTag(blocks, elem, 'menu', '<phrase role="vuo-menu">', '</phrase>', true)
-			replaceTag(blocks, elem, 'code', '<programlisting>', '</programlisting>')
+			replaceTag(blocks, elem, 'code', '<programlisting>', '</programlisting>', true)
 
 			if #blocks > 0 then
 				return blocks

@@ -2,7 +2,7 @@
  * @file
  * vuo.math.average.group node implementation
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -30,9 +30,9 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-	VuoInputData(VuoList_VuoGenericType1) list,
+	VuoInputData(VuoList_VuoGenericType1, {"name":"Values"}) list,
 	VuoInputData(VuoInteger, {"name":"Items per Group","default":1,"suggestedMin":1}) itemsPerGroup,
-	VuoOutputData(VuoList_VuoGenericType1) averageValues
+	VuoOutputData(VuoList_VuoGenericType1, {"name":"Averages"}) averageValues
 )
 {
 	unsigned long clampedItemsPerGroup = MAX(1, itemsPerGroup);

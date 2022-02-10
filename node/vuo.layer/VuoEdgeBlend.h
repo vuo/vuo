@@ -37,7 +37,6 @@ char * VuoEdgeBlend_getSummary(const VuoEdgeBlend value);
 /**
  * Automatically generated function.
  */
-VuoEdgeBlend VuoEdgeBlend_makeFromString(const char *str);
 char * VuoEdgeBlend_getString(const VuoEdgeBlend value);
 void VuoEdgeBlend_retain(VuoEdgeBlend value);
 void VuoEdgeBlend_release(VuoEdgeBlend value);

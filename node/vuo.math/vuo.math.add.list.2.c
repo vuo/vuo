@@ -2,7 +2,7 @@
  * @file
  * vuo.math.add.list.2 node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -26,9 +26,9 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) list1,
-		VuoInputData(VuoList_VuoGenericType1) list2,
-		VuoOutputData(VuoList_VuoGenericType1) summedList
+		VuoInputData(VuoList_VuoGenericType1, {"name":"Values 1"}) list1,
+		VuoInputData(VuoList_VuoGenericType1, {"name":"Values 2"}) list2,
+		VuoOutputData(VuoList_VuoGenericType1, {"name":"Sums"}) summedList
 )
 {
 	unsigned long list1Count = VuoListGetCount_VuoGenericType1(list1);

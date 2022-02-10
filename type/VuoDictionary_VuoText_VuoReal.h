@@ -2,7 +2,7 @@
  * @file
  * VuoDictionary_VuoText_VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,14 +46,14 @@ VuoDictionary_VuoText_VuoReal VuoDictionaryCreateWithLists_VuoText_VuoReal(const
 VuoReal VuoDictionaryGetValueForKey_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, VuoText key);
 void VuoDictionarySetKeyValue_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, VuoText key, VuoReal value);
 
+void VuoDictionary_VuoText_VuoReal_retain(VuoDictionary_VuoText_VuoReal value);
+void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value);
+
 /// @{
 /**
  * Automatically generated function.
  */
-VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_makeFromString(const char *str);
 char * VuoDictionary_VuoText_VuoReal_getString(const VuoDictionary_VuoText_VuoReal value);
-void VuoDictionary_VuoText_VuoReal_retain(VuoDictionary_VuoText_VuoReal value);
-void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value);
 /// @}
 
 #ifdef __cplusplus

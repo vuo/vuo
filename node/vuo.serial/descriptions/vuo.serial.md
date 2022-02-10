@@ -21,7 +21,7 @@ When receiving data from a serial device, the data may arrive as a series of sma
 If you're not sure whether Vuo is detecting your serial device:
 
    - Add a [Receive Serial Data](vuo-node://vuo.serial.receive) node to your composition. Double-click on its `Device` input port to bring up a menu of all connected serial devices. See if your device is in the list.
-   - Check the Console application for any messages about serial devices.
+   - Check Vuo's Console window (Tools > Show Console) for any messages about serial devices.
 
 If Vuo isn't detecting your device:
 

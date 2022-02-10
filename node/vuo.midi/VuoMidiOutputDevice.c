@@ -2,7 +2,7 @@
  * @file
  * VuoMidiOutputDevice implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -95,4 +95,22 @@ bool VuoMidiOutputDevice_areEqual(const VuoMidiOutputDevice value1, const VuoMid
 bool VuoMidiOutputDevice_isLessThan(const VuoMidiOutputDevice a, const VuoMidiOutputDevice b)
 {
 	return a.id < b.id;
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoMidiOutputDevice_retain(VuoMidiOutputDevice value)
+{
+	VuoRetain(value.name);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoMidiOutputDevice_release(VuoMidiOutputDevice value)
+{
+	VuoRelease(value.name);
 }

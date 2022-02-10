@@ -2,7 +2,7 @@
  * @file
  * VuoColorSample C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,6 @@ bool VuoColorSample_isLessThan(const VuoColorSample valueA, const VuoColorSample
  * Automatically generated function.
  */
 ///@{
-VuoColorSample VuoColorSample_makeFromString(const char *str);
 char *VuoColorSample_getString(const VuoColorSample value);
 void VuoColorSample_retain(VuoColorSample value);
 void VuoColorSample_release(VuoColorSample value);

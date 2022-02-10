@@ -2,7 +2,7 @@
  * @file
  * vuo.image.blur node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "gaussian", "linear", "ramp", "triangle", "box", "disc", "disk",
 						  "variable", "depth of field", "DOF",
 					  ],
-					  "version" : "1.4.1",
+					  "version" : "1.4.2",
 					  "dependencies" : [
 						  "VuoImageBlur"
 					  ],

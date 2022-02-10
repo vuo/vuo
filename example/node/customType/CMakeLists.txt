@@ -118,6 +118,10 @@ set(compiledTypeObject ${compiledObject})
 VuoCompileModule("${PROJECT_SOURCE_DIR}/VuoList_ExampleLanguage.cc" "bc" FALSE)
 set(compiledListType ${compiledModule})
 add_custom_target(type DEPENDS ${compiledType} ${compiledTypeObject} ${compiledListType})
+target_sources(type PRIVATE
+	ExampleLanguage.h
+	VuoList_ExampleLanguage.h
+)
 
 # Package the node class and port type into a node set.
 set(nodeset example.customtype.vuonode)
@@ -139,6 +143,7 @@ add_custom_target(nodeset ALL DEPENDS ${nodeset})
 # Build the input editor
 add_library(ExampleLanguageInputEditor SHARED
 	ExampleLanguageInputEditor.cc
+	ExampleLanguageInputEditor.hh
 	${compiledTypeObject}
 )
 set_target_properties(ExampleLanguageInputEditor PROPERTIES

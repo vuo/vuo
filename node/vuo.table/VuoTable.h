@@ -2,7 +2,7 @@
  * @file
  * VuoTable C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -80,7 +80,6 @@ void VuoTable_release(VuoTable value);
 /**
  * Automatically generated function.
  */
-VuoTable VuoTable_makeFromString(const char *str);
 char * VuoTable_getString(const VuoTable value);
 char * VuoTable_getInterprocessString(const VuoTable value);
 ///@}

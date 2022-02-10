@@ -2,7 +2,7 @@
  * @file
  * VuoLayer implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,7 @@ VuoModuleMetadata({
  */
 VuoLayer VuoLayer_makeEmpty(void)
 {
-    return (VuoLayer)VuoSceneObject_makeEmpty();
+	return (VuoLayer)VuoSceneObject_makeEmpty();
 }
 
 /**
@@ -433,7 +433,7 @@ uint64_t VuoLayer_getId(const VuoLayer layer)
  */
 void VuoLayer_setId(VuoLayer layer, uint64_t id)
 {
-    VuoSceneObject_setId((VuoSceneObject)layer, id);
+	VuoSceneObject_setId((VuoSceneObject)layer, id);
 }
 
 /**
@@ -576,7 +576,7 @@ VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewpor
 	VuoLayer parent = (VuoLayer)VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), parentTransform);
 
 	VuoSceneObject_setName((VuoSceneObject)parent, VuoSceneObject_getName((VuoSceneObject)child));
-	VuoSceneObject_setName((VuoSceneObject)child, VuoText_make(VuoText_format("%s (Child)", VuoSceneObject_getName((VuoSceneObject)parent))));
+	VuoSceneObject_setName((VuoSceneObject)child, VuoText_makeWithoutCopying(VuoText_format("%s (Child)", VuoSceneObject_getName((VuoSceneObject)parent))));
 
 	VuoListAppendValue_VuoSceneObject(VuoSceneObject_getChildObjects((VuoSceneObject)parent), (VuoSceneObject)child);
 
@@ -588,7 +588,7 @@ VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewpor
  */
 VuoRectangle VuoLayer_getBoundingRectangle(VuoLayer layer, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
 {
-    return VuoLayer_getBoundingRectangleWithSceneObject((VuoSceneObject)layer, viewportWidth, viewportHeight, backingScaleFactor);
+	return VuoLayer_getBoundingRectangleWithSceneObject((VuoSceneObject)layer, viewportWidth, viewportHeight, backingScaleFactor);
 }
 
 /**
@@ -596,7 +596,7 @@ VuoRectangle VuoLayer_getBoundingRectangle(VuoLayer layer, VuoInteger viewportWi
  */
 bool VuoLayer_isPopulated(VuoLayer layer)
 {
-    return VuoSceneObject_isPopulated((VuoSceneObject)layer);
+	return VuoSceneObject_isPopulated((VuoSceneObject)layer);
 }
 
 /**
@@ -605,7 +605,7 @@ bool VuoLayer_isPopulated(VuoLayer layer)
  */
 VuoLayer VuoLayer_makeFromJson(json_object * js)
 {
-    return (VuoLayer)VuoSceneObject_makeFromJson(js);
+	return (VuoLayer)VuoSceneObject_makeFromJson(js);
 }
 
 /**
@@ -614,7 +614,7 @@ VuoLayer VuoLayer_makeFromJson(json_object * js)
  */
 json_object * VuoLayer_getJson(const VuoLayer value)
 {
-    return VuoSceneObject_getJson((VuoSceneObject)value);
+	return VuoSceneObject_getJson((VuoSceneObject)value);
 }
 
 /**
@@ -623,5 +623,5 @@ json_object * VuoLayer_getJson(const VuoLayer value)
  */
 char * VuoLayer_getSummary(const VuoLayer value)
 {
-    return VuoSceneObject_getSummary((VuoSceneObject)value);
+	return VuoSceneObject_getSummary((VuoSceneObject)value);
 }

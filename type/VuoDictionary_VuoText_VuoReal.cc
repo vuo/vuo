@@ -2,7 +2,7 @@
  * @file
  * VuoDictionary_VuoText_VuoReal implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -158,4 +158,24 @@ void VuoDictionarySetKeyValue_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, V
 {
 	VuoListAppendValue_VuoText(d.keys, key);
 	VuoListAppendValue_VuoReal(d.values, value);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoDictionary_VuoText_VuoReal_retain(VuoDictionary_VuoText_VuoReal value)
+{
+	VuoRetain(value.keys);
+	VuoRetain(value.values);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value)
+{
+	VuoRelease(value.keys);
+	VuoRelease(value.values);
 }

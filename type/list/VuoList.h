@@ -2,7 +2,7 @@
  * @file
  * LIST_TYPE C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -44,6 +44,15 @@ LIST_TYPE VuoListCreate_ELEMENT_TYPE(void);
  * Use this in conjunction with @ref VuoListGetData_ELEMENT_TYPE to quickly initialize a large list.
  */
 LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const ELEMENT_TYPE value);
+
+/**
+ * Creates a new list containing the items in the C array `values`.
+ *
+ * The list retains each item in `values`.
+ *
+ * The caller may discard `values` after this function returns.
+ */
+LIST_TYPE VuoListCreateWithValueArray_ELEMENT_TYPE(const ELEMENT_TYPE *values, const unsigned long valueCount);
 
 /**
  * Makes a shallow copy of `list` — its items are retained (not copied) by the new list.
@@ -247,11 +256,20 @@ struct json_object * LIST_TYPE_getInterprocessJson(const LIST_TYPE value);
  */
 char * LIST_TYPE_getSummary(const LIST_TYPE value);
 
+/**
+ * Retains the list. This function is provided for use in polymorphism; it just calls `VuoRetain()`.
+ */
+void LIST_TYPE_retain(LIST_TYPE value);
+
+/**
+ * Releases the list. This function is provided for use in polymorphism; it just calls `VuoRelease()`.
+ */
+void LIST_TYPE_release(LIST_TYPE value);
+
 /// @{
 /**
  * Automatically generated function.
  */
-LIST_TYPE LIST_TYPE_makeFromString(const char *str);
 char * LIST_TYPE_getString(const LIST_TYPE value);
 /// @}
 

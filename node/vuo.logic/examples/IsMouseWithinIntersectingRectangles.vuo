@@ -4,7 +4,7 @@
  * Checks if the mouse cursor is within each of two rectangles, and uses logic operations to determine if it's in neither, both, at least one, and/or exactly one.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

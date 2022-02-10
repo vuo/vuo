@@ -2,7 +2,7 @@
  * @file
  * TestVuoReal implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -56,7 +56,7 @@ private slots:
 		QFETCH(VuoReal, value);
 		QFETCH(bool, testSummary);
 
-		VuoReal t = VuoReal_makeFromString(initializer.toUtf8().constData());
+		VuoReal t = VuoMakeRetainedFromString(initializer.toUtf8().constData(), VuoReal);
 		QCOMPARE(t, value);
 
 		if (testSummary)
@@ -95,8 +95,15 @@ private slots:
 		QTest::addColumn<VuoList_VuoReal>("values");
 		QTest::addColumn<VuoReal>("average");
 
-		QTest::newRow("empty list") << VuoListCreate_VuoReal() << (VuoReal)0;
-		QTest::newRow("multiple items") << VuoList_VuoReal_makeFromString("[1, -2, 3.4]") << (VuoReal)0.8;
+		{
+			VuoList_VuoReal values = VuoListCreate_VuoReal();
+			QTest::newRow("empty list") << values << (VuoReal)0;
+			VuoRetain(values);
+		}
+		{
+			VuoList_VuoReal values = VuoMakeRetainedFromString("[1, -2, 3.4]", VuoList_VuoReal);
+			QTest::newRow("multiple items") << values << (VuoReal)0.8;
+		}
 	}
 	void testAverage()
 	{
@@ -104,7 +111,7 @@ private slots:
 		QFETCH(VuoReal, average);
 
 		QCOMPARE(VuoReal_average(values), average);
-		VuoLocal(values);
+		VuoRelease(values);
 	}
 
 	void testRandom_data()

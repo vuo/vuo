@@ -2,7 +2,7 @@
  * @file
  * vuo.kinect.receive node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -92,7 +92,7 @@ static void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *pixels, 
 	int bpp = mode.video_format == FREENECT_VIDEO_RGB ? 3 : 1;
 	unsigned int stride = mode.width * bpp;
 	unsigned int size = stride * sizeof(uint8_t);
-	void *pixelsOut = malloc(size*lines);
+	unsigned char *pixelsOut = malloc(size*lines);
 	for (int i = 0; i < lines; ++i)
 		memcpy(pixelsOut + stride * (lines - i - 1), pixels + stride * i, size);
 
@@ -125,7 +125,7 @@ static void vuo_kinect_receive_worker(void *ctx)
 			{
 				int deviceNumber = 0;
 				// freenect_open_device_by_camera_serial() may also be useful
-				int ret = freenect_open_device(context->freenectContext, &context->freenectDevice, deviceNumber);
+				ret = freenect_open_device(context->freenectContext, &context->freenectDevice, deviceNumber);
 				if (ret == 0)
 					haveKinect = true;
 				else
@@ -156,7 +156,7 @@ static void vuo_kinect_receive_worker(void *ctx)
 			timeout.tv_usec = USEC_PER_SEC/10;
 			while (!context->cancelRequested)
 			{
-				int ret = freenect_process_events_timeout(context->freenectContext, &timeout);
+				ret = freenect_process_events_timeout(context->freenectContext, &timeout);
 				if (ret < 0 && ret != -10)
 				{
 					VUserLog("freenect_process_events_timeout() failed, returned %d", ret);

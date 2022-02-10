@@ -2,7 +2,7 @@
  * @file
  * VuoUiTheme C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -157,7 +157,6 @@ bool VuoUiTheme_isLessThan(const VuoUiTheme valueA, const VuoUiTheme valueB);
  * Automatically generated function.
  */
 ///@{
-VuoUiTheme VuoUiTheme_makeFromString(const char *str);
 char *VuoUiTheme_getString(const VuoUiTheme value);
 void VuoUiTheme_retain(VuoUiTheme value);
 void VuoUiTheme_release(VuoUiTheme value);

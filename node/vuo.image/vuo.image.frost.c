@@ -2,7 +2,7 @@
  * @file
  * vuo.image.frost node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						  "perlin", "simplex", "gradient",
 						  "blur", "bend", "tint", "refraction", "diffraction",
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "dependencies" : [
 						  "VuoImageRenderer"
 					  ],

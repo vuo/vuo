@@ -2,7 +2,7 @@
  * @file
  * vuo.image.color.combine.rgb node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Combine Image RGB Channels",
-					  "keywords" : [ "sum", "add", "colors", "filter", "alpha" ],
+					  "keywords" : [ "sum", "add", "colors", "filter", "alpha", "rgba", ],
 					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ "SeparateRedGreenBlue.vuo", "EnhanceBlue.vuo" ]

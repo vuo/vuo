@@ -42,6 +42,50 @@ VuoCompileLibraries(
 	csgjs.cc
 	libmodule.c
 )
+target_sources(vuo.core.libraries PRIVATE
+	VuoBase64.h
+	VuoCglPixelFormat.h
+	VuoDisplayRefresh.h
+	VuoGraphicsLayer.h
+	VuoGraphicsView.h
+	VuoGraphicsWindow.h
+	VuoGraphicsWindowDelegate.h
+	VuoGraphicsWindowDrag.h
+	VuoImageAverage.h
+	VuoImageBlend.h
+	VuoImageBlur.h
+	VuoImageConvolve.h
+	VuoImageDilate.h
+	VuoImageGet.h
+	VuoImageRenderer.h
+	VuoImageResize.h
+	VuoImageText.h
+	VuoIoReturn.h
+	VuoMathExpressionParser.h
+	VuoMeshParametric.h
+	VuoMeshUtility.h
+	VuoMouseUtility.h
+	VuoOsStatus.h
+	VuoPnpId.h
+	VuoPointsParametric.h
+	VuoPool.hh
+	VuoSceneObjectGet.h
+	VuoSceneObjectRenderer.h
+	VuoSceneRenderer.h
+	VuoSceneText.h
+	VuoScreenCapture.h
+	VuoScreenCommon.h
+	VuoSerializable.hh
+	VuoSmooth.h
+	VuoSort.h
+	VuoTextHtml.h
+	VuoTriggerSet.hh
+	VuoUrlFetch.h
+	VuoUrlParser.h
+	VuoWindow.h
+	VuoWindowRecorder.h
+	VuoWindowTextInternal.h
+)
 target_include_directories(vuo.core.libraries
 	PRIVATE
 		${CONAN_INCLUDE_DIRS_CURL}
@@ -74,6 +118,7 @@ target_link_libraries(vuo.core.libraries
 
 add_library(VuoHeap SHARED
 	VuoHeap.cc
+	VuoHeap.h
 )
 set_target_properties(VuoHeap PROPERTIES
 	BUILD_WITH_INSTALL_NAME_DIR TRUE
@@ -129,11 +174,16 @@ add_custom_command(
 # This is a dylib so that each process (with one or more running compositions)
 # only has once instance of VuoCompositionState::compositionStateKey.
 add_library(VuoApp SHARED
+	VuoApp.h
 	VuoApp.m
+	VuoAppAboutBox.h
 	VuoAppAboutBox.m
+	VuoAppDelegate.h
 	VuoAppDelegate.m
 	VuoAppMenu.m
+	VuoAppSplashView.h
 	VuoAppSplashView.m
+	VuoAppSplashWindow.h
 	VuoAppSplashWindow.m
 	vuo-wordmark-teal-cropped.h
 )
@@ -173,6 +223,7 @@ target_link_libraries(VuoApp
 
 add_library(VuoGlContext SHARED
 	VuoGlContext.cc
+	VuoGlContext.h
 )
 set_target_properties(VuoGlContext PROPERTIES
 	BUILD_WITH_INSTALL_NAME_DIR TRUE
@@ -226,6 +277,7 @@ VuoPCH(VuoGlContext)
 
 add_library(VuoGlPool SHARED
 	VuoGlPool.cc
+	VuoGlPool.h
 )
 set_target_properties(VuoGlPool PROPERTIES
 	BUILD_WITH_INSTALL_NAME_DIR TRUE
@@ -251,3 +303,7 @@ target_link_libraries(VuoGlPool
 		VuoGlContext
 )
 VuoPCH(VuoGlPool)
+
+if (VuoPro)
+	include(pro/pro.cmake)
+endif()

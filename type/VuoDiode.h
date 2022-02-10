@@ -2,7 +2,7 @@
  * @file
  * VuoDiode C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoDiode_isLessThan(const VuoDiode valueA, const VuoDiode valueB);
  * Automatically generated function.
  */
 ///@{
-VuoDiode VuoDiode_makeFromString(const char *str);
 char *VuoDiode_getString(const VuoDiode value);
 void VuoDiode_retain(VuoDiode value);
 void VuoDiode_release(VuoDiode value);

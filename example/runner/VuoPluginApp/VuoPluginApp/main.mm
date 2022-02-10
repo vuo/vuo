@@ -3,7 +3,7 @@
  * main.m
  * VuoPluginApp
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -50,6 +50,9 @@ int main(int argc, const char * argv[])
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 		[VuoRunnerCocoa prepareForFastBuild];
+
+		NSURL *defaultComposition = [NSBundle.mainBundle URLForResource:@"VuoPlugin" withExtension:@"vuo"];
+		[NSDocumentController.sharedDocumentController openDocumentWithContentsOfURL:defaultComposition display:YES completionHandler:^(NSDocument *, BOOL, NSError *){}];
 	});
 
 	return NSApplicationMain(argc, argv);

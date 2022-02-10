@@ -2,7 +2,7 @@
  * @file
  * VuoTimeFormat C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -54,7 +54,6 @@ bool VuoTimeFormat_isLessThan(const VuoTimeFormat valueA, const VuoTimeFormat va
  * Automatically generated function.
  */
 ///@{
-VuoTimeFormat VuoTimeFormat_makeFromString(const char *str);
 char *VuoTimeFormat_getString(const VuoTimeFormat value);
 void VuoTimeFormat_retain(VuoTimeFormat value);
 void VuoTimeFormat_release(VuoTimeFormat value);

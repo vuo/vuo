@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -160,7 +160,9 @@ public:
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, int elementCount);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, Value *elementCountValue);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, size_t bytes);
+	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, VuoCompilerType *type);
 	static void generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, size_t bytes);
+	static void generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, VuoCompilerType *type);
 	static Value * generateTypeCast(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static void generateAnnotation(Module *module, BasicBlock *block, Value *value, string annotation, string fileName, unsigned int lineNumber, VuoCompilerConstantsCache *constantsCache);
 	static void generateModuleMetadata(Module *module, string metadata, string moduleKey);
@@ -168,7 +170,6 @@ public:
 	static void generateRetainCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateReleaseCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateRetainOrReleaseCall(Module *module, BasicBlock *block, Value *argument, bool isRetain);
-	static bool isRetainOrReleaseNeeded(Type *type);
 	static void generateFreeCall(Module *module, BasicBlock *block, Value *argument);
 	static void generateJsonObjectPut(Module *module, BasicBlock *block, Value *jsonObjectValue);
 	static void generateNullCheck(Module *module, Function *function, Value *valueToCheck, BasicBlock *initialBlock, BasicBlock *&nullBlock, BasicBlock *&notNullBlock);

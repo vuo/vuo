@@ -1,9 +1,15 @@
 VuoCompileLibraries(
 	VuoKeyboard.m
 )
+target_sources(vuo.keyboard.libraries PRIVATE
+	VuoKeyboard.h
+)
 
 VuoCompileTypes(
 	VuoKey.c
+)
+target_sources(vuo.keyboard.types PRIVATE
+	VuoKey.h
 )
 target_link_libraries(vuo.keyboard.types
 	PUBLIC

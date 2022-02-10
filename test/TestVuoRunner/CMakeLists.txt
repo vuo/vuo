@@ -1,6 +1,7 @@
 VuoTest(NAME TestVuoRunner
 	SOURCE TestVuoRunner.cc
 )
+target_sources(TestVuoRunner PRIVATE composition.h)
 target_link_libraries(TestVuoRunner
 	PUBLIC
 	"-framework OpenGL"

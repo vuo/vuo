@@ -2,7 +2,7 @@
  * @file
  * Expected outputs for the vuo.app.shell node.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -20,7 +20,8 @@
 	"applescript":    {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -e 'log \"hi\"'"  }, "outputPortValues":{"output":"hi\n",    "status":0}},
 	// On OS X 10.10, this outputs "hi\n\n" — which is OK, but there's no convenient way to ignore that variance.
 	// "javascript":     {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -l JavaScript -e 'console.log(\"hi\")'"}, "outputPortValues":{"output":"hi\n","status":0}},
-	"php":            {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/php -r 'echo \"hi\";'"      }, "outputPortValues":{"output":"hi",      "status":0}},
+	// On macOS 12, /usr/bin/php no longer exists.
+	// "php":            {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/php -r 'echo \"hi\";'"      }, "outputPortValues":{"output":"hi",      "status":0}},
 	"python":         {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/python -c 'print \"hi\"'"   }, "outputPortValues":{"output":"hi\n",    "status":0}},
 	"ruby":           {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/ruby -e 'print \"hi\"'"     }, "outputPortValues":{"output":"hi",      "status":0}},
 	"perl":           {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/perl -e 'print \"hi\"'"     }, "outputPortValues":{"output":"hi",      "status":0}},

@@ -2,7 +2,7 @@
  * @file
  * TestTypes implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -116,7 +116,7 @@ private slots:
 		BasicBlock *block = BasicBlock::Create(*VuoCompiler::globalLLVMContext, "", function, nullptr);
 
 		Value *emptyString = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, "");
-		Value *value = type->generateValueFromStringFunctionCall(module, block, emptyString);  // tests llvmReturnType
+		Value *value = type->generateRetainedValueFromString(module, block, emptyString);  // tests llvmReturnType
 
 		Value *pointerToValue = VuoCompilerCodeGenUtilities::generatePointerToValue(block, value);
 		vector<Value *> args = type->convertPortDataToArgs(module, block, pointerToValue, type->getSummaryFunction->getFunctionType(), 0, false);  // tests llvmArgumentType
@@ -124,8 +124,8 @@ private slots:
 
 		size_t argsTotalSize = 0;
 		for (Value *arg : args)
-			argsTotalSize += module->getDataLayout().getTypeStoreSize(arg->getType());
-		QVERIFY2(argsTotalSize <= type->getSize(module), qPrintable(QString("%1 should be <= %2").arg(argsTotalSize).arg(type->getSize(module))));
+			argsTotalSize += module->getDataLayout().getTypeAllocSize(arg->getType());
+		QVERIFY2(argsTotalSize <= type->getAllocationSize(module), qPrintable(QString("%1 should be <= %2").arg(argsTotalSize).arg(type->getAllocationSize(module))));
 
 		CallInst::Create(type->getSummaryFunction, args, "", block);
 

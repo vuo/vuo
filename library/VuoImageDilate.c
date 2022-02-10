@@ -28,7 +28,7 @@ VuoModuleMetadata({
  */
 typedef struct
 {
-    VuoShader shader[2][4];  // [func][shape]
+	VuoShader shader[2][4];  // [func][shape]
 } VuoImageDilate_internal;
 
 /**
@@ -40,6 +40,7 @@ void VuoImageDilate_free(void *blur)
 	for (int func = 0; func <= 1; ++func)
 		for (int shape = VuoBlurShape_Box; shape <= VuoBlurShape_Disc; ++shape)
 			VuoRelease(bi->shader[func][shape]);
+	free(bi);
 }
 
 /**

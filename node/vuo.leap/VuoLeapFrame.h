@@ -2,7 +2,7 @@
  * @file
  * VuoLeapFrame C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -52,7 +52,6 @@ VuoLeapFrame VuoLeapFrame_make(VuoInteger id, VuoList_VuoLeapHand hands, VuoList
 /**
  * Automatically generated function.
  */
-VuoLeapFrame VuoLeapFrame_makeFromString(const char * initializer);
 char * VuoLeapFrame_getString(const VuoLeapFrame value);
 void VuoLeapFrame_retain(VuoLeapFrame value);
 void VuoLeapFrame_release(VuoLeapFrame value);

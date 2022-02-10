@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerModule interface and implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -164,7 +164,7 @@ private slots:
 		QTest::newRow("no restrictions") << "vuo.event.fireOnStart" << "any system that Vuo supports";
 		QTest::newRow("node class is restricted") << "vuo.image.make.web" << "macOS 10.13 and above";
 		QTest::newRow("library is restricted") << "VuoLeap" << "macOS on an Intel (X86-64) CPU";
-		QTest::newRow("dependency of node class is restricted") << "vuo.leap.receive" << "any system that Vuo supports";  // VuoCompilerModule::getCompatibleTargets() only checks the compatibility of the module itself, not its dependencies.
+		QTest::newRow("dependency of node class is restricted") << "vuo.ndi.receive" << "any system that Vuo supports";  // VuoCompilerModule::getCompatibleTargets() only checks the compatibility of the module itself, not its dependencies.
 	}
 	void testCompatibleTargets()
 	{

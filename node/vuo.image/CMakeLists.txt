@@ -5,6 +5,9 @@ target_link_libraries(vuo.image.libraries
 	PRIVATE
 		CONAN_PKG::zxing
 )
+target_sources(vuo.image.libraries PRIVATE
+	VuoBarcode.h
+)
 
 VuoCompileTypes(
 	VuoBlurShape.c
@@ -18,6 +21,19 @@ VuoCompileTypes(
 	VuoSizingMode.c
 	VuoThresholdType.c
 	VuoVerticalReflection.c
+)
+target_sources(vuo.image.types PRIVATE
+	VuoBlurShape.h
+	VuoColorSample.h
+	VuoFace.h
+	VuoHorizontalReflection.h
+	VuoImageFormat.h
+	VuoImageNoise.h
+	VuoImageStereoType.h
+	VuoPixelShape.h
+	VuoSizingMode.h
+	VuoThresholdType.h
+	VuoVerticalReflection.h
 )
 
 VuoCompileNodes(

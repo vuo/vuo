@@ -41,6 +41,9 @@ foreach (type ${types})
 	add_dependencies(Test${type} VuoEditorApp)
 endforeach()
 
+add_custom_target(TestVuoTypes)
+target_sources(TestVuoTypes PRIVATE TestVuoTypes.h)
+
 target_link_libraries(TestVuoColor
 	PRIVATE
 		"-framework AppKit"

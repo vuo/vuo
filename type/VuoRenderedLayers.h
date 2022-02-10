@@ -2,7 +2,7 @@
  * @file
  * VuoRenderedLayers C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -81,7 +81,7 @@ bool VuoRenderedLayers_getInverseTransformedPointLayer( VuoRenderedLayers render
 														VuoPoint2d point,
 														VuoPoint2d* localPoint) VuoWarnUnusedResult;
 
-bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, VuoRectangle *rect) VuoWarnUnusedResult;
+bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, bool includeChildrenInBounds, VuoRectangle *rect) VuoWarnUnusedResult;
 
 VuoPoint2d VuoRenderedLayers_getTextSize(VuoRenderedLayers renderedLayers, VuoText text, VuoFont font, bool scaleWithScene, float verticalScale, float rotationZ, float wrapWidth, bool includeTrailingWhiteSpace);
 
@@ -107,7 +107,6 @@ char * VuoRenderedLayers_getSummary(const VuoRenderedLayers value);
 /**
  * Automatically generated function.
  */
-VuoRenderedLayers VuoRenderedLayers_makeFromString(const char *str);
 char * VuoRenderedLayers_getString(const VuoRenderedLayers value);
 void VuoRenderedLayers_retain(VuoRenderedLayers value);
 void VuoRenderedLayers_release(VuoRenderedLayers value);

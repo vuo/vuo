@@ -2,7 +2,7 @@
  * @file
  * VuoImageRenderer implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -78,7 +78,10 @@ static const GLfloat unityMatrix[16] = {
 	0,0,0,1
 };
 
-static void VuoImageRenderer_fini(void);
+/**
+ * True if `VuoImageRenderer_init()` has initialized graphics data.
+ */
+static bool VuoImageRenderer_initialized = false;
 
 /**
  * Initializes global state for rendering a @ref VuoImage.
@@ -87,6 +90,8 @@ static void VuoImageRenderer_init(void)
 {
 	static dispatch_once_t once = 0;
 	dispatch_once(&once, ^{
+		VuoImageRenderer_initialized = true;
+
 		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 			glGenVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
 			glBindVertexArray(VuoImageRendererGlobal.vertexArray);
@@ -102,8 +107,6 @@ static void VuoImageRenderer_init(void)
 
 			glGenFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);
 		});
-
-		VuoAddCompositionFiniCallback(VuoImageRenderer_fini);
 	});
 }
 
@@ -311,14 +314,20 @@ unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int 
  *
  * @threadAny
  */
-static void VuoImageRenderer_fini(void)
+extern "C" void VuoImageRenderer_fini(void)
 {
-	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	if (! VuoImageRenderer_initialized)
+		return;
 
-		VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(quadData), VuoImageRendererGlobal.quadDataBuffer);
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		glDeleteVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
-		glDeleteFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);
+			VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(quadData), VuoImageRendererGlobal.quadDataBuffer);
+
+			glDeleteVertexArrays(1, &VuoImageRendererGlobal.vertexArray);
+			glDeleteFramebuffers(1, &VuoImageRendererGlobal.outputFramebuffer);
+		});
 	});
 }

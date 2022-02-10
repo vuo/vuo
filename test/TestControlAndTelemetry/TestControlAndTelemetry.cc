@@ -2,7 +2,7 @@
  * @file
  * TestControlAndTelemetry interface and implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -2383,43 +2383,6 @@ private slots:
 				QVERIFY(portIter->second == true);
 			}
 		}
-	}
-
-	void testPreservingFiniCallbacks()
-	{
-		const char *createdFile = "/tmp/vuo.test.finiCallbackCreatesFile";
-		remove(createdFile);
-
-		string compositionPath = getCompositionPath("FiniCallbackCreatesFile.vuo");
-
-		string bcPath;
-		string dylibPath;
-
-		VuoCompilerComposition *composition = NULL;
-		VuoRunner *runner = NULL;
-		std::shared_ptr<VuoRunningCompositionLibraries> runningCompositionLibraries(nullptr);
-
-		// Build and run the composition.
-		{
-			runner = createRunnerForLiveCoding(compositionPath, composition, runningCompositionLibraries);
-			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
-			runner->start();
-		}
-
-		// Replace the composition with itself.
-		{
-			replaceCompositionForLiveCoding(compositionPath, composition, runningCompositionLibraries.get(),
-											composition->getGraphvizDeclaration(), nullptr, runner);
-		}
-
-		QVERIFY(! VuoFileUtilities::fileExists(createdFile));
-
-		runner->stop();
-
-		delete runner;
-		delete composition;
-
-		QVERIFY(VuoFileUtilities::fileExists(createdFile));
 	}
 
 	void testAddingResourcesToRunningComposition()

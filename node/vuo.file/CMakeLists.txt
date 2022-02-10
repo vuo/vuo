@@ -1,6 +1,9 @@
 VuoCompileTypes(
 	VuoFileType.c
 )
+target_sources(vuo.file.types PRIVATE
+	VuoFileType.h
+)
 
 VuoCompileNodes(
 	vuo.file.create.folder.c

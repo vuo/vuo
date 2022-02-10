@@ -4,4 +4,4 @@ Makes a new folder.
 
 If the URL contains a series of folders that don't already exist, then all of the folders will be created. For example, if the URL is "a/b/c" and folders "b" and "c" don't already exist, they will both be created.
 
-If the folder doesn't already exist and can't be created, an error message is logged to Console.
+If the folder doesn't already exist and can't be created, an error message is logged to Vuo's Console window (Tools > Show Console).

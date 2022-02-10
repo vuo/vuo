@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTriggerPort implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -56,9 +56,8 @@ void VuoCompilerTriggerPort::generateScheduleWorker(Module *module, Function *fu
 	{
 		// Create a copy of the data on the heap.
 		Value *dataPointer = dataType->getCompiler()->convertArgsToPortData(module, block, function, 0);
-		size_t byteCount = dataType->getCompiler()->getSize(module);
-		dataCopyAsVoidPointer = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, byteCount);
-		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, dataPointer, dataCopyAsVoidPointer, byteCount);
+		dataCopyAsVoidPointer = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dataType->getCompiler());
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, dataPointer, dataCopyAsVoidPointer, dataType->getCompiler());
 
 		dataType->getCompiler()->generateRetainCall(module, block, dataCopyAsVoidPointer);
 	}

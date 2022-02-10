@@ -29,4 +29,4 @@ For example, if the tree was created from the following XML…
    - `/bookstore/book/@sku` — Two trees, one with name `book` and attribute `sku="P456"` and one with name `book` and attribute `sku="N123"`. Neither tree has content or children.
    - `/bookstore/book/@*` — Two trees, one with name `book` and attributes `isbn="0140448063" sku="P456"` and one with name `book` and attributes `isbn="0765627345" sku="N123"`. Neither tree has content or children.
 
-If there's an error in the XPath expression, this node outputs an empty list. Check Console.app for details about the error.
+If there's an error in the XPath expression, this node outputs an empty list. Check Vuo's Console window (Tools > Show Console) for details about the error.

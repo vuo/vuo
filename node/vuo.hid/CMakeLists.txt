@@ -4,6 +4,10 @@ VuoCompileLibraries(
 	VuoHidUsage.c
 	VuoUsbVendor.c
 )
+target_sources(vuo.hid.libraries PRIVATE
+	VuoHid.h
+	VuoUsbVendor.h
+)
 target_link_libraries(vuo.hid.libraries
 	PUBLIC
 	"-framework IOKit"
@@ -14,6 +18,10 @@ target_link_libraries(vuo.hid.libraries
 VuoCompileTypes(
 	VuoHidControl.c
 	VuoHidDevice.c
+)
+target_sources(vuo.hid.types PRIVATE
+	VuoHidControl.h
+	VuoHidDevice.h
 )
 target_link_libraries(vuo.hid.types
 	PUBLIC

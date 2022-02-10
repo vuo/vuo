@@ -91,20 +91,28 @@ function runCPPCheck
 		-I licensetools \
 		-I node \
 		-I node/vuo.artnet \
+		-I node/vuo.artnet/pro \
 		-I node/vuo.audio \
 		-I node/vuo.bcf2000 \
 		-I node/vuo.blackmagic \
+		-I node/vuo.blackmagic/pro \
 		-I node/vuo.data \
 		-I node/vuo.file \
+		-I node/vuo.hid \
 		-I node/vuo.image \
+		-I node/vuo.keyboard \
 		-I node/vuo.layer \
 		-I node/vuo.leap/Leap \
 		-I node/vuo.math \
 		-I node/vuo.midi \
 		-I node/vuo.mouse \
 		-I node/vuo.ndi \
+		-I node/vuo.ndi/pro \
 		-I node/vuo.noise \
+		-I node/vuo.osc \
 		-I node/vuo.scene \
+		-I node/vuo.serial \
+		-I node/vuo.syphon \
 		-I node/vuo.time \
 		-I node/vuo.video \
 		-I renderer \
@@ -116,10 +124,23 @@ function runCPPCheck
 		-D VUO_PRO \
 		-D VuoColorspace_getICC_VuoGenericType1=VuoColorspace_getICC_VuoInteger \
 		-D VuoGenericType1=VuoInteger \
+		-D VuoGenericType1_getJson=VuoInteger_getJson \
+		-D VuoGenericType1_getSummary=VuoInteger_getSummary \
+		-D VuoGenericType2=VuoInteger \
 		-D VuoListCreate_VuoGenericType1=VuoListCreate_VuoInteger \
+		-D VuoListCreate_VuoGenericType2=VuoListCreate_VuoInteger \
+		-D VuoListCopy_VuoGenericType1=VuoListCopy_VuoInteger \
+		-D VuoListSubset_VuoGenericType1=VuoListSubset_VuoInteger \
+		-D VuoListCreateWithCount_VuoGenericType1=VuoListCreateWithCount_VuoInteger \
+		-D VuoListRemoveDuplicates_VuoGenericType1=VuoListRemoveDuplicates_VuoInteger \
 		-D VuoList_VuoGenericType1=VuoList_VuoInteger \
+		-D VuoList_VuoGenericType2=VuoList_VuoInteger \
 		$cppcheckOutput \
-		$@
+		$@ \
+	2>&1 | grep -v \
+		-e '^$' \
+		-e '^\^$' \
+		-e '\[internalError\]'
 }
 
 # Split into separate batches for C and C++ files (since they require different arguments),

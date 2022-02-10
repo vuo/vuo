@@ -16,7 +16,6 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 			-DVuo_VERSION=${Vuo_VERSION}
 			-P ${CMAKE_CURRENT_LIST_FILE}
 	)
-	set_property(TEST TestAlex PROPERTY SKIP_REGULAR_EXPRESSION TestAlexSkipped)
 
 else()
 
@@ -62,15 +61,9 @@ else()
 
 	if (TestAlex)
 		# Check for potentially harmful language.
-		set(alex /usr/local/bin/alex)
-		if (NOT EXISTS ${alex})
-			message("TestAlexSkipped: ${alex} doesn't exist")
-			return()
-		endif()
-
 		execute_process(
 			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-			COMMAND ${alex} --quiet --why .
+			COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin alex --quiet --why .
 			RESULT_VARIABLE ret
 		)
 		if (ret)

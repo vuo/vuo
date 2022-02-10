@@ -2,7 +2,7 @@
  * @file
  * VuoAppSplashView implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,14 +16,10 @@
 
 #import "vuo-wordmark-teal-cropped.h"
 
-/// The URL to open when the user clicks on the splash view, in VuoCompositionLoader and Vuo Pro mode.
+/// The URL to open when the user clicks on the splash view.
 NSString *windowURL = @"https://vuo.org/";
-/// The URL to open when the user clicks on the splash view, in Vuo Community Edition mode.
-NSString *windowURLCE = @"https://vuo.org/community-edition";
-/// The simplified URL label to show on the splash view, in VuoCompositionLoader and Vuo Pro mode.
+/// The simplified URL label to show on the splash view.
 NSString *windowURLLabel = @"vuo.org";
-/// The simplified URL label to show on the splash view, in Vuo Community Edition mode.
-NSString *windowURLCELabel = @"vuo.org/community-edition";
 
 @implementation VuoAppSplashView
 
@@ -82,7 +78,7 @@ NSString *windowURLCELabel = @"vuo.org/community-edition";
 										 windowWidth*imageScale/imageAspect)];
 	}
 
-	NSString *urlLabel = VuoShouldShowSplashWindow() ? windowURLCELabel : windowURLLabel;
+	NSString *urlLabel = windowURLLabel;
 	textAttributes[NSKernAttributeName] = @0;
 	textAttributes[NSUnderlineStyleAttributeName] = @(NSUnderlineStyleSingle);
 	textAttributes[NSUnderlineColorAttributeName] = NSColor.tertiaryLabelColor;
@@ -95,7 +91,7 @@ NSString *windowURLCELabel = @"vuo.org/community-edition";
 
 - (void)mouseDown:(NSEvent *)event
 {
-	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:(VuoShouldShowSplashWindow() ? windowURLCE : windowURL)]];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:windowURL]];
 }
 
 - (void)resetCursorRects

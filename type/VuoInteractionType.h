@@ -2,7 +2,7 @@
  * @file
  * VuoInteractionType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -50,7 +50,6 @@ bool VuoInteractionType_areEqual(const VuoInteractionType a, const VuoInteractio
 /**
  * Automatically generated function.
  */
-VuoInteractionType VuoInteractionType_makeFromString(const char *str);
 char * VuoInteractionType_getString(const VuoInteractionType value);
 void VuoInteractionType_retain(VuoInteractionType value);
 void VuoInteractionType_release(VuoInteractionType value);

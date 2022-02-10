@@ -2,7 +2,7 @@
  * @file
  * VuoMesh implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -1472,6 +1472,14 @@ bool VuoMesh_isPopulated(const VuoMesh mesh)
 }
 
 /**
+ * Callback to pass to `json_object_set_userdata()`.
+ */
+static void VuoMesh_releaseCallback(struct json_object *js, void *mesh)
+{
+	VuoRelease(mesh);
+}
+
+/**
  * @ingroup VuoMesh
  * Decodes the JSON object @c js to create a new value.
  *
@@ -1482,7 +1490,11 @@ VuoMesh VuoMesh_makeFromJson(json_object * js)
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "pointer", &o))
-		return (VuoMesh)json_object_get_int64(o);
+	{
+		VuoMesh mesh = (VuoMesh)json_object_get_int64(o);
+		json_object_set_userdata(js, (void *)mesh, VuoMesh_releaseCallback);
+		return mesh;
+	}
 
 	return NULL;
 }
@@ -1495,6 +1507,8 @@ json_object * VuoMesh_getJson(const VuoMesh value)
 {
 	if (!value)
 		return NULL;
+
+	VuoRetain(value);
 
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));

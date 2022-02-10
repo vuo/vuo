@@ -2,7 +2,7 @@
  * @file
  * vuo.color.get.cmyk node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,22 +12,22 @@
 #include "VuoColorspace.h"
 
 VuoModuleMetadata({
-    "title": "Get CMYK Color Values",
-    "keywords": [
-        "red", "green", "blue",
-        "CMYKA",
-        "alpha", "transparent", "opacity",
-        "channel", "tone", "chroma",
-        "key", // The K in CMYK.
-        "color space",
-    ],
-    "version": "1.1.0",
-    "node": {
-        "exampleCompositions": [ ],
-    },
-    "dependencies" : [
-        "VuoColorspace",
-    ],
+	"title": "Get CMYK Color Values",
+	"keywords": [
+		"red", "green", "blue",
+		"CMYKA",
+		"alpha", "transparent", "opacity",
+		"channel", "tone", "chroma",
+		"key", // The K in CMYK.
+		"color space",
+	],
+	"version": "1.1.0",
+	"node": {
+		"exampleCompositions": [ ],
+	},
+	"dependencies" : [
+		"VuoColorspace",
+	],
 });
 
 void nodeEvent(

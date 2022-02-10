@@ -2,7 +2,7 @@
  * @file
  * VuoBaudRate C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -59,7 +59,6 @@ bool VuoBaudRate_isLessThan(const VuoBaudRate valueA, const VuoBaudRate valueB);
  * Automatically generated function.
  */
 ///@{
-VuoBaudRate VuoBaudRate_makeFromString(const char *str);
 char *VuoBaudRate_getString(const VuoBaudRate value);
 void VuoBaudRate_retain(VuoBaudRate value);
 void VuoBaudRate_release(VuoBaudRate value);

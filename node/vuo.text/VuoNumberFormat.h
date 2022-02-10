@@ -2,7 +2,7 @@
  * @file
  * VuoNumberFormat C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -54,7 +54,6 @@ bool VuoNumberFormat_isLessThan(const VuoNumberFormat valueA, const VuoNumberFor
  * Automatically generated function.
  */
 ///@{
-VuoNumberFormat VuoNumberFormat_makeFromString(const char *str);
 char *VuoNumberFormat_getString(const VuoNumberFormat value);
 void VuoNumberFormat_retain(VuoNumberFormat value);
 void VuoNumberFormat_release(VuoNumberFormat value);

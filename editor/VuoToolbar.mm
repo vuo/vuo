@@ -2,7 +2,7 @@
  * @file
  * VuoToolbar implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -17,17 +17,29 @@
 #include "VuoToolbarTitleCell.hh"
 
 /**
- * Positions the sheet directly beneath the titlebar/toolbar.
+ * On macOS 10.12 through 10.15, positions the sheet directly beneath the titlebar/toolbar.
+ * (On macOS 11+, window-modal dialogs are always centered inside the parent window.)
  */
 static NSRect windowWillPositionSheetUsingRect(id self, SEL _cmd, NSWindow *window, NSWindow *sheet, NSRect rect)
 {
-	rect.origin.y += ((NSApplication *)NSApp).mainMenu.menuBarHeight;
+	float titleAndToolbarHeight = window.frame.size.height - [window contentRectForFrameRect:window.frame].size.height;
 
-	if (! [NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
+#if VUO_PRO
+	if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
 	{
-		float titleAndToolbarHeight = window.frame.size.height - [window contentRectForFrameRect:window.frame].size.height;
-		rect.origin.y -= titleAndToolbarHeight;
+		// On macOS 10.14, we need to adjust the position by different amounts when toolbar labels are visible and hidden.
+		if (static_cast<VuoEditor *>(qApp)->areToolbarLabelsVisible())
+			rect.origin.y += titleAndToolbarHeight;
+		else
+			rect.origin.y += titleAndToolbarHeight * 2;
 	}
+	else if (!static_cast<VuoEditor *>(qApp)->areToolbarLabelsVisible())
+		// On macOS 10.12 and 10.13, we only need to adjust the position when toolbar labels are hidden.
+		rect.origin.y += titleAndToolbarHeight;
+#else
+	if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
+		rect.origin.y += titleAndToolbarHeight;
+#endif
 
 	return rect;
 }

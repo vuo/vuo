@@ -2,7 +2,7 @@
  * @file
  * VuoWindowProperty C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -115,7 +115,6 @@ VuoList_VuoWindowProperty VuoWindowProperty_getPropertiesWithType(const VuoList_
  * Automatically generated function.
  */
 ///@{
-VuoWindowProperty VuoWindowProperty_makeFromString(const char *str);
 char * VuoWindowProperty_getString(const VuoWindowProperty value);
 void VuoWindowProperty_retain(VuoWindowProperty value);
 void VuoWindowProperty_release(VuoWindowProperty value);

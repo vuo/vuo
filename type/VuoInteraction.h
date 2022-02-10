@@ -2,7 +2,7 @@
  * @file
  * VuoInteraction C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -54,8 +54,8 @@ bool VuoInteraction_update(const VuoPoint2d position, const VuoBoolean isPressed
 /**
  * Returns a new VuoInteraction.
  */
-static inline VuoInteraction VuoInteraction_make() __attribute__((const));
-static inline VuoInteraction VuoInteraction_make()
+static inline VuoInteraction VuoInteraction_make(void) __attribute__((const));
+static inline VuoInteraction VuoInteraction_make(void)
 {
 	VuoInteraction i;
 
@@ -79,7 +79,6 @@ bool VuoInteraction_isLessThan(const VuoInteraction a, const VuoInteraction b);
 /**
  * Automatically generated function.
  */
-VuoInteraction VuoInteraction_makeFromString(const char *str);
 char * VuoInteraction_getString(const VuoInteraction value);
 void VuoInteraction_retain(VuoInteraction value);
 void VuoInteraction_release(VuoInteraction value);

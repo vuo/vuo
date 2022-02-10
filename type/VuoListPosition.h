@@ -2,7 +2,7 @@
  * @file
  * VuoListPosition C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ char * VuoListPosition_getSummary(const VuoListPosition value);
  * Automatically generated function.
  */
 ///@{
-VuoListPosition VuoListPosition_makeFromString(const char *str);
 char * VuoListPosition_getString(const VuoListPosition value);
 void VuoListPosition_retain(VuoListPosition value);
 void VuoListPosition_release(VuoListPosition value);

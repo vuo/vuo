@@ -2,7 +2,7 @@
  * @file
  * TestVuoAudioSamples implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -41,10 +41,11 @@ private slots:
 		QFETCH(bool, valid);
 		QFETCH(QString, summary);
 
-		VuoAudioSamples v = VuoAudioSamples_makeFromString(value.toUtf8().data());
+		VuoAudioSamples v = VuoMakeRetainedFromString(value.toUtf8().constData(), VuoAudioSamples);
 		if (valid)
 			QCOMPARE(QString::fromUtf8(VuoAudioSamples_getString(v)), value);
 		QCOMPARE(QString::fromUtf8(VuoAudioSamples_getSummary(v)), summary);
+		VuoAudioSamples_release(v);
 	}
 };
 

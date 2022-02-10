@@ -2,7 +2,7 @@
  * @file
  * VuoTree implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -760,6 +760,15 @@ VuoTree VuoTree_makeFromJson(struct json_object *js)
 		if (json_object_object_get_ex(js, "childrenPointer", &o))
 			tree.children = (VuoList_VuoTree)json_object_get_int64(o);
 
+		VuoTree *treePtr = new VuoTree(tree);
+		auto releaseCallback = [](json_object *js, void *userData)
+		{
+			VuoTree *treePtr = static_cast<VuoTree *>(userData);
+			VuoTree_release(*treePtr);
+			delete treePtr;
+		};
+		json_object_set_userdata(js, treePtr, releaseCallback);
+
 		return tree;
 	}
 	else if (json_object_object_get_ex(js, "xml", &o))
@@ -782,6 +791,8 @@ VuoTree VuoTree_makeFromJson(struct json_object *js)
 struct json_object * VuoTree_getJson(const VuoTree value)
 {
 	json_object *js = json_object_new_object();
+
+	VuoTree_retain(value);
 
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value.rootXmlNode));
 	json_object_object_add(js, "jsonPointer", json_object_new_int64((int64_t)value.rootJson));

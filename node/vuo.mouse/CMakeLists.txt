@@ -1,6 +1,9 @@
 VuoCompileLibraries(
 	VuoMouse.m
 )
+target_sources(vuo.mouse.libraries PRIVATE
+	VuoMouse.h
+)
 target_include_directories(vuo.mouse.libraries
 	PRIVATE
 	../vuo.ui
@@ -8,6 +11,9 @@ target_include_directories(vuo.mouse.libraries
 
 VuoCompileTypes(
 	VuoMouseButton.c
+)
+target_sources(vuo.mouse.types PRIVATE
+	VuoMouseButton.h
 )
 
 VuoCompileNodes(

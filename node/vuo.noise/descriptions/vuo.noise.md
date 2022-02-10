@@ -5,3 +5,5 @@ Nodes for generating (pseudo)random numbers using various techniques.
 **Uniformly distributed** random numbers are useful for picking from a set of options. When a random number is generated from a uniform distribution, the number falls between a given minimum and maximum. Each number between the minimum and the maximum has an equal chance of being picked.
 
 Many of these nodes can work with various types of numbers — Integers, Reals, 2D Points, 3D Points, 4D Points — because their ports have changeable data types. To change the type of number in the calculation, change the port's data type. (For example, right-click on the port and select from the Set Data Type submenu.)
+
+To make images containing various kinds of noise, use the [Make Noise Image](vuo-node://vuo.image.make.noise) and [Make Random Image](vuo-node://vuo.image.make.random) nodes.

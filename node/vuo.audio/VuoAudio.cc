@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -53,8 +53,8 @@ unsigned int VuoAudio_useCount = 0;  ///< Process-wide count of callers (typical
 
 /**
  * Ensure we're listening for the system's device notifications.
- * https://b33p.net/kosada/node/12551
- * http://lists.apple.com/archives/Coreaudio-api/2010/Aug//msg00304.html
+ * https://b33p.net/kosada/vuo/vuo/-/issues/12551
+ * https://web.archive.org/web/20140109183704/http://lists.apple.com/archives/Coreaudio-api/2010/Aug//msg00304.html
  */
 static void __attribute__((constructor)) VuoAudio_init()
 {
@@ -357,6 +357,16 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 	return 0;
 }
 
+/**
+ * Routes RtAudio messages through VuoLog.
+ */
+void VuoAudio_rtAudioError(RtAudioError::Type type, const std::string &errorText)
+{
+	VUserLog("%s: %s",
+		(type == RtAudioError::WARNING || type == RtAudioError::DEBUG_WARNING) ? "Warning" : "Error",
+		errorText.c_str());
+}
+
 /// @{
 VUOKEYEDPOOL(unsigned int, VuoAudio_internal);
 static void VuoAudio_destroy(VuoAudio_internal ai);
@@ -420,8 +430,8 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 					&bufferFrames,
 					&VuoAudio_receivedEvent,
 					ai,
-					&options
-					);
+					&options,
+					VuoAudio_rtAudioError);
 		ai->rta->startStream();
 	}
 	catch (RtAudioError &error)

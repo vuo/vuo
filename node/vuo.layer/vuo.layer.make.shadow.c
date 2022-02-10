@@ -2,7 +2,7 @@
  * @file
  * vuo.layer.make node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 						 "stretch", "fill", "shrink", "blow up", "enlarge", "magnify",
 						 "glow", "render", "convert"
 					 ],
-					 "version" : "2.1.0",
+					 "version" : "2.1.1",
 					 "node": {
 						 "exampleCompositions" : [ "ShowTextShadow.vuo" ]
 					 }

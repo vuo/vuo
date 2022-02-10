@@ -2,7 +2,7 @@
  * @file
  * Prototypes for node class, type, and library module implementations.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -122,17 +122,13 @@ extern "C" {
 #include <dispatch/dispatch.h>
 
 /**
- * Callback prototype for @ref VuoAddCompositionFiniCallback().
- */
-typedef void (*VuoCompositionFiniCallback)(void);
-
-/**
  * Returns the directory that nodes should use to resolve relative paths.
  */
 const char *VuoGetWorkingDirectory(void);
 
 const char *VuoGetFrameworkPath(void);
 const char *VuoGetRunnerFrameworkPath(void);
+const char *VuoGetFrameworkOrRunnerFrameworkPath(void);
 
 /**
  * Returns the process ID of the runner that started the composition.
@@ -151,14 +147,6 @@ void VuoStopComposition(void);
  * doesn't handle multiple compositions running in the process.
  */
 void VuoStopCurrentComposition(void);
-
-/**
- * Registers a callback to be invoked when the composition is shutting down,
- * after `nodeInstanceFini()` has been called for all nodes.
- *
- * `VuoCompositionFiniCallback`s are not called during livecoding reloads.
- */
-void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini);
 
 /**
  * Temporarily disables automatic termination.

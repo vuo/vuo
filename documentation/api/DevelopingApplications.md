@@ -2,7 +2,7 @@
 
 If you're developing an application, library, or other project, your code can build and run Vuo compositions. One way is by invoking the Vuo command-line tools (see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml)), but you can also interact with Vuo programmatically through its API.
 
-To learn how to develop an application that uses Vuo, see: 
+To learn how to develop an application that uses Vuo, see:
 
    - This API documentation
    - The example projects found in the `/Library/Developer/Vuo/example/runner` folder after installing the Vuo SDK:
@@ -28,10 +28,10 @@ The Cocoa API and the C++ API both support 64-bit mode.  (Up through Vuo 1.2.x, 
 
 ## Setting up your application
 
-To use Vuo, your application needs to link to Vuo.framework, which comes with the Vuo SDK. 
+To use Vuo, your application needs to link to Vuo.framework, which comes with the Vuo SDK.
 
 
-### Xcode 11
+### Xcode 13
 
 If using the Cocoa API or the C++ API:
 
@@ -39,18 +39,23 @@ If using the Cocoa API or the C++ API:
     - Choose template macOS > Application > App.
     - Choose language Objective-C.
   - Add Vuo.framework to the project:
-    - In Finder, move or copy Vuo.framework into the project's folder.
-    - In Xcode, File > Add Files to your project. Select Vuo.framework from the project's folder.
-      - Vuo.framework should now appear under Build Phases > Link Binary With Libraries.
+    - File > Add Files to your project.
+    - Select `Vuo.framework` from the `/Library/Developer/Vuo/framework` folder.
+    - Uncheck the "Copy items if needed" checkbox.
+    - Vuo.framework should now appear under Build Phases > Link Binary With Libraries.
   - Modify the target's Build Phases:
     - Editor > Add Build Phase > Add Copy Files Build Phase
       - Destination: Frameworks
       - Add Vuo.framework here. (You can drag and drop it from the Project Navigator.)
-  - Modify the target's Build Settings: 
-    - Go to Editor > Add Build Setting > Add User-Defined Setting, add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
+      - Uncheck the "Code Sign On Copy" checkbox.
+  - Modify the target's Build Settings:
+    - Editor > Add Build Setting > Add User-Defined Setting
+      - Add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
+    - Set "Quoted Include In Framework Header" to `NO`.
+    - Under "Framework Search Paths", add the `/Library/Developer/Vuo/framework` folder.
   - Set up one or more of your project's source files to be able to call Vuo API functions:
     - If using the C++ API, name the source file with extension ".mm" (for Objective-C++) instead of ".m".
-    - Add @code{cpp} #include <Vuo/Vuo.h> @endcode
+    - Add @code{cpp} #import <Vuo/Vuo.h> @endcode
 
 
 ### Qt Creator
@@ -67,19 +72,19 @@ Depending on whether the Vuo compositions to be run by your application are Imag
 
 ### Compiling and linking a Vuo composition
 
-If you want to run a Vuo composition, you first have to compile and link it. 
+If you want to run a Vuo composition, you first have to compile and link it.
 
-The easiest way to do that is with the factory methods VuoCompiler::newSeparateProcessRunnerFromCompositionFile and VuoCompiler::newCurrentProcessRunnerFromCompositionFile. These compile and link your composition and return a VuoRunner that's ready to run it. 
+The easiest way to do that is with the factory methods VuoCompiler::newSeparateProcessRunnerFromCompositionFile and VuoCompiler::newCurrentProcessRunnerFromCompositionFile. These compile and link your composition and return a VuoRunner that's ready to run it.
 
-The VuoCompiler class also provides functions for separately compiling a composition, linking a composition, and compiling a node class, port type, or library module. 
+The VuoCompiler class also provides functions for separately compiling a composition, linking a composition, and compiling a node class, port type, or library module.
 
 ### Running a Vuo composition
 
-Using the VuoRunner class, you can run and interact with a composition. The composition can run in the same process as the VuoRunner or in a separate process. 
+Using the VuoRunner class, you can run and interact with a composition. The composition can run in the same process as the VuoRunner or in a separate process.
 
-The VuoRunner::start and VuoRunner::stop functions allow you to start and stop a composition. While the composition is running, you can use other VuoRunner functions to control it and query it (such such pausing the composition, setting the values of published input ports, and getting the values of published output ports). 
+The VuoRunner::start and VuoRunner::stop functions allow you to start and stop a composition. While the composition is running, you can use other VuoRunner functions to control it and query it (such such pausing the composition, setting the values of published input ports, and getting the values of published output ports).
 
-You can receive notifications from the running composition (such as when a published output port receives an event) by creating a derived class of VuoRunnerDelegate or VuoRunnerDelegateAdapter. Use VuoRunner::setDelegate to connect your class to the VuoRunner. Your class's VuoRunnerDelegate functions will be called whenever the VuoRunner receives messages from the running composition. 
+You can receive notifications from the running composition (such as when a published output port receives an event) by creating a derived class of VuoRunnerDelegate or VuoRunnerDelegateAdapter. Use VuoRunner::setDelegate to connect your class to the VuoRunner. Your class's VuoRunnerDelegate functions will be called whenever the VuoRunner receives messages from the running composition.
 
 
 ## A mini framework for running Vuo compositions
@@ -92,7 +97,7 @@ VuoRunner.framework doesn't come with any headers or supporting libraries of its
 
 &nbsp;                                             | Vuo.framework | VuoRunner.framework
 -------------------------------------------------- | ------------- | --------------------------------------------------------------------------------
-Framework size, uncompressed                       | about 170 MB  | about 5 MB + any frameworks and dylibs required by your precompiled compositions
+Framework size, uncompressed                       | about 500 MB  | about 15 MB + any frameworks and dylibs required by your precompiled compositions
 Run precompiled compositions (@ref VuoRunner)      | ✅            | ✅
 Compile and run any composition (@ref VuoCompiler) | ✅            | ❌
 Cocoa API (@ref VuoRunnerCocoa)                    | ✅            | ❌

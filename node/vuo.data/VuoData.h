@@ -2,7 +2,7 @@
  * @file
  * VuoData C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -41,14 +41,14 @@ VuoData VuoData_make(VuoInteger size, unsigned char *data);
 VuoData VuoData_makeFromText(const VuoText text);
 char * VuoData_copyToString(const VuoData data);
 
+void VuoData_retain(VuoData value);
+void VuoData_release(VuoData value);
+
 /**
  * Automatically generated function.
  */
 ///@{
-VuoData VuoData_makeFromString(const char *str);
 char *VuoData_getString(const VuoData value);
-void VuoData_retain(VuoData value);
-void VuoData_release(VuoData value);
 ///@}
 
 /**

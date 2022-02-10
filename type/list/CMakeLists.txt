@@ -18,7 +18,7 @@ execute_process(
 			VuoAudioInputDevice:2
 			VuoAudioOutputDevice:2
 			VuoAudioSamples:2
-			VuoBaudRate:2
+			VuoBaudRate:0
 			VuoBlendMode:0
 			VuoBlurShape:0
 			VuoBoolean:0
@@ -27,7 +27,7 @@ execute_process(
 			VuoControlCode:0
 			VuoCoordinateUnit:0
 			VuoCubemap:1
-			VuoCursor:2
+			VuoCursor:0
 			VuoCurve:0
 			VuoCurveEasing:0
 			VuoData:2
@@ -35,7 +35,7 @@ execute_process(
 			VuoDispersion:0
 			VuoDisplacement:0
 			VuoDistribution3d:0
-			VuoDmxColorMap:2
+			VuoDmxColorMap:0
 			VuoDragEvent:2
 			VuoDurationType:0
 			VuoEdgeBlend:0
@@ -51,7 +51,7 @@ execute_process(
 			VuoHorizontalAlignment:0
 			VuoHorizontalReflection:0
 			VuoHorizontalSide:0
-			VuoIconPosition:2
+			VuoIconPosition:0
 			VuoImage:1
 			VuoImageColorDepth:0
 			VuoImageFormat:0
@@ -69,29 +69,29 @@ execute_process(
 			VuoLeapPointable:0
 			VuoLeapPointableType:0
 			VuoLeapTouchZone:0
-			VuoListPosition:2
+			VuoListPosition:0
 			VuoLoopType:0
 			VuoMesh:1
 			VuoMidiController:0
 			VuoMidiInputDevice:2
 			VuoMidiNote:0
 			VuoMidiOutputDevice:2
-			VuoMidiPitchBend:2
+			VuoMidiPitchBend:0
 			VuoModifierKey:0
 			VuoMouseButton:0
 			VuoMovieFormat:0
 			VuoMovieImageEncoding:0
-			VuoMultisample:2
+			VuoMultisample:0
 			VuoNoise:0
-			VuoNotePriority:2
-			VuoNumberComparison:2
-			VuoNumberFormat:2
+			VuoNotePriority:0
+			VuoNumberComparison:0
+			VuoNumberFormat:0
 			VuoOrientation:0
 			VuoOscInputDevice:2
 			VuoOscMessage:2
 			VuoOscOutputDevice:2
 			VuoOscType:0
-			VuoParity:2
+			VuoParity:0
 			VuoPixelShape:0
 			VuoPoint2d:0
 			VuoPoint3d:0
@@ -131,7 +131,7 @@ execute_process(
 			VuoUuid:0
 			VuoUiTheme:2
 			VuoUrl:2
-			VuoVertexAttribute:2
+			VuoVertexAttribute:0
 			VuoVerticalAlignment:0
 			VuoVerticalReflection:0
 			VuoVideoFrame:2

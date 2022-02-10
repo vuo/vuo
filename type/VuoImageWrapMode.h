@@ -2,7 +2,7 @@
  * @file
  * VuoImageWrapMode C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -41,7 +41,6 @@ char * VuoImageWrapMode_getSummary(const VuoImageWrapMode value);
 /**
  * Automatically generated function.
  */
-VuoImageWrapMode VuoImageWrapMode_makeFromString(const char *str);
 char * VuoImageWrapMode_getString(const VuoImageWrapMode value);
 void VuoImageWrapMode_retain(VuoImageWrapMode value);
 void VuoImageWrapMode_release(VuoImageWrapMode value);

@@ -18,7 +18,7 @@ const int VuoConsole::maxLogs = 500;
  * Creates a VuoConsole that is not yet showing or tracking console logs.
  */
 VuoConsole::VuoConsole(QObject *parent) :
-    QObject(parent)
+	QObject(parent)
 {
 	areModelUpdatesPaused = false;
 	oldLogsDeletedWhilePaused = 0;

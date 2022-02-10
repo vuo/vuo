@@ -2,7 +2,7 @@
  * @file
  * VuoDispersion C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -39,7 +39,6 @@ char * VuoDispersion_getSummary(const VuoDispersion value);
  * Automatically generated function.
  */
 ///@{
-VuoDispersion VuoDispersion_makeFromString(const char *str);
 char * VuoDispersion_getString(const VuoDispersion value);
 void VuoDispersion_retain(VuoDispersion value);
 void VuoDispersion_release(VuoDispersion value);

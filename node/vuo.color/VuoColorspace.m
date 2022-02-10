@@ -2,7 +2,7 @@
  * @file
  * VuoColorspace implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -13,7 +13,7 @@
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-    "title" : "VuoColorspace",
+	"title" : "VuoColorspace",
 });
 #endif
 
@@ -142,7 +142,7 @@ static VuoColor _VuoColorspace_convertFromICC(NSColorSpace *cs, VuoList_VuoReal 
  */
 VuoColor VuoColorspace_makeICCColor_VuoInteger(VuoInteger colorspace, VuoList_VuoReal components)
 {
-    return _VuoColorspace_convertFromICC(_VuoColorspace_colorspaceForInteger(colorspace), components);
+	return _VuoColorspace_convertFromICC(_VuoColorspace_colorspaceForInteger(colorspace), components);
 }
 
 /**
@@ -151,7 +151,7 @@ VuoColor VuoColorspace_makeICCColor_VuoInteger(VuoInteger colorspace, VuoList_Vu
  */
 VuoColor VuoColorspace_makeICCColor_VuoData(VuoData colorspace, VuoList_VuoReal components)
 {
-    return _VuoColorspace_convertFromICC(_VuoColorspace_colorspaceForData(colorspace), components);
+	return _VuoColorspace_convertFromICC(_VuoColorspace_colorspaceForData(colorspace), components);
 }
 
 static VuoList_VuoReal _VuoColorspace_convertToICC(NSColorSpace *cs, VuoColor color)
@@ -184,7 +184,7 @@ static VuoList_VuoReal _VuoColorspace_convertToICC(NSColorSpace *cs, VuoColor co
  */
 VuoList_VuoReal VuoColorspace_getICC_VuoInteger(VuoInteger colorspace, VuoColor color)
 {
-    return _VuoColorspace_convertToICC(_VuoColorspace_colorspaceForInteger(colorspace), color);
+	return _VuoColorspace_convertToICC(_VuoColorspace_colorspaceForInteger(colorspace), color);
 }
 
 /**
@@ -192,5 +192,5 @@ VuoList_VuoReal VuoColorspace_getICC_VuoInteger(VuoInteger colorspace, VuoColor 
  */
 VuoList_VuoReal VuoColorspace_getICC_VuoData(VuoData colorspace, VuoColor color)
 {
-    return _VuoColorspace_convertToICC(_VuoColorspace_colorspaceForData(colorspace), color);
+	return _VuoColorspace_convertToICC(_VuoColorspace_colorspaceForData(colorspace), color);
 }

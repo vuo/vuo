@@ -1,6 +1,9 @@
 VuoCompileLibraries(
 	VuoMidi.cc
 )
+target_sources(vuo.midi.libraries PRIVATE
+	VuoMidi.h
+)
 target_link_libraries(vuo.midi.libraries
 	PUBLIC
 	"-framework CoreMIDI"
@@ -15,6 +18,14 @@ VuoCompileTypes(
 	VuoMidiOutputDevice.c
 	VuoMidiPitchBend.c
 	VuoNotePriority.c
+)
+target_sources(vuo.midi.types PRIVATE
+	VuoMidiController.h
+	VuoMidiInputDevice.h
+	VuoMidiNote.h
+	VuoMidiOutputDevice.h
+	VuoMidiPitchBend.h
+	VuoNotePriority.h
 )
 
 VuoCompileNodes(

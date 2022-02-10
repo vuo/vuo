@@ -9,6 +9,19 @@ VuoCompileLibraries(
 	VuoVideoCapture.mm
 	VuoVideoPlayer.cc
 )
+target_sources(vuo.video.libraries PRIVATE
+	VuoAvDecoder.h
+	VuoAvPlayerInterface.h
+	VuoAvPlayerObject.h
+	VuoAvWriter.h
+	VuoAvWriterObject.h
+	VuoFfmpegDecoder.h
+	VuoFfmpegUtility.h
+	VuoVideo.h
+	VuoVideoCapture.h
+	VuoVideoDecoder.h
+	VuoVideoPlayer.h
+)
 target_include_directories(vuo.video.libraries
 	PRIVATE
 		${CONAN_FRAMEWORK_DIRS_HAP}/HapInAVFoundation.framework/Headers
@@ -37,6 +50,15 @@ VuoCompileTypes(
 	VuoVideoFrame.c
 	VuoVideoInputDevice.c
 	VuoVideoOptimization.c
+)
+target_sources(vuo.video.types PRIVATE
+	VuoAudioEncoding.h
+	VuoAudioFrame.h
+	VuoMovieFormat.h
+	VuoMovieImageEncoding.h
+	VuoVideoFrame.h
+	VuoVideoInputDevice.h
+	VuoVideoOptimization.h
 )
 
 VuoCompileNodes(

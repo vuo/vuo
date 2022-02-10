@@ -2,7 +2,7 @@
  * @file
  * Implementations of functions available to modules (nodes, types, libraries).
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -68,55 +68,127 @@ const char *VuoGetWorkingDirectory(void)
 	return workingDirectoryResult;
 }
 
+static pthread_once_t VuoFrameworkPathsOnce = PTHREAD_ONCE_INIT;  ///< Ensures the framework paths are initialized just once.
+static bool VuoFrameworkPathsInitialMatchCompleted = false;       ///< Stops checking dylibs after the initial scan.
+static char *VuoFrameworkPath = NULL;                             ///< The absolute path of Vuo.framework.
+static char *VuoRunnerFrameworkPath = NULL;                       ///< The absolute path of VuoRunner.framework.
+
 /**
- * Returns the path of the folder containing `Vuo.framework`.
+ * Helper for @ref VuoInitializeFrameworkPaths.
+ *
+ * This needs to be kept in sync with `VuoFileUtilities::dylibLoaded()`.
+ */
+void VuoFrameworkPaths_dylibLoaded(const struct mach_header *mh32, intptr_t vmaddr_slide)
+{
+	if (VuoFrameworkPathsInitialMatchCompleted)
+		return;
+
+	const struct mach_header_64 *mh = (const struct mach_header_64 *)mh32;
+
+	// Ignore system libraries.
+	if (mh->flags & MH_DYLIB_IN_CACHE)
+		return;
+
+	// Get the file path of the current dylib.
+	Dl_info info = {"", NULL, "", NULL};
+	dladdr((void *)vmaddr_slide, &info);
+
+	// Check whether it's one of the dylibs we're looking for.
+
+	char * (^getMatchingPath)(const char *) = ^(const char *fragment) {
+		const char *found = strstr(info.dli_fname, fragment);
+		if (found)
+		{
+			char *pathCandidate = strndup(info.dli_fname, found - info.dli_fname + strlen(fragment));
+			if (access(pathCandidate, 0) == 0)
+				return pathCandidate;
+			else
+				free(pathCandidate);
+		}
+		return (char *)NULL;
+	};
+
+	char *possibleVuoFramework = getMatchingPath("/Vuo.framework");
+	if (possibleVuoFramework)
+		VuoFrameworkPath = possibleVuoFramework;
+
+	char *possibleVuoRunnerFramework = getMatchingPath("/VuoRunner.framework");
+	if (possibleVuoRunnerFramework)
+		VuoRunnerFrameworkPath = possibleVuoRunnerFramework;
+}
+
+/**
+ * Helper for @ref VuoGetFrameworkPath and @ref VuoGetRunnerFrameworkPath.
+ */
+void VuoInitializeFrameworkPaths(void)
+{
+	// Check whether Vuo.framework is in the list of loaded dynamic libraries.
+	_dyld_register_func_for_add_image(&VuoFrameworkPaths_dylibLoaded);
+	VuoFrameworkPathsInitialMatchCompleted = true;
+	// The above function invokes the callback for each already-loaded dylib, then returns.
+
+	if (VuoFrameworkPath && !VuoRunnerFrameworkPath)
+	{
+		// Check for VuoRunner.framework alongside Vuo.framework.
+		const char *runnerSuffix = "/../VuoRunner.framework";
+		char *pathCandidate = malloc(strlen(VuoFrameworkPath) + strlen(runnerSuffix) + 1);
+		strcpy(pathCandidate, VuoFrameworkPath);
+		strcat(pathCandidate, runnerSuffix);
+		if (access(pathCandidate, 0) == 0)
+			VuoRunnerFrameworkPath = pathCandidate;
+		else
+			free(pathCandidate);
+	}
+}
+
+/**
+ * Returns the absolute path of Vuo.framework
+ * (including the `Vuo.framework` directory name without a trailing slash),
+ * or an empty string if Vuo.framework cannot be located.
+ *
+ * The returned string remains owned by libmodule;
+ * the caller should not modify or free it.
  *
  * See also @ref VuoFileUtilities::getVuoFrameworkPath.
  */
 const char *VuoGetFrameworkPath(void)
 {
-	static char frameworkPath[PATH_MAX+1] = "";
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		uint32_t imageCount = _dyld_image_count();
-		for (uint32_t i = 0; i < imageCount; ++i)
-		{
-			const char *dylibPath = _dyld_get_image_name(i);
-			char *pos;
-			if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
-			{
-				strncpy(frameworkPath, dylibPath, pos-dylibPath);
-				break;
-			}
-		}
-	});
-	return frameworkPath;
+	pthread_once(&VuoFrameworkPathsOnce, VuoInitializeFrameworkPaths);
+	return VuoFrameworkPath;
 }
 
 /**
- * Returns the path of the folder containing `VuoRunner.framework`.
+ * Returns the absolute path of VuoRunner.framework
+ * (including the `VuoRunner.framework` directory name without a trailing slash),
+ * or an empty string if VuoRunner.framework cannot be located.
+ *
+ * The returned string remains owned by libmodule;
+ * the caller should not modify or free it.
  *
  * See also @ref VuoFileUtilities::getVuoRunnerFrameworkPath.
  * @version200New
  */
 const char *VuoGetRunnerFrameworkPath(void)
 {
-	static char frameworkPath[PATH_MAX+1] = "";
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		uint32_t imageCount = _dyld_image_count();
-		for (uint32_t i = 0; i < imageCount; ++i)
-		{
-			const char *dylibPath = _dyld_get_image_name(i);
-			char *pos;
-			if ( (pos = strstr(dylibPath, "/VuoRunner.framework/")) )
-			{
-				strncpy(frameworkPath, dylibPath, pos-dylibPath);
-				break;
-			}
-		}
-	});
-	return frameworkPath;
+	pthread_once(&VuoFrameworkPathsOnce, VuoInitializeFrameworkPaths);
+	return VuoRunnerFrameworkPath;
+}
+
+/**
+ * Returns the absolute path of Vuo.framework (preferably)
+ * or VuoRunner.framework (if Vuo.framework is unavailable),
+ * or NULL (if neither is available).
+ *
+ * The returned string remains owned by libmodule;
+ * the caller should not modify or free it.
+ */
+const char *VuoGetFrameworkOrRunnerFrameworkPath(void)
+{
+	pthread_once(&VuoFrameworkPathsOnce, VuoInitializeFrameworkPaths);
+	if (VuoFrameworkPath)
+		return VuoFrameworkPath;
+	else
+		return VuoRunnerFrameworkPath;
 }
 
 pid_t VuoGetRunnerPid(void)
@@ -152,21 +224,6 @@ void VuoStopCurrentComposition(void)
 		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
 
 	vuoStopComposition(NULL);
-}
-
-void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini)
-{
-	typedef void (*vuoAddCompositionFiniCallbackType)(struct VuoCompositionState *, VuoCompositionFiniCallback);
-	vuoAddCompositionFiniCallbackType vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_SELF, "vuoAddCompositionFiniCallback");
-	if (!vuoAddCompositionFiniCallback)
-		vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_DEFAULT, "vuoAddCompositionFiniCallback");
-
-	if (vuoAddCompositionFiniCallback)
-	{
-		void *compositionState = copyCompositionStateFromThreadLocalStorage();
-		vuoAddCompositionFiniCallback((struct VuoCompositionState *)compositionState, fini);
-		free(compositionState);
-	}
 }
 
 void VuoDisableTermination(void)

@@ -2,6 +2,7 @@
 
 brew 'alexjs'
 brew 'bash'
+brew 'binutils'
 brew 'ccache'
 brew 'checkbashisms'
 brew 'cmake'
@@ -38,7 +39,6 @@ brew 'Brew/pngquant.rb', force_bottle: true
 brew 'proselint'
 brew 'pycodestyle'
 brew 'python'
-brew 'python@2'
 brew 'shellcheck'
 brew 'tidy-html5'
 brew 'translate-toolkit'

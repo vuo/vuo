@@ -190,7 +190,7 @@ add_custom_command(
 	COMMAND rsync --perms
 		${PROJECT_BINARY_DIR}/lib/libVuoWidget.dylib
 		${frameworksDestDir}
-	COMMAND ${codesignAdHoc} ${frameworksDestDir}/libVuoWidget.dylib
+	COMMAND ${codesignAdHoc} ${frameworksDestDir}/libVuoWidget.dylib ${codesignAdHocIgnoreReplace}
 	OUTPUT ${frameworksDestDir}/libVuoWidget.dylib
 )
 add_custom_target(VuoEditorAppLibraries DEPENDS ${frameworksDestDir}/libVuoWidget.dylib)
@@ -210,5 +210,5 @@ add_dependencies(VuoEditorApp VuoEditorAppContributors)
 
 # Code-sign the whole mess after all the frameworks and helpers have been copied into Vuo.app.
 add_custom_command(TARGET VuoEditorApp POST_BUILD
-	COMMAND ${codesignAdHoc} ${CMAKE_BINARY_DIR}/bin/Vuo.app
+	COMMAND ${codesignAdHoc} ${CMAKE_BINARY_DIR}/bin/Vuo.app ${codesignAdHocIgnoreReplace}
 )

@@ -2,7 +2,7 @@
  * @file
  * VuoTime implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -441,6 +441,8 @@ VuoTime VuoTime_makeFromUnknownFormat(const char *str)
  */
 bool VuoTime_getComponents(VuoTime time, VuoInteger *year, VuoInteger *dayOfYear, VuoInteger *month, VuoInteger *dayOfMonth, VuoInteger *week, VuoWeekday *dayOfWeek, VuoInteger *hour, VuoInteger *minute, VuoReal *second)
 {
+	if (isnan(time))
+		return false;
 	time_t unixtime = time + VuoUnixTimeOffset;
 	struct tm *tm = localtime(&unixtime);
 	if (!tm)

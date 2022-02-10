@@ -2,7 +2,7 @@
  * @file
  * VuoTime C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -70,7 +70,6 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
  * Automatically generated function.
  */
 ///@{
-VuoTime VuoTime_makeFromString(const char *str);
 char *VuoTime_getString(const VuoTime value);
 void VuoTime_retain(VuoTime value);
 void VuoTime_release(VuoTime value);

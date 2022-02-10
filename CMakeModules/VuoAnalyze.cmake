@@ -6,8 +6,8 @@ if (VUO_ANALYZE)
 	add_custom_target(VuoAnalyze
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 
-		COMMAND ${CMAKE_COMMAND} -E env PATH="/usr/local/opt/grep/libexec/gnubin:/Library/TeX/texbin:$ENV{PATH}"
-			/usr/local/Cellar/check-all-the-things/0/check-all-the-things
+		COMMAND ${CMAKE_COMMAND} -E env PATH="/opt/homebrew/opt/grep/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:/opt/homebrew/opt/check-all-the-things:/usr/local/opt/check-all-the-things:/Library/TeX/texbin:$ENV{PATH}"
+			check-all-the-things
 				--jobs 9
 				--checks-output-lines 50
 				# Jenkinsfile runs cppcheck, so no need to run it again here.

@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorWithDialog implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -61,14 +61,17 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 
 	// Position the right center of the dialog at the left center of the port, or wherever required
 	// so that the entire dialog fits within the available screenspace.
-	int availableSpaceLeftBoundary = QApplication::desktop()->availableGeometry(&dialog).left();
 	QPoint dialogTopLeft = portLeftCenter - QPoint(dialog.width() - (showArrow ? 0 : margin.right()), dialog.height()/2.);
-	bool screenSpaceLimitsPos = (availableSpaceLeftBoundary > dialogTopLeft.x());
-	if (screenSpaceLimitsPos)
+	QScreen *dialogScreen = QGuiApplication::screenAt(portLeftCenter);
+	if (dialogScreen)
 	{
-		dialogTopLeft = (screenSpaceLimitsPos? QPoint(availableSpaceLeftBoundary, dialogTopLeft.y()) :
-											   dialogTopLeft);
-		showArrow = false;
+		int availableSpaceLeftBoundary = dialogScreen->availableGeometry().left();
+		bool screenSpaceLimitsPos = (availableSpaceLeftBoundary > dialogTopLeft.x());
+		if (screenSpaceLimitsPos)
+		{
+			dialogTopLeft = QPoint(availableSpaceLeftBoundary, dialogTopLeft.y());
+			showArrow = false;
+		}
 	}
 	dialog.setShowArrow(showArrow);
 	dialog.move(dialogTopLeft);

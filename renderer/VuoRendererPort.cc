@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -44,6 +44,7 @@ char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage);
 
 
 #include "VuoHeap.h"
+#include "type.h"
 
 const qreal VuoRendererPort::portRadius              = 8;         // VuoRendererFonts::thickPenWidth*8./20.
 const qreal VuoRendererPort::portSpacing             = 15;        // VuoRendererFonts::thickPenWidth*3.0/4.0
@@ -51,6 +52,34 @@ const qreal VuoRendererPort::portContainerMargin     = 3.333333;  // VuoRenderer
 const qreal VuoRendererPort::portInset               = 1.4;
 const qreal VuoRendererPort::portBarrierWidth        = 5.5;  // VuoRendererFonts::thickPenWidth*5.5/20.
 const qreal VuoRendererPort::portConstantTextPadding = 6.5;  // VuoRendererFonts::thickPenWidth*6.5/20.
+
+/**
+ * If the port's data type is equal to the specified `type`,
+ * creates an object from the port's current value,
+ * then returns the output of `VuoType_getSummary()`.
+ */
+#define RETURN_SUMMARY(type)                                                         \
+	if (getDataType()->getModuleKey() == #type)                                      \
+	{                                                                                \
+		type value = VuoMakeRetainedFromString(getConstantAsString().c_str(), type); \
+		string s = stringAndFree(type ## _getSummary(value));                        \
+		type ## _release(value);                                                     \
+		return s;                                                                    \
+	}
+
+/**
+ * If the port's data type is equal to the specified `type`,
+ * creates an object from the port's current value,
+ * then returns the output of `VuoType_getShortSummary()`.
+ */
+#define RETURN_SHORT_SUMMARY(type)                                                   \
+	if (getDataType()->getModuleKey() == #type)                                      \
+	{                                                                                \
+		type value = VuoMakeRetainedFromString(getConstantAsString().c_str(), type); \
+		string s = stringAndFree(type ## _getShortSummary(value));                   \
+		type ## _release(value);                                                     \
+		return s;                                                                    \
+	}
 
 /**
  * Creates a renderer detail for the specified base port.
@@ -951,8 +980,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		bool isColorPort = getDataType() && getDataType()->getModuleKey()=="VuoColor";
 		if (isColorPort)
 		{
-			string colorRGBAJsonString = getConstantAsString();
-			VuoColor c = VuoColor_makeFromString(colorRGBAJsonString.c_str());
+			VuoColor c = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoColor);
 			QColor swatchColor = QColor(c.r*255, c.g*255, c.b*255, c.a*255 * portBrush.color().alphaF());
 			VuoReal h,s,l,a;
 			VuoColor_getHSLA(c, &h, &s, &l, &a);
@@ -1466,8 +1494,7 @@ bool VuoRendererPort::hasRelativeReadURLConstantValue() const
 	if (details && json_object_object_get_ex(details, "isSave", &isSaveValue) && json_object_get_boolean(isSaveValue))
 		return false;
 
-	VuoUrl url = VuoUrl_makeFromString(getConstantAsString().c_str());
-	VuoRetain(url);
+	VuoUrl url = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoUrl);
 	bool isRelativePath = VuoUrl_isRelativePath(url);
 	VuoRelease(url);
 	return isRelativePath;
@@ -1567,21 +1594,6 @@ string VuoRendererPort::getConstantAsTruncatedStringToRender(void) const
 }
 
 /**
- * If the port's data type is equal to the specified `type`,
- * creates an object from the port's current value,
- * then returns the output of `VuoType_getShortSummary()`.
- */
-#define RETURN_SHORT_SUMMARY(type)                                           \
-    if (getDataType()->getModuleKey() == #type)                              \
-    {                                                                        \
-        type value = type ## _makeFromString(getConstantAsString().c_str()); \
-        type ## _retain(value);                                              \
-        string s = stringAndFree(type ## _getShortSummary(value));           \
-        type ## _release(value);                                             \
-        return s;                                                            \
-    }
-
-/**
  * Returns the untruncated string representation of this port's constant data value as it should be rendered
  * in a port tooltip, or an empty string if it has no currently assigned constant data value.
  */
@@ -1607,14 +1619,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		if (typeName == "VuoData")
 			return "";
 
-		if (getDataType()->getModuleKey()=="VuoColor")
-		{
-			string colorRGBAJsonString = getConstantAsString();
-			VuoColor c = VuoColor_makeFromString(colorRGBAJsonString.c_str());
-			return stringAndFree(VuoColor_getSummary(c));
-		}
-		if (getDataType()->getModuleKey()=="VuoBoolean")
-			return stringAndFree(VuoBoolean_getSummary(VuoBoolean_makeFromString(getConstantAsString().c_str())));
+		RETURN_SUMMARY(VuoColor);
+		RETURN_SUMMARY(VuoBoolean);
 		if (getDataType()->getModuleKey()=="VuoReal")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -1694,19 +1700,19 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint2d")
 		{
-			VuoPoint2d p = VuoPoint2d_makeFromString(getConstantAsString().c_str());
+			VuoPoint2d p = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoPoint2d);
 			QList<float> pointList = QList<float>() << p.x << p.y;
 			return getPointStringForCoords(pointList);
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint3d")
 		{
-			VuoPoint3d p = VuoPoint3d_makeFromString(getConstantAsString().c_str());
+			VuoPoint3d p = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoPoint3d);
 			QList<float> pointList = QList<float>() << p.x << p.y << p.z;
 			return getPointStringForCoords(pointList);
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint4d")
 		{
-			VuoPoint4d p = VuoPoint4d_makeFromString(getConstantAsString().c_str());
+			VuoPoint4d p = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoPoint4d);
 			QList<float> pointList = QList<float>() << p.x << p.y << p.z << p.w;
 			return getPointStringForCoords(pointList);
 		}
@@ -1775,16 +1781,17 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoImage")
 		{
-			VuoImage value = VuoImage_makeFromString(getConstantAsString().c_str());
+			VuoImage value = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoImage);
 			if (!value)
 				return "";
 
-			VuoLocal(value);
-			return format("%lu×%lu", value->pixelsWide, value->pixelsHigh);
+			string s = format("%lu×%lu", value->pixelsWide, value->pixelsHigh);
+			VuoRelease(value);
+			return s;
 		}
 		if (getDataType()->getModuleKey()=="VuoTransform")
 		{
-			VuoTransform value = VuoTransform_makeFromString(getConstantAsString().c_str());
+			VuoTransform value = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoTransform);
 
 			if (VuoTransform_isIdentity(value))
 				return "≡";
@@ -1809,7 +1816,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoTransform2d")
 		{
-			VuoTransform2d value = VuoTransform2d_makeFromString(getConstantAsString().c_str());
+			VuoTransform2d value = VuoMakeRetainedFromString(getConstantAsString().c_str(), VuoTransform2d);
 
 			if (VuoTransform2d_isIdentity(value))
 				return "≡";
@@ -2174,16 +2181,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else
 				return format("-∞ to ∞");
 		}
-		if (getDataType()->getModuleKey() == "VuoAnchor")
-		{
-			VuoAnchor value = VuoAnchor_makeFromString(getConstantAsString().c_str());
-			return stringAndFree(VuoAnchor_getSummary(value));
-		}
-		if (getDataType()->getModuleKey() == "VuoTextComparison")
-		{
-			VuoTextComparison value = VuoTextComparison_makeFromString(getConstantAsString().c_str());
-			return stringAndFree(VuoTextComparison_getSummary(value));
-		}
+		RETURN_SUMMARY(VuoAnchor);
+		RETURN_SUMMARY(VuoTextComparison);
 		if (getDataType()->getModuleKey() == "VuoBlackmagicInputDevice"
 		 || getDataType()->getModuleKey() == "VuoBlackmagicOutputDevice")
 		{
@@ -2194,16 +2193,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else
 				return "First";
 		}
-		if (getDataType()->getModuleKey() == "VuoSpeechVoice")
-		{
-			VuoSpeechVoice value = VuoSpeechVoice_makeFromString(getConstantAsString().c_str());
-			return stringAndFree(VuoSpeechVoice_getSummary(value));
-		}
-		if (getDataType()->getModuleKey() == "VuoRectangle")
-		{
-			VuoRectangle value = VuoRectangle_makeFromString(getConstantAsString().c_str());
-			return stringAndFree(VuoRectangle_getSummary(value));
-		}
+		RETURN_SUMMARY(VuoSpeechVoice);
+		RETURN_SUMMARY(VuoRectangle);
 		if (getDataType()->getModuleKey() == "VuoNdiSource")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());

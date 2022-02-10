@@ -2,7 +2,7 @@
  * @file
  * VuoMultisample C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,6 @@ bool VuoMultisample_isLessThan(const VuoMultisample valueA, const VuoMultisample
  * Automatically generated function.
  */
 ///@{
-VuoMultisample VuoMultisample_makeFromString(const char *str);
 char *VuoMultisample_getString(const VuoMultisample value);
 void VuoMultisample_retain(VuoMultisample value);
 void VuoMultisample_release(VuoMultisample value);

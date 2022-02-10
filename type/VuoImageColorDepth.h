@@ -2,7 +2,7 @@
  * @file
  * VuoImageColorDepth C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -42,7 +42,6 @@ char * VuoImageColorDepth_getSummary(const VuoImageColorDepth value);
  * Automatically generated function.
  */
 ///@{
-VuoImageColorDepth VuoImageColorDepth_makeFromString(const char *str);
 char * VuoImageColorDepth_getString(const VuoImageColorDepth value);
 void VuoImageColorDepth_retain(VuoImageColorDepth value);
 void VuoImageColorDepth_release(VuoImageColorDepth value);

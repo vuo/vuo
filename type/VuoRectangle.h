@@ -2,7 +2,7 @@
  * @file
  * VuoRectangle C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ bool VuoRectangle_isLessThan(const VuoRectangle a, const VuoRectangle b);
 /**
  * Automatically generated function.
  */
-VuoRectangle VuoRectangle_makeFromString(const char *str);
 char *VuoRectangle_getString(const VuoRectangle r);
 void VuoRectangle_retain(VuoRectangle r);
 void VuoRectangle_release(VuoRectangle r);

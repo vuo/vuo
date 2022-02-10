@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -59,7 +59,6 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
 #endif
 	module = nullptr;
 	constantsCache = nullptr;
-	debugMode = false;
 
 	this->composition = composition;
 	this->isTopLevelComposition = isTopLevelComposition;
@@ -1000,7 +999,7 @@ void VuoCompilerBitcodeGenerator::generateNodeEventFunction(bool isStatefulCompo
 				Value *inputDataPointer = inputPort->generateRetrieveData(module, block, publishedOutputNodeContext);
 
 				VuoCompilerType *dataType = inputPort->getDataVuoType()->getCompiler();
-				VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, inputDataPointer, outputArg, dataType->getSize(module));
+				VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, inputDataPointer, outputArg, dataType);
 
 				map<VuoPort *, size_t>::iterator iter = indexOfEventParameter.find(modelOutputPort);
 				if (iter != indexOfEventParameter.end())
@@ -1507,7 +1506,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
 /**
  * Generates the `compositionSetPortValue()` function, which provides a way to set each port's value.
  *
- * Each definition of `<Type>_makeFromString()` that returns heap data is responsible for registering
+ * Each definition of `<Type>_makeFromJson()` that returns heap data is responsible for registering
  * its return value (with `VuoRegister`).
  *
  * Assumes the semaphore for each node has been initialized.
@@ -1535,28 +1534,33 @@ void VuoCompilerBitcodeGenerator::generateCompositionGetPortValueFunction(void)
  *
  *     if (typeIndex == 0)
  *     {
- *       VuoText oldPortValue;
- *       if (hasOldValue)
- *         oldPortValue = *((VuoText *)portAddress);
+ *       VuoText newPortValue;
  *       if (hasNewValue)
  *       {
- *         VuoText portValue = VuoText_makeFromString(valueAsString);
- *         *((VuoText *)portAddress) = portValue;
- *         VuoRetain(portValue);
- *         if (shouldSendTelemetry)
- *           summary = VuoText_getSummary(portValue);
+ *         json_object *js = json_tokener_parse(valueAsString);
+ *         newPortValue = VuoText_makeFromJson(js);
+ *         VuoRetain(newPortValue);
+ *         json_object_put(js);
  *       }
  *       if (hasOldValue)
- *         VuoRelease(oldPortValue);
+ *         VuoRelease(*(portContext->data));
+ *       if (hasNewValue)
+ *       {
+ *         memcpy(portContext->data, &newPortValue, sizeof(VuoText));
+ *         if (shouldSendTelemetry)
+ *           summary = VuoText_getSummary(newPortValue);
+ *       }
  *     }
  *     else if (typeIndex == 1)
  *     {
  *       if (hasNewValue)
  *       {
- *         VuoReal portValue = VuoReal_makeFromString(valueAsString);
- *         *((VuoReal *)portAddress) = portValue;
+ *         json_object *js = json_tokener_parse(valueAsString);
+ *         VuoReal newPortValue = VuoReal_makeFromJson(js);
+ *         json_object_put(js);
+ *         memcpy(portContext->data, &newPortValue, sizeof(VuoReal));
  *         if (shouldSendTelemetry)
- *           summary = VuoReal_getSummary(portValue);
+ *           summary = VuoReal_getSummary(newPortValue);
  *       }
  *     }
  *     else if ...
@@ -1654,8 +1658,10 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	//   VuoText newPortValue;
 	//   if (hasNewValue)
 	//   {
-	//     newPortValue = VuoText_makeFromString(valueAsString);
+	//     json_object *js = json_tokener_parse(valueAsString);
+	//     newPortValue = VuoText_makeFromJson(js);
 	//     VuoRetain(newPortValue);
+	//     json_object_put(js);
 	//   }
 	//   if (hasOldValue)
 	//     VuoRelease(*(portContext->data));
@@ -1670,7 +1676,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 	// {
 	//   if (hasNewValue)
 	//   {
-	//     VuoReal newPortValue = VuoReal_makeFromString(valueAsString);
+	//     json_object *js = json_tokener_parse(valueAsString);
+	//     VuoReal newPortValue = VuoReal_makeFromJson(js);
+	//     json_object_put(js);
 	//     memcpy(portContext->data, &newPortValue, sizeof(VuoReal));
 	//     if (shouldSendTelemetry)
 	//       summary = VuoReal_getSummary(newPortValue);
@@ -1701,9 +1709,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 
 		BranchInst::Create(makeNewValueBlock, checkOldValueBlock, hasNewValueIsTrue, typeInitialBlock);
 
-		Value *newPortValueAddressLocal = type->generateValueFromStringFunctionCall(module, makeNewValueBlock, valueAsStringValue);
-		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, makeNewValueBlock, newPortValueAddressLocal, newPortValueAddress, type->getSize(module));
-		type->generateRetainCall(module, makeNewValueBlock, newPortValueAddress);
+		Value *newPortValueAddressLocal = type->generateRetainedValueFromString(module, makeNewValueBlock, valueAsStringValue);
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, makeNewValueBlock, newPortValueAddressLocal, newPortValueAddress, type);
+
 		BranchInst::Create(checkOldValueBlock, makeNewValueBlock);
 
 		BranchInst::Create(releaseOldValueBlock, checkNewValueBlock, hasOldValueIsTrue, checkOldValueBlock);
@@ -1713,7 +1721,7 @@ void VuoCompilerBitcodeGenerator::generateCompositionSetPortValueFunction(void)
 
 		BranchInst::Create(setNewValueBlock, typeFinalBlock, hasNewValueIsTrue, checkNewValueBlock);
 
-		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, setNewValueBlock, newPortValueAddress, portAddress, type->getSize(module));
+		VuoCompilerCodeGenUtilities::generateMemoryCopy(module, setNewValueBlock, newPortValueAddress, portAddress, type);
 		BranchInst::Create(summaryBlock, typeFinalBlock, shouldSendTelemetryIsTrue, setNewValueBlock);
 
 		Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, summaryBlock, portAddress);
@@ -2932,8 +2940,6 @@ void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, Basi
 	}
 
 	// Call the node's event function.
-	if (debugMode)
-		VuoCompilerCodeGenUtilities::generatePrint(module, currentBlock, node->getBase()->getTitle() + "\n");
 	node->generateEventFunctionCall(module, function, currentBlock, compositionStateValue);
 
 	if (shouldSendTelemetry)
@@ -3380,6 +3386,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
 	Value *compositionIdentifierValue = constantsCache->get(compositionIdentifier);
 
 	Value *compositionStateValue = VuoCompilerCodeGenUtilities::generateCreateCompositionState(module, initialBlock, runtimeStateValue, compositionIdentifierValue);
+	compositionStateValue->setName("compositionState");
 	VuoCompilerCodeGenUtilities::generateRegisterCall(module, initialBlock, compositionStateValue, VuoCompilerCodeGenUtilities::getFreeFunction(module));
 	VuoCompilerCodeGenUtilities::generateRetainCall(module, initialBlock, compositionStateValue);
 
@@ -4229,12 +4236,4 @@ Function * VuoCompilerBitcodeGenerator::generateNodeTransmissionFunction(Module 
 	ReturnInst::Create(module->getContext(), finalBlock);
 
 	return function;
-}
-
-/**
- * Turn debug mode on/off. In debug mode, print statements are inserted into the generated bitcode.
- */
-void VuoCompilerBitcodeGenerator::setDebugMode(bool debugMode)
-{
-	this->debugMode = debugMode;
 }

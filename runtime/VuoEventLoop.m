@@ -2,7 +2,7 @@
  * @file
  * VuoEventLoop implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -20,6 +20,13 @@
 #include <dlfcn.h>
 
 bool VuoEventLoop_systemAsleep = false;  ///< True if this process has received NSWorkspaceWillSleepNotification.
+
+static id *nsAppGlobal;  ///< A pointer to the NSApp reference (`NSApplication **`), or NULL if there isn't one at the time this module is loaded.
+static void __attribute__((constructor)) VuoEventLoop_init()
+{
+	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
+	nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
+}
 
 /**
  * Is the current thread the main thread?
@@ -79,9 +86,6 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode)
 
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
-	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
-
 	// Support running either with or without an NSApplication.
 	if (nsAppGlobal && *nsAppGlobal)
 	{
@@ -117,9 +121,6 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode)
  */
 void VuoEventLoop_break(void)
 {
-	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
-	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
-
 	if (nsAppGlobal && *nsAppGlobal)
 	{
 		// Send an event, to ensure VuoEventLoop_processEvent()'s call to `nextEventMatchingMask:…` returns immediately.
@@ -169,8 +170,6 @@ bool VuoEventLoop_mayBeTerminated(void)
 		exit(1);
 	}
 
-	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
-	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
 	if (!nsAppGlobal || !*nsAppGlobal)
 		return true;
 

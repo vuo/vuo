@@ -1,6 +1,9 @@
 VuoCompileLibraries(
 	VuoAppLaunch.m
 )
+target_sources(vuo.app.libraries PRIVATE
+	VuoAppLaunch.h
+)
 
 VuoCompileNodes(
 	vuo.app.keepSystemAwake.m

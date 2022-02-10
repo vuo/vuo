@@ -2,7 +2,7 @@
  * @file
  * VuoWindowTextInternal implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -292,7 +292,7 @@ VuoModuleMetadata({
  */
 - (void)clear
 {
-    [textView.textStorage deleteCharactersInRange:NSMakeRange(0, textView.textStorage.length)];
+	[textView.textStorage deleteCharactersInRange:NSMakeRange(0, textView.textStorage.length)];
 }
 
 /**

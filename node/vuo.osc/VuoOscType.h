@@ -2,7 +2,7 @@
  * @file
  * VuoOscType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoOscType_isLessThan(const VuoOscType valueA, const VuoOscType valueB);
  * Automatically generated function.
  */
 ///@{
-VuoOscType VuoOscType_makeFromString(const char *str);
 char *VuoOscType_getString(const VuoOscType value);
 void VuoOscType_retain(VuoOscType value);
 void VuoOscType_release(VuoOscType value);

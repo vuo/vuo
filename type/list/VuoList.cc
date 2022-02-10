@@ -2,7 +2,7 @@
  * @file
  * VuoList implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -166,6 +166,19 @@ LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const E
 #if IS_ELEMENT_REFERENCE_COUNTED != 0
 	for (unsigned long i = 0; i < count; ++i)
 		RETAIN(value);
+#endif
+
+	return reinterpret_cast<LIST_TYPE>(l);
+}
+
+LIST_TYPE VuoListCreateWithValueArray_ELEMENT_TYPE(const ELEMENT_TYPE *values, const unsigned long valueCount)
+{
+	std::vector<ELEMENT_TYPE> *l = new std::vector<ELEMENT_TYPE>(values, values + valueCount);
+	VuoRegister(l, VuoListDestroy_ELEMENT_TYPE);
+
+#if IS_ELEMENT_REFERENCE_COUNTED != 0
+	for (unsigned long i = 0; i < valueCount; ++i)
+		RETAIN(values[i]);
 #endif
 
 	return reinterpret_cast<LIST_TYPE>(l);
@@ -557,4 +570,14 @@ unsigned long VuoListGetCount_ELEMENT_TYPE(const LIST_TYPE list)
 
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	return l->size();
+}
+
+void LIST_TYPE_retain(LIST_TYPE value)
+{
+	VuoRetain(value);
+}
+
+void LIST_TYPE_release(LIST_TYPE value)
+{
+	VuoRelease(value);
 }

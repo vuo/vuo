@@ -2,7 +2,7 @@
  * @file
  * VuoCglPixelFormat implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -177,6 +177,7 @@ char *VuoCglRenderer_getText(int rendererID)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	if      (rendererID == kCGLRendererGenericFloatID          ) return strdup("Apple Software Renderer (GenericFloat)");
 	else if (rendererID == kCGLRendererAppleSWID               ) return strdup("Apple Software Renderer (AppleSW)");
+	else if (rendererID == 0x27f00                             ) return strdup("Apple Silicon");  // M1, M1 Pro
 	else if (rendererID == kCGLRendererATIRage128ID            ) return strdup("ATI Rage 128");
 	else if (rendererID == kCGLRendererATIRadeonID             ) return strdup("ATI Radeon");
 	else if (rendererID == kCGLRendererATIRageProID            ) return strdup("ATI Rage Pro");

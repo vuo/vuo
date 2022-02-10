@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimeState implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,6 +12,7 @@
 #include <dlfcn.h>
 #include <signal.h>
 #include <sstream>
+#include <CoreFoundation/CoreFoundation.h>
 #include "VuoCompositionDiff.hh"
 #include "VuoEventLoop.h"
 #include "VuoException.hh"
@@ -182,6 +183,14 @@ pid_t VuoRuntimeState::getRunnerPid(void)
 }
 
 /**
+ * Returns true if the runner and the composition are in the same process.
+ */
+bool VuoRuntimeState::isRunnerInCurrentProcess(void)
+{
+	return runnerPid == getpid();
+}
+
+/**
  * Returns true if automatic termination is not currently disabled.
  */
 bool VuoRuntimeState::mayBeTerminated(void)
@@ -282,7 +291,7 @@ void VuoRuntimeState::unpauseComposition(void)
  * Stops the composition, either for a live-coding reload or permanently, as a result of a
  * stop message from the runner.
  */
-void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds, bool isLastEverInProcess)
+void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds)
 {
 	if (! isBeingReplaced)
 	{
@@ -301,15 +310,6 @@ void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int
 
 		VuoCompositionState compositionState = { (void *)this, "" };
 		vuoAddCompositionStateToThreadLocalStorage(&compositionState);
-
-		// https://b33p.net/kosada/node/12912
-		if (isLastEverInProcess)
-		{
-			typedef void (*VuoImageTextCacheFiniType)(void);
-			VuoImageTextCacheFiniType vuoImageTextCacheFini = (VuoImageTextCacheFiniType) dlsym(RTLD_DEFAULT, "VuoImageTextCache_fini");
-			if (vuoImageTextCacheFini)
-				vuoImageTextCacheFini();
-		}
 
 		VuoHeap_report();
 
@@ -394,8 +394,31 @@ void VuoRuntimeState::stopComposition(bool isBeingReplaced, int timeoutInSeconds
 			}
 		});
 
-		if (!isBeingReplaced)
-			persistentState->callFiniCallbacks();
+		if (! isBeingReplaced && ! isRunnerInCurrentProcess())
+		{
+			VuoCompositionState compositionState = { (void *)this, "" };
+			vuoAddCompositionStateToThreadLocalStorage(&compositionState);
+
+			// Call VuoImageRenderer_fini() to clean up its graphics data before the VuoGlPool goes away.
+			typedef void (*VuoImageRendererFiniType)(void);
+			VuoImageRendererFiniType vuoImageRendererFini = (VuoImageRendererFiniType) dlsym(RTLD_DEFAULT, "VuoImageRenderer_fini");
+			if (vuoImageRendererFini)
+				vuoImageRendererFini();
+
+			// Call VuoImageTextCache_fini() to clear the cache so that the subsequent VuoHeap_report() doesn't report memory leaks.
+			typedef void (*VuoImageTextCacheFiniType)(void);
+			VuoImageTextCacheFiniType vuoImageTextCacheFini = (VuoImageTextCacheFiniType) dlsym(RTLD_DEFAULT, "VuoImageTextCache_fini");
+			if (vuoImageTextCacheFini)
+				vuoImageTextCacheFini();
+
+			// Call VuoApp_fini() to shut down the NSApplication gracefully. (This must be done *before* breaking out of the event loop.)
+			typedef void (*VuoAppFiniType)(void);
+			VuoAppFiniType vuoAppFini = (VuoAppFiniType) dlsym(RTLD_DEFAULT, "VuoApp_fini");
+			if (vuoAppFini)
+				vuoAppFini();
+
+			vuoRemoveCompositionStateFromThreadLocalStorage();
+		}
 
 		vuoCleanup();
 
@@ -429,7 +452,7 @@ void VuoRuntimeState::killProcessAfterTimeout(int timeoutInSeconds)
 	if (timeoutInSeconds < 0)
 		return;
 
-	if (runnerPid == getpid())
+	if (isRunnerInCurrentProcess())
 		// If the runner is in the same process as the composition (and possibly other current-process compositions),
 		// it would be overkill to kill all of it.
 		return;
@@ -442,16 +465,28 @@ void VuoRuntimeState::killProcessAfterTimeout(int timeoutInSeconds)
 		dispatch_source_t backupTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
 		dispatch_source_set_timer(backupTimer, dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC), timeoutInSeconds * NSEC_PER_SEC, NSEC_PER_SEC/10);
 		dispatch_source_set_event_handler(backupTimer, ^{
-			persistentState->communicator->sendCompositionStoppingAndCloseControl();
-			VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds * 2);
-			kill(getpid(), SIGKILL);
+			if (mayBeTerminated())
+			{
+				persistentState->communicator->sendCompositionStoppingAndCloseControl();
+				VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds * 2);
+				kill(getpid(), SIGKILL);
+			}
 		});
 		dispatch_resume(backupTimer);
 
 		__block bool eventLoopMayBeTerminated;
-		dispatch_sync(dispatch_get_main_queue(), ^{
+		std::mutex *mainMutex = new std::mutex;
+		mainMutex->lock();
+		CFRunLoopPerformBlock(CFRunLoopGetMain(), kCFRunLoopCommonModes, ^{
 			eventLoopMayBeTerminated = VuoEventLoop_mayBeTerminated();
+			mainMutex->unlock();
 		});
+		CFRunLoopWakeUp(CFRunLoopGetMain());
+
+		// Wait for the above block to execute on the main thread.
+		mainMutex->lock();
+		delete mainMutex;
+
 		if (mayBeTerminated() && eventLoopMayBeTerminated)
 		{
 			persistentState->communicator->sendCompositionStoppingAndCloseControl();

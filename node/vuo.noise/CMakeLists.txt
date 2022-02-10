@@ -1,10 +1,17 @@
 VuoCompileLibraries(
 	VuoGradientNoiseCommon.c
 )
+target_sources(vuo.noise.libraries PRIVATE
+	VuoGradientNoiseCommon.h
+)
 
 VuoCompileTypes(
 	VuoGradientNoise.c
 	VuoNoise.c
+)
+target_sources(vuo.noise.types PRIVATE
+	VuoGradientNoise.h
+	VuoNoise.h
 )
 
 VuoCompileGenericNodes(

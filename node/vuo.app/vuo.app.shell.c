@@ -2,7 +2,7 @@
  * @file
  * vuo.app.shell node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -19,7 +19,7 @@ VuoModuleMetadata({
 		"BASH", "AppleScript", "JavaScript", "Perl", "PHP", "Python", "Ruby", "cURL",
 		"``", "$()",
 	],
-	"version" : "1.0.1",
+	"version" : "1.0.2",
 	"node" : {
 		"exampleCompositions" : [ "ShowTextBanner.vuo" ]
 	}
@@ -113,8 +113,7 @@ void nodeEvent(
 	}
 	while (!feof(fp));
 
-	*output = VuoText_make(data);
-	free(data);
+	*output = VuoText_makeWithoutCopying(data);
 
 	int pcloseStatus = pclose(fp);
 	*status = WIFEXITED(pcloseStatus) ? WEXITSTATUS(pcloseStatus) : -1;

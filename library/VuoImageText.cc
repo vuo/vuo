@@ -2,7 +2,7 @@
  * @file
  * VuoImageText implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -84,7 +84,7 @@ bool operator<(const VuoFontClass &a, const VuoFontClass &b)
 /**
  * Initialize a new instance of VuoImageTextData.
  */
-VuoImageTextData VuoImageTextData_make()
+VuoImageTextData VuoImageTextData_make(void)
 {
 	VuoImageTextData i                       = (VuoImageTextData)malloc(sizeof(struct _VuoImageTextData));
 	i->lineCounts                            = nullptr;
@@ -174,46 +174,53 @@ extern "C" void __attribute__((constructor)) VuoImageTextCache_preinit(void)
  */
 static void VuoImageTextCache_init(void)
 {
-	VuoImageTextCache_semaphore = dispatch_semaphore_create(1);
-	VuoImageTextCache_canceledAndCompleted = dispatch_semaphore_create(0);
-	VuoImageTextCache = new VuoImageTextCacheType;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		VuoImageTextCache_semaphore = dispatch_semaphore_create(1);
+		VuoImageTextCache_canceledAndCompleted = dispatch_semaphore_create(0);
+		VuoImageTextCache = new VuoImageTextCacheType;
 
-	VuoImageTextCache_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-	dispatch_source_set_timer(VuoImageTextCache_timer, dispatch_walltime(NULL, 0), NSEC_PER_SEC * VuoImageTextCache_timeout, NSEC_PER_SEC * VuoImageTextCache_timeout);
-	dispatch_source_set_event_handler_f(VuoImageTextCache_timer, VuoImageTextCache_cleanup);
-	dispatch_source_set_cancel_handler(VuoImageTextCache_timer, ^ {
-					dispatch_semaphore_signal(VuoImageTextCache_canceledAndCompleted);
-			});
-	dispatch_resume(VuoImageTextCache_timer);
+		VuoImageTextCache_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, DISPATCH_TIMER_STRICT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+		dispatch_source_set_timer(VuoImageTextCache_timer, dispatch_walltime(NULL, 0), NSEC_PER_SEC * VuoImageTextCache_timeout, NSEC_PER_SEC * VuoImageTextCache_timeout);
+		dispatch_source_set_event_handler_f(VuoImageTextCache_timer, VuoImageTextCache_cleanup);
+		dispatch_source_set_cancel_handler(VuoImageTextCache_timer, ^ {
+						dispatch_semaphore_signal(VuoImageTextCache_canceledAndCompleted);
+				});
+		dispatch_resume(VuoImageTextCache_timer);
+	});
 }
 
 /**
  * Destroys the cache.
  *
- * This is called by @ref VuoRuntimeState::stopCompositionAsOrderedByRunner.
+ * This is called first by VuoRuntimeState when stopping a composition if the composition is running in its own process,
+ * but has `__attribute__((destructor))` to ensure it gets called eventually to cancel the timer to avoid crashes.
  */
 extern "C" void __attribute__((destructor)) VuoImageTextCache_fini(void)
 {
 	if (! VuoImageTextCache_timer)
 		return;
 
-	dispatch_source_cancel(VuoImageTextCache_timer);
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		dispatch_source_cancel(VuoImageTextCache_timer);
 
-	// Wait for the last cleanup to complete.
-	dispatch_semaphore_wait(VuoImageTextCache_canceledAndCompleted, DISPATCH_TIME_FOREVER);
+		// Wait for the last cleanup to complete.
+		dispatch_semaphore_wait(VuoImageTextCache_canceledAndCompleted, DISPATCH_TIME_FOREVER);
 
-	// Clean up anything that still remains.
-	//      VLog("cache:");
-	for (VuoImageTextCacheType::iterator item = VuoImageTextCache->begin(); item != VuoImageTextCache->end(); ++item)
-	{
-		// VLog("\t\"%s\" %s backingScaleFactor=%g", item->first.first.c_str(), item->first.second.first.f.fontName, item->first.second.second);
-		// VLog("\t\tpurging");
-		VuoRelease(item->second.first.first);
-	}
+		// Clean up anything that still remains.
+		//      VLog("cache:");
+		for (VuoImageTextCacheType::iterator item = VuoImageTextCache->begin(); item != VuoImageTextCache->end(); ++item)
+		{
+			// VLog("\t\"%s\" %s backingScaleFactor=%g", item->first.first.c_str(), item->first.second.first.f.fontName, item->first.second.second);
+			// VLog("\t\tpurging");
+			VuoRelease(item->second.first.first);
+		}
 
-	delete VuoImageTextCache;
-	dispatch_release(VuoImageTextCache_timer);
-	VuoImageTextCache_timer = NULL;
+		delete VuoImageTextCache;
+		dispatch_release(VuoImageTextCache_timer);
+		VuoImageTextCache_timer = NULL;
+	});
 }
 
 /**
@@ -759,10 +766,7 @@ VuoImage VuoImage_makeText(VuoText text, VuoFont font, float backingScaleFactor,
 		return NULL;
 
 	// Is there an image ready in the cache?
-	static dispatch_once_t initCache = 0;
-	dispatch_once(&initCache, ^ {
-		VuoImageTextCache_init();
-	});
+	VuoImageTextCache_init();
 	VuoFontClass fc(font, backingScaleFactor, verticalScale, rotation, wrapWidth);
 	VuoImageTextCacheDescriptor descriptor(text, fc);
 	dispatch_semaphore_wait(VuoImageTextCache_semaphore, DISPATCH_TIME_FOREVER);

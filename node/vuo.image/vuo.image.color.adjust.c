@@ -2,7 +2,7 @@
  * @file
  * vuo.image.color.adjust node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						 "white balance",
 						 "filter"
 					  ],
-					 "version" : "1.3.0",
+					 "version" : "1.3.1",
 					 "node" : {
 						 "exampleCompositions" : [ "EnhanceBlue.vuo" ]
 					 }
@@ -163,8 +163,8 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal((*instance)->shader, "tint", tint);
 	VuoShader_setUniform_VuoReal((*instance)->shader, "brightness", brightness);	// -1, 1 values
 	VuoShader_setUniform_VuoReal((*instance)->shader, "contrast", contrast+1);		// 0, 2 values
-	VuoShader_setUniform_VuoReal((*instance)->shader, "gamma", gamma);
-	VuoShader_setUniform_VuoReal((*instance)->shader, "exposure", exposure*10);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "gamma", VuoReal_makeNonzero(gamma));
+	VuoShader_setUniform_VuoReal((*instance)->shader, "exposure", VuoReal_makeNonzero(exposure * 10));
 
 	// Render.
 	*adjustedImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));

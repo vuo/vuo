@@ -2,7 +2,7 @@
  * @file
  * VuoCompositionLoader implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -433,11 +433,10 @@ void stopComposition(void)
 	vuoMemoryBarrier();
 
 	const int timeoutInSeconds = -1;
-	zmq_msg_t messages[3];
+	zmq_msg_t messages[2];
 	vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
 	vuoInitMessageWithBool(&messages[1], true ); // isBeingReplaced
-	vuoInitMessageWithBool(&messages[2], false); // isLastEverInProcess
-	vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 3);
+	vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 2);
 	vuoControlReplyReceive(VuoControlReplyCompositionStopping);
 }
 

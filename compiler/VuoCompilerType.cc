@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerType implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -27,7 +27,6 @@ VuoCompilerType::VuoCompilerType(string typeName, Module *module)
 	makeFromJsonFunction = NULL;
 	getJsonFunction = NULL;
 	getInterprocessJsonFunction = NULL;
-	makeFromStringFunction = NULL;
 	getStringFunction = NULL;
 	getInterprocessStringFunction = NULL;
 	getSummaryFunction = NULL;
@@ -107,7 +106,6 @@ void VuoCompilerType::parse(void)
 		llvmReturnType = makeFromJsonFunction->arg_begin()->getType();
 	}
 
-	parseOrGenerateValueFromStringFunction();
 	parseOrGenerateStringFromValueFunction(false);
 	if (getInterprocessJsonFunction)
 		parseOrGenerateStringFromValueFunction(true);
@@ -123,83 +121,6 @@ set<string> VuoCompilerType::globalsToRename(void)
 {
 	set<string> globals = VuoCompilerModule::globalsToRename();
 	return globals;
-}
-
-/**
- * When compiling a type, adds a @c [Type]_makeFromString() function to the type definition.
- *
- * @eg{
- * VuoBoolean VuoBoolean_makeFromString(const char *str)
- * {
- * 	json_object * js = json_tokener_parse(str);
- * 	VuoBoolean value = VuoBoolean_makeFromJson(js);
- * 	json_object_put(js);
- * 	return value;
- * }
- * }
- *
- * When parsing a compiled type, parses this function from the type definition.
- *
- * Assumes that makeFromJsonFunction has been parsed and llvmType has been set.
- */
-void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
-{
-	string functionName = (getBase()->getModuleKey() + "_makeFromString").c_str();
-	Function *function = parser->getFunction(functionName);
-
-	bool isReturnInParam = VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(makeFromJsonFunction);
-
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		FunctionType *makeFromJsonFunctionType = makeFromJsonFunction->getFunctionType();
-
-		Type *returnType = makeFromJsonFunctionType->getReturnType();
-
-		vector<Type *> functionParams;
-		if (isReturnInParam)
-			functionParams.push_back(makeFromJsonFunctionType->getParamType(0));
-		functionParams.push_back(pointerToCharType);
-
-		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-
-		if (isReturnInParam)
-			VuoCompilerCodeGenUtilities::copyParameterAttributes(makeFromJsonFunction, function);
-	}
-
-	if (function->isDeclaration())
-	{
-		BasicBlock *block = BasicBlock::Create(module->getContext(), "", function);
-
-		Function::arg_iterator args = function->arg_begin();
-		Value *result = NULL;
-		if (isReturnInParam)
-		{
-			result = args++;
-			result->setName("result");
-		}
-		Value *str = args++;
-		str->setName("str");
-
-		Function *jsonTokenerParseFunction = VuoCompilerCodeGenUtilities::getJsonTokenerParseFunction(module);
-		Function *jsonObjectPutFunction = VuoCompilerCodeGenUtilities::getJsonObjectPutFunction(module);
-
-		CallInst *jsonTokenerParseReturn = CallInst::Create(jsonTokenerParseFunction, str, "", block);
-
-		vector<Value *> makeFromJsonArgs;
-		if (isReturnInParam)
-			makeFromJsonArgs.push_back(result);
-		makeFromJsonArgs.push_back(jsonTokenerParseReturn);
-		Value *makeFromJsonReturn = CallInst::Create(makeFromJsonFunction, makeFromJsonArgs, "", block);
-
-		CallInst::Create(jsonObjectPutFunction, jsonTokenerParseReturn, "", block);
-
-		Value *returnValue = (isReturnInParam ? NULL : makeFromJsonReturn);
-		ReturnInst::Create(module->getContext(), returnValue, block);
-	}
-
-	makeFromStringFunction = function;
 }
 
 /**
@@ -288,24 +209,24 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
 }
 
 /**
- * When compiling a type, adds a @c [Type]_retain() or @c [Type]_release() function to the type definition.
+ * When compiling a type, generates a `[Type]_retain()` or `[Type]_release()` function,
+ * unless the type module already includes implementations of those functions.
  *
  * @eg{
- * void VuoSceneObject_retain(VuoSceneObject value)
+ * void VuoNdiSource_retain(VuoNdiSource value)
  * {
- *   VuoRetain((void *)value.mesh);
- *   VuoRetain((void *)value.shader);
- *   VuoRetain((void *)value.childObjects);
+ *   VuoRetain((void *)value.name);
+ *   VuoRetain((void *)value.ipAddress);
  * }
  * }
  *
  * When parsing a compiled type, parses this function from the type definition.
  *
- * Assumes that llvmType has been set.
+ * Assumes that `llvmArgumentType` has been set.
  */
 void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 {
-	string functionName = (getBase()->getModuleKey() + (isRetain ? "_retain" : "_release")).c_str();
+	string functionName{getBase()->getModuleKey() + (isRetain ? "_retain" : "_release")};
 	Function *function = parser->getFunction(functionName);
 
 	if (! function)
@@ -364,29 +285,51 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 }
 
 /**
- * Generates a call to @c [Type]_makeFromString().
+ * Generates code that unserializes data from a string.
+ *
+ * @eg{
+ * json_object *js = json_tokener_parse(str);
+ * VuoImage value = VuoImage_makeFromJson(js);
+ * VuoRetain(value);
+ * json_object_put(js);
+ * }
  *
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
- * @param arg The argument to pass to @c [Type]_makeFromString().
- * @return The return value of @c [Type]_makeFromString().
+ * @param stringValue The serialized data, which will be passed to `json_tokener_parse()`.
+ * @return The unserialized port data (the same data type as `portContext->data`).
  */
-Value * VuoCompilerType::generateValueFromStringFunctionCall(Module *module, BasicBlock *block, Value *arg)
+Value * VuoCompilerType::generateRetainedValueFromString(Module *module, BasicBlock *block, Value *stringValue)
 {
-	Function *function = declareFunctionInModule(module, makeFromStringFunction);
+	Function *makeFromJsonFunctionInModule = declareFunctionInModule(module, makeFromJsonFunction);
 
-	if (isReturnPassedAsArgument)
+	Function *jsonTokenerParseFunction = VuoCompilerCodeGenUtilities::getJsonTokenerParseFunction(module);
+	Value *jsonValue = CallInst::Create(jsonTokenerParseFunction, stringValue, "valueAsJson", block);
+
+	vector<Value *> makeFromJsonArgs;
+	int jsonParamIndex = makeFromJsonFunctionInModule->getFunctionType()->getNumParams() - 1;
+	Type *jsonParamType = static_cast<PointerType *>(makeFromJsonFunctionInModule->getFunctionType()->getParamType(jsonParamIndex));
+	Value *jsonArg = new BitCastInst(jsonValue, jsonParamType, "", block);
+	makeFromJsonArgs.push_back(jsonArg);
+
+	Value *dataPointer = nullptr;
+	if (VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(makeFromJsonFunctionInModule))
 	{
-		vector<Value *> functionArgs;
-		functionArgs.push_back(arg);
-		Value *returnVariable = VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(function, functionArgs, block);
-		return new BitCastInst(returnVariable, llvmReturnType, "valueFromString", block);
+		Value *makeFromJsonReturn = VuoCompilerCodeGenUtilities::callFunctionWithStructReturn(makeFromJsonFunctionInModule, makeFromJsonArgs, block);
+		dataPointer = new BitCastInst(makeFromJsonReturn, llvmReturnType, "valueFromString", block);
 	}
 	else
 	{
-		Value *returnValue = CallInst::Create(function, arg, "valueFromString", block);
-		return VuoCompilerCodeGenUtilities::generatePointerToValue(block, returnValue);
+		Value *makeFromJsonReturn = CallInst::Create(makeFromJsonFunctionInModule, makeFromJsonArgs, "valueFromString", block);
+		dataPointer = VuoCompilerCodeGenUtilities::generatePointerToValue(block, makeFromJsonReturn);
 	}
+
+	generateRetainCall(module, block, dataPointer);
+
+	Function *jsonObjectPutFunction = VuoCompilerCodeGenUtilities::getJsonObjectPutFunction(module);
+	CallInst::Create(jsonObjectPutFunction, jsonValue, "", block);
+
+	return dataPointer;
 }
 
 /**
@@ -436,8 +379,7 @@ Value * VuoCompilerType::generateSummaryFromValueFunctionCall(Module *module, Ba
  */
 void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Value *arg)
 {
-	if (isRetainOrReleaseNeeded())
-		generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
+	generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
 }
 
 /**
@@ -445,8 +387,7 @@ void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Valu
  */
 void VuoCompilerType::generateReleaseCall(Module *module, BasicBlock *block, Value *arg)
 {
-	if (isRetainOrReleaseNeeded())
-		generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
+	generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
 }
 
 /**
@@ -544,8 +485,6 @@ Value * VuoCompilerType::convertArgsToPortData(Module *module, BasicBlock *block
 		for (auto arg : args)
 			totalArgByteCount += module->getDataLayout().getTypeStoreSize(arg->getType());
 
-		size_t dataByteCount = getSize(module);
-
 		Value *dataPointer = new AllocaInst(llvmReturnType, 0, "dataPointer", block);
 		Value *dataPointerAsBytePointer = new BitCastInst(dataPointer, PointerType::getUnqual(IntegerType::get(module->getContext(), 8)), "dataBytePointer", block);
 
@@ -555,10 +494,10 @@ Value * VuoCompilerType::convertArgsToPortData(Module *module, BasicBlock *block
 			Value *argPointer        = VuoCompilerCodeGenUtilities::generatePointerToValue(block, arg);
 			Value *offsetValue       = ConstantInt::get(module->getContext(), APInt(64, argByteOffset));
 			Value *offsetDataPointer = GetElementPtrInst::Create(nullptr, dataPointerAsBytePointer, offsetValue, "", block);
-			size_t argByteCount      = module->getDataLayout().getTypeStoreSize(arg->getType());
-			size_t copyByteCount     = max(argByteCount, argByteCount - (dataByteCount - (argByteOffset + argByteCount)));
-			VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, argPointer, offsetDataPointer, copyByteCount);
-			argByteOffset += argByteCount;
+			size_t storeByteCount    = module->getDataLayout().getTypeStoreSize(arg->getType());
+			size_t allocByteCount    = module->getDataLayout().getTypeAllocSize(arg->getType());
+			VuoCompilerCodeGenUtilities::generateMemoryCopy(module, block, argPointer, offsetDataPointer, storeByteCount);
+			argByteOffset += allocByteCount;
 		}
 
 		return dataPointer;
@@ -580,16 +519,27 @@ Value * VuoCompilerType::generateFunctionCallWithTypeParameter(Module *module, B
 }
 
 /**
- * Returns this type's storage size in bytes.
+ * Returns the offset in bytes between successive objects of the type, including alignment padding.
  */
-size_t VuoCompilerType::getSize(Module *module)
+size_t VuoCompilerType::getAllocationSize(Module *module)
 {
 	Type *type = llvmReturnType;
 	if (isReturnPassedAsArgument)
 		type = static_cast<PointerType *>(llvmReturnType)->getElementType();
 
-	size_t size = module->getDataLayout().getTypeStoreSize(type);
-	return size;
+	return module->getDataLayout().getTypeAllocSize(type);
+}
+
+/**
+ * Returns the maximum number of bytes that may be overwritten by storing the type.
+ */
+size_t VuoCompilerType::getStorageSize(Module *module)
+{
+	Type *type = llvmReturnType;
+	if (isReturnPassedAsArgument)
+		type = static_cast<PointerType *>(llvmReturnType)->getElementType();
+
+	return module->getDataLayout().getTypeStoreSize(type);
 }
 
 /**
@@ -602,15 +552,6 @@ Value * VuoCompilerType::convertToPortData(BasicBlock *block, Value *voidPointer
 		type = llvmReturnType;
 
 	return new BitCastInst(voidPointer, type, "", block);
-}
-
-/**
- * Returns true if this type is itself reference-counted,
- * or may have structure members that are reference-counted.
- */
-bool VuoCompilerType::isRetainOrReleaseNeeded()
-{
-	return llvmReturnType->isPointerTy() || llvmReturnType->isStructTy();
 }
 
 /**

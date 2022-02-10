@@ -2,7 +2,7 @@
  * @file
  * VuoDragEvent implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -103,4 +103,22 @@ bool VuoDragEvent_isLessThan(const VuoDragEvent a, const VuoDragEvent b)
 	VuoType_returnInequality(VuoPoint2d,     a.position, b.position);
 	VuoType_returnInequality(VuoList_VuoUrl, a.urls,     b.urls);
 	return false;
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoDragEvent_retain(VuoDragEvent value)
+{
+	VuoRetain(value.urls);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoDragEvent_release(VuoDragEvent value)
+{
+	VuoRelease(value.urls);
 }

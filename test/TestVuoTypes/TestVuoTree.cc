@@ -2,7 +2,7 @@
  * @file
  * TestVuoTree implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -30,6 +30,8 @@ typedef QMap<QString, QString> QStringMap;
 Q_DECLARE_METATYPE(QStringMap);
 typedef QList<ElementAndAttributes> ElementAndAttributesList;
 Q_DECLARE_METATYPE(ElementAndAttributesList);
+Q_DECLARE_OPAQUE_POINTER(json_object *)
+Q_DECLARE_METATYPE(json_object *)
 
 /**
  * Tests the VuoTree type.
@@ -87,6 +89,7 @@ private slots:
 	void testMakeAndGet_data()
 	{
 		QTest::addColumn<VuoTree>("tree");
+		QTest::addColumn<json_object *>("jsonObjectToRelease");
 		QTest::addColumn<QString>("name");
 		QTest::addColumn<QStringMap>("attributes");
 		QTest::addColumn<QString>("content");
@@ -95,89 +98,85 @@ private slots:
 
 		QMap<QString, QString> noAttributes;
 		VuoDictionary_VuoText_VuoText noAttributesDict = VuoDictionaryCreate_VuoText_VuoText();
+		json_object *noJson = nullptr;
 
 		{
-			QTest::newRow("empty string")	<< VuoTree_makeFromString("")
-											<< "" << noAttributes << "" << "" << 0;
-		}
-		{
-			QTest::newRow("empty XML string")	<< VuoTree_makeFromString(QUOTE({"xml":""}))
+			json_object *o = json_tokener_parse(QUOTE({"xml":""}));
+			QTest::newRow("empty XML string")	<< VuoTree_makeFromJson(o) << o
 												<< "" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("empty JSON string")	<< VuoTree_makeFromString(QUOTE({"json":""}))
+			json_object *o = json_tokener_parse(QUOTE({"json":""}));
+			QTest::newRow("empty JSON string")	<< VuoTree_makeFromJson(o) << o
 												<< "" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("empty tree, constructed")	<< VuoTree_makeEmpty()
+			QTest::newRow("empty tree, constructed")	<< VuoTree_makeEmpty() << noJson
 														<< "" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("empty tree, parsed, XML")	<< VuoTree_makeFromXmlText("", false)
+			QTest::newRow("empty tree, parsed, XML")	<< VuoTree_makeFromXmlText("", false) << noJson
 														<< "" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("empty tree, parsed, JSON")	<< VuoTree_makeFromJsonText("")
+			QTest::newRow("empty tree, parsed, JSON")	<< VuoTree_makeFromJsonText("") << noJson
 														<< "" << noAttributes << "" << "" << 0;
 		}
 		{
 			VuoTree tree = VuoTree_makeEmpty();
 			json_object *o = VuoTree_getInterprocessJson(tree);
-			QTest::newRow("empty tree, interprocess")	<< VuoTree_makeFromJson(o)
+			QTest::newRow("empty tree, interprocess")	<< VuoTree_makeFromJson(o) << o
 														<< "" << noAttributes << "" << "" << 0;
-			json_object_put(o);
 			VuoTree_retain(tree);
 			VuoTree_release(tree);
 		}
 		{
-			QTest::newRow("tree with null ingredients")	<< VuoTree_make(NULL, noAttributesDict, NULL, NULL)
+			QTest::newRow("tree with null ingredients")	<< VuoTree_make(NULL, noAttributesDict, NULL, NULL) << noJson
 														<< "" << noAttributes << "" << "" << 0;
 		}
 		{
 			VuoList_VuoTree children = VuoListCreate_VuoTree();
-			QTest::newRow("tree with empty ingredients")	<< VuoTree_make("", noAttributesDict, "", children)
+			QTest::newRow("tree with empty ingredients")	<< VuoTree_make("", noAttributesDict, "", children) << noJson
 															<< "" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("leaf node, XML")		<< VuoTree_makeFromXmlText("<a>b</a>", false)
+			QTest::newRow("leaf node, XML")		<< VuoTree_makeFromXmlText("<a>b</a>", false) << noJson
 												<< "a" << noAttributes << "b" << "b" << 0;
 		}
 		{
-			QTest::newRow("leaf node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"a":"b"}))
+			QTest::newRow("leaf node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"a":"b"})) << noJson
 												<< "a" << noAttributes << "b" << "b" << 0;
 		}
 		{
-			QTest::newRow("leaf node, JSON, non-XML-compliant key") << VuoTree_makeFromJsonText(QUOTE({"50":"#ffebee"}))
+			QTest::newRow("leaf node, JSON, non-XML-compliant key") << VuoTree_makeFromJsonText(QUOTE({"50":"#ffebee"})) << noJson
 												<< "50" << noAttributes << "#ffebee" << "#ffebee" << 0;
 		}
 		{
-			QTest::newRow("leaf node, constructed")	<< VuoTree_make("a", noAttributesDict, "b", NULL)
+			QTest::newRow("leaf node, constructed")	<< VuoTree_make("a", noAttributesDict, "b", NULL) << noJson
 													<< "a" << noAttributes << "b" << "b" << 0;
 		}
 		{
 			VuoTree tree = VuoTree_makeFromXmlText("<a>b</a>", false);
 			json_object *o = VuoTree_getInterprocessJson(tree);
-			QTest::newRow("leaf node, XML interprocess")	<< VuoTree_makeFromJson(o)
+			QTest::newRow("leaf node, XML interprocess")	<< VuoTree_makeFromJson(o) << o
 															<< "a" << noAttributes << "b" << "b" << 0;
-			json_object_put(o);
 			VuoTree_retain(tree);
 			VuoTree_release(tree);
 		}
 		{
 			VuoTree tree = VuoTree_makeFromJsonText(QUOTE({"a":"b"}));
 			json_object *o = VuoTree_getInterprocessJson(tree);
-			QTest::newRow("leaf node, JSON interprocess")	<< VuoTree_makeFromJson(o)
+			QTest::newRow("leaf node, JSON interprocess")	<< VuoTree_makeFromJson(o) << o
 															<< "a" << noAttributes << "b" << "b" << 0;
-			json_object_put(o);
 			VuoTree_retain(tree);
 			VuoTree_release(tree);
 		}
 		{
-			QTest::newRow("parent node, XML")	<< VuoTree_makeFromXmlText("<patient><height>1.5</height><weight>45</weight></patient>", false)
+			QTest::newRow("parent node, XML")	<< VuoTree_makeFromXmlText("<patient><height>1.5</height><weight>45</weight></patient>", false) << noJson
 												<< "patient" << noAttributes << "" << "1.545" << 2;
 		}
 		{
-			QTest::newRow("parent node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"patient":{"height":1.5,"weight":45}}))
+			QTest::newRow("parent node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"patient":{"height":1.5,"weight":45}})) << noJson
 												<< "patient" << noAttributes << "" << "1.545" << 2;
 		}
 		{
@@ -186,15 +185,14 @@ private slots:
 			VuoList_VuoTree children = VuoListCreate_VuoTree();
 			VuoListAppendValue_VuoTree(children, height);
 			VuoListAppendValue_VuoTree(children, weight);
-			QTest::newRow("parent node, constructed")	<< VuoTree_make("patient", noAttributesDict, "", children)
+			QTest::newRow("parent node, constructed")	<< VuoTree_make("patient", noAttributesDict, "", children) << noJson
 														<< "patient" << noAttributes << "" << "1.545" << 2;
 		}
 		{
 			VuoTree tree = VuoTree_makeFromJsonText(QUOTE({"patient":{"height":1.5,"weight":45}}));
 			json_object *o = VuoTree_getJson(tree);
-			QTest::newRow("parent node, JSON intraprocess")	<< VuoTree_makeFromJson(o)
+			QTest::newRow("parent node, JSON intraprocess")	<< VuoTree_makeFromJson(o) << o
 															<< "patient" << noAttributes << "" << "1.545" << 2;
-			json_object_put(o);
 		}
 		{
 			VuoTree height = VuoTree_make("height", noAttributesDict, "1.5", NULL);
@@ -204,77 +202,76 @@ private slots:
 			VuoListAppendValue_VuoTree(children, weight);
 			VuoTree tree = VuoTree_make("patient", noAttributesDict, "", children);
 			json_object *o = VuoTree_getJson(tree);
-			QTest::newRow("parent node, constructed intraprocess")	<< VuoTree_makeFromJson(o)
+			QTest::newRow("parent node, constructed intraprocess")	<< VuoTree_makeFromJson(o) << o
 																	<< "patient" << noAttributes << "" << "1.545" << 2;
-			json_object_put(o);
 		}
 		{
-			QTest::newRow("grandparent node, XML")	<< VuoTree_makeFromXmlText("<trip><destination>Helsinki</destination><transportation><train>VR</train><bus>HRT</bus></transportation></trip>", false)
+			QTest::newRow("grandparent node, XML")	<< VuoTree_makeFromXmlText("<trip><destination>Helsinki</destination><transportation><train>VR</train><bus>HRT</bus></transportation></trip>", false) << noJson
 													<< "trip" << noAttributes << "" << "HelsinkiVRHRT" << 2;
 		}
 		{
-			QTest::newRow("grandparent node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"trip":{"destination":"Helsinki","transportation":{"train":"VR","bus":"HRT"}}}))
+			QTest::newRow("grandparent node, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"trip":{"destination":"Helsinki","transportation":{"train":"VR","bus":"HRT"}}})) << noJson
 													<< "trip" << noAttributes << "" << "HelsinkiVRHRT" << 2;
 		}
 		{
 			QMap<QString, QString> attributes;
 			attributes["id"] = "greeting";
 			attributes["class"] = "salutation";
-			QTest::newRow("attributes, XML")	<< VuoTree_makeFromXmlText("<div id=\"greeting\" class=\"salutation\">Hello!</div>", false)
+			QTest::newRow("attributes, XML")	<< VuoTree_makeFromXmlText("<div id=\"greeting\" class=\"salutation\">Hello!</div>", false) << noJson
 												<< "div" << attributes << "Hello!" << "Hello!" << 0;
 		}
 		{
-			QTest::newRow("CDATA, XML")			<< VuoTree_makeFromXmlText("<definition><![CDATA[The < and > are angle brackets.]]></definition>", false)
+			QTest::newRow("CDATA, XML")			<< VuoTree_makeFromXmlText("<definition><![CDATA[The < and > are angle brackets.]]></definition>", false) << noJson
 												<< "definition" << noAttributes << "The < and > are angle brackets." << "The < and > are angle brackets." << 0;
 		}
 		{
 			const char *xml = "<p>&lt; (less than), &gt; (greater than), &apos; (apostrophe), &quot; (quote), and &amp; (ampersand)</p>";
 			const char *content = "< (less than), > (greater than), ' (apostrophe), \" (quote), and & (ampersand)";
-			QTest::newRow("character entities, XML")	<< VuoTree_makeFromXmlText(xml, false)
+			QTest::newRow("character entities, XML")	<< VuoTree_makeFromXmlText(xml, false) << noJson
 														<< "p" << noAttributes << content << content << 0;
 		}
 		{
-			QTest::newRow("no content, XML")	<< VuoTree_makeFromXmlText("<nickname></nickname>", false)
+			QTest::newRow("no content, XML")	<< VuoTree_makeFromXmlText("<nickname></nickname>", false) << noJson
 												<< "nickname" << noAttributes << "" << "" << 0;
 		}
 		{
-			QTest::newRow("mixed content, XML")	<< VuoTree_makeFromXmlText("<p>The <strong>cat</strong> is <i>so very</i> sleepy.</p>", false)
+			QTest::newRow("mixed content, XML")	<< VuoTree_makeFromXmlText("<p>The <strong>cat</strong> is <i>so very</i> sleepy.</p>", false) << noJson
 												<< "p" << noAttributes << "The  is  sleepy." << "The cat is so very sleepy." << 2;
 		}
 		{
-			QTest::newRow("mixed content, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"p":["The ",{"strong":"cat"}," is ",{"i":"so very"}," sleepy."]}))
+			QTest::newRow("mixed content, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"p":["The ",{"strong":"cat"}," is ",{"i":"so very"}," sleepy."]})) << noJson
 													<< "" << noAttributes << "" << "The cat is so very sleepy." << 5;
 		}
 		{
-			QTest::newRow("children with same name, XML")	<< VuoTree_makeFromXmlText("<experiment><trial>heads</trial><trial>tails</trial><trial>tails</trial></experiment>", false)
+			QTest::newRow("children with same name, XML")	<< VuoTree_makeFromXmlText("<experiment><trial>heads</trial><trial>tails</trial><trial>tails</trial></experiment>", false) << noJson
 															<< "experiment" << noAttributes << "" << "headstailstails" << 3;
 		}
 		{
-			QTest::newRow("children with same name, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"experiment":{"trial":["heads","tails","tails"]}}))
+			QTest::newRow("children with same name, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"experiment":{"trial":["heads","tails","tails"]}})) << noJson
 															<< "experiment" << noAttributes << "" << "headstailstails" << 3;
 		}
 		{
-			QTest::newRow("no root, object, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"first":1,"second":2}))
+			QTest::newRow("no root, object, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"first":1,"second":2})) << noJson
 													<< "" << noAttributes << "" << "12" << 2;
 		}
 		{
-			QTest::newRow("no root, array, JSON")	<< VuoTree_makeFromJsonText(QUOTE([1, 1, 2, 3, 5]))
+			QTest::newRow("no root, array, JSON")	<< VuoTree_makeFromJsonText(QUOTE([1, 1, 2, 3, 5])) << noJson
 													<< "" << noAttributes << "" << "11235" << 5;
 		}
 		{
-			QTest::newRow("no root, string, JSON")	<< VuoTree_makeFromJsonText(QUOTE("solitary"))
+			QTest::newRow("no root, string, JSON")	<< VuoTree_makeFromJsonText(QUOTE("solitary")) << noJson
 													<< "" << noAttributes << "solitary" << "solitary" << 0;
 		}
 		{
-			QTest::newRow("file with indentation, exclude whitespace, XML")	<< makeTreeFromXmlFile("resources/TestVuoTree.html", false)
+			QTest::newRow("file with indentation, exclude whitespace, XML")	<< makeTreeFromXmlFile("resources/TestVuoTree.html", false) << noJson
 																			<< "html" << noAttributes << "" << "My blog" << 1;
 		}
 		{
-			QTest::newRow("file with indentation, include whitespace, XML")	<< makeTreeFromXmlFile("resources/TestVuoTree.html", true)
+			QTest::newRow("file with indentation, include whitespace, XML")	<< makeTreeFromXmlFile("resources/TestVuoTree.html", true) << noJson
 																			<< "html" << noAttributes << "\n\t\n" << "\n\t\n\t\tMy blog\n\t\n" << 1;
 		}
 		{
-			QTest::newRow("duplicate object key, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"a":"b","a":"c"}))
+			QTest::newRow("duplicate object key, JSON")	<< VuoTree_makeFromJsonText(QUOTE({"a":"b","a":"c"})) << noJson
 														<< "a" << noAttributes << "c" << "c" << 0;
 		}
 		{
@@ -288,20 +285,20 @@ private slots:
 			QMap<QString, QString> attributes;
 			attributes["d"] = "e";
 
-			QTest::newRow("no name, constructed") << VuoTree_make(NULL, attributesDict, "a", children)
+			QTest::newRow("no name, constructed") << VuoTree_make(NULL, attributesDict, "a", children) << noJson
 												  << "" << attributes << "a" << "ac" << 1;
 		}
 
 		QTest::newRow("linebreaks in string content, JSON")
-			<< VuoTree_makeFromJsonText(QUOTE({"Shader":{"renderpass":[{"code":"\/*\n\n*"}]}}))
+			<< VuoTree_makeFromJsonText(QUOTE({"Shader":{"renderpass":[{"code":"\/*\n\n*"}]}})) << noJson
 			<< "Shader" << noAttributes << "" << "/*\n\n*" << 1;
 
 		QTest::newRow("ampersand in string content, JSON")
-			<< VuoTree_makeFromJsonText(QUOTE("if (a & b)"))
+			<< VuoTree_makeFromJsonText(QUOTE("if (a & b)")) << noJson
 			<< "" << noAttributes << "if (a & b)" << "if (a & b)" << 0;
 
 		QTest::newRow("ampersands in string content, JSON")
-			<< VuoTree_makeFromJsonText(QUOTE("if (a && b)"))
+			<< VuoTree_makeFromJsonText(QUOTE("if (a && b)")) << noJson
 			<< "" << noAttributes << "if (a && b)" << "if (a && b)" << 0;
 
 		VuoDictionary_VuoText_VuoText_retain(noAttributesDict);
@@ -310,6 +307,7 @@ private slots:
 	void testMakeAndGet()
 	{
 		QFETCH(VuoTree, tree);
+		QFETCH(json_object *, jsonObjectToRelease);
 		QFETCH(QString, name);
 		QFETCH(QStringMap, attributes);
 		QFETCH(QString, content);
@@ -317,6 +315,7 @@ private slots:
 		QFETCH(int, childCount);
 
 		VuoTree_retain(tree);
+		json_object_put(jsonObjectToRelease);
 
 		checkTreeName(tree, name);
 		checkTreeContent(tree, content, false, false);

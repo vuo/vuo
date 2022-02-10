@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env -S PATH=/opt/homebrew/bin:/usr/local/bin:/bin:/usr/bin:/usr/sbin bash
 set -o nounset
 set -o errexit
 
@@ -27,15 +27,15 @@ export -n DYLD_INSERT_LIBRARIES
 windowID=""
 attempts=0
 while [ -z "$windowID" ] && [ $attempts -lt 10 ] ; do
-	sleep 1s
+	sleep 1
 	windowID="$(getwindowid "$exampleName" "$exampleName" || true)"
 	attempts=$((attempts+1))
 done
 
 # Take a screenshot of the window.
 if [ "$windowID" != "" ]; then
-	sleep 1s
-	screenshotFile="$binaryDir/$exampleName.png"
+	sleep 1
+	screenshotFile="$outputDir/$exampleName.png"
 	screencapture -l$windowID "$screenshotFile" 2>&1 \
 		| (grep -v "^libpng warning" || true)
 fi

@@ -2,7 +2,7 @@
  * @file
  * VuoText implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -124,21 +124,37 @@ char * VuoText_getSummary(const VuoText value)
 
 /**
  * @ingroup VuoText
- * Creates a VuoText value from an unquoted string (unlike @c VuoText_makeFromString(), which expects a quoted string).
+ * Creates a VuoText value from a UTF-8 C string.
+ *
+ * This function takes ownership of `string`;
+ * the caller should not modify or free that string.
  */
-VuoText VuoText_make(const char * unquotedString)
+VuoText VuoText_makeWithoutCopying(const char *string)
 {
-	VuoText text;
-	if (unquotedString)
-		text = strdup(unquotedString);
-	else
-		text = strdup("");
-	VuoRegister(text, free);
-	return text;
+	VuoRegister(string, free);
+	return string;
 }
 
 /**
- * Creates a VuoText value from an untrusted source (one that might not contain a NULL terminator within its memory page).
+ * @ingroup VuoText
+ * Creates a VuoText value from a UTF-8 C string.
+ *
+ * This function creates a copy of `string`.
+ * The caller can pass a string literal (`const char[]`),
+ * or the caller can pass a runtime-allocated string
+ * (in which case the caller should free that string).
+ */
+VuoText VuoText_make(const char *string)
+{
+	if (string)
+		return VuoText_makeWithoutCopying(strdup(string));
+	else
+		return VuoText_makeWithoutCopying(strdup(""));
+}
+
+/**
+ * Creates a VuoText value by copying from an untrusted source
+ * (one that might not contain a NULL terminator within its memory page).
  *
  * Use this, for example, to safely handle a string that's part of a network packet.
  *
@@ -177,7 +193,7 @@ VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength)
 }
 
 /**
- * Creates a @ref VuoText value from a `CFStringRef`.
+ * Creates a VuoText value by copying from a `CFStringRef`.
  */
 VuoText VuoText_makeFromCFString(const void *cfs)
 {
@@ -262,7 +278,8 @@ static bool VuoText_isValidUtf8(const unsigned char *data, unsigned long size)
 }
 
 /**
- * Attempts to interpret `data` as UTF-8 text.
+ * Attempts to interpret `data` as UTF-8 text,
+ * copying it to a VuoText value if it is valid UTF-8.
  *
  * Returns NULL if `data` is not valid UTF-8 text (e.g., if it contains byte 0xfe or 0xff).
  *
@@ -280,7 +297,7 @@ VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size
 }
 
 /**
- * Create a new VuoText string from an array of UTF-32 values.
+ * Create a VuoText value by copying from an array of UTF-32 values.
  *
  * Returns NULL if `data` is not valid UTF-32 text.
  *
@@ -303,8 +320,7 @@ VuoText VuoText_makeFromUtf32(const uint32_t* data, size_t size)
 			CFIndex used;
 			CFStringGetBytes(cf_str, range, kCFStringEncodingUTF8, '?', false, (uint8_t*) buffer, usedBufLen + 1, &used);
 			buffer[used] = '\0';
-			VuoText text = VuoText_make(buffer);
-			free(buffer);
+			VuoText text = VuoText_makeWithoutCopying(buffer);
 			CFRelease(cf_str);
 			return text;
 		}
@@ -316,7 +332,7 @@ VuoText VuoText_makeFromUtf32(const uint32_t* data, size_t size)
 }
 
 /**
- * Creates a new VuoText from a MacRoman-encoded string.
+ * Creates a VuoText value by copying from a MacRoman-encoded string.
  */
 VuoText VuoText_makeFromMacRoman(const char *string)
 {
@@ -465,9 +481,7 @@ bool VuoText_isLessThanCaseInsensitive(const VuoText text1, const VuoText text2)
  */
 bool VuoText_isLessThanNumeric(const VuoText text1, const VuoText text2)
 {
-	VuoReal real1 = (text1 ? VuoReal_makeFromString(text1) : 0);
-	VuoReal real2 = (text2 ? VuoReal_makeFromString(text2) : 0);
-	return real1 < real2;
+	return VuoMakeRetainedFromString(text1, VuoReal) < VuoMakeRetainedFromString(text2, VuoReal);
 }
 
 /**
@@ -983,13 +997,16 @@ VuoText VuoText_removeAt(const VuoText string, int startIndex, int length)
 	VuoLocal(left);
 	VuoLocal(right);
 
-	return VuoText_make(VuoText_format("%s%s", left, right));
+	return VuoText_makeWithoutCopying(VuoText_format("%s%s", left, right));
 }
 
 /**
  * Returns a new string formatted using the printf-style `format` string.
  *
  * The caller is responsible for freeing the returned string.
+ *
+ * Despite the name, this function returns a plain `char *`,
+ * not a referenced-counted `VuoText`.
  */
 char *VuoText_format(const char *format, ...)
 {

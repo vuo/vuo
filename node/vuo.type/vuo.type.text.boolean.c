@@ -2,12 +2,13 @@
  * @file
  * vuo.type.text.boolean node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include "node.h"
+#include "type.h"
 #include <stdlib.h>
 
 VuoModuleMetadata({
@@ -28,5 +29,5 @@ void nodeEvent
 	if (!text)
 		return;
 
-	*boolean = VuoBoolean_makeFromString(text);
+	*boolean = VuoMakeRetainedFromString(text, VuoBoolean);
 }

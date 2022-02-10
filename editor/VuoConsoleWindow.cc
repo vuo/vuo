@@ -54,7 +54,7 @@ VuoConsoleWindow::VuoConsoleWindow(VuoConsole *console, QWidget *screenMate) :
  */
 void VuoConsoleWindow::setModel(const QStringList &logs)
 {
-	quickContainer->rootObject()->setProperty("logsModel", QVariant::fromValue(logs));
+	quickContainer->rootObject()->setProperty("logsModel", logs);
 }
 
 /**

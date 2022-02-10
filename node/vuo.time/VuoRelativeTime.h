@@ -2,7 +2,7 @@
  * @file
  * VuoRelativeTime C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,6 @@ void VuoRelativeTime_getComponents(VuoRelativeTime relativeTime, VuoInteger *yea
  * Automatically generated function.
  */
 ///@{
-VuoRelativeTime VuoRelativeTime_makeFromString(const char *str);
 char *VuoRelativeTime_getString(const VuoRelativeTime value);
 void VuoRelativeTime_retain(VuoRelativeTime value);
 void VuoRelativeTime_release(VuoRelativeTime value);

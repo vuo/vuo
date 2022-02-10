@@ -2,7 +2,7 @@
  * @file
  * VuoHorizontalAlignment C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoHorizontalAlignment_isLessThan(const VuoHorizontalAlignment valueA, cons
  * Automatically generated function.
  */
 ///@{
-VuoHorizontalAlignment VuoHorizontalAlignment_makeFromString(const char *str);
 char * VuoHorizontalAlignment_getString(const VuoHorizontalAlignment value);
 void VuoHorizontalAlignment_retain(VuoHorizontalAlignment value);
 void VuoHorizontalAlignment_release(VuoHorizontalAlignment value);

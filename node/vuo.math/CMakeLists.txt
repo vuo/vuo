@@ -2,6 +2,10 @@ VuoCompileTypes(
 	VuoNumberComparison.c
 	VuoRoundingMethod.c
 )
+target_sources(vuo.math.types PRIVATE
+	VuoNumberComparison.h
+	VuoRoundingMethod.h
+)
 
 VuoCompileGenericNodes(
 	vuo.math.absolute.c

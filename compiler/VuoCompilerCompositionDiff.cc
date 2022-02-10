@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCompositionDiff implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -624,9 +624,9 @@ void VuoCompilerCompositionDiff::addNodeReplacementInTopLevelComposition(const s
  * Adds a mapping for a node replaced in the top-level composition.
  */
 void VuoCompilerCompositionDiff::addNodeReplacementInTopLevelComposition(const string &oldNodeIdentifier, const string &newNodeIdentifier,
-                                                                         const map<string, string> &oldAndNewPortNames)
+																		 const map<string, string> &oldAndNewPortNames)
 {
-    addNodeReplacement(VuoCompilerComposition::topLevelCompositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortNames);
+	addNodeReplacement(VuoCompilerComposition::topLevelCompositionIdentifier, oldNodeIdentifier, newNodeIdentifier, oldAndNewPortNames);
 }
 
 /**
@@ -647,7 +647,7 @@ void VuoCompilerCompositionDiff::addNodeReplacement(const string &compositionIde
  * Adds a mapping for a node replaced in a composition.
  */
 void VuoCompilerCompositionDiff::addNodeReplacement(const string &compositionIdentifier, const string &oldNodeIdentifier, const string &newNodeIdentifier,
-                                                    const map<string, string> &oldAndNewPortNames)
+													const map<string, string> &oldAndNewPortNames)
 {
 	NodeReplacement n;
 	n.compositionIdentifier = compositionIdentifier;

@@ -2,13 +2,14 @@
  * @file
  * VuoRunner implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoRunner.hh"
 #include "VuoFileUtilities.hh"
+#include "VuoImage.h"
 #include "VuoStringUtilities.hh"
 #include "VuoEventLoop.h"
 #include "VuoException.hh"
@@ -21,9 +22,23 @@
 #include <dlfcn.h>
 #include <sstream>
 #include <copyfile.h>
+#include <mach-o/dyld.h>
 #include <mach-o/loader.h>
+#include <mach-o/nlist.h>
 #include <sys/proc_info.h>
 #include <sys/stat.h>
+
+/// @{
+/// Logs calls to VuoRunner's public methods.
+#ifdef VUO_RUNNER_TRACE
+// Since the VuoDefer is declared on the first line of the method,
+// log line number 0 instead of the first line,
+// to avoid confusion about where the method is being exited.
+#define VuoRunnerTraceScope() VUserLog("{"); VuoDefer(^{ VuoLog(VuoLog_moduleName, __FILE__, 0, __func__, "}"); })
+#else
+#define VuoRunnerTraceScope()
+#endif
+/// @}
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 static const char *mainThreadChecker = "/Applications/Xcode.app/Contents/Developer/usr/lib/libMainThreadChecker.dylib";  ///< The path to Xcode's libMainThreadChecker.dylib.
@@ -126,6 +141,8 @@ public:
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir,
 															  bool continueIfRunnerDies, bool deleteExecutableWhenFinished)
 {
+	VuoRunnerTraceScope();
+
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = executablePath;
 	vr->shouldContinueIfRunnerDies = continueIfRunnerDies;
@@ -153,6 +170,8 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string composi
 																  const std::shared_ptr<VuoRunningCompositionLibraries> &runningCompositionLibraries,
 																  string sourceDir, bool continueIfRunnerDies, bool deleteDylibsWhenFinished)
 {
+	VuoRunnerTraceScope();
+
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = compositionLoaderPath;
 	vr->dylibPath = compositionDylibPath;
@@ -176,6 +195,8 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string composi
 VuoRunner * VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir,
 																 bool deleteDylibWhenFinished)
 {
+	VuoRunnerTraceScope();
+
 	VuoRunner * vr = new VuoRunner();
 	vr->dylibPath = dylibPath;
 	vr->shouldDeleteBinariesWhenFinished = deleteDylibWhenFinished;
@@ -190,6 +211,8 @@ VuoRunner * VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(string dylibPat
  */
 VuoRunner::~VuoRunner(void)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_release(stoppedSemaphore);
 	dispatch_release(terminatedZMQContextSemaphore);
 	dispatch_release(beganListeningSemaphore);
@@ -205,6 +228,8 @@ VuoRunner::~VuoRunner(void)
  */
 void VuoRunner::setRuntimeChecking(bool runtimeCheckingEnabled)
 {
+	VuoRunnerTraceScope();
+
 	if (!stopped)
 	{
 		VUserLog("Error: Only call VuoRunner::setRuntimeChecking() prior to starting the composition.");
@@ -270,6 +295,8 @@ VuoRunner::VuoRunner(void)
  */
 void VuoRunner::start(void)
 {
+	VuoRunnerTraceScope();
+
 	try
 	{
 		startInternal();
@@ -317,6 +344,8 @@ void VuoRunner::start(void)
  */
 void VuoRunner::startPaused(void)
 {
+	VuoRunnerTraceScope();
+
 	try
 	{
 		startInternal();
@@ -374,15 +403,16 @@ void VuoRunner::copyDylibAndChangeId(string dylibPath, string &outputDylibPath)
 	FILE *fp = fopen(outputDylibPath.c_str(), "r+b");
 	if (!fp)
 		throw VuoException("The composition couldn't start because the dylib's header couldn't be opened.");
-	VuoDefer(^{ fclose(fp); });
+
+	__block bool fpClosed = false;
+	VuoDefer(^{ if (! fpClosed) fclose(fp); });
 
 	struct mach_header_64 header;
 	if (fread(&header, sizeof(header), 1, fp) != 1)
 		throw VuoException("The composition couldn't start because the dylib's header couldn't be read.");
 
-	if (header.magic != MH_MAGIC_64
-	 || header.cputype != CPU_TYPE_X86_64)
-		throw VuoException("The composition couldn't start because the dylib isn't an x86_64-only (non-fat) Mach-O binary.");
+	if (header.magic != MH_MAGIC_64)
+		throw VuoException("The composition couldn't start because the dylib isn't a 64-bit Mach-O binary.");
 
 	for (int i = 0; i < header.ncmds; ++i)
 	{
@@ -405,6 +435,28 @@ void VuoRunner::copyDylibAndChangeId(string dylibPath, string &outputDylibPath)
 			bzero(name, nameLength);
 			memcpy(name, outputDylibPath.c_str(), min(nameLength, outputDylibPath.length()));
 			fwrite(name, nameLength, 1, fp);
+
+			fclose(fp);
+			fpClosed = true;
+
+			// Since VuoRunner doesn't have access to VuoCompiler,
+			// we can't simply call VuoCompiler::getCodesignAllocatePath().
+			// Hopefully that method will already have been called once on the system,
+			// in order to generate the cache.
+			vector<string> environment;
+			string codesignAllocatePath = VuoFileUtilities::getCachePath() + "/codesign_allocate";
+			if (VuoFileUtilities::fileExists(codesignAllocatePath))
+				environment = { "CODESIGN_ALLOCATE=" + codesignAllocatePath };
+
+			try
+			{
+				VuoFileUtilities::adHocCodeSign(outputDylibPath, environment);
+			}
+			catch (std::exception &e)
+			{
+				VUserLog("Warning: Couldn't code-sign the renamed dylib: %s", e.what());
+			}
+
 			return;
 		}
 		else
@@ -412,6 +464,94 @@ void VuoRunner::copyDylibAndChangeId(string dylibPath, string &outputDylibPath)
 	}
 
 	throw VuoException("The composition couldn't start because the dylib's LC_ID_DYLIB command couldn't be found.");
+}
+
+/**
+ * Returns the number of bytes the specified Mach-O binary occupies in virtual memory.
+ */
+int64_t VuoRunner_getDylibVMSize(const struct mach_header_64 *header)
+{
+	if (header->magic != MH_MAGIC_64)
+		return 0;
+
+	struct load_command *lc = (struct load_command *)((char *)header + sizeof(struct mach_header_64));
+	int64_t maxExtent = 0;
+	for (int i = 0; i < header->ncmds; ++i)
+	{
+		if (lc->cmd == LC_SEGMENT_64)
+		{
+			struct segment_command_64 *seg = (struct segment_command_64 *)lc;
+			maxExtent = MAX(maxExtent, seg->vmaddr + seg->vmsize);
+		}
+		else if (lc->cmd == LC_CODE_SIGNATURE
+			  || lc->cmd == LC_SEGMENT_SPLIT_INFO
+			  || lc->cmd == LC_FUNCTION_STARTS
+			  || lc->cmd == LC_DATA_IN_CODE
+			  || lc->cmd == LC_DYLIB_CODE_SIGN_DRS
+			  || lc->cmd == LC_LINKER_OPTIMIZATION_HINT
+			  || lc->cmd == LC_DYLD_EXPORTS_TRIE
+			  || lc->cmd == LC_DYLD_CHAINED_FIXUPS)
+		{
+			struct linkedit_data_command *data = (struct linkedit_data_command *)lc;
+			maxExtent = MAX(maxExtent, data->dataoff + data->datasize);
+		}
+		else if (lc->cmd == LC_SYMTAB)
+		{
+			struct symtab_command *symtab = (struct symtab_command *)lc;
+			maxExtent = MAX(maxExtent, symtab->symoff + symtab->nsyms * sizeof(struct nlist_64));
+			maxExtent = MAX(maxExtent, symtab->stroff + symtab->strsize);
+		}
+		// AFAIK other load commands don't affect VM size.
+
+		lc = (struct load_command *)((char *)lc + lc->cmdsize);
+	}
+	return maxExtent;
+}
+
+static bool VuoRunner_ignoreInitialDylibs;  ///< Don't log info about dylibs that were loaded before the first Vuo composition.
+
+/**
+ * Logs info about a dylib that was loaded or unloaded.
+ */
+static void VuoRunner_logDylibInfo(const struct mach_header_64 *mh, intptr_t vmaddr_slide, const char *func)
+{
+	if (VuoRunner_ignoreInitialDylibs)
+		return;
+
+	// Ignore system libraries.
+	if (mh->flags & MH_DYLIB_IN_CACHE)
+		return;
+
+	const char *homeZ = getenv("HOME");
+	string home;
+	if (homeZ)
+		home = homeZ;
+
+	Dl_info info{"", nullptr, "", nullptr};
+	dladdr((void *)vmaddr_slide, &info);
+	string filename{info.dli_fname};
+	if (VuoStringUtilities::beginsWith(filename, home))
+		filename = "~" + VuoStringUtilities::substrAfter(filename, home);
+
+	int64_t size = VuoRunner_getDylibVMSize(mh);
+
+	VuoLog(VuoLog_moduleName, __FILE__, __LINE__, func, "%16lx - %16lx (%lld bytes) %s", vmaddr_slide, (intptr_t)((char *)vmaddr_slide + size), size, filename.c_str());
+}
+
+/**
+ * Logs info about a dylib that was loaded.
+ */
+void VuoRunner_dylibLoaded(const struct mach_header *mh, intptr_t vmaddr_slide)
+{
+	VuoRunner_logDylibInfo((struct mach_header_64 *)mh, vmaddr_slide, __func__);
+}
+
+/**
+ * Logs info about a dylib that was unloaded.
+ */
+void VuoRunner_dylibUnloaded(const struct mach_header *mh, intptr_t vmaddr_slide)
+{
+	VuoRunner_logDylibInfo((struct mach_header_64 *)mh, vmaddr_slide, __func__);
 }
 
 /**
@@ -433,6 +573,15 @@ void VuoRunner::startInternal(void)
 	if (isInCurrentProcess())
 	{
 		// Start the composition in the current process.
+
+		static once_flag dylibLoggerInitialized;
+		call_once(dylibLoggerInitialized, [](){
+			// Start logging info about the current process's dylibs, to assist in debugging.
+			VuoRunner_ignoreInitialDylibs = true;
+			_dyld_register_func_for_add_image(VuoRunner_dylibLoaded);
+			_dyld_register_func_for_remove_image(VuoRunner_dylibUnloaded);
+			VuoRunner_ignoreInitialDylibs = false;
+		});
 
 		bool alreadyLoaded = dlopen(dylibPath.c_str(), RTLD_NOLOAD);
 		if (alreadyLoaded)
@@ -807,6 +956,8 @@ void VuoRunner::setUpConnections(void)
  */
 void VuoRunner::runOnMainThread(void)
 {
+	VuoRunnerTraceScope();
+
 	if (! isInCurrentProcess())
 		throw VuoException("The composition is not running in the current process. Only use this function if the composition was constructed with newCurrentProcessRunnerFromDynamicLibrary().");
 
@@ -843,6 +994,8 @@ void VuoRunner::runOnMainThread(void)
  */
 void VuoRunner::drainMainDispatchQueue(void)
 {
+	VuoRunnerTraceScope();
+
 	if (! isInCurrentProcess())
 		throw VuoException("The composition is not running in the current process. Only use this function if the composition was constructed with newCurrentProcessRunnerFromDynamicLibrary().");
 
@@ -861,6 +1014,8 @@ void VuoRunner::drainMainDispatchQueue(void)
  */
 void VuoRunner::pause(void)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -889,6 +1044,8 @@ void VuoRunner::pause(void)
  */
 void VuoRunner::unpause(void)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -931,6 +1088,8 @@ void VuoRunner::unpause(void)
  */
 void VuoRunner::replaceComposition(string compositionDylibPath, string compositionDiff)
 {
+	VuoRunnerTraceScope();
+
 	if (! isUsingCompositionLoader())
 		throw VuoException("The runner is not using a composition loader. Only use this function if the composition was constructed with newSeparateProcessRunnerFromDynamicLibrary().");
 
@@ -1024,6 +1183,8 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
  */
 void VuoRunner::stop(void)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped) {
 						  return;
@@ -1037,11 +1198,10 @@ void VuoRunner::stop(void)
 						  try
 						  {
 							  int timeoutInSeconds = (isInCurrentProcess() ? -1 : 5);
-							  zmq_msg_t messages[3];
+							  zmq_msg_t messages[2];
 							  vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
 							  vuoInitMessageWithBool(&messages[1], false); // isBeingReplaced
-							  vuoInitMessageWithBool(&messages[2], !isInCurrentProcess()); // isLastEverInProcess
-							  vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 3);
+							  vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 2);
 
 							  if (isInCurrentProcess() && isMainThread())
 							  {
@@ -1189,6 +1349,8 @@ void VuoRunner::cleanUpConnections(void)
  */
 void VuoRunner::waitUntilStopped(void)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_retain(stoppedSemaphore);
 	dispatch_semaphore_wait(stoppedSemaphore, DISPATCH_TIME_FOREVER);
 	dispatch_semaphore_signal(stoppedSemaphore);
@@ -1212,6 +1374,8 @@ void VuoRunner::waitUntilStopped(void)
  */
 void VuoRunner::setInputPortValue(string compositionIdentifier, string portIdentifier, json_object *value)
 {
+	VuoRunnerTraceScope();
+
 	const char *valueAsString = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
 
 	dispatch_sync(controlQueue, ^{
@@ -1252,6 +1416,8 @@ void VuoRunner::setInputPortValue(string compositionIdentifier, string portIdent
  */
 void VuoRunner::fireTriggerPortEvent(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1282,13 +1448,18 @@ void VuoRunner::fireTriggerPortEvent(string compositionIdentifier, string portId
  * @param compositionIdentifier The runtime identifier for the (sub)composition instance that contains the port.
  *     If the port is in the top-level composition, you can just pass an empty string.
  * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
- * @return JSON representation of the port's value.
+ * @return JSON representation of the port's value. When the composition is running in the current process, the JSON
+ *     representations for some port data types (e.g. `VuoImage`) contain pointers that are shared between the runner
+ *     and the composition. For correct memory management of these pointers, it's important to call `*_makeFromJson()`,
+ *     `VuoRetain()`, and `json_object_put()` in the right order — see MyType_makeFromJson().
  *
  * @see VuoTypes for information about types and their JSON representations.
  * @version200Changed{Added `compositionIdentifier` argument.}
  */
 json_object * VuoRunner::getInputPortValue(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1323,13 +1494,18 @@ json_object * VuoRunner::getInputPortValue(string compositionIdentifier, string 
  * @param compositionIdentifier The runtime identifier for the (sub)composition instance that contains the port.
  *     If the port is in the top-level composition, you can just pass an empty string.
  * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
- * @return JSON representation of the port's value.
+ * @return JSON representation of the port's value. When the composition is running in the current process, the JSON
+ *     representations for some port data types (e.g. `VuoImage`) contain pointers that are shared between the runner
+ *     and the composition. For correct memory management of these pointers, it's important to call `*_makeFromJson()`,
+ *     `VuoRetain()`, and `json_object_put()` in the right order — see MyType_makeFromJson().
  *
  * @see VuoTypes for information about types and their JSON representations.
  * @version200Changed{Added `compositionIdentifier` argument.}
  */
 json_object * VuoRunner::getOutputPortValue(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1371,6 +1547,8 @@ json_object * VuoRunner::getOutputPortValue(string compositionIdentifier, string
  */
 string VuoRunner::getInputPortSummary(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1411,6 +1589,8 @@ string VuoRunner::getInputPortSummary(string compositionIdentifier, string portI
  */
 string VuoRunner::getOutputPortSummary(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1451,6 +1631,8 @@ string VuoRunner::getOutputPortSummary(string compositionIdentifier, string port
  */
 string VuoRunner::subscribeToInputPortTelemetry(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1491,6 +1673,8 @@ string VuoRunner::subscribeToInputPortTelemetry(string compositionIdentifier, st
  */
 string VuoRunner::subscribeToOutputPortTelemetry(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1528,6 +1712,8 @@ string VuoRunner::subscribeToOutputPortTelemetry(string compositionIdentifier, s
  */
 void VuoRunner::unsubscribeFromInputPortTelemetry(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1562,6 +1748,8 @@ void VuoRunner::unsubscribeFromInputPortTelemetry(string compositionIdentifier, 
  */
 void VuoRunner::unsubscribeFromOutputPortTelemetry(string compositionIdentifier, string portIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1596,6 +1784,8 @@ void VuoRunner::unsubscribeFromOutputPortTelemetry(string compositionIdentifier,
  */
 void VuoRunner::subscribeToEventTelemetry(string compositionIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1631,6 +1821,8 @@ void VuoRunner::subscribeToEventTelemetry(string compositionIdentifier)
  */
 void VuoRunner::unsubscribeFromEventTelemetry(string compositionIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1664,6 +1856,8 @@ void VuoRunner::unsubscribeFromEventTelemetry(string compositionIdentifier)
  */
 void VuoRunner::subscribeToAllTelemetry(string compositionIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1699,6 +1893,8 @@ void VuoRunner::subscribeToAllTelemetry(string compositionIdentifier)
  */
 void VuoRunner::unsubscribeFromAllTelemetry(string compositionIdentifier)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1735,6 +1931,8 @@ void VuoRunner::unsubscribeFromAllTelemetry(string compositionIdentifier)
  */
 void VuoRunner::setPublishedInputPortValues(map<Port *, json_object *> portsAndValuesToSet)
 {
+	VuoRunnerTraceScope();
+
 	if (VuoRunner_isHostVDMX)
 		for (auto i : portsAndValuesToSet)
 		{
@@ -1750,6 +1948,12 @@ void VuoRunner::setPublishedInputPortValues(map<Port *, json_object *> portsAndV
 					p->lastWidth = json_object_get_int64(o);
 				if (json_object_object_get_ex(i.second, "pixelsHigh", &o))
 					p->lastHeight = json_object_get_int64(o);
+				if (json_object_object_get_ex(i.second, "pointer", &o))
+				{
+					VuoImage vi = (VuoImage)json_object_get_int64(o);
+					p->lastWidth = vi->pixelsWide;
+					p->lastHeight = vi->pixelsHigh;
+				}
 			}
 		}
 
@@ -1791,6 +1995,8 @@ void VuoRunner::setPublishedInputPortValues(map<Port *, json_object *> portsAndV
  */
 void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
 {
+	VuoRunnerTraceScope();
+
 	set<VuoRunner::Port *> portAsSet;
 	portAsSet.insert(port);
 	firePublishedInputPortEvent(portAsSet);
@@ -1808,6 +2014,8 @@ void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
  */
 void VuoRunner::firePublishedInputPortEvent(const set<Port *> &ports)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
 						  return;
@@ -1864,6 +2072,8 @@ void VuoRunner::firePublishedInputPortEvent(const set<Port *> &ports)
  */
 void VuoRunner::waitForFiredPublishedInputPortEvent(void)
 {
+	VuoRunnerTraceScope();
+
 	saturating_semaphore_wait(lastFiredEventSemaphore, &lastFiredEventSignaled);
 }
 
@@ -1873,12 +2083,17 @@ void VuoRunner::waitForFiredPublishedInputPortEvent(void)
  * Assumes the composition has been started and has not been stopped.
  *
  * @param port The published input port.
- * @return JSON representation of the port's value.
+ * @return JSON representation of the port's value. When the composition is running in the current process, the JSON
+ *     representations for some port data types (e.g. `VuoImage`) contain pointers that are shared between the runner
+ *     and the composition. For correct memory management of these pointers, it's important to call `*_makeFromJson()`,
+ *     `VuoRetain()`, and `json_object_put()` in the right order — see MyType_makeFromJson().
  *
  * @see VuoTypes for information about types and their JSON representations.
  */
 json_object * VuoRunner::getPublishedInputPortValue(VuoRunner::Port *port)
 {
+	VuoRunnerTraceScope();
+
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1910,12 +2125,17 @@ json_object * VuoRunner::getPublishedInputPortValue(VuoRunner::Port *port)
  * Assumes the composition has been started and has not been stopped.
  *
  * @param port The published output port.
- * @return JSON representation of the port's value.
+ * @return JSON representation of the port's value. When the composition is running in the current process, the JSON
+ *     representations for some port data types (e.g. `VuoImage`) contain pointers that are shared between the runner
+ *     and the composition. For correct memory management of these pointers, it's important to call `*_makeFromJson()`,
+ *     `VuoRetain()`, and `json_object_put()` in the right order — see MyType_makeFromJson().
  *
  * @see VuoTypes for information about types and their JSON representations.
  */
 json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 {
+	VuoRunnerTraceScope();
+
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
 					  if (stopped || lostContact) {
@@ -1950,6 +2170,12 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 		uint64_t actualHeight = 0;
 		if (json_object_object_get_ex(js, "pixelsHigh", &o))
 			actualHeight = json_object_get_int64(o);
+		if (json_object_object_get_ex(js, "pointer", &o))
+		{
+			VuoImage vi = (VuoImage)json_object_get_int64(o);
+			actualWidth = vi->pixelsWide;
+			actualHeight = vi->pixelsHigh;
+		}
 
 		if (p->lastWidth && p->lastHeight
 			&& (actualWidth != p->lastWidth || actualHeight != p->lastHeight))
@@ -1973,7 +2199,9 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 			if (p->vuoImageMakeFromJsonWithDimensions && p->vuoImageGetInterprocessJson)
 			{
 				void *vi = p->vuoImageMakeFromJsonWithDimensions(js, p->lastWidth, p->lastHeight);
-				return p->vuoImageGetInterprocessJson(vi);
+				json_object *jsResized = p->vuoImageGetInterprocessJson(vi);
+				json_object_put(js);
+				return jsResized;
 			}
 		}
 	}
@@ -2117,6 +2345,8 @@ vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
  */
 vector<VuoRunner::Port *> VuoRunner::getPublishedInputPorts(void)
 {
+	VuoRunnerTraceScope();
+
 	return getCachedPublishedPorts(true);
 }
 
@@ -2131,6 +2361,8 @@ vector<VuoRunner::Port *> VuoRunner::getPublishedInputPorts(void)
  */
 vector<VuoRunner::Port *> VuoRunner::getPublishedOutputPorts(void)
 {
+	VuoRunnerTraceScope();
+
 	return getCachedPublishedPorts(false);
 }
 
@@ -2145,6 +2377,8 @@ vector<VuoRunner::Port *> VuoRunner::getPublishedOutputPorts(void)
  */
 VuoRunner::Port * VuoRunner::getPublishedInputPortWithName(string name)
 {
+	VuoRunnerTraceScope();
+
 	vector<VuoRunner::Port *> inputPorts = getPublishedInputPorts();
 	for (vector<VuoRunner::Port *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
 		if ((*i)->getName() == name)
@@ -2164,6 +2398,8 @@ VuoRunner::Port * VuoRunner::getPublishedInputPortWithName(string name)
  */
 VuoRunner::Port * VuoRunner::getPublishedOutputPortWithName(string name)
 {
+	VuoRunnerTraceScope();
+
 	vector<VuoRunner::Port *> outputPorts = getPublishedOutputPorts();
 	for (vector<VuoRunner::Port *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
 		if ((*i)->getName() == name)
@@ -2704,6 +2940,8 @@ void VuoRunner::saturating_semaphore_wait(dispatch_semaphore_t dsema, bool *sign
  */
 bool VuoRunner::isStopped(void)
 {
+	VuoRunnerTraceScope();
+
 	return stopped;
 }
 
@@ -2729,6 +2967,8 @@ bool VuoRunner::isUsingCompositionLoader(void)
  */
 void VuoRunner::setDelegate(VuoRunnerDelegate *delegate)
 {
+	VuoRunnerTraceScope();
+
 	dispatch_sync(delegateQueue, ^{
 					  this->delegate = delegate;
 				  });
@@ -2784,6 +3024,8 @@ void VuoRunner::stopBecauseLostContact(string errorMessage)
  */
 pid_t VuoRunner::getCompositionPid()
 {
+	VuoRunnerTraceScope();
+
 	return compositionPid;
 }
 

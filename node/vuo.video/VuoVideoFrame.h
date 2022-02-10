@@ -2,7 +2,7 @@
  * @file
  * VuoVideoFrame C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -48,7 +48,6 @@ bool VuoVideoFrame_isLessThan(const VuoVideoFrame a, const VuoVideoFrame b);
  * Automatically generated function.
  */
 ///@{
-VuoVideoFrame VuoVideoFrame_makeFromString(const char *str);
 char * VuoVideoFrame_getString(const VuoVideoFrame value);
 void VuoVideoFrame_retain(VuoVideoFrame value);
 void VuoVideoFrame_release(VuoVideoFrame value);

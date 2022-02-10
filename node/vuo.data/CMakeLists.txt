@@ -1,6 +1,9 @@
 VuoCompileTypes(
 	VuoData.c
 )
+target_sources(vuo.data.types PRIVATE
+	VuoData.h
+)
 target_link_libraries(vuo.data.types
 	PUBLIC
 		${PROJECT_BINARY_DIR}/library/VuoBase64.o

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeClassList implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -401,7 +401,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 	{
 		QAction *contextMenuEdit = new QAction(NULL);
 		contextMenuEdit->setText(actionText);
-		contextMenuEdit->setData(QVariant::fromValue(sourcePath));
+		contextMenuEdit->setData(sourcePath);
 		connect(contextMenuEdit, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openFileFromSenderData);
 		contextMenu->addAction(contextMenuEdit);
 	}
@@ -415,7 +415,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 
 			QAction *contextMenuOpenEnclosingFolder = new QAction(NULL);
 			contextMenuOpenEnclosingFolder->setText(tr("Show in Finder"));
-			contextMenuOpenEnclosingFolder->setData(QVariant::fromValue(enclosingDirUrl));
+			contextMenuOpenEnclosingFolder->setData(enclosingDirUrl);
 			connect(contextMenuOpenEnclosingFolder, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openExternalUrlFromSenderData);
 			contextMenu->addAction(contextMenuOpenEnclosingFolder);
 
@@ -423,7 +423,7 @@ void VuoNodeClassList::populateContextMenuForNodeClass(QMenu *contextMenu, VuoCo
 
 			QAction *contextMenuRemove = new QAction(NULL);
 			contextMenuRemove->setText(tr("Move to Trash"));
-			contextMenuRemove->setData(QVariant::fromValue(modulePath));
+			contextMenuRemove->setData(modulePath);
 			connect(contextMenuRemove, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::removeFileFromSenderData);
 			contextMenu->addAction(contextMenuRemove);
 		}

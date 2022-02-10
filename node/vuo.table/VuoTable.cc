@@ -2,7 +2,7 @@
  * @file
  * VuoTable implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -26,7 +26,7 @@ VuoModuleMetadata({
 					  "title" : "Table",
 					  "description" : "Information structured in rows and columns.",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "dependencies" : [
 						  "VuoList_VuoTable",
 						  "VuoTableFormat",
@@ -74,6 +74,15 @@ VuoTable VuoTable_makeFromJson(struct json_object *js)
 		if (json_object_object_get_ex(js, "columnCount", &o))
 			table.columnCount = (size_t)json_object_get_int64(o);
 
+		VuoTable *tablePtr = new VuoTable(table);
+		auto releaseCallback = [](json_object *js, void *userData)
+		{
+			VuoTable *tablePtr = static_cast<VuoTable *>(userData);
+			VuoTable_release(*tablePtr);
+			delete tablePtr;
+		};
+		json_object_set_userdata(js, tablePtr, releaseCallback);
+
 		return table;
 	}
 	else if (json_object_object_get_ex(js, "csv", &o))
@@ -92,6 +101,8 @@ VuoTable VuoTable_makeFromJson(struct json_object *js)
 struct json_object * VuoTable_getJson(const VuoTable value)
 {
 	json_object *js = json_object_new_object();
+
+	VuoTable_retain(value);
 
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value.data));
 	json_object_object_add(js, "rowCount", json_object_new_int64((int64_t)value.rowCount));
@@ -230,6 +241,126 @@ static void parserGotLine(int lineEnd, void *userData)
 }
 
 /**
+ * Guesses which separator `text` is using.
+ *
+ * This function may change what `text` points to (and, accordingly, `numBytes`),
+ * in order to trim off the first line of metadata (if present).
+ */
+static char VuoTable_guessSeparator(VuoText &text, size_t &numBytes, VuoTableFormat format)
+{
+	if (format == VuoTableFormat_Tsv)
+		return CSV_TAB;
+
+	// Excel creates so-called `.csv` files that use either comma or semicolon as the separator.
+	// Try to guess which.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/19104
+
+	char separator = 0;
+
+	// Excel has undocumented support for first-line metadata specifying the separator;
+	// use that if possible (and exclude that metadata line from the output).
+	// https://support.affinity.co/hc/en-us/articles/360044453711-How-to-open-CSV-files-with-the-correct-delimiter-separator
+	// https://www.ablebits.com/office-addins-blog/change-excel-csv-delimiter/#opening
+	// https://github.com/parsecsv/parsecsv-for-php/issues/60
+	// https://superuser.com/questions/773644/what-is-the-sep-metadata-you-can-add-to-csvs
+
+	// `sep=;`
+	int unquotedSepEqualsLen = 4;  // strlen("sep=")
+	int separatorLen = 1;
+	int linefeedLen = 1;
+	if (numBytes > unquotedSepEqualsLen + separatorLen + linefeedLen
+		&& strncmp(text, "sep=", unquotedSepEqualsLen) == 0
+		&& (text[unquotedSepEqualsLen + separatorLen] == '\r' || text[unquotedSepEqualsLen + separatorLen] == '\n'))
+	{
+		separator = text[unquotedSepEqualsLen];
+		size_t bytesConsumed = unquotedSepEqualsLen + separatorLen + linefeedLen;
+		text += bytesConsumed;
+		numBytes -= bytesConsumed;
+	}
+
+	// `"sep=;"`
+	int quotedSepEqualsLen = 5;  // strlen("\"sep=")
+	int quoteLen = 1;
+	if (!separator
+		&& numBytes > quotedSepEqualsLen + separatorLen + quoteLen + linefeedLen
+		&& strncmp(text, "\"sep=", quotedSepEqualsLen) == 0
+		&& text[quotedSepEqualsLen + separatorLen] == '"'
+		&& (text[quotedSepEqualsLen + separatorLen + quoteLen] == '\r' || text[quotedSepEqualsLen + separatorLen + quoteLen] == '\n'))
+	{
+		separator = text[quotedSepEqualsLen];
+		size_t bytesConsumed = quotedSepEqualsLen + separatorLen + quoteLen + linefeedLen;
+		text += bytesConsumed;
+		numBytes -= bytesConsumed;
+	}
+
+	// If there was no metadata line, try to guess based on the quoting in the first data row:
+	// if the values are quoted, the character after the first closing quote should be the separator.
+	if (!separator && numBytes > 2)
+	{
+		char quote = 0;
+		if (text[0] == '"')
+			quote = '"';
+		else if (text[0] == '\'')
+			quote = '\'';
+
+		if (quote)
+		{
+			size_t quoteCount = 0;
+			for (size_t p = 0; p < numBytes && text[p] != '\r' && text[p] != '\n'; ++p)
+				if (text[p] == quote)
+					++quoteCount;
+
+			// Only attempt to use this guesser if all quotes are properly paired
+			// (either a pair surrounding a value, or a pair to escape the quote character).
+			if (quoteCount % 2 == 0)
+				for (size_t p = 1; p + 2 < numBytes && text[p] != '\r' && text[p] != '\n'; ++p)
+					if (text[p] == quote && text[p + 1] != quote && text[p + 1] != '\r' && text[p + 1] != '\n')
+					{
+						separator = text[p + 1];
+						break;
+					}
+		}
+	}
+
+	// If we _still_ don't know, try riskier guesses.
+
+	if (!separator)
+	{
+		// If there are no semicolons on the line, the separator miiight be comma.
+		bool semicolonFound = false;
+		for (size_t p = 0; p < numBytes && text[p] != '\r' && text[p] != '\n'; ++p)
+			if (text[p] == ';')
+			{
+				semicolonFound = true;
+				break;
+			}
+		if (!semicolonFound)
+			separator = ',';
+	}
+
+	if (!separator)
+	{
+		// If there are no commas on the line, the separator miiight be semicolon.
+		bool commaFound = false;
+		for (size_t p = 0; p < numBytes && text[p] != '\r' && text[p] != '\n'; ++p)
+			if (text[p] == ',')
+			{
+				commaFound = true;
+				break;
+			}
+		if (!commaFound)
+			separator = ';';
+	}
+
+	if (!separator)
+		// If there are both commas and semicolons, the separator miiight be semicolon,
+		// since Excel uses semicolon as the separator in locales that use comma as the decimal.
+		separator = ';';
+
+	return separator;
+}
+
+/**
  * Returns a table parsed from @a text, a CSV- or TSV-formatted string.
  */
 VuoTable VuoTable_makeFromText(VuoText text, VuoTableFormat format)
@@ -244,12 +375,12 @@ VuoTable VuoTable_makeFromText(VuoText text, VuoTableFormat format)
 		return VuoTable_makeEmpty();
 	}
 
-	if (format == VuoTableFormat_Tsv)
-		csv_set_delim(&parser, CSV_TAB);
+	size_t numBytes = VuoText_byteCount(text);
+
+	csv_set_delim(&parser, VuoTable_guessSeparator(text, numBytes, format));
 
 	ParserContext ctx;
 
-	size_t numBytes = VuoText_byteCount(text);
 	size_t numBytesParsed = csv_parse(&parser, text, numBytes, parserGotItem, parserGotLine, &ctx);
 	if (numBytesParsed != numBytes)
 	{
@@ -341,9 +472,7 @@ VuoText VuoTable_serialize(VuoTable table, VuoTableFormat format)
 		--dstPtr;
 	*dstPtr = 0;
 
-	VuoText text = VuoText_make(dst);
-	free(dst);
-	return text;
+	return VuoText_makeWithoutCopying(dst);
 }
 
 

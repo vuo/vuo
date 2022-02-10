@@ -2,7 +2,7 @@
  * @file
  * vuo.type.boolean.text node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Boolean to Text",
 					 "keywords" : [ "0", "1", "true", "false" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						   "exampleCompositions" : [ ],
 						   "isDeprecated": true
@@ -28,7 +28,5 @@ void nodeEvent
 		VuoOutputData(VuoText) text
 )
 {
-	char *textAsCString = VuoBoolean_getString(boolean);
-	*text = VuoText_make(textAsCString);
-	free(textAsCString);
+	*text = VuoText_makeWithoutCopying(VuoBoolean_getString(boolean));
 }

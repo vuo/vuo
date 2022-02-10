@@ -2,7 +2,7 @@
  * @file
  * VuoProjectionType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -39,7 +39,6 @@ char * VuoProjectionType_getSummary(const VuoProjectionType value);
 /**
  * Automatically generated function.
  */
-VuoProjectionType VuoProjectionType_makeFromString(const char *str);
 char * VuoProjectionType_getString(const VuoProjectionType value);
 void VuoProjectionType_retain(VuoProjectionType value);
 void VuoProjectionType_release(VuoProjectionType value);

@@ -2,7 +2,7 @@
  * @file
  * vuo.math.areEqual node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,21 +10,21 @@
 #include "node.h"
 
 VuoModuleMetadata({
-    "title": "Are Equal (Math)",
-    "keywords": [
-        "==", "same", "identical", "equivalent", "match", "compare", "conditional",
-        "approximate", "range", "roughly", "~", "≈",
-    ],
-    "version": "2.1.0",
-    "genericTypes": {
-        "VuoGenericType1": {
-            "defaultType": "VuoReal",
-            "compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
-        },
-    },
-    "node": {
-        "exampleCompositions": [ ],
-    },
+	"title": "Are Equal (Math)",
+	"keywords": [
+		"==", "same", "identical", "equivalent", "match", "compare", "conditional",
+		"approximate", "range", "roughly", "~", "≈",
+	],
+	"version": "2.1.0",
+	"genericTypes": {
+		"VuoGenericType1": {
+			"defaultType": "VuoReal",
+			"compatibleTypes": [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ],
+		},
+	},
+	"node": {
+		"exampleCompositions": [ ],
+	},
 });
 
 void nodeEvent(

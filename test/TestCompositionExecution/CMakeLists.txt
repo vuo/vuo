@@ -1,5 +1,6 @@
 add_library(TestCompositionExecution STATIC EXCLUDE_FROM_ALL
 	TestCompositionExecution.cc
+	TestCompositionExecution.hh
 )
 set_target_properties(TestCompositionExecution PROPERTIES
 	AUTOMOC ON

@@ -2,7 +2,7 @@
  * @file
  * VuoLog implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -268,16 +268,40 @@ static NSOperatingSystemVersion VuoLog_getOSVersion(void)
 	return operatingSystemVersion;
 }
 
+static bool VuoLog_isInstrumentsFrameworkLoaded = false;  ///< True if DVTInstrumentsFoundation.framework is loaded in the current process (i.e., if the process has been launched for debugging with Instruments.app).
+
+/**
+ * Helper for @ref VuoLog_isDebuggerAttached.
+ */
+static void VuoLog_dylibLoaded(const struct mach_header *mh32, intptr_t vmaddr_slide)
+{
+	if (VuoLog_isInstrumentsFrameworkLoaded)
+		return;
+
+	const struct mach_header_64 *mh = reinterpret_cast<const mach_header_64 *>(mh32);
+
+	// Ignore system libraries.
+	if (mh->flags & MH_DYLIB_IN_CACHE)
+		return;
+
+	// Get the file path of the current dylib.
+	Dl_info info{"", nullptr, "", nullptr};
+	dladdr((void *)vmaddr_slide, &info);
+
+	// Check whether it's the dylib we're looking for.
+	if (strstr(info.dli_fname, "/DVTInstrumentsFoundation.framework/"))
+		VuoLog_isInstrumentsFrameworkLoaded = true;
+}
+
 /**
  * Returns true if the current process is being debugged
- * (either launched by LLDB/Instruments, or the LLDB/Instruments attached after the process launched).
- *
- * Based on https://developer.apple.com/library/archive/qa/qa1361/_index.html
+ * (either launched by LLDB/Instruments, or LLDB/Instruments attached after the process launched).
  */
 bool VuoLog_isDebuggerAttached(void)
 {
 	// Detect LLDB.
 	{
+		// Based on https://developer.apple.com/library/archive/qa/qa1361/_index.html
 		int mib[4];
 		mib[0] = CTL_KERN;
 		mib[1] = KERN_PROC;
@@ -294,10 +318,12 @@ bool VuoLog_isDebuggerAttached(void)
 
 	// Detect Instruments.
 	{
-		uint32_t imageCount = _dyld_image_count();
-		for (uint32_t i = 0; i < imageCount; ++i)
-			if (strstr(_dyld_get_image_name(i), "/DVTInstrumentsFoundation.framework/"))
-				return true;
+		static once_flag once;
+		call_once(once, []() {
+			_dyld_register_func_for_add_image(VuoLog_dylibLoaded);
+		});
+		if (VuoLog_isInstrumentsFrameworkLoaded)
+			return true;
 	}
 
 	return false;

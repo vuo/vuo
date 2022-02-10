@@ -2,7 +2,7 @@
  * @file
  * VuoRelativeTime implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -68,46 +68,22 @@ char *VuoRelativeTime_getSummary(const VuoRelativeTime value)
 	VuoRetain(components);
 
 	if (years)
-	{
-		char *s = VuoText_format("%lld year%s", llabs(years), llabs(years) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%lld year%s", llabs(years), llabs(years) == 1 ? "" : "s")));
 
 	if (months)
-	{
-		char *s = VuoText_format("%lld month%s", llabs(months), llabs(months) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%lld month%s", llabs(months), llabs(months) == 1 ? "" : "s")));
 
 	if (days)
-	{
-		char *s = VuoText_format("%lld day%s", llabs(days), llabs(days) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%lld day%s", llabs(days), llabs(days) == 1 ? "" : "s")));
 
 	if (hours)
-	{
-		char *s = VuoText_format("%lld hour%s", llabs(hours), llabs(hours) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%lld hour%s", llabs(hours), llabs(hours) == 1 ? "" : "s")));
 
 	if (minutes)
-	{
-		char *s = VuoText_format("%lld minute%s", llabs(minutes), llabs(minutes) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%lld minute%s", llabs(minutes), llabs(minutes) == 1 ? "" : "s")));
 
 	if (seconds)
-	{
-		char *s = VuoText_format("%g second%s", fabs(seconds), fabs(seconds) == 1 ? "" : "s");
-		VuoListAppendValue_VuoText(components, VuoText_make(s));
-		free(s);
-	}
+		VuoListAppendValue_VuoText(components, VuoText_makeWithoutCopying(VuoText_format("%g second%s", fabs(seconds), fabs(seconds) == 1 ? "" : "s")));
 
 	int componentCount = VuoListGetCount_VuoText(components);
 	if (componentCount == 1)

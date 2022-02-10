@@ -2,7 +2,7 @@
  * @file
  * vuo.image.blur.directional node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						  "motion", "linear", "horizontal", "vertical", "diagonal",
 						  "variable", "depth of field", "DOF",
 					  ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "dependencies" : [
 						  "VuoImageBlur"
 					  ],

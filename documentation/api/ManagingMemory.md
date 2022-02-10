@@ -57,7 +57,7 @@ In many cases, the Vuo compiler automatically inserts calls to VuoRetain() and V
 
 If you're sending data through an output port, then the memory management is handled by the port type and the Vuo compiler. You don't need to call VuoRegister(), VuoRetain(), or VuoRelease(). 
 
-In the example below, VuoText_make() allocates a new @ref VuoText value, copies `textAsCString` into it, registers it, and returns it. The nodeEvent() function sends this VuoText value through the output port. After the nodeEvent() function returns, the Vuo compiler handles all calls to VuoRetain() and VuoRelease() for the VuoText value. (However, you do have to free `textAsCString`, since it's just a temporary value that never leaves the node.) 
+In the example below, VuoText_makeWithoutCopying() registers `textAsCString` as a @ref VuoText value and returns it. The nodeEvent() function sends this VuoText value through the output port. After the nodeEvent() function returns, the Vuo compiler handles all calls to VuoRetain() and VuoRelease() for the VuoText value. (However, you do have to free `textAsCString`, since it's just a temporary value that never leaves the node.)
 
 @code{.cc}
 void nodeEvent
@@ -67,8 +67,7 @@ void nodeEvent
 )
 {
 	char *textAsCString = VuoInteger_getString(integer);
-	*text = VuoText_make(textAsCString);
-	free(textAsCString);
+	*text = VuoText_makeWithoutCopying(textAsCString);
 }
 @endcode
 
@@ -82,8 +81,7 @@ void nodeEvent
 )
 {
 	char *textAsCString = VuoInteger_getString(integer);
-	fireText( VuoText_make(textAsCString) );
-	free(textAsCString);
+	fireText( VuoText_makeWithoutCopying(textAsCString) );
 }
 @endcode
 

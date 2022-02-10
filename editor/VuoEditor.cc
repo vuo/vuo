@@ -2,7 +2,7 @@
  * @file
  * VuoEditor implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -677,64 +677,64 @@ void VuoEditor::loadTranslations()
 /**
  * Iterates through the queue of pending files to open and tries to open each one.
  */
- void VuoEditor::processQueuedCompositionsToOpen()
- {
-	 vector<QString> queuedCompositionsToOpenSnapshot(queuedCompositionsToOpen);
-	 queuedCompositionsToOpen.clear();
+void VuoEditor::processQueuedCompositionsToOpen()
+{
+	vector<QString> queuedCompositionsToOpenSnapshot(queuedCompositionsToOpen);
+	queuedCompositionsToOpen.clear();
 
-	 // Iterate through a copy of the queue rather than the original queue,
-	 // because calls to openUrl() might add the file back into the original queue,
-	 // so we need the clear() call to have happened before that.
- 	foreach (QString queuedUrl, queuedCompositionsToOpenSnapshot)
+	// Iterate through a copy of the queue rather than the original queue,
+	// because calls to openUrl() might add the file back into the original queue,
+	// so we need the clear() call to have happened before that.
+	foreach (QString queuedUrl, queuedCompositionsToOpenSnapshot)
 		openUrl(queuedUrl);
- }
+}
 
- /**
+/**
  * Allow pending file-open events to override the welcome window display
  * if the welcome window is in a state where it is allowed to be closed.
  */
- void VuoEditor::reevaluateWelcomePrecedence()
- {
+void VuoEditor::reevaluateWelcomePrecedence()
+{
 #if VUO_PRO
-	 enableMenuItems(menuFile, canCloseWelcomeWindow());
+	enableMenuItems(menuFile, canCloseWelcomeWindow());
 
-	 if (!queuedCompositionsToOpen.empty())
-		 closeWelcomeWindow();
+	if (!queuedCompositionsToOpen.empty())
+		closeWelcomeWindow();
 #endif
- }
+}
 
- /**
- * Sets the enabled/disabled state of all items within the provided @c menu,
- * with the exception of certain items (e.g., "Quit") that should never be disabled
- * and certain other items (e.g., headers) that should never be enabled.
- */
- void VuoEditor::enableMenuItems(QMenu *menu, bool enable)
- {
-	 if (!menu)
+/**
+* Sets the enabled/disabled state of all items within the provided @c menu,
+* with the exception of certain items (e.g., "Quit") that should never be disabled
+* and certain other items (e.g., headers) that should never be enabled.
+*/
+void VuoEditor::enableMenuItems(QMenu *menu, bool enable)
+{
+	if (!menu)
 		return;
 
-	 foreach (QAction *action, menu->actions())
-	 {
-		 // Apply recursively to submenus.
-		 if (action->menu())
-		 {
-			 VuoExampleMenu *exampleMenu = dynamic_cast<VuoExampleMenu *>(action->menu());
-			 if (exampleMenu)
-				 exampleMenu->enableMenuItems(enable);
-			 else
-				 enableMenuItems(action->menu(), enable);
-		 }
-		 else
-		 {
-			 bool isQuitOrHelp = action->text().contains("Quit") || action->text().contains("About");
-			 bool isTemplateHeader = (menu == menuNewCompositionWithTemplate) &&
-									 action->data().value<QString>().isEmpty() &&
-									 !action->data().value<VuoProtocol *>();
-			 if (!(isQuitOrHelp || isTemplateHeader))
-				 action->setEnabled(enable);
-		 }
-	 }
- }
+	foreach (QAction *action, menu->actions())
+	{
+		// Apply recursively to submenus.
+		if (action->menu())
+		{
+			VuoExampleMenu *exampleMenu = dynamic_cast<VuoExampleMenu *>(action->menu());
+			if (exampleMenu)
+				exampleMenu->enableMenuItems(enable);
+			else
+				enableMenuItems(action->menu(), enable);
+		}
+		else
+		{
+			bool isQuitOrHelp = action->text().contains("Quit") || action->text().contains("About");
+			bool isTemplateHeader = (menu == menuNewCompositionWithTemplate) &&
+									action->data().value<QString>().isEmpty() &&
+									!action->data().value<VuoProtocol *>();
+			if (!(isQuitOrHelp || isTemplateHeader))
+				action->setEnabled(enable);
+		}
+	}
+}
 
 /**
  * Returns the list of recently-opened files.
@@ -1035,7 +1035,7 @@ void VuoEditor::populateHelpMenu(QMenu *m)
 	// Help Us Improve Vuo
 	QAction *improveVuoAction = new QAction(m);
 	improveVuoAction->setText(tr("Help Us Improve Vuo"));
-	improveVuoAction->setData(QUrl("https://vuo.org/community-edition"));
+	improveVuoAction->setData(QUrl("https://vuo.org/contribute"));
 	connect(improveVuoAction, &QAction::triggered, this, &VuoEditor::openExternalUrlFromSenderData);
 	m->addAction(improveVuoAction);
 

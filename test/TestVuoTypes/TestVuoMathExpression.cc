@@ -2,7 +2,7 @@
  * @file
  * TestVuoMathExpression implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -72,8 +72,9 @@ private slots:
 		QFETCH(QString, serialized);
 		QFETCH(QString, reserialized);
 
-		VuoMathExpressionList v = VuoMathExpressionList_makeFromString(serialized.toUtf8().data());
+		VuoMathExpressionList v = VuoMakeRetainedFromString(serialized.toUtf8().constData(), VuoMathExpressionList);
 		QCOMPARE(QString::fromUtf8(VuoMathExpressionList_getString(v)), reserialized);
+		VuoMathExpressionList_release(v);
 	}
 
 	void testParsingMultipleExpressions_data()
@@ -123,8 +124,9 @@ private slots:
 		QFETCH(QString, serialized);
 		QFETCH(QString, reserialized);
 
-		VuoMathExpressionList v = VuoMathExpressionList_makeFromString(serialized.toUtf8().data());
+		VuoMathExpressionList v = VuoMakeRetainedFromString(serialized.toUtf8().constData(), VuoMathExpressionList);
 		QCOMPARE(QString::fromUtf8(VuoMathExpressionList_getString(v)), reserialized);
+		VuoMathExpressionList_release(v);
 	}
 
 	void testCalculating_data()
@@ -172,11 +174,11 @@ private slots:
 		QFETCH(QString, serializedOutputVariables);
 		QFETCH(QString, serializedOutputValues);
 
-		VuoList_VuoText expressions = VuoList_VuoText_makeFromString(serializedExpressions.toUtf8().data());
-		VuoList_VuoText inputVariables = VuoList_VuoText_makeFromString(serializedInputVariables.toUtf8().data());
-		VuoList_VuoReal inputValues = VuoList_VuoReal_makeFromString(serializedInputValues.toUtf8().data());
-		VuoList_VuoText outputVariables = VuoList_VuoText_makeFromString(serializedOutputVariables.toUtf8().data());
-		VuoList_VuoReal outputValues = VuoList_VuoReal_makeFromString(serializedOutputValues.toUtf8().data());
+		VuoList_VuoText expressions     = VuoMakeRetainedFromString(serializedExpressions.toUtf8().constData(), VuoList_VuoText);
+		VuoList_VuoText inputVariables  = VuoMakeRetainedFromString(serializedInputVariables.toUtf8().constData(), VuoList_VuoText);
+		VuoList_VuoReal inputValues     = VuoMakeRetainedFromString(serializedInputValues.toUtf8().constData(), VuoList_VuoReal);
+		VuoList_VuoText outputVariables = VuoMakeRetainedFromString(serializedOutputVariables.toUtf8().constData(), VuoList_VuoText);
+		VuoList_VuoReal outputValues    = VuoMakeRetainedFromString(serializedOutputValues.toUtf8().constData(), VuoList_VuoReal);
 
 		VuoDictionary_VuoText_VuoReal inputVariablesAndValues = {inputVariables, inputValues};
 		VuoDictionary_VuoText_VuoReal outputVariablesAndValues = {outputVariables, outputValues};
@@ -187,6 +189,12 @@ private slots:
 		VuoDictionary_VuoText_VuoReal actualOutputVariablesAndValues = VuoMathExpressionParser_calculate(parser, inputVariablesAndValues);
 		QCOMPARE(QString::fromUtf8(VuoDictionary_VuoText_VuoReal_getString(actualOutputVariablesAndValues)),
 				 QString::fromUtf8(VuoDictionary_VuoText_VuoReal_getString(outputVariablesAndValues)));
+
+		VuoRelease(expressions);
+		VuoRelease(inputVariables);
+		VuoRelease(inputValues);
+		VuoRelease(outputVariables);
+		VuoRelease(outputValues);
 	}
 };
 

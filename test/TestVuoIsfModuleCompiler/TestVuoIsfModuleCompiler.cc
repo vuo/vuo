@@ -2,7 +2,7 @@
  * @file
  * TestVuoIsfModuleCompiler interface and implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -671,7 +671,7 @@ private slots:
 		QVERIFY2(issues->isEmpty(), issues->getLongDescription(false).c_str());
 		QVERIFY(!llvm::verifyModule(*llvmModule));
 
-		VuoCompiler::setTargetForModule(llvmModule, "x86_64-apple-macosx10.10.0");
+		VuoCompiler::setTargetForModule(llvmModule, VuoCompiler::getProcessTarget());
 		VuoCompiler::writeModuleToBitcode(llvmModule, m.getCompiledPath());
 
 		VuoCompiler *compiler = new VuoCompiler(m.getCompositionDir());
@@ -699,6 +699,8 @@ private slots:
 		VuoRunner::Port *outputPort = runner->getPublishedOutputPortWithName("outputImage");
 		json_object *outputJson = runner->getPublishedOutputPortValue(outputPort);
 		VuoImage outputImage = VuoImage_makeFromJson(outputJson);
+		VuoRetain(outputImage);
+		json_object_put(outputJson);
 
 		QCOMPARE(outputImage != nullptr, hasOutputImage);
 		if (outputImage)
@@ -712,6 +714,7 @@ private slots:
 
 			checkPixel(outputImage, x, y, r, g, b, a);
 		}
+		VuoRelease(outputImage);
 
 		runner->stop();
 

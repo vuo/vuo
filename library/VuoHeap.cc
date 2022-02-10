@@ -2,7 +2,7 @@
  * @file
  * VuoHeap implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -21,6 +21,7 @@ using namespace std;
 #include "VuoRuntime.h"
 
 static set<const void *> *VuoHeap_trace;	///< Heap pointers to trace.
+static pthread_mutex_t VuoHeap_mutex = PTHREAD_MUTEX_INITIALIZER;  ///< Protects access to `referenceCounts`.
 
 /**
  * Calls the vuoSendError() function defined in the runtime (without introducing a direct dependency on the runtime).
@@ -81,34 +82,6 @@ typedef struct
 
 static map<const void *, VuoHeapEntry> *referenceCounts;  ///< The reference count for each pointer.
 static set<const void *> *singletons;  ///< Known singleton pointers.
-static unsigned int *referenceCountsSemaphore = 0;  ///< Synchronizes access to referenceCounts.
-
-/**
- * Waits for `referenceCountsSemaphore` to become available.
- *
- * Spinlocks are faster than dispatch semaphores when under contention, especially on macOS 10.12.
- * https://b33p.net/kosada/node/12778
- */
-static inline void VuoHeap_lock(void)
-{
-	while (1)
-	{
-		for (int i = 0; i < 10000; ++i)
-			if (__sync_bool_compare_and_swap(referenceCountsSemaphore, 0, 1))
-				return;
-
-		sched_yield();
-	}
-}
-
-/**
- * Releases `referenceCountsSemaphore`.
- */
-static inline void VuoHeap_unlock(void)
-{
-	__sync_synchronize();
-	*referenceCountsSemaphore = 0;
-}
 
 /**
  * Returns true if `pointer` looks like a valid pointer.
@@ -219,12 +192,6 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 	referenceCounts = new map<const void *, VuoHeapEntry>;
 	singletons = new set<const void *>;
 	VuoHeap_trace = new set<const void *>;
-	referenceCountsSemaphore = (unsigned int *)malloc(sizeof(unsigned int));
-	*referenceCountsSemaphore = 0;
-
-#ifdef VUOHEAP_TRACE
-	VUserLog("table=%p", referenceCounts);
-#endif
 
 #if 0
 	// Periodically dump the referenceCounts table, to help find leaks.
@@ -233,7 +200,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*dumpInterval, NSEC_PER_SEC*dumpInterval);
 	dispatch_source_set_event_handler(timer, ^{
 										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
-										  VuoHeap_lock();
+										  pthread_mutex_lock(&VuoHeap_mutex);
 										  for (map<const void *, VuoHeapEntry>::iterator i = referenceCounts->begin(); i != referenceCounts->end(); ++i)
 										  {
 											  const void *heapPointer = i->first;
@@ -243,7 +210,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 											  fprintf(stderr, "\t% 3d refs to %p \"%s\", registered at %s\n", i->second.referenceCount, heapPointer, pointerSummary, description);
 											  free(description);
 										  }
-										  VuoHeap_unlock();
+										  pthread_mutex_unlock(&VuoHeap_mutex);
 									  });
 	dispatch_resume(timer);
 #endif
@@ -254,10 +221,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
  */
 void VuoHeap_report(void)
 {
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
-	{
+	pthread_mutex_lock(&VuoHeap_mutex);
 
 	if (! referenceCounts->empty())
 	{
@@ -276,8 +240,7 @@ void VuoHeap_report(void)
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
-	}
-	VuoHeap_unlock();
+	pthread_mutex_unlock(&VuoHeap_mutex);
 }
 
 /**
@@ -314,11 +277,8 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	bool isAlreadyReferenceCounted;
 	int updatedCount;
 
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	pthread_mutex_lock(&VuoHeap_mutex);
 	{
-
 #ifdef VUOHEAP_TRACE
 #ifdef VUOHEAP_TRACEALL
 		if (VuoHeap_isComposition())
@@ -331,18 +291,16 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 		}
 #endif
 
-		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
-		isAlreadyReferenceCounted = (i != referenceCounts->end());
+		isAlreadyReferenceCounted = referenceCounts->count(heapPointer);
 		if (! isAlreadyReferenceCounted)
 		{
 			updatedCount = 0;
 			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, linenumber, func, pointerName};
 		}
 		else
-			updatedCount = i->second.referenceCount;
-
+			updatedCount = (*referenceCounts)[heapPointer].referenceCount;
 	}
-	VuoHeap_unlock();
+	pthread_mutex_unlock(&VuoHeap_mutex);
 
 	if (isAlreadyReferenceCounted)
 	{
@@ -380,11 +338,8 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 
 	bool isAlreadyReferenceCounted;
 
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	pthread_mutex_lock(&VuoHeap_mutex);
 	{
-
 #ifdef VUOHEAP_TRACE
 #ifdef VUOHEAP_TRACEALL
 		if (VuoHeap_isComposition())
@@ -406,7 +361,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 		if (! isAlreadyReferenceCounted)
 			singletons->insert(heapPointer);
 	}
-	VuoHeap_unlock();
+	pthread_mutex_unlock(&VuoHeap_mutex);
 
 	if (isAlreadyReferenceCounted)
 	{
@@ -460,11 +415,8 @@ int VuoRetain(const void *heapPointer)
 
 	int updatedCount = -1;
 	bool foundSingleton = false;
-	VuoHeapEntry entry;
 
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	pthread_mutex_lock(&VuoHeap_mutex);
 	{
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
@@ -484,10 +436,8 @@ int VuoRetain(const void *heapPointer)
 			updatedCount = ++(i->second.referenceCount);
 		else
 			foundSingleton = singletons->find(heapPointer) != singletons->end();
-		entry = i->second;
-
 	}
-	VuoHeap_unlock();
+	pthread_mutex_unlock(&VuoHeap_mutex);
 
 	if (updatedCount == -1 && !foundSingleton)
 	{
@@ -545,9 +495,7 @@ int VuoRelease(const void *heapPointer)
 	bool isRegisteredWithoutRetain = false;
 	DeallocateFunctionType deallocate = NULL;
 
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	pthread_mutex_lock(&VuoHeap_mutex);
 	{
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
@@ -583,33 +531,27 @@ int VuoRelease(const void *heapPointer)
 		else
 			foundSingleton = singletons->find(heapPointer) != singletons->end();
 
-	}
-	VuoHeap_unlock();
-
-	if (updatedCount == 0)
-	{
 #ifdef VUOHEAP_TRACE
+		if (updatedCount == 0)
+		{
 #ifdef VUOHEAP_TRACEALL
-		if (VuoHeap_isComposition())
-		{
+			if (VuoHeap_isComposition())
+			{
 #else
-		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
-		{
-			VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-			VuoHeap_lock();
-			VUOLOG_PROFILE_END(referenceCountsSemaphore);
+			if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 			{
 				VuoHeap_trace->erase(heapPointer);
-			}
-			VuoHeap_unlock();
 #endif
-			fprintf(stderr, "table=%p  VuoDeallocate(%p)\n", referenceCounts, heapPointer);
-//			VuoLog_backtrace();
+				fprintf(stderr, "table=%p  VuoDeallocate(%p)\n", referenceCounts, heapPointer);
+//				VuoLog_backtrace();
+			}
 		}
 #endif
-
-		deallocate((void *)heapPointer);
 	}
+	pthread_mutex_unlock(&VuoHeap_mutex);
+
+	if (updatedCount == 0)
+		deallocate((void *)heapPointer);
 	else if (updatedCount == -1 && !foundSingleton)
 	{
 		char pointerSummary[17];
@@ -633,13 +575,22 @@ int VuoRelease(const void *heapPointer)
  *
  * The caller is responsible for freeing the returned string.
  */
-const char * VuoHeap_getDescription(const void *heapPointer)
+char *VuoHeap_getDescription(const void *heapPointer)
 {
+	char *description = nullptr;
+
+	pthread_mutex_lock(&VuoHeap_mutex);
+
 	map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 	if (i != referenceCounts->end())
-		return VuoHeap_makeDescription(i->second);
+		description = VuoHeap_makeDescription(i->second);
 
-	return strdup("(pointer was not VuoRegister()ed)");
+	pthread_mutex_unlock(&VuoHeap_mutex);
+
+	if (description)
+		return description;
+	else
+		return strdup("(pointer was not VuoRegister()ed)");
 }
 
 /**
@@ -649,11 +600,9 @@ const char * VuoHeap_getDescription(const void *heapPointer)
  */
 void VuoHeap_addTrace(const void *heapPointer)
 {
-	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	VuoHeap_lock();
-	VUOLOG_PROFILE_END(referenceCountsSemaphore);
-	{
-		VuoHeap_trace->insert(heapPointer);
-	}
-	VuoHeap_unlock();
+	pthread_mutex_lock(&VuoHeap_mutex);
+
+	VuoHeap_trace->insert(heapPointer);
+
+	pthread_mutex_unlock(&VuoHeap_mutex);
 }

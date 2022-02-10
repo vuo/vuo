@@ -2,7 +2,7 @@
  * @file
  * VuoImage implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -921,6 +921,14 @@ static void VuoImage_IOSurfaceTextureFree(VuoImage i)
 }
 
 /**
+ * Callback to pass to `json_object_set_userdata()`.
+ */
+static void VuoImage_releaseCallback(struct json_object *js, void *image)
+{
+	VuoRelease(image);
+}
+
+/**
  * @ingroup VuoImage
  * Decodes the JSON object `js` to create a new VuoImage.
  *
@@ -943,12 +951,16 @@ VuoImage VuoImage_makeFromJsonWithDimensions(struct json_object *js, unsigned in
 			VuoImage im = (VuoImage)json_object_get_int64(o);
 			if ((requestedPixelsWide == 0 && requestedPixelsHigh == 0)
 			 || (im->pixelsWide == requestedPixelsWide && im->pixelsHigh == requestedPixelsHigh))
+			{
+				json_object_set_userdata(js, im, VuoImage_releaseCallback);
 				return im;
+			}
 			else
 			{
 				VuoImage outputImage = VuoImage_make(im->glTextureName, im->glInternalFormat, requestedPixelsWide, requestedPixelsHigh);
 				outputImage->glTextureTarget = im->glTextureTarget;
 				outputImage->scaleFactor = im->scaleFactor;
+				VuoRelease(im);
 				return outputImage;
 			}
 		}
@@ -1453,6 +1465,8 @@ json_object * VuoImage_getJson(const VuoImage value)
 {
 	if (!value)
 		return NULL;
+
+	VuoRetain(value);
 
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));

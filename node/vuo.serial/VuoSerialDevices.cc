@@ -2,7 +2,7 @@
  * @file
  * VuoSerial implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -127,13 +127,13 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 		VuoRetain(serialNumber);
 
 		if (vendorName && productName && serialNumber)
-			device.name = VuoText_make(VuoText_format("%s %s (%s)", vendorName, productName, serialNumber));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s %s (%s)", vendorName, productName, serialNumber));
 		else if (vendorName && productName)
-			device.name = VuoText_make(VuoText_format("%s %s", vendorName, productName));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s %s", vendorName, productName));
 		else if (vendorName && serialNumber)
-			device.name = VuoText_make(VuoText_format("%s (%s)", vendorName, serialNumber));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s (%s)", vendorName, serialNumber));
 		else if (productName && serialNumber)
-			device.name = VuoText_make(VuoText_format("%s (%s)", productName, serialNumber));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s (%s)", productName, serialNumber));
 		else if (vendorName)
 			device.name = VuoText_make(vendorName);
 		else if (productName)

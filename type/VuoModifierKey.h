@@ -2,7 +2,7 @@
  * @file
  * VuoModifierKey C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,6 @@ bool VuoModifierKey_doMacEventFlagsMatch(unsigned long flags, VuoModifierKey mod
 /**
  * Automatically generated function.
  */
-VuoModifierKey VuoModifierKey_makeFromString(const char *str);
 char * VuoModifierKey_getString(const VuoModifierKey value);
 void VuoModifierKey_retain(VuoModifierKey value);
 void VuoModifierKey_release(VuoModifierKey value);

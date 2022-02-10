@@ -2,7 +2,7 @@
  * @file
  * VuoApp implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -188,9 +188,10 @@ static void VuoApp_initNSApplication(bool requiresDockIcon)
 	[pool drain];
 }
 
-#ifndef DOXYGEN
-void VuoApp_fini(void);
-#endif
+/**
+ * True if `VuoApp_init()` has initialized an NSApplication.
+ */
+static bool VuoApp_initialized = false;
 
 /**
  * Creates an NSApplication instance (if one doesn't already exist).
@@ -222,10 +223,11 @@ void VuoApp_init(bool requiresDockIcon)
 
 	static dispatch_once_t once = 0;
 	dispatch_once(&once, ^{
+		VuoApp_initialized = true;
+
 		VuoApp_executeOnMainThread(^{
 			VuoApp_initNSApplication(requiresDockIcon);
 		});
-		VuoAddCompositionFiniCallback(VuoApp_fini);
 	});
 }
 
@@ -270,21 +272,24 @@ static void VuoApp_finiWindows(uint64_t compositionUid)
  */
 void VuoApp_fini(void)
 {
-	if (!NSApp)
+	if (! VuoApp_initialized)
 		return;
 
-	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
-	uint64_t compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
-	free(compositionState);
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
+		uint64_t compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+		free(compositionState);
 
-	if (VuoApp_isMainThread())
-		VuoApp_finiWindows(compositionUid);
-	else
-	{
-		VUOLOG_PROFILE_BEGIN(mainQueue);
-		dispatch_sync(dispatch_get_main_queue(), ^{
-			VUOLOG_PROFILE_END(mainQueue);
+		if (VuoApp_isMainThread())
 			VuoApp_finiWindows(compositionUid);
-		});
-	}
+		else
+		{
+			VUOLOG_PROFILE_BEGIN(mainQueue);
+			dispatch_sync(dispatch_get_main_queue(), ^{
+				VUOLOG_PROFILE_END(mainQueue);
+				VuoApp_finiWindows(compositionUid);
+			});
+		}
+	});
 }

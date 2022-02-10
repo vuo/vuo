@@ -8,6 +8,9 @@ VuoCompileLibrariesWithTarget(vuo.core.runtime.objects
 	VuoRuntime.cc
 	VuoRuntimeMain.c
 )
+target_sources(vuo.core.runtime.objects PRIVATE
+	VuoRuntime.h
+)
 target_include_directories(vuo.core.runtime.objects
 	PRIVATE
 	../base
@@ -16,8 +19,9 @@ target_include_directories(vuo.core.runtime.objects
 # Objects that should be linked in to vuo.core.runtime.libraries
 # (and eventually VuoHeap).
 VuoCompileLibraries(
-	VuoEventLoop.m
 	VuoCompositionDiff.cc
+	VuoCompositionState.c
+	VuoEventLoop.m
 	VuoLog.cc
 	VuoNodeRegistry.cc
 	VuoNodeSynchronization.cc
@@ -27,9 +31,24 @@ VuoCompileLibraries(
 	VuoRuntimeState.cc
 	VuoRuntimeUtilities.cc
 	VuoThreadManager.cc
-	VuoCompositionState.c
 	../base/VuoException.cc
 	../base/VuoTelemetry.cc
+)
+target_sources(vuo.core.runtime.libraries PRIVATE
+	VuoCompositionDiff.hh
+	VuoCompositionState.h
+	VuoEventLoop.h
+	VuoNodeRegistry.hh
+	VuoNodeSynchronization.hh
+	VuoRuntimeCommunicator.hh
+	VuoRuntimeContext.hh
+	VuoRuntimePersistentState.hh
+	VuoRuntimeState.hh
+	VuoRuntimeUtilities.hh
+	VuoThreadManager.hh
+	../library/VuoLog.h
+	../node/module.h
+	../node/node.h
 )
 target_compile_definitions(vuo.core.runtime.libraries
 	PUBLIC

@@ -18,7 +18,7 @@ When typing in the `Fragment Shader` port's input editor, the Return and Tab key
 ### Troubleshooting
 
    - Make sure that you have images in the appropriate Channel ports.  If a shader makes use of an image and it is not provided, things may go awry.
-   - If your screen is blank, the shader may contain an error.  In the event that a shader fails compilation, Vuo will print the error to the Console app.
+   - If your screen is blank, the shader may contain an error.  In the event that a shader fails compilation, Vuo will show the error in the Console window (Tools > Show Console).
    - Check that a time source is connected to the `Global Time` port.  Some shaders require a time base to function correctly.
    - If your shader code uses `iMouse`, make sure that you have connected the ports from [Check Mouse Status](vuo-node://vuo.mouse.status) to `Mouse Position` and `Mouse Is Pressed`.
 

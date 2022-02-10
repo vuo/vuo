@@ -3,7 +3,7 @@
  * Shows a live video feed from your iSight camera. When you click, it switches to a repeating instant replay of the last moments before the click.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -24,6 +24,9 @@
 #include "VuoFileUtilitiesCocoa.hh"
 #include "VuoStringUtilities.hh"
 
+bool VuoFileUtilities::dylibLoaderInitialMatchCompleted = false;
+string VuoFileUtilities::vuoFrameworkPath;
+string VuoFileUtilities::vuoRunnerFrameworkPath;
 
 /**
  * Splits @c path into its directory, file name, and file extension.
@@ -246,131 +249,94 @@ void VuoFileUtilities::makeDir(string path)
 }
 
 /**
- * Returns the absolute path of Vuo.framework (without a trailing slash),
+ * Helper for @ref initializeVuoFrameworkPaths.
+ *
+ * This needs to be kept in sync with @ref VuoFrameworkPaths_dylibLoaded().
+ */
+void VuoFileUtilities::dylibLoaded(const struct mach_header *mh32, intptr_t vmaddr_slide)
+{
+	if (dylibLoaderInitialMatchCompleted)
+		return;
+
+	const struct mach_header_64 *mh = reinterpret_cast<const mach_header_64 *>(mh32);
+
+	// Ignore system libraries.
+	if (mh->flags & MH_DYLIB_IN_CACHE)
+		return;
+
+	// Get the file path of the current dylib.
+	Dl_info info{"", nullptr, "", nullptr};
+	dladdr((void *)vmaddr_slide, &info);
+
+	// Check whether it's one of the dylibs we're looking for.
+
+	auto getMatchingPath = [info](string fragment) -> string {
+		string qualifiedFragment = "/" + fragment + ".framework/Versions/";
+		const char *found = strstr(info.dli_fname, qualifiedFragment.c_str());
+		if (found)
+		{
+			char *pathC = strndup(info.dli_fname, found - info.dli_fname);
+			string path = string(pathC) + "/" + fragment + ".framework";
+			free(pathC);
+			if (access(path.c_str(), 0) == 0)
+				return path;
+		}
+		return string();
+	};
+
+	string possibleVuoFramework = getMatchingPath("Vuo");
+	if (!possibleVuoFramework.empty())
+		vuoFrameworkPath = possibleVuoFramework;
+
+	string possibleVuoRunnerFramework = getMatchingPath("VuoRunner");
+	if (!possibleVuoRunnerFramework.empty())
+		vuoRunnerFrameworkPath = possibleVuoRunnerFramework;
+}
+
+/**
+ * Helper for @ref getVuoFrameworkPath and @ref getVuoRunnerFrameworkPath.
+ */
+void VuoFileUtilities::initializeVuoFrameworkPaths(void)
+{
+	static once_flag once;
+	call_once(once, []() {
+		// Check whether Vuo.framework is in the list of loaded dynamic libraries.
+		_dyld_register_func_for_add_image(&dylibLoaded);
+		dylibLoaderInitialMatchCompleted = true;
+		// The above function invokes the callback for each already-loaded dylib, then returns.
+
+		if (vuoRunnerFrameworkPath.empty() && !vuoFrameworkPath.empty())
+		{
+			// Check for VuoRunner.framework alongside Vuo.framework.
+			string pathCandidate = vuoFrameworkPath + "/../VuoRunner.framework";
+			if (dirExists(pathCandidate))
+				vuoRunnerFrameworkPath = pathCandidate;
+		}
+	});
+}
+
+/**
+ * Returns the absolute path of Vuo.framework
+ * (including the `Vuo.framework` directory name without a trailing slash),
  * or an empty string if Vuo.framework cannot be located.
  *
  * For a C version accessible from nodes and libraries, see @ref VuoGetFrameworkPath.
  */
 string VuoFileUtilities::getVuoFrameworkPath(void)
 {
-	static string frameworkPath;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-
-	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
-	const char *frameworkPathFragment = "/Vuo.framework/Versions/";
-	uint32_t imageCount = _dyld_image_count();
-	for (uint32_t i = 0; i < imageCount; ++i)
-	{
-		const char *dylibPath = _dyld_get_image_name(i);
-		const char *found     = strstr(dylibPath, frameworkPathFragment);
-		if (found)
-		{
-			char *pathC = strndup(dylibPath, found - dylibPath);
-			string path = string(pathC) + "/Vuo.framework";
-			free(pathC);
-			if (fileExists(path))
-			{
-				frameworkPath = path;
-				return;
-			}
-		}
-	}
-
-	// Failing that, check for a Vuo.framework bundled with the executable app.
-	char executablePath[PATH_MAX + 1];
-	uint32_t size = sizeof(executablePath);
-
-	if (! _NSGetExecutablePath(executablePath, &size))
-	{
-		char cleanedExecutablePath[PATH_MAX + 1];
-
-		realpath(executablePath, cleanedExecutablePath);  // remove extra references (e.g., "/./")
-		string path = cleanedExecutablePath;
-		string dir, file, ext;
-		splitPath(path, dir, file, ext);		// remove executable name
-		path = dir.substr(0, dir.length() - 1);	// remove "/"
-		splitPath(path, dir, file, ext);		// remove "MacOS"
-		path = dir.substr(0, dir.length() - 1);	// remove "/"
-		path += "/Frameworks/Vuo.framework";
-
-		if (fileExists(path))
-		{
-			frameworkPath = path;
-			return;
-		}
-	}
-
-	// Give up.
-	});
-
-	return frameworkPath;
+	initializeVuoFrameworkPaths();
+	return vuoFrameworkPath;
 }
 
 /**
- * Returns the absolute path of VuoRunner.framework (without a trailing slash),
+ * Returns the absolute path of VuoRunner.framework
+ * (including the `VuoRunner.framework` directory name without a trailing slash),
  * or an empty string if VuoRunner.framework cannot be located.
  */
 string VuoFileUtilities::getVuoRunnerFrameworkPath(void)
 {
-	static string runnerFrameworkPath;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		// Check for VuoRunner.framework alongside Vuo.framework.
-		string possibleFrameworkPath = getVuoFrameworkPath() + "/../VuoRunner.framework";
-		if (dirExists(possibleFrameworkPath))
-		{
-			runnerFrameworkPath = possibleFrameworkPath;
-			return;
-		}
-
-		// Failing that, check whether VuoRunner.framework is in the list of loaded dynamic libraries.
-		const char *frameworkPathFragment = "/VuoRunner.framework/Versions/";
-		uint32_t imageCount = _dyld_image_count();
-		for (uint32_t i = 0; i < imageCount; ++i)
-		{
-			const char *dylibPath = _dyld_get_image_name(i);
-			const char *found     = strstr(dylibPath, frameworkPathFragment);
-			if (found)
-			{
-				char *pathC = strndup(dylibPath, found - dylibPath);
-				string path = string(pathC) + "/VuoRunner.framework";
-				free(pathC);
-				if (fileExists(path))
-				{
-					runnerFrameworkPath = path;
-					return;
-				}
-			}
-		}
-
-		// Failing that, check for a VuoRunner.framework bundled with the executable app.
-		char executablePath[PATH_MAX + 1];
-		uint32_t size = sizeof(executablePath);
-
-		if (! _NSGetExecutablePath(executablePath, &size))
-		{
-			char cleanedExecutablePath[PATH_MAX + 1];
-
-			realpath(executablePath, cleanedExecutablePath);  // remove extra references (e.g., "/./")
-			string path = cleanedExecutablePath;
-			string dir, file, ext;
-			splitPath(path, dir, file, ext);        // remove executable name
-			path = dir.substr(0, dir.length() - 1); // remove "/"
-			splitPath(path, dir, file, ext);        // remove "MacOS"
-			path = dir.substr(0, dir.length() - 1); // remove "/"
-			path += "/Frameworks/VuoRunner.framework";
-
-			if (fileExists(path))
-			{
-				runnerFrameworkPath = path;
-				return;
-			}
-		}
-
-		// Give up.
-	});
-	return runnerFrameworkPath;
+	initializeVuoFrameworkPaths();
+	return vuoRunnerFrameworkPath;
 }
 
 /**
@@ -834,9 +800,9 @@ string VuoFileUtilities::calculateFileSHA256(const string &path)
 		throw VuoException("Error: Couldn't open \"" + path + "\": " + strerror(errno));
 	VuoDefer(^{ close(fd); });
 
-    struct stat stat;
-    if (fstat(fd, &stat) != 0)
-        throw VuoException("Error: Couldn't fstat \"" + path + "\": " + strerror(errno));
+	struct stat stat;
+	if (fstat(fd, &stat) != 0)
+		throw VuoException("Error: Couldn't fstat \"" + path + "\": " + strerror(errno));
 
 	// Instead of reading the file into a string and calling `VuoStringUtilities::calculateSHA256`,
 	// use `mmap` so the OS can efficiently read parts of the file at a time (reducing memory required).
@@ -1112,6 +1078,7 @@ void VuoFileUtilities::adHocCodeSign(string path, vector<string> environment, st
 	double t0 = VuoLogGetTime();
 	vector<string> processAndArgs{
 		getVuoFrameworkPath() + "/Helpers/codesignWrapper.sh",
+		"--force",
 		"--sign",
 		"-",  // "-" = ad-hoc
 		path,

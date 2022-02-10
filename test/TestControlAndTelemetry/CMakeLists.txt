@@ -9,7 +9,6 @@ target_link_libraries(TestControlAndTelemetry
 VuoCompileNodes(
 	node-TestControlAndTelemetry/vuo.test.delay.c
 	node-TestControlAndTelemetry/vuo.test.exit.c
-	node-TestControlAndTelemetry/vuo.test.finiCallbackCreatesFile.c
 	node-TestControlAndTelemetry/vuo.test.firePeriodicallyWithCount.c
 	node-TestControlAndTelemetry/vuo.test.spinOffWithCount.c
 	node-TestControlAndTelemetry/vuo.test.temporarilyDisableTermination.c

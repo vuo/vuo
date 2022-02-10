@@ -2,7 +2,7 @@
  * @file
  * VuoOscMessage C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ char * VuoOscMessage_getSummary(const VuoOscMessage value);
 /**
  * Automatically generated function.
  */
-VuoOscMessage VuoOscMessage_makeFromString(const char *str);
 char * VuoOscMessage_getString(const VuoOscMessage value);
 void VuoOscMessage_retain(VuoOscMessage value);
 void VuoOscMessage_release(VuoOscMessage value);

@@ -2,7 +2,7 @@
  * @file
  * VuoRuntime implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -146,15 +146,12 @@ void vuoInit(int argc, char **argv)
 		// Derive the path of the app bundle's "Licenses" directory from its executable path.
 		char licensesPath[PATH_MAX+1];
 		licensesPath[0] = 0;
-		if (strlen(VuoGetFrameworkPath()))
+
+		const char *frameworkPath = VuoGetFrameworkOrRunnerFrameworkPath();
+		if (frameworkPath)
 		{
-			strncpy(licensesPath, VuoGetFrameworkPath(), PATH_MAX);
-			strncat(licensesPath, "/Vuo.framework/Versions/" VUO_FRAMEWORK_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
-		}
-		else if (strlen(VuoGetRunnerFrameworkPath()))
-		{
-			strncpy(licensesPath, VuoGetRunnerFrameworkPath(), PATH_MAX);
-			strncat(licensesPath, "/VuoRunner.framework/Versions/" VUO_FRAMEWORK_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
+			strncpy(licensesPath, frameworkPath, PATH_MAX);
+			strncat(licensesPath, "/Versions/" VUO_FRAMEWORK_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
 		}
 
 		bool foundLicenses = false;
@@ -303,11 +300,6 @@ void vuoFiniRuntimeState(void *runtimeState)
 }
 
 /**
- * Callback prototype for @ref vuoAddCompositionFiniCallback.
- */
-typedef void (*VuoCompositionFiniCallback)(void);
-
-/**
  * Calls @ref VuoRuntimePersistentState::getWorkingDirectory() on the given runtime state if any,
  * otherwise on the current runtime state if any, otherwise returns null.
  */
@@ -342,17 +334,6 @@ void vuoStopComposition(VuoCompositionState *compositionState)
 	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
 	if (r)
 		r->stopCompositionAsOrderedByComposition();
-}
-
-/**
- * Calls @ref VuoRuntimePersistentState::addFiniCallback() on the given runtime state if any,
- * otherwise on the current runtime state if any, otherwise does nothing.
- */
-void vuoAddCompositionFiniCallback(VuoCompositionState *compositionState, VuoCompositionFiniCallback fini)
-{
-	VuoRuntimeState *r = (compositionState ? (VuoRuntimeState *)compositionState->runtimeState : runtimeState);
-	if (r)
-		r->persistentState->addFiniCallback(fini);
 }
 
 /**

@@ -17,7 +17,7 @@ A color can be represented in various ways by these nodes:
 Vuo natively stores colors as floating-point values in the [sRGB colorspace](https://en.wikipedia.org/wiki/SRGB), and treats colors the same regardless of whether they were created using HSL, RGB, or CMYK.  For example, you can connect the output port of a [Make HSL Color](vuo-node://vuo.color.make.hsl) node to any input port that accepts a color, including a [Get RGB Color Values](vuo-node://vuo.color.get.rgb) node.  Vuo can also represent non-sRGB colors by using values outside the standard 0–1 sRGB range.
 
 ## Opacity
-In addition to the numbers representing HSL, RGB, or CMYK, a color can be described by a fourth number representing its **opacity** (also known as *alpha*). This number also ranges from 0 to 1, with 1 being fully opaque and 0 being fully transparent.
+In addition to the numbers representing HSL, RGB, or CMYK, a color can be described by another number representing its **opacity** (also known as *alpha*). This number also ranges from 0 to 1, with 1 being fully opaque and 0 being fully transparent. When opacity is included in a color model, the abbreviations are HSLA, RGBA, and CMYKA, respectively.
 
 ## Sorting
 For nodes such as [Sort List](vuo-node://vuo.list.sort) and [Is Less Than](vuo-node://vuo.data.isLessThan) that impose an ordering among colors, the sort is performed primarily on the colors' respective R-values, secondarily on their G-values, next on their B-values, and finally on their opacity values.

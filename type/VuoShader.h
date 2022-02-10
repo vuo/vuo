@@ -2,7 +2,7 @@
  * @file
  * VuoShader C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -295,8 +295,6 @@ struct json_object * VuoShader_getJson(const VuoShader value);
 #define VuoShader_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoShader_getInterprocessJson(const VuoShader value);
 
-/// Automatically generated function.
-VuoShader VuoShader_makeFromString(const char *str);
 /// Automatically generated function.
 char * VuoShader_getString(const VuoShader value);
 /// Automatically generated function.

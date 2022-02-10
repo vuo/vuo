@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindow implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -80,6 +80,8 @@
 #include "VuoShaderFile.hh"
 #include "VuoTitleEditor.hh"
 #include "VuoInputEditorSession.hh"
+
+#include "type.h"
 
 #ifdef __APPLE__
 #include <objc/objc-runtime.h>
@@ -3769,7 +3771,9 @@ bool VuoEditorWindow::saveFileAs(const QString & savePath)
 			string modifiedPath = i->second;
 
 			// Check whether this is a /tmp file (so that we copy it rather than updating the path).
-			QString origRelativePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+			VuoText origRelativePathText = VuoMakeRetainedFromString(port->getRenderer()->getConstantAsString().c_str(), VuoText);
+			QString origRelativePath = origRelativePathText;
+			VuoRelease(origRelativePathText);
 			string origRelativeDir, file, ext;
 			VuoFileUtilities::splitPath(origRelativePath.toUtf8().constData(), origRelativeDir, file, ext);
 			string resourceFileName = file;
@@ -3785,7 +3789,9 @@ bool VuoEditorWindow::saveFileAs(const QString & savePath)
 				copiedFileDetails.append(QString("%1\n").arg(origRelativePath));
 			else
 			{
-				updatedPathDetails.append(QString("%1 → %2\n").arg(origRelativePath, VuoText_makeFromString(modifiedPath.c_str())));
+				VuoText modifiedPathText = VuoMakeRetainedFromString(modifiedPath.c_str(), VuoText);
+				updatedPathDetails.append(QString("%1 → %2\n").arg(origRelativePath, modifiedPathText));
+				VuoRelease(modifiedPathText);
 				pathsToUpdate[port] = modifiedPath;
 			}
 		}
@@ -3870,7 +3876,6 @@ bool VuoEditorWindow::saveFileAs(const QString & savePath)
 					VuoPort *port = i->first;
 					string modifiedPath = i->second;
 
-					QString origPath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
 					setPortConstant(port->getRenderer(), modifiedPath);
 				}
 
@@ -4647,7 +4652,7 @@ void VuoEditorWindow::showPublishedPortSidebars(void)
  */
 bool VuoEditorWindow::arePublishedPortSidebarsVisible()
 {
-    return !inputPortSidebar->isHidden() && !outputPortSidebar->isHidden();
+	return !inputPortSidebar->isHidden() && !outputPortSidebar->isHidden();
 }
 
 /**
@@ -6428,6 +6433,9 @@ void VuoEditorWindow::updateColor(bool isDark)
 
 	if (doneInitializing)
 		setStyleSheet(VUO_QSTRINGIFY(
+						  QMainWindow {
+							  background-color: %2;
+						  }
 						  QMainWindow::separator {
 							  background-color: %1;
 							  width: 1px;
@@ -6437,6 +6445,7 @@ void VuoEditorWindow::updateColor(bool isDark)
 						  }
 					  )
 					  .arg(dockwidgetTitleBackgroundColor)
+					  .arg(backgroundColor)
 					  + styles);
 
 	if (VuoEditorWindowToolbar::usingOverlayScrollers())

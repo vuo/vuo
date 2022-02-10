@@ -2,7 +2,7 @@
  * @file
  * TestVuoList implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,7 @@ private slots:
 
 		{
 			char *lSerialized = VuoList_VuoText_getString(l);
-			VuoList_VuoText lUnserialized = VuoList_VuoText_makeFromString(lSerialized);
+			VuoList_VuoText lUnserialized = VuoMakeRetainedFromString(lSerialized, VuoList_VuoText);
 			QCOMPARE(VuoListGetCount_VuoText(l), VuoListGetCount_VuoText(lUnserialized));
 			unsigned long itemCount = VuoListGetCount_VuoText(l);
 			for (unsigned long i = 1; i <= itemCount; ++i)
@@ -57,6 +57,7 @@ private slots:
 				QCOMPARE(QString(lItem), QString(lUnserializedItem));
 			}
 			free(lSerialized);
+			VuoRelease(lUnserialized);
 		}
 
 		{
@@ -371,6 +372,32 @@ private slots:
 		VuoList_VuoPoint4d l = VuoListCreateWithCount_VuoPoint4d(2, p);
 		for (int i = 1; i <= 4; ++i)
 			QVERIFY(VuoPoint4d_areEqual(VuoListGetValue_VuoPoint4d(l, i), p));
+	}
+
+	void testCreateWithValueArray()
+	{
+		{
+			VuoList_VuoInteger list = VuoListCreateWithValueArray_VuoInteger(nullptr, 0);
+			QVERIFY(list);
+			VuoLocal(list);
+			QCOMPARE(VuoList_VuoInteger_getString(list), "[]");
+		}
+
+		{
+			const unsigned long valueCount = 1;
+			VuoInteger values[valueCount] = { 42 };
+			VuoList_VuoInteger list = VuoListCreateWithValueArray_VuoInteger(values, valueCount);
+			VuoLocal(list);
+			QCOMPARE(VuoList_VuoInteger_getString(list), "[42]");
+		}
+
+		{
+			const unsigned long valueCount = 2;
+			VuoInteger values[valueCount] = { 42, 22 };
+			VuoList_VuoInteger list = VuoListCreateWithValueArray_VuoInteger(values, valueCount);
+			VuoLocal(list);
+			QCOMPARE(VuoList_VuoInteger_getString(list), "[42,22]");
+		}
 	}
 
 	/**

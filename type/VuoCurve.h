@@ -2,7 +2,7 @@
  * @file
  * VuoCurve C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -48,7 +48,6 @@ char * VuoCurve_getSummary(const VuoCurve value);
 /**
  * Automatically generated function.
  */
-VuoCurve VuoCurve_makeFromString(const char *str);
 char * VuoCurve_getString(const VuoCurve value);
 void VuoCurve_retain(VuoCurve value);
 void VuoCurve_release(VuoCurve value);

@@ -4,6 +4,7 @@ VuoTest(NAME TestCompositions
 target_sources(TestCompositions
 	PRIVATE
 	PortConfiguration.cc
+	PortConfiguration.hh
 )
 target_link_libraries(TestCompositions
 	PRIVATE

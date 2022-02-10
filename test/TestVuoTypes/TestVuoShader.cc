@@ -2,7 +2,7 @@
  * @file
  * TestVuoShader implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -50,11 +50,12 @@ private slots:
 		QFETCH(QString, valueAsString);
 		QFETCH(QString, summary);
 
-		VuoShader value = VuoShader_makeFromString(valueAsString.toUtf8().data());
+		VuoShader value = VuoMakeRetainedFromString(valueAsString.toUtf8().constData(), VuoShader);
 		if (value)
 			QCOMPARE(QString(value->name), summary);
 		else
 			QCOMPARE(QString(""), summary);
+		VuoRelease(value);
 	}
 
 	void testMakeDefaultShaderPerformance()
@@ -139,13 +140,19 @@ private slots:
 
 		{
 			VuoShader s = VuoShader_makeLinearGradientShader();
-			VuoShader_setLinearGradientShaderValues(s, VuoList_VuoColor_makeFromString(VUO_STRINGIFY(["#445566"])), (VuoPoint2d){0,0}, (VuoPoint2d){1,1}, 1, 0);
+			const char *colorsStr = VUO_STRINGIFY(["#445566"]);
+			VuoList_VuoColor colors = VuoMakeRetainedFromString(colorsStr, VuoList_VuoColor);
+			VuoShader_setLinearGradientShaderValues(s, colors, (VuoPoint2d){0,0}, (VuoPoint2d){1,1}, 1, 0);
+			VuoRelease(colors);
 			QTest::newRow("gradient opaque") << s << true;
 		}
 
 		{
 			VuoShader s = VuoShader_makeLinearGradientShader();
-			VuoShader_setLinearGradientShaderValues(s, VuoList_VuoColor_makeFromString(VUO_STRINGIFY(["#44556680"])), (VuoPoint2d){0,0}, (VuoPoint2d){1,1}, 1, 0);
+			const char *colorsStr = VUO_STRINGIFY(["#44556680"]);
+			VuoList_VuoColor colors = VuoMakeRetainedFromString(colorsStr, VuoList_VuoColor);
+			VuoShader_setLinearGradientShaderValues(s, colors, (VuoPoint2d){0,0}, (VuoPoint2d){1,1}, 1, 0);
+			VuoRelease(colors);
 			QTest::newRow("gradient transparent") << s << false;
 		}
 	}

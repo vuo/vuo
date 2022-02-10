@@ -4,6 +4,12 @@ VuoCompileLibraries(
 	VuoBeatDetektor.cc
 	VuoDsp.mm
 )
+target_sources(vuo.audio.libraries PRIVATE
+	VuoAudio.h
+	VuoAudioFile.h
+	VuoBeatDetektor.hh
+	VuoDsp.h
+)
 target_link_libraries(vuo.audio.libraries
 	INTERFACE
 	"-framework CoreAudio"
@@ -21,6 +27,14 @@ VuoCompileTypes(
 	VuoAudioOutputDevice.c
 	VuoSpeechVoice.m
 	VuoTempoRange.c
+)
+target_sources(vuo.audio.types PRIVATE
+	VuoAudioBinAverageType.h
+	VuoAudioBins.h
+	VuoAudioInputDevice.h
+	VuoAudioOutputDevice.h
+	VuoSpeechVoice.h
+	VuoTempoRange.h
 )
 
 VuoCompileNodes(

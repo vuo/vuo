@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+set -o errexit
+set -o pipefail
 
 VUO_RUN_DIR=$(dirname $0)
 VUO_COMPILE=vuo-compile
@@ -26,6 +27,7 @@ else
 fi
 
 REPEAT=1
+GMALLOC=''
 declare -a COMPOSITIONS
 for argument do
 	case "$argument" in
@@ -39,6 +41,10 @@ for argument do
 
 		--lldb)
 			LLDB="lldb -o run --"
+		;;
+
+		--gmalloc)
+			GMALLOC=1
 		;;
 
 		--verbose)
@@ -103,15 +109,18 @@ for filename in "${COMPOSITIONS[@]}"; do
 </plist>
 EOF
 		codesign -s - -f --entitlements "$COMPOSITION_ENTITLEMENTS" "$COMPOSITION_LINKED" \
-			2>&1 | fgrep -v 'replacing existing signature'
+			2>&1 | (fgrep -v 'replacing existing signature' || true)
 	fi
 
 	pushd . > /dev/null
 	cd "$(dirname "$filename")"
+	[ -n "$GMALLOC" ] && export DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib
 	if [ -z "$STOP_AFTER" ]; then
 		$LLDB "$COMPOSITION_LINKED"
+		export -n DYLD_INSERT_LIBRARIES
 	else
 		"$COMPOSITION_LINKED" &
+		export -n DYLD_INSERT_LIBRARIES
 		sleep "$STOP_AFTER"
 		# echo "    Stopping…"
 		pkill "$COMPOSITION_BASENAME"

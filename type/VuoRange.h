@@ -43,7 +43,6 @@ bool VuoRange_isLessThan(const VuoRange a, const VuoRange b);
 /**
  * Automatically generated function.
  */
-VuoRange VuoRange_makeFromString(const char *str);
 char * VuoRange_getString(const VuoRange value);
 void VuoRange_retain(VuoRange value);
 void VuoRange_release(VuoRange value);

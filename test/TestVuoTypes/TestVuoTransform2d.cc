@@ -2,7 +2,7 @@
  * @file
  * TestVuoTransform2d implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,7 @@ private slots:
 		QFETCH(bool, testReverse);
 		QFETCH(QString, summary);
 
-		VuoTransform2d t = VuoTransform2d_makeFromString(value.toUtf8().data());
+		VuoTransform2d t = VuoMakeRetainedFromString(value.toUtf8().constData(), VuoTransform2d);
 		if (testReverse)
 			QCOMPARE(QString::fromUtf8(VuoTransform2d_getString(t)), value);
 		QCOMPARE(QString::fromUtf8(VuoTransform2d_getSummary(t)), summary);

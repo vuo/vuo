@@ -2,7 +2,7 @@
  * @file
  * VuoDurationType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ char * VuoDurationType_getSummary(const VuoDurationType value);
 /**
  * Automatically generated function.
  */
-VuoDurationType VuoDurationType_makeFromString(const char *str);
 char * VuoDurationType_getString(const VuoDurationType value);
 void VuoDurationType_retain(VuoDurationType value);
 void VuoDurationType_release(VuoDurationType value);

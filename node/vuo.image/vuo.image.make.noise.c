@@ -2,7 +2,7 @@
  * @file
  * vuo.image.make.noise node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  "fractal", "fractional Brownian noise", "fBm",
 						  "octaves", "persistence", "lacunarity",
 					  ],
-					  "version" : "1.2.0",
+					  "version" : "1.2.1",
 					  "node": {
 						  "exampleCompositions" : [ "ShowNoiseImage.vuo", "CompareNoiseTypes.vuo", "CompareNoiseRangeModes.vuo", "CrossfadeWithBlobMask.vuo" ],
 					  }
@@ -237,7 +237,7 @@ void nodeInstanceEvent
 
 	VuoShader_setUniform_VuoInteger((*instance)->shader, "levels", MAX(1, levels));
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "roughness", roughness);
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "spacing", spacing);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "spacing", VuoReal_makeNonzero(MAX(0, spacing)));
 
 	// Render.
 	*image = VuoImageRenderer_render((*instance)->shader, width, height, VuoImageColorDepth_8);

@@ -1,5 +1,6 @@
 add_library(TestVuoCompiler STATIC EXCLUDE_FROM_ALL
 	TestVuoCompiler.cc
+	TestVuoCompiler.hh
 )
 set_target_properties(TestVuoCompiler PROPERTIES
 	AUTOMOC ON

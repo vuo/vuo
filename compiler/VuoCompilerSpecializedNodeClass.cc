@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerSpecializedNodeClass implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -419,7 +419,7 @@ VuoCompilerNodeClass * VuoCompilerSpecializedNodeClass::getNodeClassForNode(VuoC
  * Returns true if @a potentialSpecializedNodeClassName is one of the possible specializations of @a potentialGenericNodeClass.
  */
 bool VuoCompilerSpecializedNodeClass::isSpecializationOfNodeClass(const string &potentialSpecializedNodeClassName,
-                                                                  VuoCompilerNodeClass *potentialGenericNodeClass)
+																  VuoCompilerNodeClass *potentialGenericNodeClass)
 {
 	vector<string> genericTypesFromGeneric = getGenericTypeNamesFromPorts(potentialGenericNodeClass);
 	if (genericTypesFromGeneric.empty())

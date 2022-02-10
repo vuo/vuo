@@ -2,7 +2,7 @@
  * @file
  * VuoImageText interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -43,7 +43,7 @@ typedef struct _VuoImageTextData
 	VuoAnchor billboardAnchor;        ///< The anchor point of the billboard used to render this text.  This value is unique in that it is not set by VuoImage_getTextImageData, rather, it is assigned by the function responsible for the VuoImage_makeText call.
 } *VuoImageTextData;
 
-VuoImageTextData VuoImageTextData_make();
+VuoImageTextData VuoImageTextData_make(void);
 void VuoImageTextData_free(void* data);
 void VuoImageTextData_convertToVuoCoordinates(VuoImageTextData textData, VuoReal screenWidthInPixels, VuoReal backingScaleFactor);
 VuoPoint2d VuoImageTextData_getPositionForLineIndex(VuoImageTextData textData, unsigned int lineIndex);

@@ -2,7 +2,7 @@
  * @file
  * TestVuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -68,7 +68,7 @@ private slots:
 		QTest::addColumn<QString>("summary");
 		QTest::addColumn<QString>("json");
 
-		QTest::newRow("emptystring")	<< VuoSceneObject_makeFromString("")
+		QTest::newRow("empty json")		<< VuoSceneObject_makeFromJson(nullptr)
 										<< "No object"
 										<< QUOTE(null);
 
@@ -279,11 +279,13 @@ private slots:
 			const char *actualJsonString = json_object_to_json_string_ext(actualJson, JSON_C_TO_STRING_PLAIN);
 			QCOMPARE(QString::fromUtf8(actualJsonString), json);
 
-			json_object *actualRoundtripJson = VuoSceneObject_getJson(VuoSceneObject_makeFromString(json.toUtf8().data()));
+			VuoSceneObject so = VuoMakeRetainedFromString(json.toUtf8().constData(), VuoSceneObject);
+			json_object *actualRoundtripJson = VuoSceneObject_getJson(so);
 			if (actualRoundtripJson)
 				json_object_object_del(actualRoundtripJson, "id");
 			const char *actualRoundtripJsonString = json_object_to_json_string_ext(actualRoundtripJson, JSON_C_TO_STRING_PLAIN);
 			QCOMPARE(QString::fromUtf8(actualRoundtripJsonString), json);
+			VuoRelease(so);
 		}
 	}
 
@@ -294,7 +296,7 @@ private slots:
 		QTest::addColumn<VuoPoint3d>("expectedSize");
 		QTest::addColumn<bool>("testNormalizedBounds");
 
-		QTest::newRow("empty scene")	<< VuoSceneObject_makeFromString("")
+		QTest::newRow("empty scene")	<< VuoSceneObject_makeFromJson(nullptr)
 										<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(0,0,0)
 										<< false;
 

@@ -2,7 +2,7 @@
  * @file
  * VuoWave C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ char * VuoWave_getSummary(const VuoWave value);
 /**
  * Automatically generated function.
  */
-VuoWave VuoWave_makeFromString(const char *str);
 char * VuoWave_getString(const VuoWave value);
 void VuoWave_retain(VuoWave value);
 void VuoWave_release(VuoWave value);

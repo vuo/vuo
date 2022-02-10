@@ -2,7 +2,7 @@
  * @file
  * VuoMathExpressionList implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -124,4 +124,24 @@ VuoDictionary_VuoText_VuoReal VuoMathExpressionList_calculate(const VuoMathExpre
 		return VuoDictionaryCreate_VuoText_VuoReal();
 
 	return VuoMathExpressionParser_calculate(expressionList.parser, variablesAndValues);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoMathExpressionList_retain(VuoMathExpressionList value)
+{
+	VuoRetain(value.expressions);
+	VuoRetain(value.parser);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoMathExpressionList_release(VuoMathExpressionList value)
+{
+	VuoRelease(value.expressions);
+	VuoRelease(value.parser);
 }

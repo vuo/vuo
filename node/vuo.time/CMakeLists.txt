@@ -6,6 +6,14 @@ VuoCompileTypes(
 	VuoTimeUnit.c
 	VuoWeekday.c
 )
+target_sources(vuo.time.types PRIVATE
+	VuoDurationType.h
+	VuoRelativeTime.h
+	VuoTime.h
+	VuoTimeFormat.h
+	VuoTimeUnit.h
+	VuoWeekday.h
+)
 target_include_directories(vuo.time.types
 	PRIVATE
 	../vuo.math

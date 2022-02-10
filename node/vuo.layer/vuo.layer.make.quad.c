@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					 "title" : "Make Quad Layer",
 					 "keywords" : [ "perspective", "affine", "warp", "keystone", "quadrilateral", "trapezoid", "parallelogram",
 									"mapping", "video mapping", "corner", "pin", "projector", "wall", "building", "architecture" ],
-					 "version" : "1.1.0",
+					 "version" : "1.1.1",
 					 "dependencies" : [
 					 ],
 					 "node" : {
@@ -292,8 +292,8 @@ void nodeInstanceEvent
 		VuoShader_setUniform_VuoPoint2d(unlitImagePerspDivide, "offset", offset);
 		VuoShader_setUniform_VuoReal(unlitImagePerspDivide, "gamma", gamma);
 		VuoShader_setUniform_VuoReal(unlitImagePerspDivide, "alpha", opacity);
-		VuoShader_setUniform_VuoPoint4d(unlitImagePerspDivide, "edgeGammaCutoff", VuoPoint4d_make(leftEdge.cutoff, rightEdge.cutoff, topEdge.cutoff, bottomEdge.cutoff));
-		VuoShader_setUniform_VuoPoint4d(unlitImagePerspDivide, "edgeGammaPower", VuoPoint4d_make(leftEdge.gamma, rightEdge.gamma, topEdge.gamma, bottomEdge.gamma));
+		VuoShader_setUniform_VuoPoint4d(unlitImagePerspDivide, "edgeGammaCutoff", VuoPoint4d_makeNonzero((VuoPoint4d){leftEdge.cutoff, rightEdge.cutoff, topEdge.cutoff, bottomEdge.cutoff}));
+		VuoShader_setUniform_VuoPoint4d(unlitImagePerspDivide, "edgeGammaPower", VuoPoint4d_makeNonzero((VuoPoint4d){leftEdge.gamma, rightEdge.gamma, topEdge.gamma, bottomEdge.gamma}));
 	}
 
 	*quad = (VuoLayer)VuoSceneObject_makeMesh(mesh,

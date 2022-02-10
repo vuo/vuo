@@ -2,16 +2,18 @@
  * @file
  * VuoDetailsEditorNumeric implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoDetailsEditorNumeric.hh"
 #include "VuoDialogForInputEditor.hh"
-#include "VuoReal.h"
 #include "VuoRendererFonts.hh"
 #include "VuoType.hh"
+
+#include "type.h"
+#include "VuoReal.h"
 
 /**
  * Creates a widget for editing the details (suggestedMin, suggestedMax, suggestedStep)
@@ -231,28 +233,22 @@ json_object * VuoDetailsEditorNumeric::convertFromLineEditsFormat(const QString 
 	// details
 	struct json_object *details = json_object_new_object();
 
-	if (this->type->getModuleKey() == "VuoReal")
+	auto numberAsJson = [this](const QString &numberAsString)
 	{
-		if (!suggestedMinValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedMin", VuoReal_getJson(VuoReal_makeFromString(suggestedMinValueAsStringInDefaultLocale.toUtf8().constData())));
+		if (this->type->getModuleKey() == "VuoReal")
+			return VuoReal_getJson(VuoMakeRetainedFromString(numberAsString.toUtf8().constData(), VuoReal));
+		else
+			return VuoInteger_getJson(VuoMakeRetainedFromString(numberAsString.toUtf8().constData(), VuoInteger));
+	};
 
-		if (!suggestedMaxValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedMax", VuoReal_getJson(VuoReal_makeFromString(suggestedMaxValueAsStringInDefaultLocale.toUtf8().constData())));
+	if (!suggestedMinValueAsString.isEmpty())
+		json_object_object_add(details, "suggestedMin", numberAsJson(suggestedMinValueAsStringInDefaultLocale));
 
-		if (!suggestedStepValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedStep", VuoReal_getJson(VuoReal_makeFromString(suggestedStepValueAsStringInDefaultLocale.toUtf8().constData())));
-	}
-	else
-	{
-		if (!suggestedMinValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedMin", VuoInteger_getJson(VuoInteger_makeFromString(suggestedMinValueAsStringInDefaultLocale.toUtf8().constData())));
+	if (!suggestedMaxValueAsString.isEmpty())
+		json_object_object_add(details, "suggestedMax", numberAsJson(suggestedMaxValueAsStringInDefaultLocale));
 
-		if (!suggestedMaxValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedMax", VuoInteger_getJson(VuoInteger_makeFromString(suggestedMaxValueAsStringInDefaultLocale.toUtf8().constData())));
-
-		if (!suggestedStepValueAsString.isEmpty())
-			json_object_object_add(details, "suggestedStep", VuoInteger_getJson(VuoInteger_makeFromString(suggestedStepValueAsStringInDefaultLocale.toUtf8().constData())));
-	}
+	if (!suggestedStepValueAsString.isEmpty())
+		json_object_object_add(details, "suggestedStep", numberAsJson(suggestedStepValueAsStringInDefaultLocale));
 
 	return details;
 }

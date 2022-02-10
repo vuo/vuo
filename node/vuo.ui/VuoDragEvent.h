@@ -2,7 +2,7 @@
  * @file
  * VuoDragEvent C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -57,14 +57,14 @@ void VuoWindowReference_removeDragCallbacks(const VuoWindowReference wr,
 											void (*dragCompletedCallback)(VuoDragEvent e),
 											void (*dragExitedCallback)(VuoDragEvent e));
 
+void VuoDragEvent_retain(VuoDragEvent value);
+void VuoDragEvent_release(VuoDragEvent value);
+
 /**
  * Automatically generated function.
  */
 ///@{
-VuoDragEvent VuoDragEvent_makeFromString(const char *str);
 char *VuoDragEvent_getString(const VuoDragEvent value);
-void VuoDragEvent_retain(VuoDragEvent value);
-void VuoDragEvent_release(VuoDragEvent value);
 ///@}
 
 #ifdef __cplusplus

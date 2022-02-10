@@ -2,7 +2,7 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -114,20 +114,21 @@ private slots:
 		QFETCH(bool, valid);
 		QFETCH(QString, summary);
 
-		VuoImage t = VuoImage_makeFromString(value.toUtf8().data());
+		VuoImage t = VuoMakeRetainedFromString(value.toUtf8().constData(), VuoImage);
 		if (valid)
 		{
 			QCOMPARE(QString::fromUtf8(VuoImage_getString(t)), value);
 			QCOMPARE(QString::fromUtf8(VuoImage_getSummary(t)), summary);
 		}
+		VuoRelease(t);
 	}
 
 	void testJsonColorImage()
 	{
-		VuoImage image = VuoImage_makeFromString(QUOTE({"color":{"r":0.5,"g":1,"b":0,"a":1},"pixelsWide":640,"pixelsHigh":480}));
+		const char *imageAsString = QUOTE({"color":{"r":0.5,"g":1,"b":0,"a":1},"pixelsWide":640,"pixelsHigh":480});
+		VuoImage image = VuoMakeRetainedFromString(imageAsString, VuoImage);
 		QVERIFY(image);
 
-		VuoRetain(image);
 		const unsigned char *imageBuffer = VuoImage_getBuffer(image, GL_BGRA);
 		QVERIFY(abs(imageBuffer[2] - 127) < 2);
 		QVERIFY(abs(imageBuffer[1] - 255) < 2);
@@ -219,8 +220,10 @@ private slots:
 		VuoImage vi = VuoImage_makeClientOwned(glTextureName, GL_RGBA, 1, 1, TestVuoImage_freeCallback, NULL);
 		VuoRetain(vi);
 
-		VuoImage vi2 = VuoImage_makeFromJson(VuoImage_getJson(vi));
+		json_object *js = VuoImage_getJson(vi);
+		VuoImage vi2 = VuoImage_makeFromJson(js);
 		VuoRetain(vi2);
+		json_object_put(js);
 
 		VuoRelease(vi);
 		QVERIFY(!TestVuoImage_freed);

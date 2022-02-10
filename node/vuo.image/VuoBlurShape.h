@@ -2,7 +2,7 @@
  * @file
  * VuoBlurShape C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,6 @@ bool VuoBlurShape_isLessThan(const VuoBlurShape valueA, const VuoBlurShape value
  * Automatically generated function.
  */
 ///@{
-VuoBlurShape VuoBlurShape_makeFromString(const char *str);
 char *VuoBlurShape_getString(const VuoBlurShape value);
 void VuoBlurShape_retain(VuoBlurShape value);
 void VuoBlurShape_release(VuoBlurShape value);

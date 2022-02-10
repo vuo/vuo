@@ -256,7 +256,7 @@ add_custom_command(
 		"${PROJECT_BINARY_DIR}/bin/VuoCompositionLoader.app"
 		"${frameworkVersionPath}/Helpers"
 
-	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/VuoCompositionLoader.app
+	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/VuoCompositionLoader.app ${codesignAdHocIgnoreReplace}
 
 	OUTPUT
 		${frameworkVersionPath}/Helpers/VuoCompositionLoader.app/Contents/Info.plist
@@ -364,8 +364,12 @@ VuoGetObjects(coreTypeObjects            coreTypeObjectsDest           vuo.core.
 VuoGetObjects(coreListTypeObjects        coreListTypeObjectsDest       vuo.core.list.types         "${PROJECT_BINARY_DIR}/type/list/")
 VuoGetObjects(coreLibraryObjects         coreLibraryObjectsDest        vuo.core.libraries          "${PROJECT_BINARY_DIR}/library/")
 VuoGetObjects(coreRuntimeObjects         coreRuntimeObjectsDest        vuo.core.runtime.objects    "${PROJECT_BINARY_DIR}/runtime/")
-list(FILTER coreRuntimeObjects     EXCLUDE REGEX "\.bc$")
-list(FILTER coreRuntimeObjectsDest EXCLUDE REGEX "\.bc$")
+list(FILTER coreTypeObjects        EXCLUDE REGEX "\.hh?$")
+list(FILTER coreTypeObjectsDest    EXCLUDE REGEX "\.hh?$")
+list(FILTER coreLibraryObjects     EXCLUDE REGEX "\.hh?$")
+list(FILTER coreLibraryObjectsDest EXCLUDE REGEX "\.hh?$")
+list(FILTER coreRuntimeObjects     EXCLUDE REGEX "\.(bc|hh?)$")
+list(FILTER coreRuntimeObjectsDest EXCLUDE REGEX "\.(bc|hh?)$")
 set(frameworkCoreDylibsDest
 	${frameworkVersionPath}/Modules/libVuoApp.dylib
 	${frameworkVersionPath}/Modules/libVuoCompositionStub.dylib
@@ -414,7 +418,7 @@ add_custom_command(
 	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoApp.dylib
 	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlContext.dylib
 	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlPool.dylib
-	COMMAND ${codesignAdHoc} ${frameworkCoreDylibsDest}
+	COMMAND ${codesignAdHoc} ${frameworkCoreDylibsDest} ${codesignAdHocIgnoreReplace}
 	OUTPUT ${frameworkCoreOutputs}
 )
 add_custom_target(VuoFrameworkCore DEPENDS ${frameworkCoreOutputs})
@@ -442,7 +446,7 @@ add_custom_command(
 	COMMAND rsync
 		${moduleCompilers}
 		${frameworkVersionPath}/Helpers/ModuleCompiler
-	COMMAND ${codesignAdHoc} ${moduleCompilersDest}
+	COMMAND ${codesignAdHoc} ${moduleCompilersDest} ${codesignAdHocIgnoreReplace}
 	COMMAND chmod 644 ${moduleCompilersDest}
 	OUTPUT ${moduleCompilersDest}
 )
@@ -505,6 +509,7 @@ add_custom_command(
 	COMMAND chmod 644 ${conanLibrariesDest}
 	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libLeap.dylib ${frameworkVersionPath}/Modules/libLeap.dylib
 		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Modules/libLeap.dylib ${codesignAdHocIgnoreReplace}
 
 	OUTPUT ${conanLibrariesDest}
 )
@@ -715,6 +720,7 @@ add_custom_command(
 	OUTPUT ${frameworkVersionPath}/Headers/Vuo.h
 )
 add_custom_target(VuoFrameworkMasterHeader DEPENDS ${frameworkVersionPath}/Headers/Vuo.h)
+target_sources(VuoFrameworkMasterHeader PRIVATE Vuo.stub.h)
 add_dependencies(VuoFrameworkDylib VuoFrameworkMasterHeader)
 list(APPEND generatedFiles
 	${frameworkVersionPath}/Headers/Vuo.h

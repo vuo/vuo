@@ -2,7 +2,7 @@
  * @file
  * VuoImageBlend implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -293,7 +293,7 @@ static const char * fragmentShaderSource_blendLuminosity = BLEND_FILTERS(
 static const char * fragmentShaderSource_blendPower = BLEND_FILTERS(
 	vec3 blendColors(vec4 bg, vec4 fg)
 	{
-		return pow(bg.rgb, fg.rgb);
+		return pow(bg.rgb, max(fg.rgb, vec3(0.000001)));
 	}
 );
 /// @}

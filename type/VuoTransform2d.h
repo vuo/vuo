@@ -2,7 +2,7 @@
  * @file
  * VuoTransform2d C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,6 @@ VuoPoint3d VuoTransform2d_transform_VuoPoint3d(VuoTransform2d transform, VuoPoin
 /**
  * Automatically generated function.
  */
-VuoTransform2d VuoTransform2d_makeFromString(const char *str);
 char * VuoTransform2d_getString(const VuoTransform2d value);
 void VuoTransform2d_retain(VuoTransform2d value);
 void VuoTransform2d_release(VuoTransform2d value);

@@ -2,7 +2,7 @@
  * @file
  * VuoOscOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoOscOutputDevice_isLessThan(const VuoOscOutputDevice value1, const VuoOsc
  * Automatically generated function.
  */
 ///@{
-VuoOscOutputDevice VuoOscOutputDevice_makeFromString(const char *str);
 char *VuoOscOutputDevice_getString(const VuoOscOutputDevice value);
 void VuoOscOutputDevice_retain(VuoOscOutputDevice value);
 void VuoOscOutputDevice_release(VuoOscOutputDevice value);

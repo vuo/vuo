@@ -2,7 +2,7 @@
  * @file
  * VUOVIDEOINPUTDEVICE C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -51,7 +51,6 @@ bool VuoVideoInputDevice_isLessThan(const VuoVideoInputDevice a, const VuoVideoI
  * Automatically generated function.
  */
 ///@{
-VuoVideoInputDevice VuoVideoInputDevice_makeFromString(const char *str);
 char * VuoVideoInputDevice_getString(const VuoVideoInputDevice value);
 void VuoVideoInputDevice_retain(VuoVideoInputDevice value);
 void VuoVideoInputDevice_release(VuoVideoInputDevice value);

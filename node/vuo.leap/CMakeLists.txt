@@ -1,6 +1,9 @@
 VuoCompileLibraries(
 	VuoLeap.cc
 )
+target_sources(vuo.leap.libraries PRIVATE
+	VuoLeap.h
+)
 target_include_directories(vuo.leap.libraries
 	PRIVATE
 	Leap
@@ -13,6 +16,14 @@ VuoCompileTypes(
 	VuoLeapPointable.c
 	VuoLeapPointableType.c
 	VuoLeapTouchZone.c
+)
+target_sources(vuo.leap.types PRIVATE
+	VuoHorizontalSide.h
+	VuoLeapFrame.h
+	VuoLeapHand.h
+	VuoLeapPointable.h
+	VuoLeapPointableType.h
+	VuoLeapTouchZone.h
 )
 
 VuoCompileNodes(

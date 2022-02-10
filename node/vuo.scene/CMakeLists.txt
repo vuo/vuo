@@ -7,6 +7,15 @@ VuoCompileTypes(
 	VuoMultisample.c
 	VuoSceneObjectType.c
 )
+target_sources(vuo.scene.types PRIVATE
+	VuoDispersion.h
+	VuoDisplacement.h
+	VuoDistribution3d.h
+	VuoExtrapolationMode.h
+	VuoGridType.h
+	VuoMultisample.h
+	VuoSceneObjectType.h
+)
 
 VuoCompileGenericNodes(
 	vuo.scene.copy.trs.material.c

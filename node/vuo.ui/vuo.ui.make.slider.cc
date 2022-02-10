@@ -2,7 +2,7 @@
  * @file
  * vuo.ui.slider node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -22,8 +22,9 @@ VuoModuleMetadata({
 					  "keywords" : [
 						  "gui", "user interface", "interact", "widget", "control",
 						  "track bar",
+						  "progress", "meter", "percent", "indicator", "thermometer", "gauge",
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "AdjustColorWithSlider.vuo", "vuo-example://vuo.audio/ControlLoudness.vuo", "DisplayControlPanel.vuo", "DisplayProgressBar.vuo" ]
 					  }
@@ -36,6 +37,7 @@ struct nodeInstanceData
 	uint64_t id;
 
 	struct {
+		VuoInteraction interaction;
 		VuoText label;
 		VuoReal value;
 		VuoRange range;
@@ -98,42 +100,42 @@ extern "C" void nodeInstanceEvent(
 	VuoRange rangeOrdered = VuoRange_getOrderedRange(range);
 	VuoReal trackLengthClamped = fmax(sliderTheme->minimumTrackLength(), trackLength);
 
-	bool portChanged = false;
+	bool shouldRenderLayer = false;
 	if (!VuoText_areEqual((*instance)->prior.label, label))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		VuoRetain(label);
 		VuoRelease((*instance)->prior.label);
 		(*instance)->prior.label = label;
 	}
 	if (!VuoRange_areEqual((*instance)->prior.range, rangeOrdered))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		(*instance)->prior.range = rangeOrdered;
 	}
 	if (!VuoOrientation_areEqual((*instance)->prior.orientation, orientation))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		(*instance)->prior.orientation = orientation;
 	}
 	if (!VuoAnchor_areEqual((*instance)->prior.anchor, anchor))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		(*instance)->prior.anchor = anchor;
 	}
 	if (!VuoPoint2d_areEqual((*instance)->prior.position, position))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		(*instance)->prior.position = position;
 	}
 	if (!VuoReal_areEqual((*instance)->prior.trackLength, trackLengthClamped))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		(*instance)->prior.trackLength = trackLengthClamped;
 	}
 	if (!VuoUiTheme_areEqual((*instance)->prior.theme, theme))
 	{
-		portChanged = true;
+		shouldRenderLayer = true;
 		VuoRetain(theme);
 		VuoRelease((*instance)->prior.theme);
 		(*instance)->prior.theme = theme;
@@ -148,21 +150,40 @@ extern "C" void nodeInstanceEvent(
 	{
 		value = VuoRange_clamp(rangeOrdered, setValue);
 
-		if (value != (*instance)->prior.value)
+		if (!VuoReal_areEqual(value, (*instance)->prior.value))
+		{
+			shouldRenderLayer = true;
 			changed(value);
+			(*instance)->prior.value = value;
+		}
 	}
 
 	if ((*instance)->first)
+	{
+		shouldRenderLayer = true;
 		changed(value);
+	}
 
 	float handleMovementLength = sliderTheme->handleMovementLength(trackLengthClamped);
 
 	VuoList_VuoInteraction interactions = VuoRenderedLayers_getInteractions((*instance)->renderedLayers);
 	unsigned long interactionCount = VuoListGetCount_VuoInteraction(interactions);
+	if (interactionCount)
+	{
+		VuoInteraction anInteraction = VuoListGetValue_VuoInteraction(interactions, 1);
+		if (VuoInteraction_areEqual(anInteraction, (*instance)->prior.interaction))
+			// If the node executes again due to an event to a non-Window port,
+			// avoid re-processing the same set of interactions.
+			interactionCount = 0;
+		(*instance)->prior.interaction = anInteraction;
+	}
+
 	for (int i = 0; i < interactionCount; ++i)
 	{
 		VuoInteraction interaction = VuoListGetValue_VuoInteraction(interactions, i + 1);
 		isHovering = VuoRenderedLayers_isPointInLayerId((*instance)->renderedLayers, (*instance)->id, interaction.position);
+		if (isHovering != (*instance)->prior.hovering)
+			shouldRenderLayer = true;
 
 		VuoPoint2d localPoint;
 		if (!VuoRenderedLayers_getInverseTransformedPointLayer((*instance)->renderedLayers, (*instance)->id, interaction.position, &localPoint))
@@ -171,6 +192,8 @@ extern "C" void nodeInstanceEvent(
 		if (interaction.type == VuoInteractionType_Press
 			&& isHovering)
 		{
+			shouldRenderLayer = true;
+
 			if (sliderTheme->isPointInsideSliderHandle((*instance)->renderedLayers,
 													 trackLengthClamped,
 													 VuoRange_scale(range, VuoRange_make(0, 1), value),
@@ -195,6 +218,7 @@ extern "C" void nodeInstanceEvent(
 				(*instance)->dragStartedAtPosition = lp;
 
 				changed(value);
+				(*instance)->prior.value = value;
 
 				isPressed = true;
 			}
@@ -211,24 +235,31 @@ extern "C" void nodeInstanceEvent(
 
 				value = (*instance)->dragStartedAtValue + (lp - (*instance)->dragStartedAtPosition) * (rangeOrdered.maximum - rangeOrdered.minimum) / handleMovementLength;
 				value = VuoRange_clamp(rangeOrdered, value);
-				changed(value);
+				if (!VuoReal_areEqual(value, (*instance)->prior.value))
+				{
+					shouldRenderLayer = true;
+					changed(value);
+					(*instance)->prior.value = value;
+				}
 			}
 
 			if (interaction.type == VuoInteractionType_Release
 			  || interaction.type == VuoInteractionType_Click
 			  || interaction.type == VuoInteractionType_DragFinish)
+			{
+				shouldRenderLayer = true;
 				isPressed = false;
+			}
 		}
 		else if (interaction.type == VuoInteractionType_Canceled)
+		{
+			shouldRenderLayer = true;
 			isPressed = false;
+		}
 	}
 
 
-	if ((*instance)->first
-		|| portChanged
-		|| (isHovering != (*instance)->prior.hovering)
-		|| (isPressed  != (*instance)->prior.pressed)
-		|| !VuoReal_areEqual(value, (*instance)->prior.value))
+	if (shouldRenderLayer)
 	{
 		VuoLayer layer = sliderTheme->render((*instance)->renderedLayers,
 												 label,
@@ -244,7 +275,6 @@ extern "C" void nodeInstanceEvent(
 			(*instance)->first          = false;
 			(*instance)->prior.hovering = isHovering;
 			(*instance)->prior.pressed  = isPressed;
-			(*instance)->prior.value    = value;
 
 //		if (VuoAnchor_areEqual(anchor, VuoAnchor_makeCentered()))
 			VuoLayer_setId(layer, (*instance)->id);

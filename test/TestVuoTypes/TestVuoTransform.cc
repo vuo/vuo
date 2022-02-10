@@ -2,7 +2,7 @@
  * @file
  * TestVuoTransform implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -451,7 +451,7 @@ private slots:
 		QFETCH(bool, testReverse);
 		QFETCH(QString, summary);
 
-		VuoTransform t = VuoTransform_makeFromString(value.toUtf8().data());
+		VuoTransform t = VuoMakeRetainedFromString(value.toUtf8().constData(), VuoTransform);
 		if (testReverse)
 			QCOMPARE(QString::fromUtf8(VuoTransform_getString(t)), value);
 		QCOMPARE(QString::fromUtf8(VuoTransform_getSummary(t)), summary);

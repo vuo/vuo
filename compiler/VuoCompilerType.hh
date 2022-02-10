@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerType interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -23,7 +23,6 @@ private:
 	Function *makeFromJsonFunction;
 	Function *getJsonFunction;
 	Function *getInterprocessJsonFunction;
-	Function *makeFromStringFunction;
 	Function *getStringFunction;
 	Function *getInterprocessStringFunction;
 	Function *getSummaryFunction;
@@ -40,7 +39,6 @@ private:
 	static bool isType(string typeName, Module *module);
 	void parse(void);
 	set<string> globalsToRename(void);
-	void parseOrGenerateValueFromStringFunction(void);
 	void parseOrGenerateStringFromValueFunction(bool isInterprocess);
 	void parseOrGenerateRetainOrReleaseFunction(bool isRetain);
 	Value * generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction);
@@ -55,7 +53,7 @@ public:
 	static VuoCompilerType * newType(string typeName, Module *module);
 	static bool isListType(VuoCompilerType *type);
 
-	Value * generateValueFromStringFunctionCall(Module *module, BasicBlock *block, Value *arg);
+	Value * generateRetainedValueFromString(Module *module, BasicBlock *block, Value *stringValue);
 	Value * generateStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateInterprocessStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateSummaryFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
@@ -63,9 +61,9 @@ public:
 	void generateReleaseCall(Module *module, BasicBlock *block, Value *arg);
 	vector<Value *> convertPortDataToArgs(Module *module, BasicBlock *block, Value *arg, FunctionType *functionType, int parameterIndex, bool isUnloweredStructPointerParameter);
 	Value * convertArgsToPortData(Module *module, BasicBlock *block, Function *function, int parameterIndex);
-	size_t getSize(Module *module);
+	size_t getAllocationSize(Module *module);
+	size_t getStorageSize(Module *module);
 	Value * convertToPortData(BasicBlock *block, Value *voidPointer);
-	bool isRetainOrReleaseNeeded();
 	vector<Type *> getFunctionParameterTypes(void);
 	PointerType * getFunctionParameterPointerType(void);
 	AttributeList getFunctionAttributes(void);

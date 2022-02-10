@@ -2,7 +2,7 @@
  * @file
  * vuo.color.get.hsl node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [
 						 "alpha", "transparent",
 						 "channel", "tone", "chroma",
-						 "brightness", "luminance", "luma",
+						 "brightness", "luminance", "luma", "hsla",
 					 ],
 					 "version" : "2.0.0",
 					 "node": {

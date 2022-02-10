@@ -2,7 +2,7 @@
  * @file
  * VuoMathExpression C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -38,7 +38,6 @@ char * VuoMathExpression_getSummary(const VuoMathExpression value);
 /**
  * Automatically generated function.
  */
-VuoMathExpression VuoMathExpression_makeFromString(const char *str);
 char * VuoMathExpression_getString(const VuoMathExpression value);
 void VuoMathExpression_retain(VuoMathExpression value);
 void VuoMathExpression_release(VuoMathExpression value);

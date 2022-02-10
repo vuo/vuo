@@ -10,7 +10,7 @@ The [Receive HID Controls](vuo-node://vuo.hid.receive) node receives values from
 If you're not sure whether Vuo is detecting your HID:
 
    - Add a [Receive HID Controls](vuo-node://vuo.hid.receive) node to your composition. Double-click on its `Device` input port to bring up a menu of all connected HIDs. See if your device is in the list.
-   - Check the Console application for any messages about HIDs.
+   - Check Vuo's Console window (Tools > Show Console) for any messages about HIDs.
 
 If Vuo isn't detecting your device:
 
@@ -22,6 +22,6 @@ If Vuo isn't detecting your device:
 If Vuo detects your device, but doesn't seem to be receiving any data:
 
    - Make sure your composition is referring to the correct device, especially if you have multiple similar devices connected.
-   - Make sure that another Vuo composition or application isn't already exclusively connected to the device. (Check the Console application for messages.)
+   - Make sure that another Vuo composition or application isn't already exclusively connected to the device. (Check Vuo's Console window (Tools > Show Console) for messages.)
    - Try unplugging the device and plugging it back in. (If another Vuo composition was using the device but isn't using it anymore, this will make your current composition retry connecting to the device.)
    - To exclusively read from a keyboard, macOS requires `root` access.

@@ -2,7 +2,7 @@
  * @file
  * VuoMathExpressionList C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -39,14 +39,14 @@ char * VuoMathExpressionList_getSummary(const VuoMathExpressionList value);
 VuoDictionary_VuoText_VuoReal VuoMathExpressionList_calculate(const VuoMathExpressionList expressionList,
 															  const VuoDictionary_VuoText_VuoReal variablesAndValues);
 
+void VuoMathExpressionList_retain(VuoMathExpressionList value);
+void VuoMathExpressionList_release(VuoMathExpressionList value);
+
 /// @{
 /**
  * Automatically generated function.
  */
-VuoMathExpressionList VuoMathExpressionList_makeFromString(const char *str);
 char * VuoMathExpressionList_getString(const VuoMathExpressionList value);
-void VuoMathExpressionList_retain(VuoMathExpressionList value);
-void VuoMathExpressionList_release(VuoMathExpressionList value);
 /// @}
 
 /**

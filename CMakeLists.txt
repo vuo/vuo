@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.4.0 LANGUAGES NONE)
+project(Vuo VERSION 2.4.1 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -16,6 +16,7 @@ endif()
 
 option(VUO_COMPILER_DEVELOPER "Compiler development mode.  Allows you to make changes to VuoBase and VuoCompiler without rebuilding all nodes and types (but you're responsible for keeping track of whether nodes and types need to be rebuilt).  Saves several minutes per edit-compile-test cycle." OFF)
 option(VUO_NODE_DEVELOPER     "Node development mode.  Allows you to make changes to nodes, types, and libraries without rebuilding the Vuo.framework cache.  Saves about 30 seconds per edit-compile-test cycle (but compositions take longer to start up initially)." OFF)
+option(VUO_RUNNER_TRACE       "Logs calls to VuoRunner's public methods." OFF)
 option(VUO_HEAP_TRACE         "Logs reference-counting errors to stderr (in addition to the usual telemetry-based error reporting), including backtraces.  Also enables using VuoHeap_addTrace().")
 option(VUO_HEAP_TRACE_ALL     "Logs all reference-counting operations.  Very noisy.")
 option(VUO_PROFILE            "Add instrumentation for performance profiling." OFF)
@@ -71,7 +72,7 @@ set(conanBuildInfo "${PROJECT_BINARY_DIR}/conanbuildinfo.cmake")
 set(CMAKE_TOOLCHAIN_FILE "${PROJECT_BINARY_DIR}/conan_toolchain.cmake")
 set_directory_properties(PROPERTIES CMAKE_CONFIGURE_DEPENDS ${conanFile})
 if (NOT EXISTS ${conanBuildInfo} OR ${conanFile} IS_NEWER_THAN ${conanBuildInfo})
-	execute_process(COMMAND /usr/local/bin/conan install ${PROJECT_SOURCE_DIR} RESULT_VARIABLE conanStatus)
+	execute_process(COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin:/bin:/usr/bin conan install ${PROJECT_SOURCE_DIR} RESULT_VARIABLE conanStatus)
 	if (${conanStatus})
 		message(FATAL_ERROR "Couldn't install dependencies using Conan.")
 	endif()
@@ -145,6 +146,10 @@ string(JOIN " " commonFlags
 
 	# Reduce file size.
 	-fmerge-all-constants
+
+	# Provide full backtraces, for easier debugging using Instruments and `VuoLog_backtrace()`.
+	# https://b33p.net/kosada/vuo/vuo/-/issues/19064
+	-fno-omit-frame-pointer
 
 	# Sync these warnings flags with VuoCompiler::readModuleFromC.
 	-Wall
@@ -311,14 +316,6 @@ function (VuoGeneratePCH target)
 		target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers)
 		add_dependencies(${arg_TARGET} VuoFrameworkDylib)
 	endif()
-
-	# When the OSX_ARCHITECTURES target property is set (even to a single arch),
-	# CMake outputs the `-Xarch_*` Clang argument, which `ccache` doesn't support.
-	# If we're building for a single arch that's the same as the host arch,
-	# unset OSX_ARCHITECTURES, enabling `ccache` to do its thing.
-	if (CMAKE_OSX_ARCHITECTURES STREQUAL VUO_HOST_ARCH)
-		set_property(TARGET ${arg_TARGET} PROPERTY OSX_ARCHITECTURES)
-	endif()
 endfunction()
 VuoGeneratePCH(TARGET VuoPCHDefault              LANGUAGES C CXX OBJCXX    DEFINITIONS                                             )
 VuoGeneratePCH(TARGET VuoPCHLLVM                 LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM                                )
@@ -346,14 +343,6 @@ function (VuoPCH target)
 	get_target_property(includes ${pch} INCLUDE_DIRECTORIES)
 	if (includs)
 		target_include_directories(${target} PRIVATE ${includes})
-	endif()
-
-	# When the OSX_ARCHITECTURES target property is set (even to a single arch),
-	# CMake outputs the `-Xarch_*` Clang argument, which `ccache` doesn't support.
-	# If we're building for a single arch that's the same as the host arch,
-	# unset OSX_ARCHITECTURES, enabling `ccache` to do its thing.
-	if (CMAKE_OSX_ARCHITECTURES STREQUAL VUO_HOST_ARCH)
-		set_property(TARGET ${target} PROPERTY OSX_ARCHITECTURES)
 	endif()
 endfunction()
 

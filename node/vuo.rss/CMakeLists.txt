@@ -1,6 +1,9 @@
 VuoCompileTypes(
 	VuoRssItem.c
 )
+target_sources(vuo.rss.types PRIVATE
+	VuoRssItem.h
+)
 target_include_directories(vuo.rss.types
 	PRIVATE
 	../vuo.time

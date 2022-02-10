@@ -2,7 +2,7 @@
  * @file
  * VuoTree C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -67,7 +67,6 @@ VuoList_VuoTree VuoTree_findItemsWithContent(VuoTree tree, VuoText content, VuoT
 /**
  * Automatically generated function.
  */
-VuoTree VuoTree_makeFromString(const char *str);
 char * VuoTree_getString(const VuoTree value);
 char * VuoTree_getInterprocessString(const VuoTree value);
 ///@}

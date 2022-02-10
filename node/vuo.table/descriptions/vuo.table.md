@@ -20,3 +20,16 @@ You can also refer to rows and columns by header if there is one. The table abov
 To switch between these two modes of referring to rows/columns — numbers or headers — change the data type of the Row/Column port. (Right-click on the port and select Integer or Text from the Set Data Type submenu.)
 
 Vuo stores each item of the table as text (even if it's a number or date). With the [Sort Table](vuo-node://vuo.table.sort) node, you have the option to treat the sorted column as a number or date, instead of sorting it alphabetically like text. When you retrieve table items with the [Get Table Row](vuo-node://vuo.table.get.row), [Get Table Column](vuo-node://vuo.table.get.column), or [Get Table Item](vuo-node://vuo.table.get.item) node, the items are output as text. You can convert them to numbers using nodes such as [Convert Text to Integer](vuo-node://vuo.type.text.integer) and [Convert Text List to Real List](vuo-node://vuo.type.list.text.real).
+
+## CSV field separators
+Depending on your system's region settings, Microsoft Excel may export CSV files that actually use semicolon as the field separator.  Vuo attempts to automatically determine whether each CSV file uses commas or semicolons.
+
+If Vuo detects the field separator incorrectly, or if you'd like to read a file using a separator other than comma, semicolon, or tab, you can open your CSV file in a text editor and add a line like this at the very beginning:
+
+```
+sep=C
+```
+
+…where `C` is the character to use as the field separator.  You can then read the file using [Fetch Data](vuo-node://vuo.data.fetch) or [Make Table from Text](vuo-node://vuo.table.make.text) with the `Format` field set to `CSV`.
+
+When [Format Table](vuo-node://vuo.table.format) outputs CSV data, it always uses comma as the field separator.

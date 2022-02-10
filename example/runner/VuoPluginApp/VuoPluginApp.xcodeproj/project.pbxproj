@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BC7E8AA2795FBA500EDAD26 /* VuoPlugin.vuo in Resources */ = {isa = PBXBuildFile; fileRef = 2BC7E8A92795FBA500EDAD26 /* VuoPlugin.vuo */; };
 		2BF911CC18CA8A6D004220F3 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BF911CA18CA8A6D004220F3 /* Document.xib */; };
 		2BF911CD18CA8A6D004220F3 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BF911CB18CA8A6D004220F3 /* MainMenu.xib */; };
 		44203B1E18C905F000E1BFC2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44203B1D18C905F000E1BFC2 /* QuartzCore.framework */; };
@@ -36,6 +37,7 @@
 
 /* Begin PBXFileReference section */
 		2B2F257818CBA02000381773 /* main.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = main.hh; sourceTree = "<group>"; };
+		2BC7E8A92795FBA500EDAD26 /* VuoPlugin.vuo */ = {isa = PBXFileReference; lastKnownFileType = file; path = VuoPlugin.vuo; sourceTree = SOURCE_ROOT; };
 		2BF911CA18CA8A6D004220F3 /* Document.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Document.xib; sourceTree = "<group>"; };
 		2BF911CB18CA8A6D004220F3 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		44203B1D18C905F000E1BFC2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -123,6 +125,7 @@
 		44B81AA718AD510000F27816 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				2BC7E8A92795FBA500EDAD26 /* VuoPlugin.vuo */,
 				44B81AA818AD510000F27816 /* VuoPluginApp-Info.plist */,
 				44B81AA918AD510000F27816 /* InfoPlist.strings */,
 				2B2F257818CBA02000381773 /* main.hh */,
@@ -160,7 +163,7 @@
 		44B81A9518AD510000F27816 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 1320;
 				ORGANIZATIONNAME = Kosada;
 			};
 			buildConfigurationList = 44B81A9818AD510000F27816 /* Build configuration list for PBXProject "VuoPluginApp" */;
@@ -190,6 +193,7 @@
 				2BF911CD18CA8A6D004220F3 /* MainMenu.xib in Resources */,
 				44B81ABC18AD510000F27816 /* Images.xcassets in Resources */,
 				44B81AAB18AD510000F27816 /* InfoPlist.strings in Resources */,
+				2BC7E8AA2795FBA500EDAD26 /* VuoPlugin.vuo in Resources */,
 				44B81AB118AD510000F27816 /* Credits.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

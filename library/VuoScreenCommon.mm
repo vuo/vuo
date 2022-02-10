@@ -2,7 +2,7 @@
  * @file
  * VuoScreenCommon implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -13,6 +13,10 @@
 #include "VuoOsStatus.h"
 #include "VuoPnpId.h"
 #include "VuoApp.h"
+
+#include <sstream>
+#include <string>
+using namespace std;
 
 #include "VuoMacOSSDKWorkaround.h"
 #include <IOKit/graphics/IOGraphicsLib.h>
@@ -109,6 +113,10 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 
 #elif __arm64__
 
+	uint32_t displaySerialNumber = CGDisplaySerialNumber(displayID);
+	uint32_t displayVendorNumber = CGDisplayVendorNumber(displayID);
+	uint32_t displayModelNumber  = CGDisplayModelNumber(displayID);
+
 	CFMutableDictionaryRef matching = IOServiceMatching("IOMobileFramebuffer");
 
 	io_iterator_t it  = 0;
@@ -124,9 +132,9 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 				uint32_t ioregSerialNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"SerialNumber"]).unsignedLongValue;
 				uint32_t ioregVendorNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"LegacyManufacturerID"]).unsignedLongValue;
 				uint32_t ioregModelNumber  = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductID"]).unsignedLongValue;
-				if (ioregSerialNumber == CGDisplaySerialNumber(displayID)
-					&& ioregVendorNumber == CGDisplayVendorNumber(displayID)
-					&& ioregModelNumber == CGDisplayModelNumber(displayID))
+				if (ioregSerialNumber == displaySerialNumber
+					&& ioregVendorNumber == displayVendorNumber
+					&& ioregModelNumber == displayModelNumber)
 				{
 					modelName        = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductName"] retain] autorelease];
 					manufacturerName = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ManufacturerID"] retain] autorelease];
@@ -143,10 +151,25 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 		IOObjectRelease(it);
 	}
 
+	if (!manufacturerName && !modelName)
+	{
+		// The IORegistry doesn't contain info on the built-in display…
+		if (displayVendorNumber == 0x610)
+		{
+			manufacturerName = @"Apple";
+			if (displayModelNumber == 0xa050)
+				modelName = @"Built-in Liquid Retina XDR Display";
+			else
+				modelName = @"Display";
+		}
+	}
+
 #else
 #error "Unsupported CPU architecture"
 #endif
 
+
+	// Coalesce the various attributes into a single descriptive string.
 
 	NSString *name = nil;
 	if (modelName.length > 0)
@@ -338,33 +361,44 @@ VuoScreen VuoScreen_getSecondary(void)
 	return VuoScreen_makeFromName(nullptr);
 }
 
-/// If the flag is set, logs it.
-#define VuoScreen_reconfigurationCallback_showFlag(a) \
-	if (flags & a) VUserLog("    %s", #a);
-
 /**
  * Invoked by macOS Quartz Display Services.
  */
-void VuoScreen_reconfigurationCallback(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
+void VuoScreen_reconfiguration(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
 {
 	// Ignore the "something's about to happen" notification.
 	if (flags == kCGDisplayBeginConfigurationFlag)
 		return;
 
-	{
-		VUserLog("display %x, flags %x", display, flags);
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayBeginConfigurationFlag );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayMovedFlag              );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplaySetMainFlag            );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplaySetModeFlag            );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayAddFlag                );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayRemoveFlag             );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayEnabledFlag            );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayDisabledFlag           );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayMirrorFlag             );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayUnMirrorFlag           );
-		VuoScreen_reconfigurationCallback_showFlag(kCGDisplayDesktopShapeChangedFlag);
-	}
+	// Ignore unchanged displays.
+	if (flags == 0)
+		return;
+
+	vector<string> flagDescriptions;
+	if (flags & kCGDisplayMovedFlag)               flagDescriptions.push_back("moved");
+	if (flags & kCGDisplaySetMainFlag)             flagDescriptions.push_back("set main");
+	if (flags & kCGDisplaySetModeFlag)             flagDescriptions.push_back("set mode");
+	if (flags & kCGDisplayAddFlag)                 flagDescriptions.push_back("added");
+	if (flags & kCGDisplayRemoveFlag)              flagDescriptions.push_back("removed");
+	if (flags & kCGDisplayEnabledFlag)             flagDescriptions.push_back("enabled");
+	if (flags & kCGDisplayDisabledFlag)            flagDescriptions.push_back("disabled");
+	if (flags & kCGDisplayMirrorFlag)              flagDescriptions.push_back("mirrored");
+	if (flags & kCGDisplayUnMirrorFlag)            flagDescriptions.push_back("unmirrored");
+	if (flags & kCGDisplayDesktopShapeChangedFlag) flagDescriptions.push_back("desktop shape changed");
+	stringstream flagDescription;
+	for_each(flagDescriptions.begin(), flagDescriptions.end(), [&flagDescription] (const string &s) {
+		if (flagDescription.tellp())
+			flagDescription << ", ";
+		flagDescription << s;
+	});
+
+	VuoList_VuoScreen screensList = VuoScreen_getList();
+	unsigned long screenCount = VuoListGetCount_VuoScreen(screensList);
+	VuoScreen *screens = VuoListGetData_VuoScreen(screensList);
+	VuoLocal(screensList);
+	for (unsigned long i = 0; i < screenCount; ++i)
+		if (screens[i].id == display)
+			VUserLog("Display \"%s\": %s", screens[i].name, flagDescription.str().c_str());
 
 	// If multiple displays are attached, this callback is invoked multiple times.
 	// Coalesce into a single Vuo event.
@@ -402,7 +436,7 @@ void VuoScreen_use(void)
 		// Our process only receives CGDisplay notifications while running in app mode.
 		VuoApp_init(false);
 
-		CGDisplayRegisterReconfigurationCallback(VuoScreen_reconfigurationCallback, NULL);
+		CGDisplayRegisterReconfigurationCallback(VuoScreen_reconfiguration, nullptr);
 	}
 }
 
@@ -421,7 +455,7 @@ void VuoScreen_disuse(void)
 	}
 
 	if (__sync_sub_and_fetch(&VuoScreen_useCount, 1) == 0)
-		CGDisplayRemoveReconfigurationCallback(VuoScreen_reconfigurationCallback, NULL);
+		CGDisplayRemoveReconfigurationCallback(VuoScreen_reconfiguration, nullptr);
 }
 
 /**

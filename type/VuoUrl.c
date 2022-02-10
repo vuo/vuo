@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -382,10 +382,7 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 	}
 	escapedUrl[outIndex] = 0;
 
-	VuoText escapedUrlVT = VuoText_make(escapedUrl);
-	free(escapedUrl);
-
-	return escapedUrlVT;
+	return VuoText_makeWithoutCopying(escapedUrl);
 }
 
 /**
@@ -421,10 +418,7 @@ VuoText VuoUrl_escapeUTF8(const VuoText url)
 	}
 	escapedUrl[outIndex] = 0;
 
-	VuoText escapedUrlVT = VuoText_make(escapedUrl);
-	free(escapedUrl);
-
-	return escapedUrlVT;
+	return VuoText_makeWithoutCopying(escapedUrl);
 }
 
 static const char *VuoUrl_fileScheme = "file:"; ///< URL scheme for local files.
@@ -764,9 +758,8 @@ VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags)
 	if (resolvedUrl[lastIndex] == '/')
 		resolvedUrl[lastIndex] = 0;
 
-	VuoText resolvedUrlVT = VuoText_make(resolvedUrl);
+	VuoText resolvedUrlVT = VuoText_makeWithoutCopying(resolvedUrl);
 	VuoRetain(resolvedUrlVT);
-	free(resolvedUrl);
 
 	VuoText escapedUrl = VuoUrl_escapeUTF8(resolvedUrlVT);
 	VuoRelease(resolvedUrlVT);
@@ -799,9 +792,7 @@ VuoText VuoUrl_decodeRFC3986(const VuoUrl url)
 	}
 	unescapedUrl[outIndex] = 0;
 
-	VuoText unescapedUrlVT = VuoText_make(unescapedUrl);
-	free(unescapedUrl);
-	return unescapedUrlVT;
+	return VuoText_makeWithoutCopying(unescapedUrl);
 }
 
 /**
@@ -852,10 +843,7 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url)
 	}
 	unescapedUrl[outIndex] = 0;
 
-	VuoText unescapedUrlVT = VuoText_make(unescapedUrl);
-	free(unescapedUrl);
-
-	return unescapedUrlVT;
+	return VuoText_makeWithoutCopying(unescapedUrl);
 }
 
 /**
@@ -935,8 +923,5 @@ VuoUrl VuoUrl_appendFileExtension(const char *filename, struct json_object *vali
 	char* newfilepath = (char*)malloc(buf_size * sizeof(char));
 	snprintf(newfilepath, buf_size, "%s.%s", filename, chosenExtension);
 
-	VuoText text = VuoText_make(newfilepath);
-	free(newfilepath);
-
-	return text;
+	return VuoText_makeWithoutCopying(newfilepath);
 }

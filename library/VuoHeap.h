@@ -2,7 +2,7 @@
  * @file
  * VuoHeap interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -26,6 +26,9 @@ extern "C" {
  * @ingroup ReferenceCountingFunctions
  * A type for destructor functions, such as @c free(void *), which are used to deallocate reference-counted
  * memory when it's no longer in use.
+ *
+ * These destructor functions are responsible for deallocating both the memory pointed to by `void *`,
+ * as well as (if it's a structure) releasing any memory pointed to within it.
  */
 typedef void (*DeallocateFunctionType)(void *);
 
@@ -106,7 +109,7 @@ int VuoRelease(const void *heapPointer);
 #define VuoLocal(heapPointer) VuoRetain(heapPointer); VuoDefer(^{VuoRelease(heapPointer);});
 
 bool VuoHeap_isPointerReadable(const void *pointer);
-const char * VuoHeap_getDescription(const void *heapPointer);
+char *VuoHeap_getDescription(const void *heapPointer);
 void VuoHeap_addTrace(const void *heapPointer);
 
 /**

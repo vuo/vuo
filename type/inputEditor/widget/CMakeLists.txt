@@ -1,18 +1,34 @@
 add_library(VuoWidget SHARED
 	VuoComboBox.cc
+	VuoComboBox.hh
 	VuoDialogForInputEditor.cc
+	VuoDialogForInputEditor.hh
 	VuoDoubleSpinBox.cc
+	VuoDoubleSpinBox.hh
 	VuoInputEditor.cc
+	VuoInputEditor.hh
 	VuoInputEditorCurveRenderer.cc
+	VuoInputEditorCurveRenderer.hh
+	VuoInputEditorIcon.hh
+	VuoInputEditorMenuItem.hh
 	VuoInputEditorNamedEnum.cc
+	VuoInputEditorNamedEnum.hh
 	VuoInputEditorWithDialog.cc
+	VuoInputEditorWithDialog.hh
 	VuoInputEditorWithEnumMenu.cc
+	VuoInputEditorWithEnumMenu.hh
 	VuoInputEditorWithLineEdit.cc
+	VuoInputEditorWithLineEdit.hh
 	VuoInputEditorWithLineEditList.cc
+	VuoInputEditorWithLineEditList.hh
 	VuoInputEditorWithMenu.cc
+	VuoInputEditorWithMenu.hh
 	VuoKeyComboBox.cc
+	VuoKeyComboBox.hh
 	VuoSpinBox.cc
+	VuoSpinBox.hh
 	VuoTextEditor.cc
+	VuoTextEditor.hh
 )
 set_target_properties(VuoWidget PROPERTIES
 	AUTOMOC ON

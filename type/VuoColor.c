@@ -2,7 +2,7 @@
  * @file
  * VuoColor implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -236,14 +236,14 @@ char *VuoColor_getSummary(const VuoColor value)
 VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha)
 {
 	if (includeAlpha)
-		return VuoText_make(VuoText_format("#%02x%02x%02x%02x",
+		return VuoText_makeWithoutCopying(VuoText_format("#%02x%02x%02x%02x",
 										   (unsigned int)(VuoReal_clamp(color.r,0,1) * 255),
 										   (unsigned int)(VuoReal_clamp(color.g,0,1) * 255),
 										   (unsigned int)(VuoReal_clamp(color.b,0,1) * 255),
 										   (unsigned int)(VuoReal_clamp(color.a,0,1) * 255)
 										   ));
 	else
-		return VuoText_make(VuoText_format("#%02x%02x%02x",
+		return VuoText_makeWithoutCopying(VuoText_format("#%02x%02x%02x",
 										   (unsigned int)(VuoReal_clamp(color.r,0,1) * 255),
 										   (unsigned int)(VuoReal_clamp(color.g,0,1) * 255),
 										   (unsigned int)(VuoReal_clamp(color.b,0,1) * 255)

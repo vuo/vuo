@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -137,4 +137,11 @@ public:
 	static string findLatestRevisionOfModuleCacheDylib(const string &moduleCachePath, bool builtIn, bool generated, unsigned long &lastModified);
 	static void deleteOtherRevisionsOfModuleCacheDylib(const string &dylibPath);
 	static bool areDifferentRevisionsOfSameModuleCacheDylib(const string &dylibPath1, const string &dylibPath2);
+
+private:
+	static void dylibLoaded(const struct mach_header *mh32, intptr_t vmaddr_slide);
+	static void initializeVuoFrameworkPaths(void);
+	static bool dylibLoaderInitialMatchCompleted;
+	static string vuoFrameworkPath;
+	static string vuoRunnerFrameworkPath;
 };

@@ -2,7 +2,7 @@
  * @file
  * VuoPoint3d C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -65,7 +65,6 @@ VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d 
 /**
  * Automatically generated function.
  */
-VuoPoint3d VuoPoint3d_makeFromString(const char *str);
 char * VuoPoint3d_getString(const VuoPoint3d value);
 void VuoPoint3d_retain(VuoPoint3d value);
 void VuoPoint3d_release(VuoPoint3d value);

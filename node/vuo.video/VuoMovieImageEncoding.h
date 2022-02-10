@@ -2,7 +2,7 @@
  * @file
  * VuoMovieImageEncoding C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,6 @@ char * VuoMovieImageEncoding_getSummary(const VuoMovieImageEncoding value);
 /**
  * Automatically generated function.
  */
-VuoMovieImageEncoding VuoMovieImageEncoding_makeFromString(const char *str);
 char * VuoMovieImageEncoding_getString(const VuoMovieImageEncoding value);
 void VuoMovieImageEncoding_retain(VuoMovieImageEncoding value);
 void VuoMovieImageEncoding_release(VuoMovieImageEncoding value);

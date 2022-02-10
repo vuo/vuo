@@ -2,7 +2,7 @@
  * @file
  * VuoRendererComposition implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -38,6 +38,7 @@
 #include "VuoStringUtilities.hh"
 
 #include "VuoHeap.h"
+#include "type.h"
 
 #include "VuoTextHtml.h"
 #include "VuoUrl.h"
@@ -1262,11 +1263,10 @@ void VuoRendererComposition::modifyAllResourcePathsForBundle(void)
 			VuoRendererPort *rp = port->getRenderer();
 			if (rp->hasRelativeReadURLConstantValue())
 			{
-				VuoUrl url = VuoUrl_makeFromString(rp->getConstantAsString().c_str());
-				VuoRetain(url);
+				VuoUrl url = VuoMakeRetainedFromString(rp->getConstantAsString().c_str(), VuoUrl);
 				string modifiedRelativeResourcePath = modifyResourcePathForBundle(url);
-				rp->setConstant("\"" + modifiedRelativeResourcePath + "\"");
 				VuoRelease(url);
+				rp->setConstant("\"" + modifiedRelativeResourcePath + "\"");
 			}
 		}
 	}
@@ -1290,14 +1290,13 @@ map<VuoPort *, string> VuoRendererComposition::getPortConstantResourcePathsRelat
 			VuoRendererPort *rp = port->getRenderer();
 			if (rp->hasRelativeReadURLConstantValue())
 			{
-				VuoUrl url = VuoUrl_makeFromString(rp->getConstantAsString().c_str());
-				VuoRetain(url);
+				VuoUrl url = VuoMakeRetainedFromString(rp->getConstantAsString().c_str(), VuoUrl);
 				QString origRelativeResourcePath = url;
+				VuoRelease(url);
 				string modifiedRelativeResourcePath = modifyResourcePathForNewDir(origRelativeResourcePath.toUtf8().constData(), newDir);
 
 				if (modifiedRelativeResourcePath != origRelativeResourcePath.toUtf8().constData())
 					modifiedPathForPort[port] = "\"" + modifiedRelativeResourcePath + "\"";
-				VuoRelease(url);
 			}
 		}
 	}
@@ -1314,8 +1313,7 @@ string VuoRendererComposition::getAppIconResourcePathRelativeToDir(QDir newDir)
 	string iconURL = getBase()->getMetadata()->getIconURL();
 	string quotedIconURL = "\"" + iconURL + "\"";
 
-	VuoUrl url = VuoUrl_makeFromString(quotedIconURL.c_str());
-	VuoRetain(url);
+	VuoUrl url = VuoMakeRetainedFromString(quotedIconURL.c_str(), VuoUrl);
 	bool isRelativePath = VuoUrl_isRelativePath(url);
 	QString origRelativeResourcePath = url;
 	VuoRelease(url);
@@ -1349,8 +1347,7 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir, bool 
 			VuoRendererPort *rp = port->getRenderer();
 			if (rp->hasRelativeReadURLConstantValue())
 			{
-				VuoUrl url = VuoUrl_makeFromString(rp->getConstantAsString().c_str());
-				VuoRetain(url);
+				VuoUrl url = VuoMakeRetainedFromString(rp->getConstantAsString().c_str(), VuoUrl);
 				QString origRelativeResourcePath = url;
 				QString modifiedRelativeResourcePath = modifyResourcePathForBundle(origRelativeResourcePath.toUtf8().constData()).c_str();
 
@@ -1391,8 +1388,7 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir, bool 
 	string iconURL = getBase()->getMetadata()->getIconURL();
 	string quotedIconURL = "\"" + iconURL + "\"";
 
-	VuoUrl url = VuoUrl_makeFromString(quotedIconURL.c_str());
-	VuoRetain(url);
+	VuoUrl url = VuoMakeRetainedFromString(quotedIconURL.c_str(), VuoUrl);
 	bool iconHasRelativePath = VuoUrl_isRelativePath(url);
 	QString origRelativeResourcePath = url;
 

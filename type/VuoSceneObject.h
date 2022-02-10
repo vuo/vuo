@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -183,7 +183,6 @@ VuoSceneObject VuoSceneObject_intersect(VuoList_VuoSceneObject objects, float qu
 /**
  * Automatically generated function.
  */
-VuoSceneObject VuoSceneObject_makeFromString(const char *str);
 char * VuoSceneObject_getString(const VuoSceneObject value);
 void VuoSceneObject_retain(VuoSceneObject value);
 void VuoSceneObject_release(VuoSceneObject value);

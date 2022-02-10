@@ -35,7 +35,6 @@ char * VuoIntegerRange_getSummary(const VuoIntegerRange value);
 /**
  * Automatically generated function.
  */
-VuoIntegerRange VuoIntegerRange_makeFromString(const char *str);
 char * VuoIntegerRange_getString(const VuoIntegerRange value);
 void VuoIntegerRange_retain(VuoIntegerRange value);
 void VuoIntegerRange_release(VuoIntegerRange value);

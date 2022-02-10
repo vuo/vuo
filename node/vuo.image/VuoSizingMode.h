@@ -2,7 +2,7 @@
  * @file
  * VuoSizingMode C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -41,7 +41,6 @@ char * VuoSizingMode_getSummary(const VuoSizingMode value);
 /**
  * Automatically generated function.
  */
-VuoSizingMode VuoSizingMode_makeFromString(const char *str);
 char * VuoSizingMode_getString(const VuoSizingMode value);
 void VuoSizingMode_retain(VuoSizingMode value);
 void VuoSizingMode_release(VuoSizingMode value);

@@ -2,7 +2,7 @@
  * @file
  * VuoRenderedLayers implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -433,7 +433,7 @@ VuoPoint3d VuoRenderedLayers_getQuadCenter(VuoPoint3d layerCorners3d[4])
 /**
  * Helper for @ref VuoRenderedLayers_getRect.
  */
-bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers_internal *rl, float compositeMatrix[16], VuoSceneObject targetObject, VuoRectangle* rect, bool rectIsInitialized)
+bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers_internal *rl, float compositeMatrix[16], VuoSceneObject targetObject, bool includeChildrenInBounds, VuoRectangle *rect, bool rectIsInitialized)
 {
 	bool foundRect = rectIsInitialized;
 	VuoPoint2d layerCenter;
@@ -458,15 +458,18 @@ bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers_internal *rl, float co
 		foundRect = true;
 	}
 
-	VuoList_VuoSceneObject childObjects = VuoSceneObject_getChildObjects(targetObject);
-	int children = VuoListGetCount_VuoSceneObject(childObjects);
-
-	for(int i = 1; i <= children; i++)
+	if (includeChildrenInBounds)
 	{
-		VuoSceneObject child = VuoListGetValue_VuoSceneObject(childObjects, i);
+		VuoList_VuoSceneObject childObjects = VuoSceneObject_getChildObjects(targetObject);
+		int children = VuoListGetCount_VuoSceneObject(childObjects);
 
-		if( VuoRenderedLayers_getRectRecursive(rl, localToWorldMatrix, child, rect, foundRect) )
-			foundRect = true;
+		for(int i = 1; i <= children; i++)
+		{
+			VuoSceneObject child = VuoListGetValue_VuoSceneObject(childObjects, i);
+
+			if (VuoRenderedLayers_getRectRecursive(rl, localToWorldMatrix, child, true, rect, foundRect))
+				foundRect = true;
+		}
 	}
 
 	return foundRect;
@@ -475,7 +478,7 @@ bool VuoRenderedLayers_getRectRecursive(VuoRenderedLayers_internal *rl, float co
 /**
  * Get a axis-aligned bounding rect in model space (transformed by `layer`) in Vuo coordinates for a layer and its children.
  */
-bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, VuoRectangle* rect)
+bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject layer, bool includeChildrenInBounds, VuoRectangle *rect)
 {
 	VuoRenderedLayers_internal *rl = (VuoRenderedLayers_internal *)renderedLayers;
 
@@ -486,7 +489,7 @@ bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoSceneObject 
 		0, 0, 0, 1,
 	};
 
-	return VuoRenderedLayers_getRectRecursive(rl, identity, layer, rect, false);
+	return VuoRenderedLayers_getRectRecursive(rl, identity, layer, includeChildrenInBounds, rect, false);
 }
 
 /**
@@ -508,45 +511,23 @@ bool VuoRenderedLayers_getTransformedLayer(
 	// Get the layer's corner points.
 	VuoPoint3d layerCorners3d[4];
 
-	if(includeChildrenInBounds)
-	{
-		VuoRectangle rect;
+	VuoRectangle rect;
 
-		if(!VuoRenderedLayers_getRect(renderedLayers, targetObject, &rect))
-			return false;
+	if(!VuoRenderedLayers_getRect(renderedLayers, targetObject, includeChildrenInBounds, &rect))
+		return false;
 
-		VuoPoint2d c = rect.center;
-		VuoPoint2d e = VuoPoint2d_multiply(rect.size, .5);
+	VuoPoint2d c = rect.center;
+	VuoPoint2d e = VuoPoint2d_multiply(rect.size, .5);
 
-		layerCorners3d[0] = VuoPoint3d_make( c.x - e.x, c.y - e.y, 0. );
-		layerCorners3d[1] = VuoPoint3d_make( c.x + e.x, c.y - e.y, 0. );
-		layerCorners3d[2] = VuoPoint3d_make( c.x - e.x, c.y + e.y, 0. );
-		layerCorners3d[3] = VuoPoint3d_make( c.x + e.x, c.y + e.y, 0. );
-	}
-	else
-	{
-		if( !VuoRenderedLayers_getLayerCorners(targetObject, layerCorners3d) )
-			return false;
-	}
-
-	bool isText = VuoSceneObject_getType(targetObject) == VuoSceneObjectSubType_Text
-		&& VuoSceneObject_getText(targetObject);
-
-	// if includeChildren is true VuoRenderedLayers_getRect will have already applied scale
-	VuoShader shader = VuoSceneObject_getShader(targetObject);
-	if (!includeChildrenInBounds && !isText && shader)
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			layerCorners3d[i].x *= shader->objectScale;
-			layerCorners3d[i].y *= shader->objectScale;
-		}
-	}
+	layerCorners3d[0] = VuoPoint3d_make( c.x - e.x, c.y - e.y, 0. );
+	layerCorners3d[1] = VuoPoint3d_make( c.x + e.x, c.y - e.y, 0. );
+	layerCorners3d[2] = VuoPoint3d_make( c.x - e.x, c.y + e.y, 0. );
+	layerCorners3d[3] = VuoPoint3d_make( c.x + e.x, c.y + e.y, 0. );
 
 	// Transform the layer to the rendered layers' coordinate space.
 	VuoPoint3d layerCenter3d = VuoRenderedLayers_getQuadCenter(layerCorners3d);
 
-	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &layerCenter3d, layerCorners3d, !includeChildrenInBounds);
+	VuoRenderedLayers_applyTransforms(renderedLayers, ancestorObjects, targetObject, &layerCenter3d, layerCorners3d, false);
 
 	for (int i = 0; i < 4; ++i)
 		layerCorners[i] = VuoPoint2d_make(layerCorners3d[i].x, layerCorners3d[i].y);

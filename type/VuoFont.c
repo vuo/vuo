@@ -2,7 +2,7 @@
  * @file
  * VuoFont implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -52,7 +52,7 @@ VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, 
  *
  * @version200New
  */
-VuoFont VuoFont_makeDefault()
+VuoFont VuoFont_makeDefault(void)
 {
 	return (VuoFont) { NULL, 18, false, (VuoColor){1,1,1,1}, VuoHorizontalAlignment_Center, 1, 1 };
 }

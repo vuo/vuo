@@ -2,7 +2,7 @@
  * @file
  * VuoLeapHand C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -73,7 +73,6 @@ VuoLeapHand VuoLeapHand_make(
 /**
  * Automatically generated function.
  */
-VuoLeapHand VuoLeapHand_makeFromString(const char * initializer);
 char * VuoLeapHand_getString(const VuoLeapHand value);
 void VuoLeapHand_retain(VuoLeapHand value);
 void VuoLeapHand_release(VuoLeapHand value);

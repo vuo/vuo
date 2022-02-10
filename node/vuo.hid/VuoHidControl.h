@@ -2,7 +2,7 @@
  * @file
  * VuoHidControl C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -44,7 +44,6 @@ bool VuoHidControl_isLessThan(const VuoHidControl valueA, const VuoHidControl va
  * Automatically generated function.
  */
 ///@{
-VuoHidControl VuoHidControl_makeFromString(const char *str);
 char *VuoHidControl_getString(const VuoHidControl value);
 void VuoHidControl_retain(VuoHidControl value);
 void VuoHidControl_release(VuoHidControl value);

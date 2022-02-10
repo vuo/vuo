@@ -2,7 +2,7 @@
  * @file
  * vuo.uuid C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -38,13 +38,12 @@ VuoUuid VuoUuid_makeFromJson(struct json_object * js);
 struct json_object * VuoUuid_getJson(const VuoUuid value);
 char * VuoUuid_getSummary(const VuoUuid value);
 
-VuoUuid VuoUuid_make();
+VuoUuid VuoUuid_make(void);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoUuid VuoUuid_makeFromString(const char *str);
 char * VuoUuid_getString(const VuoUuid value);
 void VuoUuid_retain(VuoUuid value);
 void VuoUuid_release(VuoUuid value);

@@ -2,7 +2,7 @@ Loads or downloads a file containing JSON-formatted text, and turns the text int
 
 See [vuo.url](vuo-nodeset://vuo.url) for info on how Vuo handles URLs.
 
-If there's an error in the JSON, this node outputs an empty tree. Check Console.app for details about the error.
+If there's an error in the JSON, this node outputs an empty tree. Check Vuo's Console window (Tools > Show Console) for details about the error.
 
 Name-value pairs in JSON objects roughly correspond to trees.
 

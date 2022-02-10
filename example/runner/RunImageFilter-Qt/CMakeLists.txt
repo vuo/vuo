@@ -11,6 +11,7 @@ find_library(VUO_FRAMEWORK Vuo)
 set(CMAKE_AUTOMOC ON)
 add_executable(RunImageFilter-Qt
 	GLWidget.cc
+	GLWidget.hh
 	main.cc
 )
 target_compile_features(RunImageFilter-Qt PRIVATE cxx_std_11)

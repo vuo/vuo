@@ -43,7 +43,8 @@ function (VuoNodeSet)
 	if (TARGET "${nodeSetName}.types")
 		list(APPEND targets "${nodeSetName}.types")
 		get_target_property(typeObjects "${nodeSetName}.types" SOURCES)
-		# typeObjects now contains a list of .o files.
+		# typeObjects now contains a list of `.o` and `.h` files.
+		list(FILTER typeObjects EXCLUDE REGEX "\.hh?$")
 		# Bundle bitcode so we can use LLVM's ParseBitcodeFile to load it into our compiler environment,
 		# and bundle native objects we can pass them to `ld`
 		# without requiring Clang to convert the bitcode files to objects every time.
@@ -55,8 +56,9 @@ function (VuoNodeSet)
 	if (TARGET "${nodeSetName}.libraries")
 		list(APPEND targets "${nodeSetName}.libraries")
 		get_target_property(libraryBitcodes "${nodeSetName}.libraries" SOURCES)
-		# libraryBitcodes now contains a list of .o files.
+		# libraryBitcodes now contains a list of `.o` and `.h` files.
 		# Bundle just the bitcode.
+		list(FILTER libraryBitcodes EXCLUDE REGEX "\.hh?$")
 		# @todo would it improve performance to bundle native objects?
 		list(TRANSFORM libraryBitcodes REPLACE "\\.o$" ".bc")
 	endif()
@@ -81,7 +83,7 @@ function (VuoNodeSet)
 	if (TARGET "${nodeSetName}.libraries.pro")
 		list(APPEND targets "${nodeSetName}.libraries.pro")
 		get_target_property(libraryProBitcodes "${nodeSetName}.libraries.pro" SOURCES)
-		list(FILTER libraryProBitcodes EXCLUDE REGEX "\.o$")
+		list(FILTER libraryProBitcodes EXCLUDE REGEX "\.(o|hh?)$")
 	endif()
 
 	# Vuo Pro node bitcode.
@@ -436,9 +438,10 @@ function (VuoCompileLibrariesWithTarget target)
 			VuoPackageCodesign(${object})
 		endif()
 		list(APPEND objects ${object})
+		list(APPEND headers ${header})
 	endforeach()
 
-	add_library(${target} STATIC ${bitcodes} ${objects})
+	add_library(${target} STATIC ${bitcodes} ${objects} ${headers})
 	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
 	target_include_directories(${target}
 		INTERFACE

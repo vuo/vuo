@@ -4,8 +4,8 @@ list(FILTER VuoCoreTypeHeaders EXCLUDE REGEX "^(VuoMathExpression|VuoShader(Shad
 VuoCompileTypes(
 	VuoAnchor.c
 	VuoAudioSamples.c
-	VuoBoolean.c
 	VuoBlendMode.c
+	VuoBoolean.c
 	VuoColor.c
 	VuoCoordinateUnit.c
 	VuoCubemap.c
@@ -17,13 +17,13 @@ VuoCompileTypes(
 	VuoDiode.c
 	VuoFont.c
 	VuoHorizontalAlignment.c
+	VuoImage.c
+	VuoImageColorDepth.c
+	VuoImageWrapMode.c
 	VuoInteger.c
 	VuoIntegerRange.c
 	VuoInteraction.c
 	VuoInteractionType.c
-	VuoImage.c
-	VuoImageColorDepth.c
-	VuoImageWrapMode.c
 	VuoListPosition.c
 	VuoLoopType.c
 #	VuoMathExpression.c
@@ -49,14 +49,74 @@ VuoCompileTypes(
 	VuoTransform.c
 	VuoTransform2d.c
 	VuoTree.cc
-	VuoUuid.c
 	VuoUrl.c
+	VuoUuid.c
 	VuoVerticalAlignment.c
 	VuoWave.c
 	VuoWindowDescription.c
 	VuoWindowProperty.c
 	VuoWindowReference.m
 	VuoWrapMode.c
+)
+target_sources(vuo.core.types PRIVATE
+	VuoAnchor.h
+	VuoAudioSamples.h
+	VuoBlendMode.h
+	VuoBoolean.h
+	VuoColor.h
+	VuoCoordinateUnit.h
+	VuoCubemap.h
+	VuoCursor.h
+	VuoCurve.h
+	VuoCurveEasing.h
+	VuoDictionary_VuoText_VuoReal.h
+	VuoDictionary_VuoText_VuoText.h
+	VuoDiode.h
+	VuoFont.h
+	VuoHorizontalAlignment.h
+	VuoImage.h
+	VuoImageColorDepth.h
+	VuoImageWrapMode.h
+	VuoInteger.h
+	VuoIntegerRange.h
+	VuoInteraction.h
+	VuoInteractionType.h
+	VuoListPosition.h
+	VuoLoopType.h
+	VuoMathExpression.h
+	VuoMathExpressionList.h
+	VuoMesh.h
+	VuoModifierKey.h
+	VuoOrientation.h
+	VuoPoint2d.h
+	VuoPoint3d.h
+	VuoPoint4d.h
+	VuoRange.h
+	VuoReal.h
+	VuoRectangle.h
+	VuoRenderedLayers.h
+	VuoSceneObject.h
+	VuoScreen.h
+	VuoShader.h
+	VuoShaderShaders.h
+	VuoShaderUniforms.h
+	VuoSortOrder.h
+	VuoText.h
+	VuoTextCase.h
+	VuoTextComparison.h
+	VuoTextSort.h
+	VuoTransform.h
+	VuoTransform2d.h
+	VuoTree.h
+	VuoUrl.h
+	VuoUuid.h
+	VuoVerticalAlignment.h
+	VuoWave.h
+	VuoWindowDescription.h
+	VuoWindowProperty.h
+	VuoWindowReference.h
+	VuoWrapMode.h
+	type.h
 )
 target_include_directories(vuo.core.types
 	PRIVATE

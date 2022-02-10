@@ -1,23 +1,42 @@
 add_library(VuoRenderer STATIC
 	VuoRendererCable.cc
+	VuoRendererCable.hh
 	VuoRendererColors.cc
+	VuoRendererColors.hh
 	VuoRendererComment.cc
+	VuoRendererComment.hh
 	VuoRendererCommon.cc
+	VuoRendererCommon.hh
 	VuoRendererComposition.cc
+	VuoRendererComposition.hh
 	VuoRendererFonts.cc
+	VuoRendererFonts.hh
 	VuoRendererHiddenInputAttachment.cc
+	VuoRendererHiddenInputAttachment.hh
 	VuoRendererInputAttachment.cc
+	VuoRendererInputAttachment.hh
 	VuoRendererInputDrawer.cc
+	VuoRendererInputDrawer.hh
 	VuoRendererInputListDrawer.cc
+	VuoRendererInputListDrawer.hh
 	VuoRendererItem.cc
+	VuoRendererItem.hh
 	VuoRendererKeyListForReadOnlyDictionary.cc
+	VuoRendererKeyListForReadOnlyDictionary.hh
 	VuoRendererNode.cc
+	VuoRendererNode.hh
 	VuoRendererPort.cc
+	VuoRendererPort.hh
 	VuoRendererPublishedPort.cc
+	VuoRendererPublishedPort.hh
 	VuoRendererReadOnlyDictionary.cc
+	VuoRendererReadOnlyDictionary.hh
 	VuoRendererSignaler.cc
+	VuoRendererSignaler.hh
 	VuoRendererTypecastPort.cc
+	VuoRendererTypecastPort.hh
 	VuoRendererValueListForReadOnlyDictionary.cc
+	VuoRendererValueListForReadOnlyDictionary.hh
 )
 set_target_properties(VuoRenderer PROPERTIES
 	AUTOMOC ON
@@ -36,6 +55,7 @@ target_include_directories(VuoRenderer
 		${PROJECT_BINARY_DIR}/type/list
 		../compiler
 		../library
+		../node
 		../node/vuo.audio
 		../node/vuo.file
 		../type

@@ -2,6 +2,10 @@ VuoCompileTypes(
 	VuoTable.cc
 	VuoTableFormat.c
 )
+target_sources(vuo.table.types PRIVATE
+	VuoTable.h
+	VuoTableFormat.h
+)
 target_include_directories(vuo.table.types
 	PRIVATE
 	../vuo.time

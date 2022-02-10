@@ -2,7 +2,7 @@
  * @file
  * TestVuoRunnerCocoa implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -219,7 +219,7 @@ private slots:
 		QTest::newRow("ImageFilter.vuo")
 				<< "ImageFilter"
 				<< "An empty composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+				<< "Copyright © 2012–2022 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -229,7 +229,7 @@ private slots:
 		QTest::newRow("ImageFilter512.vuo")
 				<< "ImageFilter512"
 				<< "A large composition that complies with the ImageFilter protocol."
-				<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+				<< "Copyright © 2012–2022 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
 				<< QList<PortAndDetails>()
@@ -255,7 +255,7 @@ private slots:
 			QTest::newRow("ImageFilterWithExtraPorts.vuo")
 					<< "ImageFilter with unconnected extra ports"
 					<< "An ImageFilter with unconnected non-protocol ports."
-					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2022 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					// Disconnected published ports should have a title, type, default, and menuItems, but no other details.
@@ -283,7 +283,7 @@ private slots:
 			QTest::newRow("ImageFilterWithExtraPortsConnected.vuo")
 					<< "ImageFilter with connected extra ports"
 					<< "An ImageFilter with connected non-protocol ports."
-					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2022 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "background" << "foreground" << "curveEasing" << "foregroundOpacity")
 					<< (QList<QString>() << "blendedColor")
 					<< (QList<PortAndDetails>() << PortAndDetails("curveEasing", curveEasingDetails))
@@ -322,7 +322,7 @@ private slots:
 			QTest::newRow("ImageFilterWithDetailCoalescing.vuo")
 					<< "ImageFilter with Detail Coalescing"
 					<< "An ImageFilter with published input ports connected to multiple internal ports each with differing details."
-					<< "Copyright © 2012–2021 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
+					<< "Copyright © 2012–2022 Kosada Incorporated.\nThis code may be modified and distributed under the terms of the MIT License.\nFor more information, see https://vuo.org/license."
 					<< (QList<QString>() << "position" << "fieldOfView" << "Palette")
 					<< QList<QString>()
 					<< (QList<PortAndDetails>()

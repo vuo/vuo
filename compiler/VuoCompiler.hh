@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -340,11 +340,10 @@ private:
 	VuoDirectedAcyclicNetwork *compositionDependencyGraph;  ///< A partial dependency graph, containing all subcompositions (loaded or not) and the node classes that are their direct dependencies.
 	static string vuoFrameworkInProgressPath;  ///< The path to use for Vuo.framework during a call to @ref VuoCompiler::generateBuiltInModuleCaches.
 	string clangPath;
-	string telemetry;
+	string telemetry;  ///< No longer used. Preserved only for ABI compatibility.
 	string target;
 	bool isVerbose;
 	bool _shouldShowSplashWindow;
-	string dependencyOutputPath;
 	VuoCompilerDelegate *delegate;
 	dispatch_queue_t delegateQueue;  ///< Synchronizes access to @ref delegate.
 
@@ -455,7 +454,6 @@ public:
 	void addHeaderSearchPath(const string &path);
 	void addLibrarySearchPath(const string &path);
 	void addFrameworkSearchPath(const string &path);
-	void setTelemetry(const string &telemetry);
 	void setVerbose(bool isVerbose);
 	void setShouldPotentiallyShowSplashWindow(bool potentiallyShow);
 	void setDependencyOutput(const string &path);

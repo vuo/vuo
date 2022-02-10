@@ -2,7 +2,7 @@
  * @file
  * VuoWindowReference interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -49,7 +49,6 @@ VuoScreen VuoWindowReference_getScreen(const VuoWindowReference value);
 /**
  * Automatically generated function.
  */
-VuoWindowReference VuoWindowReference_makeFromString(const char *str);
 char * VuoWindowReference_getString(const VuoWindowReference value);
 void VuoWindowReference_retain(VuoWindowReference value);
 void VuoWindowReference_release(VuoWindowReference value);

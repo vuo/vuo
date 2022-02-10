@@ -1,6 +1,6 @@
 Turns JSON-formatted text into a tree.
 
-If there's an error in the JSON, this node outputs an empty tree. Check Console.app for details about the error.
+If there's an error in the JSON, this node outputs an empty tree. Check Vuo's Console window (Tools > Show Console) for details about the error.
 
 Name-value pairs in JSON objects roughly correspond to trees.
 

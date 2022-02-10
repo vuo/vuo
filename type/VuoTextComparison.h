@@ -2,7 +2,7 @@
  * @file
  * VuoTextComparison C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -55,8 +55,9 @@ char * VuoTextComparison_getSummary(const VuoTextComparison value);
 /**
  * Automatically generated function.
  */
-VuoTextComparison VuoTextComparison_makeFromString(const char *str);
 char * VuoTextComparison_getString(const VuoTextComparison value);
+void VuoTextComparison_retain(VuoTextComparison value);
+void VuoTextComparison_release(VuoTextComparison value);
 /// @}
 
 /**

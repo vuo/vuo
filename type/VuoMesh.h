@@ -2,7 +2,7 @@
  * @file
  * VuoMesh C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -143,7 +143,6 @@ static inline VuoMesh_ElementAssemblyMethod VuoMesh_getExpandedPrimitiveMode(con
 /**
  * Automatically generated function.
  */
-VuoMesh VuoMesh_makeFromString(const char *str);
 char * VuoMesh_getString(const VuoMesh value);
 void VuoMesh_retain(const VuoMesh v);
 void VuoMesh_release(const VuoMesh v);

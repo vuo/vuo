@@ -4,6 +4,12 @@ VuoCompileLibraries(
 	VuoSyphonSender.m
 	VuoSyphonServerNotifier.m
 )
+target_sources(vuo.syphon.libraries PRIVATE
+	VuoSyphon.h
+	VuoSyphonListener.h
+	VuoSyphonSender.h
+	VuoSyphonServerNotifier.h
+)
 target_include_directories(vuo.syphon.libraries
     PRIVATE
 		${CONAN_FRAMEWORK_DIRS_SYPHON}/Syphon.framework/Headers
@@ -19,6 +25,9 @@ target_link_libraries(vuo.syphon.libraries
 
 VuoCompileTypes(
 	VuoSyphonServerDescription.c
+)
+target_sources(vuo.syphon.types PRIVATE
+	VuoSyphonServerDescription.h
 )
 
 VuoCompileNodes(

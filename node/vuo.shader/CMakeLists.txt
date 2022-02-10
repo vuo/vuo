@@ -1,6 +1,9 @@
 VuoCompileTypes(
 	VuoVertexAttribute.c
 )
+target_sources(vuo.shader.types PRIVATE
+	VuoVertexAttribute.h
+)
 
 VuoCompileNodes(
 	vuo.shader.make.color.c

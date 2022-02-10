@@ -2,7 +2,7 @@
  * @file
  * TestCompilingAndLinking interface and implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -25,20 +25,9 @@ class TestCompilingAndLinking : public TestCompositionExecution
 
 private:
 
-	VuoCompiler *compiler;
+	VuoCompiler *compiler = nullptr;
 
 private slots:
-
-	void init()
-	{
-		compiler = initCompiler();
-	}
-
-	void cleanup()
-	{
-		delete compiler;
-		VuoCompiler::reset();
-	}
 
 	void testCompilingWithoutCrashing_data()
 	{
@@ -69,6 +58,7 @@ private slots:
 	{
 		QFETCH(QString, compositionName);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string bcPath = VuoFileUtilities::makeTmpFile(compositionName.toUtf8().constData(), "bc");
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
@@ -83,6 +73,9 @@ private slots:
 		} catch (...) {}
 
 		remove(bcPath.c_str());
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testLinkingWithoutCrashing_data()
@@ -101,6 +94,7 @@ private slots:
 		QFETCH(QString, linkType);
 		QFETCH(VuoCompiler::Optimization, optimization);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath("Recur.vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -136,10 +130,15 @@ private slots:
 			QVERIFY2(access(linkedResourcePath.c_str(), 0) == 0, ("Expected to find file " + linkedResourcePath).c_str());
 			remove(linkedResourcePath.c_str());
 		}
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testLinkingMultipleTimes()
 	{
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath("Recur_Count_Write.vuo");
 		string dir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
@@ -162,6 +161,10 @@ private slots:
 			remove(bcPath.c_str());
 			remove(exePath.c_str());
 		}
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingAndLinkingWithGenericNodes_data()
@@ -186,6 +189,7 @@ private slots:
 		QFETCH(QString, compositionName);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -200,6 +204,9 @@ private slots:
 
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingAndLinkingWithLocalModules_data()
@@ -230,8 +237,6 @@ private slots:
 		QFETCH(QString, whenToSetPath);
 		QFETCH(bool, isTopLevelComposition);
 
-		delete compiler;
-
 		if (whenToSetPath.toStdString() == "VuoCompiler")
 			compiler = new VuoCompiler(compositionPath.toStdString());
 		else
@@ -253,6 +258,9 @@ private slots:
 
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testNodeClassThatDependsOnDylib_data()
@@ -283,7 +291,9 @@ private slots:
 		VuoFileUtilities::copyFile(nodeClassSrcPath, nodeClassDstPath);
 		VuoFileUtilities::copyFile(dylibSrcPath, dylibDstPath);
 
+		compiler = initCompiler();
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+		QVERIFY(nodeClass);
 		string compositionString = wrapNodeInComposition(nodeClass, compiler);
 
 		VuoRunner *runner = nullptr;
@@ -333,6 +343,9 @@ private slots:
 		VuoFileUtilities::deleteFile(compiledCompositionPath);
 		VuoFileUtilities::deleteFile(nodeClassDstPath);
 		VuoFileUtilities::deleteFile(dylibDstPath);
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingPerformance_data()
@@ -358,6 +371,7 @@ private slots:
 		QFETCH(QString, compositionName);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -378,6 +392,9 @@ private slots:
 		struct timeval t2 = VuoTimeUtilities::getCurrentTime();
 		struct timeval elapsed = VuoTimeUtilities::getElapsedTime(t1, t2);
 		QTest::setBenchmarkResult(elapsed.tv_sec*1000 + elapsed.tv_usec/1000, QTest::WalltimeMilliseconds);
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingAndLinkingPerformance_data()
@@ -403,6 +420,7 @@ private slots:
 		QFETCH(QString, compositionName);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -431,6 +449,10 @@ private slots:
 		struct timeval t2 = VuoTimeUtilities::getCurrentTime();
 		struct timeval elapsed = VuoTimeUtilities::getElapsedTime(t1, t2);
 		QTest::setBenchmarkResult(elapsed.tv_sec*1000 + elapsed.tv_usec/1000, QTest::WalltimeMilliseconds);
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testLiveCodingPerformance_data()
@@ -456,6 +478,7 @@ private slots:
 		QFETCH(QString, compositionName);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
@@ -501,6 +524,10 @@ private slots:
 			diffInfo->diff(oldCompositionString, composition, compiler);
 			delete diffInfo;
 		}
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCompilingAndLinkingInSeparateProcessPerformance_data()
@@ -526,8 +553,8 @@ private slots:
 		QFETCH(QString, compositionName);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
-
 		compiler->useModuleCache(true, false);
 
 		QBENCHMARK {
@@ -537,6 +564,10 @@ private slots:
 			delete issues;
 			delete runner;
 		}
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 	void testCheckForEventFlowErrorsPerformance_data()
@@ -556,6 +587,7 @@ private slots:
 	{
 		QFETCH(QString, compositionName);
 
+		compiler = initCompiler();
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
@@ -570,6 +602,10 @@ private slots:
 			composition.checkForEventFlowIssues(issues);
 			delete issues;
 		}
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
 	}
 
 private:
@@ -688,10 +724,6 @@ private slots:
 		deleteAllUserCacheDylibs();
 		deleteAllCompositionCacheDylibs();
 
-		delete compiler;
-		compiler = NULL;
-		VuoCompiler::reset();
-
 		bool recreated_user = false;
 		bool recreated_composition = false;
 		string cacheDylib_user;
@@ -742,6 +774,10 @@ private slots:
 
 		VuoFileUtilities::deleteDir(compositionDir);
 		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 	}
 
 	void testRecreationOfCachedResources()
@@ -759,8 +795,6 @@ private slots:
 		string nodeClassInNodeDir = nodeDir + "/" + nodeClass;
 		string nodeClassInCompositionModulesDir = compositionModulesDir + "/" + nodeClass;
 
-		delete compiler;
-		VuoCompiler::reset();
 		compiler = new VuoCompiler(compositionDir + "/unused");
 		TestCompilerDelegate delegate;
 		compiler->setDelegate(&delegate);
@@ -794,10 +828,16 @@ private slots:
 
 		VuoFileUtilities::deleteDir(compositionDir);
 		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + controlNodeClass);
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 	}
 
 	void testFallbackWithoutCache()
 	{
+		compiler = initCompiler();
+
 		TestCompilerDelegate delegate;
 		compiler->setDelegate(&delegate);
 
@@ -838,6 +878,10 @@ private slots:
 		VuoFileUtilities::deleteFile(linkedCompositionPath);
 
 		VuoFileUtilities::deleteFile(VuoFileUtilities::getUserModulesPath() + "/" + nodeClass);
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 	}
 
 	void testCacheCreationPerformance()
@@ -845,10 +889,6 @@ private slots:
 		// Delete the cache to force it to be recreated.
 		QDir cacheDir(VuoFileUtilities::getCachePath().c_str());
 		cacheDir.removeRecursively();
-
-		delete compiler;
-		compiler = NULL;
-		VuoCompiler::reset();
 
 		QBENCHMARK {
 			bool recreated_user = false;
@@ -861,14 +901,14 @@ private slots:
 			QVERIFY(recreated_user);
 			QVERIFY(recreated_composition);
 		}
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 	}
 
 	void testCacheCheckingPerformance()
 	{
-		delete compiler;
-		compiler = NULL;
-		VuoCompiler::reset();
-
 		// Make sure the cache exists, but force it to be rechecked.
 		bool recreated_user = false;
 		bool recreated_composition = false;
@@ -883,6 +923,10 @@ private slots:
 			QVERIFY(! recreated_user);
 			QVERIFY(! recreated_composition);
 		}
+
+		delete compiler;
+		compiler = NULL;
+		VuoCompiler::reset();
 	}
 };
 

@@ -2,7 +2,7 @@
  * @file
  * vuo.image.color.combine.hsl node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,18 +11,18 @@
 #include "VuoImageRenderer.h"
 
 VuoModuleMetadata({
-					  "title" : "Combine Image HSL Channels",
- 					  "keywords" : [
-						  "filter", "sum", "add",
- 						  "alpha", "transparent",
- 						  "tone", "chroma", "colors",
- 						  "brightness", "luminance", "luma",
- 					  ],
-					  "version" : "1.0.0",
-					  "node" : {
-						  "exampleCompositions" : [ "CapSaturation.vuo", "ZoomBlurHue.vuo" ]
-					  }
-				 });
+	"title": "Combine Image HSL Channels",
+	"keywords": [
+		"filter", "sum", "add",
+		"alpha", "transparent",
+		"tone", "chroma", "colors",
+		"brightness", "luminance", "luma", "hsla",
+	],
+	"version": "1.0.0",
+	"node": {
+		"exampleCompositions": [ "CapSaturation.vuo", "ZoomBlurHue.vuo" ],
+	},
+});
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	\n#include "VuoGlslAlpha.glsl"

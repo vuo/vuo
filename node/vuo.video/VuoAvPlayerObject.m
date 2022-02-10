@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -119,19 +119,13 @@ static dispatch_once_t VuoAvPlayerObject_initOnce = 0;  ///< Synchronizes initia
 	{
 		if (isHap)
 		{
-			NSBundle *f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/Vuo.framework/Versions/%s/Frameworks/HapInAVFoundation.framework",
-																			  VuoGetFrameworkPath(),
+			NSBundle *f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/Versions/%s/Frameworks/HapInAVFoundation.framework",
+																			  VuoGetFrameworkOrRunnerFrameworkPath(),
 																			  VUO_FRAMEWORK_VERSION_STRING]];
 			if (!f)
 			{
-				f = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%s/VuoRunner.framework/Versions/%s/Frameworks/HapInAVFoundation.framework",
-																		VuoGetRunnerFrameworkPath(),
-																		VUO_FRAMEWORK_VERSION_STRING]];
-				if (!f)
-				{
-					VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
-					return nil;
-				}
+				VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
+				return nil;
 			}
 
 			if (![f isLoaded])

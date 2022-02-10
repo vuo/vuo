@@ -2,7 +2,7 @@
  * @file
  * VuoTimeUnit C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -59,7 +59,6 @@ bool VuoTimeUnit_isLessThan(const VuoTimeUnit valueA, const VuoTimeUnit valueB);
  * Automatically generated function.
  */
 ///@{
-VuoTimeUnit VuoTimeUnit_makeFromString(const char *str);
 char *VuoTimeUnit_getString(const VuoTimeUnit value);
 void VuoTimeUnit_retain(VuoTimeUnit value);
 void VuoTimeUnit_release(VuoTimeUnit value);

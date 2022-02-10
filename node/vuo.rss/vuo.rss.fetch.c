@@ -2,7 +2,7 @@
  * @file
  * vuo.rss.fetch node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -25,7 +25,7 @@ VuoModuleMetadata({
 						  "download", "load", "import", "http", "get", "read",
 						  "feed", "syndication", "atom",
 					  ],
-					  "version" : "1.2.0",
+					  "version" : "1.2.1",
 					  "node" : {
 						  "exampleCompositions" : [ "DisplayRssItems.vuo" ]
 					  },
@@ -195,8 +195,7 @@ void nodeEvent
 							VuoRelease(host);
 							VuoRetain(rssItem.url);
 							VuoRelease(rssItem.url);
-							rssItem.url = VuoText_make(fullUrl);
-							free(fullUrl);
+							rssItem.url = VuoText_makeWithoutCopying(fullUrl);
 						}
 					}
 				}
@@ -338,11 +337,11 @@ void nodeEvent
 						}
 
 						if (name && email && uri)
-							rssItem.author = VuoText_make(VuoText_format("%s <%s> (%s)", name, email, uri));
+							rssItem.author = VuoText_makeWithoutCopying(VuoText_format("%s <%s> (%s)", name, email, uri));
 						else if (name && email)
-							rssItem.author = VuoText_make(VuoText_format("%s <%s>", name, email));
+							rssItem.author = VuoText_makeWithoutCopying(VuoText_format("%s <%s>", name, email));
 						else if (name && uri)
-							rssItem.author = VuoText_make(VuoText_format("%s (%s)", name, uri));
+							rssItem.author = VuoText_makeWithoutCopying(VuoText_format("%s (%s)", name, uri));
 						else
 							rssItem.author = VuoText_makeFromXmlContent(itemCur);
 

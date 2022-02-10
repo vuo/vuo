@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimePersistentState implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -27,8 +27,6 @@ VuoRuntimePersistentState::VuoRuntimePersistentState(const char *workingDirector
 
 	_isStopRequested = false;
 
-	finiCallbackQueue = dispatch_queue_create("org.vuo.runtime.finiCallback", NULL);
-
 	triggerWorkersScheduled = dispatch_group_create();
 
 	compositionDiff = new VuoCompositionDiff();
@@ -43,7 +41,6 @@ VuoRuntimePersistentState::VuoRuntimePersistentState(const char *workingDirector
  */
 VuoRuntimePersistentState::~VuoRuntimePersistentState(void)
 {
-	dispatch_release(finiCallbackQueue);
 	dispatch_release(triggerWorkersScheduled);
 
 	delete compositionDiff;
@@ -94,32 +91,6 @@ bool VuoRuntimePersistentState::isStopRequested(void)
 void VuoRuntimePersistentState::setStopRequested(bool isStopRequested)
 {
 	_isStopRequested = isStopRequested;
-}
-
-/**
- * Registers a callback to be invoked when the composition is shutting down, after all nodes have been fini'ed.
- */
-void VuoRuntimePersistentState::addFiniCallback(VuoCompositionFiniCallback fini)
-{
-	dispatch_sync(finiCallbackQueue, ^{
-					  finiCallbacks.push_back(fini);
-				  });
-}
-
-/**
- * Calls all fini callbacks that have been registered.
- */
-void VuoRuntimePersistentState::callFiniCallbacks(void)
-{
-	dispatch_sync(finiCallbackQueue, ^{
-					  VuoCompositionState compositionState = { (void *)runtimeState, "" };
-					  vuoAddCompositionStateToThreadLocalStorage(&compositionState);
-
-					  for (vector<VuoCompositionFiniCallback>::iterator i = finiCallbacks.begin(); i != finiCallbacks.end(); ++i)
-						  (*i)();
-
-					  vuoRemoveCompositionStateFromThreadLocalStorage();
-				  });
 }
 
 /**

@@ -2,7 +2,7 @@
  * @file
  * VuoControlCode C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -50,7 +50,6 @@ bool VuoControlCode_isLessThan(const VuoControlCode valueA, const VuoControlCode
  * Automatically generated function.
  */
 ///@{
-VuoControlCode VuoControlCode_makeFromString(const char *str);
 char *VuoControlCode_getString(const VuoControlCode value);
 void VuoControlCode_retain(VuoControlCode value);
 void VuoControlCode_release(VuoControlCode value);

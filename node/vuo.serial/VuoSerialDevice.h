@@ -2,7 +2,7 @@
  * @file
  * VuoSerialDevice C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -53,7 +53,6 @@ bool VuoSerialDevice_realize(VuoSerialDevice device, VuoSerialDevice *realizedDe
  * Automatically generated function.
  */
 ///@{
-VuoSerialDevice VuoSerialDevice_makeFromString(const char *str);
 char *VuoSerialDevice_getString(const VuoSerialDevice value);
 void VuoSerialDevice_retain(VuoSerialDevice value);
 void VuoSerialDevice_release(VuoSerialDevice value);

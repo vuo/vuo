@@ -2,7 +2,7 @@
  * @file
  * VuoDistribution3d C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -46,7 +46,6 @@ bool VuoDistribution3d_isLessThan(const VuoDistribution3d valueA, const VuoDistr
  * Automatically generated function.
  */
 ///@{
-VuoDistribution3d VuoDistribution3d_makeFromString(const char *str);
 char *VuoDistribution3d_getString(const VuoDistribution3d value);
 void VuoDistribution3d_retain(VuoDistribution3d value);
 void VuoDistribution3d_release(VuoDistribution3d value);

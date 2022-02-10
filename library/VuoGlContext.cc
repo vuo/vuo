@@ -2,7 +2,7 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -152,25 +152,6 @@ static void VuoGlContext_renderers(void)
 #pragma clang diagnostic pop
 
 
-	VUserLog("OpenGL driver binaries:");
-	const char *gldriver = "GLDriver";
-	size_t gldriverLen = strlen(gldriver);
-	uint32_t imageCount = _dyld_image_count();
-	for (uint32_t i = 0; i < imageCount; ++i)
-	{
-		const char *dylibPath = _dyld_get_image_name(i);
-		size_t len = strlen(dylibPath);
-		// If the image name ends with "GLDriver"…
-		if (strcmp(dylibPath + len - gldriverLen, gldriver) == 0)
-		{
-			// Trim off the path and the common "GLDriver" suffix.
-			char *z = strdup(strrchr(dylibPath, '/')+1);
-			z[strlen(z)-gldriverLen] = 0;
-			VUserLog("    %s", z);
-			free(z);
-		}
-	}
-
 	typedef void *(*mtlCopyAllDevicesType)(void);
 	mtlCopyAllDevicesType mtlCopyAllDevices = (mtlCopyAllDevicesType)dlsym(RTLD_DEFAULT, "MTLCopyAllDevices");
 	if (mtlCopyAllDevices)
@@ -184,11 +165,21 @@ static void VuoGlContext_renderers(void)
 			id dev = (id)CFArrayGetValueAtIndex(mtlDevices, i);
 			id devName = ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("name"));
 			const char *devNameZ = ((char * (*)(id, SEL))objc_msgSend)(devName, sel_getUid("UTF8String"));
-			VUserLog("    %s:", devNameZ);
+			VUserLog("    %s (%s):", devNameZ, class_getName(object_getClass(dev)));
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("registryID")))
 			VUserLog("        ID                                  : %p", ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("registryID")));
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("location")))
+			{
+			unsigned long location = ((unsigned long (*)(id, SEL))objc_msgSend)(dev, sel_getUid("location"));
+			VUserLog("        Location                            : %s (ID %lu)",
+				location == 0 ? "built-in" : (location == 1 ? "slot" : (location == 2 ? "external" : "unspecified")),
+				((unsigned long (*)(id, SEL))objc_msgSend)(dev, sel_getUid("locationNumber")));
+			}
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("peerGroupID")))
-			VUserLog("        Peer group                          : %llu", ((uint64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("peerGroupID")));
+			VUserLog("        Peer group                          : %llu (ID %u of %u)",
+				((uint64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("peerGroupID")),
+				((uint32_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("peerIndex")),
+				((uint32_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("peerCount")));
 
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("recommendedMaxWorkingSetSize")))
 			VUserLog("        Recommended max working-set size    : %lld MiB", ((int64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("recommendedMaxWorkingSetSize"))/1048576);
@@ -202,6 +193,14 @@ static void VuoGlContext_renderers(void)
 			VUserLog("        Low-power                           : %s", ((bool (*)(id, SEL))objc_msgSend) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("isRemovable")))
 			VUserLog("        Removable                           : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("isRemovable")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("hasUnifiedMemory")))
+			VUserLog("        Unified memory                      : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("hasUnifiedMemory")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("maxTransferRate")))
+			{
+			uint64_t maxTransferRate = ((uint64_t (*)(id, SEL))objc_msgSend)(dev, sel_getUid("maxTransferRate"));
+			if (maxTransferRate)
+			VUserLog("        Max CPU-GPU RAM transfer rate       : %llu MiB/sec", maxTransferRate/1024/1024);
+			}
 			VUserLog("        Headless                            : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("isHeadless")) ? "yes" : "no");
 
 			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFeatureSet:"), 10005))
@@ -268,27 +267,35 @@ static void VuoGlContext_renderers(void)
 			VUserLog("        Function pointer support            : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsFunctionPointers")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsRaytracing")))
 			VUserLog("        Raytracing support                  : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsRaytracing")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsShaderBarycentricCoordinates")))
+			VUserLog("        Barycentric support                 : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsShaderBarycentricCoordinates")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsPrimitiveMotionBlur")))
+			VUserLog("        Motion blur support                 : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsPrimitiveMotionBlur")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsPullModelInterpolation")))
+			VUserLog("        Multiple interpolation support      : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsPullModelInterpolation")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supports32BitFloatFiltering")))
+			VUserLog("        32-bit float support                : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supports32BitFloatFiltering")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supports32BitMSAA")))
+			VUserLog("        32-bit MSAA support                 : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supports32BitMSAA")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsQueryTextureLOD")))
+			VUserLog("        LOD query support                   : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsQueryTextureLOD")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsBCTextureCompression")))
+			VUserLog("        BC texture support                  : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsBCTextureCompression")) ? "yes" : "no");
+
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("counterSets")))
+			{
+			id counterSets = ((id (*)(id, SEL))objc_msgSend)(dev, sel_getUid("counterSets"));
+			id description = ((id (*)(id, SEL))objc_msgSend)(counterSets, sel_getUid("description"));
+			if (description)
+			{
+			string descriptionS{((const char * (*)(id, SEL))objc_msgSend)(description, sel_getUid("UTF8String"))};
+			std::replace(descriptionS.begin(), descriptionS.end(), '\n', ' ');
+			VUserLog("        Counters                            : %s", descriptionS.c_str());
+			}
+			}
 		}
 		CFRelease(mtlDevices);
 	}
-}
-
-/**
- * Called when display settings change (a display is plugged in or unplugged, resolution is changed, …).
- */
-void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
-{
-	if (!(flags & kCGDisplaySetModeFlag))
-		return;
-
-	VuoList_VuoScreen screensList = VuoScreen_getList();
-	unsigned long screenCount = VuoListGetCount_VuoScreen(screensList);
-	VuoScreen *screens = VuoListGetData_VuoScreen(screensList);
-	VuoLocal(screensList);
-
-	for (unsigned long i = 0; i < screenCount; ++i)
-		if (screens[i].id == display)
-			VUserLog("Display reconfigured: %s", screens[i].name);
 }
 
 	/**
@@ -518,7 +525,11 @@ void VuoGlContext_reconfig(CGDirectDisplayID display, CGDisplayChangeSummaryFlag
 		static dispatch_once_t info = 0;
 		dispatch_once(&info, ^{
 			VuoGlContext_renderers();
-			CGDisplayRegisterReconfigurationCallback(VuoGlContext_reconfig, NULL);
+
+			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+				// Start logging display changes.
+				VuoScreen_use();
+			});
 		});
 
 		CGLPixelFormatObj pf;

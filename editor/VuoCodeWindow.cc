@@ -2,7 +2,7 @@
  * @file
  * VuoCodeWindow implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -42,6 +42,7 @@
 #include "VuoShaderIssues.hh"
 #include "VuoStringUtilities.hh"
 #include "VuoRecentFileMenu.hh"
+#include "VuoRendererCommon.hh"
 #include "VuoSubcompositionMessageRouter.hh"
 
 /**
@@ -959,42 +960,6 @@ void VuoCodeWindow::updateColor()
 	bool isDark = static_cast<VuoEditor *>(qApp)->isInterfaceDark();
 	VuoCodeEditor *e = stages->someEditor();
 
-	QString menuStyle = VUO_QSTRINGIFY(
-		// Sync with VuoEditorWindow::updateColor.
-		// Should parallel VuoDialogForInputEditor::getStyleSheet()'s QComboBox popup menu styles.
-		QMenu {
-			background-color: #404040;
-		}
-		QMenu::item {
-			color: #cfcfcf;
-			padding-left: 22px;
-			padding-right: 36px;
-			height: 21px;
-		}
-		QMenu::item:disabled {
-			color: #707070;
-		}
-		QMenu::item:selected {
-			background-color: #1060d0;
-			color: #ffffff;
-		}
-		QMenu::right-arrow {
-			left: -14px;
-		}
-		QMenu::indicator:checked {
-			image: url(:/Icons/checkmark.svg);
-			width: 11px;
-		}
-		QMenu::indicator:checked,
-		QMenu::icon {
-			margin-left: 6px;
-		}
-		QMenu::icon:checked,
-		QMenu::icon:unchecked {
-			margin-left: 0;
-		}
-	);
-
 	setStyleSheet(VUO_QSTRINGIFY(
 		// Hide the 1px bright line between VuoPublishedPortSidebar and VuoCodeGutter.
 		QMainWindow::separator {
@@ -1009,7 +974,7 @@ void VuoCodeWindow::updateColor()
 			background: %1;
 		}
 	).arg(e->gutterColor.name())
-	+ (isDark ? menuStyle : ""));
+	+ VuoRendererCommon::getStyleSheet(isDark));
 }
 
 /**

@@ -81,7 +81,7 @@ exit(0);
 	$includeDirsMinusSTDCPP = preg_replace($stdcppRegex, '', $includeDirs);
 
 
-	$filenameRegex = '/ ([A-Za-z0-9.\/+_-]+\.(c|cc|cpp|m|mm))\b/';
+	$filenameRegex = '/[ "]([A-Za-z0-9.\/+_-]+\.(c|cc|cpp|m|mm))[^a-z.]/';
 	if (preg_match($filenameRegex, $clangArgs, $matches))
 	{
 		$filename = $matches[1];
@@ -125,6 +125,7 @@ exit(0);
 			2>&1 \
 			| egrep -v \
 				-e \"^$\" \
+				-e \"^Compiler Warnings:$\" \
 				-e \"^OCLint Report$\" \
 				-e \"^Summary: \" \
 				-e \"^\[OCLint .+\]$\" \
@@ -151,12 +152,24 @@ exit(0);
 		-Xanalyzer -analyzer-output=html \
 		-Xanalyzer -analyzer-eagerly-assume \
 		-Xanalyzer -analyzer-opt-analyze-nested-blocks \
-		-Xanalyzer -analyzer-checker=alpha,core,deadcode,llvm,osx,security,unix \
+		-Xanalyzer -analyzer-checker=alpha,core,cplusplus,deadcode,llvm,nullability,optin,osx,security,unix \
+		-Xanalyzer -analyzer-config -Xanalyzer alpha.clone.CloneChecker:MinimumCloneComplexity=90 \
 		$clangArgs \
 		-o $filename.d \
 		2>&1 \
 		| grep -E -v \
 			-e \"^$\" \
+			-e \"^InstalledDir: \" \
+			-e \"^PLEASE ATTACH THE FOLLOWING FILES TO THE BUG REPORT:$\" \
+			-e \"^Preprocessed source\\(s\\) and associated run script\\(s\\) are located at:\" \
+			-e \"^Target: \" \
+			-e \"^Thread model: posix$\" \
+			-e \"^\*+\" \
+			-e \"^clang version \" \
+			-e \"^clang:.*error:.*clang frontend command failed due to signal \\(use -v to see invocation\\)\" \
+			-e \"^clang:.*error:.*unable to execute command: Abort trap:\" \
+			-e \"^clang:.*note:.*diagnostic msg:\" \
+			-e '^Assertion failed: .*\"Obj-C methods are not supported\"' \
 		|| true
 	";
 
@@ -208,6 +221,9 @@ exit(0);
 	// False positive: it's not possible for std::vector to be NULL.
 	$inferCommand .= " | pcregrep -Mv 'NULL_DEREFERENCE(.|\\n)*?.*pointer.*__begin_.*last assigned on line.*could be null.*(\\n\\s+\\d+\\..*){5}'";
 
+	// False positive: VuoLog_moduleName intentionally exists for the lifetime of the module.
+	$inferCommand .= " | pcregrep -Mv 'VuoLog.h:\d+: error: Memory Leak(.|\\n)*?VuoLog_moduleName = basename_r\\(info.dli_fname.*\\n\\s+\\^(\\n\\s+\\d+\\..*){2}'";
+
 	// Ignore failures within Infer.
 	$inferCommand .= " | pcregrep -Mv 'Stack dump:(.|\\n)*'";
 
@@ -239,5 +255,5 @@ if ($ret)
 function squashPrecompiledHeaders(&$command, $sourceDir)
 {
 	// Disable the precompiled header, since infer's version of clang doesn't support precompiled headers from Vuo's version of clang.
-	$command = preg_replace('@-include-pch .*/pch/VuoPCH.*\.pch@', "-include $sourceDir/vuo.pch", $command);
+	$command = preg_replace('@-Xclang -include-pch -Xclang .*/VuoPCH.*\.dir/cmake_pch\..*\.pch@', "-include $sourceDir/vuo.pch", $command);
 }

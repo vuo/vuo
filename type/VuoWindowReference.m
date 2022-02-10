@@ -2,7 +2,7 @@
  * @file
  * VuoWindowReference implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -50,6 +50,14 @@ VuoWindowReference VuoWindowReference_make(void *window)
 }
 
 /**
+ * Callback to pass to `json_object_set_userdata()`.
+ */
+static void VuoWindowReference_releaseCallback(struct json_object *js, void *value)
+{
+	VuoRelease(value);
+}
+
+/**
  * @ingroup VuoWindowReference
  * Decodes the JSON object @a js, expected to contain a string, to create a new VuoMouseButton.
  */
@@ -58,7 +66,11 @@ VuoWindowReference VuoWindowReference_makeFromJson(json_object * js)
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "pointer", &o))
-		return (VuoWindowReference)json_object_get_int64(o);
+	{
+		VuoWindowReference value = (VuoWindowReference)json_object_get_int64(o);
+		json_object_set_userdata(js, (void *)value, VuoWindowReference_releaseCallback);
+		return value;
+	}
 
 	return NULL;
 }
@@ -71,6 +83,8 @@ json_object * VuoWindowReference_getJson(const VuoWindowReference value)
 {
 	if (!value)
 		return NULL;
+
+	VuoRetain(value);
 
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));

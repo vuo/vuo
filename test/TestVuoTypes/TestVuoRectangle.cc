@@ -2,7 +2,7 @@
  * @file
  * TestVuoRectangle implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,7 @@ private slots:
 		QFETCH(VuoRectangle, value);
 		QFETCH(bool, testStringFromValue);
 
-		VuoRectangle r = VuoRectangle_makeFromString(initializer.toUtf8().constData());
+		VuoRectangle r = VuoMakeRetainedFromString(initializer.toUtf8().constData(), VuoRectangle);
 
 		QCOMPARE(r.center.x, value.center.x);
 		QCOMPARE(r.center.y, value.center.y);

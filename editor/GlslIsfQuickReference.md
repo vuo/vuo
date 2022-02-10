@@ -65,7 +65,7 @@ See [How ISF source code translates to a Vuo node](https://doc.vuo.org/latest/ma
     float     TIMEDELTA
     int       FRAMEINDEX
     vec4      DATE
-    vec2      RENDERSIZE
+    vec2      RENDERSIZE  // `width` and `height` input ports
     vec2      isf_FragNormCoord
 
 ## Vuo extensions

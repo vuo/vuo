@@ -2,7 +2,7 @@
  * @file
  * VuoAudioBinAverageType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,6 @@ char * VuoAudioBinAverageType_getSummary(const VuoAudioBinAverageType value);
 /**
  * Automatically generated function.
  */
-VuoAudioBinAverageType VuoAudioBinAverageType_makeFromString(const char *str);
 char * VuoAudioBinAverageType_getString(const VuoAudioBinAverageType value);
 void VuoAudioBinAverageType_retain(VuoAudioBinAverageType value);
 void VuoAudioBinAverageType_release(VuoAudioBinAverageType value);

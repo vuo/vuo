@@ -122,3 +122,4 @@ add_custom_command(
 add_custom_target(node ALL
 	DEPENDS ${installedNode}
 )
+target_sources(node PRIVATE ExampleImageFilterCoreImage.h)

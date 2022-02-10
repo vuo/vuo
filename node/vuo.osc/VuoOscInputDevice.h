@@ -2,7 +2,7 @@
  * @file
  * VuoOscInputDevice C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -44,7 +44,6 @@ bool VuoOscInputDevice_isLessThan(const VuoOscInputDevice value1, const VuoOscIn
  * Automatically generated function.
  */
 ///@{
-VuoOscInputDevice VuoOscInputDevice_makeFromString(const char *str);
 char *VuoOscInputDevice_getString(const VuoOscInputDevice value);
 void VuoOscInputDevice_retain(VuoOscInputDevice value);
 void VuoOscInputDevice_release(VuoOscInputDevice value);

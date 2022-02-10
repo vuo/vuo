@@ -2,7 +2,7 @@
  * @file
  * vuo.leap.receive node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,16 +11,21 @@
 #include "VuoLeap.h"
 
 VuoModuleMetadata({
-					  "title" : "Receive Leap Frame",
-					  "keywords" : [ "gesture", "controller", "motion", "hand", "palm", "pointable", "finger", "tool" ],
-					  "version" : "2.0.0",
-					  "dependencies" : [
-						  "VuoLeap"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "TwirlImageWithLeap.vuo" ]
-					  }
-				 });
+	"title": "Receive Leap Frame",
+	"keywords": [ "gesture", "controller", "motion", "hand", "palm", "pointable", "finger", "tool" ],
+	"version": "2.0.0",
+	"dependencies": [
+		"VuoLeap",
+	],
+	"compatibility": {
+		"macos": {
+			"arch": ["x86_64"],
+		},
+	},
+	"node": {
+		"exampleCompositions": [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "TwirlImageWithLeap.vuo", ],
+	},
+});
 
 struct nodeInstanceData
 {

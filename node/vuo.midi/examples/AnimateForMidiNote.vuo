@@ -4,7 +4,7 @@
  * Flashes the small square whenever any MIDI note is received and while the note is held, and plays a special animation when the C#5 (just above middle C) is received.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

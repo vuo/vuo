@@ -2,6 +2,10 @@ VuoCompileTypes(
 	VuoControlCode.c
 	VuoNumberFormat.c
 )
+target_sources(vuo.text.types PRIVATE
+	VuoControlCode.h
+	VuoNumberFormat.h
+)
 
 VuoCompileGenericNodes(
 	vuo.text.split.c

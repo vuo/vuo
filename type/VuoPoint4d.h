@@ -2,7 +2,7 @@
  * @file
  * VuoPoint4d C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -56,7 +56,6 @@ VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d 
 /**
  * Automatically generated function.
  */
-VuoPoint4d VuoPoint4d_makeFromString(const char *str);
 char * VuoPoint4d_getString(const VuoPoint4d value);
 void VuoPoint4d_retain(VuoPoint4d value);
 void VuoPoint4d_release(VuoPoint4d value);

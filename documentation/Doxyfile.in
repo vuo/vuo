@@ -123,7 +123,6 @@ GENERATE_TREEVIEW      = NO
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
 
-CLASS_DIAGRAMS         = NO
 HAVE_DOT               = NO
 CLASS_GRAPH            = NO
 COLLABORATION_GRAPH    = NO

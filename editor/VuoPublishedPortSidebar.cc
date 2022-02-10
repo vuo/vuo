@@ -2,7 +2,7 @@
  * @file
  * VuoPublishedPortSidebar implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -984,7 +984,7 @@ void VuoPublishedPortSidebar::populatePortTypeMenu(QMenu *menu, bool lists, bool
 			{
 				//: Appears at the bottom of the "Set Data Type" menu when there are additional options to display.
 				QAction *showMoreAction = menu->addAction(tr("More…"));
-				showMoreAction->setData(QVariant::fromValue(lists));
+				showMoreAction->setData(lists);
 				connect(showMoreAction, &QAction::triggered, this, &VuoPublishedPortSidebar::expandPortTypeMenu);
 				usingExpansionMenu = true;
 			}

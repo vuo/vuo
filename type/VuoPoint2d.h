@@ -2,7 +2,7 @@
  * @file
  * VuoPoint2d C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -56,7 +56,6 @@ VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d 
 /**
  * Automatically generated function.
  */
-VuoPoint2d VuoPoint2d_makeFromString(const char *str);
 char * VuoPoint2d_getString(const VuoPoint2d value);
 void VuoPoint2d_retain(VuoPoint2d value);
 void VuoPoint2d_release(VuoPoint2d value);

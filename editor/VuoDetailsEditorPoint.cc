@@ -2,7 +2,7 @@
  * @file
  * VuoDetailsEditorPoint implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,6 +11,8 @@
 #include "VuoDialogForInputEditor.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoType.hh"
+
+#include "type.h"
 
 /**
  * Creates a widget for editing the details (suggestedMin, suggestedMax, suggestedStep)
@@ -387,27 +389,32 @@ json_object * VuoDetailsEditorPoint::convertFromLineEditsFormat(const QString &s
 	// details
 	struct json_object *details = json_object_new_object();
 
+	auto makeRealFromString = [](const QString &realAsString)
+	{
+		return VuoMakeRetainedFromString(realAsString.toUtf8().constData(), VuoReal);
+	};
+
 	if (this->type->getModuleKey() == "VuoPoint2d")
 	{
 		if (!suggestedMinXValueAsString.isEmpty() || !suggestedMinYValueAsString.isEmpty())
 		{
 			VuoPoint2d point;
-			point.x = VuoReal_makeFromString(suggestedMinXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMinYValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMinXValueJSON);
+			point.y = makeRealFromString(suggestedMinYValueJSON);
 			json_object_object_add(details, "suggestedMin", VuoPoint2d_getJson(point));
 		}
 		if (!suggestedMaxXValueAsString.isEmpty() || !suggestedMaxYValueAsString.isEmpty())
 		{
 			VuoPoint2d point;
-			point.x = VuoReal_makeFromString(suggestedMaxXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMaxYValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMaxXValueJSON);
+			point.y = makeRealFromString(suggestedMaxYValueJSON);
 			json_object_object_add(details, "suggestedMax", VuoPoint2d_getJson(point));
 		}
 		if (!suggestedStepXValueAsString.isEmpty() || !suggestedStepYValueAsString.isEmpty())
 		{
 			VuoPoint2d point;
-			point.x = VuoReal_makeFromString(suggestedStepXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedStepYValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedStepXValueJSON);
+			point.y = makeRealFromString(suggestedStepYValueJSON);
 			json_object_object_add(details, "suggestedStep", VuoPoint2d_getJson(point));
 		}
 	}
@@ -418,27 +425,27 @@ json_object * VuoDetailsEditorPoint::convertFromLineEditsFormat(const QString &s
 				!suggestedMinZValueAsString.isEmpty())
 		{
 			VuoPoint3d point;
-			point.x = VuoReal_makeFromString(suggestedMinXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMinYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedMinZValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMinXValueJSON);
+			point.y = makeRealFromString(suggestedMinYValueJSON);
+			point.z = makeRealFromString(suggestedMinZValueJSON);
 			json_object_object_add(details, "suggestedMin", VuoPoint3d_getJson(point));
 		}
 		if (!suggestedMaxXValueAsString.isEmpty() || !suggestedMaxYValueAsString.isEmpty() ||
 				!suggestedMaxZValueAsString.isEmpty())
 		{
 			VuoPoint3d point;
-			point.x = VuoReal_makeFromString(suggestedMaxXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMaxYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedMaxZValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMaxXValueJSON);
+			point.y = makeRealFromString(suggestedMaxYValueJSON);
+			point.z = makeRealFromString(suggestedMaxZValueJSON);
 			json_object_object_add(details, "suggestedMax", VuoPoint3d_getJson(point));
 		}
 		if (!suggestedStepXValueAsString.isEmpty() || !suggestedStepYValueAsString.isEmpty() ||
 				!suggestedStepZValueAsString.isEmpty())
 		{
 			VuoPoint3d point;
-			point.x = VuoReal_makeFromString(suggestedStepXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedStepYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedStepZValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedStepXValueJSON);
+			point.y = makeRealFromString(suggestedStepYValueJSON);
+			point.z = makeRealFromString(suggestedStepZValueJSON);
 			json_object_object_add(details, "suggestedStep", VuoPoint3d_getJson(point));
 		}
 	}
@@ -449,30 +456,30 @@ json_object * VuoDetailsEditorPoint::convertFromLineEditsFormat(const QString &s
 				!suggestedMinZValueAsString.isEmpty() || !suggestedMinWValueAsString.isEmpty())
 		{
 			VuoPoint4d point;
-			point.x = VuoReal_makeFromString(suggestedMinXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMinYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedMinZValueJSON.toUtf8().constData());
-			point.w = VuoReal_makeFromString(suggestedMinWValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMinXValueJSON);
+			point.y = makeRealFromString(suggestedMinYValueJSON);
+			point.z = makeRealFromString(suggestedMinZValueJSON);
+			point.w = makeRealFromString(suggestedMinWValueJSON);
 			json_object_object_add(details, "suggestedMin", VuoPoint4d_getJson(point));
 		}
 		if (!suggestedMaxXValueAsString.isEmpty() || !suggestedMaxYValueAsString.isEmpty() ||
 				!suggestedMaxZValueAsString.isEmpty() || !suggestedMaxWValueAsString.isEmpty())
 		{
 			VuoPoint4d point;
-			point.x = VuoReal_makeFromString(suggestedMaxXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedMaxYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedMaxZValueJSON.toUtf8().constData());
-			point.w = VuoReal_makeFromString(suggestedMaxWValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedMaxXValueJSON);
+			point.y = makeRealFromString(suggestedMaxYValueJSON);
+			point.z = makeRealFromString(suggestedMaxZValueJSON);
+			point.w = makeRealFromString(suggestedMaxWValueJSON);
 			json_object_object_add(details, "suggestedMax", VuoPoint4d_getJson(point));
 		}
 		if (!suggestedStepXValueAsString.isEmpty() || !suggestedStepYValueAsString.isEmpty() ||
 				!suggestedStepZValueAsString.isEmpty() || !suggestedStepWValueAsString.isEmpty())
 		{
 			VuoPoint4d point;
-			point.x = VuoReal_makeFromString(suggestedStepXValueJSON.toUtf8().constData());
-			point.y = VuoReal_makeFromString(suggestedStepYValueJSON.toUtf8().constData());
-			point.z = VuoReal_makeFromString(suggestedStepZValueJSON.toUtf8().constData());
-			point.w = VuoReal_makeFromString(suggestedStepWValueJSON.toUtf8().constData());
+			point.x = makeRealFromString(suggestedStepXValueJSON);
+			point.y = makeRealFromString(suggestedStepYValueJSON);
+			point.z = makeRealFromString(suggestedStepZValueJSON);
+			point.w = makeRealFromString(suggestedStepWValueJSON);
 			json_object_object_add(details, "suggestedStep", VuoPoint4d_getJson(point));
 		}
 	}

@@ -20,6 +20,9 @@ VuoCompileNodes(
 VuoCompileTypes(
 	node-TestCompilingAndLinking/VuoTestFloat.c
 )
+target_sources(TestCompilingAndLinking PRIVATE
+	node-TestCompilingAndLinking/VuoTestFloat.h
+)
 add_dependencies(TestCompilingAndLinking
 	VuoEditorApp
 	TestCompilingAndLinking.nodes

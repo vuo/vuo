@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -2188,7 +2188,7 @@ void VuoCompiler::Environment::getCacheableModulesAndDependencies(set<string> &c
 		return;
 	}
 
-	VuoCompilerCompatibility compositionTargets = VuoCompilerCompatibility::compatibilityWithTargetTriple(getProcessTarget());
+	VuoCompilerCompatibility compositionTargets = VuoCompilerCompatibility::compatibilityWithTargetTriple(target);
 
 	// Include all modules…
 	map<string, VuoCompilerModule *> allModules;
@@ -4121,11 +4121,14 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 				dispatch_sync(llvmQueue, ^{
 					setTargetForModule(module, target);
 					writeModuleToBitcode(module, outputPath);
+#if VUO_PRO
+					string dependencyOutputPath = _dependencyOutput();
 					if (!dependencyOutputPath.empty())
 					{
 						string outputObjectPath = dependencyOutputPath.substr(0, dependencyOutputPath.length() - 2);
 						VuoFileUtilities::writeStringToFile(outputObjectPath + ": " + inputPath, dependencyOutputPath);
 					}
+#endif
 				});
 
 			if (!issues->isEmpty())
@@ -4203,8 +4206,6 @@ Module * VuoCompiler::compileCompositionToModule(VuoCompilerComposition *composi
 	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition,
 																											 isTopLevelComposition,
 																											 moduleKey, this);
-	if (telemetry == "console")
-		generator->setDebugMode(true);
 
 	__block Module *module = nullptr;
 	dispatch_sync(llvmQueue, ^{
@@ -5602,6 +5603,12 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 	args.push_back("-DVUO_COMPILER");
 	args.push_back("-fblocks");
 
+	// Provide full backtraces, for easier debugging using Instruments and `VuoLog_backtrace()`.
+	// The Clang driver translates `-fno-omit-frame-pointer` to `clang -cc1`'s `-mdisable-fp-elim`.
+	// In Clang 10, this was renamed to `-mframe-pointer=all`.
+	// https://b33p.net/kosada/vuo/vuo/-/issues/19064
+	args.push_back("-mdisable-fp-elim");
+
 	// Sync with /CMakeLists.txt's `commonFlags`.
 	args.push_back("-Wall");
 	args.push_back("-Wextra");
@@ -5624,6 +5631,8 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 		args.push_back(i->c_str());
 	}
 
+#if VUO_PRO
+	string dependencyOutputPath = _dependencyOutput();
 	if (!dependencyOutputPath.empty())
 	{
 		char *outputObjectPath = strdup(dependencyOutputPath.substr(0, dependencyOutputPath.length() - 2).c_str());
@@ -5636,6 +5645,7 @@ Module *VuoCompiler::readModuleFromC(string inputPath, const vector<string> &hea
 		args.push_back("-dependency-file");
 		args.push_back(dependencyOutputPath.c_str());
 	}
+#endif
 
 	if (isVerbose)
 		args.push_back("-v");
@@ -6656,14 +6666,6 @@ void VuoCompiler::addFrameworkSearchPath(const string &path)
 }
 
 /**
- * Sets the telemetry option to use when compiling a composition. Valid values are "on" and "console".
- */
-void VuoCompiler::setTelemetry(const string &telemetry)
-{
-	this->telemetry = telemetry;
-}
-
-/**
  * Sets the verbosity to use when compiling or linking. If true, prints some debug info and passes the `-v` option to Clang.
  */
 void VuoCompiler::setVerbose(bool isVerbose)
@@ -6695,7 +6697,9 @@ void VuoCompiler::setShouldPotentiallyShowSplashWindow(bool potentiallyShow)
  */
 void VuoCompiler::setDependencyOutput(const string &path)
 {
-    dependencyOutputPath = path;
+#if VUO_PRO
+	_setDependencyOutput(path);
+#endif
 }
 
 /**

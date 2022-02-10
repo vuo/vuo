@@ -2,7 +2,7 @@
  * @file
  * VuoShader implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -1440,7 +1440,11 @@ VuoShader VuoShader_makeFromJson(json_object *js)
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "pointer", &o))
-		return (VuoShader)json_object_get_int64(o);
+	{
+		VuoShader shader = (VuoShader)json_object_get_int64(o);
+		json_object_set_userdata(js, nullptr, [](json_object *js, void *shader) { VuoRelease(shader); });
+		return shader;
+	}
 
 	return VuoShader_makeDefaultShader();
 }
@@ -1456,6 +1460,8 @@ json_object * VuoShader_getJson(const VuoShader value)
 {
 	if (!value)
 		return NULL;
+
+	VuoRetain(value);
 
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));

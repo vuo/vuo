@@ -5,7 +5,7 @@
  *
  * Uses the [Step Movie Frame](vuo-node://vuo.video.step) and [Save Frames to Movie](vuo-node://vuo.video.save2) nodes to ensure that frames are processed one at a time (rather than possibly building up a backlog of frames like [Play Movie](vuo-node://vuo.video.play) with its output ports set to Enqueue would do).
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

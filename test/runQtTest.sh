@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env -S PATH=/opt/homebrew/bin:/usr/local/bin:/bin:/usr/bin bash
 set -o pipefail
 
 options=(-nocrashhandler -maxwarnings 10000)

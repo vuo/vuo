@@ -2,7 +2,7 @@
  * @file
  * vuo.math.average node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -28,7 +28,7 @@ VuoModuleMetadata({
 
 void nodeEvent(
 	VuoInputData(VuoList_VuoGenericType1) values,
-	VuoOutputData(VuoGenericType1) averageValue)
+	VuoOutputData(VuoGenericType1, {"name":"Average"}) averageValue)
 {
 	*averageValue = VuoGenericType1_average(values);
 }

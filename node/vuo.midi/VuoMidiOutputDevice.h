@@ -2,7 +2,7 @@
  * @file
  * VuoMidiOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -37,14 +37,14 @@ char * VuoMidiOutputDevice_getSummary(const VuoMidiOutputDevice value);
 bool VuoMidiOutputDevice_areEqual(const VuoMidiOutputDevice value1, const VuoMidiOutputDevice value2);
 bool VuoMidiOutputDevice_isLessThan(const VuoMidiOutputDevice a, const VuoMidiOutputDevice b);
 
+void VuoMidiOutputDevice_retain(VuoMidiOutputDevice value);
+void VuoMidiOutputDevice_release(VuoMidiOutputDevice value);
+
 /**
  * Automatically generated function.
  */
 ///@{
-VuoMidiOutputDevice VuoMidiOutputDevice_makeFromString(const char *str);
 char * VuoMidiOutputDevice_getString(const VuoMidiOutputDevice value);
-void VuoMidiOutputDevice_retain(VuoMidiOutputDevice value);
-void VuoMidiOutputDevice_release(VuoMidiOutputDevice value);
 ///@}
 
 /**

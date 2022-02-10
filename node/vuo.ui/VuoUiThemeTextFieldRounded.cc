@@ -2,7 +2,7 @@
  * @file
  * Private VuoUiThemeTextFieldRounded implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -332,7 +332,7 @@ public:
 				p.y += textData->lineHeight * .5;
 
 				VuoListAppendValue_VuoLayer(characterBounds,
-											VuoLayer_makeColor(VuoText_make(VuoText_format("line %i", i)),
+											VuoLayer_makeColor(VuoText_makeWithoutCopying(VuoText_format("line %i", i)),
 											VuoColor_makeWithRGBA(.2,.2,.2,.4),
 											p,
 											0,
@@ -383,7 +383,7 @@ public:
 				{
 					VuoListAppendValue_VuoLayer(
 						highlights,
-						VuoLayer_makeColor(VuoText_make(VuoText_format("Text Highlight %i", i)),
+						VuoLayer_makeColor(VuoText_makeWithoutCopying(VuoText_format("Text Highlight %i", i)),
 							selectionColor,
 							highlightRects[i].center,
 							0,

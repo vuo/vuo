@@ -2,7 +2,7 @@
  * @file
  * vuo.math.fit node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -177,11 +177,11 @@ void nodeInstanceEvent
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0., "VuoPoint2d":{"x":0.,"y":0.}, "VuoPoint3d":{"x":0.,"y":0.,"z":0.}, "VuoPoint4d":{"x":0.,"y":0.,"z":0.,"w":0.}}}) value,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0}) tracking,
 		VuoInputEvent({"eventBlocking":"none"}) reset,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0., "VuoPoint2d":{"x":0.,"y":0.}, "VuoPoint3d":{"x":0.,"y":0.,"z":0.}, "VuoPoint4d":{"x":0.,"y":0.,"z":0.,"w":0.}}}) fittedMin,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":10,"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":1.}, "VuoPoint4d":{"x":1.,"y":1.,"z":1.,"w":1.}}}) fittedMax,
+		VuoInputData(VuoGenericType1, {"name":"Fitted Minimum", "defaults":{"VuoInteger":0, "VuoReal":0., "VuoPoint2d":{"x":0.,"y":0.}, "VuoPoint3d":{"x":0.,"y":0.,"z":0.}, "VuoPoint4d":{"x":0.,"y":0.,"z":0.,"w":0.}}}) fittedMin,
+		VuoInputData(VuoGenericType1, {"name":"Fitted Maximum", "defaults":{"VuoInteger":10,"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":1.}, "VuoPoint4d":{"x":1.,"y":1.,"z":1.,"w":1.}}}) fittedMax,
 		VuoOutputData(VuoGenericType1) fittedValue,
-		VuoOutputData(VuoGenericType1) min,
-		VuoOutputData(VuoGenericType1) max
+		VuoOutputData(VuoGenericType1, {"name":"Minimum"}) min,
+		VuoOutputData(VuoGenericType1, {"name":"Maximum"}) max
 )
 {
 	if ((*state)->domainSet && !reset)

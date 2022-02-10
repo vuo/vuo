@@ -2,7 +2,7 @@
  * @file
  * TestVuoTable implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -36,15 +36,38 @@ private slots:
 		QTest::addColumn<QString>("output");
 		QTest::addColumn<VuoTableFormat>("format");
 
-		{
-			QTest::newRow("empty string") << "" << "" << VuoTableFormat_Csv;
-		}
-		{
-			QTest::newRow("single row, CSV") << "a,b,c" << QUOTE("a","b","c") << VuoTableFormat_Csv;
-		}
-		{
-			QTest::newRow("single row, TSV") << "a\tb\tc" << QUOTE("a"\t"b"\t"c") << VuoTableFormat_Tsv;
-		}
+		QTest::newRow("null CSV")                                        << QString()                 << ""                   << VuoTableFormat_Csv;
+		QTest::newRow("null TSV")                                        << QString()                 << ""                   << VuoTableFormat_Tsv;
+		QTest::newRow("empty CSV")                                       << ""                        << ""                   << VuoTableFormat_Csv;
+		QTest::newRow("empty TSV")                                       << ""                        << ""                   << VuoTableFormat_Tsv;
+		QTest::newRow("single row, quoted comma-separated, CSV")         << "\"a\",\"b\",\"c\""       << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("single row, quoted comma-separated eq, CSV")      << "\"a\"\"\",\"b\",\"c\""   << QUOTE("a""","b","c") << VuoTableFormat_Csv;
+		QTest::newRow("single row, quoted semicolon-separated, CSV")     << "\"a\";\"b\";\"c\""       << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("single row, quoted semicolon-separated eq, CSV")  << "\"a\";\"\"\"b\";\"c\""   << QUOTE("a","""b","c") << VuoTableFormat_Csv;
+		QTest::newRow("single row, quoted tab-separated, TSV")           << "\"a\"\t\"b\"\t\"c\""     << QUOTE("a"\t"b"\t"c") << VuoTableFormat_Tsv;
+		QTest::newRow("single row, quoted tab-separated, CSV")           << "\"a\"\t\"b\"\t\"c\""     << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("single row, quoted tab-separated eq, CSV")        << "\"a\"\t\"b\"\t\"c\"\"\"" << QUOTE("a","b","c""") << VuoTableFormat_Csv;
+		QTest::newRow("single row, unquoted comma-separated, CSV")       << "a,b,c"                   << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("single row, unquoted semicolon-separated, CSV 0") << "a;b;c"                   << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("single row, unquoted semicolon-separated, CSV 1") << "1,2;3"                   << QUOTE("1,2","3")     << VuoTableFormat_Csv;
+		QTest::newRow("single row, unquoted semicolon-separated, CSV 2") << "1;2,3"                   << QUOTE("1","2,3")     << VuoTableFormat_Csv;
+		QTest::newRow("single row, unquoted tab-separated, TSV")         << "a\tb\tc"                 << QUOTE("a"\t"b"\t"c") << VuoTableFormat_Tsv;
+		QTest::newRow("single row, unquoted tab-separated, CSV")         << "a\tb\tc"                 << "\"a\tb\tc\""        << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted comma-separated CRLF, CSV")       << "\"sep=,\"\r\na,b,c"      << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted comma-separated LF, CSV")         << "\"sep=,\"\na,b,c"        << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted semicolon-separated CRLF, CSV")   << "\"sep=;\"\r\na;b;c"      << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted semicolon-separated LF, CSV")     << "\"sep=;\"\na;b;c"        << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted space-separated CRLF, CSV")       << "\"sep= \"\r\na b c"      << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted space-separated LF, CSV")         << "\"sep= \"\na b c"        << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted tab-separated CRLF, CSV")         << "\"sep=\t\"\r\na\tb\tc"   << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata quoted tab-separated LF, CSV")           << "\"sep=\t\"\na\tb\tc"     << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted comma-separated CRLF, CSV")     << "sep=,\r\na,b,c"          << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted comma-separated LF, CSV")       << "sep=,\na,b,c"            << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted pipe-separated CRLF, CSV")      << "sep=|\r\na|b|c"          << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted pipe-separated LF, CSV")        << "sep=|\na|b|c"            << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted semicolon-separated CRLF, CSV") << "sep=;\r\na;b;c"          << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+		QTest::newRow("metadata unquoted semicolon-separated LF, CSV")   << "sep=;\na;b;c"            << QUOTE("a","b","c")   << VuoTableFormat_Csv;
+
 		{
 			QTest::newRow("single column") << "h1\nh2\nh3" << QUOTE("h1"\n"h2"\n"h3") << VuoTableFormat_Csv;
 		}
@@ -96,7 +119,7 @@ private slots:
 		QFETCH(QString, output);
 		QFETCH(VuoTableFormat, format);
 
-		VuoTable table = VuoTable_makeFromText(input.toUtf8().constData(), format);
+		VuoTable table = VuoTable_makeFromText(input.isNull() ? nullptr : input.toUtf8().constData(), format);
 		VuoText actualOutput = VuoTable_serialize(table, format);
 		QCOMPARE(QString::fromUtf8(actualOutput), output);
 
@@ -146,14 +169,11 @@ private slots:
 		QFETCH(QString, input);
 		QFETCH(QString, output);
 
-		VuoTable table = VuoTable_makeFromString(input.toUtf8().constData());
+		VuoTable table = VuoMakeRetainedFromString(input.toUtf8().constData(), VuoTable);
 		VuoText actualOutput = VuoTable_serialize(table, VuoTableFormat_Csv);
+		VuoLocal(actualOutput);
 		QCOMPARE(QString::fromUtf8(actualOutput), output);
-
-		VuoTable_retain(table);
 		VuoTable_release(table);
-		VuoRetain(actualOutput);
-		VuoRelease(actualOutput);
 	}
 
 	void testSortInteger_data()

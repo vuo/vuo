@@ -2,7 +2,7 @@
  * @file
  * VuoData implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -144,4 +144,22 @@ char * VuoData_copyToString(const VuoData data)
 	dataAsString[data.size] = 0;
 	memcpy(dataAsString, data.data, data.size);
 	return dataAsString;
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoData_retain(VuoData value)
+{
+	VuoRetain(value.data);
+}
+
+/**
+ * `VuoCompilerType::parseOrGenerateRetainOrReleaseFunction` can't currently generate this on arm64.
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19142#note_2158967
+ */
+void VuoData_release(VuoData value)
+{
+	VuoRelease(value.data);
 }

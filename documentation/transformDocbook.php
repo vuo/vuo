@@ -11,9 +11,16 @@ $vuoVersion = $argv[1];
 $book = file_get_contents('php://stdin');
 
 // Replace the Docbook DTD with the local copy, so we don't have to download it every time
+$localDocbookDTD = '/opt/homebrew/opt/docbook/docbook/xml/4.5/docbookx.dtd';
+if (!file_exists($localDocbookDTD))
+{
+	$localDocbookDTD = '/usr/local/opt/docbook/docbook/xml/4.5/docbookx.dtd';
+	if (!file_exists($localDocbookDTD))
+		die("error: couldn't find docbookx.dtd");
+}
 $book = str_replace(
 	'http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd',
-	'/usr/local/opt/docbook/docbook/xml/4.5/docbookx.dtd',
+	$localDocbookDTD,
 	$book);
 
 // Replace Pandoc's bogus <author> tag with something sensible

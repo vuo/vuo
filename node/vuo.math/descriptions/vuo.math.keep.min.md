@@ -4,8 +4,8 @@ This node keeps track of all the values received into its `Value` port, and outp
 
 Example: 
 
-   - `Value` receives 1. `Min` becomes 1.
-   - `Value` receives 4. `Min` stays at 1.
-   - `Value` receives -3. `Min` becomes -3.
+   - `Value` receives 1. `Minimum` becomes 1.
+   - `Value` receives 4. `Minimum` stays at 1.
+   - `Value` receives -3. `Minimum` becomes -3.
 
 For point types, this node compares components left-to-right, stopping when a minimum component is found.  For example, (0,1) is considered less than (1,0).

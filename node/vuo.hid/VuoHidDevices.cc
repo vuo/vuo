@@ -2,7 +2,7 @@
  * @file
  * VuoHid implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -94,15 +94,8 @@ void VuoHid_getDeviceDescription(IOHIDDeviceRef device, VuoText *manufacturer, V
 			*manufacturer = nullptr;
 		}
 	}
-	else
-	{
-		if (*vendorID)
-		{
-			char *vendorText = VuoUsbVendor_getText(*vendorID);
-			*manufacturer = VuoText_make(vendorText);
-			free(vendorText);
-		}
-	}
+	else if (*vendorID)
+		*manufacturer = VuoText_makeWithoutCopying(VuoUsbVendor_getText(*vendorID));
 
 
 	CFNumberRef productIDCF = (CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey));
@@ -126,15 +119,8 @@ void VuoHid_getDeviceDescription(IOHIDDeviceRef device, VuoText *manufacturer, V
 		CFStringRef productCF = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
 		if (productCF)
 			*product = VuoText_makeFromCFString(productCF);
-		else
-		{
-			if (*productID)
-			{
-				char *productText = VuoText_format("0x%04llx", *productID);
-				*product = VuoText_make(productText);
-				free(productText);
-			}
-		}
+		else if (*productID)
+			*product = VuoText_makeWithoutCopying(VuoText_format("0x%04llx", *productID));
 	}
 }
 
@@ -202,17 +188,15 @@ VuoHidControl VuoHid_getControlForElement(void *e)
 
 	uint32_t usagePage = IOHIDElementGetUsagePage(element);
 	uint32_t usage     = IOHIDElementGetUsage(element);
-	char *usageText = VuoHid_getUsageText(usagePage, usage);
 
 	VuoInteger min = IOHIDElementGetLogicalMin(element);
 	VuoInteger max = IOHIDElementGetLogicalMax(element);
 	VuoHidControl control = {
-		VuoText_make(usageText),
+		VuoText_makeWithoutCopying(VuoHid_getUsageText(usagePage, usage)),
 		VuoInteger_clamp(0, min, max),
 		min,
 		max
 	};
-	free(usageText);
 
 	return control;
 }
@@ -310,13 +294,13 @@ VuoList_VuoHidDevice VuoHid_getDeviceList(void)
 		char *usageText = VuoHid_getUsageText(usagePage,usage);
 		VuoHidDevice device = {VuoHidDevice_MatchLocation, NULL, 0, NULL, vendorID, productID, usagePage, usage};
 		if (manufacturer && product)
-			device.name = VuoText_make(VuoText_format("%s (%s %s)", product, manufacturer, usageText));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s (%s %s)", product, manufacturer, usageText));
 		else if (manufacturer)
-			device.name = VuoText_make(VuoText_format("%s (%s)", manufacturer, usageText));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s (%s)", manufacturer, usageText));
 		else if (product)
-			device.name = VuoText_make(VuoText_format("%s (%s)", product, usageText));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s (%s)", product, usageText));
 		else
-			device.name = VuoText_make(VuoText_format("%s", usageText));
+			device.name = VuoText_makeWithoutCopying(VuoText_format("%s", usageText));
 		free(usageText);
 
 		device.location = VuoHid_getLocation(devicesIO[deviceIndex]);

@@ -1,59 +1,115 @@
 add_library(VuoCompiler STATIC
 	VuoCompiler.cc
+	VuoCompiler.hh
 	VuoCompilerBitcodeGenerator.cc
+	VuoCompilerBitcodeGenerator.hh
 	VuoCompilerBitcodeParser.cc
+	VuoCompilerBitcodeParser.hh
 	VuoCompilerCable.cc
+	VuoCompilerCable.hh
 	VuoCompilerChain.cc
+	VuoCompilerChain.hh
 	VuoCompilerCodeGenUtilities.cc
+	VuoCompilerCodeGenUtilities.hh
 	VuoCompilerComment.cc
+	VuoCompilerComment.hh
 	VuoCompilerCompatibility.cc
+	VuoCompilerCompatibility.hh
 	VuoCompilerComposition.cc
+	VuoCompilerComposition.hh
 	VuoCompilerCompositionDiff.cc
+	VuoCompilerCompositionDiff.hh
 	VuoCompilerConstantsCache.cc
+	VuoCompilerConstantsCache.hh
 	VuoCompilerData.cc
+	VuoCompilerData.hh
 	VuoCompilerDataClass.cc
+	VuoCompilerDataClass.hh
 	VuoCompilerDiagnosticConsumer.cc
+	VuoCompilerDiagnosticConsumer.hh
 	VuoCompilerDriver.cc
+	VuoCompilerDriver.hh
 	VuoCompilerEventPort.cc
+	VuoCompilerEventPort.hh
 	VuoCompilerEventPortClass.cc
+	VuoCompilerEventPortClass.hh
 	VuoCompilerException.cc
+	VuoCompilerException.hh
 	VuoCompilerGenericType.cc
+	VuoCompilerGenericType.hh
 	VuoCompilerGraph.cc
+	VuoCompilerGraph.hh
 	VuoCompilerGraphvizParser.cc
-	VuoCompilerInputData.cc
-	VuoCompilerInputDataClass.cc
-	VuoCompilerInputEventPort.cc
-	VuoCompilerInputEventPortClass.cc
-	VuoCompilerInstanceData.cc
-	VuoCompilerInstanceDataClass.cc
-	VuoCompilerIssue.cc
-	VuoCompilerMakeListNodeClass.cc
-	VuoCompilerModule.cc
-	VuoCompilerNode.cc
-	VuoCompilerNodeArgument.cc
-	VuoCompilerNodeArgumentClass.cc
-	VuoCompilerNodeClass.cc
-	VuoCompilerOutputData.cc
-	VuoCompilerOutputDataClass.cc
-	VuoCompilerOutputEventPort.cc
-	VuoCompilerOutputEventPortClass.cc
-	VuoCompilerPort.cc
-	VuoCompilerPortClass.cc
-	VuoCompilerPublishedInputNodeClass.cc
-	VuoCompilerPublishedNodeClass.cc
-	VuoCompilerPublishedOutputNodeClass.cc
-	VuoCompilerPublishedPort.cc
-	VuoCompilerPublishedPortClass.cc
+	VuoCompilerGraphvizParser.hh
 	VuoCompilerGroup.cc
+	VuoCompilerGroup.hh
+	VuoCompilerInputData.cc
+	VuoCompilerInputData.hh
+	VuoCompilerInputDataClass.cc
+	VuoCompilerInputDataClass.hh
+	VuoCompilerInputEventPort.cc
+	VuoCompilerInputEventPort.hh
+	VuoCompilerInputEventPortClass.cc
+	VuoCompilerInputEventPortClass.hh
+	VuoCompilerInstanceData.cc
+	VuoCompilerInstanceData.hh
+	VuoCompilerInstanceDataClass.cc
+	VuoCompilerInstanceDataClass.hh
+	VuoCompilerIssue.cc
+	VuoCompilerIssue.hh
+	VuoCompilerMakeListNodeClass.cc
+	VuoCompilerMakeListNodeClass.hh
+	VuoCompilerModule.cc
+	VuoCompilerModule.hh
+	VuoCompilerNode.cc
+	VuoCompilerNode.hh
+	VuoCompilerNodeArgument.cc
+	VuoCompilerNodeArgument.hh
+	VuoCompilerNodeArgumentClass.cc
+	VuoCompilerNodeArgumentClass.hh
+	VuoCompilerNodeClass.cc
+	VuoCompilerNodeClass.hh
+	VuoCompilerOutputData.cc
+	VuoCompilerOutputData.hh
+	VuoCompilerOutputDataClass.cc
+	VuoCompilerOutputDataClass.hh
+	VuoCompilerOutputEventPort.cc
+	VuoCompilerOutputEventPort.hh
+	VuoCompilerOutputEventPortClass.cc
+	VuoCompilerOutputEventPortClass.hh
+	VuoCompilerPort.cc
+	VuoCompilerPort.hh
+	VuoCompilerPortClass.cc
+	VuoCompilerPortClass.hh
+	VuoCompilerPublishedInputNodeClass.cc
+	VuoCompilerPublishedInputNodeClass.hh
+	VuoCompilerPublishedNodeClass.cc
+	VuoCompilerPublishedNodeClass.hh
+	VuoCompilerPublishedOutputNodeClass.cc
+	VuoCompilerPublishedOutputNodeClass.hh
+	VuoCompilerPublishedPort.cc
+	VuoCompilerPublishedPort.hh
+	VuoCompilerPublishedPortClass.cc
+	VuoCompilerPublishedPortClass.hh
 	VuoCompilerSpecializedNodeClass.cc
+	VuoCompilerSpecializedNodeClass.hh
 	VuoCompilerTriggerDescription.cc
+	VuoCompilerTriggerDescription.hh
 	VuoCompilerTriggerPort.cc
+	VuoCompilerTriggerPort.hh
 	VuoCompilerTriggerPortClass.cc
+	VuoCompilerTriggerPortClass.hh
 	VuoCompilerType.cc
+	VuoCompilerType.hh
 	VuoDirectedAcyclicGraph.cc
-	VuoModuleCompiler.cc
+	VuoDirectedAcyclicGraph.hh
 	VuoModuleCompilationQueue.cc
+	VuoModuleCompilationQueue.hh
+	VuoModuleCompiler.cc
+	VuoModuleCompiler.hh
+	VuoRunnerCocoa+Conversion.hh
 	VuoRunnerCocoa+Conversion.mm
+	VuoRunnerCocoa.h
 	VuoRunnerCocoa.mm
 )
 target_compile_definitions(VuoCompiler

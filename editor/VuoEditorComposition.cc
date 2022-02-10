@@ -2,7 +2,7 @@
  * @file
  * VuoEditorComposition implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -3328,13 +3328,13 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 
 		QAction *contextMenuInsertComment = new QAction(NULL);
 		contextMenuInsertComment->setText(tr("Insert Comment"));
-		contextMenuInsertComment->setData(QVariant::fromValue(event->scenePos()));
+		contextMenuInsertComment->setData(event->scenePos());
 		connect(contextMenuInsertComment, &QAction::triggered, this, &VuoEditorComposition::insertComment);
 		contextMenu.addAction(contextMenuInsertComment);
 
 		QAction *contextMenuInsertSubcomposition = new QAction(NULL);
 		contextMenuInsertSubcomposition->setText(tr("Insert Subcomposition"));
-		contextMenuInsertSubcomposition->setData(QVariant::fromValue(event->scenePos()));
+		contextMenuInsertSubcomposition->setData(event->scenePos());
 		connect(contextMenuInsertSubcomposition, &QAction::triggered, this, &VuoEditorComposition::insertSubcomposition);
 		contextMenu.addAction(contextMenuInsertSubcomposition);
 	}
@@ -3692,7 +3692,7 @@ void VuoEditorComposition::contextMenuEvent(QGraphicsSceneContextMenuEvent* even
 						QString enclosingDirUrl = "file://" + QFileInfo(modulePath).dir().absolutePath();
 						QAction *openEnclosingFolderAction = new QAction(NULL);
 						openEnclosingFolderAction->setText("Show in Finder");
-						openEnclosingFolderAction->setData(QVariant::fromValue(enclosingDirUrl));
+						openEnclosingFolderAction->setData(enclosingDirUrl);
 						connect(openEnclosingFolderAction, &QAction::triggered, static_cast<VuoEditor *>(qApp), &VuoEditor::openExternalUrlFromSenderData);
 						contextMenu.addAction(openEnclosingFolderAction);
 					}

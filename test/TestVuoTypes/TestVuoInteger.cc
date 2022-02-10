@@ -2,7 +2,7 @@
  * @file
  * TestVuoInteger implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -52,7 +52,8 @@ private slots:
 		QFETCH(VuoInteger, value);
 		QFETCH(bool, testTypeValueAsString);
 
-		QCOMPARE(VuoInteger_makeFromString(initializer.toUtf8().constData()), value);
+		VuoInteger actualValue = VuoMakeRetainedFromString(initializer.toUtf8().constData(), VuoInteger);
+		QCOMPARE(actualValue, value);
 		if (testTypeValueAsString)
 			QCOMPARE(VuoInteger_getString(value), initializer.toUtf8().constData());
 	}
@@ -82,9 +83,19 @@ private slots:
 		QTest::addColumn<VuoList_VuoInteger>("values");
 		QTest::addColumn<VuoInteger>("average");
 
-		QTest::newRow("empty list") << VuoListCreate_VuoInteger() << (VuoInteger)0;
-		QTest::newRow("multiple items") << VuoList_VuoInteger_makeFromString("[-20, 5, 40, 15]") << (VuoInteger)10;
-		QTest::newRow("division with remainder") << VuoList_VuoInteger_makeFromString("[1, 2, 5]") << (VuoInteger)2;
+		{
+			VuoList_VuoInteger values = VuoListCreate_VuoInteger();
+			QTest::newRow("empty list") << values << (VuoInteger)0;
+			VuoRetain(values);
+		}
+		{
+			VuoList_VuoInteger values = VuoMakeRetainedFromString("[-20, 5, 40, 15]", VuoList_VuoInteger);
+			QTest::newRow("multiple items") << values << (VuoInteger)10;
+		}
+		{
+			VuoList_VuoInteger values = VuoMakeRetainedFromString("[1, 2, 5]", VuoList_VuoInteger);
+			QTest::newRow("division with remainder") << values << (VuoInteger)2;
+		}
 	}
 	void testAverage()
 	{
@@ -92,7 +103,7 @@ private slots:
 		QFETCH(VuoInteger, average);
 
 		QCOMPARE(VuoInteger_average(values), average);
-		VuoLocal(values);
+		VuoRelease(values);
 	}
 
 	void testRandom_data()

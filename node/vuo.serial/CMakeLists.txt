@@ -2,6 +2,9 @@ VuoCompileLibraries(
 	VuoSerialDevices.cc
 	VuoSerialIO.cc
 )
+target_sources(vuo.serial.libraries PRIVATE
+	VuoSerialDevice.h
+)
 target_link_libraries(vuo.serial.libraries
 	PUBLIC
 	vuo.data.types
@@ -11,6 +14,11 @@ VuoCompileTypes(
 	VuoBaudRate.c
 	VuoParity.c
 	VuoSerialDevice.c
+)
+target_sources(vuo.serial.types PRIVATE
+	VuoBaudRate.h
+	VuoParity.h
+	VuoSerial.h
 )
 target_link_libraries(vuo.serial.types
 	PUBLIC

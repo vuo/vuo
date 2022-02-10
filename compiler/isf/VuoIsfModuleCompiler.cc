@@ -2,7 +2,7 @@
  * @file
  * VuoIsfModuleCompiler implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -499,7 +499,10 @@ void VuoIsfModuleCompiler::generateNodeInstanceEventFunction(Module *module, Vuo
 				Function *coordinateFunction = VuoCompilerCodeGenUtilities::getVuoSamplerRectCoordinatesFromNormalizedCoordinatesFunction(module);
 
 				vector<Value *> coordinateArgs;
-				coordinateArgs.push_back(portDataArg);
+				// On arm64, VuoPoint2d is lowered to `<2 x float>` when it's an argument to the nodeInstanceEvent function,
+				// yet it's lowered to `double` when it's an argument to the VuoShader_samplerRectCoordinatesFromNormalizedCoordinates function.
+				// Explicitly casting avoids LLVM's `Calling a function with a bad signature` assertion.
+				coordinateArgs.push_back(new BitCastInst(portDataArg, coordinateFunction->getFunctionType()->getParamType(0), "point2dCasted", setUniformsBlock));
 				coordinateArgs.push_back(widthValue);
 				coordinateArgs.push_back(heightValue);
 				portDataArg = CallInst::Create(coordinateFunction, coordinateArgs, "", setUniformsBlock);

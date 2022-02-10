@@ -8,6 +8,15 @@ VuoCompileLibraries(
 	VuoUiThemeTextFieldRounded.cc
 	VuoUiThemeToggleRounded.cc
 )
+target_sources(vuo.ui.libraries PRIVATE
+	VuoClipboard.h
+	VuoTextField.h
+	VuoTextFieldInternal.h
+	VuoUiTheme.h
+	VuoUiThemeBase.hh
+	material-colors.h
+	stb_textedit.h
+)
 target_include_directories(vuo.ui.libraries
 	PRIVATE
 	../vuo.layer
@@ -17,6 +26,11 @@ VuoCompileTypes(
 	VuoDragEvent.c
 	VuoIconPosition.c
 	VuoUiTheme.cc
+)
+target_sources(vuo.ui.types PRIVATE
+	VuoDragEvent.h
+	VuoIconPosition.h
+	VuoTextEdit.h
 )
 target_include_directories(vuo.ui.types
 	PRIVATE

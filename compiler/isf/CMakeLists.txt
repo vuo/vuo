@@ -1,4 +1,7 @@
-add_library(VuoIsfModuleCompiler SHARED VuoIsfModuleCompiler.cc)
+add_library(VuoIsfModuleCompiler SHARED
+	VuoIsfModuleCompiler.cc
+	VuoIsfModuleCompiler.hh
+)
 set_target_properties(VuoIsfModuleCompiler PROPERTIES
 	AUTOMOC ON
 

@@ -31,6 +31,7 @@ foreach (example ${examples})
 	)
 	set_tests_properties(${testName} PROPERTIES
 		FIXTURES_REQUIRED "TestExamples;TestScreenshots"
+		SKIP_REGULAR_EXPRESSION "error: Nodes incompatible with system — Receive Leap Frame \\(vuo.leap.receive\\) is only compatible with macOS on an Intel \\(X86-64\\) CPU, so this composition can't run on macOS 12 on an Apple Silicon \\(M1/ARM64\\) CPU."
 	)
 endforeach()
 

@@ -6,5 +6,5 @@ The camera uses a [perspective projection](https://en.wikipedia.org/wiki/Graphic
    - `Position` — The position of the camera, in Vuo Coordinates. 
    - `Target` — The point toward which the camera should face, in Vuo Coordinates.
    - `Up Direction` — The direction the top of the camera should face.
-   - `Field Of View` — The camera's [angle of view](https://en.wikipedia.org/wiki/Angle_of_view), in degrees.
+   - `Field of View` — The camera's [horizontal angle of view](https://en.wikipedia.org/wiki/Angle_of_view), in degrees.
    - `Distance Min`, `Distance Max` — The minimum and maximum distance in front of the camera at which an object is visible (clipping planes), in Vuo Coordinates. These should be greater than 0. 

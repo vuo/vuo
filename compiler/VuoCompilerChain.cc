@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerChain implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -44,6 +44,7 @@ Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block,
 	// context[1] = (void *)eventIdPtr;
 
 	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointerType, 2);
+	contextValue->setName("chainWorkerContext");
 
 	BitCastInst *compositionStateAsVoidPointer = new BitCastInst(compositionStateValue, voidPointerType, "", block);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionStateAsVoidPointer);

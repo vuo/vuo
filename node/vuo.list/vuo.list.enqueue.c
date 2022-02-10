@@ -2,7 +2,7 @@
  * @file
  * vuo.list.enqueue node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -33,7 +33,7 @@ void nodeInstanceEvent
 		VuoInstanceData(VuoList_VuoGenericType1) listInstanceData,
 		VuoInputData(VuoGenericType1) addItem,
 		VuoInputEvent({"eventBlocking":"none","data":"addItem"}) addItemEvent,
-		VuoInputData(VuoInteger, { "default":10, "suggestedMin":0, "auto":infinity }) maxItemCount,
+		VuoInputData(VuoInteger, {"name":"Maximum Item Count", "default":10, "suggestedMin":0, "auto":infinity}) maxItemCount,
 		VuoInputEvent({"eventBlocking":"wall","data":"maxItemCount"}) maxItemCountEvent,
 		VuoInputData(VuoInteger, {"menuItems":[
 			{"value":0, "name": "Oldest"},

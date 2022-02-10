@@ -85,7 +85,7 @@ add_custom_command(
 		${CMAKE_BINARY_DIR}/editor/VuoNodeClassFrequencyMap.hh
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/documentation
 	COMMENT "Generating documentation/doxygen/index.html"
-	COMMAND /usr/local/bin/doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+	COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		2>&1
 		# New warnings in Doxygen 1.8.16 and 1.8.18; seem to be harmless.
 		| (grep -v
@@ -95,6 +95,7 @@ add_custom_command(
 	OUTPUT doxygen/index.html
 )
 add_custom_target(VuoDoxygen DEPENDS doxygen/index.html)
+target_sources(VuoDoxygen PRIVATE DoxygenStructure.h)
 add_dependencies(VuoDocumentation VuoDoxygen)
 
 
@@ -112,7 +113,7 @@ foreach (language ${languages})
 	foreach (colors solarized highContrast)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/VuoManualPDF-${language}-${colors})
 set(xelatex echo Running xelatex && set -o pipefail && max_print_line=1024 PATH=/Library/TeX/texbin xelatex -halt-on-error -file-line-error VuoManual.tex
-	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|AED: lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded|L3 programming layer.*latex.base.article.cls|latex.fontspec.fontspec-xetex.sty.*latex.base.fontenc.sty.*latex.fontspec.fontspec.cfg' || true\) )
+	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|AED: lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded|L3 programming layer.*latex.base.article.cls|latex.fontspec.fontspec-xetex.sty.*latex.base.fontenc.sty.*latex.fontspec.fontspec.cfg|VuoManual.glsdefs' || true\) )
 add_custom_command(
 	DEPENDS
 		VuoEditorApp # for CONTRIBUTORS.md
@@ -144,7 +145,7 @@ add_custom_command(
 			${language}
 			${PROJECT_SOURCE_DIR}/translation/qtbase_${language}.ts
 			${PROJECT_SOURCE_DIR}/translation/vuo_${language}.ts
-		| /usr/local/bin/pandoc
+		| /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin pandoc
 			--table-of-contents
 			--number-sections
 			--template=${PROJECT_SOURCE_DIR}/documentation/VuoManualTemplate.tex
@@ -160,7 +161,7 @@ add_custom_command(
 	# so there will be a lot of harmless undefined reference warnings.
 	# xelatex exits with nonzero status even when it succeeds.
 	COMMAND ${xelatex}
-		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references|Column widths have changed|longtable.*in table .* on input line' || true\)
+		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references|Column widths have changed|Table widths have changed|longtable.*in table .* on input line' || true\)
 
 	# The second xelatex run populates terms and references (including the table of contents).
 	# There shouldn't be any undefined references after the second run.
@@ -214,7 +215,7 @@ foreach (pdf ${pdfs})
 		COMMENT "Converting ${pdfName} to PNG"
 
 		# Workaround for apparent Ghostscript bug where it deletes the character "i" from the embedded font.
-		COMMAND /usr/local/bin/gs ${ghostscriptFlags}
+		COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin gs ${ghostscriptFlags}
 			-sDEVICE=pdfwrite
 			-dEmbedAllFonts=false
 			-dAutoFilterColorImages=false
@@ -223,7 +224,7 @@ foreach (pdf ${pdfs})
 			${pdf}
 
 		# Convert PDF to PNG
-		COMMAND /usr/local/bin/gs ${ghostscriptFlags}
+		COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin gs ${ghostscriptFlags}
 			-sDEVICE=pngalpha
 			-dMaxBitmap=2147483647
 			-dAlignToPixels=0
@@ -235,7 +236,7 @@ foreach (pdf ${pdfs})
 			VuoManualTemp/${pdfName}-nofont.pdf
 
 		# Reduce size of PNG files
-		COMMAND /usr/local/bin/pngquant
+		COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin pngquant
 			--force
 			--speed 1
 			--output VuoManual/image-generated/${pdfName}.png
@@ -256,7 +257,13 @@ execute_process(OUTPUT_VARIABLE docbookXSLVersion
 	COMMAND head -1
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-set(docbookXSLPath /usr/local/Cellar/docbook-xsl/${docbookXSLVersion})
+if (EXISTS /usr/local/Cellar/docbook-xsl/${docbookXSLVersion})
+	set(docbookXSLPath /usr/local/Cellar/docbook-xsl/${docbookXSLVersion})
+elseif (EXISTS /opt/homebrew/Cellar/docbook-xsl/${docbookXSLVersion})
+	set(docbookXSLPath /opt/homebrew/Cellar/docbook-xsl/${docbookXSLVersion})
+else()
+	message(FATAL "Can't find docbook-xsl")
+endif()
 configure_file(VuoManual.xsl.in VuoManual.xsl)
 add_custom_command(
 	DEPENDS
@@ -282,7 +289,7 @@ add_custom_command(
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook
-		| LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua /usr/local/bin/pandoc
+		| /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua pandoc
 			--from markdown+smart
 			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
 			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua
@@ -359,7 +366,7 @@ add_custom_command(
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook
-		| LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua /usr/local/bin/pandoc
+		| /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin LUA_PATH=${CMAKE_CURRENT_SOURCE_DIR}/pandoc/?.lua pandoc
 			--from markdown+smart
 			--data-dir ${CMAKE_CURRENT_SOURCE_DIR}/pandoc
 			--lua-filter ${CMAKE_CURRENT_SOURCE_DIR}/pandoc/block.lua

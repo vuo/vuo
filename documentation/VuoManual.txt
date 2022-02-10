@@ -809,7 +809,7 @@ For example, if you want to connect a Real output port to an Integer input port,
 
 \vuoScreenshot{ConvertRealToInteger-menu}
 
-Vuo inserts the type-converter node in a collapsed form to save space. You can still click on the node to see its uncollapsed form and description in the Node Documentation Panel.
+Vuo inserts the type-converter node in a collapsed form to save space. You can still click on the node to see its uncollapsed form and description in the Node Documentation Panel. When you connect another cable to the same input port as the collapsed type-converter node, Vuo expands it in order to visually clarify how the cable connections are happening.
 
 \vuoScreenshot{ConvertRealToInteger}
 
@@ -1411,6 +1411,8 @@ As long as the published input port connects directly to the node's input port, 
 \definition{Image Generator}{A \term{protocol} for creating an image}
 \definition{Image Transition}{A \term{protocol} for transitioning from one image to another}
 
+\noteTextProgrammers{A protocol in Vuo is like an \code{interface} in object-oriented programming.}
+
 You may have noticed that a lot of Vuo's nodes fall into groups where the nodes in the group are, in some sense, interchangeable. For example, what are some nodes that can fill in the blank in the composition below?
 
 \vuoCompositionImage{FilterImage-blank}
@@ -1941,7 +1943,14 @@ One Vuo input port is unusual in that it's not determined by the `INPUTS` and `O
 
 Instead of editing the `INPUTS` in the JSON-formatted comment, which is hidden, you can add, remove, and modify the input ports that are displayed in the sidebar of the shader editor.
 
-Each input port is available as a uniform in the ISF code. Typically, the uniform name is the same as the port name. There are two exceptions. For an Image Filter shader, the uniform for the \vuoPort{image} input port is called `inputImage`. For any shader, the \vuoPort{time} input port corresponds to uniform `TIME`.
+Each input port is available as a uniform in the ISF code. Typically, the uniform name is the same as the port name. There are a few exceptions:
+
+   - The \vuoPort{time} (lowercase) input port corresponds to the `TIME` (uppercase) uniform value
+   - For Image Filter shaders:
+      - The \vuoPort{image} input port corresponds to the `inputImage` sampler
+      - The size of the \vuoPort{image} input corresponds to the `RENDERSIZE` uniform value
+   - For Image Generator shaders:
+      - The \vuoPort{width} and \vuoPort{height} input ports correspond to the `RENDERSIZE` uniform value
 
 ### Data types
 
@@ -2126,8 +2135,8 @@ Vuo supports these ISF-specific uniforms:
 
 | Uniform | Description |
 | --------|-------------|
-| `vec2 RENDERSIZE` | The size of the output image, in pixels. |
-| `float TIME` | The time since the composition started, in seconds. |
+| `vec2 RENDERSIZE` | The size of the output image, in pixels.  For Image Generators, the \vuoPort{width} and \vuoPort{height} input ports correspond to the `RENDERSIZE` uniform value.  For Image Filters, the size of the input \vuoPort{image} corresponds to the `RENDERSIZE` uniform value. |
+| `float TIME` | The time since the composition started, in seconds.  The \vuoPort{time} (lowercase) input port determines the `TIME` (uppercase) uniform value. |
 | `float TIMEDELTA` | The time since the previous frame was rendered, in seconds. For the first frame, this is 0. |
 | `vec2 isf_FragNormCoord` | The normalized coordinates of the pixel that the fragment shader is currently executing on. |
 | `vec4 DATE` | The current date and time: year, month, day, and seconds since midnight. |

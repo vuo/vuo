@@ -2,6 +2,9 @@ VuoCompileLibraries(
 	VuoOsc.cc
 	VuoOscDevices.cc
 )
+target_sources(vuo.osc.libraries PRIVATE
+	VuoOsc.h
+)
 target_link_libraries(vuo.osc.libraries
 	PRIVATE
 		CONAN_PKG::oscpack
@@ -12,6 +15,12 @@ VuoCompileTypes(
 	VuoOscOutputDevice.c
 	VuoOscMessage.c
 	VuoOscType.c
+)
+target_sources(vuo.osc.types PRIVATE
+	VuoOscInputDevice.h
+	VuoOscMessage.h
+	VuoOscOutputDevice.h
+	VuoOscType.h
 )
 
 VuoCompileGenericNodes(

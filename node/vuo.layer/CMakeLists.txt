@@ -3,6 +3,11 @@ VuoCompileTypes(
 	VuoLayer.c
 	VuoProjectionType.c
 )
+target_sources(vuo.layer.types PRIVATE
+	VuoEdgeBlend.h
+	VuoLayer.h
+	VuoProjectionType.h
+)
 target_include_directories(vuo.layer.types
 	PRIVATE
 	../vuo.image

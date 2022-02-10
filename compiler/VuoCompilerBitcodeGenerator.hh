@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator interface.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -77,8 +77,6 @@ private:
 
 	/// For top-level compositions only: the trigger scheduler function for each trigger on a node within a subcomposition.
 	map<string, map<size_t, map<VuoCompilerTriggerDescription *, Function *> > > subcompositionTriggerFunctions;
-
-	bool debugMode;
 
 	VuoCompilerBitcodeGenerator(VuoCompilerComposition *composition, bool isTopLevelComposition, string moduleKey, VuoCompiler *compiler);
 	void makeOrderedNodes(void);
@@ -157,7 +155,6 @@ public:
 																			string moduleKey, VuoCompiler *compiler);
 	~VuoCompilerBitcodeGenerator(void);
 	Module * generateBitcode(void);
-	void setDebugMode(bool debugMode);
 
 #ifdef VUO_PRO
 #include "pro/VuoCompilerBitcodeGenerator_Pro.hh"

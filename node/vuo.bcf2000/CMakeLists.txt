@@ -1,9 +1,15 @@
 VuoCompileLibraries(
 	VuoScribbleStrip.c
 )
+target_sources(vuo.bcf2000.libraries PRIVATE
+	VuoScribbleStrip.h
+)
 
 VuoCompileTypes(
 	VuoRealRegulation.c
+)
+target_sources(vuo.bcf2000.types PRIVATE
+	VuoRealRegulation.h
 )
 
 VuoCompileNodes(

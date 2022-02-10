@@ -1,9 +1,15 @@
 VuoCompileTypes(
 	VuoDmxColorMap.c
 )
+target_sources(vuo.color.types PRIVATE
+	VuoDmxColorMap.h
+)
 
 VuoCompileLibraries(
 	VuoColorspace.m
+)
+target_sources(vuo.color.libraries PRIVATE
+	VuoColorspace.h
 )
 target_include_directories(vuo.color.libraries
 	PRIVATE

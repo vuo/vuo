@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.3.2
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+GetRenderedLayerBounds2 [type="vuo.layer.bounds.rendered2" version="2.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<layer>layer\l|<window>window\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="180,15"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-121,86"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="-300,15" _text="\"hello\"" _font="\{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="-75,75" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SnapValue2 [type="vuo.math.snap.VuoPoint2d" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="450,15" _spacing="\{\"x\":0.1,\"y\":0.1\}" _center="\{\"x\":0.0,\"y\":0.0\}"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Position>Position\r|<IncludeChildren>IncludeChildren\r" _Position_type="VuoPoint2d" _Position_suggestedMin="\{\"x\":-1,\"y\":-1\}" _Position_suggestedMax="\{\"x\":1,\"y\":1\}" _Position_suggestedStep="\{\"x\":0.1,\"y\":0.1\}" _Position="\{\"x\":0.0,\"y\":0.0\}" _IncludeChildren_type="VuoBoolean" _IncludeChildren="true"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Center>Center\l" _Center_type="VuoPoint2d"];
+
+GetRenderedLayerBounds2:center -> PublishedOutputs:Center;
+GetRenderedLayerBounds2:center -> SnapValue2:value;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> GetRenderedLayerBounds2:layer;
+MakeTextLayer:layer -> MakeList2:1;
+PublishedInputs:IncludeChildren -> GetRenderedLayerBounds2:includeChildren;
+PublishedInputs:Position -> MakeTextLayer:center;
+RenderLayersToWindow:updatedWindow -> GetRenderedLayerBounds2:window;
+}

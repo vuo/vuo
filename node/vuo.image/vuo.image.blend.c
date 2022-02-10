@@ -2,7 +2,7 @@
  * @file
  * vuo.image.blend node implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -20,7 +20,7 @@ VuoModuleMetadata({
 						"overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "light", "hard mix",
 						"difference", "exclusion", "subtract", "divide", "power",
 						"hue", "saturation", "desaturate", "grayscale", "greyscale", "color", "luminosity", "filter" ],
-					 "version" : "1.2.2",
+					 "version" : "1.2.3",
 					 "dependencies" : [
 						 "VuoImageBlend"
 					 ],

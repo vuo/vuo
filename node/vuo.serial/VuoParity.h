@@ -2,7 +2,7 @@
  * @file
  * VuoParity C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoParity_isLessThan(const VuoParity valueA, const VuoParity valueB);
  * Automatically generated function.
  */
 ///@{
-VuoParity VuoParity_makeFromString(const char *str);
 char *VuoParity_getString(const VuoParity value);
 void VuoParity_retain(VuoParity value);
 void VuoParity_release(VuoParity value);

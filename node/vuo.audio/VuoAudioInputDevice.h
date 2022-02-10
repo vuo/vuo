@@ -2,7 +2,7 @@
  * @file
  * VuoAudioInputDevice C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -45,7 +45,6 @@ bool VuoAudioInputDevice_isLessThan(const VuoAudioInputDevice a, const VuoAudioI
  * Automatically generated function.
  */
 ///@{
-VuoAudioInputDevice VuoAudioInputDevice_makeFromString(const char *str);
 char * VuoAudioInputDevice_getString(const VuoAudioInputDevice value);
 void VuoAudioInputDevice_retain(VuoAudioInputDevice value);
 void VuoAudioInputDevice_release(VuoAudioInputDevice value);

@@ -79,5 +79,5 @@ file(CREATE_LINK "Versions/Current/Modules"       "${frameworkPath}/Modules"    
 set_target_properties(VuoRunner PROPERTIES VuoGeneratedFiles "${generatedFiles}")
 
 add_custom_command(TARGET VuoRunner POST_BUILD
-	COMMAND ${codesignAdHoc} ${frameworkBinaryPath}
+	COMMAND ${codesignAdHoc} ${frameworkBinaryPath} ${codesignAdHocIgnoreReplace}
 )

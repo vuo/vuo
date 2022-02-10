@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities implementation.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -555,7 +555,7 @@ Value * VuoCompilerCodeGenUtilities::generateCreatePortContext(Module *module, B
 	Value *pointerToDataAsVoidPointer;
 	if (dataType)
 	{
-		Value *pointerToData       = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, dataType->getSize(module));
+		Value *pointerToData       = generateMemoryAllocation(module, block, dataType);
 		pointerToDataAsVoidPointer = new BitCastInst(pointerToData, voidPointerType, "", block);
 	}
 	else
@@ -1921,7 +1921,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *mod
  */
 Value * VuoCompilerCodeGenUtilities::generateGetArrayElementVariable(Module *module, BasicBlock *block, Value *arrayValue, Value *elementIndexValue)
 {
-    return GetElementPtrInst::Create(nullptr, arrayValue, elementIndexValue, "", block);
+	return GetElementPtrInst::Create(nullptr, arrayValue, elementIndexValue, "", block);
 }
 
 /**
@@ -2346,11 +2346,24 @@ Value * VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, Ba
  * @param bytes The number of bytes to allocate.
  * @return A value pointing to the address of the memory.
  */
-Value *VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, BasicBlock *block, size_t bytes)
+Value * VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, BasicBlock *block, size_t bytes)
 {
 	Value *bytesValue = ConstantInt::get(module->getContext(), APInt(sizeof(size_t) * 8, bytes));
 	Function *mallocFunction = VuoCompilerCodeGenUtilities::getMallocFunction(module);
-	return  CallInst::Create(mallocFunction, bytesValue, "", block);
+	return CallInst::Create(mallocFunction, bytesValue, "", block);
+}
+
+/**
+ * Generates code that dynamically allocates memory for an instance of @a type.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param type The type of data to allocate space for.
+ * @return A value pointing to the address of the memory.
+ */
+Value * VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, BasicBlock *block, VuoCompilerType *type)
+{
+	return generateMemoryAllocation(module, block, type->getAllocationSize(module));
 }
 
 /**
@@ -2362,9 +2375,9 @@ Value *VuoCompilerCodeGenUtilities::generateMemoryAllocation(Module *module, Bas
  *
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
- * @param sourceAddress The type of each array element.
- * @param destAddress The number of array elements. Assumed to have type integer.
- * @param bytes The number of array elements. Assumed to have type integer.
+ * @param sourceAddress The address to copy from.
+ * @param destAddress The address to copy to.
+ * @param bytes The number of bytes to copy.
  */
 void VuoCompilerCodeGenUtilities::generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, size_t bytes)
 {
@@ -2381,6 +2394,24 @@ void VuoCompilerCodeGenUtilities::generateMemoryCopy(Module *module, BasicBlock 
 
 	Function *memcpyFunction = VuoCompilerCodeGenUtilities::getMemcpyFunction(module);
 	CallInst::Create(memcpyFunction, args, "", block);
+}
+
+/**
+ * Generates code that copies memory.
+ *
+ * Beware: this function's arguments are ordered {source, dest},
+ * which is different from the libc's
+ * `memcpy(void *restrict dst, const void *restrict src, size_t n);`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param sourceAddress The address to copy from.
+ * @param destAddress The address to copy to.
+ * @param type The type of data to copy.
+ */
+void VuoCompilerCodeGenUtilities::generateMemoryCopy(Module *module, BasicBlock *block, Value *sourceAddress, Value *destAddress, VuoCompilerType *type)
+{
+	generateMemoryCopy(module, block, sourceAddress, destAddress, type->getStorageSize(module));
 }
 
 /**
@@ -2659,10 +2690,8 @@ void VuoCompilerCodeGenUtilities::generateRegisterCall(Module *module, BasicBloc
 	Function *function = getVuoRegisterFunction(module);
 
 	Type *voidPointerType = function->getFunctionType()->getParamType(0);
-	Type *pointerToCharType = function->getFunctionType()->getParamType(2);
 	Type *intType = function->getFunctionType()->getParamType(3);
 
-	ConstantPointerNull *nullValue = ConstantPointerNull::get( static_cast<PointerType *>(pointerToCharType) );
 	Constant *zeroValue = ConstantInt::get(intType, 0);
 
 	vector<Value *> args;
@@ -2672,10 +2701,19 @@ void VuoCompilerCodeGenUtilities::generateRegisterCall(Module *module, BasicBloc
 
 	args.push_back(freeFunction);
 
-	args.push_back(nullValue);
+	args.push_back(generatePointerToConstantString(module, module->getName()));
 	args.push_back(zeroValue);
-	args.push_back(nullValue);
-	args.push_back(nullValue);
+	args.push_back(generatePointerToConstantString(module, block->getParent()->getName().str() + "#" + block->getName().str()));
+	args.push_back(generatePointerToConstantString(module, argument->getName()));
+	if (module->getName().empty() || block->getParent()->getName().empty() || block->getName().empty() || argument->getName().empty())
+	{
+		VDebugLog("warning: missing module/function/block/variable name:  module=%s  function=%s  block=%s  arg=%s",
+			module->getName().str().c_str(),
+			block->getParent()->getName().str().c_str(),
+			block->getName().str().c_str(),
+			argument->getName().str().c_str());
+		VuoLog_backtrace();
+	}
 
 	CallInst::Create(function, args, "", block);
 }
@@ -2728,15 +2766,6 @@ void VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(Module *module, Ba
 			generateRetainOrReleaseCall(module, block, member, isRetain);
 		}
 	}
-}
-
-/**
- * Returns true if VuoCompilerCodeGenUtilities::generateRetainCall and VuoCompilerCodeGenUtilities::generateReleaseCall
- * would generate any code for @a type.
- */
-bool VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(Type *type)
-{
-	return type->isPointerTy() || type->isStructTy();
 }
 
 /**

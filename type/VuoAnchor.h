@@ -2,7 +2,7 @@
  * @file
  * VuoAnchor C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -84,7 +84,6 @@ bool VuoAnchor_isLessThan(const VuoAnchor value1, const VuoAnchor value2);
  * Automatically generated function.
  */
 ///@{
-VuoAnchor VuoAnchor_makeFromString(const char *str);
 char * VuoAnchor_getString(const VuoAnchor value);
 void VuoAnchor_retain(VuoAnchor value);
 void VuoAnchor_release(VuoAnchor value);

@@ -2,7 +2,7 @@
  * @file
  * VuoImageStereoType C type definition.
  *
- * @copyright Copyright © 2012–2021 Kosada Incorporated.
+ * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -51,7 +51,6 @@ char * VuoImageStereoType_getSummary(const VuoImageStereoType value);
 /**
  * Automatically generated function.
  */
-VuoImageStereoType VuoImageStereoType_makeFromString(const char *str);
 char * VuoImageStereoType_getString(const VuoImageStereoType value);
 /// @}
 

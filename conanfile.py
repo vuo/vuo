@@ -36,7 +36,7 @@ class VuoConan(ConanFile):
         self.requires('openssl/1.1.1h-0@vuo+conan+openssl/stable')
         self.requires('oscpack/0-5@vuo+conan+oscpack/stable')
         self.requires('qt/5.12.11-3@vuo+conan+qt/stable')
-        self.requires('rtaudio/5.1.0-1@vuo+conan+rtaudio/stable')
+        self.requires('rtaudio/5.2.0-0@vuo+conan+rtaudio/stable')
         self.requires('rtmidi/4.0.0-1@vuo+conan+rtmidi/stable')
         self.requires('wjelement/1.3-2@vuo+conan+wjelement/stable')
         self.requires('zeromq/4.3.3-0@vuo+conan+zeromq/stable')
