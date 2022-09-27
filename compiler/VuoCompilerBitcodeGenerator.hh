@@ -157,6 +157,6 @@ public:
 	Module * generateBitcode(void);
 
 #ifdef VUO_PRO
-#include "pro/VuoCompilerBitcodeGenerator_Pro.hh"
+#include "../compiler/pro/VuoCompilerBitcodeGenerator_Pro.hh"
 #endif
 };

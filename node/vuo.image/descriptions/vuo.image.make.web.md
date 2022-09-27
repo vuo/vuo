@@ -2,7 +2,7 @@ Renders an image of a web page.
 
    - `Load URL` — Starts loading a web page from a URL.  You can use `http://`, `https://`, and `file:///` URLs.  Send another event to this port to reload the page.  When the page has finished loading, `Updated Image` will fire.
    - `Load HTML` — Starts loading raw HTML code.
-   - `Re-render` — Fires another event from the `Updated Image` port.  Periodically send events to this port to show a web page's animations.
+   - `Re-render` — Fires another event from the `Updated Image` port.  Periodically send events to this port to show a web page's animations. (Limitation: This node is unable to play videos and animations on some macOS versions.)
    - `Scroll Mouse`, `Click Mouse` — Performs mouse actions on the web page.  Mouse positions are in Vuo Coordinates.
    - `Go Back`, `Go Forward` — Navigates through the web browser's page history.
    - `Width`, `Height` — The image's size, in pixels.

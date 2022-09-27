@@ -46,9 +46,9 @@ else()
 			doc.vuo.org/${Vuo_VERSION}/.*404
 			# Ignore sites that block our link checker.
 			leapmotion.com.*403
-			503: Service Unavailable
+			503:.Service.Unavailable
 			# Ignore temporary failures.
-			Reason: unknown
+			Reason:.unknown
 		)
 		list(FILTER out EXCLUDE REGEX ${regexes})
 		list(SORT out)

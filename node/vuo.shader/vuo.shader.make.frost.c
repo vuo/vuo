@@ -16,6 +16,8 @@ VuoModuleMetadata({
 						  "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						  "perlin", "simplex", "gradient",
 						  "blur", "bend", "tint", "refraction", "diffraction",
+						  "fractal", "fractional Brownian motion", "fBm",
+						  "octaves", "persistence", "lacunarity",
 					  ],
 					  "version" : "1.2.1",
 					  "node" : {

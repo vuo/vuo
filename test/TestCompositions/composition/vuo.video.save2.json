@@ -33,4 +33,14 @@
 	"video5"    :{"firingPort":"SaveVideoFrame"},
 	"audio5"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":5}},
 	"finalize5" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"url-schema1"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:/tmp/foo.mov"}},
+	"url-schema1-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	"url-schema3"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/foo.mov"}},
+	"url-schema3-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+
+	// `http` URLs should fail but not crash.
+	"url-http"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"https://example.com/something"}},
+	"url-http-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
 }}

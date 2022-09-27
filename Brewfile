@@ -49,8 +49,5 @@ brew 'yamllint'
 cask 'mactex'
 cask 'oclint'
 
-tap 'pts/utils'
-brew 'pdfsizeopt', args: ['HEAD']
-
 tap 'smokris/getwindowid'
 brew 'getwindowid'

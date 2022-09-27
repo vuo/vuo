@@ -17,9 +17,10 @@ VuoModuleMetadata({
 	"keywords" : [
 		"Unix", "cli", "command line", "Terminal", "console", "script", "system", "text code",
 		"BASH", "AppleScript", "JavaScript", "Perl", "PHP", "Python", "Ruby", "cURL",
+		"Lisp", "CLISP", "Gravity", "Haskell", "Lua", "node.js", "OCaml", "Wren",
 		"``", "$()",
 	],
-	"version" : "1.0.2",
+	"version" : "1.0.3",
 	"node" : {
 		"exampleCompositions" : [ "ShowTextBanner.vuo" ]
 	}
@@ -54,6 +55,7 @@ void nodeEvent(
 			(literal "/dev/null")
 			(literal "/dev/random")
 			(literal "/dev/urandom")
+			(literal "/private")
 			(subpath "/Applications")
 			(subpath "/Library")
 			(subpath "/System")

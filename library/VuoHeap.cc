@@ -78,6 +78,9 @@ typedef struct
 	unsigned int line;
 	const char *function;
 	const char *variable;
+#ifdef VUOHEAP_TRACE
+	vector<string> backtrace;
+#endif
 } VuoHeapEntry;
 
 static map<const void *, VuoHeapEntry> *referenceCounts;  ///< The reference count for each pointer.
@@ -175,10 +178,27 @@ static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
  */
 static char *VuoHeap_makeDescription(VuoHeapEntry e)
 {
+#ifdef VUOHEAP_TRACE
+	ostringstream oss;
+	int i = 1;
+	for (auto line : e.backtrace)
+	{
+		char *lineNumber;
+		asprintf(&lineNumber, "%3d ", i++);
+		oss << lineNumber << line << endl;
+		free(lineNumber);
+	}
+
+	const char *format = "%s:%d :: %s() :: %s\n%s";
+	int size = snprintf(NULL, 0, format,  e.file, e.line, e.function, e.variable, oss.str().c_str());
+	char *description = (char *)malloc(size+1);
+	snprintf(description, size+1, format, e.file, e.line, e.function, e.variable, oss.str().c_str());
+#else
 	const char *format = "%s:%d :: %s() :: %s";
 	int size = snprintf(NULL, 0, format,  e.file, e.line, e.function, e.variable);
 	char *description = (char *)malloc(size+1);
 	snprintf(description, size+1, format, e.file, e.line, e.function, e.variable);
+#endif
 	return description;
 }
 
@@ -266,7 +286,11 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (!VuoHeap_isPointerValid(heapPointer))
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName,
+#ifdef VUOHEAP_TRACE
+			VuoLog_getBacktrace(),
+#endif
+		});
 		errorMessage << "On reference table " << referenceCounts
 					 << ", VuoRegister was called for bogus pointer " << heapPointer
 					 << " " << description;
@@ -295,7 +319,11 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 		if (! isAlreadyReferenceCounted)
 		{
 			updatedCount = 0;
-			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, linenumber, func, pointerName};
+			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, linenumber, func, pointerName,
+#ifdef VUOHEAP_TRACE
+				VuoLog_getBacktrace(),
+#endif
+			};
 		}
 		else
 			updatedCount = (*referenceCounts)[heapPointer].referenceCount;
@@ -305,7 +333,11 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName,
+#ifdef VUOHEAP_TRACE
+			VuoLog_getBacktrace(),
+#endif
+		});
 		errorMessage << "On reference table " << referenceCounts
 					 << ", VuoRegister was called more than once for " << heapPointer
 					 << " " << description;
@@ -328,7 +360,11 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	if (!VuoHeap_isPointerValid(heapPointer))
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName,
+#ifdef VUOHEAP_TRACE
+			VuoLog_getBacktrace(),
+#endif
+		});
 		errorMessage << "On reference table " << referenceCounts
 					 << ", VuoRegisterSingleton was called for bogus pointer " << heapPointer
 					 << " " << description;
@@ -366,7 +402,11 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName,
+#ifdef VUOHEAP_TRACE
+			VuoLog_getBacktrace(),
+#endif
+		});
 		errorMessage << "On reference table " << referenceCounts
 					 << ", VuoRegisterSingleton was called more than once for " << heapPointer
 					 << " " << description;

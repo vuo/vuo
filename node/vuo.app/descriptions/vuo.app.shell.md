@@ -6,17 +6,73 @@ The command runs in a sandbox that permits accessing the network, and reading an
 
 This node waits for the command to finish executing, then provides its standard output and standard error streams (the text `Output` port) and its exit code (`Status`).
 
-By default, this node uses BASH to interpret the command.  You can use another interpreter by starting the script with a line containing `#!` and the path to the interpreter.  For example, to use [AppleScript](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/introduction/ASLR_intro.html):
+## Script interpreters
+By default, this node uses BASH to interpret the command.  You can use another interpreter by starting the script with a line containing `#!` and the path to the interpreter.
+
+### Languages included with macOS
+[AppleScript](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/introduction/ASLR_intro.html):
 
     #!/usr/bin/osascript
     display dialog "Hello from AppleScript!"
 
-Or to use JavaScript:
+[JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript):
 
     #!/usr/bin/osascript -l JavaScript
     console.log("Hello from JavaScript!")
 
-Or Python:
+### Additional languages
+You can install [Homebrew](https://brew.sh), then use Homebrew to install other language interpreters, and use them with Vuo:
 
-    #!/usr/bin/python
-    print "Hello from Python!"
+[CLISP](https://clisp.sourceforge.io):
+
+    #!/opt/homebrew/opt/clisp/bin/clisp
+    (print "Hello from Lisp!")
+
+[Gravity](http://gravity-lang.org):
+
+    #!/opt/homebrew/opt/gravity/bin/gravity
+    func main() {
+        System.print("Hello from Gravity!");
+        return true;
+    }
+
+[Haskell](https://haskell.org):
+
+    #!/usr/bin/env PATH=/opt/homebrew/opt/ghc/bin runhaskell
+    main = putStrLn "Hello from Haskell!"
+
+[Lua](https://lua.org):
+
+    #!/opt/homebrew/opt/lua/bin/lua
+    print "Hello from Lua!"
+
+[node.js](https://nodejs.org):
+
+    #!/opt/homebrew/opt/node/bin/node
+    console.log("Hello from node.js!");
+
+[OCaml](https://ocaml.org):
+
+    #!/usr/bin/env PATH=/opt/homebrew/opt/ocaml/bin ocaml
+    print_string "Hello from OCaml!";;
+
+[PHP](https://php.net):
+
+    #!/opt/homebrew/opt/php/bin/php
+    <?php
+    echo "Hello from PHP!";
+
+[Python 3](https://python.org):
+
+    #!/opt/homebrew/opt/python3/bin/python3
+    print("Hello from Python!")
+
+[Ruby](https://ruby-lang.org):
+
+    #!/opt/homebrew/opt/ruby/bin/ruby
+    print "Hello from Ruby!"
+
+[Wren](https://wren.io)
+
+    #!/opt/homebrew/opt/wren-cli/bin/wren_cli
+    System.print("Hello from Wren!")

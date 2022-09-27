@@ -2,7 +2,7 @@ Outputs a list of amplitudes, with each representing a range of frequencies in t
 
 This node is useful for finding the loudness of different ranges of pitches. The output can be used to create an audio spectrum visualizer.
 
-This node performs a calculation called a [Fourier transform](http://nautil.us/blog/the-math-trick-behind-mp3s-jpegs-and-homer-simpsons-face). It divides up the full range of frequencies from the audio into subranges called *bins*, calculates the amplitude for each bin, and optionally aggregates the list of amplitudes to more closely match how humans perceive audio.
+This node performs a calculation called a [Fourier transform](https://nautil.us/the-math-trick-behind-mp3s-jpegs-and-homer-simpsons-face-2-237429/). It divides up the full range of frequencies from the audio into subranges called *bins*, calculates the amplitude for each bin, and optionally aggregates the list of amplitudes to more closely match how humans perceive audio.
 
    - `Samples` — The audio samples to analyze.
    - `Frequency Bins` — The number of subranges that the full range of frequencies is divided into. With more bins, the audio is divided into smaller subranges of frequencies for a higher-resolution result.

@@ -11,7 +11,7 @@ configure_file("CTestCustom.cmake.in" "${PROJECT_BINARY_DIR}/CTestCustom.cmake")
 # Tests that use LLVM/VuoCompiler shouldn't specify GMALLOC_ELIGIBLE, since LLVM makes a huge number of tiny allocations, overwhelming the macOS kernel.
 # Instead, those tests should call `VuoRunner::setRuntimeChecking(true)`, to run just the composition (not the compiler) with libgmalloc.
 function (VuoTest)
-	cmake_parse_arguments(arg "GMALLOC_ELIGIBLE" "NAME;SOURCE;TIMEOUT;FIXTURE;RUN_SERIAL" "" ${ARGV})
+	cmake_parse_arguments(arg "GMALLOC_ELIGIBLE" "NAME;SOURCE;TIMEOUT;FIXTURE;RUN_SERIAL;RESOURCE_LOCK" "" ${ARGV})
 
 	add_executable(${arg_NAME} EXCLUDE_FROM_ALL ${arg_SOURCE})
 	set(rpaths
@@ -80,6 +80,10 @@ function (VuoTest)
 		list(APPEND testProperties RUN_SERIAL ${arg_RUN_SERIAL})
 	endif()
 
+	if (arg_RESOURCE_LOCK)
+		list(APPEND testProperties RESOURCE_LOCK ${arg_RESOURCE_LOCK})
+	endif()
+
 	if (arg_TIMEOUT)
 		list(APPEND testProperties TIMEOUT ${arg_TIMEOUT})
 	endif()
@@ -87,6 +91,9 @@ function (VuoTest)
 	if (arg_FIXTURE)
 		list(APPEND testProperties FIXTURES_REQUIRED ${arg_FIXTURE})
 	endif()
+
+	# Use macOS's built-in crash reporter, which provides platform-specific info that QTestLib doesn't.
+	list(APPEND testEnvironment QTEST_DISABLE_STACK_DUMP=1)
 
 	if (VUO_TEST_WITH_GMALLOC)
 		list(APPEND testEnvironment VUO_RUNTIME_CHECKING=/usr/lib/libgmalloc.dylib)
@@ -104,6 +111,7 @@ function (VuoTest)
 	endif()
 
 	list(APPEND testFailRegexes "Function has no testdata|Unknown test function|Unknown testdata for function")
+	list(APPEND testFailRegexes "Error: Couldn.t get PixelBuffer from pool|Error: Cannot create file")
 
 	list(JOIN testFailRegexes "|" testFailRegexes)
 	list(APPEND testProperties FAIL_REGULAR_EXPRESSION "\"${testFailRegexes}\"")

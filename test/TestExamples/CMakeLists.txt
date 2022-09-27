@@ -31,13 +31,14 @@ foreach (example ${examples})
 	)
 	set_tests_properties(${testName} PROPERTIES
 		FIXTURES_REQUIRED "TestExamples;TestScreenshots"
-		SKIP_REGULAR_EXPRESSION "error: Nodes incompatible with system — Receive Leap Frame \\(vuo.leap.receive\\) is only compatible with macOS on an Intel \\(X86-64\\) CPU, so this composition can't run on macOS 12 on an Apple Silicon \\(M1/ARM64\\) CPU."
+		SKIP_REGULAR_EXPRESSION "error: Nodes incompatible with system — Receive Leap Frame \\(vuo.leap.receive\\) is only compatible with macOS on an Intel \\(X86-64\\) CPU, so this composition can't run on macOS [0-9]* on an Apple Silicon \\(M1/ARM64\\) CPU."
 	)
 endforeach()
 
+# Hide the "Do you want the application … to accept incoming network connections?" dialog, since it interferes with GUI tests.
 # Delete files created by these example compositions.
 add_test(NAME TestExamplesCleanup
-	COMMAND bash -c "rm -f ~/Desktop/WordInTheSpotlight.txt ~/Desktop/SepiaJellyfish.jpg ~/Desktop/ColdestTemperatures.csv ~/Desktop/CoinFlips.csv || true"
+	COMMAND bash -c "pkill UserNotificationCenter || true ; rm -f ~/Desktop/CameraDragRecording.json ~/Desktop/WordInTheSpotlight.txt ~/Desktop/SepiaJellyfish.jpg ~/Desktop/ColdestTemperatures.csv ~/Desktop/CoinFlips.csv"
 )
 set_tests_properties(TestExamplesCleanup PROPERTIES
 	FIXTURES_CLEANUP TestExamples

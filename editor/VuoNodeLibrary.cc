@@ -513,8 +513,7 @@ vector<VuoCompilerNodeClass *> VuoNodeLibrary::getMatchingNodeClassesForSearchTe
 					{
 						string typeName = i->first;
 						if ((!VuoType::isListTypeName(typeName)) &&
-								!VuoType::isDictionaryTypeName(typeName) &&  /// @todo Remove after https://b33p.net/kosada/node/5300
-								(typeName != "VuoMathExpressionList"))  /// @todo Remove after https://b33p.net/kosada/node/8550
+								VuoRendererPort::isSpecializationImplementedForType(typeName))
 
 						{
 							VuoCompilerType *type = i->second;

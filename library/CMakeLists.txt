@@ -143,7 +143,6 @@ target_include_directories(VuoHeap
 
 	PRIVATE
 		.
-		../base
 )
 target_link_libraries(VuoHeap
 	PUBLIC
@@ -202,7 +201,7 @@ target_include_directories(VuoApp
 		${PROJECT_BINARY_DIR}/type/list
 		../node
 		../type
-		../base
+		../common
 )
 
 list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
@@ -237,7 +236,6 @@ target_include_directories(VuoGlContext
 		../library
 		../node
 		../type
-		../base
 )
 target_link_libraries(VuoGlContext
 	PUBLIC

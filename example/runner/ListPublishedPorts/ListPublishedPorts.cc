@@ -42,5 +42,7 @@ int main(void)
 
 	runner->stop();
 
+	delete runner;
+
 	return 0;
 }

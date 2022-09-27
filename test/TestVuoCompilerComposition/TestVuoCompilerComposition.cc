@@ -621,6 +621,12 @@ private slots:
 			nodeClasses << "vuo.time.fireProntolistically";
 			QTest::newRow("Wrong node class name") << "WrongNodeClassName.vuo" << nodeClasses << "";
 		}
+
+		{
+			QStringList nodeClasses;
+			nodeClasses << "vuo.data.share.VuoBlah";
+			QTest::newRow("Nonexistent specialized type") << "NonexistentSpecializedType.vuo" << nodeClasses << "";
+		}
 	}
 	void testMissingNodeClasses()
 	{

@@ -1,20 +1,42 @@
 if (NOT CMAKE_SCRIPT_MODE_FILE)
 
-	# Create a test that runs this CMakeLists.txt file as a script (below).
-	add_test(NAME TestSDK
-		COMMAND ${CMAKE_COMMAND}
-			-DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
-			-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-			-DCONAN_QT_ROOT=${CONAN_QT_ROOT}
-			-DVUO_VERSION_AND_BUILD=${VUO_VERSION_AND_BUILD}
-			-DVUO_TEST_WITH_GMALLOC=${VUO_TEST_WITH_GMALLOC}
-			-DVuoFrameworkVersion=${VuoFrameworkVersion}
-			-DVuoPro=${VuoPro}
-			-P ${CMAKE_CURRENT_LIST_FILE}
+	# Create tests that run this CMakeLists.txt file as a script (below), to ensure that the SDK's node and VuoRunner examples build and run.
+	foreach (example
+		node/customType
+		node/imageFilterGLSL
+		node/imageFilterCoreImage
+		node/imageFilterMetal
+		node/stateful
+		node/stateless
+		runner/CompileAndRunInCurrentProcess
+		runner/CompileAndRunInNewProcess
+		runner/DumpTelemetryMessages
+		runner/ListPublishedPorts
+		runner/RunImageFilter-GLFW
+		runner/RunImageFilter-Qt
+		runner/VuoPluginApp
+		pro
 	)
-	set_tests_properties(TestSDK PROPERTIES
-		FIXTURES_REQUIRED TestSDK
-	)
+		string(MAKE_C_IDENTIFIER ${example} testName)
+		set(testName TestSDK_${testName})
+		list(JOIN CMAKE_OSX_ARCHITECTURES "$<SEMICOLON>" buildArchitectures)
+		add_test(NAME ${testName}
+			COMMAND ${CMAKE_COMMAND}
+				-DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+				-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+				-DCMAKE_OSX_ARCHITECTURES=${buildArchitectures}
+				-DCONAN_QT_ROOT=${CONAN_QT_ROOT}
+				-DVUO_VERSION_AND_BUILD=${VUO_VERSION_AND_BUILD}
+				-DVUO_TEST_WITH_GMALLOC=${VUO_TEST_WITH_GMALLOC}
+				-DVuoFrameworkVersion=${VuoFrameworkVersion}
+				-DVuoPro=${VuoPro}
+				-Dexample=${example}
+				-P ${CMAKE_CURRENT_LIST_FILE}
+		)
+		set_tests_properties(${testName} PROPERTIES
+			FIXTURES_REQUIRED TestSDK
+		)
+	endforeach()
 
 	add_test(NAME TestSDKCleanup
 		COMMAND rm -f
@@ -55,21 +77,43 @@ else()
 
 	set(sdkDir ${PROJECT_BINARY_DIR}/package/vuo-${VUO_VERSION_AND_BUILD}--sdk)
 
-	# Ensure that all the node and VuoRunner examples build and run.
-	foreach (example
-		node/customType
-		node/imageFilterGLSL
-		node/imageFilterCoreImage
-		node/imageFilterMetal
-		node/stateful
-		node/stateless
-		runner/CompileAndRunInCurrentProcess
-		runner/CompileAndRunInNewProcess
-		runner/DumpTelemetryMessages
-		runner/ListPublishedPorts
-		runner/RunImageFilter-GLFW
-		runner/RunImageFilter-Qt
-	)
+	if (example STREQUAL "pro")
+
+		if (VuoPro)
+			include(${PROJECT_SOURCE_DIR}/test/TestSDK/pro/pro.cmake)
+		endif()
+
+	elseif (example STREQUAL "runner/VuoPluginApp")
+
+		set(buildDir ${sdkDir}/example/${example})
+
+		# Normally VuoPluginApp uses an absolute path to the system-wide Vuo.framework installed by the PKG.
+		# For this test, use a relative path to the Vuo.framework we just built (without needing to install it system-wide).
+		set(xcodeProjectFile ${buildDir}/VuoPluginApp.xcodeproj/project.pbxproj)
+		message("xcodeProjectFile=${xcodeProjectFile}")
+		file(READ ${xcodeProjectFile} xcodeProjectContents)
+		string(REPLACE "path = /Library/Developer/Vuo/framework/Vuo.framework; sourceTree = \"<absolute>\";" "path = ../../../framework/Vuo.framework; sourceTree = SOURCE_ROOT;" xcodeProjectContents "${xcodeProjectContents}")
+		string(REPLACE "/Library/Developer/Vuo/framework" "../../../framework" xcodeProjectContents "${xcodeProjectContents}")
+		file(WRITE ${xcodeProjectFile} "${xcodeProjectContents}")
+
+		# Only try to build the example using CPU architectures that this Vuo build supports.
+		foreach(arch ${CMAKE_OSX_ARCHITECTURES})
+			list(APPEND archFlags -arch ${arch})
+		endforeach()
+		execute(COMMAND xcodebuild ${archFlags})
+
+		execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
+
+	else()
+
+		if (example STREQUAL "node/customType")
+			set(cmakelistsFile ${sdkDir}/example/${example}/CMakeLists.txt)
+			file(READ ${cmakelistsFile} cmakelistsContents)
+			# Only try to build the example using CPU architectures that this Vuo build supports.
+			string(REPLACE "set(CMAKE_OSX_ARCHITECTURES \${buildArchitectures} CACHE STRING \"\" FORCE)" "set(CMAKE_OSX_ARCHITECTURES ${CMAKE_OSX_ARCHITECTURES} CACHE STRING \"\" FORCE)" cmakelistsContents "${cmakelistsContents}")
+			file(WRITE ${cmakelistsFile} "${cmakelistsContents}")
+		endif()
+
 		set(buildDir ${sdkDir}/example/${example}/build)
 		file(MAKE_DIRECTORY ${buildDir})
 		execute(COMMAND cmake .. -DCMAKE_FRAMEWORK_PATH=../../../framework -DCMAKE_PREFIX_PATH=${CONAN_QT_ROOT}/lib/cmake)
@@ -86,22 +130,7 @@ else()
 			get_filename_component(exampleBinary ${example} NAME)
 			execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND ./${exampleBinary})
 		endif()
-	endforeach()
 
-	set(buildDir ${sdkDir}/example/runner/VuoPluginApp)
-	# Normally VuoPluginApp uses an absolute path to the system-wide Vuo.framework installed by the PKG.
-	# For this test, use a relative path to the Vuo.framework we just built (without needing to install it system-wide).
-	set(xcodeProjectFile ${buildDir}/VuoPluginApp.xcodeproj/project.pbxproj)
-	message("xcodeProjectFile=${xcodeProjectFile}")
-	file(READ ${xcodeProjectFile} xcodeProjectContents)
-	string(REPLACE "path = /Library/Developer/Vuo/framework/Vuo.framework; sourceTree = \"<absolute>\";" "path = ../../../framework/Vuo.framework; sourceTree = SOURCE_ROOT;" xcodeProjectContents "${xcodeProjectContents}")
-	string(REPLACE "/Library/Developer/Vuo/framework" "../../../framework" xcodeProjectContents "${xcodeProjectContents}")
-	file(WRITE ${xcodeProjectFile} "${xcodeProjectContents}")
-	execute(COMMAND xcodebuild)
-	execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
-
-	if (VuoPro)
-		include(${PROJECT_SOURCE_DIR}/test/TestSDK/pro/pro.cmake)
 	endif()
 
 endif()

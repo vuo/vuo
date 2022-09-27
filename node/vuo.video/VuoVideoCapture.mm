@@ -538,10 +538,10 @@ VuoVideoCapture VuoVideoCapture_make(VuoVideoInputDevice inputDevice, VuoOutputT
 	{
 		long status = (long)[AVCaptureDevice performSelector:@selector(authorizationStatusForMediaType:) withObject:@"vide"];
 		if (status == 0 /* AVAuthorizationStatusNotDetermined */)
-			VUserLog("Warning: Video input may be unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Camera.");
+			VUserLog("Warning: Video input may be unavailable due to system restrictions.  Check System Settings > Privacy & Security > Camera.");
 		else if (status == 1 /* AVAuthorizationStatusRestricted */
 			  || status == 2 /* AVAuthorizationStatusDenied */)
-			VUserLog("Error: Video input is unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Camera.");
+			VUserLog("Error: Video input is unavailable due to system restrictions.  Check System Settings > Privacy & Security > Camera.");
 	}
 
 	VuoVideoCaptureInternal *vci = (VuoVideoCaptureInternal *)calloc(1, sizeof(VuoVideoCaptureInternal));

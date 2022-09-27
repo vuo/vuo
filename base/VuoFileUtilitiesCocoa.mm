@@ -129,9 +129,32 @@ size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path
  */
 void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
 {
-	NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
-	[compositionApp activateWithOptions: NSApplicationActivateAllWindows
-		| (force ? NSApplicationActivateIgnoringOtherApps : 0)];
+	// On recent macOS versions, `-[NSRunningApplication activateWithOptions:]` fails,
+	// but the older `SetFrontProcess()` API works, so use that instead.
+
+	// NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+	// BOOL ret = [compositionApp activateWithOptions: NSApplicationActivateAllWindows
+	//     | (force ? NSApplicationActivateIgnoringOtherApps : 0)];
+	// if (!ret)
+	//     VUserLog("-[NSRunningApplication activateWithOptions:] failed for pid %d", pid);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	ProcessSerialNumber psn;
+	OSErr ret = GetProcessForPID(pid, &psn);
+	if (ret != noErr)
+	{
+		VUserLog("GetProcessForPID(%d) failed: %d", pid, ret);
+		return;
+	}
+
+	ret = SetFrontProcess(&psn);
+	if (ret != noErr)
+	{
+		VUserLog("SetFrontProcess(%d) failed: %d", pid, ret);
+		return;
+	}
+#pragma clang diagnostic pop
 }
 
 /**

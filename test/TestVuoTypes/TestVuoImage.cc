@@ -234,7 +234,7 @@ private slots:
 
 	void testFetchImagePerformance()
 	{
-		VuoText filename = VuoText_make("/Library/Desktop Pictures/Zebras.jpg");
+		VuoText filename = VuoText_make("resources/hubble-heic1206a.jpg");
 		VuoLocal(filename);
 
 		QBENCHMARK {

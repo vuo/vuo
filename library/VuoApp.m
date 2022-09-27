@@ -175,7 +175,9 @@ static void VuoApp_initNSApplication(bool requiresDockIcon)
 	// to be overridden if/when any windows get focus.
 	VuoApp_setMenuItems(NULL);
 
-	[app setActivationPolicy:requiresDockIcon ? NSApplicationActivationPolicyRegular : NSApplicationActivationPolicyAccessory];
+	BOOL ret = [app setActivationPolicy:requiresDockIcon ? NSApplicationActivationPolicyRegular : NSApplicationActivationPolicyAccessory];
+	if (!ret)
+		VUserLog("-[NSApplication setActivationPolicy:%d] failed", requiresDockIcon);
 
 	// Stop bouncing in the dock.
 	[app finishLaunching];

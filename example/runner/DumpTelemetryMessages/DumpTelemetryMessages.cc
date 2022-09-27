@@ -74,5 +74,7 @@ int main (int argc, char * const argv[])
 
 	runner->waitUntilStopped();
 
+	delete runner;
+
 	return 0;
 }

@@ -2,12 +2,38 @@
 /* Global styles */
 /*****************/
 
-@import url(https://fonts.googleapis.com/css?family=PT+Sans:400,700&subset=latin-ext);
+@font-face {
+	font-family: 'PT Sans';
+	src: url('font/PTS55F_W.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'PT Sans';
+	src: url('font/PTS56F_W.woff2') format('woff2');
+	font-weight: normal;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'PT Sans';
+	src: url('font/PTS75F_W.woff2') format('woff2');
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'PT Sans';
+	src: url('font/PTS76F_W.woff2') format('woff2');
+	font-weight: bold;
+	font-style: italic;
+}
 
 body {
 	background-color: rgb(253,246,227); /* solarized base3 */
 	color: rgb(88,110,117); /* solarized base01 */
-	font-family: 'PT Sans', sans-serif;
+	font-family: 'PT Sans', 'Open Sans', 'Helvetica Neue', Helvetica, sans-serif;
 	font-weight: 300;
 	font-size: 12pt;
 	line-height: 1.5;
@@ -62,6 +88,10 @@ hr {
 	.titlepage hr {
 		margin-left: -17em;
 	}
+}
+
+strong {
+	font-weight: bold;
 }
 
 .example .example-title {

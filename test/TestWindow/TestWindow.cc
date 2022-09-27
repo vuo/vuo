@@ -45,7 +45,7 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 
 	void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *actualPort, bool sentData, string actualDataSummary)
 	{
-//		VLog("%s %s", actualPort?actualPort->getName().c_str():"", actualDataSummary.c_str());
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    %s %s", actualPort ? actualPort->getName().c_str() : "", actualDataSummary.c_str());
 
 		if (!actualPort)
 		{
@@ -102,16 +102,21 @@ class TestWindowDelegate : public VuoRunnerDelegateAdapter
 	{
 		QVERIFY(this->expectedPort);
 
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "Performing action…");
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			action();
 		});
 
 		// 6 seconds, to leave room for Mac OS X's slowest double-click timeout (5 seconds).
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    Waiting…");
 		bool timeout = dispatch_semaphore_wait(fulfilledExpectation, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC*6));
 		if (timeout)
-			QTest::qFail(QString("Timeout while expecting port %1 to receive an event.")
-				  .arg(expectedPort->getName().c_str())
-				  .toUtf8().data(), __FILE__, linenumber);
+		{
+			QString s = QString("Timeout while expecting port %1 to receive an event.")
+				.arg(expectedPort->getName().c_str());
+			VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    %s", s.toUtf8().constData());
+			QTest::qFail(s.toUtf8().constData(), __FILE__, linenumber);
+		}
 
 		this->expectedPort = NULL;
 	}
@@ -150,13 +155,19 @@ public:
 		this->linenumber = linenumber;
 		this->expectedPort = NULL;
 
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "Performing action…");
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			action();
 		});
 
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    Waiting…");
 		bool timeout = dispatch_semaphore_wait(fulfilledExpectation, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC*6));
 		if (timeout)
-			QTest::qFail("Expected an event but didn't get one.", __FILE__, linenumber);
+		{
+			const char *s = "Expected an event but didn't get one.";
+			VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    %s", s);
+			QTest::qFail(s, __FILE__, linenumber);
+		}
 	}
 
 	void expectNoEvent(int linenumber, void (^action)(void))
@@ -164,13 +175,19 @@ public:
 		this->linenumber = linenumber;
 		this->expectedPort = NULL;
 
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "Performing action…");
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 			action();
 		});
 
+		VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    Waiting…");
 		bool timeout = dispatch_semaphore_wait(fulfilledExpectation, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC));
 		if (!timeout)
-			QTest::qFail("Expected no event, but got an event.", __FILE__, linenumber);
+		{
+			const char *s = "Expected no event, but got an event.";
+			VuoLog(VuoLog_moduleName, __FILE__, linenumber, __func__, "    %s", s);
+			QTest::qFail(s, __FILE__, linenumber);
+		}
 	}
 };
 
@@ -193,6 +210,7 @@ private:
 
 	void sendFullscreenKeystroke()
 	{
+		VLog("    Pressing Command-F…");
 		vector<CGEventRef> events;
 
 		events.push_back(CGEventCreateKeyboardEvent(NULL, (CGKeyCode)kVK_Command, true));
@@ -212,6 +230,7 @@ private:
 
 	void sendEscKeystroke()
 	{
+		VLog("    Pressing Esc…");
 		vector<CGEventRef> events;
 		events.push_back(CGEventCreateKeyboardEvent(NULL, (CGKeyCode)kVK_Escape, true));
 		events.push_back(CGEventCreateKeyboardEvent(NULL, (CGKeyCode)kVK_Escape, false));
@@ -220,6 +239,8 @@ private:
 
 	void sendScreenshotKeystroke()
 	{
+		VLog("    Pressing Command-Shift-4…");
+
 		vector<CGEventRef> events;
 
 		events.push_back(CGEventCreateKeyboardEvent(NULL, (CGKeyCode)kVK_Command, true));
@@ -239,6 +260,7 @@ private:
 
 	void sendMouseMove(int x, int y)
 	{
+		VLog("    Moving mouse to (%d, %d)…", x, y);
 		vector<CGEventRef> events;
 		events.push_back(CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, CGPointMake(x,y), kCGMouseButtonLeft));
 		sendEvents(events);
@@ -246,6 +268,8 @@ private:
 
 	void sendMouseMoveWithDelta(int x, int y, int dx, int dy)
 	{
+		VLog("    Moving mouse to (%d, %d) with delta (%+d, %+d)…", x, y, dx, dy);
+
 		vector<CGEventRef> events;
 
 		CGEventRef e = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, CGPointMake(x,y), kCGMouseButtonLeft);
@@ -258,6 +282,7 @@ private:
 
 	void sendLeftMouseButton(int x, int y, bool buttonDown)
 	{
+		VLog("    Left mouse button %s at (%d, %d)…", buttonDown ? "press" : "release", x, y);
 		vector<CGEventRef> events;
 		events.push_back(CGEventCreateMouseEvent(NULL, buttonDown ? kCGEventLeftMouseDown : kCGEventLeftMouseUp, CGPointMake(x,y), kCGMouseButtonLeft));
 		sendEvents(events);
@@ -265,6 +290,8 @@ private:
 
 	void sendLeftMouseClick(int x, int y, int clickCount)
 	{
+		VLog("    Click left mouse button %dx at (%d, %d)…", clickCount, x, y);
+
 		vector<CGEventRef> events;
 
 		for (int i = 0; i < clickCount; ++i)
@@ -283,6 +310,8 @@ private:
 
 	void sendLeftMouseDrag(int x, int y)
 	{
+		VLog("    Drag left mouse button at (%d, %d)…", x, y);
+
 		vector<CGEventRef> events;
 		events.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDragged, CGPointMake(x,y), kCGMouseButtonLeft));
 		sendEvents(events);
@@ -349,6 +378,9 @@ private slots:
 			// Move the mouse further inside the window (past the resize area).
 			// Press and release the button.
 			expectedPoint = (VuoPoint2d){ (float)(-1 + 15*2/windowContentWidth), (float)(windowContentHeight/windowContentWidth - 15*2/windowContentWidth) };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(windowX + 15, windowY + 15);
+			});
 			EXPECT_EVENT(pressedPort, expectedPoint, ^{
 				sendLeftMouseButton(windowX + 15, windowY + 15, true);
 			});
@@ -369,13 +401,15 @@ private slots:
 			});
 
 			// Make sure the button press and release are not reported (since this is a resize area).
-			expectedPoint = (VuoPoint2d){ (float)(1 - 15*2/windowContentWidth), (float)(-windowContentHeight/windowContentWidth + 15*2/windowContentWidth) };
-			EXPECT_EVENT(pressedPort, expectedPoint, ^{
-				sendLeftMouseButton(mouseX - 15, mouseY - 15, true);
+			expectedPoint = (VuoPoint2d){ (float)(1 - 10*2/windowContentWidth), (float)(-windowContentHeight/windowContentWidth + 10*2/windowContentWidth) };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(mouseX - 10, mouseY - 10);
 			});
-
-			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-				sendLeftMouseButton(mouseX - 15, mouseY - 15, false);
+			EXPECT_NO_EVENT(^{
+				sendLeftMouseButton(mouseX - 10, mouseY - 10, true);
+			});
+			EXPECT_NO_EVENT(^{
+				sendLeftMouseButton(mouseX - 10, mouseY - 10, false);
 			});
 		}
 
@@ -1169,6 +1203,13 @@ private slots:
 
 			// Move the mouse further inside the window (past the resize area).
 			// Press and release the button.
+			m[whichPort] = position;
+			runner->setPublishedInputPortValues(m);
+			expectedPoint = (VuoPoint2d){ (float)(-1 + 15*2/windowContentWidth), (float)(windowContentHeight/windowContentWidth - 15*2/windowContentWidth) };
+			EXPECT_EVENT(positionPort, expectedPoint, ^{
+				sendMouseMove(windowX + 15, windowY + 15);
+				runner->firePublishedInputPortEvent(whichPort);
+			});
 			m[whichPort] = isPressed;
 			runner->setPublishedInputPortValues(m);
 			EXPECT_EVENT(isPressedPort, true, ^{
@@ -1219,6 +1260,13 @@ private slots:
 			// Press and release the button.
 			mouseX -= 15;
 			mouseY -= 15;
+			m[whichPort] = position;
+			expectedPoint = (VuoPoint2d){ (float)(1 - 15*2/windowContentWidth), (float)(-windowContentHeight/windowContentWidth + 15*2/windowContentWidth) };
+			runner->setPublishedInputPortValues(m);
+			EXPECT_EVENT(positionPort, expectedPoint, ^{
+				sendMouseMove(mouseX, mouseY);
+				runner->firePublishedInputPortEvent(whichPort);
+			});
 			m[whichPort] = isPressed;
 			runner->setPublishedInputPortValues(m);
 			EXPECT_EVENT(isPressedPort, true, ^{
@@ -1626,11 +1674,10 @@ private slots:
 		});
 
 		// Switch back from fullscreen to windowed.
-		// This should fire two updatedWindow events, since the window changed position and size.
+		// This should fire one updatedWindow event, since the window changed position/size.
 		EXPECT_ANY_EVENT(^{
 			sendEscKeystroke();
 		});
-		EXPECT_ANY_EVENT(^{});
 		EXPECT_NO_EVENT(^{});
 
 		runner->stop();

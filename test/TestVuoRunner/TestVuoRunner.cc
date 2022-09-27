@@ -395,7 +395,7 @@ private slots:
 			}
 
 			zmq_close(control);
-			zmq_term(context);
+			zmq_ctx_term(context);
 		}
 		else
 		{
@@ -435,7 +435,7 @@ private slots:
 
 			kill(pid, SIGTERM);
 			zmq_close(control);
-			zmq_term(context);
+			zmq_ctx_term(context);
 		}
 
 		free(port);

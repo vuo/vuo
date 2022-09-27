@@ -13,6 +13,7 @@
 #include "VuoAvWriterObject.h"
 
 #include <VideoToolbox/VideoToolbox.h>
+#include <json-c/json.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -21,6 +22,7 @@ VuoModuleMetadata({
 						"VuoImage",
 						"VuoAudioSamples",
 						"VuoAvWriterObject",
+						"VuoUrl",
 						"CoreMedia.framework",
 						"VideoToolbox.framework",
 						"AVFoundation.framework"
@@ -58,24 +60,25 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 
 	if( [av isRecording] == NO )
 	{
-		NSError *error = nil;
+		VuoUrl urlNormalized = VuoUrl_normalize(url, VuoUrlNormalize_forSaving);
+		VuoLocal(urlNormalized);
 
-		NSString* apple_string = [[NSString stringWithUTF8String:url] stringByExpandingTildeInPath];
-		NSString* extension = [apple_string pathExtension];
+		json_object *validExtensions = json_object_new_array();
+		json_object_array_add(validExtensions, json_object_new_string("mov"));
+		VuoUrl urlWithExtension = VuoUrl_appendFileExtension(urlNormalized, validExtensions);
+		VuoLocal(urlWithExtension);
 
-		if( [extension caseInsensitiveCompare:@"mov"] != NSOrderedSame )
-			apple_string = [apple_string stringByAppendingPathExtension:@"mov"];
-
-		NSURL* file_url = [NSURL fileURLWithPath:apple_string];
+		NSURL *file_url = [NSURL URLWithString:[NSString stringWithUTF8String:urlWithExtension]];
 
 		// check if a file already exists at this location
 		if ([[NSFileManager defaultManager] fileExistsAtPath:[file_url path]])
 		{
 			if(overwrite)
 			{
+				NSError *error = nil;
 				if (![[NSFileManager defaultManager] removeItemAtURL:file_url error:&error])
 				{
-					VUserLog("Failed deleting old video file at path: %s", [apple_string UTF8String]);
+					VUserLog("Error deleting old video file \"%s\": %s", urlWithExtension, error.localizedDescription.UTF8String);
 					return NO;
 				}
 			}
@@ -86,18 +89,22 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 			}
 		}
 
-		// try to initialize the AssetWriter
-		bool success = [av setupAssetWriterWithUrl:file_url
-						imageWidth:width
-						imageHeight:height
-						channelCount:channels
-						movieFormat:format];
-
-		// if it doesn't succeed for whatever reason, exit
-		if( !success )
+		bool success = NO;
+		@try
 		{
-			return false;
+			success = [av setupAssetWriterWithUrl:file_url
+									   imageWidth:width
+									  imageHeight:height
+									 channelCount:channels
+									  movieFormat:format];
 		}
+		@catch (NSException *e)
+		{
+			VUserLog("Error initializing AVAssetWriter: %s", e.reason.UTF8String);
+		}
+
+		if (!success)
+			return false;
 	}
 
 	// we're good to start recording. now set the correct width, height, and audio channel count

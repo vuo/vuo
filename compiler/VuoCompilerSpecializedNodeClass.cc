@@ -273,8 +273,12 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 					if (innermostSpecializedTypeName != innermostModelPortTypeName)
 					{
 						string specializedTypeName = VuoGenericType::replaceInnermostGenericTypeName(modelPortTypeName, innermostSpecializedTypeName);
-						VuoType *portType = compiler->getType(specializedTypeName)->getBase();
-						portClass->setDataVuoType(portType);
+						VuoCompilerType *compilerPortType = compiler->getType(specializedTypeName);
+
+						if (compilerPortType)
+							portClass->setDataVuoType(compilerPortType->getBase());
+						else
+							VUserLog("Couldn't specialize port to type %s\n", specializedTypeName.c_str());
 					}
 				}
 			}

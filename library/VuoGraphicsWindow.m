@@ -412,7 +412,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 				// (since macOS doesn't let us directly move from one fullscreen to another).
 				[self setFullScreen:NO onScreen:nil];
 
-				// If `System Preferences > Mission Control > Displays have separate Spaces` is enabled…
+				// If `System Settings > Desktop & Dock > Displays have separate Spaces` is enabled…
 				if (NSScreen.screensHaveSeparateSpaces)
 					// Give macOS a chance to complete its exit-fullscreen transition.
 					self.shouldGoFullscreen = requestedScreen;
@@ -689,7 +689,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
  *    - painfully slow transition animation
  *    - if `screensHaveSeparateSpaces=NO`, can only have one window fullscreen (other screen is blank)
  *
- * `screensHaveSeparateSpaces` is `System Preferences > Mission Control > Displays have separate Spaces`.
+ * `screensHaveSeparateSpaces` is `System Settings > Desktop & Dock > Displays have separate Spaces`.
  *
  * Vuo uses #3 if it allows simultaneous fullscreen windows on separate displays
  * (i.e., when both running on 10.9+ and screensHaveSeparateSpaces=YES),
@@ -730,7 +730,7 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		// when you focus a window on a different display (such as when livecoding during a performance).
 		bool useMacFullScreenMode = true;
 
-		// If `System Preferences > Mission Control > Displays have separate Spaces` is unchecked,
+		// If `System Settings > Desktop & Dock > Displays have separate Spaces` is unchecked,
 		// only a single window could go Mac-fullscreen at once, so don't use Mac-fullscreen mode in that case.
 		if (!NSScreen.screensHaveSeparateSpaces)
 			useMacFullScreenMode = false;

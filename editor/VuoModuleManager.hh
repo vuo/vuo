@@ -19,19 +19,22 @@ class VuoCodeWindow;
 class VuoEditorComposition;
 class VuoNodeLibrary;
 
+typedef set<pair<VuoCompilerModule *, VuoCompilerModule *> > ModulesModifiedSet;  ///< Needed to avoid a syntax error with `Q_DECLARE_METATYPE`
+
 /**
  * Handles loading of node classes and types. When modules are loaded on launch,
  * and when they are installed, uninstalled, or modified while the editor is running,
  * this class receives notifications from the compiler and updates the UI and cached data.
  */
-class VuoModuleManager : public VuoCompilerDelegate
+class VuoModuleManager : public QObject, VuoCompilerDelegate
 {
+	Q_OBJECT
+
 public:
 	typedef void (^CallbackType)(void);  ///< Invoked when a node class is loaded.
 
 	VuoModuleManager(VuoCompiler *compiler);
 	virtual ~VuoModuleManager(void);
-	void deleteWhenReady(void);
 	void setComposition(VuoEditorComposition *composition);
 	void setCodeWindow(VuoCodeWindow *codeWindow);
 	void setNodeLibrary(VuoNodeLibrary *nodeLibrary);
@@ -48,7 +51,14 @@ public:
 					   const map<string, pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified,
 					   const map<string, VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues);
 
+signals:
+	/**
+	 * Used for scheduling UI changes on the main thread.
+	 */
+	void loadedModulesAndReadyToUpdate(const vector<string> &nodeClassesToRemove, const vector<VuoCompilerNodeClass *> &nodeClassesToAdd, const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd, const vector<string> &librariesToRemove, const ModulesModifiedSet &modulesModified, VuoCompilerIssues *issues);
+
 private:
+	void updateWithModulesBeingLoaded(const vector<string> &nodeClassesToRemove, const vector<VuoCompilerNodeClass *> &nodeClassesToAdd, const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd, const vector<string> &librariesToRemove, const ModulesModifiedSet &modulesModified, VuoCompilerIssues *issues);
 	void update(const vector<string> &nodeClassesToRemove, const vector<VuoCompilerNodeClass *> &nodeClassesToAdd, const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd, const vector<std::string> &librariesToRemove, const set<pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified, VuoCompilerIssues *issues);
 	static bool isResponsibleForReportingErrors(VuoModuleManager *currManager, VuoCompilerIssues *errors, const vector<VuoCompilerNodeClass *> &nodeClassesToAdd);
 	void showErrorDialog(VuoCompilerIssues *errors);
@@ -63,6 +73,5 @@ private:
 	map<pair<VuoType *, VuoType *>, vector<string> > loadedTypecastClasses;  ///< Maps input/output data pairs to lists of suitable typeconverter class names.
 	map<string, set<VuoCompilerType *> > loadedTypesForNodeSet;  ///< Maps node set names to sets of associated types.
 	map<string, pair<CallbackType, bool> > callbackForNodeClass;  ///< Callbacks to be called when node classes are added or modified, indexed by node class name.
-	dispatch_group_t updateGroup;  ///< Keeps track of asynchronous calls to @ref update().
 	static set<VuoModuleManager *> allModuleManagers;  ///< All module managers that have been constructed and not yet destroyed.
 };

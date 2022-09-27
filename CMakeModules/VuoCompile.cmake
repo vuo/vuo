@@ -134,8 +134,8 @@ function (VuoNodeSet)
 		# Use `rsync` to create a staging folder for the archive's content (since `ditto` can only take a single source argument).
 		COMMAND rm -Rf ${nodeSetStagingFolder}
 		COMMAND mkdir ${nodeSetStagingFolder}
-		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && rsync --archive --extended-attributes --relative ${builtFiles}  ${nodeSetStagingFolder}
-		COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && rsync --archive --extended-attributes --relative ${sourceFiles} ${nodeSetStagingFolder}
+		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && /usr/bin/rsync --archive --extended-attributes --relative ${builtFiles}  ${nodeSetStagingFolder}
+		COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && /usr/bin/rsync --archive --extended-attributes --relative ${sourceFiles} ${nodeSetStagingFolder}
 		# Use `ditto` (rather than Info-Zip or 7zip) since it preserves extended attributes
 		# (which is where `codesign` stores signatures for `.bc` and `.o` files, required for Notarization).
 		COMMAND cd ${CMAKE_CURRENT_BINARY_DIR} && ditto -ck --extattr --zlibCompressionLevel 9 ${nodeSetStagingFolder} ${CMAKE_CURRENT_BINARY_DIR}/${nodeSetName}.vuonode
@@ -292,6 +292,7 @@ function (VuoCompileTypes)
 			.
 		PRIVATE
 			${PROJECT_SOURCE_DIR}/base
+			${PROJECT_SOURCE_DIR}/common
 	)
 
 	# This target enables the source files to show up in Qt Creator's Projects tree.
@@ -448,7 +449,7 @@ function (VuoCompileLibrariesWithTarget target)
 			.
 		PRIVATE
 			${PROJECT_BINARY_DIR}/type/list
-			${PROJECT_SOURCE_DIR}/base
+			${PROJECT_SOURCE_DIR}/common
 			${PROJECT_SOURCE_DIR}/library
 			${PROJECT_SOURCE_DIR}/node
 			${PROJECT_SOURCE_DIR}/runtime
@@ -547,8 +548,8 @@ function (VuoCompileNodes)
 	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
 	target_include_directories(${target}
 		PRIVATE
-			${PROJECT_SOURCE_DIR}/base
 			${PROJECT_BINARY_DIR}/type/list
+			${PROJECT_SOURCE_DIR}/common
 	)
 
 	# This target enables the source files to show up in Qt Creator's Projects tree.

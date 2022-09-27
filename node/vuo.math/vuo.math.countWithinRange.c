@@ -13,7 +13,7 @@ VuoModuleMetadata({
 					  "title" : "Count within Range",
 					  "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease",
 					  "wrap", "%", "saturate", "limit", "loop", "modulus", "clock", "clamp" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  },
@@ -26,20 +26,17 @@ VuoModuleMetadata({
 				  });
 
 
-VuoGenericType1 * nodeInstanceInit
+VuoGenericType1 nodeInstanceInit
 (
 		VuoInputData(VuoGenericType1) setCount
 )
 {
-	VuoGenericType1 *countState = (VuoGenericType1 *) malloc(sizeof(VuoGenericType1));
-	VuoRegister(countState, free);
-	*countState = setCount;
-	return countState;
+	return setCount;
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoGenericType1 *) countState,
+		VuoInstanceData(VuoGenericType1) countState,
 		VuoInputData(VuoGenericType1, {"default":1}) increment,
 		VuoInputEvent({"eventBlocking":"none","data":"increment"}) incrementEvent,
 		VuoInputData(VuoGenericType1, {"default":1}) decrement,
@@ -53,34 +50,34 @@ void nodeInstanceEvent
 )
 {
 	// Adjust initial count to be within range (in case minimum/maximum have changed).
-	if(**countState > maximum)
-		**countState = maximum;
-	if(**countState < minimum)
-		**countState = minimum;
+	if(*countState > maximum)
+		*countState = maximum;
+	if(*countState < minimum)
+		*countState = minimum;
 
 	// Increment/decrement/set.
 	if(incrementEvent)
-		**countState += increment;
+		*countState += increment;
 	if(decrementEvent)
-		**countState -= decrement;
+		*countState -= decrement;
 	if (setCountEvent)
-		**countState = setCount;
+		*countState = setCount;
 
 	// Adjust incremented/decremented count to be within range.
 	switch(wrapMode)
 	{
 		default:
 		case VuoWrapMode_Wrap:
-			**countState = VuoGenericType1_wrap(**countState, minimum, maximum);
+			*countState = VuoGenericType1_wrap(*countState, minimum, maximum);
 			break;
 
 		case VuoWrapMode_Saturate:
-			if(**countState > maximum)
-				**countState = maximum;
-			if(**countState < minimum)
-				**countState = minimum;
+			if (*countState > maximum)
+				*countState = maximum;
+			if (*countState < minimum)
+				*countState = minimum;
 			break;
 	}
 
-	*count = **countState;
+	*count = *countState;
 }

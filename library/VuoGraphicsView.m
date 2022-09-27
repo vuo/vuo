@@ -133,7 +133,7 @@ VuoModuleMetadata({
 }
 
 /**
- * Without this, double-clicks cause the window to minimize/maximize itself (depending on System Preferences).
+ * Without this, double-clicks cause the window to minimize/maximize itself (depending on System Settings > Desktop & Dock > Double-click a window's title bar to…).
  *
  * Reimplemented from NSView.
  * @threadMain
@@ -144,9 +144,9 @@ VuoModuleMetadata({
 }
 
 /**
- * Workaround for apparent macOS 10.14 bug where,
- * when 'System Preferences > Dock > Double-click on a window's title bar to [minimize/zoom]' is enabled
- * and 'System Preferences > Mission Control > Displays have separate Spaces' is disabled,
+ * Workaround for apparent macOS bug where,
+ * when 'System Settings > Desktop & Dock > Double-click on a window's title bar to [minimize/zoom]' is enabled
+ * and 'System Settings > Desktop & Dock > Displays have separate Spaces' is disabled,
  * un-fullscreening a window then double-clicking on its content area causes it to minimize/zoom.
  *
  * https://vuo.org/node/2425

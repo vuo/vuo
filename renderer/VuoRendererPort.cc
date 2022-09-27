@@ -1286,7 +1286,8 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 		return false;
 
 	// Case: The 'From' port is generic and can be specialized to match the concrete type of the 'To' port.
-	if (currentFromGenericType && currentFromGenericType->isSpecializedTypeCompatible(originalToDataType->getModuleKey()))
+	if (currentFromGenericType && currentFromGenericType->isSpecializedTypeCompatible(originalToDataType->getModuleKey())
+			&& isSpecializationImplementedForType(originalToDataType->getModuleKey()))
 	{
 		*portToSpecialize = this;
 		specializedTypeName = originalToDataType->getModuleKey();
@@ -1295,7 +1296,8 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 	}
 
 	// Case: The 'To' port is generic and can be specialized to match the concrete type of the 'From' port.
-	else if (currentToGenericType && currentToGenericType->isSpecializedTypeCompatible(originalFromDataType->getModuleKey()))
+	else if (currentToGenericType && currentToGenericType->isSpecializedTypeCompatible(originalFromDataType->getModuleKey())
+			 && isSpecializationImplementedForType(originalFromDataType->getModuleKey()))
 	{
 		*portToSpecialize = toPort;
 		specializedTypeName = originalFromDataType->getModuleKey();
@@ -1304,6 +1306,17 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 	}
 
 	return false;
+}
+
+/**
+ * Returns a boolean indicating whether a port can be specialized to the
+ * provided @c typeName in the current Vuo implementation -- true unless
+ * explicitly noted otherwise in the function body.
+ */
+bool VuoRendererPort::isSpecializationImplementedForType(string typeName)
+{
+	return !VuoType::isDictionaryTypeName(typeName) &&  /// @todo Remove after https://b33p.net/kosada/vuo/vuo/-/issues/5300
+			(typeName != "VuoMathExpressionList");      /// @todo Remove after https://b33p.net/kosada/vuo/vuo/-/issues/8550
 }
 
 /**

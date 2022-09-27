@@ -133,6 +133,8 @@ void VuoNodePopover::initialize()
  */
 void VuoNodePopover::cleanup()
 {
+	delete modelNode;
+	modelNode = nullptr;
 	disconnect(static_cast<VuoEditor *>(qApp), &VuoEditor::darkInterfaceToggled, this, &VuoNodePopover::updateColor);
 }
 

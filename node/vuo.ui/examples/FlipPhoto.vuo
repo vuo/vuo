@@ -4,7 +4,7 @@
  *
  * Image by Efe Kurnaz on [Unsplash](https://unsplash.com/photos/RnCPiXixooY).
  *
- * @lastSavedInVuoVersion 2.3.0
+ * @lastSavedInVuoVersion 2.4.1
  * @copyright Copyright © 2012–2022 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -13,30 +13,22 @@
 digraph G
 {
 AllowFirstEvent2 [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-45,615" fillcolor="lime"];
-Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="1815,0" _expression="\{\"expressions\":[\"(a\\/b)*c\"],\"inputVariables\":[\"a\",\"b\",\"c\"],\"outputVariables\":[\"result\"]\}"];
 ChangeMouseCursor3 [type="vuo.window.cursor2" version="2.0.0" label="Change Mouse Cursor|<refresh>refresh\l|<windowDescription>windowDescription\l|<cursor>cursor\l|<changedWindowDescription>changedWindowDescription\r" pos="1095,660" _cursor="\"circle\""];
 ChangeWindowPosition2 [type="vuo.window.position2" version="2.0.0" label="Change Window Position|<refresh>refresh\l|<windowDescription>windowDescription\l|<topLeft>topLeft\l|<unit>unit\l|<changedWindowDescription>changedWindowDescription\r" pos="1710,660" _topLeft="\{\"x\":50,\"y\":50\}" _unit="\"points\""];
 Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1065,285"];
-ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="1530,540"];
-ConvertIntegerToRealNumber3 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="1875,120"];
 ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="1425,885"];
 Count2 [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="255,810" _increment="180.000000" _decrement="1.000000" _setCount="0.000000"];
 FetchImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="525,300" _url="\"efe-kurnaz.jpg\""];
-FetchImage5 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1365,495" _url="\"iPhone_12_mockup.png\""];
+FetchImage5 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1365,495" _url="\"iPhone 14 Pro on White Background.png\""];
 FireOnDisplayRefresh2 [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-300,690" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
-GetImageSize2 [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="1545,105"];
-GetImageSize3 [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="1080,180"];
 LockWindowAspectRatio [type="vuo.window.aspectRatio2" version="2.0.0" label="Lock Window Aspect Ratio|<refresh>refresh\l|<windowDescription>windowDescription\l|<width>width\l|<height>height\l|<changedWindowDescription>changedWindowDescription\r" pos="1365,660" _width="1" _height="1"];
 Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="720,765" _translation="\{\"x\":0,\"y\":0,\"z\":0\}" _scale="\{\"x\":1,\"y\":1,\"z\":1\}"];
 MakeActionButton2 [type="vuo.ui.make.button" version="1.0.0" label="Make Action Button|<refresh>refresh\l|<window>window\l|<label>label\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="-75,795" fillcolor="lime" _label="\"Flip\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":-0.55500000715255737\}" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
-MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="1545,45"];
-MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1725,285" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1725,285" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.90000000000000002" _fixed="\"horizontal\"" _opacity="1.0"];
 MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1725,480" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="1.0"];
-MakeList [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1545,45" _1="\"a\"" _2="\"b\"" _3="\"c\""];
 MakeList10 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1958,356" fillcolor="blue"];
 MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="418,446"];
-MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1259,296"];
-MakeList6 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1782,26" _3="2"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1258,296" _1_manuallyFirable="yes"];
 MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1032,311"];
 MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="225,330" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.000000" _width="2" _height="5.5999999999999996" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="255,525" _text="\"Multicolored hallway.\\nBy Efe Kurnaz (@efekurnaz) \\non unsplash.com\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
@@ -44,7 +36,7 @@ MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.1.0" l
 MakeUnlit3DObjectFromImage5 [type="vuo.scene.make.image.unlit" version="2.1.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<object>object\r" pos="735,435" _center="\{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000\}" _rotation="\{\"x\":0.000000,\"y\":180.000000,\"z\":0.000000\}" _width="2" _fixed="\"horizontal\"" _opacity="1.000000"];
 RenderLayersToImage2 [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="480,435" _width="580" _height="1260" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
 RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2010,345" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
-RenderSceneToImage2 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1320,285" _colorDepth="\"8bpc\"" _multisampling="\"4\"" _cameraName="\"\""];
+RenderSceneToImage2 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1320,285" _width="512" _height="1024" _colorDepth="\"8bpc\"" _multisampling="\"4\"" _cameraName="\"\""];
 SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.1.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="420,780" _setPosition="0.000000" _duration="0.5" _curve="\"quadratic\"" _easing="\"in+out\""];
 
 AllowFirstEvent2:firstEvent -> ChangeMouseCursor3:windowDescription;
@@ -52,37 +44,25 @@ AllowFirstEvent2:firstEvent -> FetchImage2:url;
 AllowFirstEvent2:firstEvent -> FetchImage5:url;
 AllowFirstEvent2:firstEvent -> MakeRectangleLayer2:color;
 AllowFirstEvent2:firstEvent -> MakeTextLayer3:text;
-Calculate:result -> MakeImageLayer:width;
 ChangeMouseCursor3:changedWindowDescription -> LockWindowAspectRatio:windowDescription;
 ChangeWindowPosition2:changedWindowDescription -> RenderLayersToWindow2:setWindowDescription;
 Combine3DObjects2:object -> MakeList5:1;
-ConvertIntegerToRealNumber2:real -> MakeList6:2;
-ConvertIntegerToRealNumber3:real -> MakeList6:1;
 ConvertRealTo3DPoint2:point3d -> Make3DTransform2:rotation;
 Count2:count -> SmoothWithDuration3:setTarget;
-FetchImage2:image -> GetImageSize3:image;
 FetchImage2:image -> MakeUnlit3DObjectFromImage2:image;
-FetchImage5:image -> GetImageSize2:image;
 FetchImage5:image -> MakeImageLayer2:image;
 FireOnDisplayRefresh2:requestedFrame -> AllowFirstEvent2:event;
 FireOnDisplayRefresh2:requestedFrame -> SmoothWithDuration3:time;
-GetImageSize2:width -> ConvertIntegerToRealNumber2:integer;
-GetImageSize3:height -> RenderSceneToImage2:height;
-GetImageSize3:width -> ConvertIntegerToRealNumber3:integer;
-GetImageSize3:width -> RenderSceneToImage2:width;
 LockWindowAspectRatio:changedWindowDescription -> ChangeWindowPosition2:windowDescription;
 Make3DTransform2:transform -> Combine3DObjects2:transform;
 MakeActionButton2:pressed -> Count2:increment;
 MakeActionButton2:updatedLayer -> MakeList10:2;
-MakeDictionary:dictionary -> Calculate:values;
 MakeImageLayer2:layer -> MakeList10:3;
 MakeImageLayer:layer -> MakeList10:1;
 MakeList10:list -> RenderLayersToWindow2:layers;
 MakeList4:list -> RenderLayersToImage2:layers;
 MakeList5:list -> RenderSceneToImage2:objects;
-MakeList6:list -> MakeDictionary:values;
 MakeList7:list -> Combine3DObjects2:childObjects;
-MakeList:list -> MakeDictionary:keys;
 MakeRectangleLayer2:layer -> MakeList4:1;
 MakeTextLayer3:layer -> MakeList4:2;
 MakeUnlit3DObjectFromImage2:object -> MakeList7:1;

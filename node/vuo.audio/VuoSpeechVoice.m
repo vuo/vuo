@@ -70,7 +70,7 @@ VuoList_VuoSpeechVoice VuoSpeechVoice_getAllowedValues(void)
 
 		// I tried filtering by VoiceShowInFullListOnly,
 		// but it doesn't seem to have any correlation to whether the voice's checkbox is checked in
-		// System Preferences > Accessibility > Speech > System Voice > Customize.
+		// System Settings > Accessibility > Spoken Content > System Voice > Manage Voices.
 //		NSNumber *n = [voiceAttributes objectForKey:@"VoiceShowInFullListOnly"];
 //		if (n && [n integerValue] == 0)
 //			continue;

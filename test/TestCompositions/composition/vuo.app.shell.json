@@ -8,23 +8,23 @@
  */
 
 {"portConfiguration": {
-	// Allowed:
-	"binary stdout":  {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/uname"                      }, "outputPortValues":{"output":"Darwin\n","status":0}},
-	"shell stdout":   {"firingPort":"command", "inputPortValues":{"command":"echo hi"                             }, "outputPortValues":{"output":"hi\n",    "status":0}},
-	"shell stderr":   {"firingPort":"command", "inputPortValues":{"command":">&2 echo hi"                         }, "outputPortValues":{"output":"hi\n",    "status":0}},
-	"shell":          {"firingPort":"command", "inputPortValues":{"command":"echo $(basename $SHELL)"             }, "outputPortValues":{"output":"bash\n",  "status":0}},
+	// Allowed commands:
+	"binary stdout":  {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/uname"                                           }, "outputPortValues":{"output":"Darwin\n","status":0}},
+	"shell stdout":   {"firingPort":"command", "inputPortValues":{"command":"echo hi"                                                  }, "outputPortValues":{"output":"hi\n",    "status":0}},
+	"shell stderr":   {"firingPort":"command", "inputPortValues":{"command":">&2 echo hi"                                              }, "outputPortValues":{"output":"hi\n",    "status":0}},
+	"shell":          {"firingPort":"command", "inputPortValues":{"command":"echo $(basename $SHELL)"                                  }, "outputPortValues":{"output":"bash\n",  "status":0}},
 	"write tempfile": {"firingPort":"command", "inputPortValues":{"command":"echo hi > /private/tmp/vuo-app-shell-test && cat /private/tmp/vuo-app-shell-test"}, "outputPortValues":{"output":"hi\n","status":0}},
-	"status":         {"firingPort":"command", "inputPortValues":{"command":"exit 1"                              }, "outputPortValues":{"output":"",        "status":1}},
-	"dns lookup":     {"firingPort":"command", "inputPortValues":{"command":"host 127.0.0.1"                      }, "outputPortValues":{"output":"1.0.0.127.in-addr.arpa domain name pointer localhost.\n","status":0}},
-	"curl":           {"firingPort":"command", "inputPortValues":{"command":"curl -sS ifconfig.me/method"         }, "outputPortValues":{"output":"GET",     "status":0}},
-	"applescript":    {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -e 'log \"hi\"'"  }, "outputPortValues":{"output":"hi\n",    "status":0}},
-	// On OS X 10.10, this outputs "hi\n\n" — which is OK, but there's no convenient way to ignore that variance.
-	// "javascript":     {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -l JavaScript -e 'console.log(\"hi\")'"}, "outputPortValues":{"output":"hi\n","status":0}},
-	// On macOS 12, /usr/bin/php no longer exists.
-	// "php":            {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/php -r 'echo \"hi\";'"      }, "outputPortValues":{"output":"hi",      "status":0}},
-	"python":         {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/python -c 'print \"hi\"'"   }, "outputPortValues":{"output":"hi\n",    "status":0}},
-	"ruby":           {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/ruby -e 'print \"hi\"'"     }, "outputPortValues":{"output":"hi",      "status":0}},
-	"perl":           {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/perl -e 'print \"hi\"'"     }, "outputPortValues":{"output":"hi",      "status":0}},
+	"status":         {"firingPort":"command", "inputPortValues":{"command":"exit 1"                                                   }, "outputPortValues":{"output":"",        "status":1}},
+	"dns lookup":     {"firingPort":"command", "inputPortValues":{"command":"host 127.0.0.1"                                           }, "outputPortValues":{"output":"1.0.0.127.in-addr.arpa domain name pointer localhost.\n","status":0}},
+	"curl":           {"firingPort":"command", "inputPortValues":{"command":"curl -sS ifconfig.me/method"                              }, "outputPortValues":{"output":"GET",     "status":0}},
+
+	// Allowed languages:
+	"applescript":    {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -e 'log \"hi\"'"                       }, "outputPortValues":{"output":"hi\n",    "status":0}},
+	"javascript":     {"firingPort":"command", "inputPortValues":{"command":"/usr/bin/osascript -l JavaScript -e 'console.log(\"hi\")'"}, "outputPortValues":{"output":"hi\n",    "status":0}},
+	"php":            {"firingPort":"command", "inputPortValues":{"command":"/opt/homebrew/opt/php/bin/php -r 'echo \"hi\";'"          }, "outputPortValues":{"output":"hi",      "status":0}},
+	"python":         {"firingPort":"command", "inputPortValues":{"command":"/opt/homebrew/opt/python3/bin/python3 -c 'print(\"hi\")'"  }, "outputPortValues":{"output":"hi\n",    "status":0}},
+	"ruby":           {"firingPort":"command", "inputPortValues":{"command":"/opt/homebrew/opt/ruby/bin/ruby -e 'print \"hi\"'"        }, "outputPortValues":{"output":"hi",      "status":0}},
+	"perl":           {"firingPort":"command", "inputPortValues":{"command":"/opt/homebrew/opt/perl/bin/perl -e 'print \"hi\"'"        }, "outputPortValues":{"output":"hi",      "status":0}},
 
 	// Prohibited:
 	"delete user file":   {"firingPort":"command", "inputPortValues":{"command":"rm ~/.DS_Store 2>&1 | grep -o 'Operation not permitted'"                            }, "outputPortValues":{"output":"Operation not permitted\n",    "status":0}},

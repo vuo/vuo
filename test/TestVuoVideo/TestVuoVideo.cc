@@ -67,9 +67,17 @@ class TestVuoVideo : public QObject
 		if (QFile(url).exists())
 			return true;
 
+		QString urlPrefixRemoved{QUrl(url).toLocalFile()};
+		if (QFile(urlPrefixRemoved).exists())
+			return true;
+
 		QString homeDir = getenv("HOME");
-		url = url.replace("/MovieGauntlet/", homeDir + "/Movies/Test Movies/");
+		url = url.replace("/MovieGauntlet/", homeDir + "/Movies/Test/");
 		if (QFile(url).exists())
+			return true;
+
+		urlPrefixRemoved = QUrl(url).toLocalFile();
+		if (QFile(urlPrefixRemoved).exists())
 			return true;
 
 		return false;
@@ -89,6 +97,8 @@ private slots:
 
 		//																																																  duration    frames  width   height  audio
 		QTest::newRow(VuoText_format("Apple ProRes 4444 opt=%d",optimize))						<< "/MovieGauntlet/rugged_terrain_prores4444.mov"														<<  30.		<<  899	<< 1280 <<  720 <<  0 	<< optimize;
+		QTest::newRow(VuoText_format("Apple ProRes 4444 url-schema1 opt=%d",optimize))          << "file:/MovieGauntlet/rugged_terrain_prores4444.mov"                                                  <<  30.     <<  899 << 1280 <<  720 <<  0   << optimize;
+		QTest::newRow(VuoText_format("Apple ProRes 4444 url-schema3 opt=%d",optimize))          << "file:///MovieGauntlet/rugged_terrain_prores4444.mov"                                                <<  30.     <<  899 << 1280 <<  720 <<  0   << optimize;
 		QTest::newRow(VuoText_format("Animated GIF opt=%d",optimize))							<< "/MovieGauntlet/count.gif"																			<<  10.1	<<  85	<<  748 <<  491	<<  0 	<< optimize;
 		QTest::newRow(VuoText_format("DIF DV NTSC opt=%d",optimize))							<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.dv"											<<  19.9	<<  596	<<  720 <<  480	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG Transport Stream opt=%d",optimize))					<< "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts"													<<  28.7	<<  860	<<  640 <<  480	<< -2 	<< optimize;
@@ -103,7 +113,7 @@ private slots:
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless 5.1 - #1 opt=%d",optimize))	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov"				<<  19.5	<<  469	<< 1920 << 3240	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless 5.1 - #2 opt=%d",optimize))	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/typewriter-barnyard — H.264 — Apple Lossless 5.1.mov"	<<  15.7	<<  376	<< 1440 <<  900	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless LR opt=%d",optimize))		<< "/MovieGauntlet/out-sd.mov"																			<< 275.2	<< 6608	<<  640 <<  360	<< -2 	<< optimize;
-		QTest::newRow(VuoText_format("QuickTime - Photo JPEG - None opt=%d",optimize))			<< "/System/Library/Compositions/Fish.mov"																<<  13.2	<<  397	<<  640 <<  480	<<  0 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - Photo JPEG - None opt=%d",optimize))          << "/MovieGauntlet/by-codec/PhotoJPEG/line-jpeg.mov"                                                    <<  10.     <<  600 << 1280 <<  720 <<  0   << optimize;
 		// avfoundation seems to lock up and wreck subsequent instances of AVAssetReader when trying to load/unload this file
 		// QTest::newRow(VuoText_format("QuickTime - Photo JPEG - PCM LR opt=%d",optimize))		<< "/MovieGauntlet/pbourke/2.mov"																		<<   3.3	<<  100	<< 4096 << 2048	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("WebM opt=%d",optimize))									<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.webmhd.webm"								<<  19.9	<<  474	<<  320 <<  240	<<  2 	<< optimize;

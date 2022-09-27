@@ -5,6 +5,7 @@ Everyone is encouraged to [contribute](https://vuo.org/contribute) toward improv
 
 Below is an alphabetical list of the people who have contributed to bringing Vuo to fruition.
 
+   - [Anonymous](https://vuo.org/user/0)
    - [.lov.](https://vuo.org/user/81)
    - [2bitpunk](https://vuo.org/user/169)
    - [3lab_tv](https://vuo.org/user/761)
@@ -45,6 +46,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [dr.drainaway](https://vuo.org/user/1794335)
    - [dumski](https://vuo.org/user/3606)
    - [e.duchemin](https://vuo.org/user/543635)
+   - [ecoAV](https://vuo.org/user/2482736)
    - [eganpc](https://vuo.org/user/920)
    - [ellington](https://vuo.org/user/445)
    - [emervark](https://vuo.org/user/925)
@@ -67,6 +69,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [Jennifer Greb](https://vuo.org/user/1979320)
    - [Jérôme Lanon](https://vuo.org/user/609825)
    - [jersmi](https://vuo.org/user/748)
+   - [jfg](https://vuo.org/user/2124744)
    - [jinyaolin](https://vuo.org/user/214)
    - [jmcc](https://vuo.org/user/14)
    - [Jobok31](https://vuo.org/user/2313)
@@ -206,7 +209,7 @@ Thanks to our contributors!
    - [glib](https://wiki.gnome.org/Projects/GLib)
    - [http-parser](https://github.com/joyent/http-parser/)
    - [libcsv](https://sourceforge.net/projects/libcsv/)
-   - [libcurl](http://curl.haxx.se/libcurl/)
+   - [libcurl](https://curl.se/libcurl)
    - [libfacedetection](https://github.com/ShiqiYu/libfacedetection)
    - [libffi](http://sourceware.org/libffi/)
    - [libfreenect](https://github.com/OpenKinect/libfreenect)
@@ -214,7 +217,7 @@ Thanks to our contributors!
    - [libintl (gettext)](https://www.gnu.org/software/gettext/)
    - [libjpeg-turbo](http://libjpeg-turbo.org/)
    - [liblqr](https://github.com/carlobaldassi/liblqr)
-   - [libusb](http://libusb.info)
+   - [libusb](https://libusb.info)
    - [libxml2](http://xmlsoft.org/)
    - [muParser](https://github.com/beltoforion/muparser/)
    - [nginx](http://nginx.org/)

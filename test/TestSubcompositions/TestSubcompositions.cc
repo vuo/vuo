@@ -1951,6 +1951,10 @@ private slots:
 		QVERIFY(issues.find(copiedLengthenEsPath) != issues.end());
 		QVERIFY(VuoStringUtilities::beginsWith(issues[copiedLengthenEsPath].getShortDescription(false), "Subcomposition contains itself"));
 		QVERIFY(! VuoFileUtilities::fileExists(compiledLengthenEsPath));
+
+		// Stop notifications to the delegate before the delegate is destroyed.
+		delete compiler;
+		compiler = nullptr;
 	}
 };
 

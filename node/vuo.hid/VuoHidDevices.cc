@@ -331,7 +331,11 @@ VuoList_VuoHidDevice VuoHid_getDeviceList(void)
 			if (VuoListGetCount_VuoHidControl(controls))
 				VuoListAppendValue_VuoHidDevice(devices, device);
 			else
+			{
 				VDebugLog("\t\tSkipping this device since it doesn't have any valid elements.");
+				VuoHidDevice_retain(device);
+				VuoHidDevice_release(device);
+			}
 		}
 		else
 			VDebugLog("\t\tSkipping this device since I can't get its elements (perhaps another process has it open for exclusive access).");

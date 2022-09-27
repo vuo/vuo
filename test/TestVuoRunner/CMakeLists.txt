@@ -14,7 +14,7 @@ function (TestRunnerSource target)
 	add_executable(${target} EXCLUDE_FROM_ALL ${target}.c)
 	target_include_directories(${target}
 		PRIVATE
-			${PROJECT_SOURCE_DIR}/base
+			${PROJECT_SOURCE_DIR}/common
 	)
 	target_link_libraries(${target}
 		CONAN_PKG::jsonc

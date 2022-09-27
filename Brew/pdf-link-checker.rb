@@ -1,6 +1,6 @@
 class PdfLinkChecker < Formula
-  url "https://github.com/bootlin/pdf-link-checker.git",
-      :revision => "17a18018bde81307a84dba09057feb39869a4a37"
+  url "https://github.com/smokris/pdf-link-checker.git",
+      :revision => "fe95acee4aab440a1e335d023171471340a09544"
   version '0'
 
   def install

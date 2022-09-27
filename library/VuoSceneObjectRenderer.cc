@@ -708,6 +708,7 @@ bool VuoSceneObjectRenderer_usingGPU(void)
 			if (strncmp(renderer, "Intel", 5) == 0
 			 || strncmp(renderer, "AMD ", 4) == 0
 			 || strncmp(renderer, "NVIDIA GeForce 9400M", 4) == 0
+			 || strncmp(renderer, "Apple ", 6) == 0
 			 || strncmp(renderer, "ATI ", 4) == 0)
 				gpuTransformFeedback = false;
 			else

@@ -154,7 +154,6 @@ target_include_directories(vuo.core.list.types
 	PUBLIC
 		${CMAKE_CURRENT_BINARY_DIR}
 	PRIVATE
-		../../base
 		../../node/vuo.artnet
 		../../node/vuo.audio
 		../../node/vuo.bcf2000

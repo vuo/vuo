@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration" : [
-	/* The expected values below assume System Preferences > Language & Region > Region is set to "United States". */
+	/* The expected values below assume System Settings > General > Language & Region > Region is set to "United States". */
 	
 	{ "firingPort": "refresh", "inputPortValues": { "value":     0         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":      "0"        } },
 	{ "firingPort": "refresh", "inputPortValues": { "value":     1         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":      "1"        } },

@@ -25,3 +25,4 @@ If Vuo detects your device, but doesn't seem to be receiving any data:
    - Make sure that another Vuo composition or application isn't already exclusively connected to the device. (Check Vuo's Console window (Tools > Show Console) for messages.)
    - Try unplugging the device and plugging it back in. (If another Vuo composition was using the device but isn't using it anymore, this will make your current composition retry connecting to the device.)
    - To exclusively read from a keyboard, macOS requires `root` access.
+   - If you're using a 3Dconnexion SpaceMouse or SpaceNavigator, ensure that the 3DxWare drivers are _not_ installed, since 3DxWare prevents Vuo from receiving data from 3Dconnexion devices.

@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Count",
 					  "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease", "number" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -26,20 +26,17 @@ VuoModuleMetadata({
 				  });
 
 
-VuoGenericType1 * nodeInstanceInit
+VuoGenericType1 nodeInstanceInit
 (
 		VuoInputData(VuoGenericType1) setCount
 )
 {
-	VuoGenericType1 *countState = (VuoGenericType1 *) malloc(sizeof(VuoGenericType1));
-	VuoRegister(countState, free);
-	*countState = setCount;
-	return countState;
+	return setCount;
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoGenericType1 *) countState,
+		VuoInstanceData(VuoGenericType1) countState,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) increment,
 		VuoInputEvent({"eventBlocking":"none","data":"increment"}) incrementEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) decrement,
@@ -50,10 +47,10 @@ void nodeInstanceEvent
 )
 {
 	if (incrementEvent)
-		**countState += increment;
+		*countState += increment;
 	if (decrementEvent)
-		**countState -= decrement;
+		*countState -= decrement;
 	if (setCountEvent)
-		**countState = setCount;
-	*count = **countState;
+		*countState = setCount;
+	*count = *countState;
 }

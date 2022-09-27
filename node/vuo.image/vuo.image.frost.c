@@ -16,6 +16,8 @@ VuoModuleMetadata({
 						  "filter", "texture",
 						  "perlin", "simplex", "gradient",
 						  "blur", "bend", "tint", "refraction", "diffraction",
+						  "fractal", "fractional Brownian motion", "fBm",
+						  "octaves", "persistence", "lacunarity",
 					  ],
 					  "version" : "1.1.1",
 					  "dependencies" : [

@@ -241,7 +241,7 @@ Merci à nos contributeurs !</translation>
 <context>
     <name>VuoCodeWindow</name>
     <message>
-        <location filename="../editor/VuoCodeWindow.cc" line="+175"/>
+        <location filename="../editor/VuoCodeWindow.cc" line="+176"/>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
@@ -338,12 +338,12 @@ Merci à nos contributeurs !</translation>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+874"/>
+        <location line="+838"/>
         <source>Hide Published Ports</source>
         <translation>Masquer les ports publiés</translation>
     </message>
     <message>
-        <location line="-869"/>
+        <location line="-833"/>
         <source>Actual Size</source>
         <translation>Taille réelle</translation>
     </message>
@@ -399,7 +399,7 @@ Merci à nos contributeurs !</translation>
         <translation>&amp;Aide</translation>
     </message>
     <message>
-        <location line="+785"/>
+        <location line="+749"/>
         <source>Show Published Ports</source>
         <translation>Afficher les ports publiés</translation>
     </message>
@@ -414,7 +414,7 @@ Merci à nos contributeurs !</translation>
         <translation>Afficher l&apos;aide-mémoire GLSL/ISF</translation>
     </message>
     <message>
-        <location line="-932"/>
+        <location line="-896"/>
         <source>&amp;Quit</source>
         <translation>&amp;Quitter Vuo</translation>
     </message>
@@ -594,7 +594,7 @@ Merci à nos contributeurs !</translation>
 <context>
     <name>VuoDetailsEditorNumeric</name>
     <message>
-        <location filename="../editor/VuoDetailsEditorNumeric.cc" line="+96"/>
+        <location filename="../editor/VuoDetailsEditorNumeric.cc" line="+98"/>
         <source>Suggested Min</source>
         <translation>Min suggéré</translation>
     </message>
@@ -612,7 +612,7 @@ Merci à nos contributeurs !</translation>
 <context>
     <name>VuoDetailsEditorPoint</name>
     <message>
-        <location filename="../editor/VuoDetailsEditorPoint.cc" line="+93"/>
+        <location filename="../editor/VuoDetailsEditorPoint.cc" line="+95"/>
         <source>X Suggested Min</source>
         <translation>X min suggéré</translation>
     </message>
@@ -795,7 +795,7 @@ Merci à nos contributeurs !</translation>
         <translation>Très transparent</translation>
     </message>
     <message>
-        <location line="+542"/>
+        <location line="+541"/>
         <source>Minimize</source>
         <translation>Réduire</translation>
     </message>
@@ -807,7 +807,7 @@ Merci à nos contributeurs !</translation>
         <translation>Zoom</translation>
     </message>
     <message>
-        <location line="+2113"/>
+        <location line="+2135"/>
         <source>Export</source>
         <translation>Exporter</translation>
     </message>
@@ -884,7 +884,7 @@ Merci à nos contributeurs !</translation>
         <translation>Vuo version Communauté</translation>
     </message>
     <message>
-        <location line="+126"/>
+        <location line="+123"/>
         <source>Vuo Software Update</source>
         <translation>Mise à jour logicielle de Vuo</translation>
     </message>
@@ -914,7 +914,7 @@ Merci à nos contributeurs !</translation>
         <translation>Ne pas vérifier automatiquement</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditor.cc" line="-2208"/>
+        <location filename="../editor/VuoEditor.cc" line="-2230"/>
         <source>Vuo Manual</source>
         <translation>Mode d&apos;emploi de Vuo</translation>
     </message>
@@ -964,7 +964,7 @@ Merci à nos contributeurs !</translation>
         <translation>Contacter l&apos;équipe Vuo</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditor_Pro.cc" line="-326"/>
+        <location filename="../editor/pro/VuoEditor_Pro.cc" line="-323"/>
         <source>Check for Updates…</source>
         <translation>Vérifier les mises à jour...</translation>
     </message>
@@ -1015,7 +1015,7 @@ Merci à nos contributeurs !</translation>
         <translation>Le nœud a été installé !</translation>
     </message>
     <message>
-        <location line="+1143"/>
+        <location line="+1165"/>
         <source>Window</source>
         <translation>Fenêtre</translation>
     </message>
@@ -1040,7 +1040,7 @@ Merci à nos contributeurs !</translation>
         <translation>Protocole</translation>
     </message>
     <message>
-        <location filename="../editor/VuoModuleManager.cc" line="+689"/>
+        <location filename="../editor/VuoModuleManager.cc" line="+697"/>
         <source>Move Broken Nodes to Trash</source>
         <translation>Déplacer les nœuds endommagés vers la corbeille</translation>
     </message>
@@ -1062,7 +1062,7 @@ Merci à nos contributeurs !</translation>
         <translation>Afficher les évènements</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditor.cc" line="-2719"/>
+        <location filename="../editor/VuoEditor.cc" line="-2740"/>
         <source>&amp;Quit</source>
         <translation>&amp;Quitter Vuo</translation>
     </message>
@@ -1092,7 +1092,7 @@ Merci à nos contributeurs !</translation>
         <translation>Bascule la visualisation des flux d&apos;évènements du canevas en affichant les déclencheurs sur les ports et les nœuds.</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditor.cc" line="+709"/>
+        <location filename="../editor/VuoEditor.cc" line="+708"/>
         <source>Start a Discussion</source>
         <translation>Initier une conversation</translation>
     </message>
@@ -1102,7 +1102,7 @@ Merci à nos contributeurs !</translation>
         <translation>Le fichier n&apos;a pas pu être déplacé vers la corbeille</translation>
     </message>
     <message>
-        <location line="+789"/>
+        <location line="+811"/>
         <source>Vuo Node Set Documentation</source>
         <extracomment>Appears in the webpage title on node set documentation pages.</extracomment>
         <translation>Documentation du groupe de nœuds Vuo</translation>
@@ -1161,7 +1161,7 @@ Appears on node documentation webpages.</extracomment>
         <translation>Le chargement d&apos;un ou plusieurs nœuds dans votre bibliothèque a rencontré une erreur.</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditor.cc" line="-1323"/>
+        <location filename="../editor/VuoEditor.cc" line="-1345"/>
         <source>&quot;%1&quot; can&apos;t be opened.</source>
         <translation>« %1 » ne peut être ouverte.</translation>
     </message>
@@ -1410,7 +1410,7 @@ Plus d&apos;informations à %1.</translation>
         <translation>Modifier en</translation>
     </message>
     <message>
-        <location line="+4219"/>
+        <location line="+4223"/>
         <source>&lt;b&gt;This composition doesn&apos;t send any images to &lt;code&gt;outputImage&lt;/code&gt;.&lt;/b&gt;</source>
         <translation>&lt;b&gt;Cette composition ne transmet aucune image à &lt;code&gt;outputImage&lt;/code&gt;.&lt;/b&gt;</translation>
     </message>
@@ -1430,12 +1430,12 @@ Plus d&apos;informations à %1.</translation>
         <translation>OK</translation>
     </message>
     <message>
-        <location line="-2740"/>
+        <location line="-2743"/>
         <source>Tint</source>
         <translation>Teinte</translation>
     </message>
     <message>
-        <location line="-3352"/>
+        <location line="-3353"/>
         <source>Insert &quot;%1&quot; Node</source>
         <extracomment>Appears in a popup menu when dragging files from Finder onto the composition canvas.</extracomment>
         <translation>Insérer le nœud « %1 »</translation>
@@ -1448,7 +1448,7 @@ Plus d&apos;informations à %1.</translation>
     </message>
     <message>
         <location line="-221"/>
-        <location line="+1408"/>
+        <location line="+1409"/>
         <source>More…</source>
         <extracomment>Appears at the bottom of the &quot;Set Data Type&quot; menu when there are additional options to display.
 ----------
@@ -1456,7 +1456,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Plus...</translation>
     </message>
     <message>
-        <location line="+1637"/>
+        <location line="+1640"/>
         <source>Keep Input Port as %1</source>
         <extracomment>Appears as a section label in the popup menu when connecting a cable to an input port that has multiple specialization/type-conversion options.</extracomment>
         <translation>Conserver le port d&apos;entrée en %1</translation>
@@ -1480,13 +1480,13 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Modifier le port de sortie en %1</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="+380"/>
+        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="+399"/>
         <source>Exporting frame %1 of %2 (%3% done).</source>
         <extracomment>Appears in the File &gt; Export &gt; Movie progress dialog. Example: &quot;Exporting frame 2 of 10 (20% done).&quot;</extracomment>
         <translation>Exportation des images %1 de %2 (%3% terminé).</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorComposition.cc" line="-6783"/>
+        <location filename="../editor/VuoEditorComposition.cc" line="-6787"/>
         <source>Enqueue Events</source>
         <translation>Placer les évènements dans la file</translation>
     </message>
@@ -1496,18 +1496,17 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Ignorer des évènements</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-202"/>
+        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-220"/>
         <source>The app was exported.</source>
         <translation>L&apos;application a été exportée.</translation>
     </message>
     <message>
         <location line="+46"/>
-        <location line="+97"/>
         <source>The plugin was exported to “%1”.</source>
         <translation>Le plug-in a été exporté dans « %1 ».</translation>
     </message>
     <message>
-        <location line="-96"/>
+        <location line="+1"/>
         <source>You may need to re-launch your FFGL host to use the plugin.</source>
         <translation>Il se peut que vous deviez relancer votre hôte FFGL pour utiliser le plug-in.</translation>
     </message>
@@ -1518,11 +1517,11 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location line="+1"/>
-        <source>Please re-launch System Preferences to use the screen saver.</source>
-        <translation>Relancer les Préférences Système pour utiliser l&apos;économiseur d&apos;écran.</translation>
+        <source>Please re-launch System Settings to use the screen saver.</source>
+        <translation>Relancer les Réglages du système pour utiliser l&apos;économiseur d&apos;écran.</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+68"/>
         <source>A Motion Template was created at “%2”.</source>
         <translation>Un gabarit Motion a été créé dans « %2 ».</translation>
     </message>
@@ -1550,7 +1549,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>&amp;Fichier</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="+223"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+225"/>
         <source>New Composition from Template</source>
         <translation>Nouvelle composition à partir d&apos;un gabarit</translation>
     </message>
@@ -1561,8 +1560,8 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location filename="../editor/VuoEditorWindow.ui" line="+151"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+670"/>
-        <location line="+3393"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+671"/>
+        <location line="+3396"/>
         <location line="+662"/>
         <location line="+769"/>
         <source>Save As…</source>
@@ -1574,7 +1573,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Fermer</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-5549"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-5553"/>
         <source>About Vuo…</source>
         <translation>À propos de Vuo…</translation>
     </message>
@@ -1596,7 +1595,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Rétablir</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="+4666"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+4670"/>
         <source>Cut</source>
         <translation>Couper</translation>
     </message>
@@ -1613,9 +1612,9 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     <message>
         <location line="-35"/>
         <location filename="../editor/VuoCommandUnpublishPort.cc" line="+64"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-2268"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-2271"/>
         <location line="+32"/>
-        <location line="+2238"/>
+        <location line="+2241"/>
         <source>Delete</source>
         <translation>Supprimer</translation>
     </message>
@@ -1635,7 +1634,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>&amp;Afficher</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-4098"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-4101"/>
         <source>Hide Published Ports</source>
         <translation>Masquer les ports publiés</translation>
     </message>
@@ -1655,14 +1654,14 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Réduire</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-707"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-708"/>
         <source>&amp;Canvas Transparency</source>
         <translation>&amp;Transparence du canevas</translation>
     </message>
     <message>
         <location filename="../editor/VuoEditorWindow.ui" line="-41"/>
         <location line="+130"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+652"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+653"/>
         <source>Run</source>
         <translation>Démarrer</translation>
     </message>
@@ -1699,7 +1698,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>FxPlug</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="+3189"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+3192"/>
         <source>Replace</source>
         <translation>Remplacer</translation>
     </message>
@@ -1710,7 +1709,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location filename="../editor/VuoCommandSetCableHidden.cc" line="+23"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-1638"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-1641"/>
         <source>Hide</source>
         <translation>Masquer</translation>
     </message>
@@ -1721,7 +1720,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location line="+106"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+3526"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+3529"/>
         <source>Package as Subcomposition</source>
         <translation>Regrouper en sous-composition</translation>
     </message>
@@ -1737,18 +1736,18 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location filename="../editor/VuoCommandPublishPort.cc" line="+26"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-3418"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-3421"/>
         <source>Publish Port</source>
         <translation>Publier le port</translation>
     </message>
     <message>
         <location filename="../editor/VuoEditorWindow.ui" line="+41"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-2193"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-2194"/>
         <source>Change To</source>
         <translation>Modifier en</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="+2055"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+2056"/>
         <source>Tint</source>
         <translation>Teinte</translation>
     </message>
@@ -1831,13 +1830,13 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location line="+34"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+4024"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+4027"/>
         <source>Duplicate</source>
         <translation>Dupliquer</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-4082"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-4085"/>
         <source>Show Hidden Cables</source>
         <translation>Afficher les câbles masqués</translation>
     </message>
@@ -1921,7 +1920,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
     </message>
     <message>
         <location filename="../editor/VuoCommandSetPortConstant.cc" line="+23"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="+4563"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+4566"/>
         <source>Set Port Constant</source>
         <translation>Définir une constante du port</translation>
     </message>
@@ -1943,7 +1942,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Définir la régulation</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-5299"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-5303"/>
         <source>&amp;Quit</source>
         <translation>&amp;Quitter Vuo</translation>
     </message>
@@ -1958,7 +1957,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Protocoles</translation>
     </message>
     <message>
-        <location line="+557"/>
+        <location line="+558"/>
         <source>&lt;p&gt;&lt;a href=&quot;%1&quot;&gt;How do I update my compositions from Vuo 1.x to Vuo 2.0?&lt;/a&gt;&lt;/p&gt;</source>
         <translation>&lt;p&gt;&lt;a href=&quot;%1&quot;&gt;Comment puis-je mettre à jour mes compositions Vuo 1.x vers Vuo 2.0 ?&lt;/a&gt;&lt;/p&gt;</translation>
     </message>
@@ -2024,7 +2023,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Modification du protocole de port</translation>
     </message>
     <message>
-        <location line="+1035"/>
+        <location line="+1039"/>
         <source>Leave files in place</source>
         <translation>Ne pas déplacer les fichiers</translation>
     </message>
@@ -2049,7 +2048,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Mises à jour du chemin de fichier</translation>
     </message>
     <message>
-        <location line="+240"/>
+        <location line="+239"/>
         <source>&lt;b&gt;“%1” already exists. Do you want to replace it?&lt;/b&gt;</source>
         <translation>&lt;b&gt;« %1 » existe déjà. Voulez-vous la remplacer ?&lt;/b&gt;</translation>
     </message>
@@ -2064,7 +2063,7 @@ Appears at the bottom of the &quot;Change Node&quot; menu when there are more op
         <translation>Vidéo... (nécessite le protocole de générateur d&apos;image)</translation>
     </message>
     <message>
-        <location line="+262"/>
+        <location line="+293"/>
         <source>&lt;b&gt;Export canceled.&lt;/b&gt;</source>
         <translation>&lt;b&gt;Exportation annulée.&lt;/b&gt;</translation>
     </message>
@@ -2116,7 +2115,7 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
         <translation>&lt;a href=&apos;%1&apos;&gt;Passez à Vuo Pro&lt;/a&gt; pour exporter des vidéos d&apos;une résolution supérieure à 1280x1280.</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+112"/>
         <source>&lt;p&gt;The frames that were rendered before you canceled have been saved to the movie.&lt;br&gt;&lt;/p&gt;</source>
         <translation>&lt;p&gt;Les images rendues avant l&apos;annulation ont été enregistrées dans la vidéo.&lt;br&gt;&lt;/p&gt;</translation>
     </message>
@@ -2131,12 +2130,12 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
         <translation>L&apos;exportation de la composition a rencontré une erreur</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-103"/>
         <source>Compiling…</source>
         <translation>Compilation...</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+83"/>
         <source>There was a problem exporting the movie.</source>
         <translation>L&apos;exportation de la vidéo a rencontré une erreur</translation>
     </message>
@@ -2162,7 +2161,7 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
     </message>
     <message>
         <location filename="../editor/VuoCommandAddPublishedPort.cc" line="+26"/>
-        <location filename="../editor/VuoEditorWindow.cc" line="-2065"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-2068"/>
         <source>Add Published Port</source>
         <translation>Ajouter le port publié</translation>
     </message>
@@ -2192,7 +2191,7 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
         <translation>Définir la teinte</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="+1417"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="+1420"/>
         <location line="+7"/>
         <source>Save Subcomposition to User Library</source>
         <translation>Enregistrer la sous-composition dans la bibliothèque utilisateur</translation>
@@ -2228,7 +2227,7 @@ Essayez de réduire la résolution ou l&apos;anticrénelage, ou utilisez un syst
         <translation>Adapter</translation>
     </message>
     <message>
-        <location filename="../editor/pro/VuoEditorWindow_Pro.cc" line="-488"/>
+        <location filename="../editor/pro/VuoEditorWindow_Pro.cc" line="-522"/>
         <location line="+18"/>
         <location line="+18"/>
         <source>Activate Vuo Pro to Export</source>
@@ -2259,7 +2258,7 @@ the Vuo Community Edition splash screen upon launch.</source>
 l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-3077"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-3080"/>
         <source>Run as</source>
         <translation>Démarrer en tant que</translation>
     </message>
@@ -2274,7 +2273,7 @@ l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
         <translation>Enregistrer dans la bibliothèque utilisateur</translation>
     </message>
     <message>
-        <location line="+4120"/>
+        <location line="+4123"/>
         <source>Reset</source>
         <translation>Réinitialiser</translation>
     </message>
@@ -2291,7 +2290,7 @@ l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
         <translation>Vos modifications seront perdues si vous ne les enregistrez pas.</translation>
     </message>
     <message>
-        <location line="-1120"/>
+        <location line="-1119"/>
         <source>You&apos;re saving your composition to a different folder.</source>
         <extracomment>Appears in a dialog after selecting File &gt; Save As on a composition that refers to resources with relative paths.</extracomment>
         <translation>Vous enregistrez votre composition dans un dossier différent.</translation>
@@ -2326,7 +2325,7 @@ l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
         </translation>
     </message>
     <message>
-        <location line="+451"/>
+        <location line="+450"/>
         <source>The composition could not be saved at “%1”.</source>
         <extracomment>Appears in a dialog after selecting File &gt; Save or Save As.</extracomment>
         <translation>La composition n&apos;a pas pu être enregistrée dans « %1 ».</translation>
@@ -2337,7 +2336,7 @@ l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
         <translation>Ouvrir…</translation>
     </message>
     <message>
-        <location filename="../editor/VuoEditorWindow.cc" line="-2054"/>
+        <location filename="../editor/VuoEditorWindow.cc" line="-2057"/>
         <source>Couldn&apos;t specialize node &apos;%1&apos; to type &apos;%2&apos;.</source>
         <translation>Impossible de spécialiser le nœud &apos;%1&apos; pour écrire &apos;%2&apos;.</translation>
     </message>
@@ -2347,7 +2346,7 @@ l&apos;écran d&apos;accueil de la version Communauté de Vuo.</translation>
         <translation>La compilation du nœud a peut-être échoué. Consultez le rapport de la console pour plus de détails.</translation>
     </message>
     <message>
-        <location line="+3485"/>
+        <location line="+3488"/>
         <source>Save before packaging</source>
         <translation>Enregistrer avant l&apos;emballage</translation>
     </message>
@@ -2654,7 +2653,7 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
 <context>
     <name>VuoNodePopover</name>
     <message>
-        <location filename="../editor/VuoNodePopover.cc" line="+380"/>
+        <location filename="../editor/VuoNodePopover.cc" line="+382"/>
         <source>Show in Finder</source>
         <extracomment>Appears in the node documentation panel at the bottom of the node library.</extracomment>
         <translation>Afficher dans le Finder</translation>
@@ -2695,7 +2694,7 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
 <context>
     <name>VuoPortPopover</name>
     <message>
-        <location filename="../editor/VuoPortPopover.cc" line="+417"/>
+        <location filename="../editor/VuoPortPopover.cc" line="+427"/>
         <source>none observed</source>
         <extracomment>Appears in port popovers. Refers to whether any events passed through this port in a running composition while the popover was open.</extracomment>
         <translation>aucun observé</translation>
@@ -2804,13 +2803,13 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <translation>Dernier évènement</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+34"/>
         <source>Value</source>
         <extracomment>Appears in port popovers. Refers to the port&apos;s current value.</extracomment>
         <translation>Valeur</translation>
     </message>
     <message numerus="yes">
-        <location line="-154"/>
+        <location line="-150"/>
         <source>%1 second(s) ago</source>
         <translation>
             <numerusform>%1 il y a une seconde</numerusform>
@@ -2976,8 +2975,8 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
     </message>
     <message>
         <location line="+5"/>
-        <source>For screen savers: &lt;code&gt;true&lt;/code&gt; when the screen saver is running in the System Preferences preview thumbnail.</source>
-        <translation>Pour les économiseurs d&apos;écran : &lt;code&gt;true&lt;/code&gt; lorsque l&apos;économiseur est prévisualisé dans les Préférences Système.</translation>
+        <source>For screen savers: &lt;code&gt;true&lt;/code&gt; when the screen saver is running in the System Settings preview thumbnail.</source>
+        <translation>Pour les économiseurs d&apos;écran : &lt;code&gt;true&lt;/code&gt; lorsque l&apos;économiseur est prévisualisé dans les Réglages du système.</translation>
     </message>
     <message>
         <location line="-193"/>
@@ -3088,11 +3087,16 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
     </message>
     <message>
         <location line="+1"/>
-        <source>Desktop &amp; Screen Saver</source>
-        <translation>Bureau et économiseur d&apos;écran</translation>
+        <source>Screen Saver</source>
+        <translation>Économiseur d&apos;écran</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>General</source>
+        <translation>Général</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Language &amp; Region</source>
         <translation>Langue &amp; région</translation>
     </message>
@@ -3108,13 +3112,8 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
     </message>
     <message>
         <location line="+1"/>
-        <source>Screen Savers</source>
-        <translation>Économiseurs d&apos;écran</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>System Preferences</source>
-        <translation>Préférences Système</translation>
+        <source>System Settings</source>
+        <translation>Réglages du système</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3130,7 +3129,7 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
 <context>
     <name>system requirements</name>
     <message>
-        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-224"/>
+        <location filename="../editor/pro/VuoEditorComposition_Pro.cc" line="-240"/>
         <source>The app requires %1.</source>
         <translation>L&apos;application nécessite %1.</translation>
     </message>

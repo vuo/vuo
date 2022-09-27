@@ -574,7 +574,7 @@ bool VuoEditorWindowToolbar::isStopInProgress()
 }
 
 /**
- * Returns true if System Preferences > General > Show Scroll Bars is set to "When Scrolling" (only available on Mac OS 10.7+).
+ * Returns true if System Settings > Appearance > Show Scroll Bars is set to "When Scrolling".
  * In this mode, scrollbars are drawn as overlays on top of content (instead of reducing the content area).
  */
 bool VuoEditorWindowToolbar::usingOverlayScrollers()

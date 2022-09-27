@@ -35,6 +35,7 @@ char *controlURL = NULL;  ///< The URL that the composition will use to initiali
 char *telemetryURL = NULL;  ///< The URL that the composition will use to initialize its telemetry socket.
 
 bool isReplacing = false;  ///< True if the composition is in the process of being replaced.
+bool replacementFailed = false;  ///< True if the composition loader attmpted to replace the composition and couldn't do it.
 void *dylibHandle = NULL;  ///< A handle to the running composition.
 map<string, void *> resourceDylibHandles;  ///< Handles to the running composition's resources.
 vector<string> resourceDylibsToUnload;  ///< Paths of the resources to be unloaded when the composition is replaced.
@@ -241,12 +242,16 @@ int main(int argc, char **argv)
 
 													  bool ok = replaceComposition(dylibPath, compositionDiff);
 
-													  vuoLoaderControlReplySend(VuoLoaderControlReplyCompositionReplaced,NULL,0);
+													  zmq_msg_t messages[1];
+													  vuoInitMessageWithBool(messages, ok);
+													  vuoLoaderControlReplySend(VuoLoaderControlReplyCompositionReplaced, messages, 1);
 
 													  if (! ok)
 													  {
-														  exit(-1);
+														  replacementFailed = true;
+														  VuoEventLoop_break();
 													  }
+
 													  break;
 												  }
 											  }
@@ -262,7 +267,7 @@ int main(int argc, char **argv)
 		// Before the composition has started for the first time, isStopped is an alias for isStoppedInitially, which returns false.
 		// While the composition is being replaced, isReplaced is true and isStopped is invalid for part of the time.
 		// While the composition is running (started and not yet stopped), isStopped returns false.
-		while (isReplacing || ! isStopped())
+		while ((isReplacing || ! isStopped()) && ! replacementFailed)
 			VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 	}
 
@@ -295,13 +300,20 @@ int main(int argc, char **argv)
 		});
 		dispatch_release(loaderControlQueue);
 
-		VuoFiniType *vuoFini = (VuoFiniType *) dlsym(dylibHandle, "vuoFini");
-		if (! vuoFini)
+		if (! replacementFailed)
 		{
-			VUserLog("The composition couldn't stop because vuoFini() couldn't be found in the composition library : %s", dlerror());
-			return -1;
+			VuoFiniType *vuoFini = (VuoFiniType *) dlsym(dylibHandle, "vuoFini");
+			if (! vuoFini)
+			{
+				VUserLog("The composition couldn't stop because vuoFini() couldn't be found in the composition library : %s", dlerror());
+				return -1;
+			}
+			vuoFini();
 		}
-		vuoFini();
+
+		// Before terminating the process, wait for any last messages to be sent.
+		zmq_ctx_term(ZMQLoaderControlContext);
+		zmq_ctx_term(ZMQControlContext);
 	}
 
 	return 0;

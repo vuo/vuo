@@ -31,6 +31,11 @@
 #include "VuoNodeClass.hh"
 #include "VuoRendererFonts.hh"
 
+Q_DECLARE_METATYPE(vector<string>)
+Q_DECLARE_METATYPE(vector<VuoCompilerNodeClass *>)
+Q_DECLARE_METATYPE(vector<VuoCompilerType *>)
+Q_DECLARE_METATYPE(ModulesModifiedSet)
+
 set<VuoModuleManager *> VuoModuleManager::allModuleManagers;
 
 /**
@@ -47,24 +52,19 @@ VuoModuleManager::VuoModuleManager(VuoCompiler *compiler)
 	codeWindow = nullptr;
 	nodeLibrary = nullptr;
 
-	updateGroup = dispatch_group_create();
-
 	allModuleManagers.insert(this);
-}
 
-/**
- * Instead of of calling `delete` directly, call @ref VuoModuleManager::deleteWhenReady.
- */
-VuoModuleManager::~VuoModuleManager(void)
-{
-	delete compiler;
-	dispatch_release(updateGroup);
+	qRegisterMetaType< vector<string> >();
+	qRegisterMetaType< vector<VuoCompilerNodeClass *> >();
+	qRegisterMetaType< vector<VuoCompilerType *> >();
+	qRegisterMetaType< ModulesModifiedSet >();
+	connect(this, &VuoModuleManager::loadedModulesAndReadyToUpdate, this, &VuoModuleManager::updateWithModulesBeingLoaded, Qt::QueuedConnection);
 }
 
 /**
  * Destroys this object after waiting for all pending work to complete.
  */
-void VuoModuleManager::deleteWhenReady(void)
+VuoModuleManager::~VuoModuleManager(void)
 {
 	composition = nullptr;
 	codeWindow = nullptr;
@@ -76,13 +76,9 @@ void VuoModuleManager::deleteWhenReady(void)
 
 	allModuleManagers.erase(this);
 
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-
-		compiler->setDelegate(nullptr);
-		dispatch_group_wait(updateGroup, DISPATCH_TIME_FOREVER);
-
-		delete this;
-	});
+	compiler->setDelegate(nullptr);
+	disconnect(this, &VuoModuleManager::loadedModulesAndReadyToUpdate, this, &VuoModuleManager::updateWithModulesBeingLoaded);
+	delete compiler;
 }
 
 /**
@@ -283,7 +279,7 @@ void VuoModuleManager::loadedModules(const map<string, VuoCompilerModule *> &mod
 
 	vector<string> nodeClassesRemovedOrModified;
 	vector<string> typesRemovedOrModified;
-	vector<string> librariesRemovedorModified;
+	vector<string> librariesRemovedOrModified;
 	foreach (VuoCompilerModule *module, modulesRemovedOrModified)
 	{
 		string moduleKey = module->getPseudoBase()->getModuleKey();
@@ -296,7 +292,7 @@ void VuoModuleManager::loadedModules(const map<string, VuoCompilerModule *> &mod
 			if (type)
 				typesRemovedOrModified.push_back(moduleKey);
 			else
-				librariesRemovedorModified.push_back(moduleKey);
+				librariesRemovedOrModified.push_back(moduleKey);
 		}
 	}
 
@@ -304,11 +300,22 @@ void VuoModuleManager::loadedModules(const map<string, VuoCompilerModule *> &mod
 	for (auto m : modulesModified)
 		modulesModifiedSet.insert(m.second);
 
-	dispatch_group_async(updateGroup, dispatch_get_main_queue(), ^{
-					   update(nodeClassesRemovedOrModified, nodeClassesAddedOrModified, typesRemovedOrModified, typesAddedOrModified,
-							  librariesRemovedorModified, modulesModifiedSet, issues);
-					   loadedModulesCompleted();
-				  });
+	emit loadedModulesAndReadyToUpdate(nodeClassesRemovedOrModified, nodeClassesAddedOrModified, typesRemovedOrModified, typesAddedOrModified,
+									   librariesRemovedOrModified, modulesModifiedSet, issues);
+}
+
+/**
+ * This function exists so that the call to `update()` can be scheduled on the main thread and canceled if the VuoModuleManager
+ * is destroyed, by virtue of the call to this function being made through a signal-slot queued connection.
+ */
+void VuoModuleManager::updateWithModulesBeingLoaded(const vector<string> &nodeClassesToRemove, const vector<VuoCompilerNodeClass *> &nodeClassesToAdd,
+													const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd,
+													const vector<string> &librariesToRemove,
+													const ModulesModifiedSet &modulesModified,
+													VuoCompilerIssues *issues)
+{
+	update(nodeClassesToRemove, nodeClassesToAdd, typesToRemove, typesToAdd, librariesToRemove, modulesModified, issues);
+	loadedModulesCompleted();
 }
 
 /**
@@ -513,7 +520,8 @@ void VuoModuleManager::update(const vector<string> &nodeClassesToRemove, const v
 					if (isSpecializedNodeClass)
 						replacementNodeClass = compiler->getNodeClass( node->getNodeClass()->getClassName() );
 
-					replacementNode = composition->createBaseNode(replacementNodeClass, node);
+					if (replacementNodeClass)
+						replacementNode = composition->createBaseNode(replacementNodeClass, node);
 				}
 				else if (dependenciesLost.find(nodeClassName) != dependenciesLost.end())
 				{
@@ -760,7 +768,10 @@ void VuoModuleManager::updateLoadedTypecastClasses(const vector<string> &nodeCla
 							static_cast<VuoCompilerPortClass *>(typecastInPortClass->getCompiler())->getDataVuoType(),
 							static_cast<VuoCompilerPortClass *>(typecastOutPortClass->getCompiler())->getDataVuoType()
 						);
-				loadedTypecastClasses[inTypeOutType].push_back(nodeClass->getClassName());
+
+				if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClass->getClassName()) ==
+						loadedTypecastClasses[inTypeOutType].end())
+					loadedTypecastClasses[inTypeOutType].push_back(nodeClass->getClassName());
 			}
 		}
 	}

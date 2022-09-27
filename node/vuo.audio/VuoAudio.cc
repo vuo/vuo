@@ -383,10 +383,10 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 			CFRelease(mediaType);
 
 			if (status == 0 /* AVAuthorizationStatusNotDetermined */)
-				VUserLog("Warning: Audio input may be unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Microphone.");
+				VUserLog("Warning: Audio input may be unavailable due to system restrictions.  Check System Settings > Privacy & Security > Microphone.");
 			else if (status == 1 /* AVAuthorizationStatusRestricted */
 				  || status == 2 /* AVAuthorizationStatusDenied */)
-				VUserLog("Error: Audio input is unavailable due to system restrictions.  Check System Preferences > Security & Privacy > Privacy > Microphone.");
+				VUserLog("Error: Audio input is unavailable due to system restrictions.  Check System Settings > Privacy & Security > Microphone.");
 		}
 
 		ai = new _VuoAudio_internal;

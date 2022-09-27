@@ -325,7 +325,7 @@ private slots:
 		QTest::newRow("HTTP")				<< "http://vuo.org"										<< false;
 		QTest::newRow("non-bundle folder")	<< "file:///"											<< false;
 		QTest::newRow("non-bundle folder2")	<< "file:///Applications"								<< false;
-		QTest::newRow("app bundle")         << "file:///Applications/Safari.app"                    << true;
+		QTest::newRow("app bundle")         << "file:///Applications/Xcode.app"                     << true;
 		QTest::newRow("framework bundle")	<< "file:///System/Library/Frameworks/AppKit.framework"	<< false;
 		QTest::newRow("nonexistent path")   << "file:///nonexistent"                                << false;
 	}

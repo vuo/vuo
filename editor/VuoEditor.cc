@@ -512,7 +512,7 @@ VuoEditor::~VuoEditor()
 	if (menuBar)
 		menuBar->deleteLater();
 	delete subcompositionRouter;
-	moduleManager->deleteWhenReady();  // deletes compiler
+	delete moduleManager;  // deletes compiler
 }
 
 /**
@@ -3000,7 +3000,7 @@ void VuoEditor::populateNewCompositionWithTemplateMenu(QMenu *m)
 {
 	// Sub-item indentation.
 	// Use transparent icons instead of whitespace padding,
-	// so that users can more easily customize the menu item shortcuts via System Preferences.
+	// so that users can more easily customize the menu item shortcuts via System Settings > Keyboard > Keyboard Shortcuts.
 	QPixmap emptyPixmap(32, 32);
 	emptyPixmap.fill(Qt::transparent);
 	QIcon indentIcon(emptyPixmap);

@@ -727,6 +727,7 @@ VuoEditorWindow::~VuoEditorWindow()
 
 	disconnect(composition, &VuoEditorComposition::sceneRectChanged, this, &VuoEditorWindow::viewportFitReset);
 	disconnect(composition, &VuoEditorComposition::selectionChanged, this, &VuoEditorWindow::viewportFitReset);
+	disconnect(composition, &VuoEditorComposition::selectionChanged, this, &VuoEditorWindow::updateSelectedComponentMenuItems);
 	disconnect(composition, &VuoEditorComposition::highlightPublishedSidebarDropLocationsRequested, inputPortSidebar, &VuoPublishedPortSidebar::highlightEligibleDropLocations);
 	disconnect(composition, &VuoEditorComposition::highlightPublishedSidebarDropLocationsRequested, outputPortSidebar, &VuoPublishedPortSidebar::highlightEligibleDropLocations);
 	disconnect(composition, &VuoEditorComposition::clearPublishedSidebarDropLocationHighlightingRequested, inputPortSidebar, &VuoPublishedPortSidebar::clearEligibleDropLocationHighlighting);
@@ -788,7 +789,7 @@ VuoEditorWindow::~VuoEditorWindow()
 
 	subcompositionRouter->removeComposition(this);
 
-	composition->deleteLater();
+	delete composition;
 	delete ui;
 
 	// Drain the documentation queue, to ensure any pending
@@ -4324,6 +4325,14 @@ void VuoEditorWindow::populateProtocolsMenu(QMenu *m)
 		connect(protocolAction, &QAction::triggered, this, &VuoEditorWindow::changeActiveProtocol);
 		m->addAction(protocolAction);
 	}
+
+	m->addSeparator();
+
+	QAction *protocolAction = new QAction(this);
+	protocolAction->setText(VuoEditor::tr("None"));
+	protocolAction->setCheckable(true);
+	connect(protocolAction, &QAction::triggered, this, &VuoEditorWindow::changeActiveProtocol);
+	m->addAction(protocolAction);
 }
 
 /**
@@ -4346,6 +4355,18 @@ void VuoEditorWindow::changeActiveProtocol(void)
 {
 	QAction *sender = (QAction *)QObject::sender();
 	VuoProtocol *selectedProtocol = sender->data().value<VuoProtocol *>();
+
+	if (!selectedProtocol)  // "None"
+	{
+		selectedProtocol = composition->getActiveProtocol();
+		if (!selectedProtocol)
+		{
+			// If the user selected "None", and there is already no protocol, there's nothing to do,
+			// except ensure that the menu checkmarks are up-to-date.
+			updateUI();
+			return;
+		}
+	}
 
 	VUserLog("%s:      %s protocol %s {",
 		getWindowTitleWithoutPlaceholder().toUtf8().data(),

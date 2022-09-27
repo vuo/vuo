@@ -120,7 +120,6 @@ target_sources(vuo.core.types PRIVATE
 )
 target_include_directories(vuo.core.types
 	PRIVATE
-	../base
 	../node/vuo.data
 	../node/vuo.image
 	../node/vuo.time

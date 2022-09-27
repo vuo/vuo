@@ -473,7 +473,10 @@ enum VuoLoaderControlRequest
 enum VuoLoaderControlReply
 {
 	/**
-	 * The composition has been replaced with an updated version.
+	 * The composition loader has finished replacing, or failed to replace, the composition with an updated version.
+	 *
+	 * Includes data message-parts:
+	 *      @arg @c bool success;
 	 */
 	VuoLoaderControlReplyCompositionReplaced
 };

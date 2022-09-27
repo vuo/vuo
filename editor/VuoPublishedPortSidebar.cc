@@ -262,7 +262,7 @@ void VuoPublishedPortSidebar::appendPublishedPortToList(VuoPublishedPort *port, 
 		else if (publishedPortName == "preview")
 		{
 			if (generator)
-				description = tr("For screen savers: <code>true</code> when the screen saver is running in the System Preferences preview thumbnail.");
+				description = tr("For screen savers: <code>true</code> when the screen saver is running in the System Settings preview thumbnail.");
 		}
 
 		if (!description.isEmpty())

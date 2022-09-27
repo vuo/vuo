@@ -73,7 +73,7 @@ public:
 	 */
 	enum Optimization
 	{
-		Optimization_FastBuild,  ///< Speed up the build by having the composition binary link to cache libraries on the user's system. See @ref prepareForFastBuild.
+		Optimization_FastBuild,  ///< Speed up the build by having the composition binary link to cache libraries on the user's system. See @ref VuoCompiler::prepareForFastBuild.
 		Optimization_FastBuildExistingCache,  ///< Like Optimization_FastBuild, but skips ensuring that the cache libraries are up to date.
 		Optimization_SmallBinary  ///< Don't link to any cache libraries.
 	};
@@ -131,7 +131,7 @@ private:
 		void *p;
 #pragma clang diagnostic pop
 #ifdef VUO_PRO
-#include "pro/VuoCompilerModuleInfo_Pro.hh"
+#include "../compiler/pro/VuoCompilerModuleInfo_Pro.hh"
 #endif
 	};
 
@@ -298,7 +298,7 @@ private:
 		void notifyCompilers(const set<VuoCompilerModule *> &modulesAdded, const set<pair<VuoCompilerModule *, VuoCompilerModule *> > &modulesModified, const set<VuoCompilerModule *> &modulesRemoved, VuoCompilerIssues *issues, bool oldModulesInvalidated = true);
 		set<VuoCompilerModule *> loadCompiledModules(const set<string> &moduleKeys, const map<string, string> &sourceCodeForModule);
 		set<dispatch_group_t> loadSpecializedModules(const set<string> &moduleKeys, VuoCompiler *compiler, dispatch_queue_t llvmQueue);
-		set<dispatch_group_t> compileModulesFromSourceCode(const set<string> &moduleKeys, bool shouldRecompileIfUnchanged);
+		set<dispatch_group_t> compileModulesFromSourceCode(const set<string> &moduleKeys, dispatch_group_t moduleSourceCompilersExist, bool shouldRecompileIfUnchanged);
 		set<VuoCompilerModule *> unloadCompiledModules(const set<string> &moduleKeys);
 		void deleteModulesCompiledFromSourceCode(const set<string> &moduleKeys);
 		void replaceNodeClass(VuoCompilerNodeClass *newNodeClass);
@@ -319,7 +319,7 @@ private:
 		string getName();
 
 #ifdef VUO_PRO
-#include "pro/VuoCompilerEnvironment_Pro.hh"
+#include "../compiler/pro/VuoCompilerEnvironment_Pro.hh"
 #endif
 	};
 
@@ -471,7 +471,7 @@ public:
 private:
 	void *p;
 #ifdef VUO_PRO
-#include "pro/VuoCompiler_Pro.hh"
+#include "../compiler/pro/VuoCompiler_Pro.hh"
 #endif
 };
 

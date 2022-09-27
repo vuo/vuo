@@ -248,6 +248,9 @@ static void VuoGlContext_renderers(void)
 			VUserLog("        Family                              : Common 2");
 			else if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 3001))
 			VUserLog("        Family                              : Common 1");
+
+			if (((bool (*)(id, SEL, int))objc_msgSend)(dev, sel_getUid("supportsFamily:"), 5001))  // MTLGPUFamilyMetal3
+			VUserLog("        Family                              : Metal 3");
 			}
 
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("readWriteTextureSupport")))
@@ -263,10 +266,16 @@ static void VuoGlContext_renderers(void)
 
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsDynamicLibraries")))
 			VUserLog("        Dynamic library support             : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsDynamicLibraries")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsRenderDynamicLibraries")))
+			VUserLog("        Dynamic render library support      : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsRenderDynamicLibraries")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsFunctionPointers")))
 			VUserLog("        Function pointer support            : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsFunctionPointers")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsFunctionPointersFromRender")))
+			VUserLog("        Render function pointer support     : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsFunctionPointersFromRender")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsRaytracing")))
 			VUserLog("        Raytracing support                  : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsRaytracing")) ? "yes" : "no");
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsRaytracingFromRender")))
+			VUserLog("        Render raytracing support           : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsRaytracingFromRender")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsShaderBarycentricCoordinates")))
 			VUserLog("        Barycentric support                 : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsShaderBarycentricCoordinates")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsPrimitiveMotionBlur")))
@@ -281,6 +290,13 @@ static void VuoGlContext_renderers(void)
 			VUserLog("        LOD query support                   : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsQueryTextureLOD")) ? "yes" : "no");
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("supportsBCTextureCompression")))
 			VUserLog("        BC texture support                  : %s", ((bool (*)(id, SEL))objc_msgSend)(dev, sel_getUid("supportsBCTextureCompression")) ? "yes" : "no");
+
+			if (class_respondsToSelector(object_getClass(dev), sel_getUid("sparseTileSizeInBytesForSparsePageSize:")))
+			{
+			VUserLog("         16-byte sparse page tile size      : %llu", ((uint64_t (*)(id, SEL, uint64_t))objc_msgSend)(dev, sel_getUid("sparseTileSizeInBytesForSparsePageSize:"), 101));
+			VUserLog("         64-byte sparse page tile size      : %llu", ((uint64_t (*)(id, SEL, uint64_t))objc_msgSend)(dev, sel_getUid("sparseTileSizeInBytesForSparsePageSize:"), 102));
+			VUserLog("        256-byte sparse page tile size      : %llu", ((uint64_t (*)(id, SEL, uint64_t))objc_msgSend)(dev, sel_getUid("sparseTileSizeInBytesForSparsePageSize:"), 103));
+			}
 
 			if (class_respondsToSelector(object_getClass(dev), sel_getUid("counterSets")))
 			{

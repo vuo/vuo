@@ -72,6 +72,12 @@ GLWidget::GLWidget(QWidget* parent)
 	elapsedMilliseconds = 0;
 }
 
+GLWidget::~GLWidget()
+{
+	runner->stop();
+	delete runner;
+}
+
 void GLWidget::initializeGL()
 {
 	// Share the GL Context with the Vuo Composition

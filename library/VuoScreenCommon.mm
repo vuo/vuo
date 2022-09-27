@@ -53,15 +53,18 @@ unsigned int VuoScreen_useCount = 0;  ///< Process-wide count of callers (typica
 static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 {
 	NSString *modelName        = nil;
+	uint32_t displayModelNumber  = CGDisplayModelNumber(displayID);
 	NSString *manufacturerName = nil;
+	uint32_t displayVendorNumber = CGDisplayVendorNumber(displayID);
 	NSString *transport        = nil;
 	NSString *serialString     = nil;
-	uint32_t serialNumber      = 0;
+	uint32_t serialNumber      = CGDisplaySerialNumber(displayID);
 	uint8_t  manufacturedWeek  = 0;
 	uint16_t manufacturedYear  = 0;
 
 
-	// x86_64 supports getting extended display info via `IODisplayCreateInfoDictionary`, but arm64 doesn't support that.
+	// First, try `IODisplayCreateInfoDictionary`, which provides the most information,
+	// but is only supported on x86_64.
 	// https://b33p.net/kosada/vuo/vuo/-/issues/18596
 
 #if __x86_64__
@@ -111,62 +114,70 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 	if ([localizedNames count] > 0)
 		modelName = [localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]];
 
-#elif __arm64__
-
-	uint32_t displaySerialNumber = CGDisplaySerialNumber(displayID);
-	uint32_t displayVendorNumber = CGDisplayVendorNumber(displayID);
-	uint32_t displayModelNumber  = CGDisplayModelNumber(displayID);
-
-	CFMutableDictionaryRef matching = IOServiceMatching("IOMobileFramebuffer");
-
-	io_iterator_t it  = 0;
-	kern_return_t ret = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &it);
-	if (ret == noErr)
-	{
-		while (io_object_t ioo = IOIteratorNext(it))
-		{
-			NSDictionary *properties = nil;
-			kern_return_t ret        = IORegistryEntryCreateCFProperties(ioo, (CFMutableDictionaryRef *)&properties, NULL, 0);
-			if (ret == noErr)
-			{
-				uint32_t ioregSerialNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"SerialNumber"]).unsignedLongValue;
-				uint32_t ioregVendorNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"LegacyManufacturerID"]).unsignedLongValue;
-				uint32_t ioregModelNumber  = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductID"]).unsignedLongValue;
-				if (ioregSerialNumber == displaySerialNumber
-					&& ioregVendorNumber == displayVendorNumber
-					&& ioregModelNumber == displayModelNumber)
-				{
-					modelName        = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductName"] retain] autorelease];
-					manufacturerName = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ManufacturerID"] retain] autorelease];
-					transport        = [[properties[@"Transport"][@"Downstream"] retain] autorelease];
-					serialString     = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"AlphanumericSerialNumber"] retain] autorelease];
-					serialNumber     = ioregSerialNumber;
-					manufacturedWeek = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"WeekOfManufacture"]).unsignedIntValue;
-					manufacturedYear = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"YearOfManufacture"]).unsignedIntValue;
-				}
-			}
-			[properties release];
-			IOObjectRelease(ioo);
-		}
-		IOObjectRelease(it);
-	}
+#endif
 
 	if (!manufacturerName && !modelName)
 	{
-		// The IORegistry doesn't contain info on the built-in display…
-		if (displayVendorNumber == 0x610)
+		// If we're running on Apple Silicon (M1/ARM64),
+		// or on x86_64 and `IODisplayCreateInfoDictionary` didn't provide any information,
+		// see if there's any information on this display in the IORegistry.
+
+		CFMutableDictionaryRef matching = IOServiceMatching("IOMobileFramebuffer");
+
+		io_iterator_t it  = 0;
+		kern_return_t ret = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &it);
+		if (ret == noErr)
+		{
+			while (io_object_t ioo = IOIteratorNext(it))
+			{
+				NSDictionary *properties = nil;
+				kern_return_t ret        = IORegistryEntryCreateCFProperties(ioo, (CFMutableDictionaryRef *)&properties, NULL, 0);
+				if (ret == noErr)
+				{
+					uint32_t ioregSerialNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"SerialNumber"]).unsignedLongValue;
+					uint32_t ioregVendorNumber = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"LegacyManufacturerID"]).unsignedLongValue;
+					uint32_t ioregModelNumber  = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductID"]).unsignedLongValue;
+					if (ioregSerialNumber == serialNumber
+						&& ioregVendorNumber == displayVendorNumber
+						&& ioregModelNumber == displayModelNumber)
+					{
+						modelName        = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ProductName"] retain] autorelease];
+						manufacturerName = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"ManufacturerID"] retain] autorelease];
+						transport        = [[properties[@"Transport"][@"Downstream"] retain] autorelease];
+						serialString     = [[properties[@"DisplayAttributes"][@"ProductAttributes"][@"AlphanumericSerialNumber"] retain] autorelease];
+						manufacturedWeek = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"WeekOfManufacture"]).unsignedIntValue;
+						manufacturedYear = ((NSNumber *)properties[@"DisplayAttributes"][@"ProductAttributes"][@"YearOfManufacture"]).unsignedIntValue;
+					}
+				}
+				[properties release];
+				IOObjectRelease(ioo);
+			}
+			IOObjectRelease(it);
+		}
+	}
+
+
+	// Hardcode info for displays that aren't available via the IORegistry or EDID.
+	if (!manufacturerName && !modelName)
+	{
+		if (displayVendorNumber == 0x0610
+		 || displayVendorNumber == 'aapl' /* 0x6161706c */)
 		{
 			manufacturerName = @"Apple";
 			if (displayModelNumber == 0xa050)
 				modelName = @"Built-in Liquid Retina XDR Display";
+			else if (displayModelNumber == 'airp' /* 0x61697270 */)
+				modelName = @"AirPlay";
 			else
 				modelName = @"Display";
 		}
+		else if (displayVendorNumber == kDisplayVendorIDUnknown /* 0x756e6b6e 'unkn' */ && displayModelNumber == 'virt' /* 0x76697274 */)
+			modelName = @"Virtual Display";
+		else if (displayVendorNumber == 0x046d && displayModelNumber == 0x100)
+			modelName = @"Yam Display";
+		else if (displayVendorNumber == 0xf0f0)  // https://github.com/waydabber/BetterDisplay/blob/0aa8394a3c04762d41268fa9c35053ef24d1ef1e/BetterDummy/Model/Dummy.swift#L109
+			modelName = [NSString stringWithFormat:@"BetterDummy %d:%d", displayModelNumber / 256 + 1, displayModelNumber % 256 + 1];
 	}
-
-#else
-#error "Unsupported CPU architecture"
-#endif
 
 
 	// Coalesce the various attributes into a single descriptive string.
@@ -186,13 +197,15 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 			name = manufacturerName;
 		else
 		{
-			name = @"?";
-
 			// As a last resort, upgrade to an NSApplication-app and check whether `NSScreen` reports anything.
-			VuoApp_init(false);
-			for (NSScreen *nsscreen in [NSScreen screens])
-				if (nsscreen.deviceId == displayID)
-					name = [nsscreen.localizedName autorelease];
+			// Disabled since `NSScreen.localizedName` is crashy.
+			// https://b33p.net/kosada/vuo/vuo/-/issues/19231
+//			VuoApp_init(false);
+//			for (NSScreen *nsscreen in [NSScreen screens])
+//				if (nsscreen.deviceId == displayID)
+//					name = [nsscreen.localizedName autorelease];
+
+			name = [NSString stringWithFormat:@"Unknown display (vendor 0x%04x, model 0x%04x)", displayVendorNumber, displayModelNumber];
 		}
 	}
 
@@ -205,7 +218,7 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 	if (serialString.length > 0)
 		[parentheticalComponents addObject:serialString];
 	else if (serialNumber)
-		[parentheticalComponents addObject:[NSString stringWithFormat:@"%d", serialNumber]];
+		[parentheticalComponents addObject:[NSString stringWithFormat:@"%u", serialNumber]];
 
 	if (manufacturedYear)
 		[parentheticalComponents addObject:[NSString stringWithFormat:@"%d-W%02d", manufacturedYear, manufacturedWeek]];
@@ -216,6 +229,59 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 	[parentheticalComponents release];
 	if (parenthetical.length > 0)
 		compositeName = [name stringByAppendingFormat:@" (%@)", parenthetical];
+
+	if (VuoIsDebugEnabled())
+	{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		io_service_t port = CGDisplayIOServicePort(displayID);
+		bool captured = CGDisplayIsCaptured(displayID);
+#pragma clang diagnostic pop
+
+		CGGammaValue r0 = 0, r1 = 0, rg = 0, g0 = 0, g1 = 0, gg = 0, b0 = 0, b1 = 0, bg = 0;
+		CGGetDisplayTransferByFormula(displayID, &r0, &r1, &rg, &g0, &g1, &gg, &b0, &b1, &bg);
+
+		uint32_t gammaCap = CGDisplayGammaTableCapacity(displayID);
+		CGGammaValue *gamma = (CGGammaValue *)malloc(sizeof(CGGammaValue) * gammaCap * 3);
+		uint32_t gammaCount = 0;
+		CGGetDisplayTransferByTable(displayID, gammaCap, gamma, gamma + gammaCap, gamma + gammaCap * 2, &gammaCount);
+
+		VUserLog("[%-55s]  %5zux%-5zu (%4.0fx%-4.0f mm) @ %5gx%-5g  id=%02x  port=%x  vendor=0x%08x (%10u)  model=0x%08x (%10u)  serial=0x%08x (%10u)  unit=0x%04x (%5u)  active=%d  asleep=%d  online=%d  main=%d  builtin=%d  mirror=%s%s  gl=%d  stereo=%d  captured=%d  shield=%x  rotation=%g  cgcontext=%p  transfer=r(%g %g %g %7.5f) g(%g %g %g %7.5f) b(%g %g %g %7.5f)",
+			compositeName.UTF8String,
+			CGDisplayPixelsWide(displayID),
+			CGDisplayPixelsHigh(displayID),
+			CGDisplayScreenSize(displayID).width,
+			CGDisplayScreenSize(displayID).height,
+			CGDisplayBounds(displayID).origin.x,
+			CGDisplayBounds(displayID).origin.y,
+			displayID,
+			port,
+			displayVendorNumber, displayVendorNumber,
+			displayModelNumber, displayModelNumber,
+			serialNumber, serialNumber,
+			CGDisplayUnitNumber(displayID), CGDisplayUnitNumber(displayID),
+			CGDisplayIsActive(displayID),
+			CGDisplayIsAsleep(displayID),
+			CGDisplayIsOnline(displayID),
+			CGDisplayIsMain(displayID),
+			CGDisplayIsBuiltin(displayID),
+			CGDisplayIsInMirrorSet(displayID) ? (CGDisplayIsAlwaysInMirrorSet(displayID) ? "always" : "yes") : "no",
+			CGDisplayIsInHWMirrorSet(displayID) ? " hw" : "",
+			CGDisplayUsesOpenGLAcceleration(displayID),
+			CGDisplayIsStereo(displayID),
+			captured,
+			CGShieldingWindowID(displayID),
+			CGDisplayRotation(displayID),
+			CGDisplayGetDrawingContext(displayID),
+			r0, r1, rg, gamma[1],
+			g0, g1, gg, gamma[1 + gammaCap],
+			b0, b1, bg, gamma[1 + gammaCap * 2]);
+
+//		for (uint32_t i = 0; i < gammaCount; ++i)
+//			VUserLog("    %8f %8f %8f", gamma[i], gamma[i + gammaCap], gamma[i + gammaCap * 2]);
+
+		free(gamma);
+	}
 
 	return VuoText_make([compositeName UTF8String]);
 }
@@ -330,7 +396,7 @@ VuoScreen VuoScreen_getActive(void)
 /**
  * Returns the primary screen.
  *
- * (In System Preferences > Displays > Arrangement, the primary screen is the one with the menu bar.)
+ * (In System Settings > Displays > Arrangement, the primary screen is the one with the menu bar.)
  */
 VuoScreen VuoScreen_getPrimary(void)
 {

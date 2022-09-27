@@ -278,13 +278,13 @@ Vuo has been partially translated to *español* (Spanish), *français* (French),
 
 To change the language of Vuo and other applications:
 
-   - In macOS System Preferences, go to \menu{Language \& Region > General} (or just \menu{Language \& Region} on earlier macOS versions).
-   - Under "Preferred languages", move the desired language to the top of the list.
+   - In macOS System Settings, go to \menu{General > Language \& Region}.
+   - Under "Preferred Languages", move the desired language to the top of the list.
    - Relaunch Vuo.
 
 To change the language of Vuo only (macOS 10.15+):
 
-   - In macOS System Preferences, go to \menu{Language \& Region > Apps}.
+   - In macOS System Settings, go to \menu{General > Language \& Region > Apps}.
    - Add Vuo and select the desired language.
    - Relaunch Vuo.
 
@@ -787,7 +787,7 @@ Here are the most common data types in Vuo:
 | Layer | | A 2D shape or image that can be stacked with others |
 | Scene Object | | A 3D shape that can be placed with others in a scene |
 
-If your computer is configured to use a comma instead of a period for the decimal mark (\menu{System Preferences > Language \& Region}), then Vuo displays numerical types accordingly.
+If your computer is configured to use a comma instead of a period for the decimal mark (\menu{System Settings > General > Language \& Region}), then Vuo displays numerical types accordingly.
 
 Vuo has dozens of other data types, many of them specific to certain tasks (such as processing audio or receiving keyboard input). You'll learn about those data types in the process of learning how to perform the tasks.
 
@@ -1472,7 +1472,7 @@ The \term{Image Generator} protocol is for compositions that create an image (or
 | \vuoPort{frameNumber} | Integer | Optional | For movie export and FxPlug: The number of frames since the beginning of the movie/clip, starting at 0. |
 | \vuoPort{quality} | Real | Optional | For FxPlug: The rendering quality or level of detail. |
 | \vuoPort{screen} | Screen | Optional | For screen savers: Which display the screen saver is running on. (macOS runs a separate instance of the composition on each display.) |
-| \vuoPort{preview} | Boolean | Optional | For screen savers: \emph{true} when the screen saver is running in the System Preferences preview thumbnail. |
+| \vuoPort{preview} | Boolean | Optional | For screen savers: \emph{true} when the screen saver is running in the System Settings preview thumbnail. |
 
 \vuoPort{time} and \vuoPort{quality} are further explained later in this section.
 
@@ -1645,8 +1645,8 @@ You can turn your Vuo compositions into screen savers that will run on macOS Sie
    - In Vuo, go to \menu{File > New Composition from Template > Export > Screen Saver}. This creates a composition that conforms to the [Image Generator protocol](#making-compositions-fit-a-mold-with-protocols).
    - Add nodes to the composition to make it output a stream of images.
    - Go to \menu{File > Export > Mac Screen Saver}.
-   - When the export is complete, relaunch System Preferences.
-   - In System Preferences, go to \menu{Desktop \& Screen Saver > Screen Saver} and find your screen saver.
+   - When the export is complete, relaunch System Settings.
+   - In System Settings, go to \menu{Screen Saver} and find your screen saver.
 
 ### Sharing screen savers
 
@@ -2149,7 +2149,6 @@ Vuo does not currently support:
    - multiple passes/buffers (`PASSES` key and `PASSINDEX` uniform)
    - image file loading (`IMPORTED` key)
    - audio input (`audio` and `audioFFT` data types)
-   - `IDENTITY` key
 
 
 
@@ -2358,11 +2357,13 @@ If your composition is too large to be displayed within a single viewport, you c
 
 A composition's published ports are displayed in sidebars, which you can show and hide using the menu \menu{View > Show/Hide Published Ports}.
 
-You can publish any input or output port in a composition. Do this by right-clicking on the port and selecting \menu{Publish Port} from the context menu. Alternatively, drag a cable from the port to the \menu{Publish} well that appears in the sidebar when you start dragging. You can unpublish the port by right-clicking on the port again and selecting \menu{Delete Port}.
+You can publish any input or output port in a composition. Do this by right-clicking on the port and selecting \menu{Publish Port} from the context menu. You can unpublish the port by right-clicking on the port again and selecting \menu{Delete Published Port}.
+
+Alternatively, you can publish a port by dragging a cable from the port to the \menu{Publish} well that appears in the sidebar when you start dragging.
 
 You can create a published port without immediately connecting it to a port inside the composition by clicking on the New Port button in the sidebar. This pops up a menu for you to choose the data type of the published port. Once the published port has been created, you can drag a cable from it and connect the cable to any compatible port within the composition.
 
-In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Port…}. You can reorder published ports (except those that are part of a protocol) by dragging the name of a published port up or down in the sidebar.
+In the sidebars, you can rename a published port by right-clicking on the published port and selecting \menu{Rename Port…}. You can reorder published ports (except those that are part of a protocol) by dragging the name of a published port up or down in the sidebar.
 
 For published ports with numerical data types (integers, real numbers, 2D points, 3D points, and 4D points), you can modify the behavior of their input editors by right-clicking on the published port in the sidebar and selecting \menu{Edit Details…}. The Suggested Min and Suggested Max determine the range of values provided by the input editor's slider or spinbox (arrow buttons). The Suggested Step controls the amount by which each click on a spinbox button increments or decrements the value.
 

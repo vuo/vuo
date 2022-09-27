@@ -52,6 +52,6 @@ private:
 	void *p;
 #pragma clang diagnostic pop
 #if VUO_PRO
-#include "pro/VuoModule_Pro.hh"
+#include "../base/pro/VuoModule_Pro.hh"
 #endif
 };

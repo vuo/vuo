@@ -131,7 +131,7 @@ void nodeInstanceEvent
 	VuoInputData(VuoInteger, {"default":4, "suggestedMin":2, "suggestedMax":20}) lines,
 	VuoInputData(VuoAnchor, {"default":{"horizontalAlignment":"center", "verticalAlignment":"center"}}) anchor,
 	VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) position,
-	VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.1, "suggestedMax":2.0}) width,
+	VuoInputData(VuoReal, {"name":"Field Width", "default":0.5, "suggestedMin":0.1, "suggestedMax":2.0}) width,
 	VuoInputData(VuoUiTheme) theme,
 	VuoOutputTrigger(updatedLayer, VuoLayer),
 	VuoOutputTrigger(updatedValue, VuoText)

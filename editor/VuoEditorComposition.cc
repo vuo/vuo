@@ -3922,8 +3922,7 @@ vector<string> VuoEditorComposition::getAllSpecializedTypeOptions(bool lists)
 	{
 		if (((!lists && !VuoType::isListTypeName(i->first)) ||
 			 (lists && VuoType::isListTypeName(i->first))) &&
-				!VuoType::isDictionaryTypeName(i->first) &&  /// @todo Remove after https://b33p.net/kosada/node/5300
-				(i->first != "VuoMathExpressionList"))  /// @todo Remove after https://b33p.net/kosada/node/8550
+				VuoRendererPort::isSpecializationImplementedForType(i->first))
 		{
 			typeOptions.push_back(i->first);
 		}
@@ -8237,7 +8236,7 @@ VuoEditorComposition::~VuoEditorComposition()
 
 	delete identifierCache;
 
-	moduleManager->deleteWhenReady();  // deletes compiler
+	delete moduleManager;  // deletes compiler
 }
 
 /**

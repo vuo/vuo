@@ -269,7 +269,7 @@ void VuoRuntimeCommunicator::closeConnection(void)
 	if (! _hasZmqConnection)
 		return;
 
-	zmq_term(zmqContext);
+	zmq_ctx_term(zmqContext);
 	zmqContext = NULL;
 
 	_hasZmqConnection = false;

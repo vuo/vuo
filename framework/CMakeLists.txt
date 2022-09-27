@@ -252,7 +252,7 @@ add_custom_command(
 		"${PROJECT_BINARY_DIR}/bin/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader"
 	COMMENT "Copying VuoCompositionLoader into Vuo.framework"
 
-	COMMAND rsync --recursive --links --perms
+	COMMAND /usr/bin/rsync --recursive --links --perms
 		"${PROJECT_BINARY_DIR}/bin/VuoCompositionLoader.app"
 		"${frameworkVersionPath}/Helpers"
 
@@ -279,7 +279,7 @@ add_custom_command(
 	DEPENDS
 		${VuoNodeSets} ${nodeSetArchives}
 	COMMENT "Copying node sets into Vuo.framework"
-	COMMAND rsync ${nodeSetArchives} "${frameworkVersionPath}/Modules"
+	COMMAND /usr/bin/rsync ${nodeSetArchives} "${frameworkVersionPath}/Modules"
 	OUTPUT ${nodeSetArchivesDest}
 )
 add_custom_target(VuoFrameworkNodeSets DEPENDS ${nodeSetArchivesDest})
@@ -312,7 +312,7 @@ add_custom_command(
 		${VuoLLVMCFrameworkGeneratedFiles} # VuoLLVMCFramework
 		${VuoLLVMFrameworkGeneratedFiles}  # VuoLLVMFramework
 	COMMENT "Copying dependency frameworks into Vuo.framework"
-	COMMAND rsync --recursive --links --perms
+	COMMAND /usr/bin/rsync --recursive --links --perms
 		${PROJECT_BINARY_DIR}/lib/clang-c.framework
 		${PROJECT_BINARY_DIR}/lib/clang.framework
 		${PROJECT_BINARY_DIR}/lib/llvm-c.framework
@@ -399,7 +399,7 @@ add_custom_command(
 	# Use `--extended-attributes` since `codesign` stores signatures for `.bc` and `.o` files
 	# in macOS extended attributes (a.k.a. xattr, resource forks),
 	# and those code signatures are required for Notarization.
-	COMMAND rsync --extended-attributes
+	COMMAND /usr/bin/rsync --extended-attributes
 		${coreTypeObjects}
 		${coreListTypeObjects}
 		${coreLibraryObjects}
@@ -443,7 +443,7 @@ add_custom_command(
 	DEPENDS
 		VuoModuleCompilers ${moduleCompilers}
 	COMMENT "Copying module-compilers into Vuo.framework"
-	COMMAND rsync
+	COMMAND /usr/bin/rsync
 		${moduleCompilers}
 		${frameworkVersionPath}/Helpers/ModuleCompiler
 	COMMAND ${codesignAdHoc} ${moduleCompilersDest} ${codesignAdHocIgnoreReplace}
@@ -499,7 +499,7 @@ list(APPEND conanLibrariesDest
 # Copy.
 add_custom_command(
 	COMMENT "Copying dependency libraries into Vuo.framework"
-	COMMAND rsync
+	COMMAND /usr/bin/rsync
 		${conanLibraries}
 		${frameworkVersionPath}/Modules
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fixRpathsConan.sh
@@ -528,11 +528,11 @@ file(COPY ${CONAN_ZEROMQ_ROOT}/include/zmq         DESTINATION "${frameworkVersi
 
 # Copy macOS system headers into Vuo.framework.
 set(macosHeadersDestination "${frameworkVersionPath}/Headers/macos")
-set(rsyncHeaders rsync --recursive --links --perms --include '*.h' --exclude '*')
+set(rsyncHeaders /usr/bin/rsync --recursive --links --perms --include '*.h' --exclude '*')
 add_custom_command(
 	COMMENT "Copying macOS headers into Vuo.framework"
 	COMMAND mkdir -p ${macosHeadersDestination}
-	COMMAND rsync --recursive --links --perms
+	COMMAND /usr/bin/rsync --recursive --links --perms
 		--exclude '*curses*'
 		--exclude '/sched.h'
 		--exclude 'tcl*'
@@ -578,7 +578,7 @@ add_custom_command(
 	COMMENT "Copying macOS SDK TBDs into Vuo.framework"
 	WORKING_DIRECTORY ${CONAN_MACOS-SDK_ROOT}
 	COMMAND mkdir -p ${macOSSDKDestination}
-	COMMAND rsync
+	COMMAND /usr/bin/rsync
 		--relative
 		--recursive
 		--links
@@ -641,6 +641,7 @@ add_dependencies(VuoFrameworkDylib VuoFrameworkMacOSSDK)
 file(GLOB frameworkHeaders
 	../base/*.h
 	../base/*.hh
+	../common/*.h
 	../compiler/*.h
 	../compiler/*.hh
 	../library/*.h
@@ -699,6 +700,7 @@ list(APPEND generatedFiles
 file(GLOB frameworkMasterHeaders
 	../base/*.h
 	../base/*.hh
+	../common/*.h
 	../compiler/*.h
 	../compiler/*.hh
 	../library/*.h
@@ -709,7 +711,7 @@ file(GLOB frameworkMasterHeaders
 	../type/*.h
 )
 list(TRANSFORM frameworkMasterHeaders REPLACE "^.*/" "")
-list(FILTER frameworkMasterHeaders EXCLUDE REGEX "^(VuoGraphics(Layer|View|Window|WindowDelegate|WindowDrag)|VuoImageResize|VuoMathExpression|VuoShader(Shaders|Uniforms)|VuoWindowRecorder|VuoWindowTextInternal|coreTypes)\.h+$")
+list(FILTER frameworkMasterHeaders EXCLUDE REGEX "^(VuoGraphics(Layer|View|Window|WindowDelegate|WindowDrag)|VuoImageResize|VuoMathExpression|VuoShader(Shaders|Uniforms)|VuoUrlParser|VuoWindowRecorder|VuoWindowTextInternal|coreTypes)\.h+$")
 list(SORT frameworkMasterHeaders)
 add_custom_command(
 	DEPENDS

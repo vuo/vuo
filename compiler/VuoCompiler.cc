@@ -1661,7 +1661,8 @@ set<dispatch_group_t> VuoCompiler::Environment::loadSpecializedModules(const set
  *
  * @threadQueue{environmentQueue}
  */
-set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(const set<string> &moduleKeys, bool shouldRecompileIfUnchanged)
+set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(const set<string> &moduleKeys, dispatch_group_t moduleSourceCompilersExist,
+																			 bool shouldRecompileIfUnchanged)
 {
 	ModuleInfoIterator modulesToLoadIter = listSourceFiles(moduleKeys);
 
@@ -1702,6 +1703,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 		sourceInfo->setAttempted(true);
 
 		dispatch_group_enter(loadingGroup);
+		dispatch_group_enter(moduleSourceCompilersExist);
 		dispatch_group_enter(moduleSourceCompilersExistGlobally);
 
 		VuoModuleCompilationQueue::Item *queueItem = new VuoModuleCompilationQueue::Item();
@@ -1840,6 +1842,7 @@ set<dispatch_group_t> VuoCompiler::Environment::compileModulesFromSourceCode(con
 				}
 
 				delete compiler;
+				dispatch_group_leave(moduleSourceCompilersExist);
 				dispatch_group_leave(moduleSourceCompilersExistGlobally);
 			});
 		}
@@ -2710,7 +2713,7 @@ void VuoCompiler::applyToAllEnvironments(void (^doForEnvironment)(Environment *e
  *
  * @param compositionPath If this compiler will be compiling a composition and its path is already known,
  *     pass the path so the compiler can locate composition-local modules. If the path is not yet known,
- *     it can be set later with @ref setCompositionPath or @ref compileComposition. If not compiling a composition,
+ *     it can be set later with @ref VuoCompiler::setCompositionPath or @ref VuoCompiler::compileComposition. If not compiling a composition,
  *     pass an empty string.
  * @param target The LLVM Target Triple to use for this compiler instance.
  *               Affects which slice of multi-archtecture binaries is loaded,
@@ -2827,6 +2830,9 @@ VuoCompiler::~VuoCompiler(void)
 
 	dispatch_group_wait(moduleCacheBuilding, DISPATCH_TIME_FOREVER);
 	dispatch_release(moduleCacheBuilding);
+
+	dispatch_group_wait(moduleSourceCompilersExist, DISPATCH_TIME_FOREVER);
+	dispatch_release(moduleSourceCompilersExist);
 
 	for (vector< vector<Environment *> >::iterator i = environments.begin(); i != environments.end(); ++i)
 		(*i)[0]->removeCompilerToNotify(this);
@@ -3149,7 +3155,6 @@ void VuoCompiler::loadModulesIfNeeded(const set<string> &moduleKeys)
 
 	// Load modules and start sources compiling.
 
-	dispatch_group_enter(moduleSourceCompilersExist);
 	__block set<dispatch_group_t> sourcesLoading;
 	dispatch_sync(environmentQueue, ^{
 					  sourcesLoading = loadModulesAndSources(moduleKeys, set<string>(), set<string>(),
@@ -3165,7 +3170,6 @@ void VuoCompiler::loadModulesIfNeeded(const set<string> &moduleKeys)
 		dispatch_group_wait(*i, DISPATCH_TIME_FOREVER);
 		dispatch_release(*i);
 	}
-	dispatch_group_leave(moduleSourceCompilersExist);
 }
 
 /**
@@ -3722,7 +3726,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 		if (sourcesToCompile.size() == 0)
 			continue;
 
-		set<dispatch_group_t> s = env->compileModulesFromSourceCode(sourcesToCompile, shouldRecompileSourcesIfUnchanged);
+		set<dispatch_group_t> s = env->compileModulesFromSourceCode(sourcesToCompile, moduleSourceCompilersExist, shouldRecompileSourcesIfUnchanged);
 		sourcesLoading.insert(s.begin(), s.end());
 	}
 
@@ -3737,7 +3741,7 @@ set<dispatch_group_t> VuoCompiler::loadModulesAndSources(const set<string> &modu
 		if (sourcesToCompile.size() == 0)
 			continue;
 
-		env->compileModulesFromSourceCode(sourcesToCompile, true);
+		env->compileModulesFromSourceCode(sourcesToCompile, moduleSourceCompilersExist, true);
 	}
 
 	// Notify compiler delegates.
@@ -4255,7 +4259,7 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
  * Compiles a composition, read from file, to LLVM bitcode.
  *
  * @param inputPath The .vuo file containing the composition. If you haven't already specified the
- *     composition path in the constructor or @ref setCompositionPath, then @a inputPath will be used
+ *     composition path in the constructor or @ref VuoCompiler::setCompositionPath, then @a inputPath will be used
  *     to locate composition-local modules.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  * @param isTopLevelComposition True if the composition is top-level, false if it's a subcomposition.
@@ -6111,7 +6115,7 @@ void VuoCompiler::installNodeClassAtCompositionLocalScope(const string &sourcePa
 }
 
 /**
- * Causes the node class that was previously loaded from @a sourcePath by @ref installNodeClassAtCompositionLocalScope,
+ * Causes the node class that was previously loaded from @a sourcePath by @ref VuoCompiler::installNodeClassAtCompositionLocalScope,
  * if any, to be unloaded.
  */
 void VuoCompiler::uninstallNodeClassAtCompositionLocalScope(const string &sourcePath)
@@ -6137,7 +6141,7 @@ void VuoCompiler::uninstallNodeClassAtCompositionLocalScope(const string &source
  * This function can be called multiple times in succession, replacing one override with another.
  *
  * The most recent override remains active until the installed subcomposition is saved or
- * @ref revertOverriddenNodeClass is called.
+ * @ref VuoCompiler::revertOverriddenNodeClass is called.
  *
  * A call to this function may or may not result in a call to @ref VuoCompilerDelegate::loadedModules.
  * The node class won't be reloaded if @a sourceCode is the same as source code from which the module
@@ -6197,7 +6201,7 @@ void VuoCompiler::overrideInstalledNodeClass(const string &sourcePath, const str
 }
 
 /**
- * Removes an override added by @ref overrideInstalledNodeClass (if any), reverting to the
+ * Removes an override added by @ref VuoCompiler::overrideInstalledNodeClass (if any), reverting to the
  * installed version of the node class.
  *
  * A call to this function always results in a call to @ref VuoCompilerDelegate::loadedModules,

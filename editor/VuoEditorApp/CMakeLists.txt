@@ -69,7 +69,7 @@ add_custom_command(
 		${VuoInputEditors} ${inputEditors}
 	COMMENT "Copying input editors into Vuo.app"
 	COMMAND mkdir -p ${inputEditorsDestDir}
-	COMMAND rsync --update
+	COMMAND /usr/bin/rsync --update
 		${inputEditors}
 		${inputEditorsDestDir}
 	COMMAND ${codesignAdHoc} ${inputEditorsDest} ${codesignAdHocIgnoreReplace}
@@ -87,7 +87,7 @@ set(frameworksDestDir "${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Frameworks")
 add_custom_command(
 	COMMENT "Copying Qt frameworks and plugins into Vuo.app"
 	COMMAND mkdir -p ${frameworksDestDir}
-	COMMAND rsync --recursive --links --perms
+	COMMAND /usr/bin/rsync --recursive --links --perms
 		--exclude 'Qt*.prl'
 		--exclude 'Qt*_debug'
 		--exclude Headers
@@ -108,7 +108,7 @@ add_custom_command(
 		${CONAN_LIB_DIRS_QT}/QtXml.framework
 		${frameworksDestDir}
 	COMMAND ${codesignAdHoc} ${frameworksDestDir}/Qt*.framework ${codesignAdHocIgnoreReplace}
-	COMMAND rsync --recursive --links --perms --delete
+	COMMAND /usr/bin/rsync --recursive --links --perms --delete
 		--include libqcocoa.dylib
 		--include libqsvgicon.dylib
 		--include libqicns.dylib
@@ -128,7 +128,7 @@ add_custom_command(
 		--exclude '*.dylib'
 		${CONAN_QT_ROOT}/plugins/
 		${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Frameworks/QtPlugins
-	COMMAND rsync --recursive --links --perms --delete
+	COMMAND /usr/bin/rsync --recursive --links --perms --delete
 		--exclude '*.dSYM'
 		--exclude '*.qmltypes'
 		--exclude Qt/labs/folderlistmodel
@@ -167,7 +167,7 @@ add_custom_command(
 	# Use `--extended-attributes` since `codesign` stores signatures for `.bc` and `.o` files
 	# in macOS extended attributes (a.k.a. xattr, resource forks),
 	# and those code signatures are required for Notarization.
-	COMMAND rsync --recursive --links --update --delete --extended-attributes
+	COMMAND /usr/bin/rsync --recursive --links --update --delete --extended-attributes
 		${PROJECT_BINARY_DIR}/lib/Vuo.framework
 		${PROJECT_BINARY_DIR}/lib/VuoRunner.framework
 		${frameworksDestDir}
@@ -187,7 +187,7 @@ add_custom_command(
 		VuoWidget ${PROJECT_BINARY_DIR}/lib/libVuoWidget.dylib
 	COMMENT "Copying libraries into Vuo.app"
 	COMMAND mkdir -p ${frameworksDestDir}
-	COMMAND rsync --perms
+	COMMAND /usr/bin/rsync --perms
 		${PROJECT_BINARY_DIR}/lib/libVuoWidget.dylib
 		${frameworksDestDir}
 	COMMAND ${codesignAdHoc} ${frameworksDestDir}/libVuoWidget.dylib ${codesignAdHocIgnoreReplace}

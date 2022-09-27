@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.4.1 LANGUAGES NONE)
+project(Vuo VERSION 2.4.2 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -285,15 +285,8 @@ function (VuoGeneratePCH target)
 
 	add_library(${arg_TARGET} OBJECT)
 	target_compile_definitions(${arg_TARGET} PRIVATE ${arg_DEFINITIONS})
-	target_include_directories(${arg_TARGET}
-		PRIVATE
-			${PROJECT_SOURCE_DIR}/base
-			${PROJECT_SOURCE_DIR}/compiler
-			${PROJECT_SOURCE_DIR}/library
-			${PROJECT_SOURCE_DIR}/type
-			${PROJECT_BINARY_DIR}/base/config
-			${PROJECT_BINARY_DIR}/type/list
-	)
+	target_sources(${arg_TARGET} PRIVATE vuo.pch)
+	target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/common)
 	target_precompile_headers(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/vuo.pch)
 
 	# Save time by only building each PCH for the languages that actually use it.
@@ -341,7 +334,7 @@ function (VuoPCH target)
 
 	# Help Qt Creator find includes.
 	get_target_property(includes ${pch} INCLUDE_DIRECTORIES)
-	if (includs)
+	if (includes)
 		target_include_directories(${target} PRIVATE ${includes})
 	endif()
 endfunction()

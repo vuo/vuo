@@ -61,6 +61,7 @@ string PortConfiguration::toString(void)
  */
 void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 {
+	VUserLog("test %2d: %s", itemIndex, itemName.c_str());
 	map<VuoRunner::Port *, json_object *> m;
 	for (map<string, string>::iterator i = valueForInputPortName.begin(); i != valueForInputPortName.end(); ++i)
 	{
@@ -70,6 +71,7 @@ void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 		string valueAsString = i->second;
 		json_object *value = json_tokener_parse(valueAsString.c_str());
 		m[port] = value;
+		VUserLog("         set %s = %s", i->first.c_str(), valueAsString.c_str());
 	}
 	runner->setPublishedInputPortValues(m);
 	for (auto &kv : m)
@@ -90,6 +92,7 @@ void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 				throw runtime_error(("Unknown firing port: " + firingPortName + " ( " + toString() + " )").c_str());
 			firingPorts.insert(firingPort);
 		}
+		VUserLog("         fire %s", firingPortName.c_str());
 		runner->firePublishedInputPortEvent(firingPorts);
 	}
 }
@@ -100,6 +103,7 @@ void PortConfiguration::setInputValuesAndFireEvent(VuoRunner *runner)
 void PortConfiguration::checkOutputValue(VuoRunner *runner, VuoRunner::Port *port)
 {
 	json_object *actualValue = runner->getPublishedOutputPortValue(port);
+	VUserLog("         received %s = %s", port->getName().c_str(), json_object_to_json_string(actualValue));
 
 	map<string, string>::iterator i = valueForOutputPortName.find(port->getName());
 	if (i == valueForOutputPortName.end())
@@ -201,6 +205,10 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 		json_object *outputPortValuesObject;
 		if (json_object_object_get_ex(portConfigurationObject, "outputPortValues", &outputPortValuesObject))
 			readValueForPortNameFromJSONObject(outputPortValuesObject, valueForOutputPort);
+
+		json_object_object_foreach(portConfigurationObject, key, val)
+			if (strcmp(key, "firingPort") && strcmp(key, "inputPortValues") && strcmp(key, "outputPortValues"))
+				throw runtime_error((string("Unknown key \"") + key + "\".").c_str());
 
 		PortConfiguration *p = new PortConfiguration(firingPortName, valueForInputPort, valueForOutputPort);
 		p->itemIndex = i;

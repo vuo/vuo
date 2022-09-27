@@ -161,12 +161,12 @@ add_custom_command(
 	# so there will be a lot of harmless undefined reference warnings.
 	# xelatex exits with nonzero status even when it succeeds.
 	COMMAND ${xelatex}
-		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references|Column widths have changed|Table widths have changed|longtable.*in table .* on input line' || true\)
+		| \(egrep -v '[Rr]eference.*on page.*undefined on input line|No file VuoManual.aux|No file VuoManual.gls|Rerun to get|rerunfilecheck|There were undefined references|Column widths have changed|Table widths have changed|longtable.*in table .* on input line|Package microtype Warning: Unable to apply patch .footnote' || true\)
 
 	# The second xelatex run populates terms and references (including the table of contents).
 	# There shouldn't be any undefined references after the second run.
 	COMMAND ${xelatex}
-		| \(egrep -v 'No file VuoManual.gls|mparhack.*Rerun to get them right' || true\)
+		| \(egrep -v 'No file VuoManual.gls|mparhack.*Rerun to get them right|Package microtype Warning: Unable to apply patch .footnote' || true\)
 
 	# Now that the table of contents is present (which shifts the page numbers back a few),
 	# generate the glossary's page number links.
@@ -176,10 +176,11 @@ add_custom_command(
 	# The third xelatex run includes the glossary,
 	# and fixes up page numbers now that the table of contents is populated.
 	COMMAND ${xelatex}
-		| \(egrep -v 'mparhack.*Rerun to get them right|rerunfilecheck.*Rerun to get outlines right|rerunfilecheck.*or use package .bookmark' || true\)
+		| \(egrep -v 'mparhack.*Rerun to get them right|rerunfilecheck.*Rerun to get outlines right|rerunfilecheck.*or use package .bookmark|Package microtype Warning: Unable to apply patch .footnote' || true\)
 
 	# The fourth xelatex run allows the glossary to be included in the table of contents.
 	COMMAND ${xelatex}
+		| \(egrep -v 'Package microtype Warning: Unable to apply patch .footnote' || true\)
 
 	COMMAND mv VuoManual.pdf ${CMAKE_CURRENT_BINARY_DIR}/VuoManual-${language}-${colors}.pdf
 
@@ -203,6 +204,7 @@ set(ghostscriptFlags
 file(MAKE_DIRECTORY
 	${CMAKE_CURRENT_BINARY_DIR}/VuoManualTemp
 	${CMAKE_CURRENT_BINARY_DIR}/VuoManual
+	${CMAKE_CURRENT_BINARY_DIR}/VuoManual/font
 	${CMAKE_CURRENT_BINARY_DIR}/VuoManual/image
 	${CMAKE_CURRENT_BINARY_DIR}/VuoManual/image-generated
 )
@@ -279,6 +281,12 @@ add_custom_command(
 		${CMAKE_CURRENT_SOURCE_DIR}/VuoManual.css
 		${CMAKE_CURRENT_SOURCE_DIR}/VuoManualTOC.js
 		.
+	COMMAND cp
+		${PROJECT_SOURCE_DIR}/renderer/font/PTS55F_W.woff2
+		${PROJECT_SOURCE_DIR}/renderer/font/PTS56F_W.woff2
+		${PROJECT_SOURCE_DIR}/renderer/font/PTS75F_W.woff2
+		${PROJECT_SOURCE_DIR}/renderer/font/PTS76F_W.woff2
+		font
 	COMMAND cp
 		${CMAKE_CURRENT_SOURCE_DIR}/image/*.png
 		${CMAKE_CURRENT_SOURCE_DIR}/image/*.svg

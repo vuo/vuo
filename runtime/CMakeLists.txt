@@ -46,7 +46,7 @@ target_sources(vuo.core.runtime.libraries PRIVATE
 	VuoRuntimeState.hh
 	VuoRuntimeUtilities.hh
 	VuoThreadManager.hh
-	../library/VuoLog.h
+	../common/VuoLog.h
 	../node/module.h
 	../node/node.h
 )

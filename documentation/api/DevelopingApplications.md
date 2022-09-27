@@ -35,27 +35,33 @@ To use Vuo, your application needs to link to Vuo.framework, which comes with th
 
 If using the Cocoa API or the C++ API:
 
-  - Create a new project:
-    - Choose template macOS > Application > App.
-    - Choose language Objective-C.
-  - Add Vuo.framework to the project:
-    - File > Add Files to your project.
-    - Select `Vuo.framework` from the `/Library/Developer/Vuo/framework` folder.
-    - Uncheck the "Copy items if needed" checkbox.
-    - Vuo.framework should now appear under Build Phases > Link Binary With Libraries.
-  - Modify the target's Build Phases:
-    - Editor > Add Build Phase > Add Copy Files Build Phase
-      - Destination: Frameworks
-      - Add Vuo.framework here. (You can drag and drop it from the Project Navigator.)
-      - Uncheck the "Code Sign On Copy" checkbox.
-  - Modify the target's Build Settings:
-    - Editor > Add Build Setting > Add User-Defined Setting
-      - Add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
-    - Set "Quoted Include In Framework Header" to `NO`.
-    - Under "Framework Search Paths", add the `/Library/Developer/Vuo/framework` folder.
-  - Set up one or more of your project's source files to be able to call Vuo API functions:
-    - If using the C++ API, name the source file with extension ".mm" (for Objective-C++) instead of ".m".
-    - Add @code{cpp} #import <Vuo/Vuo.h> @endcode
+   - Create a new project:
+      - Choose template macOS > Application > App.
+      - Choose language Objective-C.
+   - Add Vuo.framework to the project:
+      - File > Add Files to your project.
+      - Select `Vuo.framework` from the `/Library/Developer/Vuo/framework` folder.
+      - Uncheck the "Copy items if needed" checkbox.
+      - Vuo.framework should now appear under Build Phases > Link Binary With Libraries.
+   - Modify the target's Build Phases:
+      - Editor > Add Build Phase > Add Copy Files Build Phase
+         - Destination: Frameworks
+         - Add Vuo.framework here. (You can drag and drop it from the Project Navigator.)
+         - Uncheck the "Code Sign On Copy" checkbox. (Vuo.framework is already code-signed and notarized; you should not re-sign it.)
+   - Modify the target's Build Settings:
+      - Editor > Add Build Setting > Add User-Defined Setting
+         - Add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
+      - Set "Quoted Include In Framework Header" to `NO`.
+      - Under "Framework Search Paths", add the `/Library/Developer/Vuo/framework` folder.
+   - In the Signing & Capabilities tab:
+      - In the top-right of the App Sandbox pane, click the ✕ to disable the Sandbox. (Vuo includes a compiler, which is not permitted by Apple's App Sandbox.)
+      - In the Hardened Runtime pane, check the following checkboxes:
+         - Disable Library Validation — This enables Vuo to run compositions in the current process
+         - Audio Input — If you would like to allow Vuo compositions to use `Receive Live Audio`
+         - Camera — If you would like to allow Vuo compositions to use `Receive Live Video`
+   - Set up one or more of your project's source files to be able to call Vuo API functions:
+      - If using the C++ API, name the source file with extension ".mm" (for Objective-C++) instead of ".m".
+      - Add @code{cpp} #import <Vuo/Vuo.h> @endcode
 
 
 ### Qt Creator

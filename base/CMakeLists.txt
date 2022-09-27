@@ -35,7 +35,6 @@ add_library(VuoBase STATIC
 	VuoGenericType.hh
 	VuoJsonUtilities.cc
 	VuoJsonUtilities.hh
-	VuoMacOSSDKWorkaround.h
 	VuoModule.cc
 	VuoModule.hh
 	VuoNode.cc
@@ -70,6 +69,7 @@ add_library(VuoBase STATIC
 	miniz.h
 	shared_mutex.cpp
 	shared_mutex.hh
+	../common/VuoMacOSSDKWorkaround.h
 
 	# These are part of vuo.core.runtime.libraries, which is linked into the VuoHeap target.
 #	VuoException.cc

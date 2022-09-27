@@ -112,53 +112,56 @@ The body of @ref nodeEvent defines what happens when a node receives an event. I
 
 #### A stateful node class
 
-For a stateful node class, there are several functions to implement. 
+For a stateful node class, there are two required functions to implement, and a few optional functions.
 
 Instead of @ref nodeEvent, you need to implement an equivalent function called @ref nodeInstanceEvent. Like @ref nodeEvent, the @ref nodeInstanceEvent function is called whenever the node receives an event. 
 
-You also need to implement the @ref nodeInstanceInit function and the @ref nodeInstanceFini function to set up and clean up the node's state. The @ref nodeInstanceInit function is called when the composition starts or when the node is added to a running composition. The @ref nodeInstanceFini function is called when the composition stops or when the node is removed from a running composition. 
+The difference between a stateless and a stateful node class is that the stateful node class stores its state as @term{instance data}. You need to implement the @ref nodeInstanceInit function to set up the instance data. The @ref nodeInstanceInit function is called when the composition starts or when the node is added to a running composition.
+
+If you need to tear down the instance data when the node class is finished using it, you should implement the @ref nodeInstanceFini function. (Vuo takes care of some tear-down automatically, as described later in this section.) The @ref nodeInstanceFini function is called when the composition stops or when the node is removed from a running composition.
 
 If your node class has trigger ports, you may also need to implement the @ref nodeInstanceTriggerStart function, the @ref nodeInstanceTriggerUpdate function, and the @ref nodeInstanceTriggerStop function. 
 
-As an example, let's look at a simplified version of the @vuoNodeClass{vuo.math.count} node class. Its only input port is @vuoPort{increment}. Here are the functions for that node class: 
+As an example, let's look at a simplified version of the @vuoNodeClass{vuo.math.count} node class. Its input ports are @vuoPort{increment} and @vuoPort{decrement}. Its instance data stores the current count. Here are the functions for that node class:
 
 @code{.c}
-VuoReal * nodeInstanceInit()
+VuoInteger nodeInstanceInit
+(
+		VuoInputData(VuoInteger) setCount
+)
 {
-	VuoReal *countState = (VuoReal *) malloc(sizeof(VuoReal));
-	VuoRegister(countState, free);
-	*countState = 0;
-	return countState;
+	return setCount;
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoReal *) countState,
-		VuoInputData(VuoReal, {"default":1}) increment,
+		VuoInstanceData(VuoInteger) countState,
+		VuoInputData(VuoInteger, {"default":1}) increment,
 		VuoInputEvent({"data":"increment"}) incrementEvent,
-		VuoOutputData(VuoReal) count
+		VuoInputData(VuoInteger, {"default"1}) decrement,
+		VuoInputEvent({"data":"decrement"}) decrementEvent,
+		VuoOutputData(VuoInteger) count
 )
 {
 	if (incrementEvent)
-		**countState += increment;
-	*count = **countState;
-}
-
-void nodeInstanceFini
-(
-		VuoInstanceData(VuoReal *) countState
-)
-{
+		*countState += increment;
+	if (decrementEvent)
+		*countState -= decrement;
+	*count = *countState;
 }
 @endcode
 
-The state of the node is called @term{instance data}. It's created by @ref nodeInstanceInit and passed, via @ref VuoInstanceData parameters, to @ref nodeInstanceEvent and @ref nodeInstanceFini. Notice that the return type of @ref nodeInstanceInit and the type passed to each @ref VuoInstanceData call must match. Unlike the type passed to @ref VuoInputData or @ref VuoOutputData, the type passed to @ref VuoInstanceData doesn't have to be a port type. For example, it can be a struct type defined in your node class. The name of the @ref VuoInstanceData parameter (@c countState) isn't important; you can choose any name. Notice that @c countState is a *pointer* to the @ref VuoInstanceData type (@c VuoReal*).
+The @ref nodeInstanceInit function sets up the instance data. For this example, the only setup required is to initialize the instance data to the current value of the @vuoPort{setCount} port. The @ref nodeInstanceInit function returns the initial value of the instance data, which Vuo stores and later passes to other functions of the node class. If there are multiple @vuoNode{Count} nodes in a composition, Vuo stores a separate instance data for each one.
 
-The call to @ref VuoRegister in @ref nodeInstanceInit is necessary to make sure that the memory allocated for @c countState is freed at the right time. For more information, see @ref ManagingMemory. 
+The first time an event hits the node, the @ref nodeInstanceEvent function is called, and the instance data that was created by @ref nodeInstanceInit is passed in through the `countState` argument. As you may have guessed, this means that the return type of @ref nodeInstanceInit must match the data type in the @ref VuoInstanceData macro. (Here that data type happens to be a Vuo port type, @ref VuoInteger, but other C data types are also allowed.) The name of the parameter (`countState`) isn't important; you can choose any name you like.
 
-Besides the instance data, another difference between this example and the stateless example above is the @ref VuoInputEvent parameter of @ref nodeInstanceEvent. The @ref VuoInputEvent macro can represent either an event-only port or the event part of a data-and-event port. In this case, it's the latter. We can see this because of the "data" key in the JSON-formatted argument of @ref VuoInputEvent. The value for that key, "increment", is the name of the corresponding @ref VuoInputData parameter (and the port name that appears on the node). The value of @c incrementEvent is true if the node has just received an event through its @vuoPort{increment} port. 
+If the event has hit the @vuoPort{increment} or @vuoPort{decrement} input port, the code in the @ref nodeInstanceEvent function modifies both the @vuoPort{count} output port's value and the instance data's value. As mentioned in the previous section, the @ref VuoOutputData parameter `count` is actually a *pointer* to a @ref VuoInteger. Similarly, the @ref VuoInstanceData parameter `countState` is a *pointer* to a @ref VuoInteger.
 
-The body of @ref nodeInstanceEvent defines what happens when the node receives an event. In this case, it increments the count if the event came in through the @vuoPort{increment} port, then outputs the count. 
+The next time an event hits the node, the @ref nodeInstanceEvent function is called again, and the instance data that was modified on the previous call to @ref nodeInstanceEvent is passed back in through the `countState` argument.
+
+This node class doesn't have a @ref nodeInstanceFini function because there's no need for it. The instance data allocated by @ref nodeInstanceInit is a simple data type that Vuo knows how to deallocate, and does so automatically. If the instance data were more complex, then a @ref nodeInstanceFini function might be needed to deallocate it; see @ref ManagingMemory. If the node class opened a file or device handle, started a timer, etc., then @ref nodeInstanceFini would need to close, stop, or otherwise clean up the resources used.
+
+The simplified @vuoNode{Count} example introduces one other new element, which can appear in either stateless or stateful nodes: the @ref VuoInputEvent macro. A function parameter with @ref VuoInputEvent can represent either an event-only port or the event part of a data-and-event port. In this case, it's the latter. We can see this because of the "data" key in the JSON-formatted argument of @ref VuoInputEvent. The value for that key is the name of the corresponding @ref VuoInputData parameter for a data-and-event port. The `incrementEvent` and `decrementEvent` arguments are booleans that are true if the node has just received an event through that input port, and false otherwise.
 
 
 #### Nodes should treat port data as immutable {#DevelopingNodeClassesImmutable}

@@ -19,6 +19,7 @@ class GLWidget : public QOpenGLWidget
 	Q_OBJECT
 public:
 	GLWidget(QWidget *parent = 0);
+	~GLWidget();
 
 protected:
 	virtual void initializeGL();

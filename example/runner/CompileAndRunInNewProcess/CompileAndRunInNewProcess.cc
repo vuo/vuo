@@ -27,5 +27,7 @@ int main(void)
 	sleep(5);
 	runner->stop();
 
+	delete runner;
+
 	return 0;
 }

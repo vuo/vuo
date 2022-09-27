@@ -102,7 +102,7 @@ static bool isMainThread(void)
  */
 static void VuoRunner_configureSocket(void *zmqSocket)
 {
-	int linger = 0;  // avoid having zmq_term block if the runner has tried to send a message on a broken connection
+	int linger = 0;  // avoid having zmq_ctx_term block if the runner has tried to send a message on a broken connection
 	zmq_setsockopt(zmqSocket, ZMQ_LINGER, &linger, sizeof linger);
 }
 
@@ -1074,7 +1074,7 @@ void VuoRunner::unpause(void)
  * Upon return, the old version of the composition will have stopped and the updated version
  * will have started.
  *
- * Assumes the same @ref VuoRunningCompositionLibraries passed to @ref newSeparateProcessRunnerFromDynamicLibrary
+ * Assumes the same @ref VuoRunningCompositionLibraries passed to @ref VuoRunner::newSeparateProcessRunnerFromDynamicLibrary
  * was passed again through @ref VuoCompiler::linkCompositionToCreateDynamicLibrary when linking the updated
  * version of the composition. If any subcompositions or other node classes are being replaced in this live-coding
  * reload, the @ref VuoRunningCompositionLibraries also needs to be updated with a call to
@@ -1149,6 +1149,10 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string compositi
 
 						  vuoLoaderControlRequestSend(VuoLoaderControlRequestCompositionReplace,messages,messageCount);
 						  vuoLoaderControlReplyReceive(VuoLoaderControlReplyCompositionReplaced);
+
+						  bool replaced = vuoReceiveBool(ZMQLoaderControl, nullptr);
+						  if (! replaced)
+							  throw VuoException("The composition loader couldn't replace the composition.");
 
 						  setUpConnections();
 
@@ -1290,7 +1294,7 @@ void VuoRunner::stop(void)
 
 						  if (! lostContact)
 						  {
-							  zmq_term(ZMQContext);
+							  zmq_ctx_term(ZMQContext);
 							  ZMQContext = NULL;
 						  }
 						  else
@@ -1809,8 +1813,8 @@ void VuoRunner::subscribeToEventTelemetry(string compositionIdentifier)
 
 /**
  * Sends a control request to the composition telling it to stop sending telemetry for all events.
- * The composition will continue sending any telemetry subscribed by @ref subscribeToInputPortTelemetry,
- * @ref subscribeToOutputPortTelemetry, or @ref subscribeToAllTelemetry.
+ * The composition will continue sending any telemetry subscribed by @ref VuoRunner::subscribeToInputPortTelemetry,
+ * @ref VuoRunner::subscribeToOutputPortTelemetry, or @ref VuoRunner::subscribeToAllTelemetry.
  *
  * Assumes the composition has been started and has not been stopped.
  *
@@ -3008,7 +3012,7 @@ void VuoRunner::stopBecauseLostContact(string errorMessage)
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 						   vuoMemoryBarrier();
 
-						   zmq_term(ZMQContext);
+						   zmq_ctx_term(ZMQContext);
 						   ZMQContext = NULL;
 						   dispatch_semaphore_signal(terminatedZMQContextSemaphore);
 					   });
