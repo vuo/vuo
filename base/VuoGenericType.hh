@@ -2,7 +2,7 @@
  * @file
  * VuoGenericType interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -24,19 +24,20 @@ public:
 	 */
 	enum Compatibility
 	{
-		anyType, ///< Compatible with any specialized type.
+		anyType, ///< Compatible with any specialized singleton type.
 		anyListType, ///< Compatible with any specialized VuoList type.
 		whitelistedTypes ///< Compatible only with certain types.
 	};
 
 	VuoGenericType(string typeName, vector<string> compatibleSpecializedTypes);
-	bool isSpecializedTypeCompatible(string typeName);
+	bool isSpecializedTypeCompatible(const string &typeName);
 	bool isGenericTypeCompatible(VuoGenericType *otherType);
 	vector<string> getCompatibleSpecializedTypes(Compatibility &compatibility);
 
 	static bool isGenericTypeName(string typeName);
-	static size_t findGenericTypeName(string stringToSearch, size_t startPos, string &genericTypeName);
+	static vector<string> findGenericTypeNames(const string &stringToSearch);
 	static string replaceInnermostGenericTypeName(string genericTypeName, string replacementTypeName);
+	static bool replaceGenericTypeNamesInString(string &stringToSearch, const map<string, string> &specializedForGenericTypeName, vector<string> &orderedGenericTypeNames);
 	static string createGenericTypeName(unsigned int suffix);
 	static void sortGenericTypeNames(vector<string> &genericTypeNames);
 
@@ -44,6 +45,8 @@ private:
 	vector<string> compatibleSpecializedTypes;
 
 	static const string genericTypeNamePrefix;
+
+	static size_t findGenericTypeName(string stringToSearch, size_t startPos, string &genericTypeName);
 	static bool isPairOfGenericTypesSorted(string type1, string type2);
 	static string extractSuffixStringFromGenericTypeName(string genericTypeName);
 	static unsigned int extractSuffixFromGenericTypeName(string genericTypeName);

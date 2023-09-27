@@ -2,7 +2,7 @@
  * @file
  * TestVuoDirectedAcyclicGraph interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -83,10 +83,12 @@ private slots:
 		QTest::addColumn<QString>("vertices");
 		QTest::addColumn<QString>("edges");
 		QTest::addColumn<QString>("query");
+		QTest::addColumn<QString>("immediatelyDownstream");
 		QTest::addColumn<QString>("downstream");
+		QTest::addColumn<QString>("immediatelyUpstream");
 		QTest::addColumn<QString>("upstream");
 
-		QTest::newRow("no edges") << "A B C" << "" << "A" << "" << "";
+		QTest::newRow("no edges") << "A B C" << "" << "A" << "" << "" << "" << "";
 
 		//    A
 		//   / \
@@ -95,10 +97,10 @@ private slots:
 		//   D  E  F
 		QString treeVertices("A B C D E F");
 		QString treeEdges("A,B A,C C,D C,E C,F");
-		QTest::newRow("tree lower leaf") << treeVertices << treeEdges << "E" << "" << "A C";
-		QTest::newRow("tree upper leaf") << treeVertices << treeEdges << "B" << "" << "A";
-		QTest::newRow("tree middle") << treeVertices << treeEdges << "C" << "D E F" << "A";
-		QTest::newRow("tree root") << treeVertices << treeEdges << "A" << "B C D E F" << "";
+		QTest::newRow("tree lower leaf") << treeVertices << treeEdges << "E" << "" << "" << "C" << "A C";
+		QTest::newRow("tree upper leaf") << treeVertices << treeEdges << "B" << "" << "" << "A" << "A";
+		QTest::newRow("tree middle") << treeVertices << treeEdges << "C" << "D E F" << "D E F" << "A" << "A";
+		QTest::newRow("tree root") << treeVertices << treeEdges << "A" << "B C" << "B C D E F" << "" << "";
 
 		//    A
 		//   /|
@@ -107,9 +109,9 @@ private slots:
 		//    C
 		QString bypassVertices("A B C");
 		QString bypassEdges("A,B A,C B,C");
-		QTest::newRow("bypass leaf") << bypassVertices << bypassEdges << "C" << "" << "A B";
-		QTest::newRow("bypass middle") << bypassVertices << bypassEdges << "B" << "C" << "A";
-		QTest::newRow("bypass root") << bypassVertices << bypassEdges << "A" << "B C" << "";
+		QTest::newRow("bypass leaf") << bypassVertices << bypassEdges << "C" << "" << "" << "A B" << "A B";
+		QTest::newRow("bypass middle") << bypassVertices << bypassEdges << "B" << "C" << "C" << "A" << "A";
+		QTest::newRow("bypass root") << bypassVertices << bypassEdges << "A" << "B C" << "B C" << "" << "";
 
 		//    A
 		//   / \
@@ -118,9 +120,9 @@ private slots:
 		//    D
 		QString diamondVertices("A B C D");
 		QString diamondEdges("A,B A,C B,D C,D");
-		QTest::newRow("diamond leaf") << diamondVertices << diamondEdges << "D" << "" << "A B C";
-		QTest::newRow("diamond middle") << diamondVertices << diamondEdges << "B" << "D" << "A";
-		QTest::newRow("diamond root") << diamondVertices << diamondEdges << "A" << "B C D" << "";
+		QTest::newRow("diamond leaf") << diamondVertices << diamondEdges << "D" << "" << "" << "B C" << "A B C";
+		QTest::newRow("diamond middle") << diamondVertices << diamondEdges << "B" << "D" << "D" << "A" << "A";
+		QTest::newRow("diamond root") << diamondVertices << diamondEdges << "A" << "B C" << "B C D" << "" << "";
 
 		//    A
 		//   / \
@@ -133,16 +135,18 @@ private slots:
 		//    G
 		QString doubleDiamondVertices("A B C D E F G");
 		QString doubleDiamondEdges("A,B A,C B,D C,D D,E D,F E,G F,G");
-		QTest::newRow("double diamond leaf") << doubleDiamondVertices << doubleDiamondEdges << "G" << "" << "A B C D E F";
-		QTest::newRow("double diamond middle") << doubleDiamondVertices << doubleDiamondEdges << "D" << "E F G" << "A B C";
-		QTest::newRow("double diamond root") << doubleDiamondVertices << doubleDiamondEdges << "A" << "B C D E F G" << "";
+		QTest::newRow("double diamond leaf") << doubleDiamondVertices << doubleDiamondEdges << "G" << "" << "" << "E F" << "A B C D E F";
+		QTest::newRow("double diamond middle") << doubleDiamondVertices << doubleDiamondEdges << "D" << "E F" << "E F G" << "B C" << "A B C";
+		QTest::newRow("double diamond root") << doubleDiamondVertices << doubleDiamondEdges << "A" << "B C" << "B C D E F G" << "" << "";
 	}
 	void testReachableVertices()
 	{
 		QFETCH(QString, vertices);
 		QFETCH(QString, edges);
 		QFETCH(QString, query);
+		QFETCH(QString, immediatelyDownstream);
 		QFETCH(QString, downstream);
+		QFETCH(QString, immediatelyUpstream);
 		QFETCH(QString, upstream);
 
 		VuoDirectedAcyclicGraph graph;
@@ -154,9 +158,17 @@ private slots:
 		Vertex *queryVertex = verticesByName[query];
 		QVERIFY(queryVertex);
 
+		vector<VuoDirectedAcyclicGraph::Vertex *> actualImmediatelyDownstreamVec = graph.getImmediatelyDownstreamVertices(queryVertex);
+		QString actualImmediatelyDownstream = verticesVectorToString(actualImmediatelyDownstreamVec);
+		QCOMPARE(actualImmediatelyDownstream, immediatelyDownstream);
+
 		vector<VuoDirectedAcyclicGraph::Vertex *> actualDownstreamVec = graph.getDownstreamVertices(queryVertex);
 		QString actualDownstream = verticesVectorToString(actualDownstreamVec);
 		QCOMPARE(actualDownstream, downstream);
+
+		vector<VuoDirectedAcyclicGraph::Vertex *> actualImmediatelyUpstreamVec = graph.getImmediatelyUpstreamVertices(queryVertex);
+		QString actualImmediatelyUpstream = verticesVectorToString(actualImmediatelyUpstreamVec);
+		QCOMPARE(actualImmediatelyUpstream, immediatelyUpstream);
 
 		vector<VuoDirectedAcyclicGraph::Vertex *> actualUpstreamVec = graph.getUpstreamVertices(queryVertex);
 		QString actualUpstream = verticesVectorToString(actualUpstreamVec);
@@ -233,11 +245,14 @@ private slots:
 
 		VuoDirectedAcyclicGraph graph;
 		map<QString, Vertex *> verticesByName;
+		vector<VuoDirectedAcyclicGraph::Vertex *> immediatelyDownstreamVec;
 		vector<VuoDirectedAcyclicGraph::Vertex *> downstreamVec;
+		QString immediatelyDownstream;
 		QString downstream;
 		vector<VuoDirectedAcyclicGraph::Vertex *> upstreamVec;
 		QString upstream;
-		VuoDirectedAcyclicGraph::Vertex *c = NULL;
+		VuoDirectedAcyclicGraph::Vertex *b = nullptr;
+		VuoDirectedAcyclicGraph::Vertex *c = nullptr;
 
 		//    A
 		//   / \
@@ -249,6 +264,10 @@ private slots:
 
 		c = graph.findVertex("C");
 		QVERIFY(c);
+
+		immediatelyDownstreamVec = graph.getImmediatelyDownstreamVertices(verticesByName["A"]);
+		immediatelyDownstream = verticesVectorToString(immediatelyDownstreamVec);
+		QCOMPARE(immediatelyDownstream, QString("B C"));
 
 		downstreamVec = graph.getDownstreamVertices(verticesByName["A"]);
 		downstream = verticesVectorToString(downstreamVec);
@@ -287,6 +306,28 @@ private slots:
 		upstreamVec = graph.getUpstreamVertices(verticesByName["D"]);
 		upstream = verticesVectorToString(upstreamVec);
 		QCOMPARE(upstream, QString(""));
+
+		//    A
+		//   / \
+		//  B   G
+		//
+		//   D  E  F
+		addVerticesFromString(graph, "G", verticesByName);
+		addEdgesFromString(graph, "A,G", verticesByName);
+
+		//    A
+		//     \
+		//  B   G
+		//
+		//   D  E  F
+		graph.removeEdge(verticesByName["A"], verticesByName["B"]);
+
+		b = graph.findVertex("B");
+		QVERIFY(b);
+
+		downstreamVec = graph.getDownstreamVertices(verticesByName["A"]);
+		downstream = verticesVectorToString(downstreamVec);
+		QCOMPARE(downstream, QString("G"));
 	}
 
 	void testReachableVerticesInNetwork_data()
@@ -296,7 +337,9 @@ private slots:
 		QTest::addColumn<QString>("edgesBetweenGraphs");
 		QTest::addColumn<int>("queryGraph");
 		QTest::addColumn<QString>("query");
+		QTest::addColumn<QString>("immediatelyDownstream");
 		QTest::addColumn<QString>("downstream");
+		QTest::addColumn<QString>("immediatelyUpstream");
 		QTest::addColumn<QString>("upstream");
 
 		{
@@ -314,12 +357,12 @@ private slots:
 			QStringList edges;
 			edges << "A,B A,C" << "B,D B,E" << "F,C F,G";
 			QString edgesBetweenGraphs("0,1 0,2");
-			QTest::newRow("tree of trees: lower leaf vertex") << vertices << edges << edgesBetweenGraphs << 1 << "D" << "" << "A B B";
-			QTest::newRow("tree of trees: upper leaf vertex = lower root vertex, query lower") << vertices << edges << edgesBetweenGraphs << 1 << "B" << "D E" << "A B";
-			QTest::newRow("tree of trees: upper leaf vertex = lower root vertex, query upper") << vertices << edges << edgesBetweenGraphs << 0 << "B" << "B D E" << "A";
-			QTest::newRow("tree of trees: upper leaf vertex = lower leaf vertex, query lower") << vertices << edges << edgesBetweenGraphs << 2 << "C" << "" << "A C F";
-			QTest::newRow("tree of trees: upper leaf vertex = lower leaf vertex, query upper") << vertices << edges << edgesBetweenGraphs << 0 << "C" << "C" << "A";
-			QTest::newRow("tree of trees: upper root vertex") << vertices << edges << edgesBetweenGraphs << 0 << "A" << "B B C C D E" << "";
+			QTest::newRow("tree of trees: lower leaf vertex") << vertices << edges << edgesBetweenGraphs << 1 << "D" << "" << "" << "B" << "A B B";
+			QTest::newRow("tree of trees: upper leaf vertex = lower root vertex, query lower") << vertices << edges << edgesBetweenGraphs << 1 << "B" << "D E" << "D E" << "A B" << "A B";
+			QTest::newRow("tree of trees: upper leaf vertex = lower root vertex, query upper") << vertices << edges << edgesBetweenGraphs << 0 << "B" << "B D E" << "B D E" << "A" << "A";
+			QTest::newRow("tree of trees: upper leaf vertex = lower leaf vertex, query lower") << vertices << edges << edgesBetweenGraphs << 2 << "C" << "" << "" << "A C F" << "A C F";
+			QTest::newRow("tree of trees: upper leaf vertex = lower leaf vertex, query upper") << vertices << edges << edgesBetweenGraphs << 0 << "C" << "C" << "C" << "A" << "A";
+			QTest::newRow("tree of trees: upper root vertex") << vertices << edges << edgesBetweenGraphs << 0 << "A" << "B C" << "B B C C D E" << "" << "";
 		}
 
 		{
@@ -345,9 +388,9 @@ private slots:
 			QStringList edges;
 			edges << "I2a,G2a I2a,I1a I2a,I0a" << "G2a,I1b G2a,I0b" << "I1a,I0b I1a,G1a I1b" << "G1a,I0b" << "";
 			QString edgesBetweenGraphs("0,1 0,2 0,4 1,2 1,4 2,3 2,4 3,4");
-			QTest::newRow("compiler dependencies: bottom leaf vertex") << vertices << edges << edgesBetweenGraphs << 4 << "I0b" << "" << "G1a G1a G2a G2a I0b I0b I0b I1a I1a I2a";
-			QTest::newRow("compiler dependencies: mid root vertex") << vertices << edges << edgesBetweenGraphs << 2 << "I1a" << "G1a G1a I0b I0b I0b" << "I1a I2a";
-			QTest::newRow("compiler dependencies: top root vertex") << vertices << edges << edgesBetweenGraphs << 0 << "I2a" << "G1a G1a G2a G2a I0a I0a I0b I0b I0b I0b I1a I1a I1b I1b" << "";
+			QTest::newRow("compiler dependencies: bottom leaf vertex") << vertices << edges << edgesBetweenGraphs << 4 << "I0b" << "" << "" << "G1a G2a I0b I0b I0b I1a" << "G1a G1a G2a G2a I0b I0b I0b I1a I1a I2a";
+			QTest::newRow("compiler dependencies: mid root vertex") << vertices << edges << edgesBetweenGraphs << 2 << "I1a" << "G1a I0b" << "G1a G1a I0b I0b I0b" << "I1a I2a" << "I1a I2a";
+			QTest::newRow("compiler dependencies: top root vertex") << vertices << edges << edgesBetweenGraphs << 0 << "I2a" << "G2a I0a I1a" << "G1a G1a G2a G2a I0a I0a I0b I0b I0b I0b I1a I1a I1b I1b" << "" << "";
 		}
 	}
 	void testReachableVerticesInNetwork()
@@ -357,7 +400,9 @@ private slots:
 		QFETCH(QString, edgesBetweenGraphs);
 		QFETCH(int, queryGraph);
 		QFETCH(QString, query);
+		QFETCH(QString, immediatelyDownstream);
 		QFETCH(QString, downstream);
+		QFETCH(QString, immediatelyUpstream);
 		QFETCH(QString, upstream);
 
 		QCOMPARE(vertices.size(), edges.size());
@@ -392,9 +437,17 @@ private slots:
 			network.addEdge(graphs[fromIndex], graphs[toIndex]);
 		}
 
+		vector<VuoDirectedAcyclicGraph::Vertex *> actualImmediatelyDownstreamVec = network.getImmediatelyDownstreamVertices(queryVertex);
+		QString actualImmediatelyDownstream = verticesVectorToString(actualImmediatelyDownstreamVec);
+		QCOMPARE(actualImmediatelyDownstream, immediatelyDownstream);
+
 		vector<VuoDirectedAcyclicGraph::Vertex *> actualDownstreamVec = network.getDownstreamVertices(queryVertex);
 		QString actualDownstream = verticesVectorToString(actualDownstreamVec);
 		QCOMPARE(actualDownstream, downstream);
+
+		vector<VuoDirectedAcyclicGraph::Vertex *> actualImmediatelyUpstreamVec = network.getImmediatelyUpstreamVertices(queryVertex);
+		QString actualImmediatelyUpstream = verticesVectorToString(actualImmediatelyUpstreamVec);
+		QCOMPARE(actualImmediatelyUpstream, immediatelyUpstream);
 
 		vector<VuoDirectedAcyclicGraph::Vertex *> actualUpstreamVec = network.getUpstreamVertices(queryVertex);
 		QString actualUpstream = verticesVectorToString(actualUpstreamVec);

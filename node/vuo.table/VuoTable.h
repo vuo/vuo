@@ -2,18 +2,23 @@
  * @file
  * VuoTable C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoListPosition.h"
 #include "VuoTableFormat.h"
 #include "VuoTextComparison.h"
 #include "VuoTextSort.h"
 #include "VuoSortOrder.h"
+#include "VuoText.h"
 #include "VuoList_VuoText.h"
 
 /**
@@ -34,13 +39,11 @@ typedef struct
 	size_t columnCount;  ///< The number of columns. The maximum of `(*data)[i].size()`.
 } VuoTable;
 
+#define VuoTable_OVERRIDES_INTERPROCESS_SERIALIZATION  ///< This type implements `_getInterprocessJson()`.
+
 VuoTable VuoTable_makeFromJson(struct json_object *js);
 struct json_object * VuoTable_getJson(const VuoTable value);
-
-/// This type has a _getInterprocessJson() function.
-#define VuoTable_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoTable_getInterprocessJson(const VuoTable value);
-
 char * VuoTable_getSummary(const VuoTable value);
 
 VuoTable VuoTable_makeEmpty(void);
@@ -87,3 +90,7 @@ char * VuoTable_getInterprocessString(const VuoTable value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

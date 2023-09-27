@@ -2,12 +2,13 @@
  * @file
  * VuoImageSmooth interface.  Header-only, to support generic types.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#if (defined(type) && defined(zeroValue) && defined(add) && defined(subtract) && defined(multiply) && defined(bezier3)) || defined(DOXYGEN)
+#ifndef VUOSMOOTH_H
+#define VUOSMOOTH_H
 
 /**
  * Instance data for smoothing a value using inertia.
@@ -16,11 +17,11 @@ typedef struct _VuoSmoothInertia
 {
 	bool moving;
 	bool updateNeededAfterSetPosition;
-	type positionLastFrame;
-	type velocity;
-	type target;
-	type positionWhenTargetChanged;
-	type velocityWhenTargetChanged;
+	VuoGenericType1 positionLastFrame;
+	VuoGenericType1 velocity;
+	VuoGenericType1 target;
+	VuoGenericType1 positionWhenTargetChanged;
+	VuoGenericType1 velocityWhenTargetChanged;
 	VuoReal timeLastFrame;
 	VuoReal timeWhenTargetChanged;
 	VuoReal duration;
@@ -29,7 +30,7 @@ typedef struct _VuoSmoothInertia
 /**
  * Creates a new smoothing object, at rest in `initialPosition`.
  */
-static VuoSmoothInertia VuoSmoothInertia_make(type initialPosition)
+static VuoSmoothInertia VuoSmoothInertia_make(VuoGenericType1 initialPosition)
 {
 	VuoSmoothInertia s = (VuoSmoothInertia)calloc(1,sizeof(struct _VuoSmoothInertia));
 	VuoRegister(s, free);
@@ -40,18 +41,18 @@ static VuoSmoothInertia VuoSmoothInertia_make(type initialPosition)
 /**
  * Warps to `position` (without smoothing) and stops.
  */
-static void VuoSmoothInertia_setPosition(VuoSmoothInertia s, type position)
+static void VuoSmoothInertia_setPosition(VuoSmoothInertia s, VuoGenericType1 position)
 {
 	s->positionLastFrame = position;
 	s->moving = false;
-	s->velocity = zeroValue;
+	s->velocity = VuoGenericType1_makeFromJson(NULL);
 	s->updateNeededAfterSetPosition = true;
 }
 
 /**
  * Changes the end value of the smooth movement to `target, and initiates/continues motion.
  */
-static void VuoSmoothInertia_setTarget(VuoSmoothInertia s, VuoReal time, type target)
+static void VuoSmoothInertia_setTarget(VuoSmoothInertia s, VuoReal time, VuoGenericType1 target)
 {
 	s->target = target;
 	s->positionWhenTargetChanged = s->positionLastFrame;
@@ -75,7 +76,7 @@ static void VuoSmoothInertia_setDuration(VuoSmoothInertia s, VuoReal duration)
  *
  * Returns true if motion is in progress (and thus an event should be fired).
  */
-static bool VuoSmoothInertia_step(VuoSmoothInertia s, VuoReal time, type *calculatedPosition)
+static bool VuoSmoothInertia_step(VuoSmoothInertia s, VuoReal time, VuoGenericType1 *calculatedPosition)
 {
 	bool movedDuringThisStep = false;
 
@@ -94,16 +95,16 @@ static bool VuoSmoothInertia_step(VuoSmoothInertia s, VuoReal time, type *calcul
 		{
 			double timeSinceTargetChanged = MIN(time - s->timeWhenTargetChanged, s->duration);
 			double curviness = s->duration/(3.*timeSinceLastFrame);
-			type p1 = add(s->positionWhenTargetChanged, multiply(s->velocityWhenTargetChanged, timeSinceLastFrame*curviness));
-			*calculatedPosition = bezier3(s->positionWhenTargetChanged, p1, s->target, s->target, timeSinceTargetChanged/s->duration);
+			VuoGenericType1 p1 = VuoGenericType1_add(s->positionWhenTargetChanged, VuoGenericType1_multiply(s->velocityWhenTargetChanged, timeSinceLastFrame*curviness));
+			*calculatedPosition = VuoGenericType1_bezier3(s->positionWhenTargetChanged, p1, s->target, s->target, timeSinceTargetChanged/s->duration);
 
-			s->velocity = multiply(subtract(*calculatedPosition, s->positionLastFrame), 1./timeSinceLastFrame);
+			s->velocity = VuoGenericType1_multiply(VuoGenericType1_subtract(*calculatedPosition, s->positionLastFrame), 1./timeSinceLastFrame);
 			s->positionLastFrame = *calculatedPosition;
 
 			if (time - s->timeWhenTargetChanged > s->duration)
 			{
 				s->moving = false;
-				s->velocity = zeroValue;
+				s->velocity = VuoGenericType1_makeFromJson(NULL);
 			}
 		}
 	}

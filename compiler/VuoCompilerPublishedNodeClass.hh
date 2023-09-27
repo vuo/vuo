@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPublishedNodeClass interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -19,6 +19,12 @@ class VuoPublishedPort;
  */
 class VuoCompilerPublishedNodeClass : public VuoCompilerSpecializedNodeClass
 {
+public:
+	static bool isPublishedNodeClassName(const string &nodeClassName);
+	string getFileName(void);
+	static string getFileNameForModuleKey(const string &moduleKey);
+	static bool isModuleKeyMangledInFileName(const string &fileName);
+
 protected:
 	VuoCompilerPublishedNodeClass(string nodeClassName, Module *module);
 	VuoCompilerPublishedNodeClass(VuoCompilerPublishedNodeClass *compilerNodeClass);
@@ -40,8 +46,10 @@ protected:
 
 	bool parseNodeClassName(string nodeClassName, vector<string> &portNames, vector<string> &typeNames) VuoWarnUnusedResult;
 	string buildNodeClassName(const vector<string> &portNames, const vector<VuoType *> &types);
+	string buildNodeClassName(const vector<string> &portNames, const vector<string> &typeNames);
 	string buildNodeClassNameFromPorts(const vector<VuoPublishedPort *> &publishedPorts);
 	vector<string> formUniquePortNames(const vector<VuoPublishedPort *> &publishedPorts);
+	json_object * buildSpecializedModuleDetails(const vector<VuoType *> &types);
 
 	VuoCompilerNode * createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler);
 	VuoType * getOriginalPortType(VuoPortClass *portClass);

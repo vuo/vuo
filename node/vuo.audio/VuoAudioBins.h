@@ -2,17 +2,16 @@
  * @file
  * VuoAudioBins C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef const struct VuoList_VuoAudioBins_struct { void *l; } * VuoList_VuoAudioBins;
-#define VuoList_VuoAudioBins_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -40,6 +39,8 @@ typedef enum {					// actual samples per-bin
 	VuoAudioBins_8191 = 16384, 	// 16384
 } VuoAudioBins;
 
+#include "VuoList_VuoAudioBins.h"
+
 VuoAudioBins VuoAudioBins_makeFromJson(struct json_object * js);
 struct json_object * VuoAudioBins_getJson(const VuoAudioBins value);
 VuoList_VuoAudioBins VuoAudioBins_getAllowedValues(void);
@@ -57,3 +58,7 @@ void VuoAudioBins_release(VuoAudioBins value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif

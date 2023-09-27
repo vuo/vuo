@@ -2,17 +2,16 @@
  * @file
  * VuoOscType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoOscType;
-#define VuoList_VuoOscType_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,12 +31,14 @@ typedef enum
 	VuoOscType_Float32
 } VuoOscType;
 
+#define VuoOscType_SUPPORTS_COMPARISON
+#include "VuoList_VuoOscType.h"
+
 VuoOscType VuoOscType_makeFromJson(struct json_object *js);
 struct json_object *VuoOscType_getJson(const VuoOscType value);
 VuoList_VuoOscType VuoOscType_getAllowedValues(void);
 char *VuoOscType_getSummary(const VuoOscType value);
 
-#define VuoOscType_SUPPORTS_COMPARISON
 bool VuoOscType_areEqual(const VuoOscType valueA, const VuoOscType valueB);
 bool VuoOscType_isLessThan(const VuoOscType valueA, const VuoOscType valueB);
 
@@ -53,3 +54,7 @@ void VuoOscType_release(VuoOscType value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

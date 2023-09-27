@@ -6,8 +6,6 @@ This node applies a morphological skeletonization filter to the input image, whi
    - `Radius` — How far to erode the image on each iteration.  A radius of 1 produces a canonical skeleton.
    - `Iterations` — How many times to repeat the erode-and-compare process.  If Auto, the process repeats until there is nothing left to erode, producing a canonical skeleton.
 
-If you instead want to find positions of human joints, see the [Filter Skeleton](vuo-node://vuo.osc.skeleton.basic) node.
-
 ![](helloworld.png)
 
 ![](skeletonize.png)

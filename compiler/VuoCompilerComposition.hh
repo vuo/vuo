@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerComposition interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #pragma once
 
 #include "VuoBaseDetail.hh"
+#include "VuoGenericType.hh"
 
 class VuoCompiler;
 class VuoCompilerCable;
@@ -46,7 +47,8 @@ public:
 	void checkForEventFlowIssues(VuoCompilerIssues *issues);
 	void checkForEventFlowIssues(set<VuoCompilerCable *> potentialCables, VuoCompilerIssues *issues);
 	void updateGenericPortTypes(void);
-	set<VuoPort *> getCorrelatedGenericPorts(VuoNode *entryNode, VuoPort *entryPort, bool useOriginalType);
+	set<pair<VuoNode *, VuoPort *>> getCorrelatedGenericPorts(VuoNode *entryNode, VuoPort *entryPort, bool useOriginalType);
+	vector<string> getCompatibleSpecializedTypesForPort(VuoNode *entryNode, VuoPort *entryPort, VuoGenericType::Compatibility &compatibility);
 	VuoPort * findNearestUpstreamTriggerPort(VuoNode *node);
 	void setModule(Module *module);
 	Module * takeModule(void);
@@ -84,6 +86,8 @@ private:
 	void checkForMissingTypes(VuoCompilerIssues *issues);
 	set< set<VuoCompilerPort *> > groupGenericPortsByType(void);
 	string createFreshGenericTypeName(void);
+	vector<string> getCompatibleTypesForCorrelatedGenericPorts(const set<pair<VuoNode *, VuoPort *>> &correlatedPorts, bool useOriginalType);
+	static VuoGenericType * getOriginalGenericTypeOfPort(VuoNode *node, VuoPort *port);
 	static bool compareGraphvizIdentifiersOfNodes(VuoNode *lhs, VuoNode *rhs);
 	static bool compareGraphvizIdentifiersOfCables(VuoCable *lhs, VuoCable *rhs);
 	static bool compareGraphvizIdentifiersOfComments(VuoComment *lhs, VuoComment *rhs);

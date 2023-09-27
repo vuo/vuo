@@ -30,6 +30,10 @@ target_sources(vuo.syphon.types PRIVATE
 	VuoSyphonServerDescription.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoSyphonServerDescription.cc
+)
+
 VuoCompileNodes(
 	vuo.syphon.find.server.name.c
 	vuo.syphon.find.server.name2.c

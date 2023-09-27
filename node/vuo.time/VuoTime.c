@@ -2,7 +2,7 @@
  * @file
  * VuoTime implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,10 +14,8 @@
 #include "VuoMacOSSDKWorkaround.h"
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "type.h"
 #include "VuoRoundingMethod.h"
 #include "VuoTime.h"
-#include "VuoList_VuoTime.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -342,7 +340,7 @@ static VuoTime VuoTime_makeFromFormats(const char *str, const char **formats, in
 VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 {
 	const int numFormats = 2;
-	const char *formats[numFormats] = {
+	const char *formats[2] = {
 		"%a, %d %b %Y %T %z",
 		"%a, %d %b %Y %R %Z"  // `Tue, 12 Jan 2016 11:33 EST` (backup format, seen in https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss)
 	};
@@ -359,7 +357,7 @@ VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 VuoTime VuoTime_makeFromISO8601(const char *iso8601)
 {
 	const int numFormats = 4;
-	const char *formats[numFormats] = {
+	const char *formats[4] = {
 		"%Y-%m-%dT%H:%M:%SZ",
 		"%Y-%m-%d %H:%M:%SZ",
 		"%Y-%m-%dT%H:%M:%S+00:00",
@@ -387,37 +385,32 @@ static char *VuoTime_changeTo2DigitYear(char *format)
  */
 VuoTime VuoTime_makeFromUnknownFormat(const char *str)
 {
-	CFLocaleRef localeCF = CFLocaleCopyCurrent();
-	VuoText localeID = VuoText_makeFromCFString(CFLocaleGetIdentifier(localeCF));
-	VuoRetain(localeID);
-	CFRelease(localeCF);
-	locale_t locale = newlocale(LC_ALL_MASK, localeID, NULL);
+	__block VuoTime time;
+	VuoText_performWithSystemLocale(^(locale_t locale){
+		const int numFormats = 15;
+		char *formats[15] = {
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeSortable, locale),
+			VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale)),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale),
+			VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale)),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium12, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium24, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong12, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong24, locale),
+			VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale)),
+			VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateMedium, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateLong, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_Time12, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_Time24, locale)
+		};
 
-	const int numFormats = 15;
-	char *formats[numFormats] = {
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeSortable, locale),
-		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale)),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale),
-		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale)),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium12, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium24, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong12, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong24, locale),
-		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale)),
-		VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateMedium, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_DateLong, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_Time12, locale),
-		VuoTime_stringForFormat(VuoTimeFormat_Time24, locale)
-	};
+		time = VuoTime_makeFromFormats(str, (const char **)formats, numFormats);
 
-	VuoTime time = VuoTime_makeFromFormats(str, (const char **)formats, numFormats);
-
-	VuoRelease(localeID);
-	freelocale(locale);
-	for (int i = 0; i < numFormats; ++i)
-		free(formats[i]);
+		for (int i = 0; i < numFormats; ++i)
+			free(formats[i]);
+	});
 
 	return time;
 }
@@ -636,14 +629,10 @@ VuoTime VuoTime_round(const VuoTime value, const VuoTimeUnit unit, const int rou
  */
 VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format)
 {
-	CFLocaleRef localeCF = CFLocaleCopyCurrent();
-	VuoText localeID = VuoText_makeFromCFString(CFLocaleGetIdentifier(localeCF));
-	VuoRetain(localeID);
-	CFRelease(localeCF);
-
-	VuoText formattedTime = VuoTime_formatWithLocale(time, format, localeID);
-
-	VuoRelease(localeID);
+	__block VuoText formattedTime;
+	VuoText_performWithSystemLocale(^(locale_t locale){
+		formattedTime = VuoTime_formatWithLocale(time, format, locale);
+	});
 
 	return formattedTime;
 }
@@ -655,16 +644,9 @@ VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format)
  *
  * Fractional seconds are rounded down.
  */
-VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, const VuoText localeIdentifier)
+VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, locale_t locale)
 {
 	VuoText output = NULL;
-
-	locale_t locale = newlocale(LC_ALL_MASK, localeIdentifier, NULL);
-	static dispatch_once_t loggedLocale = 0;
-	dispatch_once(&loggedLocale, ^{
-		VUserLog("macOS Locale: %s", localeIdentifier);
-		VUserLog("    C Locale: %s", querylocale(LC_ALL_MASK, locale));
-	});
 
 	char *formatString = VuoTime_stringForFormat(format, locale);
 	if (! formatString)
@@ -686,7 +668,6 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
 
 done:
 	free(formatString);
-	freelocale(locale);
 
 	return output;
 }

@@ -26,6 +26,12 @@ target_link_libraries(vuo.serial.types
 	vuo.serial.libraries
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoBaudRate.cc
+	VuoList_VuoParity.cc
+	VuoList_VuoSerialDevice.cc
+)
+
 VuoCompileNodes(
 	vuo.serial.configure.c
 	vuo.serial.find.name.c

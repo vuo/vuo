@@ -2,7 +2,7 @@
  * @file
  * TestEditorCommands implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -215,6 +215,38 @@ private slots:
 
 		editorWindow->on_stopComposition_triggered();
 		QVERIFY(!composition->isRunning());
+	}
+
+	/**
+	 * Ensure that resizing an unspecialized drawer doesn't crash.
+	 *
+	 * https://b33p.net/kosada/vuo/vuo/-/issues/19823
+	 */
+	void testVuoCommandReplaceNode_adjustInputPortCountForNode_generic()
+	{
+		VERIFY_ITEM_COUNT(0);
+
+		auto composition = editorWindow->getComposition();
+		auto multiplyListsNode = composition->createNode("vuo.math.multiply.list.2");
+		QUndoCommand *command = new VuoCommandAdd(QList<QGraphicsItem *>{ multiplyListsNode }, editorWindow);
+		QVERIFY(command);
+
+		// Create the node, including drawers for its list1 and list2 input ports.
+		{
+			editorWindow->undoStack->push(command);
+			QVERIFY(editorWindow->undoStack->canUndo());
+			VERIFY_ITEM_COUNT(17);
+		}
+
+		// Add a third item to list1.
+		{
+			auto drawers = multiplyListsNode->getAttachedInputDrawers();
+			QCOMPARE(drawers.size(), 2);
+
+			auto list1MakeListNode = multiplyListsNode->getAttachedInputDrawers()[0];
+			editorWindow->adjustInputPortCountForNode(list1MakeListNode, 1, false);
+			VERIFY_ITEM_COUNT(18);
+		}
 	}
 
 	/**

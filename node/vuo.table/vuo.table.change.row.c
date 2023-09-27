@@ -2,12 +2,11 @@
  * @file
  * vuo.table.change.row node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoTable.h"
 
 VuoModuleMetadata({
@@ -27,6 +26,8 @@ VuoModuleMetadata({
 						  "exampleCompositions" : [ "ChangeTableDataToMetric.vuo" ]
 					  }
 				 });
+
+extern VuoTable VuoTable_changeRow_VuoGenericType1(VuoTable, VuoGenericType1, VuoList_VuoText, bool);
 
 void nodeEvent
 (

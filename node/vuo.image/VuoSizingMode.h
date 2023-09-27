@@ -2,17 +2,16 @@
  * @file
  * VuoSizingMode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef const struct VuoList_VuoSizingMode_struct { void *l; } * VuoList_VuoSizingMode;
-#define VuoList_VuoSizingMode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,6 +31,8 @@ typedef enum {
 	VuoSizingMode_Proportional,
 } VuoSizingMode;
 
+#include "VuoList_VuoSizingMode.h"
+
 VuoSizingMode VuoSizingMode_makeFromJson(struct json_object * js);
 struct json_object * VuoSizingMode_getJson(const VuoSizingMode value);
 VuoList_VuoSizingMode VuoSizingMode_getAllowedValues(void);
@@ -49,3 +50,7 @@ void VuoSizingMode_release(VuoSizingMode value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif

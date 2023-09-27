@@ -2,15 +2,19 @@
  * @file
  * VuoShader C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoShader_h
+#define VuoShader_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoColor.h"
-#include "VuoHeap.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
 #include "VuoMesh.h"
@@ -194,6 +198,7 @@ typedef struct _VuoShader
 	void *lock;	///< `dispatch_semaphore_t` to serialize operations that modify the state of this GL program object.
 } *VuoShader;
 
+#define VuoShader_OVERRIDES_INTERPROCESS_SERIALIZATION  ///< This type implements `_getInterprocessJson()`.
 
 /// @name Creating shaders from GLSL source code
 /// @{
@@ -290,9 +295,6 @@ bool VuoShader_isPopulated(VuoShader shader);
 char * VuoShader_getSummary(const VuoShader value);
 VuoShader VuoShader_makeFromJson(struct json_object * js);
 struct json_object * VuoShader_getJson(const VuoShader value);
-
-/// This type has a _getInterprocessJson() function.
-#define VuoShader_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoShader_getInterprocessJson(const VuoShader value);
 
 /// Automatically generated function.
@@ -307,3 +309,9 @@ void VuoShader_release(VuoShader value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

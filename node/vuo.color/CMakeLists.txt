@@ -5,6 +5,10 @@ target_sources(vuo.color.types PRIVATE
 	VuoDmxColorMap.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoDmxColorMap.cc
+)
+
 VuoCompileLibraries(
 	VuoColorspace.m
 )
@@ -38,10 +42,15 @@ VuoCompileNodes(
 	vuo.color.make.hsl.c
 	vuo.color.make.cmyk.c
 	vuo.color.make.rgb.c
+	vuo.color.palette.make.image.c
 )
 target_include_directories(vuo.color.nodes
 	PRIVATE
 		../vuo.data
+)
+target_link_libraries(vuo.color.nodes
+	PRIVATE
+		CONAN_PKG::wuquant
 )
 
 VuoNodeSet()

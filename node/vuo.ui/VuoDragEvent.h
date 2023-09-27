@@ -2,7 +2,7 @@
  * @file
  * VuoDragEvent C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -36,13 +36,14 @@ typedef struct
 	VuoList_VuoUrl urls;
 } VuoDragEvent;
 
+#define VuoDragEvent_SUPPORTS_COMPARISON
+
 VuoDragEvent VuoDragEvent_makeFromJson(struct json_object *js);
 struct json_object *VuoDragEvent_getJson(const VuoDragEvent value);
 char *VuoDragEvent_getSummary(const VuoDragEvent value);
 
 VuoDragEvent VuoDragEvent_make(const VuoPoint2d position, const VuoList_VuoUrl urls);
 
-#define VuoDragEvent_SUPPORTS_COMPARISON
 bool VuoDragEvent_areEqual(const VuoDragEvent value1, const VuoDragEvent value2);
 bool VuoDragEvent_isLessThan(const VuoDragEvent value1, const VuoDragEvent value2);
 

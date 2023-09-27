@@ -2,7 +2,7 @@
  * @file
  * VuoHidDevice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,6 +16,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 #include "VuoText.h"
@@ -50,11 +54,12 @@ typedef struct
 	VuoInteger usage;
 } VuoHidDevice;
 
+#define VuoHidDevice_SUPPORTS_COMPARISON
+
 VuoHidDevice VuoHidDevice_makeFromJson(struct json_object *js);
 struct json_object *VuoHidDevice_getJson(const VuoHidDevice value);
 char *VuoHidDevice_getSummary(const VuoHidDevice value);
 
-#define VuoHidDevice_SUPPORTS_COMPARISON
 bool VuoHidDevice_areEqual(const VuoHidDevice valueA, const VuoHidDevice valueB);
 bool VuoHidDevice_isLessThan(const VuoHidDevice valueA, const VuoHidDevice valueB);
 
@@ -72,3 +77,7 @@ void VuoHidDevice_release(VuoHidDevice value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

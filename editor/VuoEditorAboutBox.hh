@@ -2,7 +2,7 @@
  * @file
  * VuoEditorAboutBox interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -32,12 +32,13 @@ private:
 	Ui::VuoEditorAboutBox *ui;
 	QFont contributorFont;
 	QFont licenseFont;
-	QString contributorText;
+	QString contributorsText;
+	QString dependenciesText;
 	map<QString, QString> licenseTextForDependency;
 	QTreeWidgetItem *contributors;
-	QTreeWidgetItem *dependencyLicenses;
+	QTreeWidgetItem *dependencies;
 
-	void populateContributorsList();
+	QString fetchMarkdown(const QString &filename, const QString &fallback);
 	void populateLicenseTexts();
 
 private slots:

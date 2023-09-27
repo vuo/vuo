@@ -2,12 +2,10 @@
  * @file
  * VuoApp implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
-
-#include "module.h"
 
 #include "VuoApp.h"
 
@@ -183,6 +181,19 @@ static void VuoApp_initNSApplication(bool requiresDockIcon)
 	[app finishLaunching];
 
 	VuoEventLoop_switchToAppMode();
+
+	pid_t runnerPid = VuoGetRunnerPid();
+	if (runnerPid > 1
+		&& [NSRunningApplication.currentApplication respondsToSelector:@selector(activateFromApplication:options:)])
+	{
+		NSRunningApplication *runnerApp = [NSRunningApplication runningApplicationWithProcessIdentifier:runnerPid];
+		BOOL activated = (BOOL)[NSRunningApplication.currentApplication
+			performSelector:@selector(activateFromApplication:options:)
+			withObject:runnerApp
+			withObject:(id)NSApplicationActivateAllWindows];
+		if (!activated)
+			VUserLog("-[NSRunningApplication activateFromApplication:%d options:] failed", runnerPid);
+	}
 
 	if (VuoShouldShowSplashWindow())
 		VuoApp_showSplashWindow();

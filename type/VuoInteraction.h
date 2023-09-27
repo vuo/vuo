@@ -2,12 +2,17 @@
  * @file
  * VuoInteraction C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoInteraction_h
+#define VuoInteraction_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoReal.h"
 #include "VuoText.h"
@@ -15,11 +20,6 @@
 #include "VuoUuid.h"
 #include "VuoInteractionType.h"
 #include "VuoBoolean.h"
-
-/// @{ List type.
-typedef const struct VuoList_VuoInteraction_struct { void *l; } * VuoList_VuoInteraction;
-#define VuoList_VuoInteraction_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -44,6 +44,9 @@ typedef struct
 	double timestamp;			// The timestamp that the last onPressed event was fired.
 	VuoInteger clickCount;		// The number of successive clicks with double-click timing.
 } VuoInteraction;
+
+#define VuoInteraction_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoInteraction.h"
 
 VuoInteraction VuoInteraction_makeFromJson(struct json_object * js);
 struct json_object * VuoInteraction_getJson(const VuoInteraction value);
@@ -70,8 +73,6 @@ static inline VuoInteraction VuoInteraction_make(void)
 	return i;
 }
 
-#define VuoInteraction_SUPPORTS_COMPARISON
-
 bool VuoInteraction_areEqual(const VuoInteraction a, const VuoInteraction b);
 bool VuoInteraction_isLessThan(const VuoInteraction a, const VuoInteraction b);
 
@@ -87,3 +88,9 @@ void VuoInteraction_release(VuoInteraction value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

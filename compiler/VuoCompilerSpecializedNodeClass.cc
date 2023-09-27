@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerSpecializedNodeClass implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -22,6 +22,7 @@
 #include "VuoCompilerPublishedOutputNodeClass.hh"
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoGenericType.hh"
+#include "VuoJsonUtilities.hh"
 #include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 #include "VuoNodeSet.hh"
@@ -35,7 +36,10 @@
 VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(string nodeClassName, Module *module) :
 	VuoCompilerNodeClass(nodeClassName, module)
 {
-	initialize();
+	genericNodeClass = nullptr;
+	backingNodeClass = nullptr;
+
+	parseSpecializedModuleDetails();
 }
 
 /**
@@ -44,7 +48,10 @@ VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(string nodeClas
 VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(VuoCompilerSpecializedNodeClass *compilerNodeClass) :
 	VuoCompilerNodeClass(compilerNodeClass)
 {
-	initialize();
+	this->genericNodeClassName = compilerNodeClass->genericNodeClassName;
+	this->genericNodeClass = compilerNodeClass->genericNodeClass;
+	this->backingNodeClass = compilerNodeClass->backingNodeClass;
+	this->specializedForGenericTypeName = compilerNodeClass->specializedForGenericTypeName;
 }
 
 /**
@@ -53,16 +60,8 @@ VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(VuoCompilerSpec
 VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(VuoNodeClass *baseNodeClass) :
 	VuoCompilerNodeClass(baseNodeClass)
 {
-	initialize();
-}
-
-/**
- * Helper function for constructors.
- */
-void VuoCompilerSpecializedNodeClass::initialize(void)
-{
-	genericNodeClass = NULL;
-	backingNodeClass = NULL;
+	genericNodeClass = nullptr;
+	backingNodeClass = nullptr;
 }
 
 /**
@@ -78,8 +77,8 @@ void VuoCompilerSpecializedNodeClass::initialize(void)
  */
 VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue)
 {
-	if (nodeClassName.find(".") == string::npos)
-		return NULL;
+	if (! VuoNodeClass::isNodeClassName(nodeClassName))
+		return nullptr;
 
 	VuoNodeClass *makeListNodeClass = VuoCompilerMakeListNodeClass::newNodeClass(nodeClassName, compiler, llvmQueue);
 	if (makeListNodeClass)
@@ -117,7 +116,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 	if (potentialGenericNodeClass)
 	{
 		vector<string> potentialGenericTypeNames = getGenericTypeNamesFromPorts(potentialGenericNodeClass);
-		string expectedGenericNodeClassName = extractGenericNodeClassName(nodeClassName, potentialGenericTypeNames.size());
+		string expectedGenericNodeClassName = parseGenericNodeClassName(nodeClassName, potentialGenericTypeNames.size());
 		if (expectedGenericNodeClassName == potentialGenericNodeClass->getBase()->getClassName())
 		{
 			genericNodeClass = potentialGenericNodeClass;
@@ -151,13 +150,24 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 
 	if (_isFullySpecialized)
 	{
-		// Compile the specialized node class (with any necessary headers for types)
+		// Compile the specialized node class
 
-		string genericNodeClassName = genericNodeClass->getBase()->getClassName();
-		string genericImplementation = genericNodeClass->getBase()->getNodeSet()
-			? genericNodeClass->getBase()->getNodeSet()->getNodeClassContents( genericNodeClassName )
-			: genericNodeClass->getSourceCode();
-		if (genericImplementation.empty())
+		string sourcePath;
+		string sourceCode;
+		VuoNodeSet *nodeSet = genericNodeClass->getBase()->getNodeSet();
+		if (nodeSet)
+		{
+			string relativePath = nodeSet->getModuleSourcePath( genericNodeClass->getBase()->getClassName() );
+			sourceCode = nodeSet->getFileContents(relativePath);
+			sourcePath = nodeSet->getArchivePath() + "/" + relativePath;
+		}
+		else
+		{
+			sourceCode = genericNodeClass->getSourceCode();
+			sourcePath = genericNodeClass->getSourcePath();
+		}
+
+		if (sourceCode.empty())
 		{
 			VuoCompilerIssue issue(VuoCompilerIssue::Error, "specializing node in composition", "",
 								   "Missing source code",
@@ -168,68 +178,18 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 			issue.setModule(genericNodeClass->getBase());
 			throw VuoCompilerException(issue);
 		}
-		genericImplementation.insert(VuoFileUtilities::getFirstInsertionIndex(genericImplementation), "#define VuoSpecializedNode 1\n");
 
-		string tmpDir = VuoFileUtilities::makeTmpDir(nodeClassName);
-
-		replaceGenericTypesWithSpecialized(genericImplementation, specializedForGenericTypeName);
-
-		string tmpNodeClassImplementationFile = tmpDir + "/" + nodeClassName + ".c";
-		string tmpNodeClassCompiledFile = tmpDir + "/" + nodeClassName + ".vuonode";
-		VuoFileUtilities::preserveOriginalFileName(genericImplementation, genericNodeClassName + ".c");
-		VuoFileUtilities::writeStringToFile(genericImplementation, tmpNodeClassImplementationFile);
-
-		set<VuoNodeSet *> nodeSetDependencies;
-		VuoNodeSet *genericNodeSet = genericNodeClass->getBase()->getNodeSet();
-		if (genericNodeSet)
-		{
-			nodeSetDependencies.insert(genericNodeSet);
-		}
-		for (vector<string>::iterator i = specializedTypeNames.begin(); i != specializedTypeNames.end(); ++i)
-		{
-			string specializedTypeName = *i;
-			if (VuoGenericType::isGenericTypeName(specializedTypeName))
-				continue;
-
-			string innermostTypeName = VuoType::extractInnermostTypeName(specializedTypeName);
-			VuoNodeSet *typeNodeSet = compiler->getType(innermostTypeName)->getBase()->getNodeSet();
-			if (typeNodeSet)
-				nodeSetDependencies.insert(typeNodeSet);
-		}
-		set<string> tmpHeaders;
-		for (set<VuoNodeSet *>::iterator i = nodeSetDependencies.begin(); i != nodeSetDependencies.end(); ++i)
-		{
-			VuoNodeSet *nodeSet = *i;
-			vector<string> headerFileNames = nodeSet->getHeaderFileNames();
-			for (vector<string>::iterator j = headerFileNames.begin(); j != headerFileNames.end(); ++j)
-			{
-				string headerFileName = *j;
-				string header = nodeSet->getHeaderContents( headerFileName );
-				string tmpHeaderFile = tmpDir + "/" + headerFileName;
-				VuoFileUtilities::writeStringToFile(header, tmpHeaderFile);
-				tmpHeaders.insert(tmpHeaderFile);
-			}
-		}
-		vector<string> includeDirs;
-		includeDirs.push_back(tmpDir);
-
-		compiler->compileModule(tmpNodeClassImplementationFile, tmpNodeClassCompiledFile, includeDirs);
-		Module *module = compiler->readModuleFromBitcode(tmpNodeClassCompiledFile, compiler->getArch());
-
-		for (set<string>::iterator i = tmpHeaders.begin(); i != tmpHeaders.end(); ++i)
-			remove((*i).c_str());
-		remove(tmpNodeClassImplementationFile.c_str());
-		remove(tmpNodeClassCompiledFile.c_str());
-		remove(tmpDir.c_str());
-
+		VuoModuleCompilerResults results = compiler->compileModuleInMemory(sourcePath, sourceCode, specializedForGenericTypeName);
 
 		// Construct the VuoCompilerSpecializedNodeClass
 
 		dispatch_sync(llvmQueue, ^{
-						  VuoCompilerSpecializedNodeClass *dummyNodeClass = new VuoCompilerSpecializedNodeClass(nodeClassName, module);
+						  VuoCompilerSpecializedNodeClass *dummyNodeClass = new VuoCompilerSpecializedNodeClass(nodeClassName, results.module);
 						  nodeClass = new VuoCompilerSpecializedNodeClass(dummyNodeClass);
 						  delete dummyNodeClass;
 					  });
+
+		nodeClass->makeDependencies = results.makeDependencies;
 	}
 	else
 	{
@@ -308,14 +268,80 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeC
 		// The compiler will assign a fully-specialized backing node class with updateBackingNodeClass(), but
 		// the renderer may need a backing node class before then, e.g. to know if the node is stateful.
 		nodeClass->backingNodeClass = genericNodeClass;
+
+		nodeClass->genericNodeClassName = genericNodeClass->getBase()->getClassName();
+		nodeClass->genericNodeClass = genericNodeClass;
+		nodeClass->specializedForGenericTypeName = specializedForGenericTypeName;
 	}
 
-	nodeClass->genericNodeClass = genericNodeClass;
-	nodeClass->specializedForGenericTypeName = specializedForGenericTypeName;
-
-	nodeClass->setBuiltIn( genericNodeClass->isBuiltIn() );
-
 	return nodeClass->getBase();
+}
+
+/**
+ * Creates a compiler and base node class from the node class implementation in the module,
+ * or returns null if the implementation is not of a specialized node class.
+ */
+VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeClassName, Module *module)
+{
+	if (isSpecializedModule(module, nodeClassName))
+	{
+		VuoNodeClass *makeListNodeClass = VuoCompilerMakeListNodeClass::newNodeClass(nodeClassName, module);
+		if (makeListNodeClass)
+			return makeListNodeClass;
+
+		VuoNodeClass *publishedInputNodeClass = VuoCompilerPublishedInputNodeClass::newNodeClass(nodeClassName, module);
+		if (publishedInputNodeClass)
+			return publishedInputNodeClass;
+
+		VuoNodeClass *publishedOutputNodeClass = VuoCompilerPublishedOutputNodeClass::newNodeClass(nodeClassName, module);
+		if (publishedOutputNodeClass)
+			return publishedOutputNodeClass;
+
+		VuoCompilerSpecializedNodeClass *cnc = new VuoCompilerSpecializedNodeClass(nodeClassName, module);
+		VuoCompilerSpecializedNodeClass *cnc2 = new VuoCompilerSpecializedNodeClass(cnc);
+		delete cnc;
+		return cnc2->getBase();
+	}
+
+	return nullptr;
+}
+
+/**
+ * Constructs the value for the "specializedModule" key to be added to `VuoModuleMetadata`.
+ */
+json_object * VuoCompilerSpecializedNodeClass::buildSpecializedModuleDetails(const map<string, string> &specializedForGenericTypeName,
+																			 const string &genericNodeClassName)
+{
+	json_object *specializedDetails = json_object_new_object();
+
+	json_object *specializedTypes = json_object_new_object();
+	json_object_object_add(specializedDetails, "specializedTypes", specializedTypes);
+	for (auto i : specializedForGenericTypeName)
+		json_object_object_add(specializedTypes, i.first.c_str(), json_object_new_string(i.second.c_str()));
+
+	if (! genericNodeClassName.empty())
+		json_object_object_add(specializedDetails, "genericModule", json_object_new_string(genericNodeClassName.c_str()));
+
+	return specializedDetails;
+}
+
+/**
+ * Parses the data keyed on "specializedModule" in `VuoModuleMetadata`.
+ */
+void VuoCompilerSpecializedNodeClass::parseSpecializedModuleDetails(void)
+{
+	json_object *specializedDetails = nullptr;
+
+	if (json_object_object_get_ex(moduleDetails, "specializedModule", &specializedDetails))
+	{
+		specializedForGenericTypeName = VuoJsonUtilities::parseObjectWithStringValues(specializedDetails, "specializedTypes");
+		for (auto i : specializedForGenericTypeName)
+			dependencies.insert(i.second);
+
+		genericNodeClassName = VuoJsonUtilities::parseString(specializedDetails, "genericModule");
+		if (! genericNodeClassName.empty())
+			dependencies.insert(genericNodeClassName);
+	}
 }
 
 /**
@@ -429,8 +455,26 @@ bool VuoCompilerSpecializedNodeClass::isSpecializationOfNodeClass(const string &
 	if (genericTypesFromGeneric.empty())
 		return false;
 
-	string genericNodeClassNameFromSpecialized = extractGenericNodeClassName(potentialSpecializedNodeClassName, genericTypesFromGeneric.size());
+	string genericNodeClassNameFromSpecialized = parseGenericNodeClassName(potentialSpecializedNodeClassName, genericTypesFromGeneric.size());
 	return genericNodeClassNameFromSpecialized == potentialGenericNodeClass->getBase()->getClassName();
+}
+
+/**
+ * Attempts to update the stored reference to the generic node class from which this specialized node class is derived.
+ *
+ * Returns true if the generic node class was actually found by @a lookUpNodeClass and the reference was updated,
+ * or if the reference doesn't need to be updated because the compiler doesn't load a generic node class for this
+ * specialized node class (`vuo.list.make.*`, `vuo.in.*`, `vuo.out.*`).
+ */
+bool VuoCompilerSpecializedNodeClass::updateGenericNodeClass(std::function<VuoCompilerNodeClass *(const string &)> lookUpNodeClass)
+{
+	if (! genericNodeClassName.empty())
+	{
+		genericNodeClass = lookUpNodeClass(genericNodeClassName);
+		return genericNodeClass != nullptr;
+	}
+	else
+		return true;
 }
 
 /**
@@ -497,126 +541,8 @@ VuoCompilerNode * VuoCompilerSpecializedNodeClass::createReplacementBackingNode(
 		throw VuoCompilerException(VuoCompilerIssue(VuoCompilerIssue::Error, "specializing node in composition", "",
 													"Couldn't get backing node class.",
 													"'" + backingNodeClassName + "' uses generic types, but it couldn't be compiled. "
-													"Check the macOS Console for details."));
+													"Check Vuo's console window for details."));
 	return nodeClass->newNode(nodeToBack)->getCompiler();
-}
-
-/**
- * Replaces all occurrences of the given generic type names in the node class source code with their corresponding
- * specialized type names.
- */
-void VuoCompilerSpecializedNodeClass::replaceGenericTypesWithSpecialized(string &nodeClassSource, map<string, string> specializedForGenericTypeName)
-{
-	set<string> replacementTypeNames;
-	for (map<string, string>::iterator i = specializedForGenericTypeName.begin(); i != specializedForGenericTypeName.end(); ++i)
-	{
-		string genericTypeName = i->first;
-		string replacementTypeName = i->second;
-
-		if (replacementTypeName != genericTypeName)
-		{
-			// Replace each occurrence of the generic type name with the specialized or backing type name.
-			VuoStringUtilities::replaceAll(nodeClassSource, genericTypeName, replacementTypeName);
-
-			string innermostTypeName = VuoType::extractInnermostTypeName(replacementTypeName);
-			replacementTypeNames.insert(innermostTypeName);
-		}
-	}
-
-	string includesToAdd;
-	for (set<string>::iterator i = replacementTypeNames.begin(); i != replacementTypeNames.end(); ++i)
-	{
-		string replacementTypeName = *i;
-		includesToAdd += "#include \"" + replacementTypeName + ".h\"\n";
-
-		if (nodeClassSource.find(VuoType::listTypeNamePrefix + replacementTypeName) != string::npos)
-			includesToAdd += "#include \"" + VuoType::listTypeNamePrefix + replacementTypeName + ".h\"\n";
-	}
-
-	size_t insertionPos = nodeClassSource.find("VuoModuleMetadata");  // assumed to be after '#include "node.h"' and before any generic type names
-	if (insertionPos == string::npos)
-		return;
-	nodeClassSource.insert(insertionPos, includesToAdd);
-}
-
-/**
- * Replaces all occurrences of generic type names in the node class source code with a default actual type name.
- */
-void VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(string &nodeClassSource)
-{
-	size_t insertionPos = nodeClassSource.find("VuoModuleMetadata");  // assumed to be after '#include "node.h"' and before any generic type identifiers
-	if (insertionPos == string::npos)
-		return;
-
-	map<string, vector<string> > compatibleTypesForGeneric;
-
-	// Figure out the backing types by parsing the "genericTypes" metadata from nodeClassSource.
-	size_t metadataStartPos = nodeClassSource.find("(", insertionPos) + 1;
-	if (metadataStartPos == string::npos)
-		return;
-	size_t metadataEndPos = nodeClassSource.find(");\n", metadataStartPos);
-	if (metadataEndPos == string::npos)
-		return;
-	string moduleMetadataString = nodeClassSource.substr(metadataStartPos, metadataEndPos - metadataStartPos);
-	json_object *moduleMetadata = json_tokener_parse(moduleMetadataString.c_str());
-	if (! moduleMetadata)
-		return;
-	map<string, string> defaultTypeForGeneric;
-	VuoCompilerNodeClass::parseGenericTypes(moduleMetadata, defaultTypeForGeneric, compatibleTypesForGeneric);
-	json_object_put(moduleMetadata);
-
-	set<string> genericTypeIdentifiers;
-	size_t startPos = 0;
-	string genericTypeName;
-	while ((startPos = VuoGenericType::findGenericTypeName(nodeClassSource, startPos, genericTypeName)) != string::npos)
-	{
-		size_t endPos = startPos + genericTypeName.length();
-		if ((startPos == 0 || ! VuoStringUtilities::isValidCharInIdentifier( nodeClassSource[startPos-1] )) &&
-				(endPos == nodeClassSource.length() - 1 || ! VuoStringUtilities::isValidCharInIdentifier( nodeClassSource[endPos] )))
-		{
-			// Found a generic type identifier, so prepare to add a typedef.
-			genericTypeIdentifiers.insert(genericTypeName);
-			startPos += genericTypeName.length();
-		}
-		else
-		{
-			// Found a generic type name within another identifier, so replace it with its backing type name.
-			string innermostTypeName = VuoType::extractInnermostTypeName(genericTypeName);
-			string innermostBackingTypeName = VuoCompilerGenericType::chooseBackingTypeName(genericTypeName,
-																							compatibleTypesForGeneric[innermostTypeName]);
-			string backingTypeName = VuoGenericType::replaceInnermostGenericTypeName(genericTypeName, innermostBackingTypeName);
-			nodeClassSource.replace(startPos, genericTypeName.length(), backingTypeName);
-			startPos += backingTypeName.length();
-		}
-	}
-
-	// Add a typedef to replace each generic type with its backing type.
-	string typedefsToAdd;
-	map<string, bool> typeNamesSeen;
-	for (set<string>::iterator i = genericTypeIdentifiers.begin(); i != genericTypeIdentifiers.end(); ++i)
-	{
-		string genericTypeName = *i;
-
-		string innermostTypeName = VuoType::extractInnermostTypeName(genericTypeName);
-		string innermostBackingTypeName = VuoCompilerGenericType::chooseBackingTypeName(innermostTypeName,
-																						compatibleTypesForGeneric[innermostTypeName]);
-		if (! typeNamesSeen[innermostTypeName])
-		{
-			typeNamesSeen[innermostTypeName] = true;
-
-			string replacementTypeName = innermostBackingTypeName;
-			typedefsToAdd += "typedef " + replacementTypeName + " " + innermostTypeName + ";\n";
-		}
-
-		if (! typeNamesSeen[genericTypeName])
-		{
-			typeNamesSeen[genericTypeName] = true;
-
-			string replacementCollectionTypeName = VuoGenericType::replaceInnermostGenericTypeName(genericTypeName, innermostBackingTypeName);
-			typedefsToAdd += "typedef " + replacementCollectionTypeName + " " + genericTypeName + ";\n";
-		}
-	}
-	nodeClassSource.insert(insertionPos, typedefsToAdd);
 }
 
 /**
@@ -774,7 +700,7 @@ string VuoCompilerSpecializedNodeClass::createUnspecializedNodeClassName(set<Vuo
 		specializedTypeNames.push_back(s);
 	}
 
-	string genericNodeClassName = extractGenericNodeClassName(getBase()->getClassName(), origGenericTypeNames.size());
+	string genericNodeClassName = parseGenericNodeClassName(getBase()->getClassName(), origGenericTypeNames.size());
 	return createSpecializedNodeClassName(genericNodeClassName, specializedTypeNames);
 }
 
@@ -793,7 +719,7 @@ string VuoCompilerSpecializedNodeClass::createSpecializedNodeClassNameWithReplac
 		specializedTypeNames.push_back(s);
 	}
 
-	string genericNodeClassName = extractGenericNodeClassName(getBase()->getClassName(), origGenericTypeNames.size());
+	string genericNodeClassName = parseGenericNodeClassName(getBase()->getClassName(), origGenericTypeNames.size());
 	return createSpecializedNodeClassName(genericNodeClassName, specializedTypeNames);
 }
 
@@ -808,13 +734,12 @@ string VuoCompilerSpecializedNodeClass::createDefaultSpecializedNodeClassName(vo
 	for (vector<string>::iterator i = sortedGenericTypeNames.begin(); i != sortedGenericTypeNames.end(); ++i)
 	{
 		string genericTypeName = *i;
-		map<string, string>::iterator defaultTypeNameIter = defaultSpecializedForGenericTypeName.find(genericTypeName);
-		string specializedTypeName = (defaultTypeNameIter != defaultSpecializedForGenericTypeName.end() ?
-																 defaultTypeNameIter->second : genericTypeName);
+		string defaultTypeName = getDefaultSpecializedTypeName(genericTypeName);
+		string specializedTypeName = (! defaultTypeName.empty() ? defaultTypeName : genericTypeName);
 		sortedSpecializedTypeNames.push_back(specializedTypeName);
 	}
 
-	string genericNodeClassName = extractGenericNodeClassName(getBase()->getClassName(), sortedGenericTypeNames.size());
+	string genericNodeClassName = parseGenericNodeClassName(getBase()->getClassName(), sortedGenericTypeNames.size());
 	return createSpecializedNodeClassName(genericNodeClassName, sortedSpecializedTypeNames);
 }
 
@@ -840,7 +765,7 @@ string VuoCompilerSpecializedNodeClass::createFullySpecializedNodeClassName(VuoN
 /**
  * Extracts the generic node class name from the specialized node class name by removing type names from the end.
  */
-string VuoCompilerSpecializedNodeClass::extractGenericNodeClassName(string specializedNodeClassName, size_t genericTypeCount)
+string VuoCompilerSpecializedNodeClass::parseGenericNodeClassName(string specializedNodeClassName, size_t genericTypeCount)
 {
 	vector<string> specializedNameParts = VuoStringUtilities::split(specializedNodeClassName, '.');
 	if (specializedNameParts.size() < 2 + genericTypeCount)
@@ -915,16 +840,7 @@ string VuoCompilerSpecializedNodeClass::getDependencyName(void)
 
 bool VuoCompilerSpecializedNodeClass::isStateful(void)
 { return backingNodeClass ? backingNodeClass->isStateful() : VuoCompilerNodeClass::isStateful(); }
-/// @}
 
-/**
- * Returns the dependencies of the backing node class, if it exists, otherwise this node class.
- * The list of dependencies includes the generic node class that this node class specializes.
- */
 set<string> VuoCompilerSpecializedNodeClass::getDependencies(void)
-{
-	set<string> deps = (backingNodeClass ? backingNodeClass->getDependencies() : VuoCompilerNodeClass::getDependencies());
-	if (genericNodeClass)
-		deps.insert( genericNodeClass->getBase()->getClassName() );
-	return deps;
-}
+{ return backingNodeClass ? backingNodeClass->getDependencies() : VuoCompilerNodeClass::getDependencies(); }
+/// @}

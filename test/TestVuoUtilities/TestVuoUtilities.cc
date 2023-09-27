@@ -2,7 +2,7 @@
  * @file
  * TestVuoUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -622,6 +622,73 @@ private slots:
 		QCOMPARE(VuoFileUtilities::dirExists(path),  expectedDirExists);
 		QCOMPARE(VuoFileUtilities::isSymlink(path),  expectedIsSymlink);
 		QCOMPARE(VuoFileUtilitiesCocoa_isMacAlias(path),  expectedIsMacAlias);
+	}
+
+	void testFileTimes()
+	{
+		auto compareTimes = [](QString description, double actual, double expected)
+		{
+			double tolerance = 0.05;
+			QVERIFY2(fabs(actual - expected) < tolerance,
+					 QString("%1: %2 should be within %3 of %4").arg(description).arg(actual, 0, 'f').arg(tolerance).arg(expected, 0, 'f').toStdString().c_str());
+		};
+
+		useconds_t waitMicroseconds = USEC_PER_SEC/5;
+		double waitSeconds = waitMicroseconds/(double)USEC_PER_SEC;
+
+		// Create a directory.
+		string dirPath = VuoFileUtilities::makeTmpDir("TestVuoUtilities-testFileTimes");
+		double justAfterDirCreated = VuoTimeUtilities::getCurrentTimeInSeconds();
+
+		compareTimes("created dir (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterDirCreated);
+		compareTimes("created dir (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), 0);
+
+		// Wait a moment for the time since last accessed to tick up.
+		usleep(waitMicroseconds);
+
+		compareTimes("waited (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterDirCreated);
+		compareTimes("waited (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), waitSeconds);
+
+		// Create a file within the directory.
+		usleep(waitMicroseconds);
+		string filePath = dirPath + "/file";
+		VuoFileUtilities::writeStringToFile("test", filePath);
+		double justAfterFileCreated = VuoTimeUtilities::getCurrentTimeInSeconds();
+
+		compareTimes("created file (file modified)", VuoFileUtilities::getFileLastModifiedInSeconds(filePath), justAfterFileCreated);
+		compareTimes("created file (file accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(filePath), 0);
+		compareTimes("created file (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterFileCreated);
+		compareTimes("created file (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), 0);
+
+		// Read the file.
+		usleep(waitMicroseconds);
+		string s = VuoFileUtilities::readFileToString(filePath);
+		QVERIFY(! s.empty());
+
+		compareTimes("read file (file modified)", VuoFileUtilities::getFileLastModifiedInSeconds(filePath), justAfterFileCreated);
+		compareTimes("read file (file accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(filePath), 0);
+		compareTimes("read file (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterFileCreated);
+		compareTimes("read file (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), waitSeconds);
+
+		// Write to the file.
+		usleep(waitMicroseconds);
+		VuoFileUtilities::writeStringToFile("test", filePath);
+		double justAfterFileWritten = VuoTimeUtilities::getCurrentTimeInSeconds();
+
+		compareTimes("wrote file (file modified)", VuoFileUtilities::getFileLastModifiedInSeconds(filePath), justAfterFileWritten);
+		compareTimes("wrote file (file accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(filePath), 0);
+		compareTimes("wrote file (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterFileCreated);
+		compareTimes("wrote file (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), 2*waitSeconds);
+
+		// Delete the file.
+		usleep(waitMicroseconds);
+		VuoFileUtilities::deleteFile(filePath);
+		double justAfterFileDeleted = VuoTimeUtilities::getCurrentTimeInSeconds();
+
+		compareTimes("deleted file (dir modified)", VuoFileUtilities::getFileLastModifiedInSeconds(dirPath), justAfterFileDeleted);
+		compareTimes("deleted file (dir accessed)", VuoFileUtilities::getSecondsSinceFileLastAccessed(dirPath), 0);
+
+		VuoFileUtilities::deleteDir(dirPath);
 	}
 };
 

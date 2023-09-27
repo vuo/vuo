@@ -2,12 +2,13 @@
  * @file
  * VuoColor C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoColor_h
+#define VuoColor_h
 
 #include "VuoBoolean.h"
 #include "VuoReal.h"
@@ -16,11 +17,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// @{ List type.
-typedef const struct VuoList_VuoColor_struct { void *l; } * VuoList_VuoColor;
-#define VuoList_VuoColor_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -42,12 +38,14 @@ typedef struct
 	float r,g,b,a;
 } VuoColor;
 
+#define VuoColor_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoColor.h"
+
 VuoColor VuoColor_makeFromJson(struct json_object * js);
 struct json_object * VuoColor_getJson(const VuoColor value);
 char *VuoColor_getShortSummary(const VuoColor value);
 char *VuoColor_getSummary(const VuoColor value);
 
-#define VuoColor_SUPPORTS_COMPARISON
 bool VuoColor_areEqual(const VuoColor a, const VuoColor b);
 bool VuoColor_isLessThan(const VuoColor a, const VuoColor b);
 
@@ -147,4 +145,6 @@ void VuoColor_release(VuoColor value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

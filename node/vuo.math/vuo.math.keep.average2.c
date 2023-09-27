@@ -2,12 +2,10 @@
  * @file
  * vuo.math.keep.average2 node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
-
-#include "node.h"
 
 VuoModuleMetadata({
     "title": "Keep Average",
@@ -16,6 +14,7 @@ VuoModuleMetadata({
         "Kalman filter",
 		"store", "retain", "hold", "sample", "preserve", "history", "recent",
 		"rolling", "moving", "SMA",
+		"FIR", "finite impulse response",  // https://en.wikipedia.org/wiki/Finite_impulse_response#Moving_average_example
 		"smooth", "calm", "steady", "continuous"
     ],
     "version": "2.0.0",

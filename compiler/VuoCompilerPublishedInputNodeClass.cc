@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPublishedInputNodeClass implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -80,6 +80,23 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClass(vector<VuoPublis
 }
 
 /**
+ * Creates a compiler and base node class from the node class implementation in the module,
+ * or returns null if the implementation is not of a published input node class.
+ */
+VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClass(string nodeClassName, Module *module)
+{
+	if (VuoStringUtilities::beginsWith(nodeClassName, VuoNodeClass::publishedInputNodeIdentifier + "."))
+	{
+		VuoCompilerPublishedInputNodeClass *cnc = new VuoCompilerPublishedInputNodeClass(nodeClassName, module);
+		VuoCompilerPublishedInputNodeClass *cnc2 = new VuoCompilerPublishedInputNodeClass(cnc);
+		delete cnc;
+		return cnc2->getBase();
+	}
+
+	return nullptr;
+}
+
+/**
  * Returns a node class that has, for each of @a publishedInputPorts, a corresponding door input port and
  * a corresponding output port, both of the same data type as the published port.
  *
@@ -90,8 +107,15 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithImplementatio
 {
 	Module *module = new Module(nodeClassName, *VuoCompiler::globalLLVMContext);
 
-	// VuoModuleMetadata({});
-	VuoCompilerCodeGenUtilities::generateModuleMetadata(module, "{}", "");
+	// VuoModuleMetadata({…});
+	json_object *metadata = json_object_new_object();
+	json_object_object_add(metadata, "title", json_object_new_string(VuoNodeClass::publishedInputNodeIdentifier.c_str()));
+	json_object_object_add(metadata, "version", json_object_new_string("1.0.0"));
+	json_object *specializedModuleDetails = getSingleton()->buildSpecializedModuleDetails(types);
+	json_object_object_add(metadata, "specializedModule", specializedModuleDetails);
+	string metadataStr = json_object_to_json_string(metadata);
+	json_object_put(metadata);
+	VuoCompilerCodeGenUtilities::generateModuleMetadata(module, metadataStr, "");
 
 	// For published ports a (data+event) and b (event):
 	//
@@ -195,9 +219,6 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClassWithImplementatio
 	VuoCompilerPublishedInputNodeClass *dummyNodeClass = new VuoCompilerPublishedInputNodeClass(nodeClassName, module);
 	VuoCompilerNodeClass *nodeClass = new VuoCompilerPublishedInputNodeClass(dummyNodeClass);
 	delete dummyNodeClass;
-
-	nodeClass->getBase()->setDefaultTitle(VuoNodeClass::publishedInputNodeIdentifier);
-	nodeClass->getBase()->setVersion("1.0.0");
 
 	return nodeClass->getBase();
 }

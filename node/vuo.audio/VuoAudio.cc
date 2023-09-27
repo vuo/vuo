@@ -2,7 +2,7 @@
  * @file
  * VuoAudio implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -454,8 +454,6 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 }
 static void VuoAudio_destroy(VuoAudio_internal ai)
 {
-	VuoAudio_internalPool->removeSharedInstance(ai->inputDevice.id);
-
 	try
 	{
 		if (ai->rta->isStreamOpen())
@@ -489,35 +487,51 @@ VUOKEYEDPOOL_DEFINE(unsigned int, VuoAudio_internal, VuoAudio_make);
 /// @}
 
 /**
- * Returns the reference-counted object for the specified audio input device.
+ * @copydoc VuoKeyedPool<std::string,VuoAudio_internal>::useSharedInstance
  */
-VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
+VuoAudioIn VuoAudioIn_useShared(VuoAudioInputDevice aid)
 {
 	VuoAudioInputDevice realizedDevice;
 	if (!VuoAudioInputDevice_realize(aid, &realizedDevice))
 		return nullptr;
 
 	VuoAudioInputDevice_retain(realizedDevice);
-	VuoAudioIn ai = (VuoAudioIn)VuoAudio_internalPool->getSharedInstance(realizedDevice.id);
+	VuoAudioIn ai = static_cast<VuoAudioIn>(VuoAudio_internalPool->useSharedInstance(realizedDevice.id));
 	VuoAudioInputDevice_release(realizedDevice);
 
 	return ai;
 }
 
 /**
- * Returns the reference-counted object for the specified audio output device.
+ * @copydoc VuoKeyedPool<std::string,VuoAudio_internal>::disuseSharedInstance
  */
-VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
+void VuoAudioIn_disuseShared(VuoAudioIn ai)
+{
+	VuoAudio_internalPool->disuseSharedInstance(static_cast<VuoAudio_internal>(ai));
+}
+
+/**
+ * @copydoc VuoKeyedPool<std::string,VuoAudio_internal>::useSharedInstance
+ */
+VuoAudioOut VuoAudioOut_useShared(VuoAudioOutputDevice aod)
 {
 	VuoAudioOutputDevice realizedDevice;
 	if (!VuoAudioOutputDevice_realize(aod, &realizedDevice))
 		return nullptr;
 
 	VuoAudioOutputDevice_retain(realizedDevice);
-	VuoAudioOut ao = (VuoAudioOut)VuoAudio_internalPool->getSharedInstance(realizedDevice.id);
+	VuoAudioOut ao = static_cast<VuoAudioOut>(VuoAudio_internalPool->useSharedInstance(realizedDevice.id));
 	VuoAudioOutputDevice_release(realizedDevice);
 
 	return ao;
+}
+
+/**
+ * @copydoc VuoKeyedPool<std::string,VuoAudio_internal>::disuseSharedInstance
+ */
+void VuoAudioOut_disuseShared(VuoAudioOut ao)
+{
+	VuoAudio_internalPool->disuseSharedInstance(static_cast<VuoAudio_internal>(ao));
 }
 
 /**

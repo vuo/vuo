@@ -2,12 +2,14 @@
  * @file
  * VuoReal implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
+#include "VuoReal.h"
+#include "VuoText.h"
+#include <float.h>
 #include <limits.h>
 
 /// @{
@@ -82,6 +84,26 @@ char * VuoReal_getSummary(const VuoReal value)
 {
 	// See VuoDoubleSpinBox::textFromValue.
 	return VuoText_format("%.11g", value);
+}
+
+/**
+ * @ingroup VuoReal
+ * Parses the specified text into a real number, using the system locale.
+ *
+ * If the text cannot be parsed, returns NAN.
+ */
+VuoReal VuoReal_makeFromLocalizedText(const char *text)
+{
+	__block char *endptr;
+	__block VuoReal value;
+	VuoText_performWithSystemLocale(^(locale_t locale){
+		value = strtod_l(text, &endptr, locale);
+	});
+
+	if (text == endptr)
+		return NAN;
+
+	return value;
 }
 
 /**

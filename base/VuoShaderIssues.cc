@@ -2,7 +2,7 @@
  * @file
  * VuoShaderIssues implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -71,6 +71,28 @@ bool VuoShaderIssues::isUserEnteredLine(int lineNumber)
 {
 	return (lineNumber != NoLine
 		 && lineNumber < PreambleLine);
+}
+
+/**
+ * Returns a textual description of each issue.
+ */
+string VuoShaderIssues::getDescription(const string &lineBreak)
+{
+	ostringstream s;
+	size_t i = 0;
+
+	for (Issue issue : _issues)
+	{
+		if (issue.lineNumber != NoLine)
+			s << issue.lineNumber << ": ";
+
+		s << issue.message;
+
+		if (++i < _issues.size())
+			s << lineBreak;
+	}
+
+	return s.str();
 }
 
 /**

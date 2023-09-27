@@ -2,7 +2,7 @@
  * @file
  * TestVuoVideo interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,12 +11,12 @@
 
 #include <objc/objc-runtime.h>
 
-extern "C"
-{
 #include "VuoVideo.h"
-}
 
-extern bool warnedAboutSlowFlip;
+namespace VuoFfmpegUtility
+{
+	extern bool warnedAboutSlowFlip;
+}
 
 /**
  * C++ RAII wrapper for NSAutoreleasePool.
@@ -188,7 +188,7 @@ private slots:
 		if (isNetworkStream(url))
 			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
-		warnedAboutSlowFlip = false;
+		VuoFfmpegUtility::warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		QVERIFY(m != NULL);
@@ -310,7 +310,7 @@ private slots:
 
 		VuoRelease(m);
 
-		QVERIFY(!warnedAboutSlowFlip);
+		QVERIFY(!VuoFfmpegUtility::warnedAboutSlowFlip);
 	}
 
 	/**
@@ -338,7 +338,7 @@ private slots:
 		if (isNetworkStream(url))
 			QSKIP("Not running this test on an RTSP stream since it would take too long");
 
-		warnedAboutSlowFlip = false;
+		VuoFfmpegUtility::warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -371,7 +371,7 @@ private slots:
 			VuoRelease(videoFrame.image);
 		VuoRelease(m);
 
-		QVERIFY(!warnedAboutSlowFlip);
+		QVERIFY(!VuoFfmpegUtility::warnedAboutSlowFlip);
 	}
 
 	/**
@@ -402,7 +402,7 @@ private slots:
 			QSKIP("Skipping QuickTime - H.264 - Lossless 5.1 - #1");
 		}
 
-		warnedAboutSlowFlip = false;
+		VuoFfmpegUtility::warnedAboutSlowFlip = false;
 
 		VuoVideo m = VuoVideo_make(VuoText_make(url.toUtf8().data()), VuoVideoOptimization_Random);
 		VuoRetain(m);
@@ -452,7 +452,7 @@ private slots:
 			VuoRelease(videoFrame.image);
 		VuoRelease(m);
 
-		QVERIFY(!warnedAboutSlowFlip);
+		QVERIFY(!VuoFfmpegUtility::warnedAboutSlowFlip);
 	}
 
 	/**

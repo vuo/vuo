@@ -1,4 +1,6 @@
 add_library(VuoCompiler STATIC
+	VuoClangIssues.cc
+	VuoClangIssues.hh
 	VuoCompiler.cc
 	VuoCompiler.hh
 	VuoCompilerBitcodeGenerator.cc
@@ -19,16 +21,22 @@ add_library(VuoCompiler STATIC
 	VuoCompilerComposition.hh
 	VuoCompilerCompositionDiff.cc
 	VuoCompilerCompositionDiff.hh
+	VuoCompilerCompoundType.cc
+	VuoCompilerCompoundType.hh
 	VuoCompilerConstantsCache.cc
 	VuoCompilerConstantsCache.hh
 	VuoCompilerData.cc
 	VuoCompilerData.hh
 	VuoCompilerDataClass.cc
 	VuoCompilerDataClass.hh
+	VuoCompilerDelegate.cc
+	VuoCompilerDelegate.hh
 	VuoCompilerDiagnosticConsumer.cc
 	VuoCompilerDiagnosticConsumer.hh
 	VuoCompilerDriver.cc
 	VuoCompilerDriver.hh
+	VuoCompilerEnvironment.cc
+	VuoCompilerEnvironment.hh
 	VuoCompilerEventPort.cc
 	VuoCompilerEventPort.hh
 	VuoCompilerEventPortClass.cc
@@ -101,26 +109,41 @@ add_library(VuoCompiler STATIC
 	VuoCompilerTriggerPortClass.hh
 	VuoCompilerType.cc
 	VuoCompilerType.hh
+	VuoDependencyGraphVertex.cc
+	VuoDependencyGraphVertex.hh
 	VuoDirectedAcyclicGraph.cc
 	VuoDirectedAcyclicGraph.hh
+	VuoLinkerInputs.cc
+	VuoLinkerInputs.hh
+	VuoMakeDependencies.cc
+	VuoMakeDependencies.hh
+	VuoModuleCache.cc
+	VuoModuleCache.hh
+	VuoModuleCacheManifest.cc
+	VuoModuleCacheManifest.hh
+	VuoModuleCacheRevision.cc
+	VuoModuleCacheRevision.hh
 	VuoModuleCompilationQueue.cc
 	VuoModuleCompilationQueue.hh
 	VuoModuleCompiler.cc
 	VuoModuleCompiler.hh
-	VuoRunnerCocoa+Conversion.hh
-	VuoRunnerCocoa+Conversion.mm
-	VuoRunnerCocoa.h
-	VuoRunnerCocoa.mm
+	VuoModuleCompilerResults.cc
+	VuoModuleCompilerResults.hh
+	VuoModuleCompilerSettings.cc
+	VuoModuleCompilerSettings.hh
+	VuoModuleInfo.cc
+	VuoModuleInfo.hh
+	VuoModuleInfoIterator.cc
+	VuoModuleInfoIterator.hh
 )
 target_compile_definitions(VuoCompiler
 	PUBLIC
 	LLVM
-	ZMQ
 )
 target_include_directories(VuoCompiler
 	PUBLIC
-		${PROJECT_BINARY_DIR}/type/list
 		../library
+		../runner
 		../type
 		.
 )
@@ -145,7 +168,10 @@ VuoPCH(VuoCompiler LLVM)
 
 VuoDefineArchitectureMacros(VuoCompiler)
 
+add_custom_target(VuoModuleCompilers)
+add_subdirectory(c)
 add_subdirectory(isf)
+
 add_subdirectory(vuo-link)
 
 file(GLOB compilerSourcesAndDependencies

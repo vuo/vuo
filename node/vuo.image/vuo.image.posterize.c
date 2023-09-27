@@ -2,25 +2,25 @@
  * @file
  * vuo.image.filter.posterize node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoImageRenderer.h"
 
 VuoModuleMetadata({
-					  "title" : "Posterize Image",
-					  "keywords" : [
-						  "filter",
-						  "stroke", "alias", "contour", "edge", "banding", "raster", "gif", "quantize", "gradient", "reduce",
-						  "retro", ],
-					  "version" : "1.0.1",
-					  "node": {
-						  "exampleCompositions" : [ "PosterizeImage.vuo" ]
-					  }
-				 });
+	"title": "Posterize Image",
+	"keywords": [
+		"filter",
+		"stroke", "alias", "contour", "edge", "banding", "raster", "gif", "quantize", "gradient", "reduce",
+		"retro", "1980s", "1990s",
+	],
+	"version": "1.0.1",
+	"node": {
+		"exampleCompositions": [ "PosterizeImage.vuo", "ComparePosterizeAndPalette.vuo" ]
+	}
+});
 
 /**
  * http://www.geeks3d.com/20091027/shader-library-posterization-post-processing-effect-glsl/

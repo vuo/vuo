@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -119,7 +119,7 @@ private:
 	void generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node, bool requiresEvent = true, bool shouldSendTelemetry = true);
 	void generateTelemetryFromPublishedOutputNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, Value *nodeContextValue, VuoCompilerNode *node);
 	void generateDataOnlyTransmissionFromNode(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *node, bool shouldWaitForDownstreamNodes, bool shouldUpdateTriggers, bool shouldSendTelemetry);
-	void generateNodeExecution(Function *function, BasicBlock *&currentBlock, Value *compositionStateValue, VuoCompilerNode *node, bool shouldSendTelemetry = true);
+	void generateNodeExecution(BasicBlock *block, Value *compositionStateValue, VuoCompilerNode *node, bool shouldSendTelemetry = true);
 	void generateAllocation(void);
 	void generateSetupFunction(bool isStatefulComposition);
 	void generateCleanupFunction(void);

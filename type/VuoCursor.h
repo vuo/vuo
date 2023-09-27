@@ -2,17 +2,17 @@
  * @file
  * VuoCursor C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoCursor_h
+#define VuoCursor_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoCursor_struct { void *l; } * VuoList_VuoCursor;
-#define VuoList_VuoCursor_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -36,6 +36,8 @@ typedef enum
 	VuoCursor_Circle
 } VuoCursor;
 
+#include "VuoList_VuoCursor.h"
+
 VuoCursor VuoCursor_makeFromJson(struct json_object * js);
 struct json_object * VuoCursor_getJson(const VuoCursor value);
 VuoList_VuoCursor VuoCursor_getAllowedValues(void);
@@ -56,3 +58,8 @@ void VuoCursor_release(VuoCursor value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif
+
+#endif

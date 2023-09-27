@@ -1,3 +1,9 @@
+VuoGenerateModulePCH(VuoModulePCH
+	SOURCES
+		node.h
+		../type/type.h
+)
+
 add_subdirectory(vuo.app)
 add_subdirectory(vuo.audio)
 add_subdirectory(vuo.bcf2000)

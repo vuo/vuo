@@ -2,16 +2,16 @@
  * @file
  * VuoPoint2d C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoPoint2d_h
+#define VuoPoint2d_h
 
 #include "VuoReal.h"
 #include <math.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,16 +30,13 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(2))) VuoPoint2d;
 
-/// @{ List type.
-typedef const struct VuoList_VuoPoint2d_struct { void *l; } * VuoList_VuoPoint2d;
-#define VuoList_VuoPoint2d_TYPE_DEFINED
-/// @}
+#define VuoPoint2d_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoPoint2d.h"
 
 VuoPoint2d VuoPoint2d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint2d_getJson(const VuoPoint2d value);
 char * VuoPoint2d_getSummary(const VuoPoint2d value);
 
-#define VuoPoint2d_SUPPORTS_COMPARISON
 bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2);
 bool VuoPoint2d_areEqualListWithinTolerance(VuoList_VuoPoint2d values, VuoPoint2d tolerance);
 bool VuoPoint2d_isLessThan(const VuoPoint2d a, const VuoPoint2d b);
@@ -294,4 +291,6 @@ static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoi
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeSet interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -26,10 +26,10 @@ public:
 	string getDescription(void);
 	string getDescriptionForModule(VuoModule *module);
 	vector<string> getNodeClassNames(void);
-	vector<string> getHeaderFileNames(void);
+	vector<string> getHeaderPaths(void);
 	vector<string> getExampleCompositionFileNames(void);
-	string getNodeClassContents(string nodeClassName);
-	string getHeaderContents(string headerName);
+	string getModuleSourcePath(const string &moduleKey);
+	string getFileContents(const string &relativePath);
 	string getExampleCompositionContents(string exampleCompositionFileName);
 	void extractExampleCompositionResources(string destinationDir);
 	void extractDocumentationResources(string destinationDir);

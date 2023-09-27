@@ -23,6 +23,13 @@ target_sources(vuo.osc.types PRIVATE
 	VuoOscType.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoOscMessage.cc
+	VuoList_VuoOscInputDevice.cc
+	VuoList_VuoOscOutputDevice.cc
+	VuoList_VuoOscType.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.osc.message.get.1.c
 	vuo.osc.message.get.2.c

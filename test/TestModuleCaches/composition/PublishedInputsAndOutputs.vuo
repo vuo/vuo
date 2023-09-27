@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FrostImage [type="vuo.image.frost" version="1.1.1" label="Frost Image|<refresh>refresh\l|<image>image\l|<color>color\l|<brightness>brightness\l|<noiseCenter>noiseCenter\l|<noiseTime>noiseTime\l|<noiseAmount>noiseAmount\l|<noiseScale>noiseScale\l|<chromaticAberration>chromaticAberration\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<iterations>iterations\l|<frostedImage>frostedImage\r" pos="150,75" _color="\{\"r\":0.88,\"g\":0.93,\"b\":1.,\"a\":1.\}" _brightness="1.5" _noiseCenter="\{\"x\":0,\"y\":0\}" _noiseTime="0.0" _noiseScale="0.1" _chromaticAberration="0.5" _levels="1" _roughness="0.5" _spacing="2.0" _iterations="1"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Image>Image\r|<NoiseAmount>NoiseAmount\r" _Image_type="VuoImage" _NoiseAmount_type="VuoReal" _NoiseAmount_suggestedMin="0." _NoiseAmount_suggestedMax="1." _NoiseAmount_suggestedStep="0.1" _NoiseAmount="0.1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<FrostedImage>FrostedImage\l" _FrostedImage_type="VuoImage"];
+
+FrostImage:frostedImage -> PublishedOutputs:FrostedImage;
+PublishedInputs:Image -> FrostImage:image;
+PublishedInputs:NoiseAmount -> FrostImage:noiseAmount;
+}

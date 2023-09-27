@@ -2,7 +2,7 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -19,6 +19,8 @@ extern "C" {
 extern dispatch_once_t VuoImage_resolveInterprocessJsonOntoFramebufferInternal_init;
 }
 
+#include <mach/task.h>
+#include <mach/mach_init.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <OpenGL/CGLMacro.h>
 
@@ -84,6 +86,19 @@ class TestVuoImage : public QObject
 			gl_FragColor = texture2D(texture, fragmentTextureCoordinate + vec2(cos(angle)*offset,sin(angle)*offset));
 		}
 	);
+
+	int32_t getVirtualMemoryMB()
+	{
+		mach_task_basic_info info;
+		mach_msg_type_number_t c = MACH_TASK_BASIC_INFO_COUNT;
+		if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &c) != KERN_SUCCESS)
+		{
+			QTest::qFail("couldn't get mach_task_basic_info.", __FILE__, __LINE__);
+			return -1;
+		}
+
+		return info.virtual_size / (1024 * 1024);
+	}
 
 private slots:
 
@@ -232,19 +247,47 @@ private slots:
 		QVERIFY(TestVuoImage_freed);
 	}
 
+	void testFetchImagePerformance_data()
+	{
+		QTest::addColumn<QString>("filename");
+		QTest::addColumn<int>("expectedWidth");
+		QTest::addColumn<int>("expectedHeight");
+
+		QTest::newRow("jpg-5120")       << "resources/hubble-heic1206a.jpg"            << 5120 << 2880;
+		QTest::newRow("png-5120")       << "resources/noise.png"                       << 5120 << 2880;
+		QTest::newRow("webp-5120")      << "resources/noise.webp"                      << 5120 << 2880;
+		QTest::newRow("heic-grey-5120") << "resources/noise-grey.heic"                 << 5120 << 2880;
+		QTest::newRow("heic-rgb-5120")  << "resources/noise-rgb.heic"                  << 5120 << 2880;
+		QTest::newRow("mov")            << "../../node/vuo.video/examples/Kalimba.mov" <<    0 <<    0;
+	}
 	void testFetchImagePerformance()
 	{
-		VuoText filename = VuoText_make("resources/hubble-heic1206a.jpg");
-		VuoLocal(filename);
+		QFETCH(QString, filename);
+		QFETCH(int, expectedWidth);
+		QFETCH(int, expectedHeight);
+
+		VuoText filenameV = VuoText_make(filename.toUtf8().constData());
+		VuoLocal(filenameV);
+
+		int32_t m0 = getVirtualMemoryMB();
 
 		QBENCHMARK {
-			VuoImage i = VuoImage_get(filename);
-			QVERIFY(i);
-			VuoRetain(i);
-			QCOMPARE(i->pixelsWide, 5120UL);
-			QCOMPARE(i->pixelsHigh, 2880UL);
-			VuoRelease(i);
+			VuoImage i = VuoImage_get(filenameV);
+			if (expectedWidth && expectedHeight)
+			{
+				QVERIFY(i);
+				VuoRetain(i);
+				QCOMPARE(i->pixelsWide, (unsigned long int)expectedWidth);
+				QCOMPARE(i->pixelsHigh, (unsigned long int)expectedHeight);
+				VuoRelease(i);
+			}
+			else
+				QVERIFY(!i);
 		}
+
+		int32_t m1 = getVirtualMemoryMB();
+		VUserLog("virtual memory delta = %d MB", m1 - m0);
+		QVERIFY2(m1 - m0 < 1024, "Possible memory leak.");
 	}
 
 	void testMakeFromBufferPerformance()
@@ -599,6 +642,7 @@ private slots:
 		VuoLocal(filename);
 
 		VuoImage i = VuoImage_get(filename);
+		QEXPECT_FAIL("bmp-alpha-gimp.bmp", "https://sourceforge.net/p/freeimage/bugs/266/", Abort);
 		QVERIFY(i);
 		VuoLocal(i);
 
@@ -608,7 +652,6 @@ private slots:
 		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
 //		VLog("%d %d %d %d",imageBuffer[2],imageBuffer[1],imageBuffer[0],imageBuffer[3]);
 //		VLog("%d %d %d %d",imageBuffer[6],imageBuffer[5],imageBuffer[4],imageBuffer[7]);
-		QEXPECT_FAIL("bmp-alpha-gimp.bmp", "https://sourceforge.net/p/freeimage/bugs/266/", Abort);
 		QVERIFY(abs(imageBuffer[2] -  84) < 2);
 		QVERIFY(abs(imageBuffer[1] -  67) < 2);
 		QVERIFY(abs(imageBuffer[0] -  36) < 2);

@@ -2,7 +2,7 @@
  * @file
  * VuoOscOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  * @{
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoInteger.h"
 #include "VuoText.h"
 
@@ -30,6 +34,8 @@ typedef struct
 	VuoInteger port;
 } VuoOscOutputDevice;
 
+#define VuoOscOutputDevice_SUPPORTS_COMPARISON
+
 VuoOscOutputDevice VuoOscOutputDevice_makeFromJson(struct json_object *js);
 struct json_object *VuoOscOutputDevice_getJson(const VuoOscOutputDevice value);
 char *VuoOscOutputDevice_getSummary(const VuoOscOutputDevice value);
@@ -37,7 +43,6 @@ char *VuoOscOutputDevice_getSummary(const VuoOscOutputDevice value);
 VuoOscOutputDevice VuoOscOutputDevice_makeBroadcast(const VuoText name, const VuoInteger port);
 VuoOscOutputDevice VuoOscOutputDevice_makeUnicast(const VuoText name, const VuoText ipAddress, const VuoInteger port);
 
-#define VuoOscOutputDevice_SUPPORTS_COMPARISON
 bool VuoOscOutputDevice_areEqual(const VuoOscOutputDevice value1, const VuoOscOutputDevice value2);
 bool VuoOscOutputDevice_isLessThan(const VuoOscOutputDevice value1, const VuoOscOutputDevice value2);
 
@@ -53,3 +58,7 @@ void VuoOscOutputDevice_release(VuoOscOutputDevice value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

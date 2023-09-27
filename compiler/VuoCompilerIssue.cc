@@ -2,14 +2,17 @@
  * @file
  * VuoCompilerIssue implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
-#include <sstream>
 #include "VuoCompilerIssue.hh"
+
+#include <sstream>
+#include "VuoClangIssues.hh"
 #include "VuoModule.hh"
+#include "VuoShaderIssues.hh"
 #include "VuoStringUtilities.hh"
 
 /**
@@ -166,23 +169,32 @@ string VuoCompilerIssue::getShortDescription(bool htmlFormatted) const
  */
 string VuoCompilerIssue::getLongDescription(bool htmlFormatted)
 {
+	string lineBreak = getLineBreak(htmlFormatted);
+
 	string description = getIssueTypeString() + " " + action;
 
 	if (! filePath.empty())
 	{
-		string filePathFormatted = filePath;
-		if (htmlFormatted)
-			filePathFormatted = "<code>" + filePathFormatted + "</code>";
+		string location = filePath;
 
-		description += " " + filePathFormatted;
+		if (htmlFormatted)
+			location = "<code>" + location + "</code>";
+
+		description += " " + location;
 	}
 
-	description += ":" + getLineBreak(htmlFormatted);
+	description += ":" + lineBreak;
 
 	if (! summary.empty())
 		description += summary + " — ";
 
 	description += getDetails(htmlFormatted);
+
+	if (clangIssues && ! clangIssues->isEmpty())
+		description += lineBreak + clangIssues->getDescription(lineBreak);
+
+	if (shaderIssues && ! shaderIssues->issues().empty())
+		description += lineBreak + shaderIssues->getDescription(lineBreak);
 
 	return description;
 }
@@ -237,22 +249,6 @@ void VuoCompilerIssue::setFilePath(const string &filePath)
 string VuoCompilerIssue::getFilePath(void)
 {
 	return filePath;
-}
-
-/**
- * Sets the location in source code of the problem.
- */
-void VuoCompilerIssue::setLineNumber(int lineNumber)
-{
-	this->lineNumber = lineNumber;
-}
-
-/**
- * Returns the location in source code of the problem.
- */
-int VuoCompilerIssue::getLineNumber(void)
-{
-	return lineNumber;
 }
 
 /**
@@ -319,6 +315,30 @@ void VuoCompilerIssue::setCables(const set<VuoCable *> &cables)
 set<VuoCable *> VuoCompilerIssue::getCables(void)
 {
 	return cables;
+}
+
+/**
+ * Supplements this VuoCompilerIssue with a more detailed list of issues emitted by the Clang compiler.
+ */
+void VuoCompilerIssue::setClangIssues(shared_ptr<VuoClangIssues> clangIssues)
+{
+	this->clangIssues = clangIssues;
+}
+
+/**
+ * Supplements this VuoCompilerIssue with a more detailed list of issues emitted by the ISF shader compiler.
+ */
+void VuoCompilerIssue::setShaderIssues(shared_ptr<VuoShaderIssues> shaderIssues)
+{
+	this->shaderIssues = shaderIssues;
+}
+
+/**
+ * Returns the issues emitted by the ISF shader compiler.
+ */
+shared_ptr<VuoShaderIssues> VuoCompilerIssue::getShaderIssues(void)
+{
+	return shaderIssues;
 }
 
 /**
@@ -427,9 +447,9 @@ string VuoCompilerIssues::getHint(bool htmlFormatted)
  */
 void VuoCompilerIssues::setFilePathIfEmpty(const string &filePath)
 {
-	for (vector<VuoCompilerIssue>::iterator i = issues.begin(); i != issues.end(); ++i)
-		if ((*i).getFilePath().empty())
-			(*i).setFilePath(filePath);
+	for (VuoCompilerIssue &issue : issues)
+		if (issue.getFilePath().empty())
+			issue.setFilePath(filePath);
 }
 
 /**
@@ -437,9 +457,20 @@ void VuoCompilerIssues::setFilePathIfEmpty(const string &filePath)
  */
 void VuoCompilerIssues::setFilePath(const string &filePath)
 {
-	for (vector<VuoCompilerIssue>::iterator i = issues.begin(); i != issues.end(); ++i)
-		(*i).setFilePath(filePath);
+	for (VuoCompilerIssue &issue : issues)
+		issue.setFilePath(filePath);
 }
+
+/**
+ * Sets the file for each issue in the list to the value returned by @a generateFilePath,
+ * a function that takes the original file path and returns a possibly different file path.
+ */
+void VuoCompilerIssues::setFilePath(std::function<string(const string &)> generateFilePath)
+{
+	for (VuoCompilerIssue &issue : issues)
+		issue.setFilePath( generateFilePath(issue.getFilePath()) );
+}
+
 /**
  * Adds the issue to the end of the list.
  */
@@ -453,7 +484,7 @@ void VuoCompilerIssues::append(const VuoCompilerIssue &issue)
  */
 void VuoCompilerIssues::append(VuoCompilerIssues *otherIssues)
 {
-	issues.insert(issues.begin(), otherIssues->issues.begin(), otherIssues->issues.end());
+	issues.insert(issues.end(), otherIssues->issues.begin(), otherIssues->issues.end());
 }
 
 /**
@@ -483,4 +514,17 @@ VuoCompilerIssues * VuoCompilerIssues::getErrors(void)
 			errors->append(*i);
 
 	return errors;
+}
+
+/**
+ * Returns true if at least one of the issues in the list is an error.
+ */
+bool VuoCompilerIssues::hasErrors(void)
+{
+	auto isError = [](VuoCompilerIssue issue)
+	{
+		return issue.getIssueType() == VuoCompilerIssue::Error;
+	};
+
+	return std::find_if(issues.begin(), issues.end(), isError) != issues.end();
 }

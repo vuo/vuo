@@ -9,6 +9,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Apply a crop, fade and gamma curve to an edge.
  */
@@ -41,3 +45,7 @@ char * VuoEdgeBlend_getString(const VuoEdgeBlend value);
 void VuoEdgeBlend_retain(VuoEdgeBlend value);
 void VuoEdgeBlend_release(VuoEdgeBlend value);
 ///@}
+
+#ifdef __cplusplus
+}
+#endif

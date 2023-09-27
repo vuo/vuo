@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -81,6 +81,7 @@ public:
 	static void canonicalizePath(string &path);
 	static bool arePathsEqual(string path1, string path2);
 	static string getAbsolutePath(const string &path);
+	static bool isAbsolutePath(const string &path);
 	static string makeTmpFile(string file, string extension, string directory="");
 	static string makeTmpDir(string prefix);
 	static string makeTmpDirOnSameVolumeAsPath(string path);
@@ -113,8 +114,8 @@ public:
 	static void copyFile(string fromPath, string toPath, bool preserveMetadata = false);
 	static void copyDirectory(string fromPath, string toPath);
 	static string calculateFileSHA256(const string &path);
-	static unsigned long getFileLastModifiedInSeconds(string path);
-	static unsigned long getSecondsSinceFileLastAccessed(string path);
+	static double getFileLastModifiedInSeconds(string path);
+	static double getSecondsSinceFileLastAccessed(string path);
 	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>(), bool shouldSearchRecursively = false);
 	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());
 	static set<File *> findAllFilesInArchive(string archivePath);
@@ -127,16 +128,13 @@ public:
 	static void executeProcess(vector<string> processAndArgs, vector<string> environment = {});
 
 	static bool isCompositionExtension(string extension);
-	static set<string> getCSourceExtensions(void);
-	static bool isCSourceExtension(string extension);
+	static set<string> getCFamilySourceExtensions(void);
+	static bool isCFamilySourceExtension(string extension);
+	static bool isCPlusPlusSourceExtension(string extension);
+	static bool isObjectiveCSourceExtension(string extension);
+	static bool isObjectiveCPlusPlusSourceExtension(string extension);
+	static set<string> getIsfSourceExtensions(void);
 	static bool isIsfSourceExtension(string extension);
-
-	static string buildModuleCacheDescription(const string &moduleCachePath, bool generated);
-	static string buildModuleCacheIndexPath(const string &moduleCachePath, bool builtIn, bool generated);
-	static string buildModuleCacheDylibPath(const string &moduleCachePath, bool builtIn, bool generated);
-	static string findLatestRevisionOfModuleCacheDylib(const string &moduleCachePath, bool builtIn, bool generated, unsigned long &lastModified);
-	static void deleteOtherRevisionsOfModuleCacheDylib(const string &dylibPath);
-	static bool areDifferentRevisionsOfSameModuleCacheDylib(const string &dylibPath1, const string &dylibPath2);
 
 private:
 	static void dylibLoaded(const struct mach_header *mh32, intptr_t vmaddr_slide);

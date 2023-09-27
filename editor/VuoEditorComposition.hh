@@ -2,7 +2,7 @@
  * @file
  * VuoEditorComposition interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -133,8 +133,8 @@ public:
 	void leftMousePressEventAtNearbyItem(QGraphicsItem *nearbyItem, QGraphicsSceneMouseEvent *event);
 	static VuoNode * getUnderlyingParentNodeForPort(VuoPort *runningPort, VuoEditorComposition *composition);
 	QGraphicsItem * findNearbyPort(QPointF scenePos, bool limitPortCollisionRange=true);
-	VuoRendererColors::HighlightType getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types);
-	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoCompilerType *> &types);
+	VuoRendererColors::HighlightType getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection);
+	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination);
 	bool selectBridgingSolution(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, VuoRendererPort **portToSpecialize, string &specializedTypeName, string &typecastToInsert);
 	QList<QAction *> getCompatibleTypesForMenu(VuoRendererPort *genericPort, set<string> compatibleTypesInIsolation, set<string> compatibleTypesInContext, bool limitToNodeSet, string nodeSetName="", QMenu *menu=NULL);
 	void addTypeActionsToMenu(QList<QAction *> actionList, QMenu *menu);
@@ -178,6 +178,7 @@ public:
 	QString getFormattedName();
 	static QString formatCompositionFileNameForDisplay(QString unformattedCompositionFileName);
 	static QString formatNodeSetNameForDisplay(QString nodeSetName);
+	QString formatTypeNameForDisplay(string typeName);
 	QString formatTypeNameForDisplay(VuoType *type);
 	string getDefaultPublishedPortNameForType(VuoType *type);
 
@@ -298,11 +299,10 @@ private:
 	bool canSwapWithoutBreakingCables(VuoRendererNode *origNode, VuoNodeClass *newNodeClass);
 	bool portCanBeUnspecializedNondestructively(VuoPort *port);
 	bool portsPassSanityCheckToBridge(VuoRendererPort *fromPort, VuoRendererPort *toPort);
-	bool portsPassSanityCheckToTypeconvert(VuoRendererPort *fromPort, VuoRendererPort *toPort, VuoType *candidateFromType=NULL, VuoType *candidateToType=NULL);
+	bool portsPassSanityCheckToTypeconvert(VuoRendererPort *fromPort, VuoRendererPort *toPort, const string &candidateFromTypeName="", const string &candidateToTypeName="");
 
 	void fireTriggerPortEvent(VuoPort *port);
 	QList<QAction *> promoteSingletonsFromSubmenus(QList<QAction *> actionList);
-	static bool nodeSetMenuActionLessThan(QAction *action1, QAction *action2);
 	static bool itemHigherOnCanvas(QGraphicsItem *item1, QGraphicsItem *item2);
 	static double calculateNodeSimilarity(VuoNodeClass *node1, VuoNodeClass *node2);
 
@@ -415,10 +415,10 @@ private:
 	void updateHoverHighlighting(QPointF scenePos, bool disablePortHoverHighlighting=false);
 	void highlightEligibleEndpointsForCable(VuoCable *cable);
 	void highlightInternalPortsConnectableToPort(VuoRendererPort *port, VuoRendererCable *cable);
-	void updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types);
+	VuoRendererColors::HighlightType updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection);
 	void updateEligibilityHighlightingForNode(VuoRendererNode *node);
 	bool selectBridgingSolutionFromOptions(vector<string> suitableTypecasts, map<string, VuoRendererPort *> portToSpecializeForTypecast, map<string, string> specializedTypeNameForTypecast, string &selectedTypecast);
-	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoRendererPort *> &portToSpecializeForTypecast, map<string, string> &specializedTypeNameForTypecast, map<string, VuoCompilerType *> &types);
+	vector<string> findBridgingSolutions(VuoRendererPort *fromPort, VuoRendererPort *toPort, bool toPortIsDragDestination, map<string, VuoRendererPort *> &portToSpecializeForTypecast, map<string, string> &specializedTypeNameForTypecast);
 	bool promptForBridgingSelectionFromOptions(vector<string> suitableTypecasts, map<string, VuoRendererPort *> portToSpecializeForTypecast, map<string, string> specializedTypeNameForTypecast, string &selectedTypecast);
 	QString getDisplayTextForSpecializationOption(VuoRendererPort *portToSpecialize, string specializedTypeName);
 	bool hasFeedbackErrors(void);

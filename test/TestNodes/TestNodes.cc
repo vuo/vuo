@@ -2,7 +2,7 @@
  * @file
  * TestNodes interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -25,7 +25,6 @@ class TestNodes : public TestCompositionExecution
 
 private:
 	QString singleTestDatum;
-	VuoCompiler *compiler;
 	set<string> customModuleKeys;
 	set<VuoCompilerNodeClass *> builtInNodeClasses;
 	set<VuoCompilerType *> builtInTypes;
@@ -36,7 +35,7 @@ private:
 		return module->getCompatibleTargets().isCompatibleWith(currentTarget);
 	}
 
-	void makeBuiltInNodeClasses(void)
+	void makeBuiltInNodeClasses(VuoCompiler *compiler)
 	{
 		map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
 		for (map<string, VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
@@ -49,7 +48,7 @@ private:
 		}
 	}
 
-	void makeBuiltInTypes(void)
+	void makeBuiltInTypes(VuoCompiler *compiler)
 	{
 		map<string, VuoCompilerType *> types = compiler->getTypes();
 		for (map<string, VuoCompilerType *>::iterator i = types.begin(); i != types.end(); ++i)
@@ -62,7 +61,7 @@ private:
 		}
 	}
 
-	void compileAndLinkComposition(VuoCompilerComposition *composition)
+	void compileAndLinkComposition(VuoCompilerComposition *composition, VuoCompiler *compiler)
 	{
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode-linked", "");
@@ -74,7 +73,7 @@ private:
 		try
 		{
 			compiler->compileComposition(composition, compiledCompositionPath, true, &issues);
-			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_NoModuleCaches);
 		}
 		catch (VuoException &e)
 		{
@@ -92,8 +91,6 @@ private:
 public:
 	TestNodes(int argc, char **argv)
 	{
-		compiler = initCompiler();
-
 		set<string> customModuleDirs;
 		customModuleDirs.insert( VuoFileUtilities::getUserModulesPath() );
 		customModuleDirs.insert( VuoFileUtilities::getSystemModulesPath() );
@@ -116,15 +113,13 @@ public:
 			singleTestDatum = QString::fromUtf8(argv[1]).section(':', 1);
 			if (singleTestDatum.isEmpty())
 			{
-				makeBuiltInNodeClasses();
-				makeBuiltInTypes();
+				VuoCompiler *compiler = initCompiler("/TestNodes/TestNodes");
+				VuoDefer(^{ delete compiler; });
+
+				makeBuiltInNodeClasses(compiler);
+				makeBuiltInTypes(compiler);
 			}
 		}
-	}
-
-	~TestNodes()
-	{
-		delete compiler;
 	}
 
 private slots:
@@ -150,7 +145,7 @@ private slots:
 		}
 	}
 
-	void checkLinks(QString markdownText)
+	void checkLinks(QString markdownText, VuoCompiler *compiler)
 	{
 		// vuo-node:
 		auto internalLinks = QRegularExpression(VuoEditor::vuoNodeDocumentationScheme + ":(//)?([^)]+)").globalMatch(markdownText);
@@ -177,6 +172,9 @@ private slots:
 	{
 		QTest::addColumn<VuoNodeSet *>("nodeSet");
 
+		VuoCompiler *compiler = initCompiler("/TestNodes/testEachNodeSet");
+		VuoDefer(^{ delete compiler; });
+
 		for (auto i : compiler->getNodeSets())
 			QTest::newRow(i.first.c_str()) << i.second;
 	}
@@ -190,7 +188,10 @@ private slots:
 		if (VuoText_isEmpty(trimmedDescription))
 			QFAIL("Missing node set description.");
 
-		checkLinks(trimmedDescription);
+		VuoCompiler *compiler = initCompiler("/TestNodes/testEachNodeSet");
+		VuoDefer(^{ delete compiler; });
+
+		checkLinks(trimmedDescription, compiler);
 	}
 
 	/**
@@ -249,9 +250,9 @@ private slots:
 					}
 					else
 					{
-						// All types (or list types) are compatible, so just test one that's different from the
-						// default backing type.
-						specializedTypeNamesForGeneric[genericTypeName].push_back("VuoPoint2d");
+						// All types (or list types) are compatible, so just test one that's different from,
+						// and cannot be casted to, the default backing type.
+						specializedTypeNamesForGeneric[genericTypeName].push_back("VuoRange");
 					}
 
 					size_t specializedTypesCount = specializedTypeNamesForGeneric[genericTypeName].size();
@@ -280,12 +281,20 @@ private slots:
 			for (auto nodeClass : builtInNodeClasses)
 				addTestsForNodeClass(nodeClass);
 		else
+		{
+			VuoCompiler *compiler = initCompiler("/TestNodes/testEachNode");
+			VuoDefer(^{ delete compiler; });
+
 			addTestsForNodeClass(compiler->getNodeClass(singleTestDatum.toStdString()));
+		}
 	}
 	void testEachNode()
 	{
 		QFETCH(QString, nodeClassName);
 		VUserLog("%s", nodeClassName.toUtf8().constData());
+
+		VuoCompiler *compiler = initCompiler("/TestNodes/testEachNode");
+		VuoDefer(^{ delete compiler; });
 
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
 
@@ -297,7 +306,7 @@ private slots:
 			QFAIL("Missing node description.");
 
 		if (!nodeClass->getBase()->getDeprecated())
-			checkLinks(trimmedDescription);
+			checkLinks(trimmedDescription, compiler);
 
 		// Ensure all non-deprecated nodes either have an input port or a trigger port.
 		if (!nodeClass->getBase()->getDeprecated()
@@ -339,7 +348,7 @@ private slots:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode-linked", "");
 		VuoCompilerIssues issues;
 		compiler->compileCompositionString(composition, compiledCompositionPath, true, &issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_NoModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
 
@@ -403,53 +412,13 @@ private slots:
 	}
 
 	/**
-	 * Tests all specializations of one generic node class that is compatible with any port type.
-	 * This makes sure that every port type can be used with VuoList, which remains easy to forget until...
-	 * @todo https://b33p.net/kosada/node/7032
-	 */
-	void testEachListType_data()
-	{
-		QTest::addColumn< VuoCompilerNodeClass * >("nodeClass");
-
-		string genericNodeClassName = "vuo.list.get";
-		auto addTestForType = ^(VuoCompilerType *type){
-			string typeName = type->getBase()->getModuleKey();
-			if (VuoType::isListTypeName(typeName) || VuoType::isDictionaryTypeName(typeName) ||
-					typeName == "VuoMathExpressionList")  /// @todo https://b33p.net/kosada/node/8550
-				return;
-
-			string specializedNodeClassName = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(genericNodeClassName,
-																											  vector<string>(1, typeName));
-			VuoCompilerNodeClass *specializedNodeClass = compiler->getNodeClass(specializedNodeClassName);
-			QVERIFY2(specializedNodeClass, specializedNodeClassName.c_str());
-			QTest::newRow(typeName.c_str()) << specializedNodeClass;
-		};
-
-		if (singleTestDatum.isEmpty())
-			for (auto type : builtInTypes)
-				addTestForType(type);
-		else
-			addTestForType(compiler->getType(singleTestDatum.toStdString()));
-	}
-	void testEachListType()
-	{
-		QFETCH(VuoCompilerNodeClass *, nodeClass);
-		VUserLog("%s", nodeClass->getBase()->getClassName().c_str());
-
-		VuoNode *node = compiler->createNode(nodeClass);
-
-		VuoComposition baseComposition;
-		VuoCompilerComposition composition(&baseComposition, NULL);
-		baseComposition.addNode(node);
-
-		compileAndLinkComposition(&composition);
-	}
-
-	/**
 	 * Tests that there are no duplicate symbols between different node classes.
 	 */
 	void testCompositionContainingAllNodes()
 	{
+		VuoCompiler *compiler = initCompiler("/TestNodes/testCompositionContainingAllNodes");
+		VuoDefer(^{ delete compiler; });
+
 		VuoComposition baseComposition;
 		VuoCompilerComposition composition(&baseComposition, NULL);
 
@@ -478,12 +447,15 @@ private slots:
 			}
 		}
 
-		compileAndLinkComposition(&composition);
+		compileAndLinkComposition(&composition, compiler);
 	}
 
 	void testLintCompositions_data()
 	{
 		QTest::addColumn<QString>("compositionFile");
+
+		VuoCompiler *compiler = initCompiler("/TestNodes/testCompositionContainingAllNodes");
+		VuoDefer(^{ delete compiler; });
 
 		// Example compositions.
 		map<string, VuoNodeSet *> nodeSets = compiler->getNodeSets();
@@ -502,6 +474,9 @@ private slots:
 	{
 		QFETCH(QString, compositionFile);
 
+		VuoCompiler *compiler = initCompiler(compositionFile.toStdString());
+		VuoDefer(^{ delete compiler; });
+
 		VuoCompilerGraphvizParser *graphParser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionFile.toStdString(), compiler);
 		foreach (VuoNode *node, graphParser->getNodes())
 			QVERIFY2(!node->getNodeClass()->getDeprecated(), ("Found deprecated node '" + node->getNodeClass()->getClassName() + "' in composition.").c_str());
@@ -509,7 +484,7 @@ private slots:
 		foreach (VuoCable *cable, graphParser->getCables())
 			QVERIFY2(cable->getToPort() != cable->getToNode()->getRefreshPort(), "Found a cable to a node's refresh port.");
 
-		checkLinks(QString::fromStdString(graphParser->getMetadata()->getDescription()));
+		checkLinks(QString::fromStdString(graphParser->getMetadata()->getDescription()), compiler);
 	}
 
 	void testNodeExampleReferences_data()
@@ -533,6 +508,9 @@ private slots:
 	void testNodeExampleReferences()
 	{
 		QFETCH(QString, nodeClassName);
+
+		VuoCompiler *compiler = initCompiler("/TestNodes/testNodeExampleReferences");
+		VuoDefer(^{ delete compiler; });
 
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
 		for(string examplePath : nodeClass->getBase()->getExampleCompositionFileNames())

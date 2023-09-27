@@ -2,7 +2,7 @@
  * @file
  * TestEventDropping interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -27,10 +27,8 @@ private:
 		map<string, int> eventsFired;
 		map<string, int> eventsDropped;
 
-		TestEventDroppingRunnerDelegate(string compositionName, VuoCompiler *compiler)
+		TestEventDroppingRunnerDelegate(string compositionPath, VuoCompiler *compiler)
 		{
-			string compositionPath = getCompositionPath(compositionName + ".vuo");
-
 			string directory, file, extension;
 			VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
 			string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
@@ -38,7 +36,7 @@ private:
 			VuoCompilerIssues *issues = new VuoCompilerIssues();
 			compiler->compileComposition(compositionPath, compiledCompositionPath, true, issues);
 			delete issues;
-			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ModuleCaches);
 			remove(compiledCompositionPath.c_str());
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, directory, false, true);
 			runner->setRuntimeChecking(true);
@@ -85,9 +83,10 @@ private slots:
 		QFETCH(bool, shouldDrop);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
-		VuoCompiler *compiler = initCompiler();
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		VuoCompiler *compiler = initCompiler(compositionPath);
 
-		TestEventDroppingRunnerDelegate delegate(compositionName.toStdString(), compiler);
+		TestEventDroppingRunnerDelegate delegate(compositionPath, compiler);
 
 		bool wereEventsFired = false;
 		for (map<string, int>::iterator i = delegate.eventsFired.begin(); i != delegate.eventsFired.end(); ++i)
@@ -181,9 +180,10 @@ private slots:
 			installSubcomposition(subcompositionPath, nodeClassName);
 		}
 
-		VuoCompiler *compiler = initCompiler();
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		VuoCompiler *compiler = initCompiler(compositionPath);
 
-		TestEventDroppingRunnerDelegate delegate(compositionName.toStdString(), compiler);
+		TestEventDroppingRunnerDelegate delegate(compositionPath, compiler);
 
 		int numEventsFired = 0;
 		for (map<string, int>::iterator i = delegate.eventsFired.begin(); i != delegate.eventsFired.end(); ++i)

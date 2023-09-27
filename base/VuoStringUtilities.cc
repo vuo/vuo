@@ -2,7 +2,7 @@
  * @file
  * VuoStringUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -21,15 +21,23 @@ extern "C" {
 /**
  * Returns true if @c wholeString begins with @c beginning.
  */
-bool VuoStringUtilities::beginsWith(string wholeString, string beginning)
+bool VuoStringUtilities::beginsWith(const string &wholeString, const string &beginning)
 {
-	return wholeString.length() >= beginning.length() && wholeString.substr(0, beginning.length()) == beginning;
+	return wholeString.rfind(beginning, 0) == 0;
+}
+
+/**
+ * Returns true if @c wholeString begins with @c beginning.
+ */
+bool VuoStringUtilities::beginsWith(const char *wholeString, const char *beginning)
+{
+	return strlen(wholeString) >= strlen(beginning) && strstr(wholeString, beginning) == wholeString;
 }
 
 /**
  * Returns true if @c wholeString ends with @c ending.
  */
-bool VuoStringUtilities::endsWith(string wholeString, string ending)
+bool VuoStringUtilities::endsWith(const string &wholeString, const string &ending)
 {
 	if (wholeString.length() < ending.length())
 		return false;
@@ -41,7 +49,7 @@ bool VuoStringUtilities::endsWith(string wholeString, string ending)
  * Returns the substring of @c wholeString that follows @c beginning,
  * or an empty string if @c wholeString does not begin with @c beginning.
  */
-string VuoStringUtilities::substrAfter(string wholeString, string beginning)
+string VuoStringUtilities::substrAfter(const string &wholeString, const string &beginning)
 {
 	if (! beginsWith(wholeString, beginning))
 		return "";
@@ -53,7 +61,7 @@ string VuoStringUtilities::substrAfter(string wholeString, string beginning)
  * Returns the substring of @c wholeString that precedes @c ending,
  * or an empty string if @c wholeString does not end with @c ending.
  */
-string VuoStringUtilities::substrBefore(string wholeString, string ending)
+string VuoStringUtilities::substrBefore(const string &wholeString, const string &ending)
 {
 	if (! endsWith(wholeString, ending))
 		return "";
@@ -65,7 +73,7 @@ string VuoStringUtilities::substrBefore(string wholeString, string ending)
  * Returns a string constructed by replacing all instances of @c originalChar with
  * @c replacementChar in @c wholeString.
  */
-string VuoStringUtilities::replaceAll(string wholeString, char originalChar, char replacementChar)
+string VuoStringUtilities::replaceAll(const string &wholeString, char originalChar, char replacementChar)
 {
 	string outString = wholeString;
 	size_t pos = 0;
@@ -82,7 +90,7 @@ string VuoStringUtilities::replaceAll(string wholeString, char originalChar, cha
  *
  * Returns the number of instances replaced.
  */
-size_t VuoStringUtilities::replaceAll(string &wholeString, string originalSubstring, string replacementSubstring)
+size_t VuoStringUtilities::replaceAll(string &wholeString, const string &originalSubstring, const string &replacementSubstring)
 {
 	size_t replacementCount = 0;
 	size_t startPos = 0;
@@ -111,7 +119,7 @@ vector<string> VuoStringUtilities::split(const string &wholeString, char delimit
 /**
  * Combines @a partialStrings, separated by @a delimiter, into one string.
  */
-string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
+string VuoStringUtilities::join(const vector<string> &partialStrings, char delimiter)
 {
 	string delimiterStr(1, delimiter);
 	return join(partialStrings, delimiterStr);
@@ -120,13 +128,13 @@ string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
 /**
  * Combines @a partialStrings, separated by @a delimiter, into one string.
  */
-string VuoStringUtilities::join(vector<string> partialStrings, string delimiter)
+string VuoStringUtilities::join(const vector<string> &partialStrings, const string &delimiter)
 {
 	string wholeString;
-	for (vector<string>::iterator i = partialStrings.begin(); i != partialStrings.end(); )
+	for (auto i = partialStrings.cbegin(); i != partialStrings.cend(); )
 	{
 		wholeString += *i;
-		if (++i != partialStrings.end())
+		if (++i != partialStrings.cend())
 			wholeString += delimiter;
 	}
 	return wholeString;
@@ -135,13 +143,13 @@ string VuoStringUtilities::join(vector<string> partialStrings, string delimiter)
 /**
  * Combines @a partialStrings, separated by @a delimiter, into one string.
  */
-string VuoStringUtilities::join(set<string> partialStrings, string delimiter)
+string VuoStringUtilities::join(const set<string> &partialStrings, const string &delimiter)
 {
 	string wholeString;
-	for (set<string>::iterator i = partialStrings.begin(); i != partialStrings.end(); )
+	for (auto i = partialStrings.cbegin(); i != partialStrings.cend(); )
 	{
 		wholeString += *i;
-		if (++i != partialStrings.end())
+		if (++i != partialStrings.cend())
 			wholeString += delimiter;
 	}
 	return wholeString;
@@ -154,7 +162,7 @@ string VuoStringUtilities::join(set<string> partialStrings, string delimiter)
  *
  * @see VuoText_trim
  */
-string VuoStringUtilities::trim(string originalString)
+string VuoStringUtilities::trim(const string &originalString)
 {
 	string whitespace = " \t\v\n\r\f";
 
@@ -165,6 +173,42 @@ string VuoStringUtilities::trim(string originalString)
 	string::size_type end = originalString.find_last_not_of(whitespace);
 
 	return originalString.substr(begin, end - begin + 1);
+}
+
+/**
+ * Iiterates through the lines in @a multiLineString and calls @a doForLine for each one.
+ */
+void VuoStringUtilities::doForEachLine(const string &multiLineString, std::function<void(const char *)> doForLine)
+{
+	// https://stackoverflow.com/questions/17983005/c-how-to-read-a-string-line-by-line
+
+	const char linebreak = '\n';
+
+	int bufferLength = 1024;
+	char *line = (char *)malloc(bufferLength + 1);
+
+	const char *lineStart = multiLineString.c_str();
+	while (lineStart)
+	{
+		const char *lineEnd = strchr(lineStart, linebreak);
+		int lineLength = lineEnd ? (lineEnd - lineStart) : strlen(lineStart);
+
+		if (lineLength > bufferLength)
+		{
+			free(line);
+			line = (char *)malloc(lineLength + 1);
+			bufferLength = lineLength;
+		}
+
+		memcpy(line, lineStart, lineLength);
+		line[lineLength] = 0;
+
+		doForLine(line);
+
+		lineStart = lineEnd ? (lineEnd + 1) : nullptr;
+	}
+
+	free(line);
 }
 
 /**
@@ -191,7 +235,7 @@ string VuoStringUtilities::buildPortIdentifier(const string &nodeIdentifier, con
  * Returns a string that starts with @a moduleKey and ends with @a symbolName.
  * Useful for adding a unique prefix to a symbol name.
  */
-string VuoStringUtilities::prefixSymbolName(string symbolName, string moduleKey)
+string VuoStringUtilities::prefixSymbolName(const string &symbolName, const string &moduleKey)
 {
 	return transcodeToIdentifier(moduleKey) + "__" + symbolName;
 }
@@ -202,7 +246,7 @@ string VuoStringUtilities::prefixSymbolName(string symbolName, string moduleKey)
  *  - Replaces '/'s and ':'s with '__'s
  *  - Strips out characters not in [A-Za-z0-9_]
  */
-string VuoStringUtilities::transcodeToIdentifier(string str)
+string VuoStringUtilities::transcodeToIdentifier(const string &str)
 {
 	CFMutableStringRef strCF = CFStringCreateMutable(NULL, 0);
 	CFStringAppendCString(strCF, str.c_str(), kCFStringEncodingUTF8);
@@ -469,7 +513,7 @@ string VuoStringUtilities::convertToCamelCase(const string &originalString,
  *
  * Also renders standalone variable names (e.g., "x") and some common abbreviations (e.g., "rgb") in all-caps.
  */
-string VuoStringUtilities::expandCamelCase(string camelCaseString)
+string VuoStringUtilities::expandCamelCase(const string &camelCaseString)
 {
 	// Only apply these transformations if the whole string matches,
 	// since they may appear as substrings in contexts where they shouldn't be all-caps.

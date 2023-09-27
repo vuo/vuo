@@ -2,12 +2,13 @@
  * @file
  * VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoReal_h
+#define VuoReal_h
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,13 +16,6 @@ extern "C" {
 
 #include "VuoInteger.h"
 #include <math.h>
-#include <stdbool.h>
-struct json_object;
-
-/// @{ List type.
-typedef const struct VuoList_VuoReal_struct { void *l; } * VuoList_VuoReal;
-#define VuoList_VuoReal_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -36,9 +30,14 @@ typedef const struct VuoList_VuoReal_struct { void *l; } * VuoList_VuoReal;
  */
 typedef double VuoReal;
 
+#define VuoReal_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoReal.h"
+
 VuoReal VuoReal_makeFromJson(struct json_object *js);
 struct json_object * VuoReal_getJson(const VuoReal value);
 char * VuoReal_getSummary(const VuoReal value);
+
+VuoReal VuoReal_makeFromLocalizedText(const char *text);
 
 VuoReal VuoReal_minList(VuoList_VuoReal values, VuoInteger *outputPosition);
 VuoReal VuoReal_maxList(VuoList_VuoReal values, VuoInteger *outputPosition);
@@ -209,8 +208,6 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 	return center + nonzeroSnap * (int)round( (a-center) / nonzeroSnap );
 }
 
-/// This type has _areEqual() and _isLessThan() functions.
-#define VuoReal_SUPPORTS_COMPARISON
 bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2);
 bool VuoReal_areEqualListWithinTolerance(VuoList_VuoReal values, VuoReal tolerance);
 bool VuoReal_isLessThan(const VuoReal a, const VuoReal b);
@@ -222,4 +219,6 @@ bool VuoReal_isWithinRange(VuoReal value, VuoReal minimum, VuoReal maximum);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -1,0 +1,14 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r|<BlendMode>BlendMode\r" _Event_type="event" _BlendMode_type="VuoBlendMode" _BlendMode_menuItems="[\{\"value\":\"normal\",\"name\":\"Normal — Alpha\"\},\{\"value\":\"multiply\",\"name\":\"Multiply — b•f\"\},\{\"value\":\"darker-components\",\"name\":\"Darker Components — min(b,f)\"\},\{\"value\":\"darker-color\",\"name\":\"Darker Color — min(b,f)\"\},\{\"value\":\"linear-burn\",\"name\":\"Linear Burn — b+f-1\"\},\{\"value\":\"color-burn\",\"name\":\"Color Burn — 1-(1-b)\\/f\"\},\{\"value\":\"screen\",\"name\":\"Screen — 1-(1-b)•(1-f)\"\},\{\"value\":\"lighter-components\",\"name\":\"Lighter Components — max(b,f)\"\},\{\"value\":\"lighter-color\",\"name\":\"Lighter Color — max(b,f)\"\},\{\"value\":\"linear-dodge\",\"name\":\"Linear Dodge (Add) — b+f\"\},\{\"value\":\"color-dodge\",\"name\":\"Color Dodge — b\\/(1-f)\"\},\{\"value\":\"overlay\",\"name\":\"Overlay\"\},\{\"value\":\"soft-light\",\"name\":\"Soft Light\"\},\{\"value\":\"hard-light\",\"name\":\"Hard Light\"\},\{\"value\":\"vivid-light\",\"name\":\"Vivid Light\"\},\{\"value\":\"linear-light\",\"name\":\"Linear Light\"\},\{\"value\":\"pin-light\",\"name\":\"Pin Light\"\},\{\"value\":\"hard-mix\",\"name\":\"Hard Mix\"\},\{\"value\":\"difference\",\"name\":\"Difference — abs(b-f)\"\},\{\"value\":\"exclusion\",\"name\":\"Exclusion — b+f-2•b•f\"\},\{\"value\":\"subtract\",\"name\":\"Subtract — b-f\"\},\{\"value\":\"divide\",\"name\":\"Divide — b\\/f\"\},\{\"value\":\"hue\",\"name\":\"Hue\"\},\{\"value\":\"saturation\",\"name\":\"Saturation\"\},\{\"value\":\"color\",\"name\":\"Color\"\},\{\"value\":\"luminosity\",\"name\":\"Luminosity\"\},\{\"value\":\"power\",\"name\":\"Power — b^f\"\}]"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ListOfVerticalAlignmentelements>ListOfVerticalAlignmentelements\l" _ListOfVerticalAlignmentelements_type="VuoList_VuoVerticalAlignment"];
+}

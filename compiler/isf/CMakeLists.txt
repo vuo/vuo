@@ -3,14 +3,12 @@ add_library(VuoIsfModuleCompiler SHARED
 	VuoIsfModuleCompiler.hh
 )
 set_target_properties(VuoIsfModuleCompiler PROPERTIES
-	AUTOMOC ON
-
 	# Don't automatically add `rpath` search paths to this dylib.
 	BUILD_WITH_INSTALL_RPATH TRUE
 )
 target_include_directories(VuoIsfModuleCompiler
 	PRIVATE
-		${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers
+		${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Headers
 )
 target_link_libraries(VuoIsfModuleCompiler
 	PRIVATE
@@ -18,8 +16,10 @@ target_link_libraries(VuoIsfModuleCompiler
 )
 
 
-add_custom_target(VuoModuleCompilers
-	DEPENDS
-		VuoIsfModuleCompiler
+add_dependencies(VuoModuleCompilers
+	VuoIsfModuleCompiler
 )
-set_target_properties(VuoModuleCompilers PROPERTIES VuoGeneratedFiles ${PROJECT_BINARY_DIR}/lib/libVuoIsfModuleCompiler.dylib)
+set_property(
+	TARGET VuoModuleCompilers
+	APPEND PROPERTY VuoGeneratedFiles "${PROJECT_BINARY_DIR}/lib/libVuoIsfModuleCompiler.dylib"
+)

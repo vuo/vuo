@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerBitcodeGenerator interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -81,6 +81,7 @@ private slots:
 		QFETCH(bool, mayTransmitThroughNode);
 
 		string compositionPath = getCompositionPath("Semiconductor.vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
@@ -227,6 +228,7 @@ private slots:
 		QFETCH(nodesMap, expectedDownstreamNodes);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
@@ -309,6 +311,7 @@ private slots:
 		QFETCH(QString, compositionName);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
@@ -503,6 +506,7 @@ private slots:
 		QFETCH(nodesMap, expectedChains);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
@@ -582,6 +586,7 @@ private slots:
 		QFETCH(int, expectedMaxThreadsNeeded);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
@@ -856,6 +861,7 @@ private slots:
 		QFETCH(nodesMap, expectedNodesForTriggerOrNode);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
@@ -949,6 +955,7 @@ private slots:
 		QFETCH(QStringList, expectedDownstreamNodeIdentifiers);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
@@ -1004,6 +1011,7 @@ private slots:
 		QFETCH(bool, isTrigger);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		compiler->setCompositionPath(compositionPath);
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerGraph graph(&composition);
@@ -1031,6 +1039,7 @@ private slots:
 		QFETCH(bool, isStateful);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		compiler->setCompositionPath(compositionPath);
 		string dir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");

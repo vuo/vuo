@@ -2,13 +2,15 @@
  * @file
  * VuoIsfModuleCompiler implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoIsfModuleCompiler.hh"
 #include <sstream>
+
+void *VuoApp_mainThread = nullptr;  ///< A reference to the main thread, needed for the call to VuoGlContext_perform().
 
 /**
  * Registers this compiler.
@@ -17,27 +19,29 @@ void __attribute__((constructor)) VuoIsfModuleCompiler::init()
 {
 	VuoModuleCompiler::registerModuleCompiler("isf", &VuoIsfModuleCompiler::newModuleCompiler);
 	VuoGlContext_setInfoLogging(false);
+	VuoApp_mainThread = (void *)pthread_self();
 }
 
 /**
  * Constructs a module compiler, without yet checking if the provided shader is valid or attempting to compile it.
- *
- * Does not keep a reference to @a sourceFile.
  */
-VuoIsfModuleCompiler::VuoIsfModuleCompiler(const string &moduleKey, VuoFileUtilities::File *sourceFile)
+VuoIsfModuleCompiler::VuoIsfModuleCompiler(const string &moduleKey, const string &sourcePath,
+										   const VuoModuleCompilerSettings &settings) :
+	VuoModuleCompiler(moduleKey, sourcePath, settings),
+	shaderFile(nullptr)
 {
-	this->moduleKey = moduleKey;
-	this->shaderFile = new VuoShaderFile(*sourceFile);
 }
 
 /**
  * Returns a new VuoIsfModuleCompiler instance if @a sourcePath has an ISF file extension, otherwise null.
  */
-VuoModuleCompiler *VuoIsfModuleCompiler::newModuleCompiler(const string &moduleKey, VuoFileUtilities::File *sourceFile)
+VuoModuleCompiler * VuoIsfModuleCompiler::newModuleCompiler(const string &moduleKey, const string &sourcePath,
+															const VuoModuleCompilerSettings &settings)
 {
-	string ext = sourceFile->extension();
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(sourcePath, dir, file, ext);
 	if (VuoFileUtilities::isIsfSourceExtension(ext))
-		return new VuoIsfModuleCompiler(moduleKey, sourceFile);
+		return new VuoIsfModuleCompiler(moduleKey, sourcePath, settings);
 
 	return nullptr;
 }
@@ -45,59 +49,60 @@ VuoModuleCompiler *VuoIsfModuleCompiler::newModuleCompiler(const string &moduleK
 /**
  * Overrides the fragment shader, using @a sourceCode instead of the file contents.
  */
-void VuoIsfModuleCompiler::overrideSourceCode(const string &sourceCode, VuoFileUtilities::File *sourceFile)
+void VuoIsfModuleCompiler::overrideSourceCode(const string &sourceCode, const string &sourcePath)
 {
-	delete shaderFile;
-	shaderFile = new VuoShaderFile(*sourceFile, sourceCode);
+	this->sourceCode = sourceCode;
 }
 
 /**
  * Compiles the shader to LLVM bitcode that can be loaded as a Vuo node class.
- *
- * If there are errors, they are reported in @a issues and the return value is null.
  */
-Module * VuoIsfModuleCompiler::compile(std::function<VuoCompilerType *(const string &)> getVuoType, dispatch_queue_t llvmQueue,
-									   VuoCompilerIssues *issues)
+VuoModuleCompilerResults VuoIsfModuleCompiler::compile(dispatch_queue_t llvmQueue, VuoCompilerIssues *issues)
 {
+	VuoModuleCompilerResults results;
+
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(sourcePath, dir, file, ext);
+	VuoFileUtilities::File sourceFile(dir, file + "." + ext);
+
+	try
+	{
+		shaderFile = new VuoShaderFile(sourceFile, sourceCode);
+	}
+	catch (VuoException &e)
+	{
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling ISF node class", sourcePath, "", e.what());
+		issues->append(issue);
+		return results;
+	}
+
 	// Check for GLSL syntax errors.
 
 	VuoShader shader = VuoShader_makeFromFile(shaderFile);
 	VuoLocal(shader);
 
-	__block VuoShaderIssues shaderIssues;
+	shared_ptr<VuoShaderIssues> shaderIssues = std::make_shared<VuoShaderIssues>();
 	__block bool ok;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-							 ok = VuoShader_upload(shader, VuoMesh_IndividualTriangles, cgl_ctx, &shaderIssues);
+							 ok = VuoShader_upload(shader, VuoMesh_IndividualTriangles, cgl_ctx, shaderIssues.get());
 						 });
 
 	if (! ok)
 	{
-		for (VuoShaderIssues::Issue shaderIssue : shaderIssues.issues())
-		{
-			string summary = "Failed to parse shader";
-			string details = shaderIssue.message;
-			VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling ISF node class", "", summary, details);
-			issue.setLineNumber(shaderIssue.lineNumber);
-			issues->append(issue);
-		}
-		return nullptr;
+		VuoCompilerIssue issue(VuoCompilerIssue::Error, "compiling ISF node class", sourcePath, "", "Failed to parse shader");
+		issue.setShaderIssues(shaderIssues);
+		issues->append(issue);
+		return results;
 	}
 
-	// Look up types (before getting on llvmQueue).
+	// Look up types before getting on llvmQueue.
 
-	vector<string> vuoTypesUsed;
-	vuoTypesUsed.push_back("VuoShader");
-	vuoTypesUsed.push_back("VuoImage");
-	vuoTypesUsed.push_back("VuoImageColorDepth");
-	vuoTypesUsed.push_back("VuoReal");
-	vuoTypesUsed.push_back("VuoInteger");
-	vuoTypesUsed.push_back("VuoBoolean");
+	vector<string> vuoTypesUsed = { "VuoShader", "VuoImage", "VuoImageColorDepth", "VuoReal", "VuoInteger", "VuoBoolean" };
 	for (VuoShaderFile::Port shaderInputPort : shaderFile->inputPorts())
 		vuoTypesUsed.push_back(shaderInputPort.vuoTypeName);
 
-	map<string, VuoCompilerType *> vuoTypes;
-	for (string t : vuoTypesUsed)
-		vuoTypes[t] = getVuoType(t);
+	for (const string &typeName : vuoTypesUsed)
+		lookUpVuoType(typeName);
 
 	// Generate bitcode.
 
@@ -126,7 +131,9 @@ Module * VuoIsfModuleCompiler::compile(std::function<VuoCompilerType *(const str
 
 	});
 
-	return module;
+	results.module = module;
+	results.makeDependencies = VuoMakeDependencies::createFromComponents(VuoMakeDependencies::getPlaceholderCompiledFilePath(), {sourcePath});
+	return results;
 }
 
 /**

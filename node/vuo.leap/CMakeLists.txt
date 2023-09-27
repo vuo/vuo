@@ -26,6 +26,14 @@ target_sources(vuo.leap.types PRIVATE
 	VuoLeapTouchZone.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoHorizontalSide.cc
+	VuoList_VuoLeapHand.cc
+	VuoList_VuoLeapPointable.cc
+	VuoList_VuoLeapPointableType.cc
+	VuoList_VuoLeapTouchZone.cc
+)
+
 VuoCompileNodes(
 	vuo.leap.find.hand.confidence.c
 	vuo.leap.find.hand.id.c

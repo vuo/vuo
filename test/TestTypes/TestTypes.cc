@@ -2,7 +2,7 @@
  * @file
  * TestTypes implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -19,13 +19,10 @@ class TestTypes : public TestCompositionExecution
 
 private:
 	QString singleTestDatum;
-	VuoCompiler *compiler;
 
 public:
 	TestTypes(int argc, char **argv)
 	{
-		compiler = initCompiler();
-
 		if (argc > 1)
 		{
 			// If a single test is specified on the command line,
@@ -33,40 +30,52 @@ public:
 			singleTestDatum = QString::fromUtf8(argv[1]).section(':', 1);
 		}
 	}
-	~TestTypes()
-	{
-		delete compiler;
-	}
 
 private slots:
-	/**
-	 * Tests that each node class lists all necessary dependencies. If not, a composition that contains just that
-	 * node class will fail to build.
-	 *
-	 * Tests that each generic node class successfully compiles when its generic port types are specialized.
-	 */
 	void testEachType_data()
 	{
-		QTest::addColumn<bool>("dummy");
+		QTest::addColumn<QString>("typeName");
+
+		VuoCompiler *compiler = initCompiler("/TestTypes/testEachType");
+		VuoDefer(^{ delete compiler; });
 
 		map<string, VuoCompilerType *> allTypes = compiler->getTypes();
 		for (map<string, VuoCompilerType *>::iterator i = allTypes.begin(); i != allTypes.end(); ++i)
-			QTest::newRow(i->first.c_str()) << true;
+		{
+			string typeName = i->first;
+			if (! VuoType::isListTypeName(typeName) && typeName != "VuoList")
+			{
+				QTest::newRow(typeName.c_str()) << QString::fromStdString(typeName);
+				if (! VuoType::isDictionaryTypeName(typeName) && typeName != "VuoMathExpressionList")
+					QTest::newRow((VuoType::listTypeNamePrefix + typeName).c_str()) << QString::fromStdString(VuoType::listTypeNamePrefix + typeName);
+			}
+		}
+
+		QTest::newRow("VuoList_VuoGenericType1") << "VuoList_VuoGenericType1";
 	}
 	void testEachType()
 	{
-		printf("%s\n", QTest::currentDataTag()); fflush(stdout);
+		QFETCH(QString, typeName);
+		VUserLog("%s", typeName.toUtf8().constData());
 
-		string type = QTest::currentDataTag();
-		string portIdentifier = VuoStringUtilities::buildPortIdentifier("ShareValue", "value");
+		VuoCompiler *compiler = initCompiler("/TestTypes/testEachType");
+		VuoDefer(^{ delete compiler; });
+
+		string genericNodeClassName = VuoType::isListTypeName(typeName.toStdString()) ? "vuo.data.share.list" : "vuo.data.share";
+		string innerTypeName = VuoType::extractInnermostTypeName(typeName.toStdString());
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(genericNodeClassName + "." + innerTypeName);
+
+		string composition = wrapNodeInComposition(nodeClass, compiler);
+
+		// Test whether the type includes all necessary headers and dependencies.
 
 		VuoCompilerIssues issues;
-		VuoRunner *runner = VuoCompiler::newCurrentProcessRunnerFromCompositionString(
-			"digraph G { ShareValue [type=\"vuo.data.share." + type + "\"]; }", ".", &issues);
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(composition, "testEachType", "", &issues);
+		QVERIFY2(runner, issues.getLongDescription(false).c_str());
 		runner->start();
 
-
 		// Test whether basic type functions can handle all the top-level JSON types without crashing.
+
 		json_object *jsonTypes[] = {
 			NULL,
 			json_object_new_boolean(false),
@@ -77,6 +86,10 @@ private slots:
 			json_object_new_array(),
 			json_object_new_string("")
 		};
+
+		string nodeIdentifier = VuoType::isListTypeName(typeName.toStdString()) ? "ShareList" : "ShareValue";
+		string portIdentifier = VuoStringUtilities::buildPortIdentifier(nodeIdentifier, "value");
+
 		for (int i = 0; i < sizeof(jsonTypes)/sizeof(json_object *); ++i)
 		{
 //			VLog("%s",json_object_to_json_string(jsonTypes[i]));
@@ -88,7 +101,6 @@ private slots:
 			runner->getInputPortSummary("", portIdentifier);
 		}
 
-
 		runner->stop();
 		delete runner;
 	}
@@ -97,7 +109,9 @@ private slots:
 	{
 		QTest::addColumn< QString >("typeName");
 
-		initCompiler();
+		VuoCompiler *compiler = initCompiler("/TestTypes/testLlvmTypes");
+		VuoDefer(^{ delete compiler; });
+
 		if (singleTestDatum.isEmpty())
 			for (auto i : compiler->getTypes())
 				QTest::newRow(i.first.c_str()) << QString::fromStdString(i.first);
@@ -107,6 +121,9 @@ private slots:
 	void testLlvmTypes()
 	{
 		QFETCH(QString, typeName);
+
+		VuoCompiler *compiler = initCompiler("/TestTypes/testLlvmTypes");
+		VuoDefer(^{ delete compiler; });
 
 		VuoCompilerType *type = compiler->getType(typeName.toStdString());
 

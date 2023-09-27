@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerType interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -110,6 +110,81 @@ private slots:
 		QCOMPARE(QString((actualBaseType == NULL ? "" : actualBaseType->getModuleKey().c_str())),
 				 QString((expectedBaseType == NULL ? "" : expectedBaseType->getModuleKey().c_str())));
 		QCOMPARE(actualBaseType, expectedBaseType);
+	}
+
+	void testCompoundTypes_data()
+	{
+		QTest::addColumn< QString >("typeName");
+		QTest::addColumn< QString >("defaultTitle");
+		QTest::addColumn< QStringList >("functionsShouldHave");
+		QTest::addColumn< QStringList >("functionsShouldNotHave");
+
+		{
+			QStringList functionsShouldHave = {
+				"VuoListCreate_VuoReal",
+				"VuoListSort_VuoReal"
+			};
+			QStringList functionsShouldNotHave = {
+				"VuoList_VuoReal_getInterprocessJson"
+			};
+			QTest::newRow("VuoList of core type") << "VuoList_VuoReal" << "Real List" << functionsShouldHave << functionsShouldNotHave;
+		}
+		{
+			QStringList functionsShouldHave = {
+				"VuoListCreate_VuoAudioInputDevice",
+				"VuoListSort_VuoAudioInputDevice"
+			};
+			QStringList functionsShouldNotHave = {
+				"VuoList_VuoAudioInputDevice_getInterprocessJson"
+			};
+			QTest::newRow("VuoList of type defined in a node set") << "VuoList_VuoAudioInputDevice" << "Audio Input Device List" << functionsShouldHave << functionsShouldNotHave;
+		}
+		{
+			QStringList functionsShouldHave = {
+				"VuoListCreate_VuoImage",
+				"VuoListSort_VuoImage",
+				"VuoList_VuoImage_getInterprocessJson"
+			};
+			QStringList functionsShouldNotHave;
+			QTest::newRow("VuoList of type that overrides interprocess serialization") << "VuoList_VuoImage" << "Image List" << functionsShouldHave << functionsShouldNotHave;
+		}
+		{
+			QStringList functionsShouldHave = {
+				"VuoListCreate_VuoBlendMode"
+			};
+			QStringList functionsShouldNotHave = {
+				"VuoListSort_VuoBlendMode",
+				"VuoList_VuoBlendMode_getInterprocessJson"
+			};
+			QTest::newRow("VuoList of type that doesn't support comparison") << "VuoList_VuoBlendMode" << "Blend Mode List" << functionsShouldHave << functionsShouldNotHave;
+		}
+	}
+	void testCompoundTypes()
+	{
+		QFETCH(QString, typeName);
+		QFETCH(QString, defaultTitle);
+		QFETCH(QStringList, functionsShouldHave);
+		QFETCH(QStringList, functionsShouldNotHave);
+
+		dispatch_queue_t llvmQueue = dispatch_queue_create("org.vuo.TestVuoCompilerType.llvm", nullptr);
+		VuoCompilerCompoundType *type = nullptr;
+		try
+		{
+			type = VuoCompilerCompoundType::newType(typeName.toStdString(), compiler, llvmQueue);
+			QVERIFY(type);
+		}
+		catch (VuoCompilerException &e)
+		{
+			QFAIL(e.getIssues()->getLongDescription(false).c_str());
+		}
+
+		QCOMPARE(QString::fromStdString(type->getBase()->getDefaultTitle()), defaultTitle);
+
+		for (auto functionName : functionsShouldHave)
+			QVERIFY2(type->module->getFunction(functionName.toStdString()), (functionName.toStdString() + " should be in module").c_str());
+
+		for (auto functionName : functionsShouldNotHave)
+			QVERIFY2(! type->module->getFunction(functionName.toStdString()), (functionName.toStdString() + " should not be in module").c_str());
 	}
 };
 

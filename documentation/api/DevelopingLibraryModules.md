@@ -1,72 +1,54 @@
 @addtogroup DevelopingLibraryModules
 
-In @ref DevelopingTypes, we saw that a port type allows multiple node classes to share a data type and a set of related functions. Another way that node classes can share functions is by defining those functions in a @term{library module}. 
+A @term{library module} is a way to provide functionality that multiple node classes and types can use.
 
-A Vuo library module is a special kind of library. Although node classes can link to any library that exports C symbols, a Vuo library module works especially well with Vuo because it provides metadata about itself. In particular, it can list other libraries and frameworks as dependencies (see @ref ManagingDependencies), and it can specify its compatibility with various operating systems (see @ref VuoModuleMetadata). Vuo uses this information when linking a composition. 
+This documentation assumes you're familiar with @ref DevelopingTypes. Like a type, a library module can contain functions and data structures. Unlike a type, a library module's data structures are not used for storing port data. A library module doesn't have to implement any Vuo API functions; it just has to specify its metadata.
 
-A library module can be implemented in C, C++, Objective-C, or another language, as long as it exports C symbols. 
-
-A library module can be used to manage global resources. For example, the @ref VuoGlPool.cc library module manages the pool of available OpenGL objects across node classes and port types. 
-
-
+One reason you might want to develop a library module is to wrap a (non-Vuo) library or framework. For more information, see @ref ManagingDependencies.
 
 ## Writing a library module
 
 To implement a library module, you need to: 
 
-   - Create the library module source files. 
-   - Add <code>\#include "module.h"</code>. 
+   - Create the library module's header file and implementation file.
    - Call @ref VuoModuleMetadata to define the library module's metadata. 
    - Declare and implement your functions in the library module. 
 
-
 ### The file name
 
-When you implement a library module, the first thing you have to decide is the module name. Every library module has two names: a module name and a title. These can be the same. The module name is how node classes and port types refer to your library module. When you create a library module, the file name is the module name. 
+A library module's file name consists of the machine name followed by a file extension. The machine name is how node classes and types refer to your module when listing it as a dependency.
 
+Library modules can be implemented in C/C++/Objective-C. The file extension for both the header file and the implementation file should reflect the language.
 
 ### The metadata
 
-Here's an example of metadata for a library module: 
+As with node classes and types, you need to specify the metadata for a library module by calling @ref VuoModuleMetadata. Here's an example:
 
 @code{.c}
 VuoModuleMetadata({
-					 "title" : "VuoGradientNoiseCommon"
-				 });
+    "title" : "VuoGradientNoiseCommon",
+    "dependencies" : [
+        "VuoReal",
+        "VuoPoint2d",
+        "VuoPoint3d",
+        "VuoPoint4d"
+    ]
+});
 @endcode
 
-The @ref VuoModuleMetadata macro takes a [JSON-formatted](https://www.json.org/) argument. The argument may include a title and other information about the library module.
+## Compiling and installing a library module
 
-For more information, see the documentation for @ref VuoModuleMetadata. 
+To be able to use your library module within Vuo, you'll need to:
 
+   - Use the `vuo-compile` command to compile the library module to a `.bc` file.
+   - Package the library module into a node set that contains the `.bc` file and any dynamic libraries on which the library module depends.
+   - Place the node set (`.vuonode`) file in one of Vuo's [Modules folders](https://doc.vuo.org/@vuoVersion/manual/installing-a-node.xhtml).
 
-
-## Compiling a library module
-
-Before you can install your library module, you need to compile it to a `.bc` (LLVM bitcode) file. 
-
-If your library module is written in C, you can compile it with the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml) or run `vuo-compile --help`.
-
-If your library module is written in another language, you can compile it with [Clang](https://clang.llvm.org/). For example:
-@code
-clang -cc1 -triple x86_64-apple-macosx10.10.0 -emit-llvm-bc MyModule.c -o MyModule.bc
-@endcode
-
-If your library module is written in C++, the @ref VuoModuleMetadata call and any exported functions need to be enclosed by `extern "C" { ... }` so that symbols are exported with C names (instead of C++ mangled names). 
-
-
-
-## Installing a library module
-
-The final step is to place your compiled library module in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
-
-After that, you should be able to use your library module as a dependency of a node class or port type. See @ref ManagingDependencies. 
-
-
+After that, you should be able to use your library module as a dependency of a node class or data type. See @ref ManagingDependencies.
 
 ## Naming library modules and functions
 
-**Please do not begin your library module's name with "Vuo".** This is reserved for library modules distributed by Team Vuo / Kosada. Please use your own company or personal name for your port types so that Vuo users can appreciate your work (and not be confused). 
+**Please do not begin your library module's name with "Vuo".** This is reserved for library modules distributed by Team Vuo / Kosada. Please use your own company or personal name for your library modules so that Vuo users can appreciate your work (and not be confused).
 
 Built-in Vuo library modules follow a set of naming conventions. If you develop library modules to share with other Vuo developers, we encourage you to follow these conventions, too, to make your library modules easier to use. 
 
@@ -76,8 +58,3 @@ Built-in Vuo library modules follow a set of naming conventions. If you develop 
    - A library module function's name should: 
       - Be prefixed with the module name and an underscore (`VuoImageRenderer_draw()`). 
       - For the constructor function, be called "make" (`VuoImageRenderer_make()`). 
-
-
-## Managing global resources
-
-@todo (https://b33p.net/kosada/node/5252)

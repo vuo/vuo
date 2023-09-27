@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimeContext interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,6 +11,16 @@
 
 extern "C"
 {
+
+/**
+ * Options for a port's event-blocking behavior — a superset of VuoPortClass::EventBlocking.
+ */
+typedef enum {
+	PortContext_EventBlocking_None,  ///< An event received by this input port is transmitted to all output ports.
+	PortContext_EventBlocking_Door,  ///< An event received by this input port may be transmitted to all, some, or none of the output ports.
+	PortContext_EventBlocking_Wall,  ///< An event received by this input port is never transmitted to any output port.
+	PortContext_EventBlocking_NotApplicable  ///< This is an output port.
+} PortContext_EventBlocking;
 
 /**
  * Runtime information about a port.
@@ -23,6 +33,7 @@ struct PortContext
 	dispatch_queue_t triggerQueue;  ///< A queue for synchronizing fired events, or null if this is not a trigger port.
 	dispatch_semaphore_t triggerSemaphore;  ///< A semaphore for checking if events should be dropped, or null if this is not a trigger port.
 	void *triggerFunction;  ///< A function pointer for the trigger scheduler function, or null if this is not a trigger port.
+	PortContext_EventBlocking eventBlocking;  ///< The port's event-blocking behavior, or `PortContext_EventBlocking_NotApplicable` if this is not an input port.
 };
 
 /**
@@ -55,7 +66,9 @@ void * vuoGetPortContextData(struct PortContext *portContext);
 dispatch_queue_t vuoGetPortContextTriggerQueue(struct PortContext *portContext);
 dispatch_semaphore_t vuoGetPortContextTriggerSemaphore(struct PortContext *portContext);
 void * vuoGetPortContextTriggerFunction(struct PortContext *portContext);
+void vuoSetPortContextEventBlocking(struct PortContext *portContext, PortContext_EventBlocking eventBlocking);
 void vuoRetainPortContextData(struct PortContext *portContext);
+
 void vuoSetNodeContextPortContexts(struct NodeContext *nodeContext, struct PortContext **portContexts, unsigned long portContextCount);
 void vuoSetNodeContextInstanceData(struct NodeContext *nodeContext, void *instanceData);
 void vuoSetNodeContextClaimingEventId(struct NodeContext *nodeContext, unsigned long claimingEventId);
@@ -65,7 +78,12 @@ void * vuoGetNodeContextInstanceData(struct NodeContext *nodeContext);
 unsigned long vuoGetNodeContextClaimingEventId(struct NodeContext *nodeContext);
 dispatch_group_t vuoGetNodeContextExecutingGroup(struct NodeContext *nodeContext);
 bool vuoGetNodeContextOutputEvent(struct NodeContext *nodeContext, size_t index);
+
+bool vuoEventHitAnyInputPort(NodeContext *nodeContext);
+bool vuoEventHitInputPort(NodeContext *nodeContext, PortContext_EventBlocking eligibleEventBlocking);
+void vuoSetOutputEventsAfterNodeExecution(NodeContext *nodeContext);
 void vuoResetNodeContextEvents(struct NodeContext *nodeContext);
+
 void vuoStartedExecutingEvent(struct NodeContext *nodeContext, unsigned long eventId);
 void vuoSpunOffExecutingEvent(struct NodeContext *nodeContext, unsigned long eventId);
 bool vuoFinishedExecutingEvent(struct NodeContext *nodeContext, unsigned long eventId);

@@ -2,12 +2,13 @@
  * @file
  * VuoWindowReference interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoWindowReference_h
+#define VuoWindowReference_h
 
 /**
  * @ingroup VuoTypes
@@ -16,6 +17,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 #include "VuoReal.h"
@@ -27,15 +32,13 @@
  */
 typedef const struct VuoWindowReference_struct { void *l; } *VuoWindowReference;
 
+#define VuoWindowReference_OVERRIDES_INTERPROCESS_SERIALIZATION  ///< This type implements `_getInterprocessJson()`.
+
 VuoWindowReference VuoWindowReference_make(void *window);
 
 VuoWindowReference VuoWindowReference_makeFromJson(struct json_object * js);
 struct json_object * VuoWindowReference_getJson(const VuoWindowReference value);
-
-/// This type has a _getInterprocessJson() function.
-#define VuoWindowReference_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoWindowReference_getInterprocessJson(const VuoWindowReference value);
-
 char * VuoWindowReference_getSummary(const VuoWindowReference value);
 
 VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value);
@@ -57,3 +60,9 @@ void VuoWindowReference_release(VuoWindowReference value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

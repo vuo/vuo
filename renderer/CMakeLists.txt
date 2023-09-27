@@ -52,28 +52,39 @@ target_include_directories(VuoRenderer
 	../base
 
 	PRIVATE
-		${PROJECT_BINARY_DIR}/type/list
 		../compiler
 		../library
 		../node
 		../node/vuo.audio
 		../node/vuo.file
 		../type
-		../type/list
+		${PROJECT_BINARY_DIR}/type
+		${PROJECT_BINARY_DIR}/node/vuo.audio
+		${PROJECT_BINARY_DIR}/node/vuo.file
 )
 target_link_libraries(VuoRenderer
+	INTERFACE
+	"-framework AppKit"
+	vuo.hid.libraries
+
 	PUBLIC
 	objc
 	Qt5::Widgets
 	CONAN_PKG::jsonc
 	CONAN_PKG::libxml2
 	${PROJECT_BINARY_DIR}/library/VuoTextHtml.o
+	${PROJECT_BINARY_DIR}/node/vuo.audio/VuoAudioInputDevice.o
+	${PROJECT_BINARY_DIR}/node/vuo.audio/VuoAudioOutputDevice.o
+	${PROJECT_BINARY_DIR}/node/vuo.audio/VuoSpeechVoice.o
 	${PROJECT_BINARY_DIR}/node/vuo.file/VuoFileType.o
+)
+add_dependencies(VuoRenderer
+	vuo.core.types.compound
 )
 if (VuoPro)
 	include(pro/pro.cmake)
 endif()
-VuoPCH(VuoRenderer LLVMQt)
+VuoPCH(VuoRenderer LLVMQtModule)
 
 # Make the Qt frameworks available to vuo-export's relative RPATHs.
 file(COPY

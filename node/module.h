@@ -2,12 +2,13 @@
  * @file
  * Prototypes for node class, type, and library module implementations.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef MODULE_H
+#define MODULE_H
 
 #include "VuoConfig.h"
 
@@ -27,12 +28,10 @@ extern "C" {
 	extern const char* json_object_to_json_string(struct json_object *obj);
 #endif
 
-#include "coreTypes.h"
-
 
 /**
  * @ingroup DevelopingNodeClasses
- * @defgroup VuoModuleMetadata Module Metadata
+ * @defgroup ModuleMetadata Module Metadata
  * Name, version, and behavior information to be defined by node classes, port types, and library modules.
  *
  * @{
@@ -90,7 +89,7 @@ extern "C" {
  *      The CPU architectures currently supported are:
  *      - "arch" — "x86_64", "arm64"
  *   - "genericTypes" — Information about generic types used by this module.
- *      (This key is optional even if the module uses generic types. Currently, this key is only supported for node classes.)
+ *      (This key is optional if the module is a node class, required if the module is a type and uses generics, and unsupported if the module is a library.)
  *      This object contains keys for generic type names and values for details about those types.
  *      For each generic type name, the details may optionally include:
  *      - "compatibleTypes" — A list of data types that the generic type is allowed be specialized (replaced) with.
@@ -176,6 +175,23 @@ bool VuoIsPro(void);
 bool VuoProcessorSupportsAVX2(void);
 
 /**
+ * Converts a Vuo-style `[1..n]` list index into a C-style `[0..n-1]` list index.
+ *
+ * If the index is less than 1, or larger than the size of the list, the returned index is clamped.
+ */
+static inline unsigned long VuoListIndexToCArrayIndex(long index, unsigned long listCount) __attribute__((const));
+static inline unsigned long VuoListIndexToCArrayIndex(long index, unsigned long listCount)
+{
+	if (index <= 0)
+		return 0;
+
+	if (index > listCount)
+		return listCount - 1;
+
+	return index - 1;
+}
+
+/**
  * The standard Vuo graphics window width, in points.
  * @version200New
  */
@@ -229,4 +245,6 @@ extern const int VuoGraphicsWindowDefaultWidth;
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

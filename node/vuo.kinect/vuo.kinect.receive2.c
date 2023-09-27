@@ -2,12 +2,11 @@
  * @file
  * vuo.kinect.receive node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "libfreenect/libfreenect.h"
 #include <OpenGL/CGLMacro.h>
 #include <string.h>
@@ -18,15 +17,15 @@ VuoModuleMetadata({
 		"video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body",
 		"Kinect for Windows v1", "Kinect for Xbox 360",
 	],
-					  "version" : "3.1.0",
-					  "dependencies" : [
-						  "freenect",
-						  "usb"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ "DisplayKinectImages.vuo" ]
-					  }
-				 });
+	"version": "3.1.1",
+	"dependencies": [
+		"freenect",
+		"usb",
+	],
+	"node": {
+		"exampleCompositions": [ "DisplayKinectImages.vuo" ],
+	},
+});
 
 struct nodeInstanceData
 {
@@ -59,11 +58,11 @@ static void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_dept
 			unsigned int pos = 2 * ((mode.height-y-1)*mode.width + x);
 
 			uint16_t v = depth[y*mode.width + x];
-			if (v)
+			if (v != FREENECT_DEPTH_MM_NO_VALUE)
 			{
 				// Invert the intensities, because Kinect provides low=near, but people expect high=near.
 				// https://b33p.net/kosada/node/15796
-				depthOutput[pos+0] = 1. - v/16383.;
+				depthOutput[pos+0] = 1. - v / (float)FREENECT_DEPTH_MM_MAX_VALUE;
 				depthOutput[pos+1] = 1;
 			}
 			else

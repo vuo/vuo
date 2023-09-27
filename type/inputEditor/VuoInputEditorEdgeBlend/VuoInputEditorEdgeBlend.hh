@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorEdgeBlend interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -72,4 +72,3 @@ private slots:
 	void setupSpinBox(VuoDoubleSpinBox* spin, double min, double max, double step, double value);	///< set up a spin box
 	void setupSlider(QSlider* slider, double min, double max, double step, double value);	///< set up a slider
 };
-

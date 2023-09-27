@@ -2,15 +2,13 @@
  * @file
  * VuoFileType implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
-#include "type.h"
 #include "VuoFileType.h"
-#include "VuoList_VuoFileType.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -28,11 +26,13 @@ VuoModuleMetadata({
 
 /**
  * A map of the extensions for each file type.
+ *
+ * Keep in sync with `vuo.file.list`'s keywords.
  */
 static const char *VuoFileType_extensionsJSON = VUO_STRINGIFY({
 	"audio": ["wav", "aif", "aiff", "mp3", "mp2", "aac", "m4a", "ac3", "3gp", "amr"],
 	"image": ["png", "jpeg", "jpg", "gif", "bmp", "exr", "hdr", "psd", "raw", "cr2",
-			  "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp", "pct"],
+			  "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp", "pct", "heic"],
 	"mesh":  ["data"],  // PBMesh projection mesh
 	"movie": ["mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv", "gif", "qt"],
 	"scene": ["3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn",

@@ -1,0 +1,65 @@
+/**
+ * @file
+ * @brief Simulate Old TV
+ * Inserts live video into an image of an old-fashioned CRT television set.  Careful: loud noises may disturb the reception.
+ *
+ * Photo by [PJ Gal-Szabo](https://unsplash.com/photos/U8kNV-0dCS0).
+ *
+ * @lastSavedInVuoVersion 2.4.2
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddAnalogImageDistortion [type="vuo.image.analogDistortion" version="1.0.1" label="Add Analog Image Distortion|<refresh>refresh\l|<image>image\l|<flagging>flagging\l|<tearing>tearing\l|<edgeBlanking>edgeBlanking\l|<bearding>bearding\l|<beardingDistance>beardingDistance\l|<ghosting>ghosting\l|<ghostingDistance>ghostingDistance\l|<ringing>ringing\l|<noiseAmount>noiseAmount\l|<noiseScale>noiseScale\l|<verticalOffset>verticalOffset\l|<distortedImage>distortedImage\r" pos="720,600" fillcolor="orange" _flagging="-0.20000000000000001" _tearing="0.10000000000000001" _edgeBlanking="0.0" _bearding="0.0" _beardingDistance="0.005" _ghosting="0.40000000000000002" _ghostingDistance="0.03" _ringing="0.29999999999999999" _noiseAmount="1.0" _noiseScale="0.005"];
+ApplyMask [type="vuo.image.apply.mask" version="1.1.2" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<maskedImage>maskedImage\r" pos="1770,600" fillcolor="orange"];
+BecameGreaterThan [type="vuo.data.becameGreaterThan.VuoReal" version="1.0.0" label="Became Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<becameGreaterThan>becameGreaterThan\r" pos="240,825" _b="0.59999999999999998"];
+BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1005,600" _feedbackOpacity="0.10000000000000001" _feedbackBlendMode="\"linear-dodge\"" _pixelAligned="false" _imageInForeground="false" _width="0" _height="0" _colorDepth="\"8bpc\""];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="45,825"];
+ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="2205,600" _blendMode="\"linear-dodge\""];
+ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="570,630"];
+ConvertFrameToTimestamp [type="vuo.type.videoframe.real" version="1.0.0" label="Convert Frame to Timestamp|<refresh>refresh\l|<frame>frame\l|<timestamp>timestamp\r" pos="1215,1005"];
+ConvertImageToLayer2 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="870,240"];
+FetchImage [type="vuo.image.fetch" version="2.1.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1635,450" _url="\"old-tv.jpg\""];
+FetchImage2 [type="vuo.image.fetch" version="2.1.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1635,510" _url="\"old-tv-mask.png\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1395,450" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1965,600" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="0.59999999999999998"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1275,600" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.035000000149011612,\"y\":0.0\}" _rotation="0.0" _width="0.72999999999999998" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2391,461"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1453,611"];
+MixAudioChannels2 [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="135,930"];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.1" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="-315,825" fillcolor="lime" _receivedChannels_eventThrottling="enqueue"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="150,600" fillcolor="lime" _width="640" _height="525" _receivedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="1515,600" _width="1024" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2445,450" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage3 [type="vuo.image.resize" version="1.1.3" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="540,600" _sizingMode="\"fill\"" _width="640" _height="525"];
+SmoothWithSpring [type="vuo.motion.smooth.spring.VuoReal" version="2.1.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="465,765" _setPosition="1.0" _setTarget="0." _period="0.5" _damping="0.59999999999999998"];
+
+AddAnalogImageDistortion:distortedImage -> BlendImageWithFeedback:image;
+ApplyMask:maskedImage -> MakeImageLayer:image;
+BecameGreaterThan:becameGreaterThan -> SmoothWithSpring:setPosition;
+BecameGreaterThan:becameGreaterThan -> SmoothWithSpring:setTarget;
+BlendImageWithFeedback:feedbackImage -> MakeImageLayer2:image;
+CalculateLoudness:loudness -> BecameGreaterThan:a;
+ChangeLayerBlending:blendedLayer -> MakeList:2;
+ConvertFrameToImage3:image -> ResizeImage3:image;
+ConvertFrameToTimestamp:timestamp -> SmoothWithSpring:time;
+ConvertImageToLayer2:layer -> MakeList:1;
+FetchImage2:image -> ApplyMask:mask;
+FetchImage:image -> ConvertImageToLayer2:image;
+FireOnStart:started -> FetchImage2:url;
+FireOnStart:started -> FetchImage:url;
+MakeImageLayer2:layer -> MakeList2:1;
+MakeImageLayer:layer -> ChangeLayerBlending:layer;
+MakeList2:list -> RenderLayersToImage:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MixAudioChannels2:mixedSamples -> CalculateLoudness:samples;
+ReceiveLiveAudio:receivedChannels -> MixAudioChannels2:samples;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage3:frame;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToTimestamp:frame;
+RenderLayersToImage:image -> ApplyMask:image;
+ResizeImage3:resizedImage -> AddAnalogImageDistortion:image;
+SmoothWithSpring:position -> AddAnalogImageDistortion:verticalOffset;
+}

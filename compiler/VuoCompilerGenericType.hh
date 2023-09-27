@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerGenericType interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -22,8 +22,7 @@ class VuoGenericType;
 class VuoCompilerGenericType : public VuoCompilerType
 {
 public:
-	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, VuoCompilerType * (^getType)(string moduleKey));
-	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, const map<string, VuoCompilerType *> &types);
+	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, std::function<VuoCompilerType *(const string &)> lookUpType);
 	static string chooseBackingTypeName(string genericTypeName, vector<string> compatibleTypeNames);
 
 	string getBackingTypeName(void);

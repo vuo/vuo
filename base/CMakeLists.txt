@@ -51,8 +51,6 @@ add_library(VuoBase STATIC
 	VuoProtocol.hh
 	VuoPublishedPort.cc
 	VuoPublishedPort.hh
-	VuoRunner.cc
-	VuoRunner.hh
 	VuoRunningCompositionLibraries.cc
 	VuoRunningCompositionLibraries.hh
 	VuoShaderFile.cc
@@ -61,6 +59,8 @@ add_library(VuoBase STATIC
 	VuoShaderIssues.hh
 	VuoStringUtilities.cc
 	VuoStringUtilities.hh
+	VuoThreadUtilities.cc
+	VuoThreadUtilities.hh
 	VuoTimeUtilities.cc
 	VuoTimeUtilities.hh
 	VuoType.cc
@@ -84,18 +84,13 @@ target_compile_definitions(VuoBase
 	PUBLIC
 	ZMQ
 )
-if (VUO_RUNNER_TRACE)
-	target_compile_definitions(VuoBase PRIVATE VUO_RUNNER_TRACE)
-endif()
 target_include_directories(VuoBase
 	PUBLIC
 	.
 
 	PRIVATE
-		${PROJECT_BINARY_DIR}/type/list
 		../library
 		../runtime
-		../type
 )
 target_link_libraries(VuoBase
 	PUBLIC

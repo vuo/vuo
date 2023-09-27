@@ -2,19 +2,18 @@
  * @file
  * VuoTimeUnit C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-#include "VuoInteger.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/// @{ List type.
-typedef void * VuoList_VuoTimeUnit;
-#define VuoList_VuoTimeUnit_TYPE_DEFINED
-/// @}
+#include "VuoInteger.h"
 
 /**
  * @ingroup VuoTypes
@@ -45,13 +44,15 @@ typedef enum
 	VuoTimeUnit_Second,
 } VuoTimeUnit;
 
+#define VuoTimeUnit_SUPPORTS_COMPARISON
+#include "VuoList_VuoTimeUnit.h"
+
 VuoTimeUnit VuoTimeUnit_makeFromJson(struct json_object *js);
 struct json_object *VuoTimeUnit_getJson(const VuoTimeUnit value);
 VuoList_VuoTimeUnit VuoTimeUnit_getAllowedValues(void);
 char *VuoTimeUnit_getSummary(const VuoTimeUnit value);
 VuoInteger VuoTimeUnit_getSeconds(const VuoTimeUnit value);
 
-#define VuoTimeUnit_SUPPORTS_COMPARISON
 bool VuoTimeUnit_areEqual(const VuoTimeUnit valueA, const VuoTimeUnit valueB);
 bool VuoTimeUnit_isLessThan(const VuoTimeUnit valueA, const VuoTimeUnit valueB);
 
@@ -68,3 +69,6 @@ void VuoTimeUnit_release(VuoTimeUnit value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

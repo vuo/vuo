@@ -2,12 +2,10 @@
  * @file
  * vuo.scene.displace.image node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
-
-#include "node.h"
 
 #include "VuoSceneObjectRenderer.h"
 
@@ -15,7 +13,7 @@
 #include <Block.h>
 #include <OpenGL/CGLMacro.h>
 #include "VuoImageWrapMode.h"
-#include "../vuo.image/VuoThresholdType.h"
+#include "VuoThresholdType.h"
 
 VuoModuleMetadata({
 					 "title" : "Displace 3D Object with Image",

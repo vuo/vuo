@@ -7,7 +7,6 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoImageRenderer.h"
 #include "VuoImageDilate.h"
 

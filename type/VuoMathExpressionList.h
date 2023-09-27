@@ -2,12 +2,17 @@
  * @file
  * VuoMathExpressionList C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoMathExpressionList_h
+#define VuoMathExpressionList_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoMathExpressionParser.h"
 #include "VuoDictionary_VuoText_VuoReal.h"
@@ -28,8 +33,6 @@ typedef struct
 	VuoList_VuoText expressions;  ///< The original expressions.
 	VuoMathExpressionParser parser;  ///< The parsed expressions, or null if parsing failed.
 } VuoMathExpressionList;
-
-struct json_object;
 
 VuoMathExpressionList VuoMathExpressionList_make(VuoList_VuoText expressions);
 VuoMathExpressionList VuoMathExpressionList_makeFromJson(struct json_object * js);
@@ -52,3 +55,9 @@ char * VuoMathExpressionList_getString(const VuoMathExpressionList value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

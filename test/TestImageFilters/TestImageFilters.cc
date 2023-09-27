@@ -2,7 +2,7 @@
  * @file
  * TestImageFilters implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -14,14 +14,6 @@
 Q_DECLARE_METATYPE(VuoCompilerNodeClass *);
 Q_DECLARE_METATYPE(string);
 
-class TestImageFiltersDelegate : public VuoRunnerDelegateAdapter
-{
-	void lostContactWithComposition(void)
-	{
-		QFAIL("Composition crashed.");
-	}
-};
-
 /**
  * Tests each image filter node for common mistakes.
  */
@@ -32,7 +24,6 @@ class TestImageFilters : public TestCompositionExecution
 private:
 	int argc;
 	char **argv;
-	VuoCompiler *compiler;
 
 public:
 
@@ -40,29 +31,9 @@ public:
 		: argc(argc),
 		  argv(argv)
 	{
-		compiler = initCompiler();
-	}
-
-	~TestImageFilters()
-	{
-		delete compiler;
 	}
 
 private slots:
-
-	VuoPortClass *getFirstImagePort(vector<VuoPortClass *> ports)
-	{
-		for (vector<VuoPortClass *>::iterator p = ports.begin(); p != ports.end(); ++p)
-		{
-			VuoCompilerPortClass *cpc = dynamic_cast<VuoCompilerPortClass *>((*p)->getCompiler());
-			VuoType *dataType = cpc->getDataVuoType();
-			if (!dataType)
-				continue;
-			if (cpc->getDataVuoType()->getModuleKey() == "VuoImage")
-				return *p;
-		}
-		return NULL;
-	}
 
 	/**
 	 * Ensures each image filter outputs an image when it gets an image,
@@ -76,6 +47,9 @@ private slots:
 		QTest::addColumn<string>("inputPort");
 		QTest::addColumn<string>("outputPort");
 
+		VuoCompiler *compiler = initCompiler("/TestImageFilters/testImageFollowedByNull");
+		VuoDefer(^{ delete compiler; });
+
 		if (argc > 1)
 		{
 			// If a single test is specified on the command line,
@@ -84,25 +58,24 @@ private slots:
 			if (!nodeClassName.isEmpty())
 			{
 				VuoCompilerNodeClass *nc = compiler->getNodeClass(nodeClassName.toStdString());
-				VuoPortClass *imageInput  = getFirstImagePort(nc->getBase()->getInputPortClasses());
-				VuoPortClass *imageOutput = getFirstImagePort(nc->getBase()->getOutputPortClasses());
+				VuoPortClass *imageInput  = getFirstPortOfType(nc->getBase()->getInputPortClasses(), "VuoImage");
+				VuoPortClass *imageOutput = getFirstPortOfType(nc->getBase()->getOutputPortClasses(), "VuoImage");
 				QTest::newRow(nodeClassName.toUtf8().constData()) << nc << imageInput->getName() << imageOutput->getName();
 				return;
 			}
 		}
 
-		map<string, VuoCompilerNodeClass *> allNodeClasses = compiler->getNodeClasses();
-		for (map<string, VuoCompilerNodeClass *>::iterator nc = allNodeClasses.begin(); nc != allNodeClasses.end(); ++nc)
+		for (auto &nc : compiler->getNodeClasses())
 		{
-			if (!VuoStringUtilities::beginsWith(nc->first, "vuo."))
+			if (!VuoStringUtilities::beginsWith(nc.first, "vuo."))
 				continue;
 
-			VuoPortClass *imageInput  = getFirstImagePort(nc->second->getBase()->getInputPortClasses());
-			VuoPortClass *imageOutput = getFirstImagePort(nc->second->getBase()->getOutputPortClasses());
+			VuoPortClass *imageInput  = getFirstPortOfType(nc.second->getBase()->getInputPortClasses(), "VuoImage");
+			VuoPortClass *imageOutput = getFirstPortOfType(nc.second->getBase()->getOutputPortClasses(), "VuoImage");
 			if (!imageInput || !imageOutput)
 				continue;
 
-			QTest::newRow(nc->first.c_str()) << nc->second << imageInput->getName() << imageOutput->getName();
+			QTest::newRow(nc.first.c_str()) << nc.second << imageInput->getName() << imageOutput->getName();
 		}
 	}
 	void testImageFollowedByNull()
@@ -112,22 +85,9 @@ private slots:
 		QFETCH(string, outputPort);
 
 //		printf("%s\n", QTest::currentDataTag()); fflush(stdout);
-//		printf("%s\n",TestCompositionExecution::wrapNodeInComposition(nodeClass, compiler).c_str());
 
-		VuoCompilerIssues issues;
-		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "bc");
-		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "");
-		compiler->compileCompositionString(TestCompositionExecution::wrapNodeInComposition(nodeClass, compiler), compiledCompositionPath, true, &issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuildExistingCache);
-		remove(compiledCompositionPath.c_str());
-		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
+		VuoRunner *runner = createAndStartRunnerFromNode(nodeClass);
 		QVERIFY(runner);
-
-		TestImageFiltersDelegate delegate;
-		runner->setDelegate(&delegate);
-
-		runner->setRuntimeChecking(true);
-		runner->start();
 
 		VuoRunner::Port *inputImagePort = runner->getPublishedInputPortWithName(inputPort);
 		QVERIFY(inputImagePort);

@@ -2,14 +2,12 @@
  * @file
  * VuoMultisample implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
 #include "VuoMultisample.h"
-#include "VuoList_VuoMultisample.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -112,4 +110,3 @@ bool VuoMultisample_isLessThan(const VuoMultisample valueA, const VuoMultisample
 {
 	return valueA < valueB;
 }
-

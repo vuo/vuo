@@ -2,17 +2,17 @@
  * @file
  * VuoModifierKey C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoModifierKey_h
+#define VuoModifierKey_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoModifierKey_struct { void *l; } * VuoList_VuoModifierKey;
-#define VuoList_VuoModifierKey_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -35,6 +35,8 @@ typedef enum {
 	VuoModifierKey_None		= 0x0
 } VuoModifierKey;
 
+#include "VuoList_VuoModifierKey.h"
+
 VuoModifierKey VuoModifierKey_makeFromJson(struct json_object * js);
 struct json_object * VuoModifierKey_getJson(const VuoModifierKey value);
 VuoList_VuoModifierKey VuoModifierKey_getAllowedValues(void);
@@ -54,3 +56,9 @@ void VuoModifierKey_release(VuoModifierKey value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

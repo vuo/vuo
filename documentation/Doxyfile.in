@@ -16,8 +16,9 @@ LAYOUT_FILE            = DoxygenLayout.xml
 HTML_OUTPUT            = .
 HTML_HEADER            = DoxygenHeader.html
 HTML_FOOTER            = DoxygenFooter.html
-HTML_STYLESHEET        = Doxygen.css
-HTML_TIMESTAMP         = YES
+HTML_EXTRA_STYLESHEET  = DoxygenExtra.css
+HTML_COLORSTYLE        = AUTO_LIGHT
+TIMESTAMP              = YES
 GENERATE_LATEX         = NO
 GENERATE_TODOLIST      = NO
 ALIASES                = "eg{1}=@par Example:^^@code \1 @endcode"
@@ -34,6 +35,9 @@ ALIASES               += "threadQueue{1}=This function may only be called on dis
 ALIASES               += "threadNoQueue{1}=This function may be called on any dispatch queue _except_ @c \1."
 ALIASES               += "version200Changed{1}=\xrefitem Changes_2_0_0 \"Changed in Vuo 2.0.0\" \"Changes in Vuo 2.0.0\" \1"
 ALIASES               += "version200New=\version200Changed{New.}"
+ALIASES               += "deprecated=@qualifier deprecated ^^ @deprecated"
+ALIASES               += "vuoRunnerCocoaDeprecated=@deprecated <b>Use @ref VuoRunner (a similar API, in C++) instead.</b><br>The %VuoRunnerCocoa Objective-C API is deprecated as of Vuo 2.4.3 and tentatively planned for removal in Vuo 3.0.0, since, as far as we know, it isn't currently being used by any apps. If you do still need the Objective-C API, please <a href='https://vuo.org/contact'>contact Team Vuo</a> to tell us about your use-case."
+ALIASES               += "vuoVersion=${Vuo_VERSION}"
 
 #---------------------------------------------------------------------------
 # Build related configuration options
@@ -61,17 +65,20 @@ INPUT                 += ../editor
 INPUT                 += ../library
 INPUT                 += ../node
 INPUT                 += ../renderer
+INPUT                 += ../runner
 INPUT                 += ../runtime
 INPUT                 += ../type
-INPUT                 += ${PROJECT_BINARY_DIR}/type/list
+INPUT                 += ${PROJECT_BINARY_DIR}/node
+INPUT                 += ${PROJECT_BINARY_DIR}/type
 INCLUDE_PATH          += ${PROJECT_BINARY_DIR}/editor
-FILE_PATTERNS          = *.c* *.h* *.m* *.md
+FILE_PATTERNS          = *.c *.cc *.h *.hh *.m *.mm *.md
 EXTENSION_MAPPING     += mm=C++
 EXCLUDE_PATTERNS      += */CMakeFiles/*
 EXCLUDE_PATTERNS      += */build/test/*
 EXCLUDE_PATTERNS      += */*_autogen/*
 EXCLUDE_PATTERNS      += */library/VuoUrlParser.*
 EXCLUDE_PATTERNS      += */library/csgjs.cc
+EXCLUDE_PATTERNS      += */node/vuo.*/staging/*
 EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.c*
 EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.m*
 EXCLUDE_PATTERNS      += */node/vuo.*/descriptions/*
@@ -80,8 +87,9 @@ EXCLUDE_PATTERNS      += */node/vuo.audio/VuoBeatDetektor.*
 EXCLUDE_PATTERNS      += */node/vuo.leap/Leap/*.h
 EXCLUDE_PATTERNS      += */node/vuo.*/*.framework
 EXCLUDE_PATTERNS      += */node-Test*/*
-EXCLUDE_PATTERNS      += */type/list/VuoList.cc
-EXCLUDE_PATTERNS      += */type/list/VuoList.h
+EXCLUDE_PATTERNS      += */type/compound/*
+EXCLUDE_PATTERNS      += */type/VuoList.cc
+EXCLUDE_PATTERNS      += */type/VuoList.h
 EXCLUDE_PATTERNS      += *.cmake
 EXCLUDE_PATTERNS      += *.mov
 EXCLUDE_PATTERNS      += *.png

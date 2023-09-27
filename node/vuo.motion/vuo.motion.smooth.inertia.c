@@ -2,12 +2,12 @@
  * @file
  * vuo.motion.smooth.inertia node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoSmooth_VuoGenericType1.h"
 
 VuoModuleMetadata({
 					  "title" : "Smooth with Inertia",
@@ -22,14 +22,6 @@ VuoModuleMetadata({
 						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo", "RotateInSequence.vuo" ]
 					  }
 				 });
-
-#define type VuoGenericType1
-#define zeroValue VuoGenericType1_makeFromJson(NULL)
-#define add VuoGenericType1_add
-#define subtract VuoGenericType1_subtract
-#define multiply VuoGenericType1_multiply
-#define bezier3 VuoGenericType1_bezier3
-#include "VuoSmooth.h"
 
 struct nodeInstanceData
 {

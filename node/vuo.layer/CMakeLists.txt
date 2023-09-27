@@ -21,6 +21,11 @@ target_link_libraries(vuo.layer.types
 		${PROJECT_BINARY_DIR}/library/VuoSceneText.o
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoLayer.cc
+	VuoList_VuoProjectionType.cc
+)
+
 VuoCompileNodes(
 	vuo.layer.align.window.c
 	vuo.layer.align.window2.c

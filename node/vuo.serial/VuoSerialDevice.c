@@ -2,12 +2,11 @@
  * @file
  * VuoSerialDevice implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
 #include "VuoSerialDevice.h"
 #include "VuoSerial.h"
 
@@ -191,7 +190,7 @@ char *VuoSerialDevice_getSummary(const VuoSerialDevice value)
 	if (VuoSerialDevice_realize(value, &realizedDevice))
 	{
 		VuoSerialDevice_retain(realizedDevice);
-		char *outputText = VuoText_format("%s<br>%s", realizedDevice.name, realizedDevice.path);
+		char *outputText = VuoText_format("<b>Name:</b> <code>%s</code><br><b>URL:</b> <code>%s</code>", realizedDevice.name, realizedDevice.path);
 		VuoSerialDevice_release(realizedDevice);
 		return outputText;
 	}

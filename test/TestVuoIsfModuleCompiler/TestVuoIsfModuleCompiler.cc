@@ -2,7 +2,7 @@
  * @file
  * TestVuoIsfModuleCompiler interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -26,23 +26,22 @@ private:
 	public:
 		ModuleFileGroup(const string &sourcePath)
 		{
-			sourceFile = new VuoFileUtilities::File(sourceDir, sourcePath);
+			this->sourcePath = sourcePath;
 		}
 
 		~ModuleFileGroup(void)
 		{
 			VuoFileUtilities::deleteFile(getCompiledPath());
-			delete sourceFile;
 		}
 
 		string getModuleKey(void)
 		{
-			return VuoCompiler::getModuleKeyForPath(sourceFile->path());
+			return VuoCompiler::getModuleKeyForPath(sourcePath);
 		}
 
-		VuoFileUtilities::File * getSourceFile(void)
+		string getSourcePath(void)
 		{
-			return sourceFile;
+			return sourceDir.empty() ? sourcePath : sourceDir + "/" + sourcePath;
 		}
 
 		string getCompiledPath(void)
@@ -75,7 +74,7 @@ private:
 			return moduleDir;
 		}
 
-		VuoFileUtilities::File *sourceFile;
+		string sourcePath;
 		static string testId;
 		static string sourceDir;
 		static string moduleDir;
@@ -142,14 +141,16 @@ private:
 
 	void compileIsfToLlvmModule(ModuleFileGroup &m, Module *&llvmModule, VuoCompilerIssues *&issues)
 	{
-		VuoModuleCompiler *moduleCompiler = VuoModuleCompiler::newModuleCompiler("isf", m.getModuleKey(), m.getSourceFile());
+		VuoCompiler *compiler = new VuoCompiler(QDir::current().canonicalPath().toStdString() + "/composition");
+		auto getType = [&compiler] (const string &moduleKey) { return compiler->getType(moduleKey); };
+
+		VuoModuleCompiler *moduleCompiler = VuoModuleCompiler::newModuleCompiler("isf", m.getModuleKey(), m.getSourcePath(), VuoModuleCompilerSettings(), getType);
 		QVERIFY(moduleCompiler);
 
-		VuoCompiler *compiler = new VuoCompiler();
-		auto getType = [&compiler] (const string &moduleKey) { return compiler->getType(moduleKey); };
 		dispatch_queue_t llvmQueue = dispatch_queue_create("org.vuo.TestVuoIsfModuleCompiler.llvm", NULL);  // OK since VuoCompiler is used serially here
 		issues = new VuoCompilerIssues();
-		llvmModule = moduleCompiler->compile(getType, llvmQueue, issues);
+		VuoModuleCompilerResults results = moduleCompiler->compile(llvmQueue, issues);
+		llvmModule = results.module;
 
 		delete moduleCompiler;
 		delete compiler;
@@ -218,7 +219,7 @@ private slots:
 		compileIsfToLlvmModule(m, llvmModule, issues);
 
 		QCOMPARE(llvmModule != nullptr, isValid);
-		QCOMPARE(issues->getErrors()->isEmpty(), isValid);
+		QCOMPARE(! issues->hasErrors(), isValid);
 
 		delete issues;
 		delete llvmModule;
@@ -669,12 +670,11 @@ private slots:
 		compileIsfToLlvmModule(m, llvmModule, issues);
 
 		QVERIFY2(issues->isEmpty(), issues->getLongDescription(false).c_str());
-		QVERIFY(!llvm::verifyModule(*llvmModule));
 
-		VuoCompiler::setTargetForModule(llvmModule, VuoCompiler::getProcessTarget());
-		VuoCompiler::writeModuleToBitcode(llvmModule, m.getCompiledPath());
+		VuoCompiler::verifyModule(llvmModule, issues);
+		VuoCompiler::writeModuleToBitcode(llvmModule, VuoCompiler::getProcessTarget(), m.getCompiledPath(), issues);
 
-		VuoCompiler *compiler = new VuoCompiler(m.getCompositionDir());
+		VuoCompiler *compiler = new VuoCompiler(m.getCompositionDir() + "/composition");
 		CompositionFileGroup::setDestinationDir(m.getCompositionDir());
 		CompositionFileGroup c(m.getModuleKey());
 
@@ -682,7 +682,7 @@ private slots:
 		QVERIFY(nodeClass);
 		string compositionStr = wrapNodeInComposition(nodeClass, compiler);
 		compiler->compileCompositionString(compositionStr, c.getCompiledPath(), true, issues);
-		compiler->linkCompositionToCreateDynamicLibrary(c.getCompiledPath(), c.getDynamicLibraryPath(), VuoCompiler::Optimization_SmallBinary);
+		compiler->linkCompositionToCreateDynamicLibrary(c.getCompiledPath(), c.getDynamicLibraryPath(), VuoCompiler::Optimization_NoModuleCaches);
 
 		VuoRunner *runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(c.getDynamicLibraryPath(), ".");
 		runner->setRuntimeChecking(true);

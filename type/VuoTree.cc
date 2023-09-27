@@ -2,7 +2,7 @@
  * @file
  * VuoTree implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,8 +14,6 @@
 #include <string>
 #include <vector>
 using namespace std;
-
-#include "type.h"
 
 extern "C"
 {
@@ -293,12 +291,12 @@ static xmlChar * VuoTree_serializeXmlNodeAsXml(VuoTree tree, bool indent, int le
 
 		string whitespaceBeforeChild = (indent ? "\n" + string(2 * (level+1), ' ') : "");
 
-		unsigned long childCount = VuoListGetCount_VuoTree(tree.children);
+		unsigned long childCount = VuoListGetCount_VuoTree((VuoList_VuoTree)tree.children);
 		for (unsigned long i = 1; i <= childCount; ++i)
 		{
 			xml = xmlStrcat(xml, (const xmlChar *)whitespaceBeforeChild.c_str());
 
-			VuoTree child = VuoListGetValue_VuoTree(tree.children, i);
+			VuoTree child = VuoListGetValue_VuoTree((VuoList_VuoTree)tree.children, i);
 			xmlChar *childXml = VuoTree_serializeXmlNodeAsXml(child, indent, level+1);
 			xml = xmlStrcat(xml, childXml);
 		}
@@ -697,10 +695,10 @@ static json_object * VuoTree_serializeXmlNodeAsJson(VuoTree tree, bool atRoot)
 			json_object_object_add(topLevelJson, rootKey, rootValue);
 		}
 
-		unsigned long childCount = VuoListGetCount_VuoTree(tree.children);
+		unsigned long childCount = VuoListGetCount_VuoTree((VuoList_VuoTree)tree.children);
 		for (unsigned long i = 1; i <= childCount; ++i)
 		{
-			VuoTree child = VuoListGetValue_VuoTree(tree.children, i);
+			VuoTree child = VuoListGetValue_VuoTree((VuoList_VuoTree)tree.children, i);
 			if (! child.rootXmlNode)
 				continue;
 
@@ -758,7 +756,7 @@ VuoTree VuoTree_makeFromJson(struct json_object *js)
 			tree.rootJson = (json_object *)json_object_get_int64(o);
 
 		if (json_object_object_get_ex(js, "childrenPointer", &o))
-			tree.children = (VuoList_VuoTree)json_object_get_int64(o);
+			tree.children = (void *)(json_object_get_int64(o));
 
 		VuoTree *treePtr = new VuoTree(tree);
 		auto releaseCallback = [](json_object *js, void *userData)
@@ -933,7 +931,7 @@ VuoTree VuoTree_make(VuoText name, VuoDictionary_VuoText_VuoText attributes, Vuo
 
 	VuoTree tree = VuoTree_makeFromXmlDoc(doc);
 
-	tree.children = children;
+	tree.children = (void *)children;
 
 	return tree;
 }
@@ -1091,10 +1089,10 @@ VuoText VuoTree_getContent(VuoTree tree, bool includeDescendants)
 
 		if (tree.children)
 		{
-			unsigned long childCount = VuoListGetCount_VuoTree(tree.children);
+			unsigned long childCount = VuoListGetCount_VuoTree((VuoList_VuoTree)tree.children);
 			for (unsigned long i = 1; i <= childCount; ++i)
 			{
-				VuoTree child = VuoListGetValue_VuoTree(tree.children, i);
+				VuoTree child = VuoListGetValue_VuoTree((VuoList_VuoTree)tree.children, i);
 				VuoText childContent = VuoTree_getContent(child, true);
 				content = xmlStrcat(content, (const xmlChar *)childContent);
 			}
@@ -1118,7 +1116,7 @@ VuoText VuoTree_getContent(VuoTree tree, bool includeDescendants)
 VuoList_VuoTree VuoTree_getChildren(VuoTree tree)
 {
 	if (tree.children)
-		return VuoListCopy_VuoTree(tree.children);
+		return VuoListCopy_VuoTree((VuoList_VuoTree)tree.children);
 
 	VuoList_VuoTree children = VuoListCreate_VuoTree();
 
@@ -1385,10 +1383,10 @@ static VuoList_VuoTree VuoTree_findItems(VuoTree tree, bool (*compare)(xmlNode *
 	{
 		if (tree.children)
 		{
-			unsigned long childCount = VuoListGetCount_VuoTree(tree.children);
+			unsigned long childCount = VuoListGetCount_VuoTree((VuoList_VuoTree)tree.children);
 			for (unsigned long i = 1; i <= childCount; ++i)
 			{
-				VuoTree child = VuoListGetValue_VuoTree(tree.children, i);
+				VuoTree child = VuoListGetValue_VuoTree((VuoList_VuoTree)tree.children, i);
 				VuoList_VuoTree childFoundTrees = VuoTree_findItems(child, compare, targetText, comparison, attribute, includeDescendants, false);
 				unsigned long foundCount = VuoListGetCount_VuoTree(childFoundTrees);
 				for (unsigned long j = 1; j <= foundCount; ++j)

@@ -2,17 +2,16 @@
  * @file
  * VuoBaudRate C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoBaudRate;
-#define VuoList_VuoBaudRate_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -46,12 +45,14 @@ typedef enum
 	VuoBaudRate_921600 = 921600,
 } VuoBaudRate;
 
+#define VuoBaudRate_SUPPORTS_COMPARISON
+#include "VuoList_VuoBaudRate.h"
+
 VuoBaudRate VuoBaudRate_makeFromJson(struct json_object *js);
 struct json_object *VuoBaudRate_getJson(const VuoBaudRate value);
 VuoList_VuoBaudRate VuoBaudRate_getAllowedValues(void);
 char *VuoBaudRate_getSummary(const VuoBaudRate value);
 
-#define VuoBaudRate_SUPPORTS_COMPARISON
 bool VuoBaudRate_areEqual(const VuoBaudRate valueA, const VuoBaudRate valueB);
 bool VuoBaudRate_isLessThan(const VuoBaudRate valueA, const VuoBaudRate valueB);
 
@@ -68,3 +69,6 @@ void VuoBaudRate_release(VuoBaudRate value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

@@ -2,12 +2,13 @@
  * @file
  * VuoPoint4d C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoPoint4d_h
+#define VuoPoint4d_h
 
 #include <math.h>
 #include "VuoPoint3d.h"
@@ -30,16 +31,13 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(4))) VuoPoint4d;
 
-/// @{ List type.
-typedef const struct VuoList_VuoPoint4d_struct { void *l; } * VuoList_VuoPoint4d;
-#define VuoList_VuoPoint4d_TYPE_DEFINED
-/// @}
+#define VuoPoint4d_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoPoint4d.h"
 
 VuoPoint4d VuoPoint4d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint4d_getJson(const VuoPoint4d value);
 char * VuoPoint4d_getSummary(const VuoPoint4d value);
 
-#define VuoPoint4d_SUPPORTS_COMPARISON
 bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2);
 bool VuoPoint4d_areEqualListWithinTolerance(VuoList_VuoPoint4d values, VuoPoint4d tolerance);
 bool VuoPoint4d_isLessThan(const VuoPoint4d a, const VuoPoint4d b);
@@ -309,4 +307,6 @@ static inline VuoPoint4d VuoPoint4d_clampn(VuoPoint4d point, VuoPoint4d limitA, 
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

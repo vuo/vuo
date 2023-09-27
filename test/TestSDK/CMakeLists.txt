@@ -14,7 +14,6 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 		runner/ListPublishedPorts
 		runner/RunImageFilter-GLFW
 		runner/RunImageFilter-Qt
-		runner/VuoPluginApp
 		pro
 	)
 		string(MAKE_C_IDENTIFIER ${example} testName)
@@ -40,10 +39,10 @@ if (NOT CMAKE_SCRIPT_MODE_FILE)
 
 	add_test(NAME TestSDKCleanup
 		COMMAND rm -f
-			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.customtype.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.brightness.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.coreImage.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.imageFilter.metal.vuonode
+			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.player.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.stateful.countExecutions.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/example.stateless.vuoize.vuonode
 			$ENV{HOME}/Library/Application\ Support/Vuo/Modules/libExampleImageFilterCoreImage.a
@@ -82,27 +81,6 @@ else()
 		if (VuoPro)
 			include(${PROJECT_SOURCE_DIR}/test/TestSDK/pro/pro.cmake)
 		endif()
-
-	elseif (example STREQUAL "runner/VuoPluginApp")
-
-		set(buildDir ${sdkDir}/example/${example})
-
-		# Normally VuoPluginApp uses an absolute path to the system-wide Vuo.framework installed by the PKG.
-		# For this test, use a relative path to the Vuo.framework we just built (without needing to install it system-wide).
-		set(xcodeProjectFile ${buildDir}/VuoPluginApp.xcodeproj/project.pbxproj)
-		message("xcodeProjectFile=${xcodeProjectFile}")
-		file(READ ${xcodeProjectFile} xcodeProjectContents)
-		string(REPLACE "path = /Library/Developer/Vuo/framework/Vuo.framework; sourceTree = \"<absolute>\";" "path = ../../../framework/Vuo.framework; sourceTree = SOURCE_ROOT;" xcodeProjectContents "${xcodeProjectContents}")
-		string(REPLACE "/Library/Developer/Vuo/framework" "../../../framework" xcodeProjectContents "${xcodeProjectContents}")
-		file(WRITE ${xcodeProjectFile} "${xcodeProjectContents}")
-
-		# Only try to build the example using CPU architectures that this Vuo build supports.
-		foreach(arch ${CMAKE_OSX_ARCHITECTURES})
-			list(APPEND archFlags -arch ${arch})
-		endforeach()
-		execute(COMMAND xcodebuild ${archFlags})
-
-		execute(TIMEOUT GMALLOC_ELIGIBLE COMMAND build/Release/VuoPluginApp.app/Contents/MacOS/VuoPluginApp)
 
 	else()
 

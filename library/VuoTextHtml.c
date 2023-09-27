@@ -2,7 +2,7 @@
  * @file
  * VuoTextHtml implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,8 +11,6 @@
 
 #include <libxml/xpath.h>
 #include <libxml/HTMLparser.h>
-
-#include "module.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({

@@ -2,17 +2,17 @@
  * @file
  * VuoBlendMode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoBlendMode_h
+#define VuoBlendMode_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoBlendMode_struct { void *l; } * VuoList_VuoBlendMode;
-#define VuoList_VuoBlendMode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -55,6 +55,8 @@ typedef enum {
 	VuoBlendMode_Power				///< Power
 } VuoBlendMode;
 
+#include "VuoList_VuoBlendMode.h"
+
 VuoBlendMode VuoBlendMode_makeFromJson(struct json_object * js);
 struct json_object * VuoBlendMode_getJson(const VuoBlendMode value);
 VuoList_VuoBlendMode VuoBlendMode_getAllowedValues(void);
@@ -72,3 +74,9 @@ void VuoBlendMode_release(VuoBlendMode value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

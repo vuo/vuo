@@ -2,7 +2,7 @@
  * @file
  * VuoFileType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,11 +14,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// @{ List type.
-typedef const struct VuoList_VuoFileType_struct { void *l; } * VuoList_VuoFileType;
-#define VuoList_VuoFileType_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -47,6 +42,8 @@ typedef enum
 	VuoFileType_Table,
 	VuoFileType_XML,
 } VuoFileType;
+
+#include "VuoList_VuoFileType.h"
 
 VuoFileType VuoFileType_makeFromJson(struct json_object * js);
 struct json_object * VuoFileType_getJson(const VuoFileType value);

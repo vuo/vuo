@@ -2,17 +2,17 @@
  * @file
  * VuoLoopType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoLoopType_h
+#define VuoLoopType_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoLoopType_struct { void *l; } * VuoList_VuoLoopType;
-#define VuoList_VuoLoopType_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -31,6 +31,8 @@ typedef enum {
 	VuoLoopType_None
 } VuoLoopType;
 
+#include "VuoList_VuoLoopType.h"
+
 VuoLoopType VuoLoopType_makeFromJson(struct json_object * js);
 struct json_object * VuoLoopType_getJson(const VuoLoopType value);
 VuoList_VuoLoopType VuoLoopType_getAllowedValues(void);
@@ -48,3 +50,9 @@ void VuoLoopType_release(VuoLoopType value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

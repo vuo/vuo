@@ -7,7 +7,12 @@
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoIntegerRange_h
+#define VuoIntegerRange_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 
@@ -69,3 +74,9 @@ static inline VuoIntegerRange VuoIntegerRange_getOrderedRange(VuoIntegerRange ra
 	else
 		return range;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

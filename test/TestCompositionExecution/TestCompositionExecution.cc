@@ -2,7 +2,7 @@
  * @file
  * TestCompositionExecution implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -16,10 +16,13 @@
 
 /**
  * Sets up a compiler, adding both regular and for-testing-only node classes to the search path.
+ *
+ * @param compositionPath Typically, the path of the composition that will be compiled. If there isn't one, you can pass
+ *    a unique string (e.g. the name of the test function) to assign the test a unique composition-scope module cache.
  */
-VuoCompiler * TestCompositionExecution::initCompiler(void)
+VuoCompiler * TestCompositionExecution::initCompiler(const string &compositionPath)
 {
-	VuoCompiler *c = new VuoCompiler();
+	VuoCompiler *c = new VuoCompiler(compositionPath);
 	c->environments.back().at(0)->addModuleSearchPath(BINARY_DIR "/test/" + QDir::current().dirName().toStdString(), false);
 	return c;
 }
@@ -148,6 +151,62 @@ const char *TestCompositionExecution::getJsonTypeDescription(enum json_type type
 	}
 }
 
+/**
+ * Returns the first port in the specified list whose type matches the specified type,
+ * or null if there are no ports of that type.
+ */
+VuoPortClass *TestCompositionExecution::getFirstPortOfType(vector<VuoPortClass *> ports, string type)
+{
+	for (VuoPortClass *p : ports)
+	{
+		VuoCompilerPortClass *cpc = dynamic_cast<VuoCompilerPortClass *>(p->getCompiler());
+		VuoType *dataType = cpc->getDataVuoType();
+		if (!dataType)
+			continue;
+		if (cpc->getDataVuoType()->getModuleKey() == type)
+			return p;
+	}
+	return nullptr;
+}
+
+class TestCompositionExecutionDelegate : public VuoRunnerDelegateAdapter
+{
+	void lostContactWithComposition(void)
+	{
+		QFAIL("Composition crashed.");
+	}
+};
+
+/**
+ * Wraps the specified node in a composition, compiles it,
+ * attaches a delegate that fails the current test if the connection to the composition is lost,
+ * and starts it running.
+ */
+VuoRunner *TestCompositionExecution::createAndStartRunnerFromNode(VuoCompilerNodeClass *nodeClass)
+{
+	VuoCompiler *compiler = initCompiler(QTest::currentDataTag());
+	VuoCompilerIssues issues;
+	string compiledCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "bc");
+	string linkedCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "");
+	compiler->compileCompositionString(TestCompositionExecution::wrapNodeInComposition(nodeClass, compiler), compiledCompositionPath, true, &issues);
+	compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ExistingModuleCaches);
+	remove(compiledCompositionPath.c_str());
+	delete compiler;
+
+	VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
+
+	if (runner)
+	{
+		auto delegate = new TestCompositionExecutionDelegate;
+		runner->setDelegate(delegate);
+
+		runner->setRuntimeChecking(true);
+		runner->start();
+	}
+
+	return runner;
+}
+
 double TestCompositionExecution_tolerance = 0.00001;
 void TestCompositionExecution::setTolerance(double tolerance)
 {
@@ -262,7 +321,9 @@ void TestCompilerDelegate::installModule(const string &originalPath, const strin
 {
 	waiting = true;
 	moduleWaitingOn = (! moduleToWaitOn.empty() ? moduleToWaitOn : VuoCompiler::getModuleKeyForPath(installedPath));
+
 	VuoFileUtilities::copyFile(originalPath, installedPath);
+
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 }
 
@@ -274,10 +335,10 @@ void TestCompilerDelegate::installModuleWithSuperficialChange(const string &orig
 {
 	string dir, file, ext;
 	VuoFileUtilities::splitPath(originalPath, dir, file, ext);
-	if (ext == "vuo")
+	if (VuoFileUtilities::isCompositionExtension(ext) || VuoFileUtilities::isCFamilySourceExtension(ext) || VuoFileUtilities::isIsfSourceExtension(ext))
 	{
 		string originalSource = VuoFileUtilities::readFileToString(originalPath);
-		string modifiedSource = originalSource + "/* modified */";
+		string modifiedSource = originalSource + "/* " + VuoStringUtilities::makeRandomHash(4) + " */";
 		string modifiedPath = VuoFileUtilities::makeTmpFile("vuo.test.TestModuleLoading.modified", "vuo");
 		VuoFileUtilities::writeStringToFile(modifiedSource, modifiedPath);
 
@@ -292,13 +353,44 @@ void TestCompilerDelegate::installModuleWithSuperficialChange(const string &orig
 }
 
 /**
+ * Overrides the module at @a installedPath with a small change to the source code and waits for the notification that
+ * the module has been modified.
+ */
+void TestCompilerDelegate::overrideModuleWithSuperficialChange(const string &installedPath, VuoCompiler *compiler)
+{
+	waiting = true;
+	moduleWaitingOn = VuoCompiler::getModuleKeyForPath(installedPath);
+
+	string sourceCode = VuoFileUtilities::readFileToString(installedPath);
+	sourceCode += "/* " + VuoStringUtilities::makeRandomHash(4) + " */";
+	compiler->overrideInstalledNodeClass(installedPath, sourceCode);
+
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+/**
+ * Reverts a previous override to the module's source code and waits for the notification that the module has been modified.
+ */
+void TestCompilerDelegate::revertOverriddenModule(const string &installedPath, VuoCompiler *compiler)
+{
+	waiting = true;
+	moduleWaitingOn = VuoCompiler::getModuleKeyForPath(installedPath);
+
+	compiler->revertOverriddenNodeClass(installedPath);
+
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+/**
  * Deletes the module file at @a installedPath and waits for the notification that it has been uninstalled.
  */
 void TestCompilerDelegate::uninstallModule(const string &installedPath)
 {
 	waiting = true;
 	moduleWaitingOn = VuoCompiler::getModuleKeyForPath(installedPath);
+
 	VuoFileUtilities::deleteFile(installedPath);
+
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 }
 

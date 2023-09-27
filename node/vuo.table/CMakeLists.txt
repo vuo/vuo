@@ -11,6 +11,10 @@ target_include_directories(vuo.table.types
 	../vuo.time
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoTableFormat.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.table.change.column.c
 	vuo.table.change.item.c

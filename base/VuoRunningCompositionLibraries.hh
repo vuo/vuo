@@ -2,7 +2,7 @@
  * @file
  * VuoRunningCompositionLibraries interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -18,22 +18,24 @@
 class VuoRunningCompositionLibraries
 {
 public:
+	typedef std::function<void(void)> CallbackType;  ///< Type of callbacks to be called after loading/unloading events.
+
 	VuoRunningCompositionLibraries(void);
 	~VuoRunningCompositionLibraries(void);
 	void enqueueResourceLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary, bool isUnloadable);
 	void enqueueResourceLibraryToUnload(const string &path);
 	set<string> enqueueAllUnloadableResourceLibrariesToUnload(void);
-	void enqueueCacheLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary, bool isUnloadable);
+	void enqueueCacheLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary, bool isUnloadable, CallbackType doAfterLoadAttempted);
 	set<string> enqueueCacheLibraryToUnload(const string &path);
 	void enqueueLibraryContainingDependencyToUnload(const string &dependency);
-	vector<string> dequeueLibrariesToLoad(void);
+	vector<string> dequeueLibrariesToLoad(vector<CallbackType> &doAfterLoadAttempted);
 	vector<string> dequeueLibrariesToUnload(void);
 	vector<string> getNonUnloadableLibrariesLoaded(void);
 	vector<string> getUnloadableLibrariesLoaded(void);
 	vector<string> getUnloadableResourceLibrariesLoaded(void);
 	vector<string> getUnloadableCacheLibrariesLoaded(void);
+	map<string, set<string>> getCacheLibrariesEnqueuedToUnload(void);
 	set<string> getDependenciesLoaded(void);
-	bool hasCacheLibraryEnqueuedToUnload(void);
 	void addExternalLibraries(const set<string> &paths);
 	void addExternalFrameworks(const set<string> &paths);
 	set<string> getExternalLibraries(void);
@@ -54,4 +56,5 @@ private:
 	set<string> externalLibraries;  ///< Dylibs not created by the Vuo compiler that are referenced by the resource and cache dylibs.
 	set<string> externalFrameworks;  ///< Frameworks referenced by the resource and cache dylibs.
 	bool shouldDeleteResourceLibraries;  ///< Whether resource dylib files should be deleted when the composition is finished using them.
+	map<string, CallbackType> cachePathLoadedCallbacks;  ///< Callbacks to be called after the attempt has been made to load a module cache dylib or, if that never happens, when this VuoRunningCompositionLibraries is destroyed.
 };

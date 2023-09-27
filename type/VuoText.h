@@ -2,12 +2,13 @@
  * @file
  * VuoText C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoText_h
+#define VuoText_h
 
 /**
  * @ingroup VuoTypes
@@ -22,24 +23,21 @@ extern "C"
 {
 #endif
 
-#include <stdbool.h>
-#include <string.h>
-struct json_object;
+#include "VuoInteger.h"
 #include "VuoTextCase.h"
 #include "VuoTextComparison.h"
-#include "VuoInteger.h"
-#include "VuoList_VuoInteger.h"
+
 #include <stdint.h>
+#include <string.h>
+#include <xlocale.h>
 
 /**
  * A Unicode (UTF-8) text string.
  */
 typedef const char * VuoText;
 
-/// @{ List type.
-typedef const struct VuoList_VuoText_struct { void *l; } * VuoList_VuoText;
-#define VuoList_VuoText_TYPE_DEFINED
-/// @}
+#define VuoText_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoText.h"
 
 /**
  * Where to truncate text.
@@ -49,6 +47,9 @@ typedef enum
 	VuoTextTruncation_Beginning,
 	VuoTextTruncation_End
 } VuoTextTruncation;
+
+void VuoText_performWithUTF8Locale(void (^function)(locale_t utf8Locale));
+void VuoText_performWithSystemLocale(void (^function)(locale_t systemLocale));
 
 VuoText VuoText_makeFromJson(struct json_object * js);
 struct json_object * VuoText_getJson(const VuoText value);
@@ -65,11 +66,8 @@ size_t VuoText_length(const VuoText text);
 size_t VuoText_byteCount(const VuoText text);
 bool VuoText_isEmpty(const VuoText text);
 bool VuoText_isPopulated(const VuoText text);
-
-#define VuoText_SUPPORTS_COMPARISON
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
-
 bool VuoText_isLessThanCaseInsensitive(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThanNumeric(const VuoText text1, const VuoText text2);
 bool VuoText_compare(VuoText a, VuoTextComparison comparison, VuoText b);
@@ -91,6 +89,7 @@ uint32_t* VuoText_getUtf32Values(const VuoText text, size_t* length);
 #ifndef DOXYGEN
 	#define VUOTEXT_FORMAT_ATTRIBUTE __attribute__((format(printf, 1, 2)))
 #else
+	/// Work around spurious Doxygen warning about VuoText_format() not being documented.
 	#define VUOTEXT_FORMAT_ATTRIBUTE
 #endif
 char *VuoText_format(const char *format, ...) VUOTEXT_FORMAT_ATTRIBUTE;
@@ -110,4 +109,6 @@ void VuoText_release(VuoText value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

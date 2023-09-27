@@ -2,12 +2,17 @@
  * @file
  * VuoRectangle C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoRectangle_h
+#define VuoRectangle_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoPoint2d.h"
 
@@ -28,11 +33,12 @@ typedef struct
 	VuoPoint2d size;
 } VuoRectangle;
 
+#define VuoRectangle_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+
 VuoRectangle VuoRectangle_makeFromJson(struct json_object *js);
 struct json_object *VuoRectangle_getJson(const VuoRectangle r);
 char *VuoRectangle_getSummary(const VuoRectangle r);
 
-#define VuoRectangle_SUPPORTS_COMPARISON
 bool VuoRectangle_areEqual(const VuoRectangle a, const VuoRectangle b);
 bool VuoRectangle_isLessThan(const VuoRectangle a, const VuoRectangle b);
 
@@ -71,3 +77,9 @@ VuoRectangle VuoRectangle_union(VuoRectangle rectangleA, VuoRectangle rectangleB
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

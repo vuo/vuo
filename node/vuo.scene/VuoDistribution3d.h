@@ -2,17 +2,16 @@
  * @file
  * VuoDistribution3d C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoDistribution3d;
-#define VuoList_VuoDistribution3d_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -33,12 +32,14 @@ typedef enum
 	VuoDistribution3d_SphereSurface,
 } VuoDistribution3d;
 
+#define VuoDistribution3d_SUPPORTS_COMPARISON
+#include "VuoList_VuoDistribution3d.h"
+
 VuoDistribution3d VuoDistribution3d_makeFromJson(struct json_object *js);
 struct json_object *VuoDistribution3d_getJson(const VuoDistribution3d value);
 VuoList_VuoDistribution3d VuoDistribution3d_getAllowedValues(void);
 char *VuoDistribution3d_getSummary(const VuoDistribution3d value);
 
-#define VuoDistribution3d_SUPPORTS_COMPARISON
 bool VuoDistribution3d_areEqual(const VuoDistribution3d valueA, const VuoDistribution3d valueB);
 bool VuoDistribution3d_isLessThan(const VuoDistribution3d valueA, const VuoDistribution3d valueB);
 
@@ -54,3 +55,7 @@ void VuoDistribution3d_release(VuoDistribution3d value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

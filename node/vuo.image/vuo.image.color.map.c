@@ -2,18 +2,17 @@
  * @file
  * vuo.image.color.map node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
-
 VuoModuleMetadata({
-					  "title" : "Map Image Colors",
+					  "title" : "Map Image Brightness to Gradient",
 					  "keywords" : [
 						  "gradient", "heatmap",
-						  "replace", "colorize", "false color", "recolor",
+						  "replace", "colorize", "false color", "recolor", "pseudocolor",
+						  "luminance", "lightness", "darkness",
 						  "tint", "tone", "chroma", "correction", "calibration", "grading", "balance",
 						  "filter",
 					  ],

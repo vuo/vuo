@@ -2,12 +2,11 @@
  * @file
  * vuo.serial.receive node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoSerial.h"
 
 VuoModuleMetadata({
@@ -16,7 +15,7 @@ VuoModuleMetadata({
 						 "read", "open", "listen",
 						 "arduino", "rs232", "rs-232", "usb", "modem"
 					 ],
-					 "version" : "1.0.1",
+					 "version" : "1.0.2",
 					 "dependencies" : [
 						 "VuoSerialIO"
 					 ],
@@ -36,7 +35,7 @@ static void updateDevice(struct nodeInstanceData *context, VuoSerialDevice newDe
 {
 	if (context->s)
 	{
-		VuoRelease(context->s);
+		VuoSerial_disuseShared(context->s);
 		context->s = NULL;
 		VuoSerialDevice_release(context->device);
 	}
@@ -46,8 +45,7 @@ static void updateDevice(struct nodeInstanceData *context, VuoSerialDevice newDe
 	{
 		context->device = newDevice;
 		VuoSerialDevice_retain(context->device);
-		context->s = VuoSerial_getShared(realizedDevice.path);
-		VuoRetain(context->s);
+		context->s = VuoSerial_useShared(realizedDevice.path);
 
 		VuoSerialDevice_retain(realizedDevice);
 		VuoSerialDevice_release(realizedDevice);
@@ -127,7 +125,7 @@ void nodeInstanceFini
 {
 	if ((*context)->s)
 	{
-		VuoRelease((*context)->s);
+		VuoSerial_disuseShared((*context)->s);
 		VuoSerialDevice_release((*context)->device);
 	}
 }

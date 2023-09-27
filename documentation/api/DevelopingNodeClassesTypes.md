@@ -6,12 +6,12 @@ To learn how to develop node classes, see:
 
    - This API documentation
       - @ref DevelopingNodeClasses — How to create a node class
-      - @ref DevelopingTypes — How to create a port type that can be used by node classes
-      - @ref DevelopingLibraryModules — How to create a library of shared code that can be used by node classes and port types
-      - @ref ManagingDependencies — How to use libraries and frameworks in node classes, port types, and library modules
-      - @ref ManagingMemory — How to prevent memory leaks and corruption in node classes, port types, and library modules
-      - @ref ManagingConcurrency — How to be thread-safe in node classes, port types, and library modules
+      - @ref DevelopingTypes — How to create a data type that can be used by node classes
+      - @ref DevelopingLibraryModules — How to create a library of shared code that can be used by node classes and types
+      - @ref ManagingDependencies — How to use libraries and frameworks in node classes, types, and library modules
+      - @ref ManagingMemory — How to prevent memory leaks and corruption in node classes, types, and library modules
+      - @ref ManagingConcurrency — How to be thread-safe in node classes, types, and library modules
       - @ref WorkingWithGraphics — How to work with images, scenes, and shaders
       - @ref PackagingNodeSets — How to bundle node classes and supporting files into a node set
    - The example projects found in the `/Library/Developer/Vuo/example/node` folder after installing the Vuo SDK
-   - The source code for Vuo's built-in node classes, port types, and library modules
+   - The source code for Vuo's built-in node classes, types, and library modules

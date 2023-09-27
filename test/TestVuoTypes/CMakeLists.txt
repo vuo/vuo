@@ -51,7 +51,7 @@ target_link_libraries(TestVuoColor
 )
 target_link_libraries(TestVuoUiTheme
 	PRIVATE
-	vuo.ui.libraries
+		vuo.ui.libraries
 )
 target_link_libraries(TestVuoUrl
 	PRIVATE

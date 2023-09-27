@@ -1,0 +1,22 @@
+/* Highlight the background of code elements, to make them more distinct from plain text. */
+code {
+  background: #E8E8E8;
+  border-radius: 0.3em;
+  padding: 0 4px;
+}
+/* …but not the default argument values (such as newNode() on class_vuo_node_class.html). */
+.paramname code {
+  background: inherit;
+  border-radius: inherit;
+  padding: inherit;
+}
+
+/* Override the default centered. */
+table.markdownTable th {
+  text-align: left;
+}
+
+/* On code listings, the default line height is too small, causing the following line's background overdraws the previous line's text. */
+div.line {
+  line-height: 1.3;
+}

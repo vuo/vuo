@@ -2,19 +2,18 @@
  * @file
  * vuo.scene.make.square node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include <OpenGL/CGLMacro.h>	// GL_NONE
 #include "VuoMeshUtility.h"
 
 VuoModuleMetadata({
 					"title" : "Make 3D Square",
 					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle", "grid", "shape" ],
-					"version" : "1.1.0",
+					"version" : "1.1.1",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -52,7 +51,8 @@ void nodeInstanceEvent
 )
 {
 	// If the structure hasn't changed, just reuse the existing GPU mesh data.
-	if (rows == (*context)->rows
+	if (*object
+	 && rows == (*context)->rows
 	 && columns == (*context)->columns)
 	{
 		*object = VuoSceneObject_copy(*object);

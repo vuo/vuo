@@ -5,20 +5,21 @@ if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/empty.c)
 endif()
 
 
-add_library(VuoRunner SHARED
+add_library(VuoRunnerFramework SHARED
 	empty.c
 )
 set(frameworkPath "${PROJECT_BINARY_DIR}/lib/VuoRunner.framework")
 set(frameworkVersionPath "${frameworkPath}/Versions/${VuoFrameworkVersion}")
 set(frameworkBinaryPath "${frameworkVersionPath}/VuoRunner")
 list(APPEND generatedFiles
-	${vuoRunnerBinary}
+	${frameworkBinaryPath}
 )
 
 # This value is substituted into Info.plist.
 set(SHORT_VERSION "${VUO_VERSION_AND_BUILD}")
 
-set_target_properties(VuoRunner PROPERTIES
+set_target_properties(VuoRunnerFramework PROPERTIES
+	OUTPUT_NAME "VuoRunner"
 	FRAMEWORK TRUE
 	FRAMEWORK_VERSION 2
 	VERSION ${Vuo_VERSION}
@@ -33,14 +34,14 @@ set_target_properties(VuoRunner PROPERTIES
 get_property(VuoNodeSets GLOBAL PROPERTY VuoNodeSets)
 list(APPEND typeTargets
 	vuo.core.types
-	vuo.core.list.types
+	vuo.core.types.compound
 )
 foreach (nodeSet ${VuoNodeSets})
 	if (TARGET "${nodeSet}.types")
 		list(APPEND typeTargets "${nodeSet}.types")
 	endif()
 endforeach()
-target_link_libraries(VuoRunner
+target_link_libraries(VuoRunnerFramework
 	PRIVATE
 	CONAN_PKG::libxml2
 	CONAN_PKG::muparser
@@ -49,6 +50,7 @@ target_link_libraries(VuoRunner
 	VuoGlContext
 	VuoGlPool
 	VuoHeap
+	VuoRunner
 	${typeTargets}
 	# Do not link to vuo.core.libraries here.
 	# The core libraries include Objective-C classes,
@@ -58,13 +60,14 @@ target_link_libraries(VuoRunner
 )
 
 VuoGenerateUnexportedSymbolsList(unexportedSymbolsList "${typeTargets}")
-target_link_options(VuoRunner
+target_link_options(VuoRunnerFramework
 	PRIVATE
 		# Ensure the content of these libraries is included in VuoRunner.framework
 		# (since the framework itself doesn't have any code).
 		LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoBase.a
+		LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoRunner.a
 		LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.types.a
-		LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.list.types.a
+		LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.types.compound.a
 		LINKER:-reexport-lc++
 
 		# Reduce file size.
@@ -76,8 +79,8 @@ file(MAKE_DIRECTORY "${frameworkVersionPath}/Modules")
 file(CREATE_LINK "Versions/Current/Documentation" "${frameworkPath}/Documentation" SYMBOLIC)
 file(CREATE_LINK "Versions/Current/Modules"       "${frameworkPath}/Modules"       SYMBOLIC)
 
-set_target_properties(VuoRunner PROPERTIES VuoGeneratedFiles "${generatedFiles}")
+set_target_properties(VuoRunnerFramework PROPERTIES VuoGeneratedFiles "${generatedFiles}")
 
-add_custom_command(TARGET VuoRunner POST_BUILD
+add_custom_command(TARGET VuoRunnerFramework POST_BUILD
 	COMMAND ${codesignAdHoc} ${frameworkBinaryPath} ${codesignAdHocIgnoreReplace}
 )

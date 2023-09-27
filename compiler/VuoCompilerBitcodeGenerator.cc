@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -2898,7 +2898,7 @@ void VuoCompilerBitcodeGenerator::generateDataOnlyTransmissionFromNode(Function 
 			}
 
 			// Call the node's event function, and send telemetry if needed.
-			generateNodeExecution(function, currentBlock, compositionStateValue, visitedNode, false);
+			generateNodeExecution(currentBlock, compositionStateValue, visitedNode, false);
 
 			// Transmit data through the node's outgoing cables, and send telemetry for port updates if needed.
 			generateTransmissionFromNode(function, currentBlock, compositionStateValue, nodeContextValue, visitedNode, false, shouldSendTelemetry);
@@ -2927,8 +2927,7 @@ void VuoCompilerBitcodeGenerator::generateDataOnlyTransmissionFromNode(Function 
 /**
  * Generates code to call the node's event function, sending telemetry indicating that execution has started and finished.
  */
-void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, BasicBlock *&currentBlock,
-														Value *compositionStateValue, VuoCompilerNode *node,
+void VuoCompilerBitcodeGenerator::generateNodeExecution(BasicBlock *block, Value *compositionStateValue, VuoCompilerNode *node,
 														bool shouldSendTelemetry)
 {
 	Value *nodeIdentifierValue = constantsCache->get(node->getIdentifier());
@@ -2936,16 +2935,16 @@ void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, Basi
 	if (shouldSendTelemetry)
 	{
 		// Send telemetry indicating that the node's execution has started.
-		VuoCompilerCodeGenUtilities::generateSendNodeExecutionStarted(module, currentBlock, compositionStateValue, nodeIdentifierValue);
+		VuoCompilerCodeGenUtilities::generateSendNodeExecutionStarted(module, block, compositionStateValue, nodeIdentifierValue);
 	}
 
 	// Call the node's event function.
-	node->generateEventFunctionCall(module, function, currentBlock, compositionStateValue);
+	node->generateEventFunctionCall(module, block, compositionStateValue);
 
 	if (shouldSendTelemetry)
 	{
 		// Send telemetry indicating that the node's execution has finished.
-		VuoCompilerCodeGenUtilities::generateSendNodeExecutionFinished(module, currentBlock, compositionStateValue, nodeIdentifierValue);
+		VuoCompilerCodeGenUtilities::generateSendNodeExecutionFinished(module, block, compositionStateValue, nodeIdentifierValue);
 	}
 }
 
@@ -4047,7 +4046,7 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, NULL);
 
 	Value *nodeContextValue = node->generateGetContext(module, initialBlock, compositionStateValue);
-	Value *isHitValue = node->generateReceivedEventCondition(module, initialBlock, nodeContextValue);
+	Value *isHitValue = VuoCompilerCodeGenUtilities::generateEventHitAnyPort(module, initialBlock, nodeContextValue);
 
 	if (node == graph->getPublishedOutputNode())
 	{
@@ -4073,16 +4072,19 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 			for (size_t publishedPortIndex = 0; publishedPortIndex < publishedOutputPorts.size(); ++publishedPortIndex)
 			{
 				VuoPort *port = graph->getInputPortOnPublishedOutputNode(publishedPortIndex);
+				VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>( port->getCompiler() );
 
-				Value *isPortHitValue = node->generateReceivedEventCondition(module, currBlock, nodeContextValue, vector<VuoPort *>(1, port));
+				Value *portContextValue = eventPort->generateGetPortContext(module, currBlock, nodeContextValue);
+				Value *isPortHitValue = VuoCompilerCodeGenUtilities::generateGetPortContextEvent(module, currBlock, portContextValue);
 
 				if (publishedOutputTriggerNames.find( port->getClass()->getName() ) != publishedOutputTriggerNames.end())
 				{
 					BasicBlock *triggerBlock = BasicBlock::Create(module->getContext(), "trigger", function, NULL);
 					BasicBlock *nextBlock = BasicBlock::Create(module->getContext(), "next", function, NULL);
-					BranchInst::Create(triggerBlock, nextBlock, isPortHitValue, currBlock);
+					Constant *falseValue = ConstantInt::get(isPortHitValue->getType(), 0);
+					ICmpInst *isPortHitIsTrue = new ICmpInst(*currBlock, ICmpInst::ICMP_NE, isPortHitValue, falseValue);
+					BranchInst::Create(triggerBlock, nextBlock, isPortHitIsTrue, currBlock);
 
-					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>( port->getCompiler() );
 					VuoType *dataType = eventPort->getDataVuoType();
 
 					FunctionType *triggerFunctionType = VuoCompilerCodeGenUtilities::getFunctionType(module, dataType);
@@ -4097,8 +4099,8 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 					int indexInSubcompositionPorts = VuoNodeClass::unreservedInputPortStartIndex + publishedInputPorts.size() +
 													 VuoNodeClass::unreservedOutputPortStartIndex + publishedPortIndex;
 
-					Value *portContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, triggerBlock, compositionContextValue, indexInSubcompositionPorts);
-					Value *triggerFunction = VuoCompilerCodeGenUtilities::generateGetPortContextTriggerFunction(module, triggerBlock, portContextValue, triggerFunctionType);
+					Value *triggerPortContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContextPortContext(module, triggerBlock, compositionContextValue, indexInSubcompositionPorts);
+					Value *triggerFunction = VuoCompilerCodeGenUtilities::generateGetPortContextTriggerFunction(module, triggerBlock, triggerPortContextValue, triggerFunctionType);
 
 					CallInst *triggerFunctionCall = CallInst::Create(triggerFunction, args, "", triggerBlock);
 					if (dataType)
@@ -4159,7 +4161,7 @@ Function * VuoCompilerBitcodeGenerator::generateNodeExecutionFunction(Module *mo
 
 		// Call the node's event function, and send telemetry that the node's execution has started and finished.
 		bool shouldSendTelemetry = (node != graph->getPublishedInputNode());
-		generateNodeExecution(function, executeBlock, compositionStateValue, node, shouldSendTelemetry);
+		generateNodeExecution(executeBlock, compositionStateValue, node, shouldSendTelemetry);
 		BranchInst::Create(finalBlock, executeBlock);
 	}
 

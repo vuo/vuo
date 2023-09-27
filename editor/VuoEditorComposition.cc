@@ -2,7 +2,7 @@
  * @file
  * VuoEditorComposition implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #include "VuoEditorComposition.hh"
 
 #include "VuoCommandReplaceNode.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoComposition.hh"
 #include "VuoCompositionMetadata.hh"
@@ -25,6 +26,7 @@
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerComment.hh"
 #include "VuoCompilerComposition.hh"
+#include "VuoCompilerCompoundType.hh"
 #include "VuoCompilerDriver.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerGraph.hh"
@@ -1203,12 +1205,13 @@ void VuoEditorComposition::unspecializePortType()
 void VuoEditorComposition::createReplacementsToUnspecializePort(VuoPort *portToUnspecialize, bool shouldOutputNodesToReplace, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete)
 {
 	// Find the ports that will share the same generic type as portToUnspecialize, and organize them by node.
-	set<VuoPort *> connectedPotentiallyGenericPorts = getBase()->getCompiler()->getCorrelatedGenericPorts(portToUnspecialize->getRenderer()->getUnderlyingParentNode()->getBase(),
-																										  portToUnspecialize, true);
+	set<pair<VuoNode *, VuoPort *>> connectedPotentiallyGenericPorts = getBase()->getCompiler()->getCorrelatedGenericPorts(portToUnspecialize->getRenderer()->getUnderlyingParentNode()->getBase(),
+																														   portToUnspecialize, true);
 	map<VuoNode *, set<VuoPort *> > portsToUnspecializeForNode;
-	for (VuoPort *connectedPort : connectedPotentiallyGenericPorts)
+	for (pair<VuoNode *, VuoPort *> i : connectedPotentiallyGenericPorts)
 	{
-		VuoNode *node = connectedPort->getRenderer()->getUnderlyingParentNode()->getBase();
+		VuoNode *node = i.first;
+		VuoPort *connectedPort = i.second;
 
 		// @todo: Don't just exclude ports that aren't currently revertible, also exclude ports that are only
 		// within the current network by way of ports that aren't currently revertible.
@@ -2904,8 +2907,6 @@ void VuoEditorComposition::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
  */
 void VuoEditorComposition::updateHoverHighlighting(QPointF scenePos, bool disablePortHoverHighlighting)
 {
-	auto types = compiler->getTypes();
-
 	// Detect cable and port hover events ourselves, since we need to account
 	// for their extended hover ranges.
 	QGraphicsItem *item = cableInProgress? findNearbyPort(scenePos, false) : findNearbyComponent(scenePos);
@@ -3002,7 +3003,7 @@ void VuoEditorComposition::updateHoverHighlighting(QPointF scenePos, bool disabl
 				if (typecastParentPort)
 					updatedPort = typecastParentPort;
 
-				updateEligibilityHighlightingForPort(updatedPort, fixedPort, p.second, types);
+				updateEligibilityHighlightingForPort(updatedPort, fixedPort, p.second);
 
 				VuoRendererNode *potentialDrawer = updatedPort->getUnderlyingParentNode();
 				updateEligibilityHighlightingForNode(potentialDrawer);
@@ -3864,14 +3865,9 @@ void VuoEditorComposition::populateSpecializePortMenu(QMenu *menu, VuoRendererPo
 			addTypeActionsToMenu(actions, menu);
 
 			// Now add a submenu for each node set that contains compatible types.
-			map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = moduleManager->getLoadedTypesForNodeSet();
 			QList<QAction *> allNodeSetActionsToAdd;
-			for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
-			{
-				string nodeSetName = i->first;
-				if (!nodeSetName.empty())
-					allNodeSetActionsToAdd += getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, nodeSetName, menu);
-			}
+			for (const string &nodeSet : moduleManager->getKnownNodeSets())
+				allNodeSetActionsToAdd += getCompatibleTypesForMenu(port, compatibleTypesInIsolation, compatibleTypes, true, nodeSet, menu);
 
 			bool usingExpansionMenu = false;
 			if ((menu->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))
@@ -3915,20 +3911,19 @@ void VuoEditorComposition::populateSpecializePortMenu(QMenu *menu, VuoRendererPo
  */
 vector<string> VuoEditorComposition::getAllSpecializedTypeOptions(bool lists)
 {
-	vector<string> typeOptions;
-
-	map<string, VuoCompilerType *> loadedTypes = compiler->getTypes();
-	for (map<string, VuoCompilerType *>::iterator i = loadedTypes.begin(); i != loadedTypes.end(); ++i)
+	if (lists)
 	{
-		if (((!lists && !VuoType::isListTypeName(i->first)) ||
-			 (lists && VuoType::isListTypeName(i->first))) &&
-				VuoRendererPort::isSpecializationImplementedForType(i->first))
-		{
-			typeOptions.push_back(i->first);
-		}
+		set<string> types = moduleManager->getKnownListTypeNames(true);
+		return vector<string>(types.begin(), types.end());
 	}
+	else
+	{
+		vector<string> typeOptions;
+		for (auto i : moduleManager->getLoadedSingletonTypes(true))
+			typeOptions.push_back(i.first);
 
-	return typeOptions;
+		return typeOptions;
+	}
 }
 
 /**
@@ -3939,68 +3934,19 @@ vector<string> VuoEditorComposition::getAllSpecializedTypeOptions(bool lists)
 set<string> VuoEditorComposition::getRespecializationOptionsForPortInNetwork(VuoRendererPort *port)
 {
 	if (!port)
-		return set<string>();
+		return {};
 
-	// Find the set of connected generic ports that contains our target port.
-	set<VuoPort *> connectedGenericPorts = getBase()->getCompiler()->getCorrelatedGenericPorts(port->getUnderlyingParentNode()->getBase(),
-																							   port->getBase(), true);
+	VuoGenericType::Compatibility compatibility;
+	vector<string> compatibleTypes = getBase()->getCompiler()->getCompatibleSpecializedTypesForPort(port->getUnderlyingParentNode()->getBase(),
+																									port->getBase(), compatibility);
 
-	// Determine the set of types compatible with all generic ports in the connected network.
-	vector<string> compatibleInnerTypeNames;
-	vector<string> compatibleTypeNames;
-	for (VuoPort *connectedPort : connectedGenericPorts)
+	if (compatibility == VuoGenericType::anyType || compatibility == VuoGenericType::anyListType)
 	{
-		VuoGenericType *genericTypeFromPortClass = NULL;
-		VuoCompilerNodeClass *nodeClass = connectedPort->getRenderer()->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler();
-		VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
-		if (specializedNodeClass)
-		{
-			VuoPortClass *portClass = connectedPort->getClass();
-			genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass) );
-		}
-
-		VuoGenericType::Compatibility compatibility;
-		vector<string> compatibleTypeNamesForPort = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibility);
-		vector<string> innermostCompatibleTypeNamesForPort;
-		for (vector<string>::iterator k = compatibleTypeNamesForPort.begin(); k != compatibleTypeNamesForPort.end(); ++k)
-			innermostCompatibleTypeNamesForPort.push_back( VuoType::extractInnermostTypeName(*k) );
-
-		if (! innermostCompatibleTypeNamesForPort.empty())
-		{
-			if (compatibleInnerTypeNames.empty())
-				compatibleInnerTypeNames = innermostCompatibleTypeNamesForPort;
-			else
-			{
-				for (int k = compatibleInnerTypeNames.size() - 1; k >= 0; --k)
-					if (find(innermostCompatibleTypeNamesForPort.begin(), innermostCompatibleTypeNamesForPort.end(), compatibleInnerTypeNames[k]) ==
-							innermostCompatibleTypeNamesForPort.end())
-						compatibleInnerTypeNames.erase(compatibleInnerTypeNames.begin() + k);
-			}
-		}
+		vector<string> allTypes = getAllSpecializedTypeOptions(compatibility == VuoGenericType::anyListType);
+		return set<string>(allTypes.begin(), allTypes.end());
 	}
-
-	VuoCompilerNodeClass *nodeClass = port->getUnderlyingParentNode()->getBase()->getNodeClass()->getCompiler();
-	VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
-	VuoPortClass *portClass = port->getBase()->getClass();
-	VuoGenericType *genericTypeFromPortClass = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass) );
-	string typeNameForPort = genericTypeFromPortClass->getModuleKey();
-
-	// Finish compiling set of compatible types in the context of the connected generic port network.
-	string prefix = (VuoType::isListTypeName(typeNameForPort) ? VuoType::listTypeNamePrefix : "");
-	for (vector<string>::iterator k = compatibleInnerTypeNames.begin(); k != compatibleInnerTypeNames.end(); ++k)
-		compatibleTypeNames.push_back(prefix + *k);
-
-	if (compatibleTypeNames.empty())
-	{
-		VuoGenericType::Compatibility compatibility;
-		genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibility);
-
-		// If all types or all list types are compatible, add them to (currently empty) compatibleTypeNames.
-		if (compatibility == VuoGenericType::anyType || compatibility == VuoGenericType::anyListType)
-			compatibleTypeNames = getAllSpecializedTypeOptions(compatibility == VuoGenericType::anyListType);
-	}
-
-	return set<string>(compatibleTypeNames.begin(), compatibleTypeNames.end());
+	else
+		return set<string>(compatibleTypes.begin(), compatibleTypes.end());
 }
 
 /**
@@ -4022,38 +3968,36 @@ set<string> VuoEditorComposition::getRespecializationOptionsForPortInNetwork(Vuo
  *
  * Returns the generated list of actions, which may be used to populate a menu.
  */
-QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPort *genericPort,
-														   set<string> compatibleTypesInIsolation,
-														   set<string> compatibleTypesInContext,
-														   bool limitToNodeSet,
-														   string nodeSetName,
-														   QMenu *menu)
+QList<QAction *> VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPort *genericPort,
+																 set<string> compatibleTypesInIsolation,
+																 set<string> compatibleTypesInContext,
+																 bool limitToNodeSet,
+																 string nodeSetName,
+																 QMenu *menu)
 {
 	QList<QAction *> actionsToAddToMenu;
 
-	map<string, VuoCompilerType *> allTypes = compiler->getTypes();
-	map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = moduleManager->getLoadedTypesForNodeSet();
-	QList<VuoCompilerType *> compatibleTypesForNodeSetDisplay;
-	foreach (string typeName, compatibleTypesInIsolation)
+	vector<string> compatibleTypesForNodeSetDisplay;
+	for (const string &typeName : compatibleTypesInIsolation)
 	{
-		VuoCompilerType *type = allTypes[typeName];
-		if (type && (!limitToNodeSet || (loadedTypesForNodeSet[nodeSetName].find(type) != loadedTypesForNodeSet[nodeSetName].end())) &&
-				(! VuoGenericType::isGenericTypeName(typeName)) &&
+		string innermostTypeName = VuoType::extractInnermostTypeName(typeName);
+		if (! VuoGenericType::isGenericTypeName(innermostTypeName) &&
 				// @todo: Re-enable listing of VuoUrl type for https://b33p.net/kosada/node/9204
-				(typeName != "VuoUrl" && typeName != "VuoList_VuoUrl"
+				innermostTypeName != "VuoUrl" &&
 				// @todo: Re-enable listing of interaction type for https://b33p.net/kosada/node/11631
-			  && typeName != "VuoInteraction" && typeName != "VuoList_VuoInteraction"
-			  && typeName != "VuoInteractionType" && typeName != "VuoList_VuoInteractionType"
-			  && typeName != "VuoUuid" && typeName != "VuoList_VuoUuid"
+				innermostTypeName != "VuoInteraction" &&
+				innermostTypeName != "VuoInteractionType" &&
+				innermostTypeName != "VuoUuid" &&
 				// Hide deprecated types.
-			  && typeName != "VuoIconPosition" && typeName != "VuoList_VuoIconPosition"
-			  && typeName != "VuoMesh" && typeName != "VuoList_VuoMesh"
-			  && typeName != "VuoWindowProperty" && typeName != "VuoList_VuoWindowProperty"
-			  && typeName != "VuoWindowReference" && typeName != "VuoList_VuoWindowReference"))
-			compatibleTypesForNodeSetDisplay.append(type);
+				innermostTypeName != "VuoIconPosition" &&
+				innermostTypeName != "VuoMesh" &&
+				innermostTypeName != "VuoWindowProperty" &&
+				innermostTypeName != "VuoWindowReference" &&
+				(! limitToNodeSet || moduleManager->getNodeSetForType(innermostTypeName) == nodeSetName))
+			compatibleTypesForNodeSetDisplay.push_back(typeName);
 	}
 
-	if (!compatibleTypesForNodeSetDisplay.isEmpty())
+	if (!compatibleTypesForNodeSetDisplay.empty())
 	{
 		QMenu *contextMenuNodeSetTypes = NULL;
 		QList<QAction *> actionsToAddToNodeSetSubmenu;
@@ -4069,15 +4013,14 @@ QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPor
 			actionsToAddToMenu.append(contextMenuNodeSetTypes->menuAction());
 		}
 
-		foreach (VuoCompilerType *type, compatibleTypesForNodeSetDisplay)
+		for (const string &typeName : compatibleTypesForNodeSetDisplay)
 		{
-			string typeName = type->getBase()->getModuleKey();
 			QList<QVariant> portAndSpecializedType;
 			portAndSpecializedType.append(QVariant::fromValue(genericPort));
 			portAndSpecializedType.append(typeName.c_str());
 
 			QAction *specializeAction;
-			QString typeTitle = formatTypeNameForDisplay(type->getBase());
+			QString typeTitle = formatTypeNameForDisplay(typeName);
 
 			// Case: Adding to the node set submenu
 			if (!nodeSetName.empty())
@@ -4095,7 +4038,7 @@ QList<QAction *>  VuoEditorComposition::getCompatibleTypesForMenu(VuoRendererPor
 
 			specializeAction->setData(QVariant(portAndSpecializedType));
 			specializeAction->setCheckable(true);
-			specializeAction->setChecked(genericPort && genericPort->getDataType() && (genericPort->getDataType()->getModuleKey() == type->getBase()->getModuleKey()));
+			specializeAction->setChecked(genericPort && genericPort->getDataType() && (genericPort->getDataType()->getModuleKey() == typeName));
 
 			if (compatibleTypesInContext.find(typeName) == compatibleTypesInContext.end())
 			{
@@ -4147,7 +4090,9 @@ QList<QAction *> VuoEditorComposition::promoteSingletonsFromSubmenus(QList<QActi
  */
 void VuoEditorComposition::addTypeActionsToMenu(QList<QAction *> actionList, QMenu *menu)
 {
-	std::sort(actionList.begin(), actionList.end(), nodeSetMenuActionLessThan);
+	std::sort(actionList.begin(), actionList.end(),
+			  [](QAction *action1, QAction *action2) { return action1->text().compare(action2->text(), Qt::CaseInsensitive) < 0; });
+
 	foreach (QAction *action, actionList)
 		menu->addAction(action);
 }
@@ -5983,26 +5928,32 @@ void VuoEditorComposition::highlightEligibleEndpointsForCable(VuoCable *cable)
  */
 void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPort *port, VuoRendererCable *cable)
 {
-	auto types = compiler->getTypes();
-
 	QList<QGraphicsItem *> compositionComponents = items();
-	for (QList<QGraphicsItem *>::iterator i = compositionComponents.begin(); i != compositionComponents.end(); ++i)
+
+	// Cache the (fairly time-consuming) computation of eligibility highlighting for each port so we can reuse the result.
+	map<VuoRendererPort *, VuoRendererColors::HighlightType> highlightForPort;
+
+	for (QGraphicsItem *compositionComponent : compositionComponents)
 	{
-		QGraphicsItem *compositionComponent = *i;
 		VuoRendererNode *rn = dynamic_cast<VuoRendererNode *>(compositionComponent);
 		if (rn)
 		{
 			// Check for eligible internal input ports.
 			vector<VuoPort *> inputPorts = rn->getBase()->getInputPorts();
-			for(vector<VuoPort *>::iterator inputPort = inputPorts.begin(); inputPort != inputPorts.end(); ++inputPort)
-				updateEligibilityHighlightingForPort((*inputPort)->getRenderer(), port, !cable->effectivelyCarriesData(), types);
+			for (VuoPort *inputPort : inputPorts)
+				highlightForPort[inputPort->getRenderer()] =
+						updateEligibilityHighlightingForPort(inputPort->getRenderer(), port, !cable->effectivelyCarriesData());
 
 			// Check for eligible internal output ports.
 			vector<VuoPort *> outputPorts = rn->getBase()->getOutputPorts();
-			for(vector<VuoPort *>::iterator outputPort = outputPorts.begin(); outputPort != outputPorts.end(); ++outputPort)
-				updateEligibilityHighlightingForPort((*outputPort)->getRenderer(), port, !cable->effectivelyCarriesData(), types);
+			for (VuoPort *outputPort : outputPorts)
+				highlightForPort[outputPort->getRenderer()] =
+						updateEligibilityHighlightingForPort(outputPort->getRenderer(), port, !cable->effectivelyCarriesData());
 		}
+	}
 
+	for (QGraphicsItem *compositionComponent : compositionComponents)
+	{
 		// Fade out cables that aren't relevant to the current cable drag.
 		VuoRendererCable *rc = dynamic_cast<VuoRendererCable *>(compositionComponent);
 		if (rc && rc != cable)
@@ -6015,11 +5966,10 @@ void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPo
 				? rc->getBase()->getFromPort()
 				: rc->getBase()->getToPort();
 
-			VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(otherCablePort? otherCablePort->getRenderer() : NULL,
-																						   port,
-																						   !cable->effectivelyCarriesData(),
-																						   types);
-
+			VuoRendererColors::HighlightType highlight = otherCablePort ?
+															 highlightForPort[otherCablePort->getRenderer()] :
+															 VuoRendererColors::noHighlight;
+\
 			// Don't apply extra highlighting to compatible, already-connected cables.
 			if (highlight == VuoRendererColors::standardHighlight)
 				highlight = VuoRendererColors::noHighlight;
@@ -6031,25 +5981,24 @@ void VuoEditorComposition::highlightInternalPortsConnectableToPort(VuoRendererPo
 	}
 
 	// Now that the ports and cables have been highlighted, also highlight the nodes based on those results.
-	for (QList<QGraphicsItem *>::iterator i = compositionComponents.begin(); i != compositionComponents.end(); ++i)
-		updateEligibilityHighlightingForNode(dynamic_cast<VuoRendererNode *>(*i));
+	for (QGraphicsItem *compositionComponent : compositionComponents)
+		updateEligibilityHighlightingForNode(dynamic_cast<VuoRendererNode *>(compositionComponent));
 }
 
 /**
  * Updates the eligibility highlighting of the @a portToHighlight given that a cable with event-only status specified by
  * @a eventOnlyConnection is being drawn from @a fixedPort.
  */
-void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight,
-																VuoRendererPort *fixedPort,
-																bool eventOnlyConnection,
-																map<string, VuoCompilerType *> &types)
+VuoRendererColors::HighlightType VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort *portToHighlight,
+																							VuoRendererPort *fixedPort,
+																							bool eventOnlyConnection)
 {
 	QGraphicsItem::CacheMode normalCacheMode = portToHighlight->cacheMode();
 	portToHighlight->setCacheMode(QGraphicsItem::NoCache);
 
 	portToHighlight->updateGeometry();
 
-	VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(portToHighlight, fixedPort, eventOnlyConnection, types);
+	VuoRendererColors::HighlightType highlight = getEligibilityHighlightingForPort(portToHighlight, fixedPort, eventOnlyConnection);
 
 	portToHighlight->setEligibilityHighlight(highlight);
 	VuoRendererTypecastPort *typecastPortToHighlight = dynamic_cast<VuoRendererTypecastPort *>(portToHighlight);
@@ -6059,7 +6008,9 @@ void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort 
 	portToHighlight->setCacheMode(normalCacheMode);
 
 	if (typecastPortToHighlight)
-		updateEligibilityHighlightingForPort(typecastPortToHighlight->getChildPort(), fixedPort, eventOnlyConnection, types);
+		updateEligibilityHighlightingForPort(typecastPortToHighlight->getChildPort(), fixedPort, eventOnlyConnection);
+
+	return highlight;
 }
 
 /**
@@ -6070,9 +6021,8 @@ void VuoEditorComposition::updateEligibilityHighlightingForPort(VuoRendererPort 
  * @param fixedPort The port already selected for connection, and against which eligibility is to be checked.
  * @param eventOnlyConnection If true, determines eligibility as if the ports will be connected with a cable
  * that is event-only regardless of the data-carrying status of the ports.
- * @param types All loaded types (@ref VuoCompiler::getTypes).
  */
-VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection, map<string, VuoCompilerType *> &types)
+VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightingForPort(VuoRendererPort *portToHighlight, VuoRendererPort *fixedPort, bool eventOnlyConnection)
 {
 	// Determine whether the port endpoints are internal canvas ports or external published sidebar ports.
 	VuoRendererPublishedPort *fixedExternalPublishedPort = dynamic_cast<VuoRendererPublishedPort *>(fixedPort);
@@ -6110,7 +6060,7 @@ VuoRendererColors::HighlightType VuoEditorComposition::getEligibilityHighlightin
 	VuoRendererColors::HighlightType highlight;
 	if (directConnectionPossible)
 		highlight = VuoRendererColors::standardHighlight;
-	else if (!findBridgingSolutions(fromPort, toPort, forwardConnection, types).empty())
+	else if (!findBridgingSolutions(fromPort, toPort, forwardConnection).empty())
 		highlight = VuoRendererColors::subtleHighlight;
 	else if (fixedPort == portToHighlight)
 		highlight = VuoRendererColors::noHighlight;
@@ -6452,8 +6402,7 @@ bool VuoEditorComposition::selectBridgingSolution(VuoRendererPort *fromPort,
 	map<string, VuoRendererPort *> portToSpecializeForTypecast;
 	map<string, string> specializedTypeNameForTypecast;
 
-	auto types = compiler->getTypes();
-	vector<string> candidateTypecasts = findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast, types);
+	vector<string> candidateTypecasts = findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast);
 	bool solutionSelected = selectBridgingSolutionFromOptions(candidateTypecasts, portToSpecializeForTypecast, specializedTypeNameForTypecast, typecastToInsert);
 
 	if (!solutionSelected)
@@ -6526,16 +6475,24 @@ bool VuoEditorComposition::portsPassSanityCheckToBridge(VuoRendererPort *fromPor
  * If candidate types are provided, performs the check as if the ports were to be specialized to
  * those types; otherwise, uses the ports' current types.
  */
-bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fromPort, VuoRendererPort *toPort, VuoType *candidateFromType, VuoType *candidateToType)
+bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fromPort, VuoRendererPort *toPort,
+															 const string &candidateFromTypeName, const string &candidateToTypeName)
 {
 	if (!portsPassSanityCheckToBridge(fromPort, toPort))
 		return false;
 
-	VuoType *inType = (candidateFromType? candidateFromType : static_cast<VuoCompilerPortClass *>(fromPort->getBase()->getClass()->getCompiler())->getDataVuoType());
-	VuoType *outType = (candidateToType? candidateToType : static_cast<VuoCompilerPortClass *>(toPort->getBase()->getClass()->getCompiler())->getDataVuoType());
+	VuoType *fromPortType = static_cast<VuoCompilerPortClass *>(fromPort->getBase()->getClass()->getCompiler())->getDataVuoType();
+	VuoType *toPortType = static_cast<VuoCompilerPortClass *>(toPort->getBase()->getClass()->getCompiler())->getDataVuoType();
+
+	string fromTypeName = ! candidateFromTypeName.empty() ?
+							  candidateFromTypeName :
+							  (fromPortType ? fromPortType->getModuleKey() : "");
+	string toTypeName = ! candidateToTypeName.empty() ?
+							candidateToTypeName :
+							(toPortType ? toPortType->getModuleKey() : "");
 
 	// To reduce confusion, don't offer Boolean -> Integer as a type conversion option for nodes that use 1-based indices.
-	if (inType && (inType->getModuleKey() == "VuoBoolean") && outType && (outType->getModuleKey() == "VuoInteger"))
+	if (fromTypeName == "VuoBoolean" && toTypeName == "VuoInteger")
 	{
 		bool toNodeUsesIndex = toPort->getUnderlyingParentNode() &&
 							   (VuoStringUtilities::beginsWith(toPort->getUnderlyingParentNode()->getBase()->getNodeClass()->getClassName(), "vuo.text.") ||
@@ -6561,7 +6518,6 @@ bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fr
  *                              (as in a forward cable drag) as opposed to the fromPort
  *                              (as in a backward cable drag), which may be the tie-breaking factor
  *                              in deciding which port to attempt to specialize.
- * @param types All loaded types (@ref VuoCompiler::getTypes).
  *
  * Returns a vector containing the names of all loaded typecast classes that, in combination
  * with potential respecialization of the @c fromPort or @c toPort, are capable of bridging
@@ -6571,48 +6527,43 @@ bool VuoEditorComposition::portsPassSanityCheckToTypeconvert(VuoRendererPort *fr
  */
 vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *fromPort,
 														   VuoRendererPort *toPort,
-														   bool toPortIsDragDestination,
-														   map<string, VuoCompilerType *> &types)
+														   bool toPortIsDragDestination)
 {
 	map<string, VuoRendererPort *> portToSpecializeForTypecast;
 	map<string, string> specializedTypeNameForTypecast;
-	return findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast, types);
+	return findBridgingSolutions(fromPort, toPort, toPortIsDragDestination, portToSpecializeForTypecast, specializedTypeNameForTypecast);
 }
 
 /**
- * Returns a list containing the names of all loaded typecast classes
- * capable of bridging the connection between @c fromPort to @c toPort
- * when (re-)specialization of one port or the other is permitted.
+ * Returns a list of ways that a valid cable connection could be made between two ports of different data types,
+ * by inserting a type-converter node, changing the data type of a generic port, or both.
  *
- * If the two ports are equally good candidates for (re-)specialization,
- * the drag destination (as indicated by @c toPortIsDragDestination) will
- * be the port to be considered for (re-)specialization.
+ * - For inserting a type-converter node, the list item is the node class name.
+ * - For changing the data type of a generic port, the list item is an empty string, and entries are added to
+ *   @a portToSpecializeForTypecast and @a specializedTypeNameForTypecast with an empty string as the key.
+ * - For doing both, the list item is the type-converter node class name, and entries are added to
+ *   @a portToSpecializeForTypecast and @a specializedTypeNameForTypecast with the node class name as the key.
+ *
+ * If a connection could be made by changing the data type of either @a fromPort or @a toPort, and the two ports
+ * are equally good candidates, then the drag destination (as indicated by @a toPortIsDragDestination) will be
+ * chosen as the one to change.
  */
 vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *fromPort,
 														   VuoRendererPort *toPort,
 														   bool toPortIsDragDestination,
 														   map<string, VuoRendererPort *> &portToSpecializeForTypecast,
-														   map<string, string> &specializedTypeNameForTypecast,
-														   map<string, VuoCompilerType *> &types)
+														   map<string, string> &specializedTypeNameForTypecast)
 {
-	// If `limitCombinations` is `true`, first considers solutions that involve typeconversion
-	// or specialization, but not both; if no such solution exists, returns solutions that involve
-	// typeconversion+specialization combinations.
-	// If `limitCombinations` is `false`, returns all solutions, whether they involve typeconversion,
-	// specialization, or both.
-	const bool limitCombinations = true;
-
 	portToSpecializeForTypecast.clear();
 	specializedTypeNameForTypecast.clear();
-	vector<string> suitableTypecasts;
 
 	if (!portsPassSanityCheckToBridge(fromPort, toPort))
-		return suitableTypecasts;
+		return {};
 
 	// Temporarily disallow direct cable connections between published inputs and published outputs.
 	// @todo: Allow for https://b33p.net/kosada/node/7756 .
 	if (dynamic_cast<VuoRendererPublishedPort *>(fromPort) && dynamic_cast<VuoRendererPublishedPort *>(toPort))
-		return suitableTypecasts;
+		return {};
 
 	// Case: We have an unspecialized (generic) port. See whether we can specialize it to complete the connection without typeconversion.
 	{
@@ -6620,11 +6571,9 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 		string specializedTypeName = "";
 		if (fromPort->canConnectDirectlyWithSpecializationTo(toPort, !cableInProgress->getRenderer()->effectivelyCarriesData(), &portToSpecialize, specializedTypeName))
 		{
-			suitableTypecasts.push_back("");
 			portToSpecializeForTypecast[""] = portToSpecialize;
 			specializedTypeNameForTypecast[""] = specializedTypeName;
-
-			return suitableTypecasts;
+			return {""};
 		}
 	}
 
@@ -6632,7 +6581,7 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 	VuoType *currentToDataType = toPort->getDataType();
 
 	if (!(currentFromDataType && currentToDataType))
-		return suitableTypecasts;
+		return {};
 
 	VuoGenericType *currentFromGenericType = dynamic_cast<VuoGenericType *>(currentFromDataType);
 	VuoGenericType *currentToGenericType = dynamic_cast<VuoGenericType *>(currentToDataType);
@@ -6675,14 +6624,16 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 
 	// No typeconversion or specialization options between two unspecialized generic ports.
 	if (fromPortIsGeneric && toPortIsGeneric)
-		return suitableTypecasts;
+		return {};
 
 	// Typeconversion options but no specialization options between two static ports.
 	else if (fromPortIsStatic && toPortIsStatic)
 	{
-		if (portsPassSanityCheckToTypeconvert(fromPort, toPort))
-			suitableTypecasts = moduleManager->getCompatibleTypecastClasses(currentFromDataType, currentToDataType);
-		return suitableTypecasts;
+		if (! portsPassSanityCheckToTypeconvert(fromPort, toPort))
+			return {};
+
+		return moduleManager->getCompatibleTypecastClasses(currentFromDataType->getModuleKey(), currentFromDataType,
+														   currentToDataType->getModuleKey(), currentToDataType);
 	}
 
 	// Remaining combinations might require (re-)specializing one port or the other.
@@ -6711,14 +6662,15 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 	// non-destructively unspecializable, since it already has the appropriate specialization.
 	compatibleTypes.insert(specializeToPort? currentToDataType->getModuleKey() : currentFromDataType->getModuleKey());
 
-	if (limitCombinations)
+	// If there's at least one bridging solution that involves only type-conversion or only specialization, then return that.
 	{
 		vector<string> limitedSuitableTypecasts;
 
 		// Check for bridging solutions that involve typeconversion without specialization.
 		if (portsPassSanityCheckToTypeconvert(fromPort, toPort))
 		{
-			limitedSuitableTypecasts = moduleManager->getCompatibleTypecastClasses(currentFromDataType, currentToDataType);
+			limitedSuitableTypecasts = moduleManager->getCompatibleTypecastClasses(currentFromDataType->getModuleKey(), currentFromDataType,
+																				   currentToDataType->getModuleKey(), currentToDataType);
 			foreach (string typecastName, limitedSuitableTypecasts)
 			{
 				portToSpecializeForTypecast[typecastName] = specializeToPort? toPort : fromPort;
@@ -6740,37 +6692,48 @@ vector<string> VuoEditorComposition::findBridgingSolutions(VuoRendererPort *from
 			return limitedSuitableTypecasts;
 	}
 
-	foreach (string compatibleTypeName, compatibleTypes)
+	// Search for bridging solutions that involve both type-conversion and specialization.
+	vector<string> suitableTypecasts;
+	for (const string &compatibleTypeName : compatibleTypes)
 	{
-		VuoCompilerType *compatibleSpecializedType = types[compatibleTypeName];
-		if (!compatibleSpecializedType)
-			compatibleSpecializedType = compiler->getType(compatibleTypeName);
-
-		if (compatibleSpecializedType)
+		// Don't look up the VuoCompilerType for compatibleTypeName since we don't actually need it
+		// and loading it (if not already loaded) would slow things down.
+		string candidateFromTypeName;
+		string candidateToTypeName;
+		VuoType *candidateFromType;
+		VuoType *candidateToType;
+		if (specializeToPort)
 		{
-			VuoType *candidateFromType = specializeToPort? currentFromDataType : compatibleSpecializedType->getBase();
-			VuoType *candidateToType = specializeToPort? compatibleSpecializedType->getBase() : currentToDataType;
+			candidateFromTypeName = currentFromDataType->getModuleKey();
+			candidateFromType = currentFromDataType;
+			candidateToTypeName = compatibleTypeName;
+			candidateToType = nullptr;
+		}
+		else
+		{
+			candidateFromTypeName = compatibleTypeName;
+			candidateFromType = nullptr;
+			candidateToTypeName = currentToDataType->getModuleKey();
+			candidateToType = currentToDataType;
+		}
 
-			// Re-specialization without typeconversion may be possible.
-			if (candidateFromType == candidateToType)
-			{
-				suitableTypecasts.push_back("");
-				portToSpecializeForTypecast[""] = specializeToPort? toPort : fromPort;
-				specializedTypeNameForTypecast[""] = compatibleSpecializedType->getBase()->getModuleKey();
-			}
+		// Re-specialization without typeconversion may be possible.
+		if (candidateFromTypeName == candidateToTypeName)
+		{
+			suitableTypecasts.push_back("");
+			portToSpecializeForTypecast[""] = specializeToPort? toPort : fromPort;
+			specializedTypeNameForTypecast[""] = compatibleTypeName;
+		}
 
-			if (portsPassSanityCheckToTypeconvert(fromPort,
-												  toPort,
-												  candidateFromType,
-												  candidateToType))
+		if (portsPassSanityCheckToTypeconvert(fromPort, toPort, candidateFromTypeName, candidateToTypeName))
+		{
+			vector<string> suitableTypecastsForCurrentTypes = moduleManager->getCompatibleTypecastClasses(candidateFromTypeName, candidateFromType,
+																										  candidateToTypeName, candidateToType);
+			foreach (string typecast, suitableTypecastsForCurrentTypes)
 			{
-				vector<string> suitableTypecastsForCurrentTypes = moduleManager->getCompatibleTypecastClasses(candidateFromType, candidateToType);
-				foreach (string typecast, suitableTypecastsForCurrentTypes)
-				{
-					suitableTypecasts.push_back(typecast);
-					portToSpecializeForTypecast[typecast] = specializeToPort? toPort : fromPort;
-					specializedTypeNameForTypecast[typecast] = compatibleSpecializedType->getBase()->getModuleKey();
-				}
+				suitableTypecasts.push_back(typecast);
+				portToSpecializeForTypecast[typecast] = specializeToPort? toPort : fromPort;
+				specializedTypeNameForTypecast[typecast] = compatibleTypeName;
 			}
 		}
 	}
@@ -6917,9 +6880,7 @@ QString VuoEditorComposition::getDisplayTextForSpecializationOption(VuoRendererP
 		return "";
 
 	bool isInput = portToSpecialize && portToSpecialize->getInput();
-	QString typeDisplayName = compiler->getType(specializedTypeName)?
-								  formatTypeNameForDisplay(compiler->getType(specializedTypeName)->getBase()) :
-								  specializedTypeName.c_str();
+	QString typeDisplayName = formatTypeNameForDisplay(specializedTypeName);
 
 	bool portAlreadyHasTargetType = (!portToSpecialize || (portToSpecialize->getDataType() && (portToSpecialize->getDataType()->getModuleKey() == specializedTypeName)));
 
@@ -8047,30 +8008,48 @@ QString VuoEditorComposition::formatNodeSetNameForDisplay(QString nodeSetName)
 }
 
 /**
- * Formats the input @c type name for human-readable display.
- *
- * @return The human-readable type name.
+ * Returns a human-readable title for the concrete type (not unspecialized generic) with module key @a typeName.
+ */
+QString VuoEditorComposition::formatTypeNameForDisplay(string typeName)
+{
+	set<string> listTypes = moduleManager->getKnownListTypeNames(false);
+	auto foundListType = listTypes.find(typeName);
+	if (foundListType != listTypes.end())
+	{
+		// Don't request the list type from the compiler, since that causes a delay if the type is not already generated.
+		auto getVuoType = [this] (const string &typeName) -> VuoCompilerType *
+		{
+			map<string, VuoCompilerType *> singletonTypes = moduleManager->getLoadedSingletonTypes(false);
+			VuoCompilerType *singletonType = singletonTypes[typeName];
+			if (singletonType)
+				return singletonType;
+
+			map<string, VuoCompilerType *> compoundTypes = moduleManager->getLoadedGenericCompoundTypes();
+			VuoCompilerType *compoundType = compoundTypes[typeName];
+			if (compoundType)
+				return compoundType;
+
+			return nullptr;
+		};
+		string defaultTitle = VuoCompilerCompoundType::buildDefaultTitle(typeName, getVuoType);
+		return QString::fromStdString(defaultTitle);
+	}
+
+	map<string, VuoCompilerType *> singletonTypes = moduleManager->getLoadedSingletonTypes(false);
+	VuoCompilerType *singletonType = singletonTypes[typeName];
+	return formatTypeNameForDisplay(singletonType ? singletonType->getBase() : nullptr);
+}
+
+/**
+ * Returns a human-readable title for @a type.
  */
 QString VuoEditorComposition::formatTypeNameForDisplay(VuoType *type)
 {
-	if (!type)
+	if (! type)
 		return "(none)";
 
-	string formattedTypeName = "";
-	if (type->hasCompiler() && VuoCompilerType::isListType(type->getCompiler()))
-	{
-		string innerTypeName = VuoType::extractInnermostTypeName(type->getModuleKey());
-		VuoCompilerType *innerType = compiler->getType(innerTypeName);
-		if (innerType)
-		{
-			string formattedInnerTypeName = innerType->getBase()->getDefaultTitle();
-			formattedTypeName = "List of " + formattedInnerTypeName + " elements";
-		}
-	}
-	else
-		formattedTypeName = type->getDefaultTitle();
-
-	return formattedTypeName.c_str();
+	string defaultTitle = type->getDefaultTitle();
+	return QString::fromStdString(defaultTitle);
 }
 
 /**
@@ -8094,36 +8073,6 @@ string VuoEditorComposition::getDefaultPublishedPortNameForType(VuoType *type)
 		return "Transform3D";
 
 	return VuoRendererPort::sanitizePortName(formatTypeNameForDisplay(type)).toUtf8().constData();
-}
-
-/**
- * Comparison function for menu actions representing Vuo types, for use in sorting.
- */
-bool VuoEditorComposition::nodeSetMenuActionLessThan(QAction *action1, QAction *action2)
-{
-	QString item1Text = action1->text();
-	QString item2Text = action2->text();
-
-	// Ignore list prefixes
-	const QString listPrefix = "List of ";
-	const QString builtInTypePrefix = "Vuo";
-
-	if (item1Text.startsWith(listPrefix))
-	{
-		item1Text.remove(0, listPrefix.length());
-		if (item1Text.startsWith(builtInTypePrefix))
-			item1Text.remove(0, builtInTypePrefix.length());
-	}
-
-	if (item2Text.startsWith(listPrefix))
-	{
-		item2Text.remove(0, listPrefix.length());
-		if (item2Text.startsWith(builtInTypePrefix))
-			item2Text.remove(0, builtInTypePrefix.length());
-	}
-
-	// Sort alphabetically by title.
-	return (item1Text.compare(item2Text, Qt::CaseInsensitive) < 0);
 }
 
 /**

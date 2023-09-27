@@ -34,13 +34,15 @@ VuoBundleFiles(VuoEditorApp "Resources"
 	Icons/align-center.png
 	Icons/align-left.png
 	Icons/align-right.png
-	Icons/run.pdf
+	Icons/run-1x1.pdf
+	Icons/run-16x11.pdf
 	Icons/search-clear-pressed.png
 	Icons/search-clear.png
 	Icons/search-loupe.png
 	Icons/share.pdf
 	Icons/showEvents.pdf
-	Icons/stop.pdf
+	Icons/stop-1x1.pdf
+	Icons/stop-16x11.pdf
 	Icons/vuo-composition.icns
 	Icons/vuo-node.icns
 	Icons/vuo.icns
@@ -48,10 +50,14 @@ VuoBundleFiles(VuoEditorApp "Resources"
 	Icons/zoom-fit.pdf
 	Icons/zoom-in.pdf
 	Icons/zoom-out.pdf
-	Icons/fontawesome/copy.pdf
-	Icons/fontawesome/download.pdf
-	Icons/fontawesome/external-link-square.pdf
-	Icons/fontawesome/times-circle.pdf
+	Icons/fontawesome/copy-1x1.pdf
+	Icons/fontawesome/copy-16x11.pdf
+	Icons/fontawesome/download-1x1.pdf
+	Icons/fontawesome/download-16x11.pdf
+	Icons/fontawesome/external-link-square-1x1.pdf
+	Icons/fontawesome/external-link-square-16x11.pdf
+	Icons/fontawesome/times-circle-1x1.pdf
+	Icons/fontawesome/times-circle-16x11.pdf
 	qt.conf
 )
 
@@ -152,7 +158,7 @@ add_dependencies(VuoEditorApp VuoEditorAppQt)
 
 
 get_target_property(VuoFrameworkGeneratedFiles       VuoFramework       VuoGeneratedFiles)
-get_target_property(VuoRunnerGeneratedFiles          VuoRunner          VuoGeneratedFiles)
+get_target_property(VuoRunnerFrameworkGeneratedFiles VuoRunnerFramework VuoGeneratedFiles)
 get_target_property(VuoModuleCompilersGeneratedFiles VuoModuleCompilers VuoGeneratedFiles)
 set(frameworkDest ${frameworksDestDir}/Vuo.framework/Versions/Current/Vuo)
 add_custom_command(
@@ -167,7 +173,10 @@ add_custom_command(
 	# Use `--extended-attributes` since `codesign` stores signatures for `.bc` and `.o` files
 	# in macOS extended attributes (a.k.a. xattr, resource forks),
 	# and those code signatures are required for Notarization.
-	COMMAND /usr/bin/rsync --recursive --links --update --delete --extended-attributes
+	# Use `--times` to preserve the timestamps from the source files so that the Vuo editor is able to compile
+	# modules without getting errors about header files being newer than the module PCH files.
+	COMMAND /usr/bin/rsync --recursive --links --update --delete --extended-attributes --times
+		--exclude '**/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/Generated/Modules/*/*.d'
 		${PROJECT_BINARY_DIR}/lib/Vuo.framework
 		${PROJECT_BINARY_DIR}/lib/VuoRunner.framework
 		${frameworksDestDir}
@@ -196,17 +205,11 @@ add_custom_command(
 add_custom_target(VuoEditorAppLibraries DEPENDS ${frameworksDestDir}/libVuoWidget.dylib)
 add_dependencies(VuoEditorApp VuoEditorAppLibraries)
 
-
-set(contributorsDest "${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md")
-add_custom_command(
-	COMMENT "Fetching CONTRIBUTORS.md"
-	COMMAND /usr/bin/curl --silent --show-error https://vuo.org/contributors/markdown --output ${contributorsDest}
-	COMMAND grep --quiet 'Thanks to our contributors' ${contributorsDest}
-	OUTPUT ${contributorsDest}
-)
-add_custom_target(VuoEditorAppContributors DEPENDS ${contributorsDest})
-add_dependencies(VuoEditorApp VuoEditorAppContributors)
-
+include(VuoContributorList)
+VuoContributorList()
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Resources")
+file(COPY_FILE "${CMAKE_BINARY_DIR}/documentation/CONTRIBUTORS.md" "${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md")
+file(COPY_FILE "${PROJECT_SOURCE_DIR}/DEPENDENCIES.md" "${CMAKE_BINARY_DIR}/bin/Vuo.app/Contents/Resources/DEPENDENCIES.md")
 
 # Code-sign the whole mess after all the frameworks and helpers have been copied into Vuo.app.
 add_custom_command(TARGET VuoEditorApp POST_BUILD

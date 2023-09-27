@@ -2,7 +2,7 @@
  * @file
  * VuoSerialDevice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,6 +16,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoText.h"
 
@@ -39,11 +43,12 @@ typedef struct
 	VuoText path;	///< The POSIX filesystem path to the device file.
 } VuoSerialDevice;
 
+#define VuoSerialDevice_SUPPORTS_COMPARISON
+
 VuoSerialDevice VuoSerialDevice_makeFromJson(struct json_object *js);
 struct json_object *VuoSerialDevice_getJson(const VuoSerialDevice value);
 char *VuoSerialDevice_getSummary(const VuoSerialDevice value);
 
-#define VuoSerialDevice_SUPPORTS_COMPARISON
 bool VuoSerialDevice_areEqual(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 bool VuoSerialDevice_isLessThan(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 
@@ -62,3 +67,6 @@ void VuoSerialDevice_release(VuoSerialDevice value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

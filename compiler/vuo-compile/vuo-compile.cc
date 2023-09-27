@@ -2,7 +2,7 @@
  * @file
  * vuo-compile implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -13,6 +13,7 @@
 #else
 	#include "VuoCompiler.hh"
 	#include "VuoCompilerComposition.hh"
+	#include "VuoCompilerDelegate.hh"
 	#include "VuoCompilerException.hh"
 	#include "VuoCompilerIssue.hh"
 	#include "VuoComposition.hh"
@@ -47,11 +48,11 @@ public:
 void printHelp(char *argv0)
 {
 	printf("Compiles a Vuo composition file into LLVM bitcode,\n"
-		   "or compiles C/C++/Objective-C/Objective-C++/GLSL/ISF source code into a Vuo node.\n"
+		   "or compiles C/C++/Objective-C/Objective-C++/GLSL/ISF source code into a Vuo module (node class, type, or library).\n"
 		   "\n"
 		   "Usage:\n"
 		   "  %s [options] composition.vuo      Compiles composition.vuo into LLVM bitcode (suitable for use with vuo-link).\n"
-		   "  %s [options] node.class.name.c    Compiles a node class into a Vuo node (suitable for placing in '~/Library/Application Support/Vuo/Modules').\n"
+		   "  %s [options] node.class.name.c    Compiles node.class.name.c into a Vuo node class (suitable for placing in '~/Library/Application Support/Vuo/Modules').\n"
 		   "\n"
 		   "Options:\n"
 		   "     --help                       Display this information.\n"
@@ -78,6 +79,7 @@ int main (int argc, char * const argv[])
 		string target = "";
 		vector<char *> headerSearchPaths;
 		string dependencyOutputPath;
+		bool shouldGenerateHeader = false;
 		bool doPrintHelp = false;
 		bool isVerbose = false;
 		string optimization = "off";
@@ -91,6 +93,8 @@ int main (int argc, char * const argv[])
 			{"verbose", no_argument, NULL, 0},
 			{"optimization", required_argument, NULL, 0},
 			{"generate-builtin-module-caches", required_argument, NULL, 0},
+			{"generate-builtin-modules", required_argument, NULL, 0},
+			{"generate-header-file", no_argument, NULL, 0},
 			{"dependency-output", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
@@ -127,9 +131,15 @@ int main (int argc, char * const argv[])
 					optimization = optarg;
 					break;
 				case 7:  // --generate-builtin-module-caches
-					VuoCompiler::generateBuiltInModuleCaches(optarg, target);
+					VuoCompiler::generateBuiltInModuleCache(optarg, target, false);
 					return 0;
-				case 8:  // --dependency-output
+				case 8:  // --generate-builtin-modules
+					VuoCompiler::generateBuiltInModuleCache(optarg, target, true);
+					return 0;
+				case 9:  // --generate-header-file
+					shouldGenerateHeader = true;
+					break;
+				case 10:  // --dependency-output
 					dependencyOutputPath = optarg;
 					break;
 
@@ -277,8 +287,13 @@ int main (int argc, char * const argv[])
 					delete composition;
 					delete baseComposition;
 				}
-				else if (VuoFileUtilities::isCSourceExtension(inputExtension) || inputExtension == "fs")
-					compiler.compileModule(inputPath, outputPath);
+				else if (VuoFileUtilities::isCFamilySourceExtension(inputExtension) || inputExtension == "fs")
+				{
+					if (shouldGenerateHeader)
+						compiler.generateHeaderForModule(inputPath, outputPath);
+					else
+						compiler.compileModule(inputPath, outputPath);
+				}
 				else
 					throw VuoException("input file must have a file extension of .vuo, .c, .cc, .m, .mm, or .fs");
 			}
@@ -304,14 +319,12 @@ int main (int argc, char * const argv[])
 		ret = 1;
 	}
 
-	vector<VuoCompilerIssue> issueList = issues->getList();
-	for (vector<VuoCompilerIssue>::iterator i = issueList.begin(); i != issueList.end(); ++i)
-		fprintf(stderr, "%s: %s: %s\n",
-			!i->getFilePath().empty()
-				? i->getFilePath().c_str()
-				: (hasInputFile ? (inputPath == "-" ? "stdin" : inputPath.c_str()) : argv[0]),
-			(*i).getIssueType() == VuoCompilerIssue::Error ? "error" : "warning",
-			(*i).getShortDescription(false).c_str());
+	if (! issues->isEmpty())
+	{
+		if (hasInputFile && inputPath == "-")
+			issues->setFilePathIfEmpty("stdin");
+		fprintf(stderr, "%s\n", issues->getLongDescription(false).c_str());
+	}
 
 	delete issues;
 

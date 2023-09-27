@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,7 +12,6 @@
 #include "VuoImageRenderer.h"
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
-#include "module.h"
 #include "VuoGlPool.h"
 #include "VuoVideoFrame.h"
 #include <QuartzCore/CoreImage.h>
@@ -673,6 +672,13 @@ static dispatch_once_t VuoAvPlayerObject_initOnce = 0;  ///< Synchronizes initia
 	[videoQueue removeObjectAtIndex:index];
 
 	free(framePointer);
+
+	if (![self audioEnabled])
+	{
+		// Ensure that audio decoding keeps pace with video decoding,
+		// so that if/when we resume audio output, the audio and video streams will be in sync.
+		while (audioTimestamp < videoTimestamp && [self copyNextAudioSampleBuffer]);
+	}
 
 	return true;
 }

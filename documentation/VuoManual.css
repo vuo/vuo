@@ -30,15 +30,72 @@
 	font-style: italic;
 }
 
+:root {
+	--color-background: rgb(253,246,227); /* solarized base3 */
+	--color-text: rgb(88,110,117); /* solarized base01 */
+	--color-link: #0099a9; /* Vuo 2017 Logo blue */
+	--color-link-current: rgb(7,54,66); /* solarized base02 */
+	--color-term: rgb(66,153,0); /* not-solarized green */
+	--color-heading: #0099a9; /* Vuo 2017 Logo blue */
+	--color-group-background: rgb(238,232,213); /* solarized base2 */
+	--color-group-border: transparent;
+	--color-hr: rgb(238,232,213); /* solarized base2 */
+	--link-decoration: none;
+}
+@media (prefers-contrast: more) {
+	:root {
+		--color-background: #fff;
+		--color-text: #000;
+		--color-link: #004c54; /* Vuo 2017 Logo blue, darker */
+		--color-link-current: #000;
+		--color-term: #214c00;
+		--color-heading: #000;
+		--color-group-background: #fff;
+		--color-group-border: #888;
+		--color-hr: #888;
+		--link-decoration: underline;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-background: rgb(0,43,54); /* solarized base03 */
+		--color-text: rgb(147,161,161); /* solarized base1 */
+		--color-heading: rgb(238,232,213); /* solarized base2 */
+		--color-link: #3abac8; /* Vuo 2017 Logo blue, brighter */
+		--color-link-current: rgb(238,232,213); /* solarized base2 */
+		--color-group-background: rgb(7,54,66); /* solarized base02 */
+		--color-group-border: transparent;
+		--color-hr: rgb(7,54,66); /* solarized base02 */
+	}
+	img {
+		opacity: 80%;
+	}
+}
+@media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+	:root {
+		--color-background: #000;
+		--color-text: #fff;
+		--color-heading: #fff;
+		--color-link: #9cdce3; /* Vuo 2017 Logo blue, brighter */
+		--color-link-current: #fff;
+		--color-group-background: #000;
+		--color-group-border: #888;
+		--color-hr: #888;
+	}
+	img {
+		opacity: 100%;
+	}
+}
+
 body {
-	background-color: rgb(253,246,227); /* solarized base3 */
-	color: rgb(88,110,117); /* solarized base01 */
+	background-color: var(--color-background);
+	color: var(--color-text);
 	font-family: 'PT Sans', 'Open Sans', 'Helvetica Neue', Helvetica, sans-serif;
 	font-weight: 300;
 	font-size: 12pt;
 	line-height: 1.5;
 	margin: 0 auto;
-	padding: 0 1em 0 18em;
+	padding: 0 1em 0 20em;
 	max-width: 800px;
 }
 @media (max-width: 800px) {
@@ -48,21 +105,24 @@ body {
 }
 
 a {
-	color: #0099a9; /* Vuo 2017 Logo blue */
-	text-decoration: none;
+	color: var(--color-link);
+	text-decoration: var(--link-decoration);
 }
 a:hover {
 	text-decoration: underline;
 }
+a.current,
+a.active-trail {
+	color: var(--color-link-current);
+}
 a.current {
 	font-weight: bold;
-	color: rgb(88,110,117);
 }
 
 h2,
 h3,
 h4 {
-	color: #0099a9; /* Vuo 2017 Logo blue */
+	color: var(--color-heading);
 	font-weight: 300;
 	margin: 0px;
 }
@@ -81,13 +141,8 @@ img {
 }
 
 hr {
-	border: 2px solid rgb(238,232,213); /* solarized base2 */
+	border: 2px solid var(--color-hr);
 	clear: both;
-}
-@media (min-width: 800px) {
-	.titlepage hr {
-		margin-left: -17em;
-	}
 }
 
 strong {
@@ -95,7 +150,7 @@ strong {
 }
 
 .example .example-title {
-	background-color: rgb(238,232,213); /* solarized base2 */
+	background-color: var(--color-group-background);
 	padding: 0.8em;
 }
 .example .example-contents pre {
@@ -112,10 +167,11 @@ strong {
 .navheader tr:last-child td:last-child a,
 .navfooter tr:first-child td:first-child a,
 .navfooter tr:first-child td:last-child a {
-	color: rgb(88,110,117); /* solarized base01 */
+	color: var(--color-text);
 	font-size: 1.3em;
 	display: inline-block;
 	padding: 0 .5em;
+	text-decoration: none;
 }
 .navheader tr:last-child td:first-child a:hover,
 .navheader tr:last-child td:last-child a:hover,
@@ -129,13 +185,31 @@ strong {
 	font-weight: normal;
 }
 
+/* Table of contents search widget */
+.toc input {
+	width: 100%;
+	background: var(--color-background);
+	border-radius: 6px;
+	border: 1px solid var(--color-group-border);
+	color: var(--color-link-current);
+	padding: 0.25rem 1rem;
+}
+.toc .search-results {
+	margin-bottom: 0;
+	padding-left: 1rem;
+}
+.toc .search-results li {
+	list-style: circle;
+}
+
+/* Tables */
 .informaltable table {
 	border: none !important;
-	border-bottom: 1px solid rgb(88,110,117) !important; /* solarized base01 */
+	border-bottom: 1px solid var(--color-text) !important;
 	margin: 1em;
 }
 .informaltable table th {
-	border: 1px solid rgb(88,110,117) !important; /* solarized base01 */
+	border: 1px solid var(--color-text) !important;
 	border-left: none !important;
 	border-right: none !important;
 	padding: .1em .5em .1em .5em;
@@ -147,7 +221,7 @@ strong {
 }
 
 .vuo-term {
-	color: rgb(66,153,0); /* not-solarized green */
+	color: var(--color-term);
 	font-weight: 600;
 }
 
@@ -160,8 +234,8 @@ strong {
 .shortcut,
 .vuo-directory,
 .vuo-menu {
-	background-color: rgb(238,232,213); /* solarized base2 */
-	border: 1px solid rgb(147,161,161); /* solarized base1 */
+	background-color: var(--color-group-background);
+	border: 1px solid var(--color-group-border);
 	border-radius: 4px;
 	padding: .02em .2em .02em .2em;
 }
@@ -173,7 +247,8 @@ strong {
 	clear: right;
 	float: right;
 	width: 33%;
-	background-color: rgb(238,232,213); /* solarized base2 */
+	background-color: var(--color-group-background);
+	border: 1px solid var(--color-group-border);
 	border-radius: 6px;
 	font-size: 11pt;
 	margin: 0 0 1em 1em;
@@ -281,17 +356,17 @@ div.toc > p > strong {
 }
 #toc iframe {
 	border: none;
-	width: 13em;
-	margin: 1em 0 0 -17em;
+	width: 15em;
+	margin: 1em 0 0 -19em;
 }
 div.toc {
-	background-color: rgb(238,232,213); /* solarized base2 */
+	background-color: var(--color-group-background);
+	border: 1px solid var(--color-group-border);
 	border-radius: 6px;
 	padding: 1em;
 	position: absolute;
-	width: 13em;
-	margin: 1em 0 0 -17em;
-	min-height: 50em;
+	width: 15em;
+	margin: 1em 0 0 -19em;
 }
 @media (max-width: 800px) {
 	div.toc {
@@ -302,7 +377,7 @@ div.toc {
 	display: none;
 }
 .titlepage div.toc {
-	margin-top: 13em;
+	margin-top: 11em;
 }
 div.toc p {
 	margin: 0;
@@ -314,22 +389,60 @@ dl.toc {
 }
 ul.toc li,
 dl.toc dt {
-	list-style: none;
+	margin-left: 1rem;
+	list-style: circle;
 }
 ul.toc ul,
 dl.toc dl {
-	padding: 0 0 0 1.2em;
-	font-size: 84%;
-	opacity: 0.8;
+	padding: 0;
 }
 dl.toc dd {
 	margin: 0;
 }
+#toc details {
+	margin-left: 1rem;
+}
+#toc details > summary {
+	display: block;
+	position: relative;
+}
+#toc details > summary::-webkit-details-marker {
+	display: none;
+}
+#toc details > summary::before {
+	content: "▶";
+	position: absolute;
+	font-size: 60%;
+	left: -0.9rem;
+	top: 0.3rem;
+	color: var(--color-link);
+}
+#toc details[open] > summary::before {
+	content: "▼";
+	color: var(--color-link-current);
+}
+
+
 /* Scale down this image so it fits next to the "tip" sidebars (rather than leaving a gap). */
 .quickstart-noiseglass-output img {
 	width: 52%;
 }
 
+/* Contributors page */
+#contributors .itemizedlist,
+#software-and-resources .itemizedlist {
+	column-width: 10em;
+}
+#contributors .itemizedlist ul,
+#software-and-resources .itemizedlist ul {
+	margin-top: 0;
+}
+#contributors .itemizedlist ul p,
+#software-and-resources .itemizedlist ul p {
+	margin: 0;
+}
+
+/* Glossary page */
 #glossary h4 {
 	color: inherit;
 	font-size: inherit;

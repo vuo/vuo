@@ -1,5 +1,6 @@
 VuoTest(NAME TestCompilingAndLinking
 	SOURCE TestCompilingAndLinking.cc
+	FIXTURE TestCompilingAndLinking
 
 	# This test modifies shared caches, which can trip up other tests.
 	RUN_SERIAL ON
@@ -10,7 +11,6 @@ target_link_libraries(TestCompilingAndLinking
 )
 
 VuoCompileNodes(
-	node-TestCompilingAndLinking/vuo.test.doNothing.c
 	node-TestCompilingAndLinking/vuo.test.triggerCarryingFloat.c
 	node-TestCompilingAndLinking/vuo.test.triggerCarryingInteger.c
 	node-TestCompilingAndLinking/vuo.test.triggerCarryingPoint3d.c
@@ -39,6 +39,7 @@ set_target_properties(UserDylib PROPERTIES
 add_dependencies(TestCompilingAndLinking
 	UserDylib
 )
+add_custom_command(TARGET UserDylib POST_BUILD COMMAND ${codesignAdHoc} libUserDylib.dylib)
 
 # Delete modules installed by this test.
 add_test(NAME TestCompilingAndLinkingCleanup

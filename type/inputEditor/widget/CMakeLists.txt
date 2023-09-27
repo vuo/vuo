@@ -64,6 +64,7 @@ target_link_libraries(VuoWidget
 	# For unknown reasons, CMake 3.16 duplicates VuoAudio.o and other object files above on the linker command line,
 	# unless we list the frameworks _after_ the objects.
 	"-framework AVFoundation"
+	"-framework Carbon"
 	"-framework CFNetwork"
 	"-framework CoreAudio"
 	"-framework CoreMIDI"

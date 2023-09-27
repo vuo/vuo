@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorScreen implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -30,9 +30,9 @@ VuoInputEditorMenuItem * VuoInputEditorScreen::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	VuoScreen mainScreen      = {VuoScreenType_Active,   -1,-1,"",false,{0,0},0,0,0,0};
-	VuoScreen primaryScreen   = {VuoScreenType_Primary,  -1,-1,"",false,{0,0},0,0,0,0};
-	VuoScreen secondaryScreen = {VuoScreenType_Secondary,-1,-1,"",false,{0,0},0,0,0,0};
+    VuoScreen mainScreen      = {VuoScreenType_Active,    -1, -1, "", false, {0, 0}, 0, 0, 0, 0, false};
+    VuoScreen primaryScreen   = {VuoScreenType_Primary,   -1, -1, "", false, {0, 0}, 0, 0, 0, 0, false};
+    VuoScreen secondaryScreen = {VuoScreenType_Secondary, -1, -1, "", false, {0, 0}, 0, 0, 0, 0, false};
 
 	optionsTree->addItem(new VuoInputEditorMenuItem("Screen with Active Window", VuoScreen_getJson(mainScreen)));
 	optionsTree->addItem(new VuoInputEditorMenuItem("Primary Screen", VuoScreen_getJson(primaryScreen)));

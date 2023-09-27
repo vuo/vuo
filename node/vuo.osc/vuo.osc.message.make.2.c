@@ -2,18 +2,12 @@
  * @file
  * vuo.osc.message.make.2 node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoOscMessage.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#include <json-c/json.h>
-#pragma clang diagnostic pop
 
 VuoModuleMetadata({
 					 "title" : "Make Message (2)",

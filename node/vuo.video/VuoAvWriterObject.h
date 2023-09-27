@@ -2,7 +2,7 @@
  * @file
  * VuoAvWriter implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,7 +10,11 @@
 #include "VuoMacOSSDKWorkaround.h"
 #import <Foundation/Foundation.h>
 
+#include "VuoImage.h"
+#include "VuoAudioSamples.h"
+#include "VuoList_VuoAudioSamples.h"
 #include "VuoMovieFormat.h"
+#include "VuoReal.h"
 
 /**
 * Internal AVWriter implementation.  Use VuoAvWriter instead.

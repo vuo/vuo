@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Expected outputs for the vuo.logic.areAllTrue node.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"null":       {"firingPort":"values", "inputPortValues":{"values":null          }, "outputPortValues":{"allTrue":true }},
+	"zero":       {"firingPort":"values", "inputPortValues":{"values":[            ]}, "outputPortValues":{"allTrue":true }},
+	"one false":  {"firingPort":"values", "inputPortValues":{"values":[false       ]}, "outputPortValues":{"allTrue":false}},
+	"one true":   {"firingPort":"values", "inputPortValues":{"values":[true        ]}, "outputPortValues":{"allTrue":true }},
+	"two false":  {"firingPort":"values", "inputPortValues":{"values":[false, false]}, "outputPortValues":{"allTrue":false}},
+	"two true":   {"firingPort":"values", "inputPortValues":{"values":[true,  true ]}, "outputPortValues":{"allTrue":true }},
+	"two":        {"firingPort":"values", "inputPortValues":{"values":[false, true ]}, "outputPortValues":{"allTrue":false}},
+}}

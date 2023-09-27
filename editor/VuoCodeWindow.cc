@@ -2,7 +2,7 @@
  * @file
  * VuoCodeWindow implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -53,7 +53,7 @@ VuoCodeWindow::VuoCodeWindow(const string &sourcePath)
 {
 	stages = nullptr;
 	issueList = nullptr;
-	issues = new VuoShaderIssues();  // VuoCodeGutter::paintEvent wants this to be non-null.
+	issues = std::make_shared<VuoShaderIssues>();  // VuoCodeGutter::paintEvent wants this to be non-null.
 	saveAction = nullptr;
 	toggleInputPortSidebarAction = nullptr;
 	toggleDocumentationSidebarAction = nullptr;
@@ -160,7 +160,6 @@ VuoCodeWindow::~VuoCodeWindow(void)
 	relinquishSourcePath();
 
 	delete toolbar;
-	delete issues;
 	delete wrapperComposition;  // deletes compiler
 }
 
@@ -682,7 +681,6 @@ void VuoCodeWindow::setSourcePath(const string &sourcePath)
 	catch (VuoException &e)
 	{
 		delete toolbar;
-		delete issues;
 		delete wrapperComposition;  // deletes compiler
 		throw;
 	}
@@ -919,13 +917,12 @@ void VuoCodeWindow::bringStoredShaderInSyncWithPublishedInputPorts(VuoCompilerPu
  */
 void VuoCodeWindow::setIssues(VuoCompilerIssues *compilerIssues)
 {
-	delete issues;
-
-	VuoShaderIssues *issues = new VuoShaderIssues();
+	issues = std::make_shared<VuoShaderIssues>();
 	for (VuoCompilerIssue compilerIssue : compilerIssues->getList())
-		issues->addIssue(VuoShaderFile::Fragment, compilerIssue.getLineNumber(), compilerIssue.getDetails(false));
-
-	this->issues = issues;
+	{
+		shared_ptr<VuoShaderIssues> shaderIssues = compilerIssue.getShaderIssues();
+		issues->issues().insert(issues->issues().end(), shaderIssues->issues().begin(), shaderIssues->issues().end());
+	}
 
 	// Render the error icons in the gutter.
 	if (stages)

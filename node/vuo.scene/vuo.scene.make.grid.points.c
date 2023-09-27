@@ -2,12 +2,11 @@
  * @file
  * vuo.scene.make.grid.points node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include <OpenGL/CGLMacro.h>	// GL_NONE
 
 VuoModuleMetadata({
@@ -15,7 +14,7 @@ VuoModuleMetadata({
 	"keywords": [
 		"3D", "heightmap", "plane", "subdivision", "square", "rectangle", "shape",
 	],
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"genericTypes": {
 		"VuoGenericType1": {
 			"compatibleTypes": [ "VuoShader", "VuoColor", "VuoImage" ],
@@ -51,7 +50,8 @@ void nodeInstanceEvent
 )
 {
 	// If the structure hasn't changed, just reuse the existing GPU mesh data.
-	if (rows == (*context)->rows
+	if (*object
+	 && rows == (*context)->rows
 	 && columns == (*context)->columns)
 	{
 		*object = VuoSceneObject_copy(*object);

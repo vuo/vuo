@@ -2,17 +2,17 @@
  * @file
  * VuoImageColorDepth C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoImageColorDepth_h
+#define VuoImageColorDepth_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoImageColorDepth_struct { void *l; } * VuoList_VuoImageColorDepth;
-#define VuoList_VuoImageColorDepth_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -30,6 +30,8 @@ typedef enum {
 	VuoImageColorDepth_16,			// 16 bits per channel (64 bits per RGBA pixel)
 	VuoImageColorDepth_32,			// 32 bits per channel (128 bits per RGBA pixel)
 } VuoImageColorDepth;
+
+#include "VuoList_VuoImageColorDepth.h"
 
 unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, VuoImageColorDepth imageColorDepth);
 
@@ -50,3 +52,9 @@ void VuoImageColorDepth_release(VuoImageColorDepth value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

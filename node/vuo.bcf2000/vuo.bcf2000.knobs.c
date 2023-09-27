@@ -2,15 +2,15 @@
  * @file
  * vuo.midi.bcf2000.knobs node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoMidi.h"
 #include "VuoRealRegulation.h"
 #include "VuoScribbleStrip.h"
+#include "VuoSmooth_VuoReal.h"
 
 VuoModuleMetadata({
 					 "title" : "Receive BCF2000 Knobs",
@@ -24,14 +24,6 @@ VuoModuleMetadata({
 						 "exampleCompositions" : [ ]
 					 }
 				 });
-
-#define type VuoReal
-#define zeroValue 0
-#define add VuoReal_add
-#define subtract VuoReal_subtract
-#define multiply VuoReal_multiply
-#define bezier3 VuoReal_bezier3
-#include "VuoSmooth.h"
 
 struct nodeInstanceData
 {

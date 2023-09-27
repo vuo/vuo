@@ -7,6 +7,11 @@ target_sources(vuo.text.types PRIVATE
 	VuoNumberFormat.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoControlCode.cc
+	VuoList_VuoNumberFormat.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.text.split.c
 	vuo.text.split.stream.c

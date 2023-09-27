@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.4.2 LANGUAGES NONE)
+project(Vuo VERSION 2.4.3 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -72,7 +72,7 @@ set(conanBuildInfo "${PROJECT_BINARY_DIR}/conanbuildinfo.cmake")
 set(CMAKE_TOOLCHAIN_FILE "${PROJECT_BINARY_DIR}/conan_toolchain.cmake")
 set_directory_properties(PROPERTIES CMAKE_CONFIGURE_DEPENDS ${conanFile})
 if (NOT EXISTS ${conanBuildInfo} OR ${conanFile} IS_NEWER_THAN ${conanBuildInfo})
-	execute_process(COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin:/bin:/usr/bin conan install ${PROJECT_SOURCE_DIR} RESULT_VARIABLE conanStatus)
+	execute_process(COMMAND conan install ${PROJECT_SOURCE_DIR} RESULT_VARIABLE conanStatus)
 	if (${conanStatus})
 		message(FATAL_ERROR "Couldn't install dependencies using Conan.")
 	endif()
@@ -121,15 +121,6 @@ endif()
 list(JOIN CMAKE_OSX_ARCHITECTURES " " buildArch)
 message(STATUS "Building to run on: ${buildArch}")
 
-include_directories(SYSTEM
-	${CONAN_INCLUDE_DIRS_JSONC}
-	${CONAN_INCLUDE_DIRS_LLVM}
-	${CONAN_INCLUDE_DIRS_ZEROMQ}
-)
-include_directories(
-	${PROJECT_BINARY_DIR}/base/config # For VuoConfig.h and coreTypes.h
-)
-
 set(CMAKE_C_COMPILER "${CONAN_BIN_DIRS_LLVM}/clang")
 set(CMAKE_CXX_COMPILER "${CONAN_BIN_DIRS_LLVM}/clang++")
 set(CMAKE_C_STANDARD 99)
@@ -151,13 +142,14 @@ string(JOIN " " commonFlags
 	# https://b33p.net/kosada/vuo/vuo/-/issues/19064
 	-fno-omit-frame-pointer
 
-	# Sync these warnings flags with VuoCompiler::readModuleFromC.
+	# Sync these warnings flags with VuoCModuleCompiler::createCompilerInstance.
 	-Wall
 	-Wextra
 	-Wimplicit-fallthrough
 	-Wno-unused-parameter
 	-Wno-sign-compare
 	-Werror=implicit
+	-Wtautological-compare
 )
 string(JOIN " " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}"
 	-std=c99
@@ -185,9 +177,15 @@ set(CMAKE_OBJC_FLAGS_RELEASE -Oz)
 set(CMAKE_OBJCXX_FLAGS_RELEASE -Oz)
 set(CMAKE_BUILD_TYPE Release)
 
-# Reduce file size.
-# Explicitly specify the SDK version, since we still want some old behaviors.
-set(CMAKE_SHARED_LINKER_FLAGS "-Xlinker -no_function_starts -Xlinker -dead_strip -Wl,-sdk_version,10.10")
+string(JOIN " " CMAKE_SHARED_LINKER_FLAGS
+	# Ensure Clang uses Vuo's ld (rather than the system linker (/usr/bin/ld) or whatever happens to be in the PATH).
+	-fuse-ld=${CONAN_BIN_DIRS_LD64}/ld
+	# Reduce file size.
+	-Xlinker -no_function_starts
+	# Explicitly specify the SDK version, since we still want some old behaviors.
+	-Xlinker -dead_strip -Wl,-sdk_version,10.10
+)
+
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 set(CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
@@ -276,6 +274,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Test MacExtras Network PrintSupport
 if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/empty.c)
 	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.c "")
 	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cc "")
+	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.m "")
 	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.mm "")
 endif()
 
@@ -285,9 +284,39 @@ function (VuoGeneratePCH target)
 
 	add_library(${arg_TARGET} OBJECT)
 	target_compile_definitions(${arg_TARGET} PRIVATE ${arg_DEFINITIONS})
-	target_sources(${arg_TARGET} PRIVATE vuo.pch)
-	target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/common)
-	target_precompile_headers(${arg_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/vuo.pch)
+	target_include_directories(${arg_TARGET} PRIVATE
+		${PROJECT_BINARY_DIR}/base/config
+		${PROJECT_SOURCE_DIR}/common
+	)
+	target_include_directories(${arg_TARGET} SYSTEM PRIVATE
+		${CONAN_INCLUDE_DIRS_JSONC}
+		${CONAN_INCLUDE_DIRS_ZEROMQ}
+	)
+
+	if ("VUO_PCH_DEFAULT" IN_LIST arg_DEFINITIONS)
+		list(APPEND headers ${PROJECT_SOURCE_DIR}/vuo.pch)
+	endif()
+	if ("VUO_PCH_LLVM" IN_LIST arg_DEFINITIONS)
+		target_include_directories(${arg_TARGET} SYSTEM PRIVATE
+			${CONAN_INCLUDE_DIRS_LLVM}
+		)
+	endif()
+	if ("VUO_PCH_MODULE" IN_LIST arg_DEFINITIONS)
+		list(APPEND headers ${PROJECT_SOURCE_DIR}/node/module.h)
+		target_include_directories(${arg_TARGET} PRIVATE
+			${PROJECT_SOURCE_DIR}/library
+		)
+	endif()
+	if ("VUO_PCH_TYPE" IN_LIST arg_DEFINITIONS)
+		list(APPEND headers ${PROJECT_SOURCE_DIR}/type/type.h)
+		target_include_directories(${arg_TARGET} PRIVATE
+			${PROJECT_SOURCE_DIR}/library
+			${PROJECT_SOURCE_DIR}/node
+		)
+	endif()
+
+	target_sources(${arg_TARGET} PRIVATE ${headers})
+	target_precompile_headers(${arg_TARGET} PRIVATE ${headers})
 
 	# Save time by only building each PCH for the languages that actually use it.
 	if ("C" IN_LIST arg_LANGUAGES)
@@ -295,6 +324,9 @@ function (VuoGeneratePCH target)
 	endif()
 	if ("CXX" IN_LIST arg_LANGUAGES)
 		target_sources(${arg_TARGET} PRIVATE empty.cc)
+	endif()
+	if ("OBJC" IN_LIST arg_LANGUAGES)
+		target_sources(${arg_TARGET} PRIVATE empty.m)
 	endif()
 	if ("OBJCXX" IN_LIST arg_LANGUAGES)
 		target_sources(${arg_TARGET} PRIVATE empty.mm)
@@ -306,15 +338,23 @@ function (VuoGeneratePCH target)
 
 	if ("VUO_PCH_FRAMEWORK" IN_LIST arg_DEFINITIONS)
 		target_compile_options(${arg_TARGET} PRIVATE "SHELL:-F ${PROJECT_BINARY_DIR}/lib")
-		target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers)
-		add_dependencies(${arg_TARGET} VuoFrameworkDylib)
+		target_include_directories(${arg_TARGET} PRIVATE ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Headers)
+		add_dependencies(${arg_TARGET}
+			VuoFrameworkDylib
+			VuoFrameworkHeaders
+		)
 	endif()
 endfunction()
-VuoGeneratePCH(TARGET VuoPCHDefault              LANGUAGES C CXX OBJCXX    DEFINITIONS                                             )
-VuoGeneratePCH(TARGET VuoPCHLLVM                 LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM                                )
-VuoGeneratePCH(TARGET VuoPCHLLVMQt               LANGUAGES   CXX OBJCXX    DEFINITIONS VUO_PCH_LLVM VUO_PCH_QT                     )
-VuoGeneratePCH(TARGET VuoPCHQt                   LANGUAGES   CXX OBJCXX    DEFINITIONS              VUO_PCH_QT                     )
-VuoGeneratePCH(TARGET VuoPCHQTestVuoFramework    LANGUAGES   CXX OBJCXX    DEFINITIONS              VUO_PCH_QTEST VUO_PCH_FRAMEWORK)
+VuoGeneratePCH(TARGET VuoPCHDefault              LANGUAGES C CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT                                                                         )
+VuoGeneratePCH(TARGET VuoPCHLLVM                 LANGUAGES   CXX                DEFINITIONS VUO_PCH_DEFAULT VUO_PCH_LLVM                                                            )
+VuoGeneratePCH(TARGET VuoPCHLLVMModule           LANGUAGES   CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT VUO_PCH_LLVM                                 VUO_PCH_MODULE             )
+VuoGeneratePCH(TARGET VuoPCHLLVMQtModule         LANGUAGES   CXX                DEFINITIONS VUO_PCH_DEFAULT VUO_PCH_LLVM VUO_PCH_QT                      VUO_PCH_MODULE             )
+VuoGeneratePCH(TARGET VuoPCHLLVMQtType           LANGUAGES   CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT VUO_PCH_LLVM VUO_PCH_QT                                     VUO_PCH_TYPE)
+VuoGeneratePCH(TARGET VuoPCHQt                   LANGUAGES   CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT              VUO_PCH_QT                                                 )
+VuoGeneratePCH(TARGET VuoPCHQtModule             LANGUAGES   CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT              VUO_PCH_QT                      VUO_PCH_MODULE             )
+VuoGeneratePCH(TARGET VuoPCHQTestVuoFramework    LANGUAGES   CXX      OBJCXX    DEFINITIONS VUO_PCH_DEFAULT              VUO_PCH_QTEST VUO_PCH_FRAMEWORK                            )
+VuoGeneratePCH(TARGET VuoPCHModule               LANGUAGES   CXX                DEFINITIONS VUO_PCH_DEFAULT                                              VUO_PCH_MODULE             )
+VuoGeneratePCH(TARGET VuoPCHModuleOnly           LANGUAGES   CXX OBJC OBJCXX    DEFINITIONS                                                              VUO_PCH_MODULE             )
 
 # Adds a precompiled (or prefix) header to the sources in the specified target.
 # The second argument specifies which PCH to use (none for default, LLVM for VuoPCHLLVM, …).
@@ -376,6 +416,7 @@ endif()
 add_subdirectory(type)
 add_subdirectory(base)
 add_subdirectory(compiler)
+add_subdirectory(runner)
 add_subdirectory(runtime)
 add_subdirectory(library)
 add_subdirectory(node)

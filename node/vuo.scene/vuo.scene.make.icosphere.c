@@ -2,12 +2,11 @@
  * @file
  * vuo.scene.make.icosphere node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "stdlib.h"
 #include "string.h"
 #include "stdio.h"
@@ -36,19 +35,6 @@ static const float PI = 3.14159265359;
 static const float ICO_RADIUS = .5f;
 
 #define IS_POLE(v) (fabs(v.y) > .9999)
-
-static inline VuoPoint4d VuoPoint4d_multiply3d(VuoPoint4d a, float b)
-{
-	VuoPoint4d v =
-	{
-		a.x * b,
-		a.y * b,
-		a.z * b,
-		a.w
-	};
-
-	return v;
-}
 
 /**
  * Subdivides a set of vertices (wound as individual triangles) on an icosphere.

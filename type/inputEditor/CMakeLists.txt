@@ -21,7 +21,8 @@ function (VuoInputEditor)
 		VuoHeap
 		VuoWidget
 	)
-	VuoPCH(${arg_NAME} Qt)
+	add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/lib/lib${arg_NAME}.dylib)
+	VuoPCH(${arg_NAME} QtModule)
 
 	add_dependencies(VuoInputEditors ${arg_NAME})
 

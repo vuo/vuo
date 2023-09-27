@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @createdInVuoVersion 2.4.1
+ * @lastSavedInVuoVersion 2.4.1
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,45" _started_eventThrottling="enqueue"];
+ShareList [type="vuo.data.share.list.VuoText" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="240,60"];
+
+FireOnStart:started -> ShareList:value;
+}

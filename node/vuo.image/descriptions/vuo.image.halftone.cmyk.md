@@ -8,7 +8,7 @@ Makes the image look like it was printed, by passing it through cyan, magenta, y
    - `Color Offset` — The amount, in Vuo Coordinates, that the halftone screens are moved from their ideal positions.
    - `Color Offset Angle` — The rotation of the halftone screen offset.  This only has an effect if `Color Offset` is nonzero.
 
-Thanks to [Stefan Gustavson](http://webstaff.itn.liu.se/~stegu76/) for the shader this node was based on.
+Thanks to [Stefan Gustavson](https://liu.se/en/employee/stegu76) for the shader this node was based on.
 
 ![](mountains.png)
 

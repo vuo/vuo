@@ -2,17 +2,17 @@
  * @file
  * VuoCurveEasing C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoCurveEasing_h
+#define VuoCurveEasing_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoCurveEasing_struct { void *l; } * VuoList_VuoCurveEasing;
-#define VuoList_VuoCurveEasing_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,6 +32,8 @@ typedef enum {
 	VuoCurveEasing_Middle
 } VuoCurveEasing;
 
+#include "VuoList_VuoCurveEasing.h"
+
 VuoCurveEasing VuoCurveEasing_makeFromJson(struct json_object * js);
 struct json_object * VuoCurveEasing_getJson(const VuoCurveEasing value);
 VuoList_VuoCurveEasing VuoCurveEasing_getAllowedValues(void);
@@ -49,3 +51,9 @@ void VuoCurveEasing_release(VuoCurveEasing value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

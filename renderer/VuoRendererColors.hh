@@ -2,7 +2,7 @@
  * @file
  * VuoRendererColors interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -117,4 +117,3 @@ private:
 	static const int subtleHighlightingLighteningFactor; ///< The factor by which lightness is increased for components drawn in @c subtleHighlight as opposed to @c standardHighlight mode.
 	static const int activityFadeDuration; ///< Time period, in ms, over which a component fades to its minimum alpha level following activity (e.g., node execution) while in 'Show Events' mode.
 };
-

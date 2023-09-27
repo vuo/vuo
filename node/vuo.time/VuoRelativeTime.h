@@ -2,20 +2,19 @@
  * @file
  * VuoRelativeTime C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoInteger.h"
 #include "VuoReal.h"
-
-/// @{ List type.
-typedef void * VuoList_VuoRelativeTime;
-#define VuoList_VuoRelativeTime_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -32,11 +31,12 @@ typedef void * VuoList_VuoRelativeTime;
  */
 typedef double VuoRelativeTime;
 
+#define VuoRelativeTime_SUPPORTS_COMPARISON
+
 VuoRelativeTime VuoRelativeTime_makeFromJson(struct json_object *js);
 struct json_object *VuoRelativeTime_getJson(const VuoRelativeTime value);
 char *VuoRelativeTime_getSummary(const VuoRelativeTime value);
 
-#define VuoRelativeTime_SUPPORTS_COMPARISON
 bool VuoRelativeTime_areEqual(const VuoRelativeTime valueA, const VuoRelativeTime valueB);
 bool VuoRelativeTime_isLessThan(const VuoRelativeTime valueA, const VuoRelativeTime valueB);
 
@@ -56,3 +56,6 @@ void VuoRelativeTime_release(VuoRelativeTime value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

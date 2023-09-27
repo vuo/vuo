@@ -2,18 +2,17 @@
  * @file
  * vuo.uuid C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
-struct json_object;
+#ifndef VuoUuid_h
+#define VuoUuid_h
 
-/// @{ List type.
-typedef void * VuoList_VuoUuid;
-#define VuoList_VuoUuid_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -77,3 +76,9 @@ static inline bool VuoUuid_areEqual(const VuoUuid value1, const VuoUuid value2) 
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

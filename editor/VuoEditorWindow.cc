@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindow implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -11,6 +11,7 @@
 #include "ui_VuoEditorWindow.h"
 
 #include "VuoCompilerCable.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerComment.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerException.hh"
@@ -80,8 +81,6 @@
 #include "VuoShaderFile.hh"
 #include "VuoTitleEditor.hh"
 #include "VuoInputEditorSession.hh"
-
-#include "type.h"
 
 #ifdef __APPLE__
 #include <objc/objc-runtime.h>
@@ -1341,8 +1340,11 @@ void VuoEditorWindow::disambiguatePasteRequest()
 		pasteCompositionComponents();
 	else if (!clipboardText.isEmpty())
 	{
-		on_showNodeLibrary_triggered();
-		nl->searchForText(clipboardText);
+		if (nl->isHidden())
+			nl->emitNodeLibraryHiddenOrUnhidden(true);
+
+		nl->focusTextFilter();
+		nl->insertSearchText(clipboardText);
 	}
 }
 
@@ -2124,12 +2126,11 @@ void VuoEditorWindow::adjustInputPortCountForNode(VuoRendererNode *node, int inp
 	VuoCompilerNodeClass *origNodeClass = node->getBase()->getNodeClass()->getCompiler();
 	VuoCompilerNodeClass *newNodeClass = NULL;
 
-	// Case: "Make List" node
-	if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(origNodeClass->getBase()->getClassName()))
+	unsigned long origItemCount;
+	string itemTypeName;
+	if (VuoCompilerMakeListNodeClass::parseNodeClassName(origNodeClass->getBase()->getClassName(), origItemCount, itemTypeName))
 	{
-		int origNumPorts = ((VuoCompilerMakeListNodeClass *)(origNodeClass))->getItemCount();
-		VuoCompilerType *listType = ((VuoCompilerMakeListNodeClass *)(origNodeClass))->getListType();
-		string newMakeListNodeClassName = VuoCompilerMakeListNodeClass::getNodeClassName(origNumPorts+inputPortCountDelta, listType);
+		string newMakeListNodeClassName = VuoCompilerMakeListNodeClass::buildNodeClassName(origItemCount + inputPortCountDelta, itemTypeName);
 		newNodeClass = compiler->getNodeClass(newMakeListNodeClassName);
 	}
 
@@ -2204,7 +2205,8 @@ VuoRendererNode * VuoEditorWindow::specializePortNetwork(VuoRendererPort *port, 
 		undoStack->beginMacro(tr(commandText.c_str()));
 
 	VuoRendererNode *originalNode = port->getUnderlyingParentNode();
-	set<VuoPort *> networkedGenericPorts = composition->getBase()->getCompiler()->getCorrelatedGenericPorts(originalNode->getBase(), port->getBase(), false);
+	set<pair<VuoNode *, VuoPort *>> networkedGenericPorts = composition->getBase()->getCompiler()->getCorrelatedGenericPorts(originalNode->getBase(),
+																															 port->getBase(), false);
 
 	VuoRendererNode *newNode = NULL;
 	try
@@ -2219,16 +2221,19 @@ VuoRendererNode * VuoEditorWindow::specializePortNetwork(VuoRendererPort *port, 
 			nodesToSpecialize[originalNode] = newNode;
 
 			// Specialize the parent node of each port in the target port's connected generic network.
-			foreach (VuoPort *networkedPort, networkedGenericPorts)
+			for (pair<VuoNode *, VuoPort *> i : networkedGenericPorts)
 			{
+				VuoNode *networkedNode = i.first;
+				VuoPort *networkedPort = i.second;
+
 				// If we have specialized this port already, there is no need to do so again.
-				VuoRendererNode *originalNetworkedNode = networkedPort->getRenderer()->getUnderlyingParentNode();
+				VuoRendererNode *originalNetworkedNode = networkedNode->getRenderer();
 				VuoRendererNode *mostRecentVersionOfNetworkedNode = originalNetworkedNode;
 				VuoPort *mostRecentVersionOfNetworkedPort = networkedPort;
-				map<VuoRendererNode *, VuoRendererNode *>::iterator i = nodesToSpecialize.find(originalNetworkedNode);
-				if (i != nodesToSpecialize.end())
+				auto foundIter = nodesToSpecialize.find(originalNetworkedNode);
+				if (foundIter != nodesToSpecialize.end())
 				{
-					VuoRendererNode *specializedNode = i->second;
+					VuoRendererNode *specializedNode = foundIter->second;
 					if (!specializedNode)
 					{
 						VuoCompilerIssue issue(VuoCompilerIssue::Error, "specializing node", "",
@@ -3541,7 +3546,7 @@ void VuoEditorWindow::mouseMoveEvent(QMouseEvent *event)
  */
 void VuoEditorWindow::initializeNodeLibrary(VuoCompiler *nodeLibraryCompiler, VuoNodeLibrary::nodeLibraryDisplayMode nodeLibraryDisplayMode, VuoNodeLibrary::nodeLibraryState nodeLibraryState, VuoNodeLibrary *floater)
 {
-	ownedNodeLibrary = new VuoNodeLibrary(nodeLibraryCompiler, this, nodeLibraryDisplayMode);
+	ownedNodeLibrary = new VuoNodeLibrary(nodeLibraryCompiler, composition->getModuleManager(), this, nodeLibraryDisplayMode);
 	ownedNodeLibrary->setObjectName(composition? composition->getBase()->getMetadata()->getName().c_str() : "");
 
 	nl = ownedNodeLibrary;
@@ -4646,7 +4651,7 @@ void VuoEditorWindow::on_showNodeLibrary_triggered(void)
 	if (nl->isHidden())
 		nl->emitNodeLibraryHiddenOrUnhidden(true);
 
-	nl->focusTextFilter();
+	nl->focusTextFilterAndSelectAll();
 }
 
 /**

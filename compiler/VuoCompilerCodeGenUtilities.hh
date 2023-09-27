@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -96,6 +96,7 @@ public:
 	static void generateSetPortContextEvent(Module *module, BasicBlock *block, Value *portContextValue, Value *eventValue);
 	static void generateSetPortContextData(Module *module, BasicBlock *block, Value *portContextValue, Value *dataValue, VuoCompilerType *dataType);
 	static void generateSetPortContextTriggerFunction(Module *module, BasicBlock *block, Value *portContextValue, Value *triggerFunctionValue);
+	static void generateSetPortContextEventBlocking(Module *module, BasicBlock *block, Value *portContextValue, VuoPortClass::EventBlocking eventBlocking);
 	static Value * generateGetPortContextEvent(Module *module, BasicBlock *block, Value *portContextValue);
 	static Value * generateGetPortContextDataVariable(Module *module, BasicBlock *block, Value *portContextValue, VuoCompilerType *dataType);
 	static Value * generateGetPortContextDataVariableAsVoidPointer(Module *module, BasicBlock *block, Value *portContextValue);
@@ -115,7 +116,11 @@ public:
 	static Value * generateGetNodeContextClaimingEventId(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static Value * generateGetNodeContextExecutingGroup(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static Value * generateGetNodeContextOutputEvent(Module *module, BasicBlock *block, Value *nodeContextValue, size_t index);
+
+	static Value * generateEventHitAnyPort(Module *module, BasicBlock *block, Value *nodeContextValue);
+	static void generateSetOutputEventsAfterNodeExecution(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static void generateResetNodeContextEvents(Module *module, BasicBlock *block, Value *nodeContextValue);
+
 	static void generateStartedExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue);
 	static void generateSpunOffExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue);
 	static Value * generateFinishedExecutingEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventIdValue);

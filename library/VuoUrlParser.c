@@ -26,8 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoUrlParser"

@@ -27,8 +27,6 @@
  * IN THE SOFTWARE.
  */
 
-#include "module.h"
-
 extern "C"
 {
 #ifdef VUO_COMPILER

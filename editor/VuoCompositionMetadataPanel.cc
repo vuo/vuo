@@ -2,7 +2,7 @@
  * @file
  * VuoCompositionMetadataPanel implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -35,6 +35,7 @@ VuoCompositionMetadataPanel::VuoCompositionMetadataPanel(VuoComposition *composi
 	textLabel->setText(generateCompositionMetadataText());
 	textLabel->setTextInteractionFlags(textLabel->textInteractionFlags() | Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
 	textLabel->setOpenExternalLinks(false);
+	connect(textLabel, &QLabel::linkHovered, this, &VuoCompositionMetadataPanel::linkHovered);
 	connect(textLabel, &QLabel::linkActivated, this, &VuoCompositionMetadataPanel::handleMetadataLinkClick);
 
 	// Layout

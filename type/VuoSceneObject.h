@@ -2,15 +2,15 @@
  * @file
  * VuoSceneObject C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoSceneObject_h
+#define VuoSceneObject_h
 
 #include "VuoCubemap.h"
-#include "VuoHeap.h"
 #include "VuoText.h"
 #include "VuoMesh.h"
 #include "VuoShader.h"
@@ -23,11 +23,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// @{ List type.
-typedef const struct VuoList_VuoSceneObject_struct { void *l; } * VuoList_VuoSceneObject;
-#define VuoList_VuoSceneObject_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -65,6 +60,8 @@ typedef enum
  */
 typedef const struct { void *l; } * VuoSceneObject;
 
+#include "VuoList_VuoSceneObject.h"
+
 uint64_t VuoSceneObject_getNextId(void);
 
 // Constructors
@@ -86,7 +83,7 @@ VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font, VuoBoolean sc
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance);
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax);
-VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal vignetteWidth, VuoReal vignetteSharpness);
+VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, float distanceMin, float distanceMax, VuoReal vignetteWidth, VuoReal vignetteSharpness);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
 VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness);
 VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, VuoPoint3d position, float range, float sharpness);
@@ -194,4 +191,6 @@ void VuoSceneObject_release(VuoSceneObject value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

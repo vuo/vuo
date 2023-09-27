@@ -2,7 +2,7 @@
  * @file
  * TestCompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -63,7 +63,7 @@ public:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		VuoCompilerIssues issues;
 		compiler->compileCompositionString(composition, compiledCompositionPath, true, &issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
 		runner->setRuntimeChecking(true);
@@ -139,9 +139,9 @@ public:
 	/**
 	 * Starts the composition, fires the `Init` event, and waits for it to complete.
 	 */
-	TestCompositionPerformanceDelegate(string composition, string compositionDir, VuoCompiler *compiler)
+	TestCompositionPerformanceDelegate(string composition, string compositionDir, string compositionName)
 	{
-		runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(composition, "TestCompositionPerformance", compositionDir, nullptr);
+		runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(composition, compositionName, compositionDir, nullptr);
 		runner->setRuntimeChecking(false);  // This test is for performance, not correctness.
 		runner->setDelegate(this);
 		runner->start();
@@ -185,7 +185,6 @@ public:
 
 	TestCompositions(int argc, char *argv[])
 	{
-		compiler = nullptr;
 		if (argc > 1)
 		{
 			// If a single test is specified on the command line,
@@ -197,19 +196,8 @@ public:
 private:
 
 	QString singleTestDatum;
-	VuoCompiler *compiler;
 
 private slots:
-
-	void initTestCase()
-	{
-		compiler = initCompiler();
-	}
-
-	void cleanupTestCase()
-	{
-		delete compiler;
-	}
 
 	void testReadPortConfigurationsFromJSONFile()
 	{
@@ -245,6 +233,9 @@ private slots:
 		QTest::addColumn< string >("portConfigurationPath");
 		QTest::addColumn< string >("composition");
 
+		VuoCompiler *compiler = new VuoCompiler("/TestCompositions/testRunningCompositions");
+		VuoDefer(^{ delete compiler; });
+
 		QDir compositionDir = getCompositionDir();
 		QStringList filter("*.json");
 		QStringList portConfigurationFileNames = compositionDir.entryList(filter);
@@ -262,7 +253,7 @@ private slots:
 				composition.append( (istreambuf_iterator<char>(fin)), (istreambuf_iterator<char>()) );
 				fin.close();
 			}
-			else if (compiler)
+			else
 			{
 				VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(name);
 				if (!nodeClass)
@@ -293,6 +284,10 @@ private slots:
 
 		QVERIFY(! composition.empty());
 		string compositionDir = getCompositionDir().path().toStdString();
+
+		VuoCompiler *compiler = initCompiler(QTest::currentDataTag());
+		VuoDefer(^{ delete compiler; });
+
 		try
 		{
 			TestCompositionsRunnerDelegate delegate(composition, compositionDir, portConfigurations, compiler);
@@ -346,7 +341,7 @@ private slots:
 		QVERIFY(! composition.empty());
 		try
 		{
-			TestCompositionPerformanceDelegate delegate(composition, getCompositionDir().path().toStdString(), compiler);
+			TestCompositionPerformanceDelegate delegate(composition, getCompositionDir().path().toStdString(), QTest::currentDataTag());
 			QBENCHMARK {
 				delegate.fireAndWaitForTest();
 			}

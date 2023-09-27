@@ -35,16 +35,17 @@ function (VuoTest)
 	)
 	target_include_directories(${arg_NAME}
 		PRIVATE
-		../../node/vuo.artnet
-		../../node/vuo.data
-		../../node/vuo.image
-		../../node/vuo.layer
-		../../node/vuo.math
-		../../node/vuo.midi
-		../../node/vuo.scene
-		../../node/vuo.table
-		../../node/vuo.time
-		../../node/vuo.ui
+			..
+			../../node/vuo.artnet
+			../../node/vuo.data
+			../../node/vuo.image
+			../../node/vuo.layer
+			../../node/vuo.math
+			../../node/vuo.midi
+			../../node/vuo.scene
+			../../node/vuo.table
+			../../node/vuo.time
+			../../node/vuo.ui
 	)
 	target_link_libraries(${arg_NAME}
 		PUBLIC
@@ -60,6 +61,7 @@ function (VuoTest)
 		CONAN_PKG::oai
 		vuo.core.libraries
 	)
+	add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/bin/${arg_NAME})
 	if (arg_NAME STREQUAL TestBuiltProducts
 	 OR arg_NAME STREQUAL TestConsole
 	 OR arg_NAME STREQUAL TestEditorCommands
@@ -72,7 +74,7 @@ function (VuoTest)
 	else()
 		VuoPCH(${arg_NAME} QTestVuoFramework)
 	endif()
-	add_dependencies(${arg_NAME} VuoFramework)
+	add_dependencies(${arg_NAME} VuoEditorApp)
 
 	add_dependencies(VuoTest ${arg_NAME})
 
@@ -131,6 +133,7 @@ add_subdirectory(TestTests)
 
 add_subdirectory(TestVuoUtilities)
 add_subdirectory(TestVuoDirectedAcyclicGraph)
+add_subdirectory(TestVuoModuleInfoIterator)
 add_subdirectory(TestVuoProtocol)
 add_subdirectory(TestVuoCompilerCompatibility)
 add_subdirectory(TestVuoRunnerCocoa)
@@ -151,6 +154,7 @@ add_subdirectory(TestShaderFile)
 add_subdirectory(TestCompositionExecution)
 	add_subdirectory(TestVuoIsfModuleCompiler)
 	add_subdirectory(TestImageFilters)
+	add_subdirectory(TestSceneObjectGenerators)
 	add_subdirectory(TestNodeExecutionOrder)
 	add_subdirectory(TestReferenceCounting)
 
@@ -164,6 +168,7 @@ add_subdirectory(TestDocumentation)
 # Long.
 add_subdirectory(TestCompilingAndLinking)
 add_subdirectory(TestModuleLoading)
+add_subdirectory(TestModuleCaches)
 add_subdirectory(TestControlAndTelemetry)
 add_subdirectory(TestSubcompositions)
 add_subdirectory(TestEventDropping)

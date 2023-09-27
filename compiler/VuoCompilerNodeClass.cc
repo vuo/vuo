@@ -2,12 +2,13 @@
  * @file
  * VuoCompilerNodeClass implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include <sstream>
+#include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
@@ -17,6 +18,8 @@
 #include "VuoCompilerOutputDataClass.hh"
 #include "VuoCompilerOutputEventPortClass.hh"
 #include "VuoCompilerPort.hh"
+#include "VuoCompilerPublishedNodeClass.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoCompilerTriggerDescription.hh"
 #include "VuoCompilerTriggerPortClass.hh"
 #include "VuoFileUtilities.hh"
@@ -108,6 +111,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	this->portsWithExplicitEventBlockingNone = compilerNodeClass->portsWithExplicitEventBlockingNone;
 	this->sourcePath = compilerNodeClass->sourcePath;
 	this->sourceCode = compilerNodeClass->sourceCode;
+	this->makeDependencies = compilerNodeClass->makeDependencies;
 	this->containedNodes = compilerNodeClass->containedNodes;
 	this->defaultSpecializedForGenericTypeName = compilerNodeClass->defaultSpecializedForGenericTypeName;
 
@@ -216,15 +220,21 @@ VuoNodeClass * VuoCompilerNodeClass::newNodeClassWithoutImplementation(VuoNodeCl
  */
 VuoNodeClass * VuoCompilerNodeClass::newNodeClass(string nodeClassName, Module * module)
 {
-	if (! isNodeClass(module, nodeClassName))
-		return NULL;
+	if (isNodeClass(module, nodeClassName))
+	{
+		VuoNodeClass *specializedNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(nodeClassName, module);
+		if (specializedNodeClass)
+			return specializedNodeClass;
 
-	VuoCompilerNodeClass * cnc = new VuoCompilerNodeClass(nodeClassName, module);
+		VuoCompilerNodeClass *cnc = new VuoCompilerNodeClass(nodeClassName, module);
 
-	// Reconstruct, this time with a base VuoNodeClass containing actual (non-dummy) ports.
-	VuoCompilerNodeClass * cnc2 = new VuoCompilerNodeClass(cnc);
-	delete cnc;
-	return cnc2->getBase();
+		// Reconstruct, this time with a base VuoNodeClass containing actual (non-dummy) ports.
+		VuoCompilerNodeClass *cnc2 = new VuoCompilerNodeClass(cnc);
+		delete cnc;
+		return cnc2->getBase();
+	}
+
+	return nullptr;
 }
 
 /**
@@ -320,33 +330,6 @@ void VuoCompilerNodeClass::parseMetadata(void)
 				string nodeClassName = json_object_get_string(nodeClassNameObj);
 				containedNodes.insert(make_pair(nodeIdentifier, nodeClassName));
 			}
-		}
-	}
-
-	parseGenericTypes(moduleDetails, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
-}
-
-/**
- * Parses the "genericTypes" portion of a node class's metadata.
- *
- * @see VuoModuleMetadata
- */
-void VuoCompilerNodeClass::parseGenericTypes(json_object *moduleDetails,
-											 map<string, string> &defaultSpecializedForGenericTypeName,
-											 map<string, vector<string> > &compatibleSpecializedForGenericTypeName)
-{
-	json_object *genericTypeDetails = NULL;
-	if (json_object_object_get_ex(moduleDetails, "genericTypes", &genericTypeDetails))
-	{
-		json_object_object_foreach(genericTypeDetails, genericTypeName, genericTypeDetailsForOneType)
-		{
-			string defaultType = VuoJsonUtilities::parseString(genericTypeDetailsForOneType, "defaultType");
-			if (! defaultType.empty())
-				defaultSpecializedForGenericTypeName[genericTypeName] = defaultType;
-
-			vector<string> compatibleTypes = VuoJsonUtilities::parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
-			if (! compatibleTypes.empty())
-				compatibleSpecializedForGenericTypeName[genericTypeName] = compatibleTypes;
 		}
 	}
 }
@@ -1109,6 +1092,40 @@ VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumen
 }
 
 /**
+ * Returns the file name (with extension) that this node class should have when saved to file.
+ */
+string VuoCompilerNodeClass::getFileName(void)
+{
+	return getBase()->getModuleKey() + ".vuonode";
+}
+
+/**
+ * Returns the file name (with extension) that a node class with the given module key would have
+ * when saved to file.
+ */
+string VuoCompilerNodeClass::getFileNameForModuleKey(const string &moduleKey)
+{
+	if (VuoCompilerPublishedNodeClass::isPublishedNodeClassName(moduleKey))
+		return VuoCompilerPublishedNodeClass::getFileNameForModuleKey(moduleKey);
+
+	return moduleKey + ".vuonode";
+}
+
+/**
+ * Returns true if a node class with the given file name (with extension) would have a module key
+ * other than the file name minus extension.
+ */
+bool VuoCompilerNodeClass::isModuleKeyMangledInFileName(const string &fileName)
+{
+	string moduleKey = VuoCompiler::getModuleKeyForPath(fileName);
+
+	if (VuoCompilerPublishedNodeClass::isPublishedNodeClassName(moduleKey))
+		return VuoCompilerPublishedNodeClass::isModuleKeyMangledInFileName(fileName);
+
+	return false;
+}
+
+/**
  * The unique class name for this node class, rendered as an identifier in the generated code.
  *
  * Possible characters: @c [A-Za-z0-9_]
@@ -1466,40 +1483,8 @@ void VuoCompilerNodeClass::updateSubcompositionStatus()
 bool VuoCompilerNodeClass::isIsf(void)
 {
 	string dir, file, ext;
-	VuoFileUtilities::splitPath(sourcePath, dir, file, ext);
+	VuoFileUtilities::splitPath(getSourcePath(), dir, file, ext);
 	return ext == "fs";
-}
-
-/**
- * Stores the path of the source file for this node class. Currently for subcompositions only.
- */
-void VuoCompilerNodeClass::setSourcePath(const string &sourcePath)
-{
-	this->sourcePath = sourcePath;
-}
-
-/**
- * Returns the stored path of the source file for this node class. Currently for subcompositions only.
- */
-string VuoCompilerNodeClass::getSourcePath(void)
-{
-	return sourcePath;
-}
-
-/**
- * Stores the source code for this node class. Currently for subcompositions only.
- */
-void VuoCompilerNodeClass::setSourceCode(const string &sourceCode)
-{
-	this->sourceCode = sourceCode;
-}
-
-/**
- * Returns the stored source code for this node class. Currently for subcompositions only.
- */
-string VuoCompilerNodeClass::getSourceCode(void)
-{
-	return sourceCode;
 }
 
 /**

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeSet implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -117,25 +117,23 @@ vector<string> VuoNodeSet::getNodeClassNames(void)
 }
 
 /**
- * Returns the file names of the header files within this node set.
+ * Returns the relative paths of the header files within this node set.
  */
-vector<string> VuoNodeSet::getHeaderFileNames(void)
+vector<string> VuoNodeSet::getHeaderPaths(void)
 {
 	set<string> extensions;
 	extensions.insert("h");
 	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "", extensions);
 
-	vector<string> headerFileNames;
+	vector<string> headerPaths;
 	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
 	{
 		VuoFileUtilities::File *f = *i;
-		string dir, file, ext;
-		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
-		headerFileNames.push_back(file + "." + ext);
+		headerPaths.push_back(f->getRelativePath());
 		delete f;
 	}
 
-	return headerFileNames;
+	return headerPaths;
 }
 
 /**
@@ -163,23 +161,47 @@ vector<string> VuoNodeSet::getExampleCompositionFileNames(void)
 }
 
 /**
- * Returns the contents of a node class source file within this node set.
+ * Returns the relative path of a module source file within this node set.
  *
  * If the file doesn't exist, returns an empty string.
  */
-string VuoNodeSet::getNodeClassContents(string nodeClassName)
+string VuoNodeSet::getModuleSourcePath(const string &moduleKey)
 {
-	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, nodeClassName + ".c");
+	set<string> extensions;
+	extensions.insert("vuo");
+	set<string> cExtensions = VuoFileUtilities::getCFamilySourceExtensions();
+	extensions.insert(cExtensions.begin(), cExtensions.end());
+	set<string> isfExtensions = VuoFileUtilities::getIsfSourceExtensions();
+	extensions.insert(isfExtensions.begin(), isfExtensions.end());
+	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "", extensions);
+
+	string relativePath;
+	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
+	{
+		VuoFileUtilities::File *f = *i;
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
+		if (file == moduleKey)
+		{
+			relativePath = f->getRelativePath();
+			break;
+		}
+	}
+
+	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
+		delete *i;
+
+	return relativePath;
 }
 
 /**
- * Returns the contents of a port type header file within this node set.
+ * Returns the contents of the file at @a relativePath within this node set.
  *
  * If the file doesn't exist, returns an empty string.
  */
-string VuoNodeSet::getHeaderContents(string headerName)
+string VuoNodeSet::getFileContents(const string &relativePath)
 {
-	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, headerName);
+	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, relativePath);
 }
 
 /**
@@ -220,6 +242,7 @@ void VuoNodeSet::extractResourcesFromSubdirectory(string archiveSubdir, string d
 	set<string> extensions;
 	extensions.insert("png");
 	extensions.insert("jpg");
+	extensions.insert("gif");
 	extensions.insert("mov");
 	extensions.insert("mp3");
 	extensions.insert("data");

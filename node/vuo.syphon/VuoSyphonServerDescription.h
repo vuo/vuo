@@ -2,12 +2,16 @@
  * @file
  * VuoSyphonServerDescription C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoText.h"
 
@@ -32,11 +36,12 @@ typedef struct
 	bool useWildcard;
 } VuoSyphonServerDescription;
 
+#define VuoSyphonServerDescription_SUPPORTS_COMPARISON
+
 VuoSyphonServerDescription VuoSyphonServerDescription_makeFromJson(struct json_object * js);
 struct json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescription value);
 char * VuoSyphonServerDescription_getSummary(const VuoSyphonServerDescription value);
 
-#define VuoSyphonServerDescription_SUPPORTS_COMPARISON
 bool VuoSyphonServerDescription_areEqual(const VuoSyphonServerDescription value1, const VuoSyphonServerDescription value2);
 bool VuoSyphonServerDescription_isLessThan(const VuoSyphonServerDescription a, const VuoSyphonServerDescription b);
 
@@ -54,3 +59,7 @@ void VuoSyphonServerDescription_release(VuoSyphonServerDescription value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

@@ -2,12 +2,15 @@
  * @file
  * VuoActivityIndicator implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoActivityIndicator.hh"
+
+#include "VuoEditor.hh"
+#include "VuoFileUtilitiesCocoa.hh"
 
 /**
  * Creates an activity indicator.
@@ -33,6 +36,16 @@ QPixmap VuoActivityIndicator::pixmap(const QSize &size, QIcon::Mode mode, QIcon:
 	pixmap.setMask(bitmap);
 
 	QPainter painter(&pixmap);
+
+#if VUO_PRO
+	// See VuoEditorWindowToolbar::updateLabelVisibility.
+	if (!static_cast<VuoEditor *>(qApp)->areToolbarLabelsVisible() && VuoFileUtilitiesCocoa_getOSVersionMajor() == 13)
+	{
+		painter.scale(11. / 16, 1);
+		painter.translate(size.width() * (1 - 11./16) / 2, 0);
+	}
+#endif
+
 	paint(&painter, QRect(QPoint(0,0),size), mode, state);
 	return pixmap;
 }

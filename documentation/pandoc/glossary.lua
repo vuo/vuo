@@ -56,10 +56,7 @@ filters = {
 	{Pandoc = function(doc)
 		table.insert(doc.blocks, pandoc.Header(1, pandoc.Str('Glossary'), {id='glossary'}))
 		table.insert(doc.blocks, pandoc.Para({ pandoc.RawInline('html', '<abstract>Definitions of words Vuo uses</abstract>') }))
-
-		-- Add a dummy level-2 header so we can use level-3 headers below,
-		-- so each individual term doesn't show up in the table of contents.
-		table.insert(doc.blocks, pandoc.Header(2, pandoc.Str('')))
+		table.insert(doc.blocks, pandoc.Para('Definitions of words Vuo uses.'))
 
 		-- Sort case-insensitively.
 		local orderedTerms = {}
@@ -70,11 +67,17 @@ filters = {
 			-- It would be nice to use the more-specific "DefinitionList",
 			-- but I couldn't find a way to get it to emit an element "id"
 			-- so I can create an anchor link to it.
-			table.insert(doc.blocks, pandoc.Header(3, pandoc.Str(term), {id=makeGlossaryIdentifier(term)}))
+			table.insert(doc.blocks, pandoc.Header(2, pandoc.Str(term), {id=makeGlossaryIdentifier(term)}))
 
-			-- Allow Markdown and linking to other terms.
+			-- Parse Markdown in glossary definitions.
 			definition = pandoc.read(glossary[term], 'markdown').blocks[1].content
 			filteredDefinition = pandoc.walk_inline(pandoc.Span(definition), filters[2])
+
+			-- Also produce a plaintext version of the glossary definition for the <abstract> tag.
+			htmlDefinition = pandoc.write(pandoc.Pandoc(filteredDefinition), 'html')
+			textDefinition = pandoc.write(pandoc.read(htmlDefinition, 'html'), 'plain')
+
+			table.insert(doc.blocks, pandoc.Para({ pandoc.RawInline('html', '<abstract>' .. textDefinition .. '</abstract>') }))
 			table.insert(doc.blocks, pandoc.Para(filteredDefinition))
 		end
 

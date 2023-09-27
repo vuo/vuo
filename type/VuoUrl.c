@@ -2,12 +2,11 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
 #include "VuoUrl.h"
 #include "VuoOsStatus.h"
 
@@ -275,14 +274,16 @@ bool VuoUrl_isLessThan(const VuoText a, const VuoText b)
  */
 static bool VuoUrl_urlContainsScheme(const char *url)
 {
-	const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+-\\.]+:";
-	regex_t    urlWithSchemeRegExp;
-	size_t     nmatch = 0;
-	regmatch_t pmatch[0];
-
-	regcomp(&urlWithSchemeRegExp, urlWithSchemePattern, REG_EXTENDED);
-	bool matchFound = !regexec(&urlWithSchemeRegExp, url, nmatch, pmatch, 0);
-	regfree(&urlWithSchemeRegExp);
+	__block bool matchFound;
+	VuoText_performWithUTF8Locale(^(locale_t locale){
+		const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+-\\.]+:";
+		regex_t    urlWithSchemeRegExp;
+		size_t     nmatch = 0;
+		regmatch_t pmatch[0];
+		regcomp_l(&urlWithSchemeRegExp, urlWithSchemePattern, REG_EXTENDED, locale);
+		matchFound = !regexec(&urlWithSchemeRegExp, url, nmatch, pmatch, 0);
+		regfree(&urlWithSchemeRegExp);
+	});
 
 	return matchFound;
 }

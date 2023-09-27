@@ -2,7 +2,7 @@
  * @file
  * VuoDirectedAcyclicGraph implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -114,6 +114,33 @@ void VuoDirectedAcyclicGraph::addEdge(Vertex *fromVertex, Vertex *toVertex)
 }
 
 /**
+ * Removes a directed edge from the graph.
+ */
+void VuoDirectedAcyclicGraph::removeEdge(Vertex *fromVertex, Vertex *toVertex)
+{
+	std::lock_guard<std::mutex> lock(graphMutex);
+
+	auto iter = find(edges[fromVertex].begin(), edges[fromVertex].end(), toVertex);
+	if (iter != edges[fromVertex].end())
+		edges[fromVertex].erase(iter);
+
+	downstreamVerticesCache.clear();
+	upstreamVerticesCache.clear();
+	cycleVerticesCacheReady = false;
+	longestDownstreamPathsCache.clear();
+}
+
+/**
+ * Returns all vertices that are directly connected to @a vertex by a directed edge from @a vertex to the other vertex.
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getImmediatelyDownstreamVertices(Vertex *vertex)
+{
+	std::lock_guard<std::mutex> lock(graphMutex);
+
+	return edges[vertex];
+}
+
+/**
  * Returns all vertices that can be reached from @a vertex via a path of directed edges.
  *
  * The returned vertices are not in any particular order. In the future, this function may be modified
@@ -141,6 +168,26 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getDownstream
 	downstreamVerticesCache[vertex] = downstreamVertices;
 
 	return downstreamVertices;
+}
+
+/**
+ * Returns all vertices that are directly connected to @a vertex by a directed edge from the other vertex to @a vertex.
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicGraph::getImmediatelyUpstreamVertices(Vertex *vertex)
+{
+	std::lock_guard<std::mutex> lock(graphMutex);
+
+	vector<VuoDirectedAcyclicGraph::Vertex *> upstreamVertices;
+
+	for (auto i : edges)
+	{
+		Vertex *fromVertex = i.first;
+		for (Vertex *toVertex : i.second)
+			if (toVertex == vertex && find(upstreamVertices.begin(), upstreamVertices.end(), fromVertex) == upstreamVertices.end())
+				upstreamVertices.push_back(fromVertex);
+	}
+
+	return upstreamVertices;
 }
 
 /**
@@ -354,6 +401,18 @@ void VuoDirectedAcyclicNetwork::addEdge(VuoDirectedAcyclicGraph *fromGraph, VuoD
 }
 
 /**
+ * Returns all vertices that are directly connected to @a vertex by a directed edge from @a vertex to the other vertex
+ * within any graph in the network.
+ *
+ * When different vertex instances with the same key as @a vertex appear in multiple graphs, all downstream
+ * instances are returned.
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getImmediatelyDownstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex)
+{
+	return getReachableVertices(vertex, edges, true, true);
+}
+
+/**
  * Returns all vertices that can be reached from @a vertex via a path of directed vertex-to-vertex edges
  * within graphs and directed graph-to-graph edges within the network.
  *
@@ -365,7 +424,19 @@ void VuoDirectedAcyclicNetwork::addEdge(VuoDirectedAcyclicGraph *fromGraph, VuoD
  */
 vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getDownstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex)
 {
-	return getReachableVertices(vertex, edges, true);
+	return getReachableVertices(vertex, edges, true, false);
+}
+
+/**
+ * Returns all vertices that are directly connected to @a vertex by a directed edge from the other vertex to @a vertex
+ * within any graph in the network.
+ *
+ * When different vertex instances with the same key as @a vertex appear in multiple graphs, all upstream
+ * instances are returned.
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getImmediatelyUpstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex)
+{
+	return getUpstreamVerticesInternal(vertex, true);
 }
 
 /**
@@ -380,6 +451,15 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getDownstre
  */
 vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getUpstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex)
 {
+	return getUpstreamVerticesInternal(vertex, false);
+}
+
+/**
+ * Helper function.
+ */
+vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getUpstreamVerticesInternal(VuoDirectedAcyclicGraph::Vertex *vertex,
+																								 bool isImmediate)
+{
 	map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> > backEdges;
 	for (map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> >::iterator i = edges.begin(); i != edges.end(); ++i)
 	{
@@ -390,7 +470,7 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getUpstream
 		backEdges[i->first];
 	}
 
-	return getReachableVertices(vertex, backEdges, false);
+	return getReachableVertices(vertex, backEdges, false, isImmediate);
 }
 
 /**
@@ -398,7 +478,7 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getUpstream
  */
 vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getReachableVertices(VuoDirectedAcyclicGraph::Vertex *vertex,
 																						  const map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> > &edges,
-																						  bool isDownstream)
+																						  bool isDownstream, bool isImmediate)
 {
 	vector<VuoDirectedAcyclicGraph::Vertex *> reachableVertices;
 
@@ -433,8 +513,12 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getReachabl
 			{
 				VuoDirectedAcyclicGraph::Vertex *currVertex = *i;
 				vector<VuoDirectedAcyclicGraph::Vertex *> currReachableVertices = (isDownstream ?
-																					   currGraph->getDownstreamVertices(currVertex) :
-																					   currGraph->getUpstreamVertices(currVertex));
+																					   (isImmediate ?
+																							currGraph->getImmediatelyDownstreamVertices(currVertex) :
+																							currGraph->getDownstreamVertices(currVertex)) :
+																					   (isImmediate ?
+																							currGraph->getImmediatelyUpstreamVertices(currVertex) :
+																							currGraph->getUpstreamVertices(currVertex)));
 
 				for (vector<VuoDirectedAcyclicGraph::Vertex *>::iterator j = currReachableVertices.begin(); j != currReachableVertices.end(); ++j)
 				{
@@ -445,8 +529,16 @@ vector<VuoDirectedAcyclicGraph::Vertex *> VuoDirectedAcyclicNetwork::getReachabl
 				}
 
 				vector<VuoDirectedAcyclicGraph::Vertex *> candidateVertices;
-				candidateVertices.push_back(currVertex);
-				candidateVertices.insert(candidateVertices.end(), currReachableVertices.begin(), currReachableVertices.end());
+				if (isImmediate)
+				{
+					if (currVertex == vertex)
+						candidateVertices.push_back(currVertex);
+				}
+				else
+				{
+					candidateVertices.push_back(currVertex);
+					candidateVertices.insert(candidateVertices.end(), currReachableVertices.begin(), currReachableVertices.end());
+				}
 
 				for (vector<VuoDirectedAcyclicGraph::Vertex *>::iterator j = candidateVertices.begin(); j != candidateVertices.end(); ++j)
 				{

@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+SendLiveAudio [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="225,75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<SendChannels>SendChannels\r" _SendChannels_type="VuoList_VuoAudioSamples"];
+
+PublishedInputs:SendChannels -> SendLiveAudio:sendChannels;
+}

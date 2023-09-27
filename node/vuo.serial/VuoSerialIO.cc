@@ -2,7 +2,7 @@
  * @file
  * VuoSerialIO implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -205,23 +205,18 @@ VuoSerial_internal VuoSerial_make(std::string devicePath)
 }
 static void VuoSerial_destroy(VuoSerial_internal si)
 {
-//	VLog("%s", si->devicePath);
-
 	dispatch_sync(VuoSerial_pendingDevicesQueue, ^{
 		VuoSerial_pendingDevices.erase(si);
 	});
 
 	if (si->source)
 	{
-		dispatch_sync(si->queue, ^{
-			dispatch_source_cancel(si->source);
-			dispatch_release(si->source);
-		});
+		dispatch_source_cancel(si->source);
+		dispatch_release(si->source);
+		dispatch_sync(si->queue, ^{});
 	}
 
 	dispatch_release(si->queue);
-
-	VuoSerial_internalPool->removeSharedInstance(si->devicePath);
 
 	VuoRelease(si->devicePath);
 	delete si;
@@ -234,13 +229,20 @@ VUOKEYEDPOOL_DEFINE(std::string, VuoSerial_internal, VuoSerial_make);
 
 
 /**
- * Returns the reference-counted object for the specified serial device.
+ * @copydoc VuoKeyedPool<std::string,VuoSerial_internal>::useSharedInstance
  */
-VuoSerial VuoSerial_getShared(const VuoText devicePath)
+VuoSerial VuoSerial_useShared(const VuoText devicePath)
 {
-	return (VuoSerial)VuoSerial_internalPool->getSharedInstance(devicePath);
+	return static_cast<VuoSerial>(VuoSerial_internalPool->useSharedInstance(devicePath));
 }
 
+/**
+ * @copydoc VuoKeyedPool<std::string,VuoSerial_internal>::disuseSharedInstance
+ */
+void VuoSerial_disuseShared(VuoSerial device)
+{
+	VuoSerial_internalPool->disuseSharedInstance(static_cast<VuoSerial_internal>(device));
+}
 
 /**
  * Adds a trigger callback, to be invoked whenever the specified serial device receives data.

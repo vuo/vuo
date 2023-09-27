@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Expected outputs for the vuo.motion.curve node.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	// In range:
+	"linear 0.00":         {"firingPort":"time", "inputPortValues":{"time": 0,   "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":0   }},
+	"linear 0.50":         {"firingPort":"time", "inputPortValues":{"time": 0.5, "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":0.5 }},
+	"linear 1.00":         {"firingPort":"time", "inputPortValues":{"time": 1,   "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":1   }},
+
+	// In range, phase offset:
+	"linear -0.25 phase":  {"firingPort":"time", "inputPortValues":{"time":-0.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0.25}, "outputPortValues":{"value":0   }},
+	"linear 0.00 phase":   {"firingPort":"time", "inputPortValues":{"time": 0,   "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0.25}, "outputPortValues":{"value":0.25}},
+	"linear 0.50 phase":   {"firingPort":"time", "inputPortValues":{"time": 0.5, "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0.25}, "outputPortValues":{"value":0.75}},
+	"linear 1.00 phase":   {"firingPort":"time", "inputPortValues":{"time": 1,   "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0.25}, "outputPortValues":{"value":1   }},
+
+	// Out of range:
+	"linear 1.25":         {"firingPort":"time", "inputPortValues":{"time": 1.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":1   }},
+	"linear 1.25 loop":    {"firingPort":"time", "inputPortValues":{"time": 1.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"loop",  "phase":0   }, "outputPortValues":{"value":0.25}},
+	"linear 1.25 mirror":  {"firingPort":"time", "inputPortValues":{"time": 1.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"mirror","phase":0   }, "outputPortValues":{"value":0.75}},
+	"linear -0.25":        {"firingPort":"time", "inputPortValues":{"time":-0.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":0   }},
+	"linear -0.25 loop":   {"firingPort":"time", "inputPortValues":{"time":-0.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"loop",  "phase":0   }, "outputPortValues":{"value":0.75}},
+	"linear -0.25 mirror": {"firingPort":"time", "inputPortValues":{"time":-0.25,"startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"mirror","phase":0   }, "outputPortValues":{"value":0.25}},
+
+	// Bogus:
+	"duration 0":          {"firingPort":"time", "inputPortValues":{"time": 0,   "startPosition":0,"endPosition":1,"duration":0,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":0   }},
+	"duration 0 loop":     {"firingPort":"time", "inputPortValues":{"time": 0,   "startPosition":0,"endPosition":1,"duration":0,"curve":"linear","easing":"in","loop":"loop",  "phase":0   }, "outputPortValues":{"value":0   }},
+	"duration 0 mirror":   {"firingPort":"time", "inputPortValues":{"time": 0,   "startPosition":0,"endPosition":1,"duration":0,"curve":"linear","easing":"in","loop":"mirror","phase":0   }, "outputPortValues":{"value":0   }},
+
+	// Ensure recovery after bogus:
+	"recover after bogus": {"firingPort":"time", "inputPortValues":{"time": 1,   "startPosition":0,"endPosition":1,"duration":1,"curve":"linear","easing":"in","loop":"none",  "phase":0   }, "outputPortValues":{"value":1   }},
+}}

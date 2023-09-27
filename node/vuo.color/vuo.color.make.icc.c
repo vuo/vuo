@@ -2,12 +2,10 @@
  * @file
  * vuo.color.make.icc node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
-
-#include "node.h"
 
 #include "VuoColorspace.h"
 
@@ -38,6 +36,8 @@ VuoModuleMetadata({
 		"VuoColorspace",
 	],
 });
+
+extern VuoColor VuoColorspace_makeICCColor_VuoGenericType1(VuoGenericType1 colorspace, VuoList_VuoReal components);
 
 void nodeEvent(
 	VuoInputData(VuoGenericType1, {"menuItems":[

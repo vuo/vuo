@@ -2,12 +2,17 @@
  * @file
  * VuoTransform2d C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoTransform2d_h
+#define VuoTransform2d_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
@@ -67,3 +72,9 @@ static inline bool VuoTransform2d_isIdentity(const VuoTransform2d transform)
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

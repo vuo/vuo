@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Shows how the bilinear and nearest-neighbor sampling modes differ when upscaling pixel art.
+ *
+ * @lastSavedInVuoVersion 2.4.2
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+ChangeSamplingMode [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="705,690" fillcolor="orange" _samplingMode="0"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="495,45"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="105,30" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.realSize2" version="3.0.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="960,45" _center="\{\"x\":0.0,\"y\":0.30000001192092896\}" _opacity="1.0" _preservePhysicalSize="false"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="960,345" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.40000000596046448,\"y\":-0.10000000149011612\}" _rotation="0.0" _width="0.5" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer3 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="960,690" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.40000000596046448,\"y\":-0.10000000149011612\}" _rotation="0.0" _width="0.5" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1206,326" fillcolor="blue"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="975,150" _text="\"Original\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="975,495" _text="\"Scaled\\nwith bilinear sampling\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":0.99999994039535522,\"a\":1.0\},\"alignment\":\"center\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.40000000596046448,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="975,840" _text="\"Scaled\\nwith nearest-neighbor sampling\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":0.99999994039535522,\"a\":1.0\},\"alignment\":\"center\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.40000000596046448,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+PlayMovie [type="vuo.video.play" version="2.0.3" label="Play Movie|<refresh>refresh\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<url>url\l|<loop>loop\l|<playbackRate>playbackRate\l|<optimization>optimization\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r|<finishedPlayback>finishedPlayback\r" pos="270,45" fillcolor="lime" _setTime="\"\"" _url="\"ufo.gif\"" _loop="\"loop\"" _playbackRate="1" _optimization="\"auto\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1260,315" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+ChangeSamplingMode:outputImage -> MakeImageLayer3:image;
+ConvertFrameToImage2:image -> ChangeSamplingMode:image;
+ConvertFrameToImage2:image -> MakeImageLayer2:image;
+ConvertFrameToImage2:image -> MakeImageLayer:image;
+FireOnStart:started -> MakeTextLayer2:text [style=invis];
+FireOnStart:started -> MakeTextLayer3:text [style=invis];
+FireOnStart:started -> MakeTextLayer:text [style=invis];
+FireOnStart:started -> PlayMovie:play;
+MakeImageLayer2:layer -> MakeList:3;
+MakeImageLayer3:layer -> MakeList:5;
+MakeImageLayer:layer -> MakeList:1;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextLayer2:layer -> MakeList:4;
+MakeTextLayer3:layer -> MakeList:6;
+MakeTextLayer:layer -> MakeList:2;
+PlayMovie:decodedVideo -> ConvertFrameToImage2:frame;
+}

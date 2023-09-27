@@ -2,7 +2,7 @@
  * @file
  * VuoText implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,9 +12,9 @@
 #include <fnmatch.h>
 #include <regex.h>
 #include <string.h>
-#include <xlocale.h>
 
-#include "type.h"
+#include "VuoText.h"
+#include "VuoReal.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -34,6 +34,69 @@ VuoModuleMetadata({
 				 });
 #endif
 /// @}
+
+dispatch_queue_t VuoText_utf8LocaleQueue = NULL;    ///< Serializes access to VuoText_utf8Locale.
+locale_t VuoText_utf8Locale = NULL;                 ///< A shared UTF-8 locale object, initialized at startup.
+
+dispatch_queue_t VuoText_systemLocaleQueue = NULL;  ///< Serializes access to VuoText_systemLocale.
+locale_t VuoText_systemLocale = NULL;               ///< A shared system locale object, initialized at startup.
+
+/**
+ * Creates locale objects, to be used only by @ref VuoText_performWithUTF8Locale and @ref VuoText_performWithSystemLocale.
+ *
+ * https://b33p.net/kosada/vuo/vuo/-/issues/19708
+ */
+void __attribute__((constructor)) VuoText_init(void)
+{
+	VuoText_utf8LocaleQueue = dispatch_queue_create("org.vuo.VuoText.locale.utf8", NULL);
+	VuoText_utf8Locale = newlocale(LC_ALL_MASK, "en_US.UTF-8", NULL);
+
+	VuoText_systemLocaleQueue = dispatch_queue_create("org.vuo.VuoText.locale.system", NULL);
+
+	CFLocaleRef localeCF = CFLocaleCopyCurrent();
+	VuoText localeIdentifier = VuoText_makeFromCFString(CFLocaleGetIdentifier(localeCF));
+	VuoLocal(localeIdentifier);
+	CFRelease(localeCF);
+
+	VuoText_systemLocale = newlocale(LC_ALL_MASK, localeIdentifier, NULL);
+}
+
+/**
+ * Activates the UTF-8 locale and executes the specified block.
+ *
+ * Use the UTF-8 locale when parsing serialized text.
+ */
+void VuoText_performWithUTF8Locale(void (^function)(locale_t utf8Locale))
+{
+	dispatch_sync(VuoText_utf8LocaleQueue, ^{
+		locale_t oldLocale = uselocale(VuoText_utf8Locale);
+		if (oldLocale != LC_GLOBAL_LOCALE)
+			freelocale(oldLocale);
+
+		function(VuoText_utf8Locale);
+
+		uselocale(LC_GLOBAL_LOCALE);
+	});
+}
+
+/**
+ * Activates the system locale and executes the specified block.
+ *
+ * Use the system locale when parsing numbers typed by the user at runtime,
+ * and to format dates according to the user's selected locale.
+ */
+void VuoText_performWithSystemLocale(void (^function)(locale_t systemLocale))
+{
+	dispatch_sync(VuoText_systemLocaleQueue, ^{
+		locale_t oldLocale = uselocale(VuoText_systemLocale);
+		if (oldLocale != LC_GLOBAL_LOCALE)
+			freelocale(oldLocale);
+
+		function(VuoText_systemLocale);
+
+		uselocale(LC_GLOBAL_LOCALE);
+	});
+}
 
 /**
  * @ingroup VuoText
@@ -499,7 +562,7 @@ bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
 		text2 = VuoText_changeCase(text2, VuoTextCase_LowercaseAll);
 	}
 
-	bool match = false;
+	__block bool match = false;
 	if (comparison.type == VuoTextComparison_Equals)
 	{
 		match = VuoText_areEqual(text1, text2);
@@ -535,12 +598,9 @@ bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
 		if (t2empty)
 			return t1empty == t2empty;
 
-		locale_t locale = newlocale(LC_ALL_MASK, "en_US.UTF-8", NULL);
-		locale_t oldLocale = uselocale(locale);
-		if (oldLocale != LC_GLOBAL_LOCALE)
-			freelocale(oldLocale);
-
-		match = fnmatch(text2, text1, 0) != FNM_NOMATCH;
+		VuoText_performWithUTF8Locale(^(locale_t locale){
+			match = fnmatch(text2, text1, 0) != FNM_NOMATCH;
+		});
 	}
 
 	else if (comparison.type == VuoTextComparison_MatchesRegEx)
@@ -550,28 +610,30 @@ bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
 		if (t2empty)
 			return t1empty == t2empty;
 
-		regex_t re;
-		int ret = regcomp(&re, text2, REG_EXTENDED);
-		if (ret)
-		{
-			char errstr[256];
-			regerror(ret, &re, errstr, sizeof(errstr));
-			VUserLog("Error compiling regular expression: %s", errstr);
-			return false;
-		}
+		VuoText_performWithUTF8Locale(^(locale_t locale){
+			regex_t re;
+			int ret = regcomp_l(&re, text2, REG_EXTENDED, locale);
+			if (ret)
+			{
+				char errstr[256];
+				regerror(ret, &re, errstr, sizeof(errstr));
+				VUserLog("Error compiling regular expression: %s", errstr);
+				return;
+			}
 
-		ret = regexec(&re, text1, 0, NULL, 0);
-		if (ret == 0)
-			match = true;
-		else if (ret == REG_NOMATCH)
-			match = false;
-		else
-		{
-			char errstr[256];
-			regerror(ret, &re, errstr, sizeof(errstr));
-			VUserLog("Error executing regular expression: %s", errstr);
-		}
-		regfree(&re);
+			ret = regexec(&re, text1, 0, NULL, 0);
+			if (ret == 0)
+				match = true;
+			else if (ret == REG_NOMATCH)
+				match = false;
+			else
+			{
+				char errstr[256];
+				regerror(ret, &re, errstr, sizeof(errstr));
+				VUserLog("Error executing regular expression: %s", errstr);
+			}
+			regfree(&re);
+		});
 	}
 
 	if (! comparison.isCaseSensitive)

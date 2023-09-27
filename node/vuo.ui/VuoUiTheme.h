@@ -2,7 +2,7 @@
  * @file
  * VuoUiTheme C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,11 +12,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// @{ List type.
-typedef void * VuoList_VuoUiTheme;
-#define VuoList_VuoUiTheme_TYPE_DEFINED
-/// @}
 
 #include "VuoReal.h"
 #include "VuoFont.h"
@@ -39,6 +34,9 @@ typedef void * VuoList_VuoUiTheme;
  * A visual style for UI widgets.
  */
 typedef const struct VuoUiTheme_struct { void *l; } * VuoUiTheme;
+
+#define VuoUiTheme_SUPPORTS_COMPARISON
+#include "VuoList_VuoUiTheme.h"
 
 VuoUiTheme VuoUiTheme_makeFromJson(struct json_object *js);
 struct json_object *VuoUiTheme_getJson(const VuoUiTheme value);
@@ -149,7 +147,6 @@ VuoUiTheme VuoUiTheme_makeSliderRounded(VuoFont labelFont,
 										VuoReal marginBetweenTrackAndLabel);
 
 
-#define VuoUiTheme_SUPPORTS_COMPARISON
 bool VuoUiTheme_areEqual(const VuoUiTheme valueA, const VuoUiTheme valueB);
 bool VuoUiTheme_isLessThan(const VuoUiTheme valueA, const VuoUiTheme valueB);
 

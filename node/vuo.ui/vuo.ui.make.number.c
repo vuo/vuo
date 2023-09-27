@@ -2,22 +2,19 @@
  * @file
  * vuo.ui.number node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoUiTheme.h"
 #include "VuoList_VuoUiTheme.h"
 #include "VuoRenderedLayers.h"
-#include "../vuo.keyboard/VuoKeyboard.h"
+#include "VuoKeyboard.h"
 #include "VuoEventLoop.h"
 #include <dispatch/dispatch.h>
 #include "VuoTextField.h"
-#include "../vuo.text/VuoNumberFormat.h"
-#include <CoreFoundation/CoreFoundation.h>
-#include <xlocale.h>
+#include "VuoNumberFormat.h"
 
 VuoModuleMetadata({
 					  "title" : "Make Number Field",
@@ -105,22 +102,8 @@ static void vuo_ui_make_number_parseNumber(VuoText text, VuoReal *outputNumber)
 		return;
 	}
 
-	// The C locale doesn't necessarily match the macOS locale; ensure that it does for this conversion.
-	CFLocaleRef localeCF = CFLocaleCopyCurrent();
-	VuoText localeIdentifier = VuoText_makeFromCFString(CFLocaleGetIdentifier(localeCF));
-	VuoLocal(localeIdentifier);
-	CFRelease(localeCF);
-
-	locale_t locale = newlocale(LC_ALL_MASK, localeIdentifier, NULL);
-	locale_t oldLocale = uselocale(locale);
-	if (oldLocale != LC_GLOBAL_LOCALE)
-		freelocale(oldLocale);
-
-	// strtod parses str according to the current locale
-	char *endptr;
-	*outputNumber = strtod(text, &endptr);
-
-	if (text == endptr)
+	*outputNumber = VuoReal_makeFromLocalizedText(text);
+	if (isnan(*outputNumber))
 		*outputNumber = INFINITY;
 }
 

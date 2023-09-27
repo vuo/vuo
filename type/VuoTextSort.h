@@ -2,17 +2,17 @@
  * @file
  * VuoTextSort C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoTextSort_h
+#define VuoTextSort_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoTextSort_struct { void *l; } * VuoList_VuoTextSort;
-#define VuoList_VuoTextSort_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -33,6 +33,8 @@ typedef enum
 	VuoTextSort_Date
 } VuoTextSort;
 
+#include "VuoList_VuoTextSort.h"
+
 VuoTextSort VuoTextSort_makeFromJson(struct json_object * js);
 struct json_object * VuoTextSort_getJson(const VuoTextSort value);
 VuoList_VuoTextSort VuoTextSort_getAllowedValues(void);
@@ -43,8 +45,16 @@ char * VuoTextSort_getSummary(const VuoTextSort value);
  * Automatically generated function.
  */
 char * VuoTextSort_getString(const VuoTextSort value);
+void VuoTextSort_retain(VuoTextSort value);
+void VuoTextSort_release(VuoTextSort value);
 /// @}
 
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

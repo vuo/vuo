@@ -7,6 +7,11 @@ target_sources(vuo.math.types PRIVATE
 	VuoRoundingMethod.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoNumberComparison.cc
+	VuoList_VuoRoundingMethod.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.math.absolute.c
 	vuo.math.add.c

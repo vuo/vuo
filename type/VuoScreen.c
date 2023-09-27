@@ -2,13 +2,12 @@
  * @file
  * VuoScreen implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
-#include "type.h"
 #include "VuoScreen.h"
 #include "VuoScreenCommon.h"
 
@@ -42,7 +41,7 @@ VuoModuleMetadata({
  */
 VuoScreen VuoScreen_makeFromJson(json_object *js)
 {
-	VuoScreen value = {VuoScreenType_Active,-1,-1,"",false,{0,0},0,0,0,0};
+	VuoScreen value = {VuoScreenType_Active, -1, -1, "", false, {0, 0}, 0, 0, 0, 0, false};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "type", &o))
@@ -55,6 +54,9 @@ VuoScreen VuoScreen_makeFromJson(json_object *js)
 		value.name = VuoText_makeFromJson(o);
 	else
 		value.name = VuoText_make("");
+
+	if (json_object_object_get_ex(js, "isMirrored", &o))
+		value.isMirrored = json_object_get_boolean(o);
 
 	return value;
 }
@@ -79,6 +81,8 @@ json_object * VuoScreen_getJson(const VuoScreen value)
 		json_object_object_add(js, "id", idObject);
 	}
 
+	json_object_object_add(js, "isMirrored", json_object_new_boolean(value.isMirrored));
+
 	return js;
 }
 
@@ -88,7 +92,13 @@ json_object * VuoScreen_getJson(const VuoScreen value)
 char * VuoScreen_getSummary(const VuoScreen value)
 {
 	if (value.isRealized)
-		return VuoText_format("<div>Screen \"%s\"</div>\n<div>%lld x %lld points</div>\n<div>%lld x %lld DPI</div>", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
+		return VuoText_format("<div>Screen \"%s\"%s</div>\n<div>%lld x %lld points</div>\n<div>%lld x %lld DPI</div>",
+			value.name,
+			value.isMirrored ? " (mirrored)" : "",
+			value.width,
+			value.height,
+			value.dpiHorizontal,
+			value.dpiVertical);
 
 	if (value.type == VuoScreenType_Active)
 		return strdup("The screen with the active window.");
@@ -116,7 +126,8 @@ bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2)
 		&& value1.width == value2.width
 		&& value1.height == value2.height
 		&& value1.dpiHorizontal == value2.dpiVertical
-		&& value1.dpiVertical == value2.dpiVertical;
+		&& value1.dpiVertical == value2.dpiVertical
+		&& value1.isMirrored == value2.isMirrored;
 }
 
 /**

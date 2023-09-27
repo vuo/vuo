@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNode implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -202,13 +202,15 @@ Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block
 	ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
 	ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
 	vector<Value *> portContextValues;
-	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
+	for (VuoPort *port : ports)
 	{
-		VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
-
-		Value *portContextValue = port->generateCreatePortContext(module, block);
+		VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(port->getCompiler());
+		Value *portContextValue = compilerPort->generateCreatePortContext(module, block);
 		portContextValues.push_back(portContextValue);
 	}
+
+	for (size_t i = 0; i < inputPorts.size(); ++i)
+		VuoCompilerCodeGenUtilities::generateSetPortContextEventBlocking(module, block, portContextValues[i], inputPorts[i]->getClass()->getEventBlocking());
 
 	VuoCompilerCodeGenUtilities::generateSetNodeContextPortContexts(module, block, nodeContextValue, portContextValues);
 
@@ -222,17 +224,15 @@ Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block
  * and handles memory management for the node's runtime representation.
  *
  * @param module The destination LLVM module (i.e., generated code).
- * @param function The function in which to generate code.
- * @param currentBlock The block in which to generate code.
+ * @param block The block in which to generate code.
  * @param compositionStateValue The `VuoCompositionState *` of the composition containing this node.
  * @throw VuoCompilerException Failed to generate the call, possibly due to a bug in the compiler or node class.
  */
-void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock,
-												Value *compositionStateValue)
+void VuoCompilerNode::generateEventFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getEventFunction();
 
-	Value *nodeContextValue = generateGetContext(module, currentBlock, compositionStateValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionStateValue);
 
 	map<VuoCompilerEventPort *, Value *> portContextForEventPort;
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
@@ -244,70 +244,12 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
 	{
 		VuoCompilerEventPort *eventPort = dynamic_cast<VuoCompilerEventPort *>((*i)->getCompiler());
 		if (eventPort)
-			portContextForEventPort[eventPort] = eventPort->generateGetPortContext(module, currentBlock, nodeContextValue);
+			portContextForEventPort[eventPort] = eventPort->generateGetPortContext(module, block, nodeContextValue);
 	}
 
-	generateFunctionCall(functionSrc, module, currentBlock, compositionStateValue, nodeContextValue, portContextForEventPort);
+	generateFunctionCall(functionSrc, module, block, compositionStateValue, nodeContextValue, portContextForEventPort);
 
-	// The output port should transmit an event if any non-blocking input port received the event.
-	// The output port should not transmit an event if no non-blocking or door input ports received the event.
-	// Otherwise, the output port's event transmission is handled by the node class implementation.
-
-	vector<VuoPort *> nonBlockingInputPorts;
-	vector<VuoPort *> doorInputPorts;
-	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
-	{
-		VuoPortClass::EventBlocking eventBlocking = (*i)->getClass()->getEventBlocking();
-		if (eventBlocking == VuoPortClass::EventBlocking_None)
-			nonBlockingInputPorts.push_back(*i);
-		else if (eventBlocking == VuoPortClass::EventBlocking_Door)
-			doorInputPorts.push_back(*i);
-	}
-
-	Value *eventHitNonBlockingInputPort = generateReceivedEventCondition(module, currentBlock, nodeContextValue, nonBlockingInputPorts,
-																		 portContextForEventPort);
-	Value *transmitForAllOutputPorts = eventHitNonBlockingInputPort;
-
-	BasicBlock *handleTransmissionBlock = NULL;
-	BasicBlock *nextBlock = NULL;
-	if (! doorInputPorts.empty())
-	{
-		handleTransmissionBlock = BasicBlock::Create(module->getContext(), "handleTransmission", function, 0);
-		nextBlock = BasicBlock::Create(module->getContext(), "next", function, 0);
-
-		Value *eventHitDoorInputPort = generateReceivedEventCondition(module, currentBlock, nodeContextValue, doorInputPorts,
-																	  portContextForEventPort);
-
-		Value *blockForAllOutputPorts = BinaryOperator::Create(Instruction::And,
-															   BinaryOperator::CreateNot(eventHitNonBlockingInputPort, "", currentBlock),
-															   BinaryOperator::CreateNot(eventHitDoorInputPort, "", currentBlock),
-															   "", currentBlock);
-		Value *handleTransmission = BinaryOperator::Create(Instruction::Or, transmitForAllOutputPorts, blockForAllOutputPorts, "", currentBlock);
-
-		Constant *zeroValue = ConstantInt::get(transmitForAllOutputPorts->getType(), 0);
-		ICmpInst *handleTransmissionComparison = new ICmpInst(*currentBlock, ICmpInst::ICMP_NE, handleTransmission, zeroValue, "");
-		BranchInst::Create(handleTransmissionBlock, nextBlock, handleTransmissionComparison, currentBlock);
-	}
-	else
-	{
-		handleTransmissionBlock = currentBlock;
-	}
-
-	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
-	{
-		VuoCompilerOutputEventPort *eventPort = dynamic_cast<VuoCompilerOutputEventPort *>((*i)->getCompiler());
-		if (eventPort)
-		{
-			Value *portContextValue = portContextForEventPort[eventPort];
-			eventPort->generateStoreEvent(module, handleTransmissionBlock, nodeContextValue, transmitForAllOutputPorts, portContextValue);
-		}
-	}
-
-	if (! doorInputPorts.empty())
-	{
-		BranchInst::Create(nextBlock, handleTransmissionBlock);
-		currentBlock = nextBlock;
-	}
+	VuoCompilerCodeGenUtilities::generateSetOutputEventsAfterNodeExecution(module, block, nodeContextValue);
 }
 
 /**
@@ -714,39 +656,6 @@ bool VuoCompilerNode::isUnloweredStructPointerParameter(VuoCompilerInputData *in
 	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction())
 		return inputDataClass->isUnloweredStructPointerInCallbackStopFunction();
 	return false;
-}
-
-/**
- * Generates a condition that is true if any of this node's input event ports have received an event.
- */
-Value * VuoCompilerNode::generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue)
-{
-	return generateReceivedEventCondition(module, block, nodeContextValue, getBase()->getInputPorts());
-}
-
-/**
- * Generates a condition that is true if any of the given input event ports of this node have received an event.
- */
-Value * VuoCompilerNode::generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue,
-														vector<VuoPort *> selectedInputPorts,
-														const map<VuoCompilerEventPort *, Value *> &portContextForEventPort)
-{
-	Value *conditionValue = ConstantInt::getFalse(block->getContext());
-	for (vector<VuoPort *>::iterator i = selectedInputPorts.begin(); i != selectedInputPorts.end(); ++i)
-	{
-		VuoCompilerInputEventPort *eventPort = dynamic_cast<VuoCompilerInputEventPort *>((*i)->getCompiler());
-		if (eventPort)
-		{
-			map<VuoCompilerEventPort *, Value *>::const_iterator iter = portContextForEventPort.find(eventPort);
-			Value *portContextValue = (iter != portContextForEventPort.end() ?
-												   iter->second :
-												   eventPort->generateGetPortContext(module, block, nodeContextValue));
-
-			Value *pushValue = eventPort->generateLoadEvent(module, block, nodeContextValue, portContextValue);
-			conditionValue = BinaryOperator::Create(Instruction::Or, conditionValue, pushValue, "", block);
-		}
-	}
-	return conditionValue;
 }
 
 /**

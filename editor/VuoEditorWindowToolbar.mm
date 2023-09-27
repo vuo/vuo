@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindowToolbar implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -351,8 +351,11 @@ VuoEditorWindowToolbar::VuoEditorWindowToolbar(QMainWindow *window, bool isCodeE
 void VuoEditorWindowToolbar::addToolbarItems(void)
 {
 	{
-		runImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"run" ofType:@"pdf"]];
-		[runImage setTemplate:YES];
+		runImage11   = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"run-1x1"   ofType:@"pdf"]];
+		runImage1611 = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"run-16x11" ofType:@"pdf"]];
+		[runImage11   setTemplate:YES];
+		[runImage1611 setTemplate:YES];
+		runImage = runImage11;
 
 		toolbarRunItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Run"));
 		NSToolbarItem *ti = toolbarRunItem->nativeToolBarItem();
@@ -365,8 +368,11 @@ void VuoEditorWindowToolbar::addToolbarItems(void)
 
 
 	{
-		stopImage = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"stop" ofType:@"pdf"]];
-		[stopImage setTemplate:YES];
+		stopImage11   = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"stop-1x1"   ofType:@"pdf"]];
+		stopImage1611 = [[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"stop-16x11" ofType:@"pdf"]];
+		[stopImage11   setTemplate:YES];
+		[stopImage1611 setTemplate:YES];
+		stopImage = stopImage11;
 
 		toolbarStopItem = qtToolbar->addItem(QIcon(), VuoEditor::tr("Stop"));
 		NSToolbarItem *ti = toolbarStopItem->nativeToolBarItem();

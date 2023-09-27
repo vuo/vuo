@@ -19,6 +19,17 @@ target_include_directories(vuo.time.types
 	../vuo.math
 )
 
+VuoCompileCompoundTypes(
+	# List types needed by targets compiled with Clang rather than the Vuo compiler
+	VuoList_VuoTime.cc
+	VuoList_VuoTimeUnit.cc
+
+	# Additional list types referenced by headers in this node set
+	VuoList_VuoDurationType.cc
+	VuoList_VuoTimeFormat.cc
+	VuoList_VuoWeekday.cc
+)
+
 VuoCompileNodes(
 	vuo.time.after.timeOfDay.c
 	vuo.time.allowPeriodic.c

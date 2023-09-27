@@ -37,6 +37,18 @@ target_sources(vuo.audio.types PRIVATE
 	VuoTempoRange.h
 )
 
+VuoCompileCompoundTypes(
+	# List types needed by targets compiled with Clang rather than the Vuo compiler
+	VuoList_VuoSpeechVoice.cc
+
+	# Additional list types referenced by headers in this node set
+	VuoList_VuoAudioBinAverageType.cc
+	VuoList_VuoAudioBins.cc
+	VuoList_VuoAudioInputDevice.cc
+	VuoList_VuoAudioOutputDevice.cc
+	VuoList_VuoTempoRange.cc
+)
+
 VuoCompileNodes(
 	vuo.audio.analyze.loudness.c
 	vuo.audio.analyze.fft.c

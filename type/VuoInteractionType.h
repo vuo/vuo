@@ -2,17 +2,17 @@
  * @file
  * VuoInteractionType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoInteractionType_h
+#define VuoInteractionType_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoInteractionType_struct { void *l; } * VuoList_VuoInteractionType;
-#define VuoList_VuoInteractionType_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -39,6 +39,8 @@ typedef enum {
 	VuoInteractionType_Canceled		// Drag or mouse press has been canceled (usually means mouse went off-screen).
 } VuoInteractionType;
 
+#include "VuoList_VuoInteractionType.h"
+
 VuoInteractionType VuoInteractionType_makeFromJson(struct json_object * js);
 struct json_object * VuoInteractionType_getJson(const VuoInteractionType value);
 VuoList_VuoInteractionType VuoInteractionType_getAllowedValues(void);
@@ -58,3 +60,9 @@ void VuoInteractionType_release(VuoInteractionType value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

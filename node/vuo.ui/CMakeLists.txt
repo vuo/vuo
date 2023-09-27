@@ -11,7 +11,7 @@ VuoCompileLibraries(
 target_sources(vuo.ui.libraries PRIVATE
 	VuoClipboard.h
 	VuoTextField.h
-	VuoTextFieldInternal.h
+	VuoTextFieldInternal.hh
 	VuoUiTheme.h
 	VuoUiThemeBase.hh
 	material-colors.h
@@ -39,6 +39,11 @@ target_include_directories(vuo.ui.types
 target_link_libraries(vuo.ui.types
 	PUBLIC
 		${PROJECT_BINARY_DIR}/library/VuoSerializable.o
+)
+
+VuoCompileCompoundTypes(
+	VuoList_VuoIconPosition.cc
+	VuoList_VuoUiTheme.cc
 )
 
 VuoCompileNodes(

@@ -2,12 +2,11 @@
  * @file
  * VuoImageMapColors implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/CGLMacro.h>
 
@@ -82,7 +81,7 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 
 	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 
-	VuoShader shader = VuoShader_make("Map Image Colors Shader");
+	VuoShader shader = VuoShader_make("Map Image Brightness to Gradient Shader");
 	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(shader);
 

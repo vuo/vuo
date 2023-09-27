@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "type.h"
+#include "VuoSceneObject.h"
 #include "VuoMeshUtility.h"
 
 /// @{
@@ -580,7 +580,7 @@ VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform 
 /**
  * Returns a fisheye camera having the position and negative-rotation specified by @c transform (its scale is ignored).
  */
-VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal vignetteWidth, VuoReal vignetteSharpness)
+VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, float distanceMin, float distanceMax, VuoReal vignetteWidth, VuoReal vignetteSharpness)
 {
 	VuoSceneObject_internal *so = (VuoSceneObject_internal *)VuoSceneObject_makeEmpty();
 	so->type = VuoSceneObjectSubType_FisheyeCamera;
@@ -588,9 +588,13 @@ VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform trans
 	so->transform = transform;
 	so->camera.fieldOfView = fieldOfView;
 
-	// 0 and 1000 come from "Realtime Dome Imaging and Interaction" by Bailey/Clothier/Gebbie 2006.
-	so->camera.distanceMin = 0;
-	so->camera.distanceMax = 1000;
+	// "Realtime Dome Imaging and Interaction" by Bailey/Clothier/Gebbie 2006
+	// https://web.archive.org/web/20090116013458/http://web.engr.oregonstate.edu/~mjb/WebMjb/Papers/asmedome.pdf
+	// (which Vuo's fisheye camera is based on) specifies an underlying orthographic projection
+	// with clip planes z=0 and z=1000, but doesn't specify where those numbers came from.
+	// Instead, allow user-configurable Z clip planes, like we do for other cameras.
+	so->camera.distanceMin = distanceMin;
+	so->camera.distanceMax = distanceMax;
 
 	so->camera.vignetteWidth = vignetteWidth;
 	so->camera.vignetteSharpness = vignetteSharpness;
@@ -2184,6 +2188,8 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 						name,
 						transform,
 						cameraFieldOfView,
+						cameraDistanceMin,
+						cameraDistanceMax,
 						cameraVignetteWidth,
 						cameraVignetteSharpness
 						);

@@ -10,17 +10,17 @@ VuoCompileLibraries(
 	VuoVideoPlayer.cc
 )
 target_sources(vuo.video.libraries PRIVATE
-	VuoAvDecoder.h
+	VuoAvDecoder.hh
 	VuoAvPlayerInterface.h
 	VuoAvPlayerObject.h
 	VuoAvWriter.h
 	VuoAvWriterObject.h
-	VuoFfmpegDecoder.h
-	VuoFfmpegUtility.h
+	VuoFfmpegDecoder.hh
+	VuoFfmpegUtility.hh
 	VuoVideo.h
 	VuoVideoCapture.h
-	VuoVideoDecoder.h
-	VuoVideoPlayer.h
+	VuoVideoDecoder.hh
+	VuoVideoPlayer.hh
 )
 target_include_directories(vuo.video.libraries
 	PRIVATE
@@ -59,6 +59,13 @@ target_sources(vuo.video.types PRIVATE
 	VuoVideoFrame.h
 	VuoVideoInputDevice.h
 	VuoVideoOptimization.h
+)
+
+VuoCompileCompoundTypes(
+	VuoList_VuoAudioEncoding.cc
+	VuoList_VuoMovieImageEncoding.cc
+	VuoList_VuoVideoInputDevice.cc
+	VuoList_VuoVideoOptimization.cc
 )
 
 VuoCompileNodes(

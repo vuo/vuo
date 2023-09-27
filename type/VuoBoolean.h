@@ -1,25 +1,19 @@
 /**
  * @file
- * vuo.boolean C type definition.
+ * VuoBoolean C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoBoolean_h
+#define VuoBoolean_h
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-struct json_object;
-
-/// @{ List type.
-typedef void * VuoList_VuoBoolean;
-#define VuoList_VuoBoolean_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -33,6 +27,9 @@ typedef void * VuoList_VuoBoolean;
  * A Boolean
  */
 typedef unsigned long VuoBoolean;
+
+#define VuoBoolean_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoBoolean.h"
 
 VuoBoolean VuoBoolean_makeFromJson(struct json_object * js);
 struct json_object * VuoBoolean_getJson(const VuoBoolean value);
@@ -48,7 +45,6 @@ void VuoBoolean_retain(VuoBoolean value);
 void VuoBoolean_release(VuoBoolean value);
 /// @}
 
-#define VuoBoolean_SUPPORTS_COMPARISON
 bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean value2);
 bool VuoBoolean_isLessThan(const VuoBoolean a, const VuoBoolean b);
 
@@ -58,4 +54,6 @@ bool VuoBoolean_isLessThan(const VuoBoolean a, const VuoBoolean b);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeLibrary interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -14,6 +14,7 @@
 class VuoCompiler;
 class VuoCompilerNodeClass;
 class VuoEditorComposition;
+class VuoModuleManager;
 class VuoNodeClass;
 class VuoNodePopover;
 
@@ -49,9 +50,10 @@ public:
 		nodeLibraryFloating
 	};
 
-	explicit VuoNodeLibrary(VuoCompiler *compiler, QWidget *parent = 0,
+	explicit VuoNodeLibrary(VuoCompiler *compiler, VuoModuleManager *moduleManager, QWidget *parent = 0,
 							VuoNodeLibrary::nodeLibraryDisplayMode displayMode = VuoNodeLibrary::displayByClass);
 	void setCompiler(VuoCompiler *compiler);
+	void setModuleManager(VuoModuleManager *moduleManager);
 	static void cullHiddenNodeClasses(vector<VuoCompilerNodeClass *> &nodeClasses);
 	void prepareAndMakeVisible();
 	void fixWidth(bool fix);
@@ -61,8 +63,10 @@ public:
 	static QStringList tokenizeNodeName(QString nodeName, QString className);
 	static bool isStopWord(QString word);
 	bool getHumanReadable();
+	void focusTextFilterAndSelectAll();
 	void focusTextFilter();
 	void searchForText(QString text);
+	void insertSearchText(QString text);
 	void getState(QString &filterText, set<string> &selectedNodeClasses, string &documentedNodeClass);
 	void setState(QString filterText, set<string> selectedNodeClasses, string documentedNodeClass);
 	QString getSelectedDocumentationText();
@@ -112,6 +116,7 @@ private:
 
 	Ui::VuoNodeLibrary *ui;
 	VuoCompiler *compiler;
+	VuoModuleManager *moduleManager;
 	vector<VuoCompilerNodeClass *> loadedNodeClasses;
 	static map<VuoCompilerNodeClass *, int> newlyInstalledNodeClasses;
 	map<string, VuoNodePopover *> popoverForNodeClass;

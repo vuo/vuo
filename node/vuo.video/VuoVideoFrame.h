@@ -2,7 +2,7 @@
  * @file
  * VuoVideoFrame C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoImage.h"
 #include <float.h>
@@ -35,12 +39,12 @@ typedef struct
 	VuoReal duration;
 } VuoVideoFrame;
 
+#define VuoVideoFrame_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+
 VuoVideoFrame VuoVideoFrame_makeFromJson(struct json_object * js);
 struct json_object * VuoVideoFrame_getJson(const VuoVideoFrame value);
 char * VuoVideoFrame_getSummary(const VuoVideoFrame value);
 
-/// This type has _areEqual() and _isLessThan() functions.
-#define VuoVideoFrame_SUPPORTS_COMPARISON
 bool VuoVideoFrame_areEqual(VuoVideoFrame value1, VuoVideoFrame value2);
 bool VuoVideoFrame_isLessThan(const VuoVideoFrame a, const VuoVideoFrame b);
 
@@ -65,3 +69,7 @@ static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

@@ -22,5 +22,6 @@ target_link_libraries(vuo-compile-for-framework
 add_dependencies(vuo-compile-for-framework
 	VuoCompilerHash
 )
+add_custom_command(TARGET vuo-compile-for-framework POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/bin/vuo-compile-for-framework)
 VuoAddInfoPListSection(vuo-compile-for-framework vuo-compile-Info.plist)
 VuoPCH(vuo-compile-for-framework QTestVuoFramework)

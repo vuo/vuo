@@ -2,7 +2,7 @@
  * @file
  * VuoAudioInputDevice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,6 +16,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 #include "VuoText.h"
@@ -32,12 +36,13 @@ typedef struct
 	VuoInteger channelCount;  ///< The number of input channels on this device.  <= 0 if unknown.
 } VuoAudioInputDevice;
 
+#define VuoAudioInputDevice_SUPPORTS_COMPARISON
+
 VuoAudioInputDevice VuoAudioInputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoAudioInputDevice_getJson(const VuoAudioInputDevice value);
 char * VuoAudioInputDevice_getSummary(const VuoAudioInputDevice value);
 char * VuoAudioInputDevice_getShortSummary(const VuoAudioInputDevice value);
 
-#define VuoAudioInputDevice_SUPPORTS_COMPARISON
 bool VuoAudioInputDevice_areEqual(VuoAudioInputDevice value1, VuoAudioInputDevice value2);
 bool VuoAudioInputDevice_isLessThan(const VuoAudioInputDevice a, const VuoAudioInputDevice b);
 
@@ -63,4 +68,6 @@ static inline VuoAudioInputDevice VuoAudioInputDevice_make(VuoInteger id, VuoTex
  * @}
  */
 
-
+#ifdef __cplusplus
+}
+#endif

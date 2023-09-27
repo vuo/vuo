@@ -2,7 +2,7 @@
  * @file
  * VuoNodeLibrary implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -19,6 +19,7 @@
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerType.hh"
+#include "VuoModuleManager.hh"
 #include "VuoNodeClass.hh"
 #include "VuoNodeClassListItemDelegate.hh"
 #include "VuoNodePopover.hh"
@@ -37,7 +38,7 @@ map<VuoCompilerNodeClass *, int> VuoNodeLibrary::newlyInstalledNodeClasses;
 /**
  * Creates a window for browsing node classes.
  */
-VuoNodeLibrary::VuoNodeLibrary(VuoCompiler *compiler, QWidget *parent,
+VuoNodeLibrary::VuoNodeLibrary(VuoCompiler *compiler, VuoModuleManager *moduleManager, QWidget *parent,
 							   nodeLibraryDisplayMode displayMode) :
 	QDockWidget(parent),
 	ui(new Ui::VuoNodeLibrary)
@@ -81,6 +82,7 @@ VuoNodeLibrary::VuoNodeLibrary(VuoCompiler *compiler, QWidget *parent,
 	fixWidth(false);
 
 	this->compiler = compiler;
+	this->moduleManager = moduleManager;
 
 	populateNodeClassFrequencyMap();
 	populateStopWordList();
@@ -182,6 +184,14 @@ void VuoNodeLibrary::clickedFlatClassButton()
 void VuoNodeLibrary::setCompiler(VuoCompiler *compiler)
 {
 	this->compiler = compiler;
+}
+
+/**
+ * Sets the module manager instance to query for information about loaded modules.
+ */
+void VuoNodeLibrary::setModuleManager(VuoModuleManager *moduleManager)
+{
+	this->moduleManager = moduleManager;
 }
 
 /**
@@ -508,18 +518,8 @@ vector<VuoCompilerNodeClass *> VuoNodeLibrary::getMatchingNodeClassesForSearchTe
 				if (	(nodeClass->getBase()->getClassName() == "vuo.data.share") ||
 						(nodeClass->getBase()->getClassName() == "vuo.data.share.list"))
 				{
-					map<string, VuoCompilerType *> loadedTypes = compiler->getTypes();
-					for (map<string, VuoCompilerType *>::iterator i = loadedTypes.begin(); i != loadedTypes.end(); ++i)
-					{
-						string typeName = i->first;
-						if ((!VuoType::isListTypeName(typeName)) &&
-								VuoRendererPort::isSpecializationImplementedForType(typeName))
-
-						{
-							VuoCompilerType *type = i->second;
-							keywords.push_back(type->getBase()->getDefaultTitle());
-						}
-					}
+					for (auto i : moduleManager->getLoadedSingletonTypes(true))
+						keywords.push_back(i.second->getBase()->getDefaultTitle());
 				}
 
 				// Split keyphrases on whitespace so that each one is considered an individual searchable keyword.
@@ -733,10 +733,18 @@ bool VuoNodeLibrary::getHumanReadable()
  * Focuses the node library's text filter widget and highlights any text
  * already displayed within the filter.
  */
-void VuoNodeLibrary::focusTextFilter()
+void VuoNodeLibrary::focusTextFilterAndSelectAll()
 {
 	ui->textFilter->setFocus();
 	ui->textFilter->selectAll();
+}
+
+/**
+ * Focuses the node library's text filter widget (without changing the selection).
+ */
+void VuoNodeLibrary::focusTextFilter()
+{
+    ui->textFilter->setFocus();
 }
 
 /**
@@ -745,6 +753,14 @@ void VuoNodeLibrary::focusTextFilter()
 void VuoNodeLibrary::searchForText(QString text)
 {
 	ui->textFilter->setText(text);
+}
+
+/**
+ * Inserts text into the node library's text filter at the current cursor position.
+ */
+void VuoNodeLibrary::insertSearchText(QString text)
+{
+    ui->textFilter->insert(text);
 }
 
 /**

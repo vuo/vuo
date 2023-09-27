@@ -1,0 +1,65 @@
+/**
+ * @file
+ *
+ * @createdInVuoVersion 2.4.2
+ * @lastSavedInVuoVersion 2.4.2
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AddToScore [type="example.player.award" version="1.0.0" label="Add to Score|<refresh>refresh\l|<player>player\l|<points>points\l|<awardedPlayer>awardedPlayer\r" pos="375,150"];
+AddToScore2 [type="example.player.award" version="1.0.0" label="Add to Score|<refresh>refresh\l|<player>player\l|<points>points\l|<awardedPlayer>awardedPlayer\r" pos="375,300"];
+AddToScore3 [type="example.player.award" version="1.0.0" label="Add to Score|<refresh>refresh\l|<player>player\l|<points>points\l|<awardedPlayer>awardedPlayer\r" pos="375,450"];
+AppendTexts [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="705,180" _separator="\", \"" _includeEmptyParts="true"];
+CombineScores [type="example.player.combine" version="1.0.0" label="Combine Scores|<refresh>refresh\l|<players>players\l|<method>method\l|<combinedScore>combinedScore\r" pos="690,270" _method="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,75" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.3.Player" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="629,281"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1124,236"];
+MakeList3 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="646,191"];
+MakePlayer [type="example.player.make" version="1.0.0" label="Make Player|<refresh>refresh\l|<name>name\l|<player>player\r" pos="195,120" _name="\"Player 1\""];
+MakePlayer2 [type="example.player.make" version="1.0.0" label="Make Player|<refresh>refresh\l|<name>name\l|<player>player\r" pos="195,270" _name="\"Player 2\""];
+MakePlayer3 [type="example.player.make" version="1.0.0" label="Make Player|<refresh>refresh\l|<name>name\l|<player>player\r" pos="195,420" _name="\"Player 3\""];
+MakeRandomValue [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="180,180" _minimum="0" _maximum="100"];
+MakeRandomValue2 [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="180,330" _minimum="0" _maximum="100"];
+MakeRandomValue3 [type="vuo.noise.random.VuoInteger" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="180,480" _minimum="0" _maximum="100"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="960,150" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.10000000149011612\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="960,300" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":48.0,\"underline\":false,\"color\":\{\"r\":0.99999278783798218,\"g\":1.0,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":-0.10000000149011612\}" _wrapWidth="Infinity" _opacity="1.0"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1170,225" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue4 [type="vuo.data.summarize.VuoGenericType1" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1050,405"];
+SummarizeValue5 [type="vuo.data.summarize.VuoGenericType1" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="765,270"];
+SummarizeValue6 [type="vuo.data.summarize.VuoGenericType1" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="765,285"];
+SummarizeValue7 [type="vuo.data.summarize.VuoGenericType1" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="750,255"];
+
+AddToScore2:awardedPlayer -> MakeList:2;
+AddToScore3:awardedPlayer -> MakeList:3;
+AddToScore:awardedPlayer -> MakeList:1;
+AppendTexts:compositeText -> MakeTextLayer:text;
+CombineScores:combinedScore -> SummarizeValue4:value;
+FireOnStart:started -> MakePlayer2:name;
+FireOnStart:started -> MakePlayer3:name;
+FireOnStart:started -> MakePlayer:name;
+FireOnStart:started -> MakeRandomValue2:minimum;
+FireOnStart:started -> MakeRandomValue3:minimum;
+FireOnStart:started -> MakeRandomValue:minimum;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> AppendTexts:texts;
+MakeList:list -> CombineScores:players;
+MakePlayer2:player -> AddToScore2:player;
+MakePlayer3:player -> AddToScore3:player;
+MakePlayer:player -> AddToScore:player;
+MakeRandomValue2:value -> AddToScore2:points;
+MakeRandomValue2:value -> SummarizeValue5:value;
+MakeRandomValue3:value -> AddToScore3:points;
+MakeRandomValue3:value -> SummarizeValue6:value;
+MakeRandomValue:value -> AddToScore:points;
+MakeRandomValue:value -> SummarizeValue7:value;
+MakeTextLayer2:layer -> MakeList2:2;
+MakeTextLayer:layer -> MakeList2:1;
+SummarizeValue4:summary -> MakeTextLayer2:text;
+SummarizeValue5:summary -> MakeList3:2;
+SummarizeValue6:summary -> MakeList3:3;
+SummarizeValue7:summary -> MakeList3:1;
+}

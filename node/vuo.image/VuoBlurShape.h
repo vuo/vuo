@@ -2,17 +2,16 @@
  * @file
  * VuoBlurShape C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoBlurShape;
-#define VuoList_VuoBlurShape_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -33,12 +32,14 @@ typedef enum
 	VuoBlurShape_Disc,
 } VuoBlurShape;
 
+#define VuoBlurShape_SUPPORTS_COMPARISON
+#include "VuoList_VuoBlurShape.h"
+
 VuoBlurShape VuoBlurShape_makeFromJson(struct json_object *js);
 struct json_object *VuoBlurShape_getJson(const VuoBlurShape value);
 VuoList_VuoBlurShape VuoBlurShape_getAllowedValues(void);
 char *VuoBlurShape_getSummary(const VuoBlurShape value);
 
-#define VuoBlurShape_SUPPORTS_COMPARISON
 bool VuoBlurShape_areEqual(const VuoBlurShape valueA, const VuoBlurShape valueB);
 bool VuoBlurShape_isLessThan(const VuoBlurShape valueA, const VuoBlurShape valueB);
 
@@ -54,3 +55,7 @@ void VuoBlurShape_release(VuoBlurShape value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

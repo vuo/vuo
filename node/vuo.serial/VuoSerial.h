@@ -2,12 +2,12 @@
  * @file
  * VuoSerial interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "node_header.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -33,7 +33,9 @@ void VuoSerial_removeDevicesChangedTriggers(VuoOutputTrigger(devices, VuoList_Vu
  */
 typedef void *VuoSerial;
 
-VuoSerial VuoSerial_getShared(const VuoText devicePath);
+VuoSerial VuoSerial_useShared(const VuoText devicePath);
+void VuoSerial_disuseShared(VuoSerial device);
+
 void VuoSerial_checkPendingDevices(void);
 
 void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger dataBits, VuoParity parity, VuoInteger stopBits);

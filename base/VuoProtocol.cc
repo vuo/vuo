@@ -2,14 +2,13 @@
  * @file
  * VuoProtocol implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoProtocol.hh"
 
-#include "VuoRunner.hh"
 #include "VuoStringUtilities.hh"
 
 
@@ -251,8 +250,8 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 
 
 	// portID => portType
-	map<string,string> publishedInputs;
-	map<string,string> publishedOutputs;
+	vector<pair<string,string>> publishedInputs;
+	vector<pair<string,string>> publishedOutputs;
 	string linenumber;
 	while (getNextLine(linenumber))
 	{
@@ -276,84 +275,30 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 		while (getNextPort(label, portID))
 		{
 			if (isPublishedInputs)
-				publishedInputs[portID] = getType(linenumber, portID);
+				publishedInputs.push_back({portID, getType(linenumber, portID)});
 			else
-				publishedOutputs[portID] = getType(linenumber, portID);
+				publishedOutputs.push_back({portID, getType(linenumber, portID)});
 		}
-
 	}
 
-	// Check whether the composition contains all of the required input ports.
-	vector<pair<string, string> > protocolInputs = getInputPortNamesAndTypes();
-	for (vector<pair<string, string> >::iterator i = protocolInputs.begin(); i != protocolInputs.end(); ++i)
-	{
-		string protocolInputName = i->first;
-		string protocolInputType = i->second;
-
-		map<string,string>::iterator publishedInput = publishedInputs.find(protocolInputName);
-		if (publishedInput == publishedInputs.end() || publishedInput->second != protocolInputType)
-			return false;
-	}
-
-	// Check whether the composition contains all of the required output ports.
-	vector<pair<string, string> > protocolOutputs = getOutputPortNamesAndTypes();
-	for (vector<pair<string, string> >::iterator i = protocolOutputs.begin(); i != protocolOutputs.end(); ++i)
-	{
-		string protocolOutputName = i->first;
-		string protocolOutputType = i->second;
-
-		map<string,string>::iterator publishedOutput = publishedOutputs.find(protocolOutputName);
-		if (publishedOutput == publishedOutputs.end() || publishedOutput->second != protocolOutputType)
-			return false;
-	}
-
-	return true;
+	return arePublishedPortsCompliant(publishedInputs, publishedOutputs);
 }
 
 /**
- * @see isCompositionCompliant
+ * Returns true if the given published port names and types contain all of the required ports for this protocol.
  */
-bool VuoProtocol::isCompositionCompliant(VuoRunner *runner)
+bool VuoProtocol::arePublishedPortsCompliant(const vector<pair<string, string>> &publishedInputNamesAndTypes,
+												const vector<pair<string, string>> &publishedOutputNamesAndTypes)
 {
-	// Check whether the composition contains all of the required input ports.
-	vector<VuoRunner::Port *> inputs = runner->getPublishedInputPorts();
 	vector<pair<string, string> > protocolInputs = getInputPortNamesAndTypes();
-	for (vector<pair<string, string> >::iterator i = protocolInputs.begin(); i != protocolInputs.end(); ++i)
-	{
-		string protocolInputName = i->first;
-		string protocolInputType = i->second;
-
-		bool found = false;
-		for (vector<VuoRunner::Port *>::iterator it = inputs.begin(); it != inputs.end(); ++it)
-			if ((*it)->getName() == protocolInputName
-			 && (*it)->getType() == protocolInputType)
-			{
-				found = true;
-				break;
-			}
-		if (!found)
+	for (auto protocolInput : protocolInputs)
+		if (std::find(publishedInputNamesAndTypes.begin(), publishedInputNamesAndTypes.end(), protocolInput) == publishedInputNamesAndTypes.end())
 			return false;
-	}
 
-	// Check whether the composition contains all of the required output ports.
-	vector<VuoRunner::Port *> outputs = runner->getPublishedOutputPorts();
 	vector<pair<string, string> > protocolOutputs = getOutputPortNamesAndTypes();
-	for (vector<pair<string, string> >::iterator i = protocolOutputs.begin(); i != protocolOutputs.end(); ++i)
-	{
-		string protocolOutputName = i->first;
-		string protocolOutputType = i->second;
-
-		bool found = false;
-		for (vector<VuoRunner::Port *>::iterator it = outputs.begin(); it != outputs.end(); ++it)
-			if ((*it)->getName() == protocolOutputName
-			 && (*it)->getType() == protocolOutputType)
-			{
-				found = true;
-				break;
-			}
-		if (!found)
+	for (auto protocolOutput : protocolOutputs)
+		if (std::find(publishedOutputNamesAndTypes.begin(), publishedOutputNamesAndTypes.end(), protocolOutput) == publishedOutputNamesAndTypes.end())
 			return false;
-	}
 
 	return true;
 }
@@ -365,22 +310,23 @@ vector<VuoProtocol *> VuoProtocol::getCompositionProtocols(string compositionAsS
 {
 	vector<VuoProtocol *> allProtocols = VuoProtocol::getProtocols();
 	vector<VuoProtocol *> adheresToProtocols;
-	for (vector<VuoProtocol *>::iterator i = allProtocols.begin(); i != allProtocols.end(); ++i)
-		if ((*i)->isCompositionCompliant(compositionAsString))
-			adheresToProtocols.push_back(*i);
+	for (VuoProtocol *protocol : allProtocols)
+		if (protocol->isCompositionCompliant(compositionAsString))
+			adheresToProtocols.push_back(protocol);
 	return adheresToProtocols;
 }
 
 /**
- * Returns the protocols the composition adheres to.
+ * Returns the protocols that a composition with the given published port names and types adheres to.
  */
-vector<VuoProtocol *> VuoProtocol::getCompositionProtocols(VuoRunner *runner)
+vector<VuoProtocol *> VuoProtocol::getCompositionProtocols(const vector<pair<string, string>> &publishedInputNamesAndTypes,
+														   const vector<pair<string, string>> &publishedOutputNamesAndTypes)
 {
 	vector<VuoProtocol *> allProtocols = VuoProtocol::getProtocols();
 	vector<VuoProtocol *> adheresToProtocols;
-	for (vector<VuoProtocol *>::iterator i = allProtocols.begin(); i != allProtocols.end(); ++i)
-		if ((*i)->isCompositionCompliant(runner))
-			adheresToProtocols.push_back(*i);
+	for (VuoProtocol *protocol : allProtocols)
+		if (protocol->arePublishedPortsCompliant(publishedInputNamesAndTypes, publishedOutputNamesAndTypes))
+			adheresToProtocols.push_back(protocol);
 	return adheresToProtocols;
 }
 

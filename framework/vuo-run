@@ -87,9 +87,7 @@ for filename in "${COMPOSITIONS[@]}"; do
 	fi
 	
 	COMPOSITION_LINKED="/tmp/$COMPOSITION_BASENAME"
-	# During development, small-binary is typically faster since it doesn't need to wait for _everything_ to be linked.
-	$VUO_FRAMEWORK_PATH/vuo-link --optimization small-binary $VERBOSE "$COMPOSITION_COMPILED" --output="$COMPOSITION_LINKED"
-#	$VUO_FRAMEWORK_PATH/vuo-link --optimization fast-build "$COMPOSITION_COMPILED" --output="$COMPOSITION_LINKED"
+	$VUO_FRAMEWORK_PATH/vuo-link $VERBOSE "$COMPOSITION_COMPILED" --output="$COMPOSITION_LINKED"
 	if [ ! -f "$COMPOSITION_LINKED" ]; then
 		echo "Error: $COMPOSITION_WITHOUT_EXTENSION.vuo: Linking failed"
 		exit 1

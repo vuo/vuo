@@ -2,7 +2,7 @@
  * @file
  * VuoVideoCapture interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -12,7 +12,7 @@ extern "C"
 {
 #endif
 
-#include "node.h"
+#include "node_header.h"
 #include "VuoVideoFrame.h"
 #include "VuoVideoInputDevice.h"
 #include "VuoList_VuoVideoInputDevice.h"

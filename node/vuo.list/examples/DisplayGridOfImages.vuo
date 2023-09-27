@@ -3,7 +3,7 @@
  * Displays a set of images as layers arranged in a grid.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
@@ -11,7 +11,7 @@
 digraph G
 {
 ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="825,225" _scaleToFit="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="[\{\"x\":0,\"y\":0\}]" _width="2.000000" _columns="10" _height="1.250000" _rows="5"];
-FetchListOfImages [type="vuo.image.fetch.list" version="1.0.0" label="Fetch List of Images|<refresh>refresh\l|<urls>urls\l|<images>images\r" pos="315,225"];
+FetchListOfImages [type="vuo.image.fetch.list" version="1.0.0" label="Fetch Images|<refresh>refresh\l|<urls>urls\l|<images>images\r" pos="315,225"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-105,180" fillcolor="lime" _started_eventThrottling="enqueue"];
 ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="150,225" _folder="\"\\/Library\\/User Pictures\"" _includeSubfolders="true" _fileType="\"image\""];
 MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1019,236" fillcolor="blue"];

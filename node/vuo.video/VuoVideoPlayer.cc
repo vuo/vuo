@@ -2,14 +2,14 @@
  * @file
  * VuoVideoPlayer implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "VuoVideoPlayer.h"
-#include "VuoAvDecoder.h"
-#include "VuoFfmpegDecoder.h"
+#include "VuoVideoPlayer.hh"
+#include "VuoAvDecoder.hh"
+#include "VuoFfmpegDecoder.hh"
 #include <unistd.h>
 
 extern "C"

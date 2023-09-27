@@ -1,22 +1,21 @@
 /**
  * @file
- * vuo.integer C type definition.
+ * VuoInteger C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoInteger_h
+#define VuoInteger_h
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <math.h>
-struct json_object;
 
 /**
  * @ingroup VuoTypes
@@ -31,10 +30,8 @@ struct json_object;
  */
 typedef int64_t VuoInteger;
 
-/// List type.
-typedef const struct VuoList_VuoInteger_struct { void *l; } * VuoList_VuoInteger;
-/// List type.
-#define VuoList_VuoInteger_TYPE_DEFINED
+#define VuoInteger_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoInteger.h"
 
 VuoInteger VuoInteger_makeFromJson(struct json_object * js);
 struct json_object * VuoInteger_getJson(const VuoInteger value);
@@ -124,8 +121,6 @@ static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInt
 	return center + snap * ((a-center) / snap);
 }
 
-/// This type has _areEqual() and _isLessThan() functions.
-#define VuoInteger_SUPPORTS_COMPARISON
 bool VuoInteger_areEqual(const VuoInteger value1, const VuoInteger value2);
 bool VuoInteger_areEqualListWithinTolerance(VuoList_VuoInteger values, VuoInteger tolerance);
 bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b);
@@ -177,4 +172,6 @@ void VuoInteger_release(VuoInteger value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

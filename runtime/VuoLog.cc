@@ -2,7 +2,7 @@
  * @file
  * VuoLog implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <xlocale.h>
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -39,6 +40,9 @@
 
 /// The existing std::terminate handler before we installed ours.
 static std::terminate_handler nextTerminateHandler = nullptr;
+
+dispatch_queue_t VuoLog_utf8LocaleQueue = NULL;    ///< Serializes access to VuoText_utf8Locale.
+locale_t VuoLog_utf8Locale = NULL;                 ///< A shared UTF-8 locale object, initialized at startup.
 
 /**
  * Log the timestamp at which std::terminate was called,
@@ -137,6 +141,9 @@ static void __attribute__((constructor)) VuoLog_init(void)
 	if (!_NSGetExecutablePath(executablePath, &size))
 		VuoLog_executableName = basename_r(executablePath, (char *)malloc(size));
 
+	VuoLog_utf8LocaleQueue = dispatch_queue_create("org.vuo.VuoLog.locale.utf8", NULL);
+	VuoLog_utf8Locale = newlocale(LC_ALL_MASK, "en_US.UTF-8", NULL);
+
 #ifdef VUO_PROFILE
 	VuoLogProfileQueue = dispatch_queue_create("VuoLogProfile", NULL);
 	VuoLogProfile = new VuoLogProfileType;
@@ -199,13 +206,16 @@ double VuoLogGetElapsedTime(void)
 /**
  * Data to be inserted into macOS crash reports.
  * Via http://alastairs-place.net/blog/2013/01/10/interesting-os-x-crash-report-tidbits/
+ *
+ * Since the `message` and `message2` fields don't work on macOS 12 and later,
+ * use the `signature` and `backtrace` fields instead.
  */
 typedef struct {
 	unsigned int version	VuoCrashReport_alignment;
-	char *message           VuoCrashReport_alignment;  ///< Shows up in the crash report's "Application Specific Information" section.
-	char *signature			VuoCrashReport_alignment;
-	char *backtrace			VuoCrashReport_alignment;
-	char *message2          VuoCrashReport_alignment;  ///< Shows up in the crash report's "Application Specific Information" section, _above_ `message`.
+	char *message           VuoCrashReport_alignment;  ///< On macOS 11 and earlier, shows up in the crash report's "Application Specific Information" section.
+	char *signature         VuoCrashReport_alignment;  ///< On macOS 10.15 through 13 (at least), shows up in the crash report's "Application Specific Signatures" section.
+	char *backtrace         VuoCrashReport_alignment;  ///< On macOS 10.15 through 13 (at least), shows up in the crash report's "Application Specific Backtrace" section.
+	char *message2          VuoCrashReport_alignment;  ///< On macOS 11 and earlier, shows up in the crash report's "Application Specific Information" section, _above_ `message`.
 	void *reserved			VuoCrashReport_alignment;
 	void *reserved2			VuoCrashReport_alignment;
 } VuoCrashReport_infoType;
@@ -231,13 +241,13 @@ void VuoLog_statusF(const char *moduleName, const char *file, const unsigned int
 	}
 
 	dispatch_sync(statusQueue, ^{
-		if (VuoCrashReport.message2)
-			free(VuoCrashReport.message2);
+		if (VuoCrashReport.signature)
+			free(VuoCrashReport.signature);
 
 		if (format)
-			VuoCrashReport.message2 = message;
+			VuoCrashReport.signature = message;
 		else
-			VuoCrashReport.message2 = nullptr;
+			VuoCrashReport.signature = nullptr;
 	});
 }
 
@@ -586,8 +596,8 @@ void VuoLog(const char *moduleName, const char *file, const unsigned int linenum
 
 	// Combine VuoLogHistory into a single string for the crash report.
 	{
-		if (VuoCrashReport.message)
-			free(VuoCrashReport.message);
+		if (VuoCrashReport.backtrace)
+			free(VuoCrashReport.backtrace);
 
 		long size = 0;
 		for (int i = 0; i < VuoLogHistoryItems; ++i)
@@ -604,7 +614,7 @@ void VuoLog(const char *moduleName, const char *file, const unsigned int linenum
 				strlcat(message, VuoLogHistory[i], size);
 			}
 
-		VuoCrashReport.message = message;
+		VuoCrashReport.backtrace = message;
 	}
 	});
 }
@@ -649,17 +659,19 @@ void VuoLog_backtrace(void)
  */
 void VuoLog_replaceString(char *wholeString, const char *substringToRemove, const char *replacement)
 {
-	size_t replacementLen = strlen(replacement);
-	regex_t regex;
-	regcomp(&regex, substringToRemove, REG_EXTENDED);
-	size_t nmatch = 1;
-	regmatch_t pmatch[nmatch];
-	while (!regexec(&regex, wholeString, nmatch, pmatch, 0))
-	{
-		strncpy(wholeString + pmatch[0].rm_so, replacement, replacementLen);
-		memmove(wholeString + pmatch[0].rm_so + replacementLen, wholeString + pmatch[0].rm_eo, strlen(wholeString + pmatch[0].rm_eo) + 1);
-	}
-	regfree(&regex);
+	dispatch_sync(VuoLog_utf8LocaleQueue, ^{
+		size_t replacementLen = strlen(replacement);
+		regex_t regex;
+		regcomp_l(&regex, substringToRemove, REG_EXTENDED, VuoLog_utf8Locale);
+		size_t nmatch = 1;
+		regmatch_t pmatch[nmatch];
+		while (!regexec(&regex, wholeString, nmatch, pmatch, 0))
+		{
+			strncpy(wholeString + pmatch[0].rm_so, replacement, replacementLen);
+			memmove(wholeString + pmatch[0].rm_so + replacementLen, wholeString + pmatch[0].rm_eo, strlen(wholeString + pmatch[0].rm_eo) + 1);
+		}
+		regfree(&regex);
+	});
 }
 
 /**

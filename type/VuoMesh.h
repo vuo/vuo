@@ -2,12 +2,17 @@
  * @file
  * VuoMesh C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoMesh_h
+#define VuoMesh_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoColor.h"
 #include "VuoPoint2d.h"
@@ -55,6 +60,8 @@ typedef enum {
  * Please use the get/set methods instead of directly accessing the structure.}
  */
 typedef const struct { void *l; } * VuoMesh;
+
+#define VuoMesh_OVERRIDES_INTERPROCESS_SERIALIZATION  ///< This type implements `_getInterprocessJson()`.
 
 // Constructors
 VuoMesh VuoMesh_makeQuad(void);
@@ -116,11 +123,7 @@ bool VuoMesh_isPopulated(const VuoMesh mesh);
 
 VuoMesh VuoMesh_makeFromJson(struct json_object * js);
 struct json_object * VuoMesh_getJson(const VuoMesh value);
-
-/// This type has a _getInterprocessJson() function.
-#define VuoMesh_REQUIRES_INTERPROCESS_JSON
 struct json_object * VuoMesh_getInterprocessJson(const VuoMesh value);
-
 char * VuoMesh_getSummary(const VuoMesh value);
 
 /**
@@ -151,3 +154,9 @@ void VuoMesh_release(const VuoMesh v);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -2,7 +2,7 @@
  * @file
  * VuoPublishedPortSidebar implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -12,6 +12,7 @@
 
 #include "VuoPublishedPortListItemDelegate.hh"
 
+#include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
@@ -291,8 +292,6 @@ void VuoPublishedPortSidebar::appendPublishedPortToList(VuoPublishedPort *port, 
  */
 void VuoPublishedPortSidebar::highlightEligibleDropLocations(VuoRendererPort *internalFixedPort, bool eventOnlyConnection)
 {
-	auto types = composition->getCompiler()->getTypes();
-
 	int numPorts = ui->publishedPortList->count();
 	for (int portIndex = 0; portIndex < numPorts; ++portIndex)
 	{
@@ -303,7 +302,7 @@ void VuoPublishedPortSidebar::highlightEligibleDropLocations(VuoRendererPort *in
 		publishedPortToHighlight->setCacheMode(QGraphicsItem::NoCache);
 		publishedPortToHighlight->updateGeometry();
 
-		VuoRendererColors::HighlightType highlight = composition->getEligibilityHighlightingForPort(publishedPortToHighlight, internalFixedPort, eventOnlyConnection, types);
+		VuoRendererColors::HighlightType highlight = composition->getEligibilityHighlightingForPort(publishedPortToHighlight, internalFixedPort, eventOnlyConnection);
 		publishedPortToHighlight->setEligibilityHighlight(highlight);
 
 		publishedPortToHighlight->setCacheMode(normalCacheMode);
@@ -966,14 +965,9 @@ void VuoPublishedPortSidebar::populatePortTypeMenu(QMenu *menu, bool lists, bool
 
 		// Now add a submenu for each node set that contains compatible types.
 		composition->getModuleManager()->updateWithAlreadyLoadedModules();
-		map<string, set<VuoCompilerType *> > loadedTypesForNodeSet = composition->getModuleManager()->getLoadedTypesForNodeSet();
 		QList<QAction *> allNodeSetActionsToAdd;
-		for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
-		{
-			string nodeSetName = i->first;
-			if (!nodeSetName.empty())
-				allNodeSetActionsToAdd += composition->getCompatibleTypesForMenu(NULL, types, types, true, nodeSetName, menu);
-		}
+		for (const string &nodeSet : composition->getModuleManager()->getKnownNodeSets())
+			allNodeSetActionsToAdd += composition->getCompatibleTypesForMenu(NULL, types, types, true, nodeSet, menu);
 
 		bool usingExpansionMenu = false;
 		if ((menu->actions().size() > 0) && (allNodeSetActionsToAdd.size() > 0))

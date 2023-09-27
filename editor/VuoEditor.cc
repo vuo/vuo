@@ -2,7 +2,7 @@
  * @file
  * VuoEditor implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #include "VuoEditor.hh"
 
 #include "VuoCodeWindow.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerDriver.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoComposition.hh"
@@ -23,6 +24,7 @@
 #include "VuoEditorWindow.hh"
 #include "VuoErrorDialog.hh"
 #include "VuoException.hh"
+#include "VuoModuleCache.hh"
 #include "VuoModuleManager.hh"
 #include "VuoNodeClass.hh"
 #include "VuoNodeSet.hh"
@@ -229,7 +231,7 @@ VuoEditor::VuoEditor(int &argc, char *argv[])
 	VuoEditor_Pro1();
 #endif
 
-	compiler->prepareForFastBuild();
+	compiler->prepareModuleCaches();
 
 	builtInDriversQueue = dispatch_queue_create("org.vuo.editor.drivers", NULL);
 	dispatch_async(builtInDriversQueue, ^{
@@ -607,6 +609,7 @@ void VuoEditor::loadTranslations()
 	if (settings->value("translation/enable", true).toBool())
 	{
 		QLocale locale = QLocale::system();
+		if (VuoIsDebugEnabled())
 		{
 			VUserLog("C locale:");
 			VUserLog("    NL codeset         : %s", nl_langinfo(CODESET));
@@ -828,7 +831,7 @@ void VuoEditor::reallyQuit()
 
 	try
 	{
-		VuoCompiler::deleteOldModuleCaches();
+		VuoModuleCache::deleteOldCaches();
 	}
 	catch (...)
 	{
@@ -886,7 +889,7 @@ void VuoEditor::initializeTopLevelNodeLibrary(VuoCompiler *nodeLibraryCompiler,
 											  int nodeLibraryWidth,
 											  int nodeLibraryHeight)
 {
-	ownedNodeLibrary = new VuoNodeLibrary(nodeLibraryCompiler, NULL, nodeLibraryDisplayMode);
+	ownedNodeLibrary = new VuoNodeLibrary(nodeLibraryCompiler, moduleManager, NULL, nodeLibraryDisplayMode);
 	ownedNodeLibrary->setObjectName("Top-level node library");
 
 	ownedNodeLibrary->setFloating(true);
@@ -998,7 +1001,7 @@ void VuoEditor::populateHelpMenu(QMenu *m)
 	// View Community Activity
 	QAction *communityActivityAction = new QAction(m);
 	communityActivityAction->setText(tr("View Community Activity"));
-	communityActivityAction->setData(QUrl("https://vuo.org/community"));
+	communityActivityAction->setData(QUrl("https://community.vuo.org"));
 	connect(communityActivityAction, &QAction::triggered, this, &VuoEditor::openExternalUrlFromSenderData);
 	m->addAction(communityActivityAction);
 
@@ -1335,7 +1338,7 @@ void VuoEditor::newCompositionWithProtocol(void)
 		if (!nodeLibraryFilterText.empty())
 		{
 			w->getCurrentNodeLibrary()->searchForText(nodeLibraryFilterText.c_str());
-			w->getCurrentNodeLibrary()->focusTextFilter();
+			w->getCurrentNodeLibrary()->focusTextFilterAndSelectAll();
 		}
 	}
 }
@@ -1367,7 +1370,7 @@ void VuoEditor::newCompositionWithTemplate(void)
 		if (!nodeLibraryFilterText.empty())
 		{
 			w->getCurrentNodeLibrary()->searchForText(nodeLibraryFilterText.c_str());
-			w->getCurrentNodeLibrary()->focusTextFilter();
+			w->getCurrentNodeLibrary()->focusTextFilterAndSelectAll();
 		}
 	}
 }
@@ -1593,7 +1596,7 @@ void VuoEditor::showNodeLibrary(void)
 			updateGlobalNodeLibraryState(true, false);
 		}
 
-		ownedNodeLibrary->focusTextFilter();
+		ownedNodeLibrary->focusTextFilterAndSelectAll();
 	}
 }
 
@@ -1762,13 +1765,12 @@ void VuoEditor::moveFileToTrash(QString filePath)
 void VuoEditor::openUrl(const QString &url)
 {
 	QUrl fileUrl(url);
-
 	if (fileUrl.isValid() && fileUrl.scheme() == VuoEditor::vuoExampleCompositionScheme)
 	{
 		if (!uiInitialized)
 			queuedCompositionsToOpen.push_back(url);
 		else
-			openExampleCompositionFromUrl(fileUrl);
+			openExampleCompositionFromUrl(url);
 	}
 	else
 	{
@@ -2879,24 +2881,27 @@ string VuoEditor::removeVuoLinks(string markdownText)
  *
  * Sample @c url format: "vuo-example://vuo.text/RevealWord.vuo"
  */
-void VuoEditor::openExampleCompositionFromUrl(const QUrl &url)
+void VuoEditor::openExampleCompositionFromUrl(const QString &url)
 {
-	string nodeSetName = url.host().toUtf8().constData();
-	string nodeClassToHighlight = "";
+	QUrl urlForParsing(url);  // We can extract all parts from this except the host, since the QUrl wouldn't preserve its case.
 
-	QUrlQuery query(url.query());
-	// Check whether the url contains the expected query parameters.
+	QString hostPathQuery = url;
+	hostPathQuery.remove(0, (urlForParsing.scheme() + "://").size());
+	QString nodeSetName = hostPathQuery.left(urlForParsing.host().size());
+
+	QString compositionFileName = urlForParsing.path();
+	compositionFileName.remove(0, 1);  // Remove leading "/".
+
+	QString nodeClassToHighlight;
+	QUrlQuery query(urlForParsing.query());
 	if (query.hasQueryItem(vuoExampleHighlightedNodeClassQueryItem))
-		nodeClassToHighlight = query.queryItemValue(vuoExampleHighlightedNodeClassQueryItem, QUrl::FullyDecoded).toUtf8().constData();
+		nodeClassToHighlight = query.queryItemValue(vuoExampleHighlightedNodeClassQueryItem, QUrl::FullyDecoded);
 
-	string compositionFileName = VuoStringUtilities::substrAfter(url.path().toUtf8().constData(), "/");
-
-	VuoNodeSet *nodeSet = compiler->getNodeSetForName(nodeSetName);
+	VuoNodeSet *nodeSet = compiler->getNodeSetForName(nodeSetName.toStdString());
 	if (!nodeSet)
 		return;
 
-	// Open the composition.
-	openExampleComposition(compositionFileName.c_str(), nodeSet, nodeClassToHighlight);
+	openExampleComposition(compositionFileName, nodeSet, nodeClassToHighlight.toStdString());
 }
 
 /**

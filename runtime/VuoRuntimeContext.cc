@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimeContext implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -22,6 +22,7 @@ struct PortContext * vuoCreatePortContext(void *data, bool isTrigger, const char
 	portContext->data = data;
 	portContext->dataRetained = false;
 	portContext->triggerFunction = NULL;
+	portContext->eventBlocking = PortContext_EventBlocking_NotApplicable;
 
 	if (isTrigger)
 	{
@@ -132,6 +133,14 @@ void vuoSetPortContextData(struct PortContext *portContext, void *data)
 void vuoSetPortContextTriggerFunction(struct PortContext *portContext, void *triggerFunction)
 {
 	portContext->triggerFunction = triggerFunction;
+}
+
+/**
+ * Sets the port context's eventBlocking field.
+ */
+void vuoSetPortContextEventBlocking(struct PortContext *portContext, PortContext_EventBlocking eventBlocking)
+{
+	portContext->eventBlocking = eventBlocking;
 }
 
 /**
@@ -254,6 +263,58 @@ dispatch_group_t vuoGetNodeContextExecutingGroup(struct NodeContext *nodeContext
 bool vuoGetNodeContextOutputEvent(struct NodeContext *nodeContext, size_t index)
 {
 	return nodeContext->outputEvents[index];
+}
+
+/**
+ * Returns true if the most recent event hit at least one input port.
+ */
+bool vuoEventHitAnyInputPort(NodeContext *nodeContext)
+{
+	for (unsigned long i = 0; i < nodeContext->portContextCount; ++i)
+	{
+		PortContext *portContext = nodeContext->portContexts[i];
+		if (portContext->eventBlocking != PortContext_EventBlocking_NotApplicable && portContext->event)
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if the most recent event hit at least one input port whose event blocking matches @a eligibleEventBlocking.
+ */
+bool vuoEventHitInputPort(NodeContext *nodeContext, PortContext_EventBlocking eligibleEventBlocking)
+{
+	for (unsigned long i = 0; i < nodeContext->portContextCount; ++i)
+	{
+		PortContext *portContext = nodeContext->portContexts[i];
+		if (portContext->eventBlocking == eligibleEventBlocking && portContext->event)
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * Transmits events from the node's input ports to its output ports.
+ * - If the event hit any non-blocking input port, then the event is transmitted to all output ports.
+ * - If the event did not hit any non-blocking input ports or door input ports, then the event is not transmitted to any output ports.
+ * - Otherwise (the event hit a door input port), the event transmission is handled by the node class implementation.
+ */
+void vuoSetOutputEventsAfterNodeExecution(NodeContext *nodeContext)
+{
+	bool eventHitNonBlockingInput = vuoEventHitInputPort(nodeContext, PortContext_EventBlocking_None);
+	bool eventHitDoorInput = vuoEventHitInputPort(nodeContext, PortContext_EventBlocking_Door);
+
+	if (eventHitNonBlockingInput || ! eventHitDoorInput)
+	{
+		for (unsigned long i = 0; i < nodeContext->portContextCount; ++i)
+		{
+			PortContext *portContext = nodeContext->portContexts[i];
+			if (portContext->eventBlocking == PortContext_EventBlocking_NotApplicable)
+				portContext->event = eventHitNonBlockingInput;
+		}
+	}
 }
 
 /**

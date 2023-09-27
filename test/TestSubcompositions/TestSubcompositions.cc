@@ -2,7 +2,7 @@
  * @file
  * TestSubcompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -58,7 +58,8 @@ private:
 	string getCachedCompiledCompositionPath(string nodeClassName)
 	{
 		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
-		return VuoFileUtilities::getCachePath() + "/User/Modules/" + arch + "/" + nodeClassName + ".vuonode";
+		string dir = VuoModuleCache::newUserCache()->getCompiledModulesPath(false, arch);
+		return dir + "/" + nodeClassName + ".vuonode";
 	}
 
 	/**
@@ -107,7 +108,7 @@ private slots:
 
 	void init()
 	{
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions");
 		compilerDelegate = new TestCompilerDelegate();
 		compiler->setDelegate(compilerDelegate);
 	}
@@ -775,8 +776,9 @@ private slots:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("TopLevelComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("TopLevelComposition-linked", "");
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->setCompositionPath("/TestSubcompositions/testExecutingSubcomposition");
 		compiler->compileComposition(topLevelComposition, compiledCompositionPath, true, issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_NoModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		delete issues;
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
@@ -838,8 +840,9 @@ private slots:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(compositionName, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(compositionName + "-linked", "");
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
+		compiler->setCompositionPath(compositionPath);
 		compiler->compileComposition(topLevelComposition, compiledCompositionPath, true, issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_NoModuleCaches);
 		delete issues;
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
 
@@ -1021,6 +1024,7 @@ private slots:
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 
+			compiler->setCompositionPath(compositionPath);
 			compiler->compileComposition(composition, bcPath, true, issues);
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
@@ -1293,6 +1297,7 @@ private slots:
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 
+			compiler->setCompositionPath(compositionPath);
 			compiler->compileComposition(composition, bcPath, true, issues);
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
@@ -1413,7 +1418,7 @@ private:
 				{
 					for (auto m : modulesModified)
 					{
-						if (m.second.first->getPseudoBase() == node->getNodeClass())
+						if (m.second.first->getPseudoBase()->getModuleKey() == node->getNodeClass()->getClassName())
 						{
 							VuoCompilerNodeClass *newNodeClass = static_cast<VuoCompilerNodeClass *>(m.second.second);
 							VuoNode *newNode = newNodeClass->newNode(node);
@@ -1422,8 +1427,6 @@ private:
 						}
 					}
 				}
-
-				composition = nullptr;
 			}
 
 			TestCompilerDelegate::loadedModules(modulesAdded, modulesModified, modulesRemoved, issues);
@@ -1480,6 +1483,7 @@ private slots:
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 
+			compiler->setCompositionPath(compositionPath);
 			compiler->compileComposition(composition, bcPath, true, issues);
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, runningCompositionLibraries.get());
 			remove(bcPath.c_str());
@@ -1655,23 +1659,23 @@ private slots:
 		delete compiler;
 		VuoCompiler::reset();
 		VuoFileUtilities::copyFile(origCompositionPath, copiedCompositionPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testLoadingInstalledSubcompositions");
 		QVERIFY(! VuoFileUtilities::fileExists(compiledCompositionPath));
 		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
 
 		// The subcomposition source file is newer than the compiled file when the compiler is initialized.
 		// When all node classes are loaded, the subcomposition gets recompiled.
-		unsigned long lastModified1 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
+		double lastModified1 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		sleep(2);
 		delete compiler;
 		VuoCompiler::reset();
 		string origCompositionContents = VuoFileUtilities::readFileToString(origCompositionPath);
 		VuoFileUtilities::writeStringToFile(origCompositionContents + "/* modified */", copiedCompositionPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testLoadingInstalledSubcompositions");
 		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
-		unsigned long lastModified2 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
+		double lastModified2 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		QVERIFY(lastModified2 > lastModified1);
 
 		// When the subcomposition is reinstalled, it gets recompiled.
@@ -1681,7 +1685,7 @@ private slots:
 		compilerDelegate->installModule(origCompositionPath, copiedCompositionPath);
 		VuoCompilerNodeClass *newNodeClass = compiler->getNodeClass(nodeClassName);
 		QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
-		unsigned long lastModified3 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
+		double lastModified3 = VuoFileUtilities::getFileLastModifiedInSeconds(compiledCompositionPath);
 		QVERIFY(lastModified3 > lastModified2);
 		QVERIFY(oldNodeClass != newNodeClass);
 
@@ -1690,7 +1694,7 @@ private slots:
 		delete compiler;
 		VuoCompiler::reset();
 		VuoFileUtilities::deleteFile(compiledCompositionPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testLoadingInstalledSubcompositions");
 		compiler->setLoadAllModules(false);
 		compiler->getNodeClass("vuo.event.fireOnStart");
 		QVERIFY(! VuoFileUtilities::fileExists(compiledCompositionPath));
@@ -1730,7 +1734,7 @@ private slots:
 		VuoFileUtilities::copyFile(midOrigCompositionPath, midCopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner1OrigCompositionPath, inner1CopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner2OrigCompositionPath, inner2CopiedCompositionPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testLoadingInstalledSubcompositions");
 		compiler->setLoadAllModules(false);
 		QVERIFY(! VuoFileUtilities::fileExists(outerCompiledCompositionPath));
 		QVERIFY(! VuoFileUtilities::fileExists(midCompiledCompositionPath));
@@ -1750,7 +1754,7 @@ private slots:
 		VuoFileUtilities::deleteFile(midCompiledCompositionPath);
 		VuoFileUtilities::deleteFile(inner1CompiledCompositionPath);
 		VuoFileUtilities::deleteFile(inner2CompiledCompositionPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testLoadingInstalledSubcompositions");
 		compiler->getNodeClasses();
 		QVERIFY(VuoFileUtilities::fileExists(outerCompiledCompositionPath));
 		QVERIFY(VuoFileUtilities::fileExists(midCompiledCompositionPath));
@@ -1820,7 +1824,7 @@ private slots:
 
 			VuoCompilerIssues *issues = new VuoCompilerIssues();
 			compilers[i]->compileComposition(compositionPath, compiledCompositionPath, true, issues);
-			compilers[i]->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+			compilers[i]->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_NoModuleCaches);
 			remove(compiledCompositionPath.c_str());
 
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, "", false, true);
@@ -1913,7 +1917,7 @@ private slots:
 		delete compiler;
 		VuoCompiler::reset();
 		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testErrors");
 		compiler->setDelegate(&delegate);
 		map<string, VuoCompilerIssue> issues = delegate.getIssuesByFilePath(compiler);
 		QVERIFY(issues.find(copiedParseErrorPath) != issues.end());
@@ -1933,7 +1937,7 @@ private slots:
 		VuoCompiler::reset();
 		installSubcomposition(appendWithSpacesPath);
 		VuoFileUtilities::copyFile(lengthenEsAndDoublePath, copiedLengthenEsPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testErrors");
 		compiler->setDelegate(&delegate);
 		issues = delegate.getIssuesByFilePath(compiler);
 		QVERIFY(issues.find(copiedLengthenEsPath) != issues.end());
@@ -1945,7 +1949,7 @@ private slots:
 		VuoCompiler::reset();
 		installSubcomposition(lengthenEsAndDoublePath);
 		VuoFileUtilities::copyFile(lengthenEsAndDoubleAndAddKPath, copiedLengthenEsPath);
-		compiler = initCompiler();
+		compiler = initCompiler("/TestSubcompositions/testErrors");
 		compiler->setDelegate(&delegate);
 		issues = delegate.getIssuesByFilePath(compiler);
 		QVERIFY(issues.find(copiedLengthenEsPath) != issues.end());

@@ -2,7 +2,7 @@
  * @file
  * VuoAudioFrame C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoAudioSamples.h"
 #include "VuoList_VuoAudioSamples.h"
@@ -34,12 +38,12 @@ typedef struct
 	VuoReal timestamp;
 } VuoAudioFrame;
 
+#define VuoAudioFrame_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+
 VuoAudioFrame VuoAudioFrame_makeFromJson(struct json_object * js);
 struct json_object * VuoAudioFrame_getJson(const VuoAudioFrame value);
 char * VuoAudioFrame_getSummary(const VuoAudioFrame value);
 
-/// This type has _areEqual() and _isLessThan() functions.
-#define VuoAudioFrame_SUPPORTS_COMPARISON
 bool VuoAudioFrame_areEqual(VuoAudioFrame value1, VuoAudioFrame value2);
 bool VuoAudioFrame_isLessThan(const VuoAudioFrame a, const VuoAudioFrame b);
 
@@ -65,3 +69,7 @@ static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples channels,
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

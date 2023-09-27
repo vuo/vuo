@@ -2,7 +2,7 @@
  * @file
  * TestReferenceCounting interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -38,7 +38,7 @@ public:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		VuoCompilerIssues issues;
 		compiler->compileComposition(compositionPath, compiledCompositionPath, true, &issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuildExistingCache);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ExistingModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
 
@@ -136,7 +136,7 @@ private slots:
 		printf("	%s\n", compositionFile.toUtf8().data()); fflush(stdout);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompiler *compiler = initCompiler();
+		VuoCompiler *compiler = initCompiler(compositionPath);
 		TestReferenceCountingRunnerDelegate delegate(compositionPath, compiler);
 
 		if (! delegate.errorMessages.empty())

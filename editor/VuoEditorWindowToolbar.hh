@@ -2,7 +2,7 @@
  * @file
  * VuoEditorWindowToolbar interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -61,7 +61,12 @@ private:
 	bool stopInProgress;
 
 	NSImage *runImage;
+	NSImage *runImage11;    //  1:1  aspect ratio, to be used when toolbar labels are visible
+	NSImage *runImage1611;  // 16:11 aspect ratio, to be used when toolbar labels are hidden
+
 	NSImage *stopImage;
+	NSImage *stopImage11;
+	NSImage *stopImage1611;
 
 	QMacToolBarItem *toolbarRunItem;
 	QMacToolBarItem *toolbarStopItem;

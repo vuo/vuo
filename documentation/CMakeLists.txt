@@ -87,7 +87,7 @@ add_custom_command(
 	COMMENT "Generating documentation/doxygen/index.html"
 	COMMAND /usr/bin/env PATH=/opt/homebrew/bin:/usr/local/bin doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		2>&1
-		# New warnings in Doxygen 1.8.16 and 1.8.18; seem to be harmless.
+		# New warnings in Doxygen 1.8.16, 1.8.18; seem to be harmless.
 		| (grep -v
 			-e "warning: multiple use of page label .Changes_2_0_0"
 			-e "warning: unexpected token TK_COMMAND_BS as the argument of _internalref"
@@ -99,46 +99,52 @@ target_sources(VuoDoxygen PRIVATE DoxygenStructure.h)
 add_dependencies(VuoDocumentation VuoDoxygen)
 
 
-# Build the PDF manual =======================================================
+# Check the TeX installation, for building the PDF manual ====================
 file(GLOB basictexPath "/usr/local/texlive/20*basic")
-if (EXISTS "${basictexPath}")
-	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution (not BasicTeX).  Please run:\n    brew uninstall basictex\n    brew install mactex\n…or delete ${basictexPath} and download the standard installer from https://www.tug.org/mactex/")
+if (NOT "${basictexPath}" STREQUAL "")
+	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution (not BasicTeX).  Please delete ${basictexPath} and download the standard installer from https://www.tug.org/mactex/")
 endif()
+
 file(GLOB mactexPath "/usr/local/texlive/20*")
-if (NOT EXISTS "${mactexPath}")
-	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution.  Please run:\n    brew install mactex\n…or download the standard (not BasicTeX) installer from https://www.tug.org/mactex/")
+if ("${mactexPath}" STREQUAL "")
+	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution.  Please download the standard (not BasicTeX) installer from https://www.tug.org/mactex/")
 endif()
+
+# The output of file(GLOB) is sorted lexicographically; select the last item (most recent version).
+list(GET mactexPath -1 mactexPath)
+if (NOT EXISTS "${mactexPath}")
+	message(FATAL_ERROR "Building Vuo's documentation requires the MacTeX distribution.  Please download the standard (not BasicTeX) installer from https://www.tug.org/mactex/")
+endif()
+
+
+# Build the PDF manual =======================================================
 get_directory_property(languages DIRECTORY ../translation DEFINITION languages)
 foreach (language ${languages})
 	foreach (colors solarized highContrast)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/VuoManualPDF-${language}-${colors})
 set(xelatex echo Running xelatex && set -o pipefail && max_print_line=1024 PATH=/Library/TeX/texbin xelatex -halt-on-error -file-line-error VuoManual.tex
-	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|AED: lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded|L3 programming layer.*latex.base.article.cls|latex.fontspec.fontspec-xetex.sty.*latex.base.fontenc.sty.*latex.fontspec.fontspec.cfg|VuoManual.glsdefs' || true\) )
+	| \(egrep -v '^$$|This is XeTeX|LaTeX Font Warning: Font shape.*undefined|using.*instead on input line|LaTeX Font Warning: Some font shapes were not available|Snakes have been superseded by decorations|LaTeX Warning: Label.* may have changed. Rerun to get cross-references right|Package rerunfilecheck Warning: File .* has changed|LaTeX Warning: Marginpar on page .* moved|Package mparhack Warning: Marginpars may have changed|restricted .write18 enabled|fontencoding T3 patched|entering extended mode|^ *\[[0-9]*\]|Transcript written on|Overfull .[hv]box|Underfull .[hv]box|EveryShipout initializing macros|geometry. detected driver|geometry. driver|to be read again|Standard LaTeX document class|For additional information on|LaTeX2e .[0-9-]+|Output written on|Writing index file|^\\\([/.]|^.TU|^ *.$$|see the transcript file for additional information|lastpage setting LastPage|Babel.*and hyphenation patterns for.*loaded|L3 programming layer.*latex.base.article.cls|latex.fontspec.fontspec-xetex.sty.*latex.base.fontenc.sty.*latex.fontspec.fontspec.cfg|VuoManual.glsdefs|^\\\)\\\)?\( \\\(/usr/local/texlive/[0-9]+/texmf-dist/tex/\([a-z]+/\)+[a-z.-]+.\(def|sty|tex\)\\\)*\)+$$' || true\) )
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/newline.md "\n")
 add_custom_command(
 	DEPENDS
-		VuoEditorApp # for CONTRIBUTORS.md
 		VuoManual.txt
 		VuoManualColors-${colors}.tex
 		VuoManualHeader.tex
 		VuoDocumentationNodesAndCompositions
+		${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+		${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
 
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/VuoManualPDF-${language}-${colors}
 
 	COMMAND cp ${PROJECT_SOURCE_DIR}/documentation/VuoManualColors-${colors}.tex VuoManualColors.tex
 
-	COMMAND cat ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
-		| perl -p
-			# Render the contributor lists compactly in multiple columns.
-			-e "'s/(people.who.have.contributed.to.bringing.Vuo.to.fruition\.)$$/\\1\\n\\n```{=latex}\\n\\\\begin{multicols}{3}\\n```/;'"
-			-e "'s/(Thanks.to.our.contributors!)$$/```{=latex}\\n\\\\end{multicols}\\n```\\n\\n\\1/;'"
-			-e "'s/(Software.Vuo.uses)$$/\\1\\n\\n```{=latex}\\n\\\\begin{multicols}{3}\\n```\\n/;'"
-			-e "'s/(\#\# Resources Vuo uses)$$/```{=latex}\\n\\\\end{multicols}\\n```\\n\\n\\1/;'"
-		> ${CMAKE_CURRENT_BINARY_DIR}/CONTRIBUTORS-processed.md
-
 	COMMAND echo Running pandoc
 		&& cat
 			${PROJECT_SOURCE_DIR}/documentation/VuoManual.txt
-			${CMAKE_CURRENT_BINARY_DIR}/CONTRIBUTORS-processed.md
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 		| fgrep -v '<abstract>'
 		| ${PROJECT_SOURCE_DIR}/documentation/VuoManualTranslate.php
@@ -269,11 +275,17 @@ endif()
 configure_file(VuoManual.xsl.in VuoManual.xsl)
 add_custom_command(
 	DEPENDS
-		VuoEditorApp # for CONTRIBUTORS.md
 		VuoManual.css
 		VuoManual.txt
+		VuoManualFooter.xhtml
+		VuoManualHeader.xhtml
+		VuoManualNavigation.xhtml
+		VuoManualTOC.js
 		VuoDocumentationNodesAndCompositions
 		VuoDocumentationPNGs
+		${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+		${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
+		${PROJECT_BINARY_DIR}/documentation/VuoManual.xsl
 
 	WORKING_DIRECTORY VuoManual
 
@@ -293,7 +305,13 @@ add_custom_command(
 		image
 	COMMAND cp ../image-generated/*.png image-generated
 
-	COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/VuoManual.txt ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
+	COMMAND
+		cat
+			${PROJECT_SOURCE_DIR}/documentation/VuoManual.txt
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook
@@ -317,14 +335,15 @@ add_custom_command(
 		# Docbook -> HTML
 		| xsltproc
 			--nonet
+			--stringparam chunk.first.sections 1
 			--stringparam chunk.quietly 1
-			--stringparam chunk.section.depth 2
+			--stringparam chunk.section.depth 4
 			--stringparam chunk.tocs.and.lots 1
 			--stringparam generate.meta.abstract 1
 			--stringparam html.stylesheet VuoManual.css
 			--stringparam para.propagates.style 1
 			--stringparam phrase.propagates.style 1
-			--stringparam toc.section.depth 2
+			--stringparam toc.section.depth 4
 			--stringparam use.id.as.filename 1
 			../VuoManual.xsl
 			-
@@ -347,11 +366,13 @@ configure_file(VuoManualHelp.xsl.in VuoManualHelp.xsl)
 configure_file(MacHelp-Info.plist Vuo.help/Contents/Info.plist)
 add_custom_command(
 	DEPENDS
-		VuoEditorApp # for CONTRIBUTORS.md
 		VuoManual.css
 		VuoManual.txt
 		VuoDocumentationNodesAndCompositions
 		VuoDocumentationPNGs
+		${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+		${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
+		${PROJECT_BINARY_DIR}/documentation/VuoManualHelp.xsl
 
 	WORKING_DIRECTORY Vuo.help/Contents/Resources
 
@@ -370,7 +391,13 @@ add_custom_command(
 		${CMAKE_CURRENT_BINARY_DIR}/VuoManual/image-generated/*.png
 		image-generated
 
-	COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/VuoManual.txt ${PROJECT_BINARY_DIR}/bin/Vuo.app/Contents/Resources/CONTRIBUTORS.md
+	COMMAND
+		cat
+			${PROJECT_SOURCE_DIR}/documentation/VuoManual.txt
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/CONTRIBUTORS-pandoc.md
+			${CMAKE_CURRENT_BINARY_DIR}/newline.md
+			${PROJECT_BINARY_DIR}/documentation/DEPENDENCIES-pandoc.md
 		| perl -pe "s/VUO_VERSION/${Vuo_VERSION}/g"
 
 		# Markdown -> Docbook

@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -101,11 +101,12 @@ bool VuoFileUtilities::arePathsEqual(string path1, string path2)
 }
 
 /**
- * Returns the absolute path of @a path (which may be relative or absolute).
+ * Returns @a path itself if it's already an absolute path, or else an absolute path
+ * consisting of @a path relative to the current working directory.
  */
 string VuoFileUtilities::getAbsolutePath(const string &path)
 {
-	if (VuoStringUtilities::beginsWith(path, "/"))
+	if (isAbsolutePath(path))
 		return path;
 
 	char *cwd = getcwd(NULL, 0);
@@ -118,6 +119,15 @@ string VuoFileUtilities::getAbsolutePath(const string &path)
 	string absolutePath = string(cwd) + "/" + path;
 	free(cwd);
 	return absolutePath;
+}
+
+/**
+ * Returns true if @a path is an absolute path (regardless of whether the file exists),
+ * false if @a path is a relative path.
+ */
+bool VuoFileUtilities::isAbsolutePath(const string &path)
+{
+	return VuoStringUtilities::beginsWith(path, "/");
 }
 
 /**
@@ -637,10 +647,15 @@ bool VuoFileUtilities::fileContainsReadableData(string path)
 
 /**
  * Creates the file if it does not exist already; otherwise, has no effect on the file.
+ *
+ * @throw VuoException The user doesn't have permission to create the file.
  */
 void VuoFileUtilities::createFile(string path)
 {
 	FILE *f = fopen(path.c_str(), "a");
+	if (! f)
+		throw VuoException(string("Couldn't open file for writing: ") + strerror(errno) + " — " + path);
+
 	fclose(f);
 }
 
@@ -823,28 +838,37 @@ string VuoFileUtilities::calculateFileSHA256(const string &path)
 }
 
 /**
- * Returns the time that the file was last modified, in seconds from a reference date.
+ * Returns the time that the file was last modified, in seconds from a reference date,
+ * with fractional seconds up to microsecond resolution if the filesystem supports it.
  * This is useful for checking which of two files was modified more recently.
  */
-unsigned long VuoFileUtilities::getFileLastModifiedInSeconds(string path)
+double VuoFileUtilities::getFileLastModifiedInSeconds(string path)
 {
 	struct stat s;
 	lstat(path.c_str(), &s);
-	return s.st_mtimespec.tv_sec;  // s.st_mtimespec.tv_nsec is always 0 on some OSes, hence the resolution of 1 second
+	return s.st_mtimespec.tv_sec + ((s.st_mtimespec.tv_nsec/1000)/1000000.0);
 }
 
 /**
- * Returns the time since the file was last accessed, in seconds.
+ * Returns the time since the file was last accessed or modified (whichever is more recent), in seconds,
+ * with fractional seconds up to microsecond resolution if the filesystem supports it.
  */
-unsigned long VuoFileUtilities::getSecondsSinceFileLastAccessed(string path)
+double VuoFileUtilities::getSecondsSinceFileLastAccessed(string path)
 {
+	// Access times are tricky. Some Unix/Linux filesystems don't track access times at all.
+	// On APFS, the exact behavior depends on whether APFS_FEATURE_STRICTATIME is set on the volume.
+	// Here we check access time in case it's been updated, but use modification time as a backup.
+
 	struct stat s;
 	lstat(path.c_str(), &s);
+	double lastAccessed = s.st_atimespec.tv_sec + ((s.st_atimespec.tv_nsec/1000)/1000000.0);
+
+	double lastModified = getFileLastModifiedInSeconds(path);
 
 	struct timeval t;
 	gettimeofday(&t, NULL);
 
-	return t.tv_sec - s.st_atimespec.tv_sec;
+	return (t.tv_sec + t.tv_usec/1000000.0) - max(lastAccessed, lastModified);
 }
 
 /**
@@ -1491,7 +1515,7 @@ bool VuoFileUtilities::isCompositionExtension(string extension)
 /**
  * Returns C/C++/Objective-C/Objective-C++ source file extensions (without a leading dot).
  */
-set<string> VuoFileUtilities::getCSourceExtensions()
+set<string> VuoFileUtilities::getCFamilySourceExtensions()
 {
 	set<string> e;
 	e.insert("c");
@@ -1508,10 +1532,48 @@ set<string> VuoFileUtilities::getCSourceExtensions()
 /**
  * Returns true if the given extension (without leading dot) is a C/C++/Objective-C/Objective-C++ source file.
  */
-bool VuoFileUtilities::isCSourceExtension(string extension)
+bool VuoFileUtilities::isCFamilySourceExtension(string extension)
 {
-	auto extensions = getCSourceExtensions();
+	auto extensions = getCFamilySourceExtensions();
 	return extensions.find(extension) != extensions.end();
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is for a C++ source file.
+ */
+bool VuoFileUtilities::isCPlusPlusSourceExtension(string extension)
+{
+	set<string> e = { "cc", "cpp", "cxx", "c++" };
+	return e.find(extension) != e.end();
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is for an Objective-C source file.
+ */
+bool VuoFileUtilities::isObjectiveCSourceExtension(string extension)
+{
+	return extension == "m";
+}
+
+/**
+ * Returns true if the given extension (without leading dot) is for an Objective-C++ source file.
+ */
+bool VuoFileUtilities::isObjectiveCPlusPlusSourceExtension(string extension)
+{
+	return extension == "mm";
+}
+
+/**
+ * Returns ISF source file extensions (without a leading dot).
+ */
+set<string> VuoFileUtilities::getIsfSourceExtensions(void)
+{
+	set<string> e;
+	e.insert("fs");
+	e.insert("vs");
+	e.insert("vuoshader");
+	e.insert("vuoobjectfilter");
+	return e;
 }
 
 /**
@@ -1519,141 +1581,6 @@ bool VuoFileUtilities::isCSourceExtension(string extension)
  */
 bool VuoFileUtilities::isIsfSourceExtension(string extension)
 {
-	set<string> e;
-	e.insert("fs");
-	e.insert("vs");
-	e.insert("vuoshader");
-	e.insert("vuoobjectfilter");
-	return e.find(extension) != e.end();
-}
-
-/**
- * Returns a human-readable description of the module cache.
- */
-string VuoFileUtilities::buildModuleCacheDescription(const string &moduleCachePath, bool generated)
-{
-	return string() + "the cache of " + (generated ? "generated" : "installed") + " modules at '" + moduleCachePath + "'";
-}
-
-/**
- * Returns the path of the index file within the module cache.
- */
-string VuoFileUtilities::buildModuleCacheIndexPath(const string &moduleCachePath, bool builtIn, bool generated)
-{
-	string moduleCachePathCanonical = moduleCachePath;
-	canonicalizePath(moduleCachePathCanonical);
-
-	return moduleCachePathCanonical + "/libVuoModuleCache-" + (generated ? "generated" : "installed") + ".txt";
-}
-
-/**
- * Returns the path of a dylib file within the module cache.
- * - For the built-in module caches, the returned path is always the same.
- * - For other module caches, this function returns an unused path at which a new revision of the dylib can be saved.
- */
-string VuoFileUtilities::buildModuleCacheDylibPath(const string &moduleCachePath, bool builtIn, bool generated)
-{
-	string moduleCachePathCanonical = moduleCachePath;
-	canonicalizePath(moduleCachePathCanonical);
-
-	string partialPath = moduleCachePathCanonical + "/libVuoModuleCache-" + (generated ? "generated" : "installed");
-	if (builtIn)
-		return partialPath + ".dylib";
-
-	string uniquePath;
-	do {
-		uniquePath = partialPath + "-" + VuoStringUtilities::makeRandomHash(4) + ".dylib";
-	} while (fileExists(uniquePath));
-	return uniquePath;
-}
-
-/**
- * Returns the most recently created dylib file within the module cache, or an empty string if none exists.
- */
-string VuoFileUtilities::findLatestRevisionOfModuleCacheDylib(const string &moduleCachePath, bool builtIn, bool generated,
-															  unsigned long &lastModified)
-{
-	string path = buildModuleCacheDylibPath(moduleCachePath, builtIn, generated);
-
-	if (builtIn)
-	{
-		if (fileExists(path))
-		{
-			lastModified = getFileLastModifiedInSeconds(path);
-			return path;
-		}
-		else
-		{
-			lastModified = 0;
-			return "";
-		}
-	}
-
-	string dir, file, ext;
-	splitPath(path, dir, file, ext);
-	string fileName = file + "." + ext;
-
-	vector< pair<string, unsigned long> > existingRevisions;
-	for (File *existingFile : findFilesInDirectory(moduleCachePath, {"dylib"}))
-	{
-		if (areDifferentRevisionsOfSameModuleCacheDylib(existingFile->getRelativePath(), fileName))
-			existingRevisions.push_back({existingFile->path(), getFileLastModifiedInSeconds(existingFile->path())});
-
-		delete existingFile;
-	}
-
-	if (existingRevisions.empty())
-	{
-		lastModified = 0;
-		return "";
-	}
-
-	auto latest = std::max_element(existingRevisions.begin(), existingRevisions.end(),
-								   [](pair<string, unsigned long> p1, pair<string, unsigned long> p2) { return p1.second < p2.second; });
-
-	lastModified = latest->second;
-	return latest->first;
-}
-
-/**
- * Deletes any files in the same directory as @a dylibPath that differ only in their revision suffix.
- */
-void VuoFileUtilities::deleteOtherRevisionsOfModuleCacheDylib(const string &dylibPath)
-{
-	string moduleCachePath, file, ext;
-	splitPath(dylibPath, moduleCachePath, file, ext);
-	string dylibFileName = file + "." + ext;
-
-	for (File *otherFile : findFilesInDirectory(moduleCachePath, {"dylib"}))
-	{
-		if (areDifferentRevisionsOfSameModuleCacheDylib(otherFile->getRelativePath(), dylibFileName))
-			deleteFile(otherFile->path());
-
-		delete otherFile;
-	}
-}
-
-/**
- * Returns true if the two paths differ only in their revision suffix.
- */
-bool VuoFileUtilities::areDifferentRevisionsOfSameModuleCacheDylib(const string &dylibPath1, const string &dylibPath2)
-{
-	string dir1, dir2, file1, file2, ext;
-	splitPath(dylibPath1, dir1, file1, ext);
-	splitPath(dylibPath2, dir2, file2, ext);
-
-	if (arePathsEqual(dir1, dir2))
-	{
-		vector<string> parts1 = VuoStringUtilities::split(file1, '-');
-		vector<string> parts2 = VuoStringUtilities::split(file2, '-');
-
-		if (parts1.size() == 3 && parts2.size() == 3 && parts1.back() != parts2.back())
-		{
-			parts1.pop_back();
-			parts2.pop_back();
-			return parts1 == parts2;
-		}
-	}
-
-	return false;
+	auto extensions = getIsfSourceExtensions();
+	return extensions.find(extension) != extensions.end();
 }

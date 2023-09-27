@@ -16,6 +16,10 @@ target_sources(vuo.mouse.types PRIVATE
 	VuoMouseButton.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoMouseButton.cc
+)
+
 VuoCompileNodes(
 	vuo.mouse.button.c
 	vuo.mouse.button2.c

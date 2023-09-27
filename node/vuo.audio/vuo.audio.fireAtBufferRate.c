@@ -2,18 +2,17 @@
  * @file
  * vuo.audio.fireAtBufferRate node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoAudio.h"
 
 VuoModuleMetadata({
 					  "title" : "Fire at Audio Rate",
 					  "keywords" : [ "sound", "device", "buffers", "samples", "periodically" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoAudio"
 					  ],
@@ -37,9 +36,8 @@ static void updateDevice(struct nodeInstanceData *context)
 	context->device = defaultDevice;
 	VuoAudioOutputDevice_retain(context->device);
 
-	VuoRelease(context->audioManager);
-	context->audioManager = VuoAudioOut_getShared(defaultDevice);
-	VuoRetain(context->audioManager);
+	VuoAudioOut_disuseShared(context->audioManager);
+	context->audioManager = VuoAudioOut_useShared(defaultDevice);
 }
 
 
@@ -87,5 +85,5 @@ void nodeInstanceFini
 )
 {
 	VuoAudioOutputDevice_release((*context)->device);
-	VuoRelease((*context)->audioManager);
+	VuoAudioOut_disuseShared((*context)->audioManager);
 }

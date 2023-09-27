@@ -24,6 +24,7 @@ function (TestRunnerSource target)
 		vuo.core.runtime.objects
 	)
 	set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
+	add_custom_command(TARGET ${target} POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/bin/${target})
 	add_dependencies(TestVuoRunner ${target})
 endfunction()
 

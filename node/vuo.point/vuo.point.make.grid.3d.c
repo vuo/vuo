@@ -7,8 +7,6 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
-
 VuoModuleMetadata({
 					  "title" : "Make Points in 3D Grid",
 					  "keywords" : [

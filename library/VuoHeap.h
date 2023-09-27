@@ -2,12 +2,13 @@
  * @file
  * VuoHeap interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoHeap_h
+#define VuoHeap_h
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -130,4 +131,6 @@ void VuoHeap_addTrace(const void *heapPointer);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -14,6 +14,11 @@ target_sources(vuo.noise.types PRIVATE
 	VuoNoise.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoGradientNoise.cc
+	VuoList_VuoNoise.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.noise.gradient.c
 	vuo.noise.random.c

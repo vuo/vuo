@@ -14,7 +14,7 @@ fi
 
 # Compile and link the composition.
 "$binaryDir/vuo-compile-for-framework" "$exampleName.vuo" -o "$outputDir/$exampleName.bc"
-"$binaryDir/vuo-link" --optimization fast-build-existing-cache "$outputDir/$exampleName.bc"
+"$binaryDir/vuo-link" --optimization existing-module-caches "$outputDir/$exampleName.bc"
 
 # Start the composition.
 if [ "$useGMalloc" == "ON" ]; then

@@ -3,12 +3,11 @@
  * vuo.shader.make.color node implementation.
  * @todo Rename to vuo.shader.make.vertex or something, to reflect the new breadth of the shader.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoVertexAttribute.h"
 
 #include <OpenGL/CGLMacro.h>

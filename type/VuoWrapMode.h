@@ -2,17 +2,17 @@
  * @file
  * VuoWrapMode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoWrapMode_h
+#define VuoWrapMode_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoWrapMode_struct { void *l; } * VuoList_VuoWrapMode;
-#define VuoList_VuoWrapMode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -29,6 +29,8 @@ typedef enum {
 	VuoWrapMode_Wrap,
 	VuoWrapMode_Saturate
 } VuoWrapMode;
+
+#include "VuoList_VuoWrapMode.h"
 
 VuoWrapMode VuoWrapMode_makeFromJson(struct json_object * js);
 struct json_object * VuoWrapMode_getJson(const VuoWrapMode value);
@@ -47,3 +49,9 @@ void VuoWrapMode_release(VuoWrapMode value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

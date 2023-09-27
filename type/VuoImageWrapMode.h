@@ -2,17 +2,17 @@
  * @file
  * VuoImageWrapMode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoImageWrapMode_h
+#define VuoImageWrapMode_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoImageWrapMode_struct { void *l; } * VuoList_VuoImageWrapMode;
-#define VuoList_VuoImageWrapMode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,6 +32,8 @@ typedef enum {
 	VuoImageWrapMode_MirroredRepeat	// the image will repeat inverted
 } VuoImageWrapMode;
 
+#include "VuoList_VuoImageWrapMode.h"
+
 VuoImageWrapMode VuoImageWrapMode_makeFromJson(struct json_object * js);
 struct json_object * VuoImageWrapMode_getJson(const VuoImageWrapMode value);
 VuoList_VuoImageWrapMode VuoImageWrapMode_getAllowedValues(void);
@@ -49,3 +51,9 @@ void VuoImageWrapMode_release(VuoImageWrapMode value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

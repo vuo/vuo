@@ -2,18 +2,18 @@
  * @file
  * vuo.audio.loudness node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoList_VuoAudioSamples.h"
 
 VuoModuleMetadata({
 					 "title" : "Adjust Loudness",
 					 "keywords" : [
 						 "sound", "music",
-						 "volume", "amplitude", "gain", "rms", "root mean square", "decibel",
+						 "volume", "amplitude", "gain", "rms", "root mean square", "decibel", "level",
 						 "multiply", "scale", "*", "•", "×", "x"
 					 ],
 					 "version" : "2.0.0",

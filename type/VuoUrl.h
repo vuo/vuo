@@ -2,12 +2,13 @@
  * @file
  * VuoUrl C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoUrl_h
+#define VuoUrl_h
 
 /**
  * @ingroup VuoTypes
@@ -22,16 +23,15 @@ extern "C"
 {
 #endif
 
-#include "VuoHeap.h"
 #include "VuoInteger.h"
 #include "VuoText.h"
-
-struct json_object;
 
 /**
  * Uniform Resource Locator.
  */
 typedef VuoText VuoUrl;
+
+#define VuoUrl_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
 
 VuoUrl VuoUrl_makeFromJson(struct json_object *js);
 struct json_object *VuoUrl_getJson(const VuoUrl value);
@@ -39,7 +39,6 @@ char * VuoUrl_getSummary(const VuoUrl value);
 bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment) VuoWarnUnusedResult;
 bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension) VuoWarnUnusedResult;
 
-#define VuoUrl_SUPPORTS_COMPARISON
 bool VuoUrl_areEqual(const VuoText a, const VuoText b);
 bool VuoUrl_isLessThan(const VuoText a, const VuoText b);
 
@@ -78,4 +77,6 @@ void VuoUrl_release(VuoUrl value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

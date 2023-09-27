@@ -2,17 +2,18 @@
  * @file
  * VuoControlCode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoControlCode;
-#define VuoList_VuoControlCode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "VuoText.h"
 
 /**
  * @ingroup VuoTypes
@@ -36,13 +37,15 @@ typedef enum
 	VuoControlCode_EnSpace
 } VuoControlCode;
 
+#define VuoControlCode_SUPPORTS_COMPARISON
+#include "VuoList_VuoControlCode.h"
+
 VuoControlCode VuoControlCode_makeFromJson(struct json_object *js);
 struct json_object *VuoControlCode_getJson(const VuoControlCode value);
 VuoList_VuoControlCode VuoControlCode_getAllowedValues(void);
 char *VuoControlCode_getSummary(const VuoControlCode value);
 VuoText VuoControlCode_makeText(VuoControlCode code);
 
-#define VuoControlCode_SUPPORTS_COMPARISON
 bool VuoControlCode_areEqual(const VuoControlCode valueA, const VuoControlCode valueB);
 bool VuoControlCode_isLessThan(const VuoControlCode valueA, const VuoControlCode valueB);
 
@@ -59,4 +62,6 @@ void VuoControlCode_release(VuoControlCode value);
  * @}
  */
 
-
+#ifdef __cplusplus
+}
+#endif

@@ -2,16 +2,18 @@
  * @file
  * VuoCompilerModule implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
+#include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerType.hh"
 #include "VuoJsonUtilities.hh"
 #include "VuoNodeClass.hh"
+#include "VuoNodeSet.hh"
 #include "VuoStringUtilities.hh"
 
 /**
@@ -98,6 +100,24 @@ bool VuoCompilerModule::isModule(Module *module, string moduleKey)
 }
 
 /**
+ * Returns true if the `moduleDetails` global variable within the LLVM module contains
+ * a key indicating that it is intended to be a specialized module definition.
+ */
+bool VuoCompilerModule::isSpecializedModule(Module *module, string moduleKey)
+{
+	VuoCompilerBitcodeParser parser(module);
+	string moduleDetailsStr = parser.getGlobalString( nameForGlobal("moduleDetails", moduleKey) );
+	json_object *moduleDetails = json_tokener_parse(moduleDetailsStr.c_str());
+
+	json_object *specializedDetails = nullptr;
+	bool ret = json_object_object_get_ex(moduleDetails, "specializedModule", &specializedDetails);
+
+	json_object_put(moduleDetails);
+
+	return ret;
+}
+
+/**
  * Renames globals in the LLVM module that might conflict with other VuoCompilerModules,
  * and parses those globals.
  */
@@ -110,6 +130,8 @@ void VuoCompilerModule::parse(void)
 
 /**
  * Parses the metadata of this VuoCompilerModule (name, description, ...) from the LLVM module.
+ *
+ * @see VuoModuleMetadata
  */
 void VuoCompilerModule::parseMetadata(void)
 {
@@ -130,6 +152,9 @@ void VuoCompilerModule::parseMetadata(void)
 	vector<string> dependenciesVector = VuoJsonUtilities::parseArrayOfStrings(moduleDetails, "dependencies");
 	dependencies = set<string>(dependenciesVector.begin(), dependenciesVector.end());
 	compatibleTargets = parseCompatibility(moduleDetails, "compatibility");
+
+	vector<string> genericTypeNames;
+	parseGenericTypes(moduleDetails, genericTypeNames, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
 }
 
 /**
@@ -144,6 +169,30 @@ VuoCompilerCompatibility VuoCompilerModule::parseCompatibility(json_object *o, s
 		return VuoCompilerCompatibility(compatibilityObject);
 
 	return VuoCompilerCompatibility::compatibilityWithAnySystem();
+}
+
+/**
+ * Parses the "genericTypes" portion of a module's metadata.
+ */
+void VuoCompilerModule::parseGenericTypes(json_object *moduleDetails,
+										  vector<string> &genericTypeNames,
+										  map<string, string> &defaultSpecializedForGenericTypeName,
+										  map<string, vector<string> > &compatibleSpecializedForGenericTypeName)
+{
+	json_object *genericTypeDetails = NULL;
+	if (json_object_object_get_ex(moduleDetails, "genericTypes", &genericTypeDetails))
+	{
+		json_object_object_foreach(genericTypeDetails, genericTypeName, genericTypeDetailsForOneType)
+		{
+			genericTypeNames.push_back(genericTypeName);
+
+			string defaultType = VuoJsonUtilities::parseString(genericTypeDetailsForOneType, "defaultType");
+			defaultSpecializedForGenericTypeName[genericTypeName] = defaultType;
+
+			vector<string> compatibleTypes = VuoJsonUtilities::parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
+			compatibleSpecializedForGenericTypeName[genericTypeName] = compatibleTypes;
+		}
+	}
 }
 
 /**
@@ -254,6 +303,54 @@ string VuoCompilerModule::getDependencyName(void)
 }
 
 /**
+ * Returns the path that would represent this VuoCompilerModule in a dependency file.
+ *
+ * @see VuoMakeDependencies
+ */
+string VuoCompilerModule::getDependencyPath(void)
+{
+	VuoNodeSet *nodeSet = getPseudoBase()->getNodeSet();
+	if (nodeSet)
+		return nodeSet->getArchivePath();
+
+	return modulePath;
+}
+
+/**
+ * Returns the file name (with extension) that this module should have when saved to file.
+ */
+string VuoCompilerModule::getFileName(void)
+{
+	return getPseudoBase()->getModuleKey() + ".bc";
+}
+
+/**
+ * Returns the file name (with extension) that a module with the given module key would have
+ * when saved to file.
+ */
+string VuoCompilerModule::getFileNameForModuleKey(const string &moduleKey)
+{
+	if (VuoNodeClass::isNodeClassName(moduleKey))
+		return VuoCompilerNodeClass::getFileNameForModuleKey(moduleKey);
+
+	return moduleKey + ".bc";
+}
+
+/**
+ * Returns true if a module with the given file name (with extension) would have a module key
+ * other than the file name minus extension.
+ */
+bool VuoCompilerModule::isModuleKeyMangledInFileName(const string &fileName)
+{
+	string moduleKey = VuoCompiler::getModuleKeyForPath(fileName);
+
+	if (VuoNodeClass::isNodeClassName(moduleKey))
+		return VuoCompilerNodeClass::isModuleKeyMangledInFileName(fileName);
+
+	return false;
+}
+
+/**
  * Returns the set of targets (operating system versions) with which this module is compatible.
  *
  * Only checks the compatibility of the module itself, not its dependencies.
@@ -302,4 +399,44 @@ void VuoCompilerModule::setBuiltIn(bool builtIn)
 string VuoCompilerModule::getModulePath(void)
 {
 	return modulePath;
+}
+
+/**
+ * Stores the path of the source file for this module.
+ */
+void VuoCompilerModule::setSourcePath(const string &sourcePath)
+{
+	this->sourcePath = sourcePath;
+}
+
+/**
+ * Returns the stored path of the source file for this module, if any.
+ */
+string VuoCompilerModule::getSourcePath(void)
+{
+	return sourcePath;
+}
+
+/**
+ * Stores the source code for this module.
+ */
+void VuoCompilerModule::setSourceCode(const string &sourceCode)
+{
+	this->sourceCode = sourceCode;
+}
+
+/**
+ * Returns the stored source code for this module, if any.
+ */
+string VuoCompilerModule::getSourceCode(void)
+{
+	return sourceCode;
+}
+
+/**
+ * Returns the stored dependency file contents for this module, if any.
+ */
+shared_ptr<VuoMakeDependencies> VuoCompilerModule::getMakeDependencies(void)
+{
+	return makeDependencies;
 }

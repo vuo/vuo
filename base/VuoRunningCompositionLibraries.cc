@@ -2,7 +2,7 @@
  * @file
  * VuoRunningCompositionLibraries implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -26,6 +26,9 @@ VuoRunningCompositionLibraries::~VuoRunningCompositionLibraries(void)
 	if (shouldDeleteResourceLibraries)
 		for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
 			VuoFileUtilities::deleteFile(*i);
+
+	for (auto i : cachePathLoadedCallbacks)
+		i.second();
 }
 
 /**
@@ -85,13 +88,13 @@ set<string> VuoRunningCompositionLibraries::enqueueAllUnloadableResourceLibrarie
 }
 
 /**
- * Adds a cache library to the list of those pending to be loaded.
+ * Adds a module cache library to the list of those pending to be loaded.
  *
  * If @a isUnloadable is true, the library can be unloaded during live coding. If false, it can't be unloaded,
  * e.g. because it contains Objective-C code.
  */
 void VuoRunningCompositionLibraries::enqueueCacheLibraryToLoad(const string &path, const set<string> &dependenciesInLibrary,
-															   bool isUnloadable)
+															   bool isUnloadable, CallbackType doAfterLoadAttempted)
 {
 	if (find(cachePathsLoaded.begin(), cachePathsLoaded.end(), path) == cachePathsLoaded.end() ||
 			find(cachePathsToUnload.begin(), cachePathsToUnload.end(), path) != cachePathsToUnload.end())
@@ -99,11 +102,12 @@ void VuoRunningCompositionLibraries::enqueueCacheLibraryToLoad(const string &pat
 		cachePathsToLoad.push_back(path);
 		canUnloadPathToLoad[path] = isUnloadable;
 		dependenciesToLoad[path] = dependenciesInLibrary;
+		cachePathLoadedCallbacks[path] = doAfterLoadAttempted;
 	}
 }
 
 /**
- * Adds the cache library to the list of those pending to be unloaded.
+ * Adds the module cache library to the list of those pending to be unloaded.
  *
  * If the cache library either is enqueued to be unloaded by this function or was already enqueued,
  * this function returns the dependencies contained in the cache library.
@@ -160,8 +164,11 @@ void VuoRunningCompositionLibraries::enqueueLibraryContainingDependencyToUnload(
  *
  * Returns those libraries, plus the already-loaded libraries that would have been unloaded by @ref dequeueLibrariesToUnload.
  * The returned libraries are ordered so that a library comes after the libraries it depends on.
+ *
+ * Also outputs @a doAfterLoadAttempted, a list of callbacks that the caller should call after attempting to load the
+ * returned libraries.
  */
-vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToLoad(void)
+vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToLoad(vector<CallbackType> &doAfterLoadAttempted)
 {
 	vector<string> libraryPathsToLoad;
 
@@ -170,6 +177,16 @@ vector<string> VuoRunningCompositionLibraries::dequeueLibrariesToLoad(void)
 			libraryPathsToLoad.push_back(*i);
 
 	libraryPathsToLoad.insert(libraryPathsToLoad.end(), cachePathsToLoad.begin(), cachePathsToLoad.end());
+
+	for (const string &cachePath : cachePathsToLoad)
+	{
+		auto callbackIter = cachePathLoadedCallbacks.find(cachePath);
+		if (callbackIter != cachePathLoadedCallbacks.end())
+		{
+			doAfterLoadAttempted.push_back(callbackIter->second);
+			cachePathLoadedCallbacks.erase(callbackIter);
+		}
+	}
 
 	for (vector<string>::iterator i = resourcePathsLoaded.begin(); i != resourcePathsLoaded.end(); ++i)
 		if (canUnloadPathLoaded[*i])
@@ -309,6 +326,19 @@ vector<string> VuoRunningCompositionLibraries::getUnloadableCacheLibrariesLoaded
 }
 
 /**
+ * Returns the currently-loaded cache libraries that are enqueued to be unloaded.
+ */
+map<string, set<string>> VuoRunningCompositionLibraries::getCacheLibrariesEnqueuedToUnload(void)
+{
+	map<string, set<string>> cachePathsAndDependenciesToUnload;
+
+	for (const string &path : cachePathsToUnload)
+		cachePathsAndDependenciesToUnload[path] = dependenciesLoaded[path];
+
+	return cachePathsAndDependenciesToUnload;
+}
+
+/**
  * Returns the node classes, etc. contained within all currently-loaded libraries that are not enqueued to be unloaded.
  */
 set<string> VuoRunningCompositionLibraries::getDependenciesLoaded(void)
@@ -329,14 +359,6 @@ set<string> VuoRunningCompositionLibraries::getDependenciesLoaded(void)
 	}
 
 	return dependenciesLoadedSet;
-}
-
-/**
- * Returns true if there is at least one cache library enqueued to be unloaded.
- */
-bool VuoRunningCompositionLibraries::hasCacheLibraryEnqueuedToUnload(void)
-{
-	return ! cachePathsToUnload.empty();
 }
 
 /**

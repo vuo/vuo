@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 cmake_policy(VERSION 3.16...3.20)
 
+set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
+find_library(VUO_FRAMEWORK Vuo)
+
 execute_process(
 	COMMAND xcrun --sdk macosx --show-sdk-path
 	OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
@@ -8,19 +11,16 @@ execute_process(
 )
 execute_process(
 	COMMAND /usr/bin/plutil -extract SupportedTargets.macosx.Archs json -o - "${CMAKE_OSX_SYSROOT}/SDKSettings.plist"
-	OUTPUT_VARIABLE supportedTargets
+	OUTPUT_VARIABLE supportedTargetsXcode
 )
-if (supportedTargets MATCHES arm64)
-	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
-else()
-	execute_process(COMMAND /usr/bin/uname -m OUTPUT_VARIABLE systemArch)
-	string(STRIP ${systemArch} systemArch)
-	set(CMAKE_OSX_ARCHITECTURES ${systemArch} CACHE STRING "" FORCE)
-endif()
-project(ExampleImageFilterCoreImage)
+foreach (arch "x86_64" "arm64")
+	if (supportedTargetsXcode MATCHES ${arch} AND EXISTS "${VUO_FRAMEWORK}/Headers/OBJC-${arch}.h.pch")
+		list(APPEND supportedTargets ${arch})
+	endif()
+endforeach()
+set(CMAKE_OSX_ARCHITECTURES ${supportedTargets} CACHE STRING "")
 
-set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
-find_library(VUO_FRAMEWORK Vuo)
+project(ExampleImageFilterCoreImage)
 
 set(userModules "~/Library/Application\ Support/Vuo/Modules")
 file(MAKE_DIRECTORY ${userModules})

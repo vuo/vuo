@@ -5,6 +5,10 @@ target_sources(vuo.shader.types PRIVATE
 	VuoVertexAttribute.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoVertexAttribute.cc
+)
+
 VuoCompileNodes(
 	vuo.shader.make.color.c
 	vuo.shader.make.color.unlit.c

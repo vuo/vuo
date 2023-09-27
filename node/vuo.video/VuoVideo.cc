@@ -2,13 +2,13 @@
  * @file
  * VuoVideo implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoVideo.h"
-#include "VuoVideoPlayer.h"
+#include "VuoVideoPlayer.hh"
 
 extern "C"
 {

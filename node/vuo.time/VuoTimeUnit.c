@@ -2,14 +2,12 @@
  * @file
  * VuoTimeUnit implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
 #include "VuoTimeUnit.h"
-#include "VuoList_VuoTimeUnit.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -224,4 +222,3 @@ bool VuoTimeUnit_isLessThan(const VuoTimeUnit valueA, const VuoTimeUnit valueB)
 	// considered less than lengthier time units.
 	return valueA > valueB;
 }
-

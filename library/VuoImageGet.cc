@@ -2,58 +2,48 @@
  * @file
  * VuoImageGet implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
+#include "VuoFreeImage.h"
 #include "VuoImageGet.h"
+
+#include "VuoImageCoreGraphics.h"
+#include "VuoImageRotate.h"
+#include "VuoGlPool.h"
+#include "VuoUrl.h"
 #include "VuoUrlFetch.h"
 
 #include <string.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
+/// Support compiling in Objective-C mode (which defines its own BOOL type having a different underlying type than FreeImage's).
+#define BOOL FREEIMAGE_BOOL
 #include <FreeImage.h>
+#undef BOOL
 #pragma clang diagnostic pop
 
 #include <OpenGL/CGLMacro.h>
-
-#include "module.h"
 
 extern "C"
 {
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "VuoImageGet",
-					 "dependencies" : [
-						 "VuoImage",
-						 "VuoUrlFetch",
-						 "freeimage"
-					 ]
-				 });
+	"title" : "VuoImageGet",
+	"dependencies" : [
+		"VuoFreeImage",
+		"VuoImage",
+		"VuoImageCoreGraphics",
+		"VuoImageRotate",
+		"VuoUrlFetch",
+	]
+});
 #endif
 }
 
-
-/**
- * Initializes the FreeImage library.
- */
-__attribute__((constructor)) static void VuoImageGet_init(void)
-{
-	FreeImage_Initialise(true);
-}
-
-/**
- * Logs error messages coming from FreeImage.
- */
-static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
-{
-	if (fif != FIF_UNKNOWN)
-		VUserLog("Error: %s (%s format)", message, FreeImage_GetFormatFromFIF(fif));
-	else
-		VUserLog("Error: %s", message);
-}
 
 /**
  * Returns the VuoImage::scaleFactor for the specified URL.
@@ -106,25 +96,76 @@ VuoImage VuoImage_get(const char *imageURL)
 		return NULL;
 
 	// Decode the memory buffer into a straightforward array of BGRA pixels
-	FreeImage_SetOutputMessage(FreeImageErrorHandler);
 	FIBITMAP *dib;
-	GLuint format;
-	VuoImageColorDepth colorDepth;
-	unsigned char *pixels;
-	unsigned long pixelsWide;
-	unsigned long pixelsHigh;
 	{
 		FIMEMORY *hmem = FreeImage_OpenMemory((BYTE *)data, dataLength);
 
 		FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
 		if (fif == FIF_UNKNOWN)
 		{
-			VUserLog("Error: '%s': Couldn't determine image type.", imageURL);
+			// FreeImage couldn't read it; try CoreGraphics.
+			CFDataRef cfd = CFDataCreateWithBytesNoCopy(nullptr, (UInt8 *)data, dataLength, kCFAllocatorNull);
+			if (cfd)
+			{
+				CGImageSourceRef cgis = CGImageSourceCreateWithData(cfd, nullptr);
+				CFRelease(cfd);
+				if (cgis)
+				{
+					size_t imageIndex = 0;
+					CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(cgis, imageIndex, nullptr);
+					int32_t orientation = kCGImagePropertyOrientationUp;
+					if (properties)
+					{
+						CFNumberRef orientationCF = static_cast<CFNumberRef>(CFDictionaryGetValue(properties, kCGImagePropertyOrientation));
+						CFNumberGetValue(orientationCF, kCFNumberSInt32Type, &orientation);
+						CFRelease(properties);
+					}
+
+					CGImageRef cgi = CGImageSourceCreateImageAtIndex(cgis, imageIndex, nullptr);
+					CFRelease(cgis);
+					if (cgi)
+					{
+						VuoImage vi = VuoImage_makeFromCGImage(cgi);
+						if (vi)
+							vi->scaleFactor = VuoImage_getScaleFactor(imageURL);
+						CGImageRelease(cgi);
+						FreeImage_CloseMemory(hmem);
+						free(data);
+
+						if (orientation != kCGImagePropertyOrientationUp)
+						{
+							VuoImageRotate rotator = VuoImageRotate_make();
+							VuoLocal(rotator);
+
+							VuoReal angleInDegrees = 0;
+							if (orientation == kCGImagePropertyOrientationDown)
+								angleInDegrees = 180;
+							else if (orientation == kCGImagePropertyOrientationLeft)
+								angleInDegrees = 90;
+							else if (orientation == kCGImagePropertyOrientationRight)
+								angleInDegrees = -90;
+
+							VuoImage rotatedImage = VuoImageRotate_rotate(vi, rotator, angleInDegrees, true);
+							VuoRetain(vi);
+							VuoRelease(vi);
+							vi = rotatedImage;
+						}
+
+						return vi;
+					}
+				}
+			}
+
+			VUserLog("Error: '%s': FreeImage couldn't determine the image type. The file might not be an image, or it might be corrupted.", imageURL);
+			FreeImage_CloseMemory(hmem);
+			free(data);
 			return NULL;
 		}
 		if (!FreeImage_FIFSupportsReading(fif))
 		{
-			VUserLog("Error: '%s': This image type doesn't support reading.", imageURL);
+			VUserLog("Error: '%s': FreeImage can't read this type of image.", imageURL);
+			FreeImage_CloseMemory(hmem);
+			free(data);
 			return NULL;
 		}
 
@@ -133,146 +174,13 @@ VuoImage VuoImage_get(const char *imageURL)
 
 		if (!dib)
 		{
-			VUserLog("Error: '%s': Failed to read image.", imageURL);
-			return NULL;
-		}
-
-		pixelsWide = FreeImage_GetWidth(dib);
-		pixelsHigh = FreeImage_GetHeight(dib);
-
-		const FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
-		const unsigned int bpp = FreeImage_GetBPP(dib);
-		const FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(dib);
-		const FIICCPROFILE *colorProfile = FreeImage_GetICCProfile(dib);
-		FITAG *exifColorSpace = NULL;
-		FreeImage_GetMetadata(FIMD_EXIF_EXIF, dib, "ColorSpace", &exifColorSpace);
-		VDebugLog("ImageFormat=%d  ImageType=%d  BPP=%d  colorType=%s  Profile=%s(%d)  EXIF_ColorSpace=%s", fif, type, bpp,
-				  colorType == FIC_MINISWHITE ? "minIsWhite" :
-					  (colorType == FIC_MINISBLACK ? "minIsBlack" :
-					  (colorType == FIC_RGB ? "RGB" :
-					  (colorType == FIC_PALETTE ? "indexed" :
-					  (colorType == FIC_RGBALPHA ? "RGBA" :
-					  (colorType == FIC_CMYK ? "CMYK" : "unknown"))))),
-				  colorProfile->flags & FIICC_COLOR_IS_CMYK ? "CMYK" : "RGB",
-				  colorProfile->size,
-				  FreeImage_TagToString(FIMD_EXIF_EXIF, exifColorSpace));
-
-		if (type == FIT_FLOAT
-		 || type == FIT_DOUBLE
-		 || type == FIT_UINT16
-		 || type == FIT_INT16
-		 || type == FIT_UINT32
-		 || type == FIT_INT32)
-		{
-			// If it is > 8bpc greyscale, convert to float.
-			colorDepth = VuoImageColorDepth_32;
-			format = GL_LUMINANCE;
-
-			FIBITMAP *dibFloat = FreeImage_ConvertToFloat(dib);
-			FreeImage_Unload(dib);
-			dib = dibFloat;
-		}
-		else if (type == FIT_RGB16
-			  || type == FIT_RGBF)
-		{
-			// If it is > 8bpc WITHOUT an alpha channel, convert to float.
-			colorDepth = VuoImageColorDepth_32;
-			format = GL_RGB;
-
-			FIBITMAP *dibFloat = FreeImage_ConvertToRGBF(dib);
-			FreeImage_Unload(dib);
-			dib = dibFloat;
-		}
-		else if (type == FIT_RGBA16
-			  || type == FIT_RGBAF)
-		{
-			// If it is > 8bpc WITH an alpha channel, convert to float.
-			colorDepth = VuoImageColorDepth_32;
-			format = GL_RGBA;
-
-			FIBITMAP *dibFloat = FreeImage_ConvertToRGBAF(dib);
-			FreeImage_Unload(dib);
-			dib = dibFloat;
-
-			// FreeImage_PreMultiplyWithAlpha() only works on 8bpc images, so do it ourself.
-			float *pixels = (float *)FreeImage_GetBits(dib);
-			if (!pixels)
-			{
-				VUserLog("Error: '%s': Couldn't get pixels from image.", imageURL);
-				FreeImage_Unload(dib);
-				return NULL;
-			}
-			for (int y = 0; y < pixelsHigh; ++y)
-				for (int x = 0; x < pixelsWide; ++x)
-				{
-					float alpha = pixels[(y*pixelsWide + x)*4 + 3];
-					pixels[(y*pixelsWide + x)*4 + 0] *= alpha;
-					pixels[(y*pixelsWide + x)*4 + 1] *= alpha;
-					pixels[(y*pixelsWide + x)*4 + 2] *= alpha;
-				}
-		}
-		else
-		{
-			// Upload other images as 8bpc.
-			colorDepth = VuoImageColorDepth_8;
-
-			if (colorType == FIC_MINISWHITE
-			 || colorType == FIC_MINISBLACK)
-			{
-				format = GL_LUMINANCE;
-
-				FIBITMAP *dibConverted = FreeImage_ConvertTo8Bits(dib);
-				FreeImage_Unload(dib);
-				dib = dibConverted;
-			}
-			else if (colorType == FIC_RGB
-				 || (colorType == FIC_PALETTE && !FreeImage_IsTransparent(dib)))
-			{
-				format = GL_BGR;
-
-				FIBITMAP *dibConverted = FreeImage_ConvertTo24Bits(dib);
-				FreeImage_Unload(dib);
-				dib = dibConverted;
-			}
-			else if (colorType == FIC_RGBALPHA
-				 || (colorType == FIC_PALETTE && FreeImage_IsTransparent(dib)))
-			{
-				format = GL_BGRA;
-
-				FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(dib);
-				FreeImage_Unload(dib);
-				dib = dibConverted;
-
-				if (!FreeImage_PreMultiplyWithAlpha(dib))
-					VUserLog("Warning: Premultiplication failed.");
-			}
-			else
-			{
-				VUserLog("Error: '%s': Unknown colorType %d.", imageURL, colorType);
-				FreeImage_Unload(dib);
-				return NULL;
-			}
-		}
-
-		pixels = FreeImage_GetBits(dib);
-		if (!pixels)
-		{
-			VUserLog("Error: '%s': Couldn't get pixels from image.", imageURL);
-			FreeImage_Unload(dib);
+			VUserLog("Error: '%s': FreeImage couldn't read this image. The file might be corrupted.", imageURL);
+			free(data);
 			return NULL;
 		}
 	}
 
-	// FreeImage's documentation says "Every scanline is DWORD-aligned."
-	// …so round the row stride up to the nearest 4 bytes.
-	// See @ref TestVuoImage::testFetchOddStride.
-	int bytesPerRow = pixelsWide * VuoGlTexture_getBytesPerPixelForInternalFormat(VuoImageColorDepth_getGlInternalFormat(format, colorDepth));
-	bytesPerRow = (bytesPerRow + 3) & ~0x3;
-
-	VuoImage vuoImage = VuoImage_makeFromBufferWithStride(pixels, format, pixelsWide, pixelsHigh, bytesPerRow, colorDepth, ^(void *buffer){
-		FreeImage_Unload(dib);
-		free(data);
-	});
+	VuoImage vuoImage = VuoFreeImage_convertFreeImageToVuoImage(dib, data, imageURL);
 	if (!vuoImage)
 		return NULL;
 

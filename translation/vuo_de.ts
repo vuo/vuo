@@ -1185,12 +1185,7 @@ Appears on node documentation webpages.</extracomment>
         <translation>Beitragende</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Dependency Licenses</source>
-        <translation>Abhängigkeitslizenzen</translation>
-    </message>
-    <message>
-        <location line="-46"/>
+        <location line="-44"/>
         <source>**Create memorable interactive experiences — without coding.**
 
 Drag, drop, and connect Vuo&apos;s simple building blocks to support your creative work:  
@@ -1211,6 +1206,21 @@ Weitere Informationen finden Sie unter %1.</translation>
         <location line="+16"/>
         <source>Built on %2</source>
         <translation>Erbaut auf %2</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Dependencies</source>
+        <translation>Abhängigkeiten</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Please see the list of contributors at &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</source>
+        <translation>Bitte sehen Sie die Liste der Mitwirkenden unter &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please see the list of dependencies at &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</source>
+        <translation>Bitte sehen Sie sich die Liste der Abhängigkeiten unter &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt; an.</translation>
     </message>
 </context>
 <context>
@@ -2690,6 +2700,29 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <source>This node is not installed. You can either remove it from the composition or install it on your computer.</source>
         <extracomment>Appears in the node documentation panel at the bottom of the node library.</extracomment>
         <translation>Dieser Knoten ist nicht installiert. Sie können es entweder aus dem Aufbau entfernen oder auf Ihrem Computer installieren.</translation>
+    </message>
+    <message>
+        <location line="-262"/>
+        <source>Drag this onto the canvas to add it to your composition.</source>
+        <translation>Ziehen Sie es auf die Zeichenfläche, um es Ihrer Komposition hinzuzufügen.</translation>
+    </message>
+</context>
+<context>
+    <name>VuoPanelDocumentation</name>
+    <message>
+        <location filename="../editor/VuoPanelDocumentation.cc" line="+67"/>
+        <source>Opens the &quot;%1&quot; documentation in this panel.</source>
+        <translation>Öffnet die Dokumentation „%1“ in diesem Bereich.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Opens the &quot;%1&quot; example composition in a new window.</source>
+        <translation>Öffnet die Beispielkomposition „%1“ in einem neuen Fenster.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Opens the &quot;%1&quot; documentation in a new web browser tab.</source>
+        <translation>Öffnet die Dokumentation „%1“ in einem neuen Tab des Webbrowsers.</translation>
     </message>
 </context>
 <context>

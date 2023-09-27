@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNode interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -47,15 +47,12 @@ public:
 	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, const vector<VuoCompilerType *> &orderedTypes, Function *compositionCreateContextForNode, Function *compositionSetPortValueFunction, Function *compositionGetPortValueFunction, Function *compositionFireTriggerPortEventFunction, Function *compositionReleasePortDataFunction);
 	Value * generateCreateContext(Module *module, BasicBlock *block);
-	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *compositionStateValue);
+	void generateEventFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
 	void generateCallbackStopFunctionCall(Module *module, BasicBlock *block, Value *compositionStateValue);
-	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue);
-	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue, vector<VuoPort *> selectedInputPorts,
-										   const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	VuoCompilerInstanceData * getInstanceData(void);
 	string getIdentifier(void);
 	string getGraphvizIdentifierPrefix(void);

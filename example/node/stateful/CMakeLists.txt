@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 cmake_policy(VERSION 3.16...3.20)
 
-set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
-project(Stateful LANGUAGES NONE)
-
 set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
 find_library(VUO_FRAMEWORK Vuo)
+
+foreach (arch "x86_64" "arm64")
+	if (EXISTS "${VUO_FRAMEWORK}/Headers/OBJC-${arch}.h.pch")
+		list(APPEND supportedTargets ${arch})
+	endif()
+endforeach()
+set(CMAKE_OSX_ARCHITECTURES ${supportedTargets} CACHE STRING "")
+
+project(Stateful LANGUAGES NONE)
 
 set(userModules "~/Library/Application\ Support/Vuo/Modules")
 file(MAKE_DIRECTORY ${userModules})

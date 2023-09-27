@@ -2,13 +2,16 @@
  * @file
  * VuoTimeUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
-#include <sys/time.h>
 #include "VuoTimeUtilities.hh"
+
+#include <chrono>
+#include <ctime>
+#include <sys/time.h>
 
 /**
  * Returns a floating-point representation of the number of seconds since 1970 (the Unix Epoch).
@@ -42,9 +45,24 @@ struct timeval VuoTimeUtilities::getElapsedTime(const struct timeval &start, con
 }
 
 /**
- * Prints @c time to @c stdout.
+ * Returns the current timestamp, at millisecond resolution, formatted for use as part of a file name.
  */
-void VuoTimeUtilities::printTime(const struct timeval &time)
+string VuoTimeUtilities::getCurrentDateTimeForFileName(void)
 {
-	printf("%ld.%06d\n", time.tv_sec, time.tv_usec);
+	// https://stackoverflow.com/questions/15845505/how-to-get-higher-precision-fractions-of-a-second-in-a-printout-of-current-tim
+
+	auto now = std::chrono::system_clock::now();
+	auto secondsSinceEpoch(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()));
+	std::time_t now_t(std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(secondsSinceEpoch)));
+
+	const int length = 16;
+	char nowToSeconds[length] = {0};
+
+	strftime(nowToSeconds, length, "%Y%m%d_%H%M%S", std::localtime(&now_t));
+	auto nowMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch() - secondsSinceEpoch).count();
+
+	char nowFull[length+3] = {0};
+	snprintf(nowFull, length+4, "%s%03lld", nowToSeconds, nowMilliseconds);
+
+	return nowFull;
 }

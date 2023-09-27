@@ -2,7 +2,7 @@
  * @file
  * TestCompositionExecution interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -39,8 +39,10 @@ public:
 	static void checkEqual(string itemName, string type, json_object *actualValue, json_object *expectedValue);
 
 protected:
-	static VuoCompiler * initCompiler(void);
+	static VuoCompiler * initCompiler(const string &compositionPath);
 	static const char *getJsonTypeDescription(enum json_type);
+	VuoPortClass *getFirstPortOfType(vector<VuoPortClass *> ports, string type);
+	VuoRunner *createAndStartRunnerFromNode(VuoCompilerNodeClass *nodeClass);
 };
 
 /**
@@ -79,6 +81,8 @@ public:
 	virtual ~TestCompilerDelegate(void);
 	virtual void installModule(const string &originalPath, const string &installedPath, const string &moduleToWaitOn="");
 	virtual void installModuleWithSuperficialChange(const string &originalPath, const string &installedPath);
+	virtual void overrideModuleWithSuperficialChange(const string &installedPath, VuoCompiler *compiler);
+	virtual void revertOverriddenModule(const string &installedPath, VuoCompiler *compiler);
 	virtual void uninstallModule(const string &installedPath);
 	VuoCompilerCompositionDiff * takeDiffInfo(void);
 };

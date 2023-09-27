@@ -2,14 +2,12 @@
  * @file
  * VuoProtocol interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
-
-class VuoRunner;
 
 /**
  * This class represents a protocol. A protocol consists of an ordered list of
@@ -40,12 +38,13 @@ public:
 	void addOutputPort(string portName, string portType);
 
 	bool isCompositionCompliant(string compositionAsString);
-	bool isCompositionCompliant(VuoRunner *runner);
 
 	static vector<VuoProtocol *> getCompositionProtocols(string compositionAsString);
-	static vector<VuoProtocol *> getCompositionProtocols(VuoRunner *runner);
+	static vector<VuoProtocol *> getCompositionProtocols(const vector<pair<string, string> > &publishedInputNamesAndTypes, const vector<pair<string, string> > &publishedOutputNamesAndTypes);
 
 private:
+	bool arePublishedPortsCompliant(const vector<pair<string, string> > &publishedInputs, const vector<pair<string, string> > &publishedOutputs);
+
 	static vector<VuoProtocol *> protocols;
 	string id;
 	string name;

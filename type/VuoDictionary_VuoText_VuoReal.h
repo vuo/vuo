@@ -2,12 +2,13 @@
  * @file
  * VuoDictionary_VuoText_VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoDictionary_VuoText_VuoReal_h
+#define VuoDictionary_VuoText_VuoReal_h
 
 /**
  * @ingroup VuoTypes
@@ -35,8 +36,6 @@ typedef struct
 	VuoList_VuoReal values;
 } VuoDictionary_VuoText_VuoReal;
 
-struct json_object;
-
 VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_makeFromJson(struct json_object * js);
 struct json_object * VuoDictionary_VuoText_VuoReal_getJson(const VuoDictionary_VuoText_VuoReal value);
 char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoReal value);
@@ -63,3 +62,5 @@ char * VuoDictionary_VuoText_VuoReal_getString(const VuoDictionary_VuoText_VuoRe
 /**
  * @}
  */
+
+#endif

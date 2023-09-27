@@ -2,12 +2,11 @@
  * @file
  * vuo.serial.configure node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoSerial.h"
 
 VuoModuleMetadata({
@@ -17,7 +16,7 @@ VuoModuleMetadata({
 						  "speed",
 						  "arduino", "rs232", "rs-232", "usb", "modem"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoSerialIO"
 					  ],
@@ -43,11 +42,10 @@ void nodeEvent
 	}
 
 	VuoSerialDevice_retain(realizedDevice);
-	VuoSerial s = VuoSerial_getShared(realizedDevice.path);
-	VuoRetain(s);
+	VuoSerial s = VuoSerial_useShared(realizedDevice.path);
 
 	VuoSerial_configureDevice(s, baudRate, dataBits, parity, stopBits);
 
-	VuoRelease(s);
+	VuoSerial_disuseShared(s);
 	VuoSerialDevice_release(realizedDevice);
 }

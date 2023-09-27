@@ -2,17 +2,16 @@
  * @file
  * VuoImageStereoType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef const struct VuoList_VuoImageStereoType_struct { void *l; } * VuoList_VuoImageStereoType;
-#define VuoList_VuoImageStereoType_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -42,6 +41,8 @@ typedef enum {
 	VuoImageStereoType_RightOnly
 } VuoImageStereoType;
 
+#include "VuoList_VuoImageStereoType.h"
+
 VuoImageStereoType VuoImageStereoType_makeFromJson(struct json_object * js);
 struct json_object * VuoImageStereoType_getJson(const VuoImageStereoType value);
 VuoList_VuoImageStereoType VuoImageStereoType_getAllowedValues(void);
@@ -49,11 +50,17 @@ char * VuoImageStereoType_getSummary(const VuoImageStereoType value);
 
 /// @{
 /**
- * Automatically generated function.
+ * Automatically generated functions.
  */
 char * VuoImageStereoType_getString(const VuoImageStereoType value);
+void VuoImageStereoType_retain(VuoImageStereoType value);
+void VuoImageStereoType_release(VuoImageStereoType value);
 /// @}
 
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif

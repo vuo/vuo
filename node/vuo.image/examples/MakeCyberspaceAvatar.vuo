@@ -1,0 +1,52 @@
+/**
+ * @file
+ * @brief Make Cyberspace Avatar
+ * Uses live video to deep dive into Cyberspace.
+ *
+ * Thanks to [Gisle Martens Meyer](https://uncannyplanet.com) for funding development of some of these nodes!
+ *
+ * @lastSavedInVuoVersion 2.4.2
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowPeriodicEvents [type="vuo.time.allowPeriodic" version="1.0.0" label="Allow Periodic Events|<refresh>refresh\l|<time>time\l|<period>period\l|<periodicTime>periodicTime\r" pos="570,420" _period="2.0"];
+BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1170,240" _imageTransform="\{\"translation\":[0.0,0.0],\"rotation\":0.0,\"scale\":[4.0,4.0]\}" _feedbackOpacity="1.0" _feedbackBlendMode="\"normal\"" _pixelAligned="true" _imageInForeground="true" _width="1024" _height="768" _colorDepth="\"16bpc\""];
+BlendImageWithFeedback3 [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1530,240" _imageTransform="\"identity\"" _feedbackOpacity="1.0" _feedbackBlendMode="\"normal\"" _pixelAligned="true" _imageInForeground="true" _width="1024" _height="768" _colorDepth="\"16bpc\""];
+ChangeSamplingMode2 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="840,240" fillcolor="orange" _samplingMode="0"];
+Convert2DPointToTranslation [type="vuo.type.translate.point2d.transform2d" version="1.0.0" label="Convert 2D Point to Translation|<refresh>refresh\l|<translation>translation\l|<transform>transform\r" pos="1200,375"];
+Convert2DPointToTranslation2 [type="vuo.type.translate.point2d.transform2d" version="1.0.0" label="Convert 2D Point to Translation|<refresh>refresh\l|<translation>translation\l|<transform>transform\r" pos="1470,375"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="-105,345"];
+ConvertFrameToTimestamp [type="vuo.type.videoframe.real" version="1.0.0" label="Convert Frame to Timestamp|<refresh>refresh\l|<frame>frame\l|<timestamp>timestamp\r" pos="720,495"];
+GetRandomItemFromList [type="vuo.list.get.random.VuoPoint2d" version="1.0.0" label="Get Random Item from List|<refresh>refresh\l|<list>list\l|<randomItem>randomItem\r" pos="810,450"];
+MakeList [type="vuo.list.make.4.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="777,461" _1="\{\"x\":0.0099999997764825821,\"y\":0.0\}" _2="\{\"x\":0.0099999997764825821,\"y\":0.0099999997764825821\}" _3="\{\"x\":0.0,\"y\":0.0099999997764825821\}" _4="\{\"x\":0.0099999997764825821,\"y\":-0.0099999997764825821\}"];
+MakeList6 [type="vuo.list.make.4.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="487,266" fillcolor="orange" _1="\"#000\"" _2="\"#fff\"" _3="\{\"r\":0.25000381469726562,\"g\":0.50000762939453125,\"b\":1.0,\"a\":1.0\}" _4="\{\"r\":0.12500190734863281,\"g\":0.25000381469726562,\"b\":0.50000762939453125,\"a\":1.0\}"];
+MatchImageToPalette [type="vuo.image.color.palette" version="1.0.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="570,240" fillcolor="orange" _dithering="20" _ditheringIntensity="0.10000000000000001"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="-150,240" fillcolor="lime" _width="256" _height="224" _receivedFrame_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1755,240" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage [type="vuo.image.resize" version="1.1.3" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="135,240" _sizingMode="\"fill\"" _width="256" _height="224"];
+ScalePoint [type="vuo.point.multiply.scalar.VuoPoint2d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="1215,450" _scaleFactor="-1.0"];
+VignetteImage [type="vuo.image.vignette2" version="2.0.0" label="Vignette Image|<refresh>refresh\l|<image>image\l|<color>color\l|<center>center\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<replaceOpacity>replaceOpacity\l|<vignettedImage>vignettedImage\r" pos="315,240" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":0.0\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1.0" _height="1.0" _sharpness="1.0" _replaceOpacity="true"];
+
+AllowPeriodicEvents:periodicTime -> MakeList:1 [event=true];
+BlendImageWithFeedback3:feedbackImage -> RenderImageToWindow:image;
+BlendImageWithFeedback:feedbackImage -> BlendImageWithFeedback3:image;
+ChangeSamplingMode2:outputImage -> BlendImageWithFeedback:image;
+Convert2DPointToTranslation2:transform -> BlendImageWithFeedback3:feedbackTransform;
+Convert2DPointToTranslation:transform -> BlendImageWithFeedback:feedbackTransform;
+ConvertFrameToImage2:image -> ResizeImage:image;
+ConvertFrameToTimestamp:timestamp -> AllowPeriodicEvents:time;
+GetRandomItemFromList:randomItem -> Convert2DPointToTranslation:translation;
+GetRandomItemFromList:randomItem -> ScalePoint:point;
+MakeList6:list -> MatchImageToPalette:palette;
+MakeList:list -> GetRandomItemFromList:list;
+MatchImageToPalette:quantizedImage -> ChangeSamplingMode2:image;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage2:frame;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToTimestamp:frame;
+ResizeImage:resizedImage -> VignetteImage:image;
+ScalePoint:scaledPoint -> Convert2DPointToTranslation2:translation;
+VignetteImage:vignettedImage -> MatchImageToPalette:image;
+}

@@ -2,7 +2,7 @@
  * @file
  * VuoType interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -25,7 +25,8 @@ public:
 
 	static const string listTypeNamePrefix;
 	static const string dictionaryTypeNamePrefix;
-	static bool isListTypeName(string typeName);
-	static bool isDictionaryTypeName(string typeName);
-	static string extractInnermostTypeName(string typeName);
+	static bool isTypeName(const string &potentialTypeName);
+	static bool isListTypeName(const string &typeName);
+	static bool isDictionaryTypeName(const string &typeName);
+	static string extractInnermostTypeName(const string &typeName);
 };

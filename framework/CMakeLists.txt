@@ -14,6 +14,9 @@ endif()
 # and then be copied into `Vuo.framework` (dependency of VuoFramework).
 add_custom_target(VuoFramework)
 
+set(frameworkPath "${PROJECT_BINARY_DIR}/lib/Vuo.framework")
+set(frameworkVersionPath "${frameworkPath}/Versions/${VuoFrameworkVersion}")
+
 add_library(VuoFrameworkDylib SHARED
 	empty.c
 )
@@ -39,10 +42,10 @@ target_compile_options(VuoFrameworkDylib
 )
 target_include_directories(VuoFrameworkDylib
 	INTERFACE
-		${PROJECT_BINARY_DIR}/lib/Vuo.framework/Headers
+		${frameworkPath}/Headers
 )
 list(APPEND generatedFiles
-	${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Vuo
+	${frameworkVersionPath}/Vuo
 )
 add_dependencies(VuoFramework VuoFrameworkDylib)
 
@@ -50,11 +53,16 @@ add_dependencies(VuoFramework VuoFrameworkDylib)
 get_property(VuoNodeSets GLOBAL PROPERTY VuoNodeSets)
 list(APPEND typeTargets
 	vuo.core.types
-	vuo.core.list.types
+	vuo.core.types.compound
 )
 foreach (nodeSet ${VuoNodeSets})
 	if (TARGET "${nodeSet}.types")
 		list(APPEND typeTargets "${nodeSet}.types")
+		list(APPEND typeLinkerFlags LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/lib${nodeSet}.types.a)
+	endif()
+	if (TARGET "${nodeSet}.types.compound")
+		list(APPEND typeTargets "${nodeSet}.types.compound")
+		list(APPEND typeLinkerFlags LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/lib${nodeSet}.types.compound.a)
 	endif()
 	if (TARGET "${nodeSet}.libraries")
 		list(APPEND libraryTargets "${nodeSet}.libraries")
@@ -69,6 +77,8 @@ target_link_libraries(VuoFrameworkDylib
 	CONAN_PKG::oai
 	VuoBase
 	VuoCompiler
+	VuoRunner
+	VuoRunnerCocoa
 	VuoApp
 	VuoGlContext
 	VuoGlPool
@@ -82,7 +92,9 @@ target_link_libraries(VuoFrameworkDylib
 	# that run in the same process as Vuo.framework.
 )
 add_custom_command(TARGET VuoFrameworkDylib POST_BUILD
-	COMMAND install_name_tool -change @rpath/libc++.dylib /usr/lib/libc++.1.dylib ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/Current/Vuo
+	COMMAND install_name_tool -change @rpath/libc++.dylib /usr/lib/libc++.1.dylib ${frameworkVersionPath}/Vuo
+	COMMAND install_name_tool -change @loader_path/../Frameworks/Syphon.framework/Versions/A/Syphon @rpath/../Frameworks/Syphon.framework/Syphon ${frameworkVersionPath}/Vuo
+	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Vuo
 )
 
 
@@ -92,8 +104,11 @@ target_link_options(VuoFrameworkDylib
 	PRIVATE
 	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoBase.a
 	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoCompiler.a
+	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoRunner.a
+	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libVuoRunnerCocoa.a
 	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.types.a
-	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.list.types.a
+	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.types.compound.a
+	${typeLinkerFlags}  # Force non-core types' functions to be loaded — needed for VuoCompilerPublishedPort::getDetails() and input editors.
 )
 
 
@@ -127,7 +142,7 @@ target_link_options(VuoFrameworkDylib
 # (More recent `ld64` versions automatically find them using the dylib's built-in rpath.)
 target_link_options(VuoFrameworkDylib
 	PUBLIC
-	-L${PROJECT_BINARY_DIR}/lib/Vuo.framework/Modules
+	-L${frameworkPath}/Modules
 )
 
 
@@ -191,9 +206,8 @@ VuoBundleFiles(VuoFrameworkDylib "Resources/shaders"
 	shaders/trianglePoint.glsl
 )
 
-set(frameworkPath "${PROJECT_BINARY_DIR}/lib/Vuo.framework")
-set(frameworkVersionPath "${frameworkPath}/Versions/${VuoFrameworkVersion}")
 
+set(installNameToolIgnoreSignature 2>&1 | (grep -F -v 'will invalidate the code signature' || true))
 
 # Copy helpers.
 add_custom_command(
@@ -207,18 +221,14 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/base/codesignWrapper.sh
 		"${frameworkVersionPath}/Helpers"
 
-	COMMAND install_name_tool -rpath @loader_path/../lib @loader_path/../Modules ${frameworkVersionPath}/Helpers/clang
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
-	COMMAND install_name_tool -add_rpath @loader_path/../../../.. ${frameworkVersionPath}/Helpers/clang
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND install_name_tool -rpath @loader_path/../lib @loader_path/../Modules ${frameworkVersionPath}/Helpers/clang ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -add_rpath @loader_path/../../../.. ${frameworkVersionPath}/Helpers/clang ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/clang ${codesignAdHocIgnoreReplace}
 
-	COMMAND install_name_tool -rpath @loader_path/../lib @loader_path/../Modules ${frameworkVersionPath}/Helpers/llvm-link
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND install_name_tool -rpath @loader_path/../lib @loader_path/../Modules ${frameworkVersionPath}/Helpers/llvm-link ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/llvm-link ${codesignAdHocIgnoreReplace}
 
-	COMMAND install_name_tool -rpath @executable_path/../lib/ @loader_path/../Modules ${frameworkVersionPath}/Helpers/ld
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND install_name_tool -rpath @executable_path/../lib/ @loader_path/../Modules ${frameworkVersionPath}/Helpers/ld ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/ld ${codesignAdHocIgnoreReplace}
 
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Helpers/codesignWrapper.sh
@@ -329,8 +339,7 @@ add_custom_command(
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Frameworks/llvm-c.framework ${codesignAdHocIgnoreReplace}
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Frameworks/llvm.framework   ${codesignAdHocIgnoreReplace}
 
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Frameworks/Syphon.framework/Versions/A/Syphon ${frameworkVersionPath}/Frameworks/Syphon.framework/Versions/A/Syphon
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Frameworks/Syphon.framework/Versions/A/Syphon ${frameworkVersionPath}/Frameworks/Syphon.framework/Versions/A/Syphon ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} --force "${frameworkVersionPath}/Frameworks/Syphon.framework" ${codesignAdHocIgnoreReplace}
 
 	# Update timestamps, to help `make` believe this target was successfully rebuilt.
@@ -345,10 +354,6 @@ list(APPEND generatedFiles
 	${dependencyFrameworksDest}
 )
 
-add_custom_command(TARGET VuoFrameworkDylib POST_BUILD
-	COMMAND install_name_tool -change @loader_path/../Frameworks/Syphon.framework/Versions/A/Syphon @rpath/../Frameworks/Syphon.framework/Syphon ${frameworkVersionPath}/Vuo
-)
-
 
 # Copy core types and libraries into Vuo.framework.
 function (VuoGetObjects outputObjectsVariable outputDestVariable target binaryDir)
@@ -361,15 +366,17 @@ function (VuoGetObjects outputObjectsVariable outputDestVariable target binaryDi
 	set(${outputDestVariable} "${objects}" PARENT_SCOPE)
 endfunction()
 VuoGetObjects(coreTypeObjects            coreTypeObjectsDest           vuo.core.types              "${PROJECT_BINARY_DIR}/type/")
-VuoGetObjects(coreListTypeObjects        coreListTypeObjectsDest       vuo.core.list.types         "${PROJECT_BINARY_DIR}/type/list/")
 VuoGetObjects(coreLibraryObjects         coreLibraryObjectsDest        vuo.core.libraries          "${PROJECT_BINARY_DIR}/library/")
+VuoGetObjects(coreModuleLibraryObjects   coreModuleLibraryObjectsDest  vuo.core.module.libraries   "${PROJECT_BINARY_DIR}/library/")
 VuoGetObjects(coreRuntimeObjects         coreRuntimeObjectsDest        vuo.core.runtime.objects    "${PROJECT_BINARY_DIR}/runtime/")
-list(FILTER coreTypeObjects        EXCLUDE REGEX "\.hh?$")
-list(FILTER coreTypeObjectsDest    EXCLUDE REGEX "\.hh?$")
-list(FILTER coreLibraryObjects     EXCLUDE REGEX "\.hh?$")
-list(FILTER coreLibraryObjectsDest EXCLUDE REGEX "\.hh?$")
-list(FILTER coreRuntimeObjects     EXCLUDE REGEX "\.(bc|hh?)$")
-list(FILTER coreRuntimeObjectsDest EXCLUDE REGEX "\.(bc|hh?)$")
+list(FILTER coreTypeObjects              EXCLUDE REGEX "\.hh?$")
+list(FILTER coreTypeObjectsDest          EXCLUDE REGEX "\.hh?$")
+list(FILTER coreLibraryObjects           EXCLUDE REGEX "\.hh?$")
+list(FILTER coreLibraryObjectsDest       EXCLUDE REGEX "\.hh?$")
+list(FILTER coreModuleLibraryObjects     EXCLUDE REGEX "\.hh?$")
+list(FILTER coreModuleLibraryObjectsDest EXCLUDE REGEX "\.hh?$")
+list(FILTER coreRuntimeObjects           EXCLUDE REGEX "\.(bc|hh?)$")
+list(FILTER coreRuntimeObjectsDest       EXCLUDE REGEX "\.(bc|hh?)$")
 set(frameworkCoreDylibsDest
 	${frameworkVersionPath}/Modules/libVuoApp.dylib
 	${frameworkVersionPath}/Modules/libVuoCompositionStub.dylib
@@ -381,14 +388,16 @@ set(frameworkCoreOutputs
 	${coreTypeObjectsDest}
 	${coreListTypeObjectsDest}
 	${coreLibraryObjectsDest}
+	${coreModuleLibraryObjectsDest}
 	${coreRuntimeObjectsDest}
 	${frameworkCoreDylibsDest}
 )
 add_custom_command(
 	DEPENDS
 		vuo.core.types
-		vuo.core.list.types
+		vuo.core.types.compound
 		vuo.core.libraries
+		vuo.core.module.libraries
 		vuo.core.runtime.objects
 		VuoApp
 		VuoCompositionStub
@@ -403,6 +412,7 @@ add_custom_command(
 		${coreTypeObjects}
 		${coreListTypeObjects}
 		${coreLibraryObjects}
+		${coreModuleLibraryObjects}
 		${coreRuntimeObjects}
 		"${PROJECT_BINARY_DIR}/lib/libVuoApp.dylib"
 		"${PROJECT_BINARY_DIR}/lib/libVuoCompositionStub.dylib"
@@ -411,13 +421,13 @@ add_custom_command(
 		"${PROJECT_BINARY_DIR}/lib/libVuoHeap.dylib"
 		${frameworkVersionPath}/Modules
 	COMMAND chmod 644 ${frameworkCoreDylibsDest}
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoApp.dylib       ${frameworkVersionPath}/Modules/libVuoApp.dylib
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoGlContext.dylib ${frameworkVersionPath}/Modules/libVuoGlContext.dylib
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoGlPool.dylib    ${frameworkVersionPath}/Modules/libVuoGlPool.dylib
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoHeap.dylib      ${frameworkVersionPath}/Modules/libVuoHeap.dylib
-	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoApp.dylib
-	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlContext.dylib
-	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlPool.dylib
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoApp.dylib       ${frameworkVersionPath}/Modules/libVuoApp.dylib       ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoGlContext.dylib ${frameworkVersionPath}/Modules/libVuoGlContext.dylib ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoGlPool.dylib    ${frameworkVersionPath}/Modules/libVuoGlPool.dylib    ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libVuoHeap.dylib      ${frameworkVersionPath}/Modules/libVuoHeap.dylib      ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoApp.dylib       ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlContext.dylib ${installNameToolIgnoreSignature}
+	COMMAND install_name_tool -add_rpath @loader_path ${frameworkVersionPath}/Modules/libVuoGlPool.dylib    ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} ${frameworkCoreDylibsDest} ${codesignAdHocIgnoreReplace}
 	OUTPUT ${frameworkCoreOutputs}
 )
@@ -436,7 +446,7 @@ endif()
 # Copy module-compilers into Vuo.framework.
 get_target_property(moduleCompilers VuoModuleCompilers VuoGeneratedFiles)
 foreach (moduleCompiler ${moduleCompilers})
-	get_filename_component(moduleCompiler ${moduleCompilers} NAME)
+	get_filename_component(moduleCompiler ${moduleCompiler} NAME)
 	list(APPEND moduleCompilersDest "${frameworkVersionPath}/Helpers/ModuleCompiler/${moduleCompiler}")
 endforeach()
 add_custom_command(
@@ -451,9 +461,14 @@ add_custom_command(
 	OUTPUT ${moduleCompilersDest}
 )
 add_custom_target(VuoFrameworkModuleCompilers DEPENDS ${moduleCompilersDest})
-add_dependencies(VuoFramework VuoFrameworkModuleCompilers)
+add_dependencies(VuoFramework
+	VuoFrameworkModuleCompilers
+	VuoModulePCH
+)
+get_target_property(precompiledHeaders VuoModulePCH VuoGeneratedFiles)
 list(APPEND generatedFiles
 	${moduleCompilersDest}
+	${precompiledHeaders}
 )
 
 
@@ -507,8 +522,7 @@ add_custom_command(
 		Vuo.framework/Versions/${VuoFrameworkVersion}/Modules
 		${conanLibrariesDest}
 	COMMAND chmod 644 ${conanLibrariesDest}
-	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libLeap.dylib ${frameworkVersionPath}/Modules/libLeap.dylib
-		2>&1 | (grep -F -v 'will invalidate the code signature' || true)
+	COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/libLeap.dylib ${frameworkVersionPath}/Modules/libLeap.dylib ${installNameToolIgnoreSignature}
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Modules/libLeap.dylib ${codesignAdHocIgnoreReplace}
 
 	OUTPUT ${conanLibrariesDest}
@@ -551,6 +565,7 @@ add_custom_command(
 		--include mach_debug
 		--include machine
 		--include malloc
+		--include objc
 		--include os
 		--include pthread
 		--include secure
@@ -649,9 +664,10 @@ file(GLOB frameworkHeaders
 	../node/*.h
 	../node/*/*.h
 	../node/*/*.hh
+	../runner/*.h
+	../runner/*.hh
 	../runtime/*.h
 	../runtime/*.hh
-	${PROJECT_BINARY_DIR}/type/list/VuoList_*.h
 )
 
 get_directory_property(coreTypeHeaders DIRECTORY ../type DEFINITION VuoCoreTypeHeaders)
@@ -659,9 +675,22 @@ list(TRANSFORM coreTypeHeaders PREPEND "${PROJECT_SOURCE_DIR}/type/")
 get_directory_property(coreTypeHeadersDest DIRECTORY ../type DEFINITION VuoCoreTypeHeaders)
 list(TRANSFORM coreTypeHeadersDest PREPEND "${frameworkVersionPath}/Headers/")
 
+list(APPEND generatedTypeHeaderTargets vuo.core.types.compound.headers)
+get_target_property(generatedTypeHeadersInTarget vuo.core.types.compound.headers VuoGeneratedFiles)
+list(APPEND generatedTypeHeaders ${generatedTypeHeadersInTarget})
+foreach (nodeSet ${VuoNodeSets})
+	if (TARGET "${nodeSet}.types.compound.headers")
+		list(APPEND generatedTypeHeaderTargets ${nodeSet}.types.compound.headers)
+		get_target_property(generatedTypeHeadersInTarget ${nodeSet}.types.compound.headers VuoGeneratedFiles)
+		list(APPEND generatedTypeHeaders ${generatedTypeHeadersInTarget})
+	endif()
+endforeach()
+
 set(frameworkHeadersOutputs
 	${frameworkVersionPath}/Headers/VuoConfig.h
 	${frameworkVersionPath}/Headers/coreTypes.h
+	${frameworkVersionPath}/Headers/module.h
+	${frameworkVersionPath}/Headers/node.h
 	${frameworkVersionPath}/Headers/type.h
 	${coreTypeHeadersDest}
 )
@@ -671,6 +700,7 @@ add_custom_command(
 		VuoCoreTypesHeader
 		${PROJECT_SOURCE_DIR}/type/type.h
 		${coreTypeHeaders}
+		${generatedTypeHeaders}
 		${frameworkHeaders}
 	COMMENT "Copying Vuo headers into Vuo.framework"
 	COMMAND cp ${PROJECT_BINARY_DIR}/base/VuoConfig-for-framework.h ${frameworkVersionPath}/Headers/VuoConfig.h
@@ -678,6 +708,7 @@ add_custom_command(
 		${PROJECT_BINARY_DIR}/base/config/coreTypes.h
 		${PROJECT_SOURCE_DIR}/type/type.h
 		${coreTypeHeaders}
+		${generatedTypeHeaders}
 		${frameworkHeaders}
 		${frameworkVersionPath}/Headers
 	OUTPUT ${frameworkHeadersOutputs}
@@ -687,6 +718,7 @@ add_custom_target(VuoFrameworkHeaders
 		${frameworkHeadersOutputs}
 		${coreTypeHeaders}
 		${frameworkHeaders}
+		${generatedTypeHeaderTargets}
 )
 add_dependencies(VuoFrameworkDylib VuoFrameworkHeaders)
 list(APPEND generatedFiles
@@ -694,6 +726,30 @@ list(APPEND generatedFiles
 	${coreTypeHeaders}
 	${frameworkHeaders}
 )
+
+
+# Copy generic compound type headers and sources into Vuo.framework.
+
+file(GLOB compoundTypeSources RELATIVE "${PROJECT_SOURCE_DIR}/type/compound"
+	"${PROJECT_SOURCE_DIR}/type/compound/*.h"
+	"${PROJECT_SOURCE_DIR}/type/compound/*.cc"
+)
+set(compoundTypeSourcesIn ${compoundTypeSources})
+set(compoundTypeSourcesOut ${compoundTypeSources})
+list(TRANSFORM compoundTypeSourcesIn PREPEND "${PROJECT_SOURCE_DIR}/type/compound/")
+list(TRANSFORM compoundTypeSourcesOut PREPEND "${frameworkVersionPath}/Modules/")
+add_custom_command(
+	DEPENDS ${compoundTypeSourcesIn}
+	COMMAND /usr/bin/rsync ${compoundTypeSourcesIn} "${frameworkVersionPath}/Modules"
+
+	# Update timestamps, to help `make` believe this target was successfully rebuilt.
+	COMMAND touch ${compoundTypeSourcesOut}
+
+	OUTPUT ${compoundTypeSourcesOut}
+)
+add_custom_target(VuoFrameworkGenericCompoundTypes DEPENDS ${compoundTypeSourcesOut})
+set_property(TARGET VuoFrameworkGenericCompoundTypes APPEND PROPERTY VuoGeneratedFiles "${compoundTypeSourcesOut}")
+add_dependencies(VuoFrameworkDylib VuoFrameworkGenericCompoundTypes)
 
 
 # Generate the framework's master header.
@@ -706,12 +762,14 @@ file(GLOB frameworkMasterHeaders
 	../library/*.h
 	../library/*.hh
 	../node/*.h
+	../runner/*.h
+	../runner/*.hh
 	../runtime/*.h
 	../runtime/*.hh
 	../type/*.h
 )
 list(TRANSFORM frameworkMasterHeaders REPLACE "^.*/" "")
-list(FILTER frameworkMasterHeaders EXCLUDE REGEX "^(VuoGraphics(Layer|View|Window|WindowDelegate|WindowDrag)|VuoImageResize|VuoMathExpression|VuoShader(Shaders|Uniforms)|VuoUrlParser|VuoWindowRecorder|VuoWindowTextInternal|coreTypes)\.h+$")
+list(FILTER frameworkMasterHeaders EXCLUDE REGEX "^(VuoGraphics(Layer|View|Window|WindowDelegate|WindowDrag)|VuoImageResize|VuoMathExpression|VuoShader(Shaders|Uniforms)|VuoSmooth|VuoUrlParser|VuoWindowRecorder|VuoWindowTextInternal|coreTypes)\.h+$")
 list(SORT frameworkMasterHeaders)
 add_custom_command(
 	DEPENDS
@@ -736,116 +794,126 @@ file(GLOB licenses
 VuoBundleFiles(VuoFrameworkDylib "Documentation/Licenses" ${licenses})
 
 
-if (NOT VUO_NODE_DEVELOPER)
+# Create symlinks within the Headers directory so that the module PCH files can use it as their sysroot.
+add_custom_command(
+	DEPENDS
+		VuoFrameworkDependencyFrameworks
+		VuoFrameworkMacOSHeaders
+		VuoFrameworkHeaders
+	COMMENT "Creating symlinks for headers"
+	COMMAND mkdir -p "${frameworkVersionPath}/Headers/usr"
+	COMMAND rm -f "${frameworkVersionPath}/Headers/usr/include"
+				  "${frameworkVersionPath}/Headers/macos/c++"
+				  "${frameworkVersionPath}/Headers/clang"
+				  "${frameworkVersionPath}/Headers/llvm"
+	COMMAND ln -s "../macos" "${frameworkVersionPath}/Headers/usr/include"
+	COMMAND ln -s "../../Frameworks/llvm.framework/Versions/A/Headers/lib/c++" "${frameworkVersionPath}/Headers/macos/c++"
+	COMMAND ln -s "../Frameworks/llvm.framework/Versions/Current/lib/clang/5.0.2" "${frameworkVersionPath}/Headers/clang"
+	COMMAND ln -s "../Frameworks/llvm.framework/Versions/Current/Headers/lib" "${frameworkVersionPath}/Headers/llvm"
+	OUTPUT "${frameworkVersionPath}/Headers/usr/include"
+)
+add_custom_target(ModulePCHSysroot DEPENDS "${frameworkVersionPath}/Headers/usr/include")
 
-	# Generate the built-in module caches in the Modules directory.
-	# (Do this after the rest of Vuo.framework is created so the cache dylibs will refer to the install_name_tool-ed dylibs in Vuo.framework.)
-	set(frameworkCacheInstalledPrefix ${frameworkVersionPath}/Modules/Builtin/libVuoModuleCache-installed)
-	set(frameworkCacheGeneratedPrefix ${frameworkVersionPath}/Modules/Builtin/libVuoModuleCache-generated)
-	set(frameworkCacheInstalled ${frameworkCacheInstalledPrefix}.dylib)
-	set(frameworkCacheGenerated ${frameworkCacheGeneratedPrefix}.dylib)
-	if (VUO_COMPILER_DEVELOPER)
-		set(dependsOnVuoCompile "")
-	else()
-		set(dependsOnVuoCompile "vuo-compile")
-	endif()
-	get_property(VuoCacheableObjects GLOBAL PROPERTY VuoCacheableObjects)
 
-	set(frameworkCacheInstalledParts "")
-	set(frameworkCacheGeneratedParts "")
-	list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
-	foreach (arch ${CMAKE_OSX_ARCHITECTURES})
-		set(frameworkCacheInstalledPart ${frameworkCacheInstalled}-${arch})
-		set(frameworkCacheGeneratedPart ${frameworkCacheGenerated}-${arch})
-		set(frameworkCacheInstalledPartBuild ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.dylib-${arch})
-		set(frameworkCacheGeneratedPartBuild ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.dylib-${arch})
+# Generate the built-in module caches in the Modules directory.
+# (Do this after the rest of Vuo.framework is created so the cache dylibs will refer to the install_name_tool-ed dylibs in Vuo.framework.)
+set(frameworkCacheDir ${frameworkVersionPath}/Modules/Builtin)
+set(frameworkCache ${frameworkCacheDir}/libVuoModuleCache.dylib)
+if (VUO_COMPILER_DEVELOPER)
+	set(dependsOnVuoCompile "")
+else()
+	set(dependsOnVuoCompile "vuo-compile" VuoCModuleCompiler)
+endif()
+get_property(VuoCacheableObjects GLOBAL PROPERTY VuoCacheableObjects)
+
+set(frameworkCacheParts "")
+list(LENGTH CMAKE_OSX_ARCHITECTURES archCount)
+foreach (arch ${CMAKE_OSX_ARCHITECTURES})
+	set(frameworkCachePart ${frameworkCacheDir}/libVuoModuleCache.dylib-${arch})
+	set(frameworkCachePartBuild ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache.dylib-${arch})
+	set(dependsOn
+		${dependsOnVuoCompile}
+		VuoFrameworkCompilerCLI
+		VuoFrameworkDependencyFrameworks
+		VuoFrameworkHeaders
+		VuoFrameworkNodeSets
+		VuoFrameworkHeaders
+		VuoFrameworkCore
+		VuoFrameworkConanLibraries
+		vuo.core.libraries
+		vuo.core.module.libraries
+		vuo.core.runtime.objects
+		vuo.core.types
+		${generatedModuleTargets}
+		${VuoCacheableObjects}
+	)
+	if (VUO_NODE_DEVELOPER)
 		add_custom_command(
-			DEPENDS
-				${dependsOnVuoCompile}
-				VuoFrameworkCompilerCLI
-				VuoFrameworkDependencyFrameworks
-				VuoFrameworkNodeSets
-				VuoFrameworkCore
-				VuoFrameworkConanLibraries
-				vuo.core.libraries
-				vuo.core.list.types
-				vuo.core.runtime.objects
-				vuo.core.types
-				${VuoCacheableObjects}
+			DEPENDS ${dependsOn}
 			COMMENT "Generating built-in module caches (${arch})"
-			COMMAND rm -f
-				${frameworkCacheInstalledPart}
-				${frameworkCacheGeneratedPart}
-			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target ${arch}-apple-macosx10.10.0 --generate-builtin-module-caches "${frameworkPath}"
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-installed.dylib ${frameworkCacheInstalledPart}
-			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheGeneratedPart}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                             ${frameworkCacheInstalledPart}
-			COMMAND install_name_tool -rpath  ${PROJECT_BINARY_DIR}/lib/Vuo.framework/.. @loader_path/../../../../..                             ${frameworkCacheGeneratedPart}
-			COMMAND install_name_tool -change ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib-${arch} @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache-generated.dylib ${frameworkCacheInstalledPart}
-			COMMAND ${codesignAdHoc} ${frameworkCacheInstalledPart}
-			COMMAND ${codesignAdHoc} ${frameworkCacheGeneratedPart}
-			COMMAND chmod 644 ${frameworkCacheInstalledPart} ${frameworkCacheGeneratedPart}
-			# vuo-compile generates them inside the framework;
-			# move them aside so that only the final merged dylib is in the framework.
-			COMMAND mv ${frameworkCacheInstalledPart} ${frameworkCacheInstalledPartBuild}
-			COMMAND mv ${frameworkCacheGeneratedPart} ${frameworkCacheGeneratedPartBuild}
-			COMMAND mv ${frameworkCacheInstalledPrefix}.txt-${arch} ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-${arch}
-			COMMAND mv ${frameworkCacheGeneratedPrefix}.txt-${arch} ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-${arch}
-			OUTPUT
-				${frameworkCacheInstalledPartBuild}
-				${frameworkCacheGeneratedPartBuild}
+			COMMAND rm -f ${frameworkCachePart} ${frameworkCachePartBuild}
+			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target ${arch}-apple-macosx10.10.0 --generate-builtin-modules "${frameworkPath}"
+			COMMAND touch ${frameworkCachePartBuild}
+			OUTPUT ${frameworkCachePartBuild}
 		)
-		list(APPEND frameworkCacheInstalledParts ${frameworkCacheInstalledPartBuild})
-		list(APPEND frameworkCacheGeneratedParts ${frameworkCacheGeneratedPartBuild})
-	endforeach()
+	else()
+		add_custom_command(
+			DEPENDS ${dependsOn}
+			COMMENT "Generating built-in module caches (${arch})"
+			COMMAND rm -f ${frameworkCachePart}
+			COMMAND ${PROJECT_BINARY_DIR}/bin/vuo-compile --target ${arch}-apple-macosx10.10.0 --generate-builtin-module-caches "${frameworkPath}"
+			COMMAND install_name_tool -id @rpath/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/libVuoModuleCache.dylib ${frameworkCachePart}
+			COMMAND install_name_tool -rpath ${frameworkPath}/.. @loader_path/../../../../.. ${frameworkCachePart}
+			COMMAND ${codesignAdHoc} ${frameworkCachePart}
+			COMMAND chmod 644 ${frameworkCachePart}
+			# vuo-compile generates the single-arch part inside the framework;
+			# move it aside so that only the final merged dylib is in the framework.
+			COMMAND mv ${frameworkCachePart} ${frameworkCachePartBuild}
+			COMMAND mv ${frameworkCacheDir}/manifest.txt-${arch} ${PROJECT_BINARY_DIR}/lib/manifest.txt-${arch}
+			OUTPUT ${frameworkCachePartBuild}
+		)
+	endif()
+	list(APPEND frameworkCacheParts ${frameworkCachePartBuild})
+endforeach()
 
+if (VUO_NODE_DEVELOPER)
+	add_custom_command(
+		DEPENDS ${frameworkCacheParts}
+		COMMAND rm -f ${frameworkCache}
+		COMMAND touch ${frameworkCache}
+		OUTPUT ${frameworkCache}
+	)
+else()
 	if (archCount GREATER 1)
-		# The index files should be the same; pick one to include.
+		# The manifest files should be the same; pick one to include.
 		list(GET CMAKE_OSX_ARCHITECTURES 0 arch)
 		add_custom_command(
-			DEPENDS ${frameworkCacheInstalledParts}
-			COMMENT "Merging built-in installed module cache"
-			COMMAND lipo -create ${frameworkCacheInstalledParts} -output ${frameworkCacheInstalled}
-			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-${arch} ${frameworkCacheInstalledPrefix}.txt
-			OUTPUT ${frameworkCacheInstalled}
-		)
-		add_custom_command(
-			DEPENDS ${frameworkCacheGeneratedParts}
-			COMMENT "Merging built-in generated module cache"
-			COMMAND lipo -create ${frameworkCacheGeneratedParts} -output ${frameworkCacheGenerated}
-			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-${arch} ${frameworkCacheGeneratedPrefix}.txt
-			OUTPUT ${frameworkCacheGenerated}
+			DEPENDS ${frameworkCacheParts}
+			COMMENT "Merging built-in module cache"
+			COMMAND lipo -create ${frameworkCacheParts} -output ${frameworkCache}
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/manifest.txt-${arch} ${frameworkCacheDir}/manifest.txt
+			OUTPUT ${frameworkCache}
 		)
 	else()
 		add_custom_command(
-			DEPENDS ${frameworkCacheInstalledParts} ${frameworkCacheGeneratedParts}
+			DEPENDS ${frameworkCacheParts}
 			COMMENT "Copying built-in module caches into framework"
-			COMMAND cp ${frameworkCacheInstalledParts} ${frameworkCacheInstalled}
-			COMMAND cp ${frameworkCacheGeneratedParts} ${frameworkCacheGenerated}
-			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-installed.txt-* ${frameworkCacheInstalledPrefix}.txt
-			COMMAND cp ${PROJECT_BINARY_DIR}/lib/libVuoModuleCache-generated.txt-* ${frameworkCacheGeneratedPrefix}.txt
-			OUTPUT ${frameworkCacheInstalled} ${frameworkCacheGenerated}
+			COMMAND cp ${frameworkCacheParts} ${frameworkCache}
+			COMMAND cp ${PROJECT_BINARY_DIR}/lib/manifest.txt-* ${frameworkCacheDir}/manifest.txt
+			OUTPUT ${frameworkCache}
 		)
 	endif()
-
-	add_custom_target(VuoFrameworkCache
-		DEPENDS
-			${frameworkCacheInstalled}
-			${frameworkCacheGenerated}
-			VuoFrameworkCompilerCLI
-	)
-	list(APPEND generatedFiles
-		${frameworkCacheInstalled}
-		${frameworkCacheGenerated}
-	)
-	add_dependencies(VuoFramework VuoFrameworkCache)
-
-else()
-
-	# When node developer mode is enabled, ensure any previously-built caches are gone.
-	file(REMOVE_RECURSE ${frameworkVersionPath}/Modules/Builtin)
-
 endif()
+
+add_custom_target(VuoFrameworkCache
+	DEPENDS
+		${frameworkCache}
+		VuoFrameworkCompilerCLI
+)
+list(APPEND generatedFiles
+	${frameworkCache}
+)
+add_dependencies(VuoFramework VuoFrameworkCache)
 
 
 # Mark bundled resources as generated files,
@@ -855,7 +923,7 @@ foreach (source ${frameworkDylibSources})
 	get_source_file_property(packageLocation ${source} MACOSX_PACKAGE_LOCATION)
 	if (packageLocation)
 		get_filename_component(file ${source} NAME)
-		list(APPEND generatedFiles ${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/${packageLocation}/${file})
+		list(APPEND generatedFiles ${frameworkVersionPath}/${packageLocation}/${file})
 	endif()
 endforeach()
 
@@ -866,7 +934,7 @@ set_target_properties(VuoFramework PROPERTIES VuoGeneratedFiles "${generatedFile
 add_custom_command(TARGET VuoFramework POST_BUILD
 	# Save and restore VuoFrameworkDylib's timestamp, so that code-signing it
 	# doesn't cause everything that depends on VuoFrameworkDylib to rebuild.
-	COMMAND touch -r ${frameworkVersionPath}/Vuo ${PROJECT_BINARY_DIR}/lib/Vuo.framework-dylib-timestamp
+	COMMAND touch -r ${frameworkVersionPath}/Vuo ${frameworkPath}-dylib-timestamp
 	COMMAND ${codesignAdHocVerify} ${frameworkVersionPath}/Vuo >/dev/null 2>&1 || ${codesignAdHoc} ${frameworkVersionPath}/Vuo ${codesignAdHocIgnoreReplace}
-	COMMAND touch -r ${PROJECT_BINARY_DIR}/lib/Vuo.framework-dylib-timestamp ${frameworkVersionPath}/Vuo
+	COMMAND touch -r ${frameworkPath}-dylib-timestamp ${frameworkVersionPath}/Vuo
 )

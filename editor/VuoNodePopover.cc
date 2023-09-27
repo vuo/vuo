@@ -2,7 +2,7 @@
  * @file
  * VuoNodePopover implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -68,12 +68,14 @@ void VuoNodePopover::initialize()
 	this->headerLabel = new QLabel("", this);
 	headerLabel->setText(generateNodePopoverTextHeader());
 	headerLabel->setTextInteractionFlags(headerLabel->textInteractionFlags() | Qt::TextSelectableByMouse);
+	connect(headerLabel, &QLabel::linkHovered, this, &VuoNodePopover::linkHovered);
 
 	// Text content
 	this->textLabel = new QLabel("", this);
 	textLabel->setText(generateNodePopoverText(isDark));
 	textLabel->setTextInteractionFlags(textLabel->textInteractionFlags() | Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
 	textLabel->setOpenExternalLinks(false);
+	connect(textLabel, &QLabel::linkHovered, this, &VuoNodePopover::linkHovered);
 	connect(textLabel, &QLabel::linkActivated, static_cast<VuoEditor *>(qApp), &VuoEditor::openUrl);
 
 	QTextDocument *doc = textLabel->findChild<QTextDocument *>();
@@ -98,6 +100,7 @@ void VuoNodePopover::initialize()
 		modelNodeView->setFrameShape(QFrame::NoFrame);
 		modelNodeView->ensureVisible(modelNode->boundingRect());
 		modelNodeView->setEnabled(false);
+		modelNodeView->setToolTip(tr("Drag this onto the canvas to add it to your composition."));
 	}
 
 	// Layout

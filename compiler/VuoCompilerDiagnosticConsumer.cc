@@ -2,14 +2,16 @@
  * @file
  * VuoCompilerDiagnosticConsumer implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoCompilerDiagnosticConsumer.hh"
 
-#include "VuoCompilerIssue.hh"
+#include <sstream>
+
+#include "VuoClangIssues.hh"
 
 #ifndef DOXYGEN
 // Workaround for "Undefined symbols… typeinfo for clang::DiagnosticConsumer".
@@ -18,9 +20,12 @@ clang::DiagnosticConsumer::~DiagnosticConsumer() {}
 
 /**
  * Creates a diagnostic consumer that logs compilation errors in `issues`.
+ *
+ * @param issues The list to which compilation errors/warnings should be added.
+ * @param virtualToRealFilePaths Key = virtual file path+name (see VuoCModuleCompiler::getVirtualSourcePath); value = real (file-on-disk) file path+name.
  */
-VuoCompilerDiagnosticConsumer::VuoCompilerDiagnosticConsumer(VuoCompilerIssues *issues)
-	: issues(issues)
+VuoCompilerDiagnosticConsumer::VuoCompilerDiagnosticConsumer(shared_ptr<VuoClangIssues> issues, map<string, string> virtualToRealFilePaths)
+	: issues(issues), virtualToRealFilePaths(virtualToRealFilePaths)
 {
 }
 
@@ -31,22 +36,7 @@ VuoCompilerDiagnosticConsumer::VuoCompilerDiagnosticConsumer(VuoCompilerIssues *
  */
 void VuoCompilerDiagnosticConsumer::HandleDiagnostic(clang::DiagnosticsEngine::Level level, const clang::Diagnostic &diagnostic)
 {
-	VuoCompilerIssue::IssueType issueType = VuoCompilerIssue::Warning;
-	const char *levelName;
-	if (level == clang::DiagnosticsEngine::Note)
-		levelName = "note";
-	else if (level == clang::DiagnosticsEngine::Warning)
-		levelName = "warning";
-	else if (level == clang::DiagnosticsEngine::Error
-		  || level == clang::DiagnosticsEngine::Fatal)
-	{
-		issueType = VuoCompilerIssue::Error;
-		levelName = "error";
-	}
-	else
-		return;
-
-	llvm::SmallString<64> location;
+	ostringstream formattedLocation;
 	if (diagnostic.hasSourceManager() && diagnostic.getLocation().isValid())
 	{
 		auto &sourceManager = diagnostic.getSourceManager();
@@ -62,13 +52,18 @@ void VuoCompilerDiagnosticConsumer::HandleDiagnostic(clang::DiagnosticsEngine::L
 		  || filename.find("/Applications/Xcode.app/") != llvm::StringRef::npos))
 			return;
 
-		llvm::raw_svector_ostream oss(location);
-		loc.print(oss, sourceManager);
+		auto realFilePath = virtualToRealFilePaths.find(filename.str());
+		if (realFilePath != virtualToRealFilePaths.end())
+			formattedLocation << realFilePath->second;
+		else
+			formattedLocation << filename.str();
+
+		formattedLocation << ':' << sourceManager.getPresumedLineNumber(loc);
+		formattedLocation << ':' << sourceManager.getPresumedColumnNumber(loc);
 	}
 
 	llvm::SmallString<64> message;
 	diagnostic.FormatDiagnostic(message);
 
-	VUserLog("%s: %s: %s", levelName, location.c_str(), message.c_str());
-	issues->append(VuoCompilerIssue(issueType, "compiling module", location.str(), "", message.str()));
+	issues->addIssue(formattedLocation.str(), level, message.str());
 }

@@ -2,7 +2,7 @@
  * @file
  * VuoEditorAboutBox implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -35,6 +35,7 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 	if (!commitHash.isEmpty())
 		commitHash = QString(" (revision ") + VUO_GIT_COMMIT + ")";
 
+	// Keep this description in sync with VuoManual.txt.
 	QString missionMarkdown = tr(
 		"**Create memorable interactive experiences — without coding.**\n"
 		"\n"
@@ -52,7 +53,7 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 					"<p><span style=\"font-size:28pt;\">Vuo</span>"
 						"<span style=\"font-size:20pt;\"> %1</span>%5<br>"
 						"<span style=\"font-size:12pt; color:rgba(0,0,0,.5)\">" + tr("Built on %2") + "<br>"
-						"Copyright © 2012–2022 Kosada Incorporated</span></p>%4"
+						"Copyright © 2012–2023 Kosada Incorporated</span></p>%4"
 					"</body></html>").
 			arg(
 				versionNumber,
@@ -80,11 +81,12 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 	// Populate the "Details" pane.
 	contributors = new QTreeWidgetItem(ui->treeWidget);
 	contributors->setText(0, tr("Contributors"));
-	dependencyLicenses = new QTreeWidgetItem(ui->treeWidget);
-	dependencyLicenses->setText(0, tr("Dependency Licenses"));
+	dependencies = new QTreeWidgetItem(ui->treeWidget);
+	dependencies->setText(0, tr("Dependencies"));
 
-	// Populate the text file content pane.
-	populateContributorsList();
+	// Populate the text file content panes.
+	contributorsText = fetchMarkdown("CONTRIBUTORS.md", tr("Please see the list of contributors at <a href=\"%1\">%1</a>.").arg("https://community.vuo.org/badges"));
+	dependenciesText = fetchMarkdown("DEPENDENCIES.md", tr("Please see the list of dependencies at <a href=\"%1\">%1</a>.").arg("https://github.com/vuo/vuo/blob/main/conanfile.py"));
 	populateLicenseTexts();
 
 	ui->textEdit->setReadOnly(true);
@@ -100,22 +102,17 @@ VuoEditorAboutBox::VuoEditorAboutBox(QWidget *parent) :
 }
 
 /**
- * Load the content of CONTRIBUTORS.md within the text file content pane, if the file exists.
- * Otherwise refer the user to the web link.
+ * Loads the content of the specified Markdown file.
+ * Falls back to placeholder text if the file doesn't exist.
  */
-void VuoEditorAboutBox::populateContributorsList()
+QString VuoEditorAboutBox::fetchMarkdown(const QString &filename, const QString &fallback)
 {
-	QFile contributorsList(QApplication::applicationDirPath().append("/../Resources/CONTRIBUTORS.md"));
+	QFile f(QApplication::applicationDirPath().append("/../Resources/").append(filename));
+	if (!f.open(QIODevice::ReadOnly))
+		return fallback;
 
-	if (!contributorsList.open(QIODevice::ReadOnly))
-		contributorText = "Please see our list of contributors at <a href=\"https://vuo.org/contributors\">https://vuo.org/contributors</a>. ";
-
-	else
-	{
-		// Display the contents of the contributors list.
-		QTextStream textStream(&contributorsList);
-		contributorText = VuoStringUtilities::generateHtmlFromMarkdown(textStream.readAll().toUtf8().constData()).c_str();
-	}
+	QTextStream textStream(&f);
+	return QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(textStream.readAll().toUtf8().constData()));
 }
 
 /**
@@ -137,7 +134,7 @@ void VuoEditorAboutBox::populateLicenseTexts()
 			QString dependencyIdentifier = licenseFileInfo.completeBaseName();
 			QTreeWidgetItem *dependencyLicenseItem = new QTreeWidgetItem();
 			dependencyLicenseItem->setText(0, dependencyIdentifier);
-			dependencyLicenses->addChild(dependencyLicenseItem);
+			dependencies->addChild(dependencyLicenseItem);
 
 			QTextStream textStream(&licenseFile);
 			licenseTextForDependency[dependencyIdentifier] = textStream.readAll();
@@ -155,10 +152,13 @@ void VuoEditorAboutBox::updateDisplayedTextContent()
 	if (currentItem == contributors)
 	{
 		ui->textEdit->setFont(contributorFont);
-		ui->textEdit->setText(htmlHead + contributorText);
+		ui->textEdit->setText(htmlHead + contributorsText);
 	}
-	else if (currentItem == dependencyLicenses)
-		ui->textEdit->setText("");
+	else if (currentItem == dependencies)
+	{
+		ui->textEdit->setFont(contributorFont);
+		ui->textEdit->setText(htmlHead + dependenciesText);
+	}
 	else
 	{
 		ui->textEdit->setFont(licenseFont);

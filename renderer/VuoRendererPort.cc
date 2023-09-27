@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -22,7 +22,6 @@
 #include "VuoGenericType.hh"
 #include "VuoNodeClass.hh"
 
-extern "C" {
 #include "VuoAnchor.h"
 #include "VuoAudioInputDevice.h"
 #include "VuoAudioOutputDevice.h"
@@ -34,6 +33,7 @@ extern "C" {
 #include "VuoUrl.h"
 #include "VuoSpeechVoice.h"
 
+extern "C" {
 char *VuoHid_getUsageText(uint32_t usagePage, uint32_t usage);
 }
 
@@ -1207,14 +1207,9 @@ bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort 
 		return true;
 
 	// OK: Event+data to event+data, if types are generic and compatible.
-	if (dynamic_cast<VuoGenericType *>(fromDataType) && dynamic_cast<VuoGenericType *>(toDataType))
-	{
-		/// @todo (https://b33p.net/kosada/node/7032)
-		if (VuoType::isListTypeName(fromDataType->getModuleKey()) != VuoType::isListTypeName(toDataType->getModuleKey()))
-			return false;
-
-		return (dynamic_cast<VuoGenericType *>(fromDataType)->isGenericTypeCompatible(dynamic_cast<VuoGenericType *>(toDataType)));
-	}
+	if (dynamic_cast<VuoGenericType *>(fromDataType) && dynamic_cast<VuoGenericType *>(toDataType) &&
+			dynamic_cast<VuoGenericType *>(fromDataType)->isGenericTypeCompatible(dynamic_cast<VuoGenericType *>(toDataType)))
+		return true;
 
 	return false;
 }

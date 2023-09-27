@@ -2,17 +2,16 @@
  * @file
  * VuoTimeFormat C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoTimeFormat;
-#define VuoList_VuoTimeFormat_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -41,12 +40,14 @@ typedef enum
 	VuoTimeFormat_Time24,
 } VuoTimeFormat;
 
+#define VuoTimeFormat_SUPPORTS_COMPARISON
+#include "VuoList_VuoTimeFormat.h"
+
 VuoTimeFormat VuoTimeFormat_makeFromJson(struct json_object *js);
 struct json_object *VuoTimeFormat_getJson(const VuoTimeFormat value);
 VuoList_VuoTimeFormat VuoTimeFormat_getAllowedValues(void);
 char *VuoTimeFormat_getSummary(const VuoTimeFormat value);
 
-#define VuoTimeFormat_SUPPORTS_COMPARISON
 bool VuoTimeFormat_areEqual(const VuoTimeFormat valueA, const VuoTimeFormat valueB);
 bool VuoTimeFormat_isLessThan(const VuoTimeFormat valueA, const VuoTimeFormat valueB);
 
@@ -62,3 +63,7 @@ void VuoTimeFormat_release(VuoTimeFormat value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

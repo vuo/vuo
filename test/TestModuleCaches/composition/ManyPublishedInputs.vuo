@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AdjustImageColors [type="vuo.image.color.adjust" version="1.3.1" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<vibrance>vibrance\l|<hueShift>hueShift\l|<temperature>temperature\l|<tint>tint\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="150,90"];
+BlurImageDirectionally [type="vuo.image.blur.directional" version="1.1.2" label="Blur Image Directionally|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<radius>radius\l|<angle>angle\l|<symmetric>symmetric\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="345,330"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Image>Image\r|<Saturation>Saturation\r|<Vibrance>Vibrance\r|<HueShift>HueShift\r|<Temperature>Temperature\r|<Tint>Tint\r|<Contrast>Contrast\r|<Brightness>Brightness\r|<Exposure>Exposure\r|<Gamma>Gamma\r|<Mask>Mask\r|<Shape>Shape\r|<Radius>Radius\r|<Angle>Angle\r|<Symmetric>Symmetric\r|<ExpandBounds>ExpandBounds\r|<Quality>Quality\r" _Image_type="VuoImage" _Saturation_type="VuoReal" _Saturation_suggestedMin="-1" _Saturation_suggestedMax="2" _Saturation_suggestedStep="0.1" _Saturation="0" _Vibrance_type="VuoReal" _Vibrance_suggestedMin="-1" _Vibrance_suggestedMax="1" _Vibrance_suggestedStep="0.1" _Vibrance="0" _HueShift_type="VuoReal" _HueShift_suggestedMin="-180" _HueShift_suggestedMax="180" _HueShift_suggestedStep="1" _HueShift="0" _Temperature_type="VuoReal" _Temperature_suggestedMin="-1" _Temperature_suggestedMax="1" _Temperature_suggestedStep="0.1" _Temperature="0" _Tint_type="VuoReal" _Tint_suggestedMin="-1" _Tint_suggestedMax="1" _Tint_suggestedStep="0.1" _Tint="0" _Contrast_type="VuoReal" _Contrast_suggestedMin="-1" _Contrast_suggestedMax="1" _Contrast_suggestedStep="0.1" _Contrast="0" _Brightness_type="VuoReal" _Brightness_suggestedMin="-1" _Brightness_suggestedMax="1" _Brightness_suggestedStep="0.1" _Brightness="0" _Exposure_type="VuoReal" _Exposure_suggestedMin="-1" _Exposure_suggestedMax="1" _Exposure_suggestedStep="0.1" _Exposure="0" _Gamma_type="VuoReal" _Gamma_suggestedMin="0" _Gamma_suggestedMax="3" _Gamma_suggestedStep="0.1" _Gamma="1" _Mask_type="VuoImage" _Shape_type="VuoBlurShape" _Shape_menuItems="[\{\"value\":\"gaussian\",\"name\":\"Gaussian\"\},\{\"value\":\"linear\",\"name\":\"Linear\"\},\{\"value\":\"box\",\"name\":\"Box\"\},\{\"value\":\"disc\",\"name\":\"Disc\"\}]" _Shape="\"linear\"" _Radius_type="VuoReal" _Radius_suggestedMin="0" _Radius_suggestedMax="50" _Radius="4" _Angle_type="VuoReal" _Angle_suggestedMin="0." _Angle_suggestedMax="360." _Angle="0." _Symmetric_type="VuoBoolean" _Symmetric="true" _ExpandBounds_type="VuoBoolean" _ExpandBounds="false" _Quality_type="VuoReal" _Quality_suggestedMin="0" _Quality_suggestedMax="1" _Quality="0.7"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<OutputImage>OutputImage\l" _OutputImage_type="VuoImage"];
+
+AdjustImageColors:adjustedImage -> BlurImageDirectionally:image;
+BlurImageDirectionally:blurredImage -> PublishedOutputs:OutputImage;
+PublishedInputs:Angle -> BlurImageDirectionally:angle;
+PublishedInputs:Brightness -> AdjustImageColors:brightness;
+PublishedInputs:Contrast -> AdjustImageColors:contrast;
+PublishedInputs:ExpandBounds -> BlurImageDirectionally:expandBounds;
+PublishedInputs:Exposure -> AdjustImageColors:exposure;
+PublishedInputs:Gamma -> AdjustImageColors:gamma;
+PublishedInputs:HueShift -> AdjustImageColors:hueShift;
+PublishedInputs:Image -> AdjustImageColors:image;
+PublishedInputs:Mask -> BlurImageDirectionally:mask;
+PublishedInputs:Quality -> BlurImageDirectionally:quality;
+PublishedInputs:Radius -> BlurImageDirectionally:radius;
+PublishedInputs:Saturation -> AdjustImageColors:saturation;
+PublishedInputs:Shape -> BlurImageDirectionally:shape;
+PublishedInputs:Symmetric -> BlurImageDirectionally:symmetric;
+PublishedInputs:Temperature -> AdjustImageColors:temperature;
+PublishedInputs:Tint -> AdjustImageColors:tint;
+PublishedInputs:Vibrance -> AdjustImageColors:vibrance;
+}

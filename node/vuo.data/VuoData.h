@@ -2,7 +2,7 @@
  * @file
  * VuoData C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  * @{
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoInteger.h"
 #include "VuoText.h"
 
@@ -29,11 +33,12 @@ typedef struct
 	char *data;	///< 8-bit data.
 } VuoData;
 
+#define VuoData_SUPPORTS_COMPARISON
+
 VuoData VuoData_makeFromJson(struct json_object *js);
 struct json_object *VuoData_getJson(const VuoData value);
 char *VuoData_getSummary(const VuoData value);
 
-#define VuoData_SUPPORTS_COMPARISON
 bool VuoData_areEqual(const VuoData valueA, const VuoData valueB);
 bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB);
 
@@ -54,3 +59,7 @@ char *VuoData_getString(const VuoData value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

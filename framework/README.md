@@ -22,7 +22,7 @@ In the `/Library/Developer/Vuo/framework` folder:
    - In the `resources` folder:
       - The Qt frameworks (required for `vuo-export`)
       - The fonts used on the Vuo Editor canvas (required by `vuo-export`)
-      - The `inputEditorWidgets` folder, containing the C++ headers and library required to create input editors for custom types — see https://api.vuo.org/latest/group__DevelopingInputEditors.html for more information
+      - The `inputEditorWidgets` folder, containing the headers and library required to create input editors for custom types — see https://api.vuo.org/latest/group__DevelopingInputEditors.html for more information
 
 ## Examples
 In the `/Library/Developer/Vuo/example` folder:
@@ -35,19 +35,20 @@ In the `/Library/Developer/Vuo/example` folder:
       - `imageFilterCoreImage` — an example node that processes an image on the GPU using Apple Core Image
       - `customType` — an example type and input editor implementation — see https://api.vuo.org/latest/group__DevelopingTypes.html for more information
 
-   - In the `runner` folder, example projects for using Vuo inside another application:
-      - For Vuo's Cocoa API: `VuoPluginApp`
-      - For Vuo's C++ API: `CompileAndRunInCurrentProcess`, `CompileAndRunInNewProcess`, `ListPublishedPorts`, `RunImageFilter-GLFW`, `RunImageFilter-Qt`
+   - In the `runner` folder, example C++ projects for using Vuo inside another application:
+      - `CompileAndRunInCurrentProcess`
+      - `CompileAndRunInNewProcess`
+      - `ListPublishedPorts`
+      - `RunImageFilter-GLFW`
+      - `RunImageFilter-Qt`
       - See https://api.vuo.org/latest/group__DevelopingApplications.html for more information
 
 To build, install, and use each example:
 
    - Copy the example's folder to your Desktop or some other folder you have write access to
-   - For the `VuoPluginApp` example, open `VuoPluginApp.xcodeproj` in Xcode, and click the Run button
-   - For the other examples:
-      - In Terminal, change to the example's folder — e.g., `cd stateless`
-      - Create a build folder — `mkdir build`
-      - Change to the build folder — `cd build`
-      - Run `cmake ..` to generate the makefile
-      - Run `make` to build and install the example
-      - Launch examples in the `runner` folder from Terminal by entering the binary's filename preceded by `./` (e.g., `./ListPublishedPorts`) and pressing Return
+   - In Terminal, change to the example's folder — e.g., `cd stateless`
+   - Create a build folder — `mkdir build`
+   - Change to the build folder — `cd build`
+   - Run `cmake ..` to generate the makefile
+   - Run `make` to build and install the example
+   - Launch examples in the `runner` folder from Terminal by entering the binary's filename preceded by `./` (e.g., `./ListPublishedPorts`) and pressing Return

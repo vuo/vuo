@@ -7,7 +7,12 @@
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoRange_h
+#define VuoRange_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoReal.h"
 #include <float.h>
@@ -30,12 +35,12 @@ typedef struct
 	VuoReal maximum;
 } VuoRange;
 
+#define VuoRange_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+
 VuoRange VuoRange_makeFromJson(struct json_object * js);
 struct json_object * VuoRange_getJson(const VuoRange value);
 char * VuoRange_getSummary(const VuoRange value);
 
-/// This type has _areEqual() and _isLessThan() functions.
-#define VuoRange_SUPPORTS_COMPARISON
 bool VuoRange_areEqual(const VuoRange a, const VuoRange b);
 bool VuoRange_isLessThan(const VuoRange a, const VuoRange b);
 
@@ -128,3 +133,9 @@ static inline VuoReal VuoRange_scale(VuoRange from, VuoRange to, VuoReal value)
 
 	return to_lower + (n * to_range);
 }
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -2,12 +2,10 @@
  * @file
  * vuo.point.make.cube node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
-
-#include "node.h"
 
 VuoModuleMetadata({
 	"title": "Make Points along Cube Edges",
@@ -28,6 +26,9 @@ VuoModuleMetadata({
 	},
 });
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 static VuoPoint3d vuo_point_make_cube_getExpandedPoint_VuoReal(VuoReal size)
 {
 	return (VuoPoint3d){ size, size, size };
@@ -37,6 +38,8 @@ static VuoPoint3d vuo_point_make_cube_getExpandedPoint_VuoPoint3d(VuoPoint3d siz
 {
 	return size;
 }
+
+#pragma clang diagnostic pop
 
 void nodeEvent(
 	VuoInputData(VuoPoint3d, {"default":[ 0, 0, 0 ], "suggestedMin":[ -1, -1, -1 ], "suggestedMax":[ 1, 1, 1 ]}) center,
@@ -136,7 +139,6 @@ void nodeEvent(
 
 	*cubePoints = VuoListCreateWithCount_VuoPoint3d(totalPointCount, (VuoPoint3d){0,0,0});
 	VuoPoint3d *cubePointData = VuoListGetData_VuoPoint3d(*cubePoints);
-	VuoPoint3d *cubePointDataP = cubePointData;
 	for (int edge = 0; edge < 4 * 6; ++edge)
 	{
 		VuoPoint3d edgeVector = endPoints[edge] - startPoints[edge];

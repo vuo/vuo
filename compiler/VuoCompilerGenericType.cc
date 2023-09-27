@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerGenericType implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -18,30 +18,17 @@ const string VuoCompilerGenericType::defaultBackingTypeName = "VuoInteger";
 /**
  * Creates a VuoCompilerGenericType and makes it the compiler detail object for @a baseType.
  */
-VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, VuoCompilerType * (^getType)(string moduleKey))
+VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, std::function<VuoCompilerType *(const string &)> lookUpType)
 {
 	VuoGenericType::Compatibility compatibility;
 	vector<string> compatibleTypeNames = baseType->getCompatibleSpecializedTypes(compatibility);
 	string backingTypeName = VuoCompilerGenericType::chooseBackingTypeName(baseType->getModuleKey(), compatibleTypeNames);
 
-	VuoCompilerType *backingType = getType(backingTypeName);
+	VuoCompilerType *backingType = lookUpType(backingTypeName);
 	if (! backingType)
 		return NULL;
 
 	return new VuoCompilerGenericType(baseType, backingType);
-}
-
-/**
- * Creates a VuoCompilerGenericType and makes it the compiler detail object for @a baseType.
- */
-VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, const map<string, VuoCompilerType *> &types)
-{
-	VuoCompilerType * (^getType)(string) = ^VuoCompilerType * (string moduleKey) {
-		map<string, VuoCompilerType *>::const_iterator typeIter = types.find(moduleKey);
-		return (typeIter != types.end() ? typeIter->second : NULL);
-	};
-
-	return newGenericType(baseType, getType);
 }
 
 /**

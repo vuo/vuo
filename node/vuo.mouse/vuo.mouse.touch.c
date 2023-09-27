@@ -2,21 +2,20 @@
  * @file
  * vuo.mouse.touch node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoMouse.h"
 
 VuoModuleMetadata({
 	"title" : "Receive Touches",
 	"keywords" : [
 		"trackpad", "touchpad", "finger", "pointer", "cursor",
-		"gesture",
-		// "pinch",
+		"two fingers", "gesture", "pinch",
 		"drag", "flick", "next", "previous", "forward", "backward",
+		"control", "GUI", "UI", "user interface", "interact",
 	],
 	"version" : "1.0.0",
 	"dependencies" : [ "VuoMouse" ],

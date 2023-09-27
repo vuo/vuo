@@ -2,17 +2,16 @@
  * @file
  * VuoIconPosition C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoIconPosition;
-#define VuoList_VuoIconPosition_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -34,12 +33,14 @@ typedef enum
 	VuoIconPosition_Behind
 } VuoIconPosition;
 
+#define VuoIconPosition_SUPPORTS_COMPARISON
+#include "VuoList_VuoIconPosition.h"
+
 VuoIconPosition VuoIconPosition_makeFromJson(struct json_object *js);
 struct json_object *VuoIconPosition_getJson(const VuoIconPosition value);
 VuoList_VuoIconPosition VuoIconPosition_getAllowedValues(void);
 char *VuoIconPosition_getSummary(const VuoIconPosition value);
 
-#define VuoIconPosition_SUPPORTS_COMPARISON
 bool VuoIconPosition_areEqual(const VuoIconPosition value1, const VuoIconPosition value2);
 bool VuoIconPosition_isLessThan(const VuoIconPosition a, const VuoIconPosition b);
 
@@ -56,4 +57,6 @@ void VuoIconPosition_release(VuoIconPosition value);
  * @}
  */
 
-
+#ifdef __cplusplus
+}
+#endif

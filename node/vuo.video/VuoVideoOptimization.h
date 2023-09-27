@@ -2,17 +2,16 @@
  * @file
  * VuoVideoOptimization C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef const struct VuoList_VuoVideoOptimization_struct { void *l; } * VuoList_VuoVideoOptimization;
-#define VuoList_VuoVideoOptimization_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -33,6 +32,8 @@ typedef enum {
 	VuoVideoOptimization_Random
 } VuoVideoOptimization;
 
+#include "VuoList_VuoVideoOptimization.h"
+
 VuoVideoOptimization VuoVideoOptimization_makeFromJson(struct json_object * js);
 struct json_object * VuoVideoOptimization_getJson(const VuoVideoOptimization value);
 VuoList_VuoVideoOptimization VuoVideoOptimization_getAllowedValues(void);
@@ -50,3 +51,7 @@ void VuoVideoOptimization_release(VuoVideoOptimization value);
 /**
  * @}
 */
+
+#ifdef __cplusplus
+}
+#endif

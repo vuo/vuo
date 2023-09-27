@@ -47,6 +47,11 @@ Review the results of `brew doctor` and fix any problems it finds, then install 
 
 ### Conan
 
+   - `pip3 install --user conan==1.59.0`
+   - Add the directory in which `conan` was just installed to the shell's command search path:
+      - `python3 -c 'import site; print(site.getuserbase())'`
+      - Take the output of that command and append `/bin` to get the directory containing `conan` (e.g. `/Users/me/Library/Python/3.10/bin`).
+      - In `~/.zshrc`, `~/.profile`, or similar, add that directory to your shell's `PATH` variable.
    - `cd` to the Vuo source code folder.
    - `mkdir build`
    - `cd build`
@@ -56,6 +61,14 @@ Review the results of `brew doctor` and fix any problems it finds, then install 
    - On Linux:
       - `conan config install https://vuo.org/sites/default/files/conan-linux.zip`
    - `conan install ..`
+
+### TeX (optional)
+
+To build the user manual (PDF, HTML, or MacHelp variants), install TeX from https://www.tug.org/mactex/ .
+
+### Behat (optional)
+
+To be able to run `TestBuildSystem`, install Behat following the instructions on <https://docs.behat.org/en/latest/quick_start.html#installation>. Add its directory to your shell's `PATH` variable.
 
 ## Build Vuo using Qt Creator
 
@@ -144,7 +157,16 @@ ctest -R vuo.math.keep.average           # Run tests for a node
 ctest -R VuoAnchor                       # Run tests for a type
 ctest -R PlayBluesOrgan                  # Run tests for an example composition
 ctest -R TestModules.testType:VuoAnchor  # Run a single test datum
-ctest -R 'TestVuoRunner\.'               # Run all TestVuoRunner tests (but don't run TestVuoRunnerCocoa)
+```
+
+Optionally, build the documentation:
+
+```sh
+cmake .. -DVUO_DOCUMENTATION=ON
+make -j8 VuoManualPDF_en_highContrast    # Build the manual as a PDF
+make -j8 VuoManualHTML                   # Build the manual as HTML
+make -j8 VuoManualMacHelp                # Build the manual as a MacHelp Book
+make -j8 VuoDoxygen                      # Build the SDK documentation
 ```
 
 ## Developer shortcuts

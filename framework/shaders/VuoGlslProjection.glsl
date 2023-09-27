@@ -9,6 +9,8 @@ uniform mat4 projectionMatrix;
 uniform mat4 cameraMatrixInverse;
 uniform bool useFisheyeProjection;
 
+const float PI_DIV_2 = 1.570796327;
+
 vec4 VuoGlsl_projectPosition(vec3 position)
 {
 	if (!useFisheyeProjection)
@@ -17,8 +19,8 @@ vec4 VuoGlsl_projectPosition(vec3 position)
 	else
 	{
 		// Hemispherical fisheye projection, based on "Realtime Dome Imaging and Interaction" by Bailey/Clothier/Gebbie 2006.
+		// https://web.archive.org/web/20090116013458/http://web.engr.oregonstate.edu/~mjb/WebMjb/Papers/asmedome.pdf
 
-		float phi;
 		vec3 pos = (cameraMatrixInverse * vec4(position, 1.)).xyz;
 		float rxy = length(pos.xy);
 
@@ -28,13 +30,18 @@ vec4 VuoGlsl_projectPosition(vec3 position)
 			// https://b33p.net/kosada/node/10911
 			float negativeZ = -pos.z;
 
-			float phi = atan(rxy, negativeZ);
-			float lens_radius = phi / 1.570796 /* PI/2 */;
+			// The unit circle suggests that when x=0, the inverse tangent for positive y values should be π/2.
+			// However, the GLSL spec says "The result is undefined if x=0",
+			// and the macOS GLSL implementation, at least, returns -π/2 (i.e. flipped to the opposite side of the circle).
+			// Instead, use the geometically-expected value.
+			// This fixes flickering shards that appeared when triangles crossed the camera ground plane.
+			// https://b33p.net/kosada/vuo/vuo/-/issues/19583#note_2188920
+			float phi = pos.z == 0 ? PI_DIV_2 : atan(rxy, negativeZ);
+
+			float lens_radius = phi / PI_DIV_2;
+
 			pos.xy *= lens_radius / rxy;
 		}
-
-		// Cut down on z-fighting near the edges of the circle.
-		pos.z *= 10.;
 
 		return projectionMatrix * vec4(pos, 1.);
 	}

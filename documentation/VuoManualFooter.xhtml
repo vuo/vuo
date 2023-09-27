@@ -1,4 +1,8 @@
 <?xml version='1.0'?>
 <body>
-	<script xmlns="http://www.w3.org/1999/xhtml" type="text/javascript" src="VuoManualTOC.js" />
+	<script xmlns="http://www.w3.org/1999/xhtml" type="text/javascript">
+		// Mark the titlepage for special formatting.
+		if (document.getElementsByClassName('releaseinfo').length)
+			document.getElementsByTagName('body')[0].className = 'titlepage';
+	</script>
 </body>

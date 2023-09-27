@@ -2,7 +2,7 @@
  * @file
  * TestModuleLoading interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,7 @@
 #include <Vuo/Vuo.h>
 #include "VuoRendererCommon.hh"
 #include "TestCompositionExecution.hh"
+#include <sstream>
 
 /**
  * Tests for loading, installing, and modifying 3rd-party modules.
@@ -139,14 +140,16 @@ private:
 	QString getUserCachedModulesPath(void)
 	{
 		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
-		return QString::fromStdString( VuoFileUtilities::getCachePath() + "/User/Modules/" + arch );
+		string path = VuoModuleCache::newUserCache()->getCompiledModulesPath(false, arch);
+		return QString::fromStdString(path);
 	}
 
 	QString getCustomCachedModulesPath(void)
 	{
 		string cachedModulesName = VuoFileUtilities::getTmpDir() + "/TestModuleLoading";
 		string arch = VuoCompiler::getTargetArch(VuoCompiler::getProcessTarget());
-		return QString::fromStdString( VuoCompiler::getCachePathForComposition(cachedModulesName) + "/Modules/" + arch );
+		string path = VuoModuleCache::newCache(cachedModulesName)->getCompiledModulesPath(false, arch);
+		return QString::fromStdString(path);
 	}
 
 	void uninstallModules(void)
@@ -274,14 +277,17 @@ private slots:
 		map<string, VuoCompilerModule *> modulesModified;
 		set<string> modulesRemoved;
 		delegate.loadModule(compiler, nodeClassName, modulesAdded, modulesModified, modulesRemoved);
-		QCOMPARE(modulesAdded.size(), (size_t)1);
+		if (shouldLoadAllModules)
+			QVERIFY(modulesAdded.size() > 1000);
+		else
+			QCOMPARE(modulesAdded.size(), (size_t)1);
 		QVERIFY(modulesAdded[nodeClassName]);
 		QCOMPARE(modulesModified.size(), (size_t)0);
 		QCOMPARE(modulesRemoved.size(), (size_t)0);
 
 		map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
 		if (shouldLoadAllModules)
-			QVERIFY(nodeClasses.size() > 1);
+			QVERIFY(nodeClasses.size() > 900);
 		else
 		{
 			auto foundPublishedInputTriggerNodeClass = nodeClasses.find("vuo.event.spinOffEvent2");
@@ -460,7 +466,10 @@ private slots:
 		map<string, VuoCompilerModule *> modulesModified;
 		set<string> modulesRemoved;
 		delegate.loadModule(compiler, nodeClassName, modulesAdded, modulesModified, modulesRemoved);
-		QCOMPARE(modulesAdded.size(), (size_t)1);
+		if (shouldLoadAllModules)
+			QVERIFY(modulesAdded.size() > 1000);
+		else
+			QCOMPARE(modulesAdded.size(), (size_t)1);
 		QVERIFY(modulesAdded[nodeClassName]);
 		QCOMPARE(modulesModified.size(), (size_t)0);
 		QCOMPARE(modulesRemoved.size(), (size_t)0);
@@ -494,17 +503,22 @@ private slots:
 		QTest::addColumn<QString>("copyPathDescription");
 		QTest::addColumn<bool>("addCopyPathAsSearchPath");
 		QTest::addColumn<bool>("shouldLoadAllModules");
+		QTest::addColumn<bool>("sourceFileExists");
 
 		QString copyPathDescription[2] = { "user", "custom" };
 		bool addCopyPathAsSearchPath[2] = { false, false };
 		bool shouldLoadAllModules[2] = { false, true };
+		bool sourceFileExists[2] = { false, true };
 
 		for (int j = 0; j < 2; ++j)
 		{
 			for (int k = 0; k < 2; ++k)
 			{
-				QString dataTag = copyPathDescription[j] + ", " + (shouldLoadAllModules[k] ? "" : "not ") + "loading all modules";
-				QTest::newRow(dataTag.toUtf8().data()) << copyPathDescription[j] << addCopyPathAsSearchPath[j] << shouldLoadAllModules[k];
+				for (int l = 0; l < 2; ++l)
+				{
+					QString dataTag = copyPathDescription[j] + ", " + (shouldLoadAllModules[k] ? "" : "not ") + "loading all modules, source file " + (sourceFileExists[l] ? "exists" : "does not exist");
+					QTest::newRow(dataTag.toUtf8().data()) << copyPathDescription[j] << addCopyPathAsSearchPath[j] << shouldLoadAllModules[k] << sourceFileExists[l];
+				}
 			}
 		}
 	}
@@ -513,6 +527,7 @@ private slots:
 		QFETCH(QString, copyPathDescription);
 		QFETCH(bool, addCopyPathAsSearchPath);
 		QFETCH(bool, shouldLoadAllModules);
+		QFETCH(bool, sourceFileExists);
 
 		QString installedFileName = "vuo.test.TestModuleLoading.nodeClass.vuonode";
 		string nodeClassName = getNodeClassName(installedFileName.toStdString());
@@ -528,6 +543,17 @@ private slots:
 		VuoFileUtilities::copyFile(originalPath, cachedPath);
 		QVERIFY(VuoFileUtilities::fileExists(cachedPath));
 
+		// Install the dependency file for the cached module.
+		string dependencyName = "vuo.test.TestModuleLoading.nodeClass.c";
+		string dependencyDir;
+		if (sourceFileExists)
+			dependencyDir = "node-TestModuleLoading";
+		else
+			VuoFileUtilities::splitPath(installedDirPath, dependencyDir, file, ext);
+		string dependencyPath = VuoFileUtilities::getAbsolutePath(dependencyDir + "/" + dependencyName);
+		shared_ptr<VuoMakeDependencies> makeDependencies = VuoMakeDependencies::createFromComponents(cachedPath, {dependencyPath});
+		makeDependencies->writeToFile(cachedPath + ".d");
+
 		// Initialize the compiler.
 		VuoCompiler *compiler = new VuoCompiler(parentCompositionPath);
 		TestModuleLoadingCompilerDelegate delegate;
@@ -541,12 +567,24 @@ private slots:
 		map<string, VuoCompilerModule *> modulesModified;
 		set<string> modulesRemoved;
 		compiler->getNodeClass(nodeClassName);
-		delegate.getLastLoadedModules(modulesAdded, modulesModified, modulesRemoved);
-		QVERIFY(modulesAdded.find(nodeClassName) == modulesAdded.end());
-		QVERIFY(modulesModified.find(nodeClassName) == modulesModified.end());
-		QVERIFY(modulesRemoved.find(nodeClassName) == modulesRemoved.end());
 
-		QVERIFY(! VuoFileUtilities::fileExists(cachedPath));
+		if (sourceFileExists)
+		{
+			QVERIFY(VuoFileUtilities::fileExists(cachedPath));
+			QVERIFY(VuoFileUtilities::fileExists(cachedPath + ".d"));
+			VuoFileUtilities::deleteFile(cachedPath);
+			VuoFileUtilities::deleteFile(cachedPath + ".d");
+		}
+		else
+		{
+			delegate.getLastLoadedModules(modulesAdded, modulesModified, modulesRemoved);
+			QVERIFY(modulesAdded.find(nodeClassName) == modulesAdded.end());
+			QVERIFY(modulesModified.find(nodeClassName) == modulesModified.end());
+			QVERIFY(modulesRemoved.find(nodeClassName) == modulesRemoved.end());
+
+			QVERIFY(! VuoFileUtilities::fileExists(cachedPath));
+			QVERIFY(! VuoFileUtilities::fileExists(cachedPath + ".d"));
+		}
 
 		delete compiler;
 	}
@@ -573,7 +611,7 @@ private slots:
 		VuoFileUtilities::copyFile(originalPath[1], installedPath[1]);
 
 		// Initialize the first compiler.
-		VuoCompiler *compiler1 = new VuoCompiler();
+		VuoCompiler *compiler1 = new VuoCompiler(QDir::current().canonicalPath().toStdString());
 		TestModuleLoadingCompilerDelegate delegate1;
 		compiler1->setDelegate(&delegate1);
 		compiler1->setLoadAllModules(true);
@@ -941,6 +979,81 @@ private slots:
 		QCOMPARE(modulesRemoved.size(), (size_t)1);
 	}
 
+	void testLoadingManyIsfModulesWithoutCrashing()
+	{
+		// Install the modules.
+
+		string nodeClassName = "vuo.test.red";
+		string originalPath, installedDirPath, installedPath, parentCompositionPath, cachedPath;
+		getNodeClassPaths(nodeClassName + ".fs", "user", originalPath, installedDirPath, installedPath, parentCompositionPath, cachedPath);
+
+		vector<string> filesToDelete;
+		for (int i = 0; i < 1000; ++i)
+		{
+			ostringstream fileName;
+			fileName << nodeClassName << i << ".fs";
+
+			string unusedOriginalPath;
+			getNodeClassPaths(fileName.str(), "user", unusedOriginalPath, installedDirPath, installedPath, parentCompositionPath, cachedPath);
+
+			VuoFileUtilities::copyFile(originalPath, installedPath);
+
+			filesToDelete.push_back(cachedPath);
+			filesToDelete.push_back(installedPath);
+		}
+
+		// Load the modules for the first time.
+
+		VuoCompiler *compiler = new VuoCompiler();
+		compiler->setLoadAllModules(true);
+		map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
+
+		QVERIFY(nodeClasses.find(nodeClassName + "0") != nodeClasses.end());
+		QVERIFY(nodeClasses.find(nodeClassName + "999") != nodeClasses.end());
+
+		delete compiler;
+		compiler = nullptr;
+		VuoCompiler::reset();
+		sleep(1);
+
+		// Load the modules again, now that they've been cached.
+
+		compiler = new VuoCompiler();
+		compiler->setLoadAllModules(true);
+		nodeClasses = compiler->getNodeClasses();
+
+		QVERIFY(nodeClasses.find(nodeClassName + "0") != nodeClasses.end());
+		QVERIFY(nodeClasses.find(nodeClassName + "999") != nodeClasses.end());
+
+		delete compiler;
+		for (const string &path : filesToDelete)
+			VuoFileUtilities::deleteFile(path);
+	}
+
+	void testModuleLoadingPerformance()
+	{
+		// Initialize the compiler.
+		VuoCompiler *compiler = new VuoCompiler();
+		TestModuleLoadingCompilerDelegate delegate;
+		compiler->setDelegate(&delegate);
+		compiler->setLoadAllModules(true);
+
+		// Load a module, prompting all built-in modules to be loaded.
+		map<string, VuoCompilerModule *> modulesAdded;
+		map<string, VuoCompilerModule *> modulesModified;
+		set<string> modulesRemoved;
+		QBENCHMARK_ONCE {
+			delegate.loadModule(compiler, "vuo.event.fireOnStart", "VuoList_VuoTree", modulesAdded, modulesModified, modulesRemoved);
+		}
+		QVERIFY(modulesAdded["vuo.event.fireOnStart"]);
+		QVERIFY(modulesAdded["VuoImageGet"]);
+		QVERIFY(modulesAdded["VuoTree"]);
+		QVERIFY(modulesAdded["VuoList_VuoTree"]);
+		QCOMPARE(modulesModified.size(), (size_t)0);
+		QCOMPARE(modulesRemoved.size(), (size_t)0);
+
+		delete compiler;
+	}
 };
 
 int main(int argc, char *argv[])

@@ -17,6 +17,16 @@ target_sources(vuo.scene.types PRIVATE
 	VuoSceneObjectType.h
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoDispersion.cc
+	VuoList_VuoDisplacement.cc
+	VuoList_VuoDistribution3d.cc
+	VuoList_VuoExtrapolationMode.cc
+	VuoList_VuoGridType.cc
+	VuoList_VuoMultisample.cc
+	VuoList_VuoSceneObjectType.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.scene.copy.trs.material.c
 	vuo.scene.make.cone.c

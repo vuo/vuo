@@ -2,17 +2,17 @@
  * @file
  * VuoVerticalAlignment C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoVerticalAlignment_h
+#define VuoVerticalAlignment_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoVerticalAlignment_struct { void *l; } * VuoList_VuoVerticalAlignment;
-#define VuoList_VuoVerticalAlignment_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,12 +32,14 @@ typedef enum
 	VuoVerticalAlignment_Bottom
 } VuoVerticalAlignment;
 
+#define VuoVerticalAlignment_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoVerticalAlignment.h"
+
 VuoVerticalAlignment VuoVerticalAlignment_makeFromJson(struct json_object * js);
 struct json_object * VuoVerticalAlignment_getJson(const VuoVerticalAlignment value);
 VuoList_VuoVerticalAlignment VuoVerticalAlignment_getAllowedValues(void);
 char * VuoVerticalAlignment_getSummary(const VuoVerticalAlignment value);
 
-#define VuoVerticalAlignment_SUPPORTS_COMPARISON
 bool VuoVerticalAlignment_areEqual(const VuoVerticalAlignment valueA, const VuoVerticalAlignment valueB);
 bool VuoVerticalAlignment_isLessThan(const VuoVerticalAlignment valueA, const VuoVerticalAlignment valueB);
 
@@ -54,4 +56,8 @@ void VuoVerticalAlignment_release(VuoVerticalAlignment value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif
 
+#endif

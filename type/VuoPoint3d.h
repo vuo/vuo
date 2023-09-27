@@ -2,12 +2,13 @@
  * @file
  * VuoPoint3d C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoPoint3d_h
+#define VuoPoint3d_h
 
 #include "VuoReal.h"
 #include "VuoBoolean.h"
@@ -30,10 +31,8 @@ extern "C" {
  */
 typedef float __attribute__((ext_vector_type(3))) VuoPoint3d;
 
-/// @{ List type.
-typedef const struct VuoList_VuoPoint3d_struct { void *l; } * VuoList_VuoPoint3d;
-#define VuoList_VuoPoint3d_TYPE_DEFINED
-/// @}
+#define VuoPoint3d_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoPoint3d.h"
 
 /**
  *	Defines a bounding box.
@@ -48,7 +47,6 @@ VuoPoint3d VuoPoint3d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint3d_getJson(const VuoPoint3d value);
 char * VuoPoint3d_getSummary(const VuoPoint3d value);
 
-#define VuoPoint3d_SUPPORTS_COMPARISON
 bool VuoPoint3d_areEqual(const VuoPoint3d value1, const VuoPoint3d value2);
 bool VuoPoint3d_areEqualListWithinTolerance(VuoList_VuoPoint3d values, VuoPoint3d tolerance);
 bool VuoPoint3d_isLessThan(const VuoPoint3d a, const VuoPoint3d b);
@@ -414,4 +412,6 @@ static inline VuoBoolean VuoBox_intersects(VuoBox a, VuoBox b)
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

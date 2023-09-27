@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerComposition interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -328,23 +328,12 @@ private slots:
 	{
 		QTest::addColumn<QString>("nodeTitle");
 		QTest::addColumn<QString>("portName");
-		QTest::addColumn< set<string> >("compatibleTypeNames");
+		QTest::addColumn<QStringList>("compatibleTypeNames");
 
-		set<string> allTypes;
-		set<string> numericalTypes;
-		numericalTypes.insert("VuoInteger");
-		numericalTypes.insert("VuoReal");
-		set<string> numericalAndPointTypes;
-		numericalAndPointTypes.insert("VuoInteger");
-		numericalAndPointTypes.insert("VuoReal");
-		numericalAndPointTypes.insert("VuoPoint2d");
-		numericalAndPointTypes.insert("VuoPoint3d");
-		numericalAndPointTypes.insert("VuoPoint4d");
-		set<string> oscTypes;
-		oscTypes.insert("VuoBoolean");
-		oscTypes.insert("VuoInteger");
-		oscTypes.insert("VuoReal");
-		oscTypes.insert("VuoText");
+		QStringList allTypes;
+		QStringList numericalTypes = { "VuoInteger", "VuoReal" };
+		QStringList numericalAndPointTypes = { "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" };
+		QStringList oscTypes = { "VuoBoolean", "VuoInteger", "VuoReal", "VuoText" };
 
 		QTest::newRow("generic port, unconnected, compatible with any")										<< "HoldValue2"			<< "heldValue"	<< allTypes;
 		QTest::newRow("generic port, unconnected, compatible with some")									<< "Subtract1"			<< "a"			<< numericalAndPointTypes;
@@ -359,7 +348,7 @@ private slots:
 	{
 		QFETCH(QString, nodeTitle);
 		QFETCH(QString, portName);
-		QFETCH(set<string>, compatibleTypeNames);
+		QFETCH(QStringList, compatibleTypeNames);
 
 		string compositionPath = getCompositionPath("Generics.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
@@ -394,10 +383,14 @@ private slots:
 				QVERIFY(genericType != NULL);
 
 				VuoGenericType::Compatibility compatibility;
-				vector<string> actualCompatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
-				for (set<string>::iterator k = compatibleTypeNames.begin(); k != compatibleTypeNames.end(); ++k)
-					QVERIFY2(find(actualCompatibleTypeNames.begin(), actualCompatibleTypeNames.end(), *k) != actualCompatibleTypeNames.end(), (*k).c_str());
-				QCOMPARE(compatibleTypeNames.size(), actualCompatibleTypeNames.size());
+				vector<string> actualCompatibleTypeNamesVec = genericType->getCompatibleSpecializedTypes(compatibility);
+
+				QStringList actualCompatibleTypeNames;
+				for (string s : actualCompatibleTypeNamesVec)
+					actualCompatibleTypeNames.append(QString::fromStdString(s));
+				actualCompatibleTypeNames.sort();
+				compatibleTypeNames.sort();
+				QCOMPARE(actualCompatibleTypeNames, compatibleTypeNames);
 			}
 		}
 		QVERIFY(foundType);

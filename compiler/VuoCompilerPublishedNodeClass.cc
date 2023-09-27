@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerPublishedNodeClass implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,7 @@
 #include "VuoCompilerPublishedOutputNodeClass.hh"
 #include "VuoCompilerType.hh"
 #include "VuoGenericType.hh"
+#include "VuoMakeDependencies.hh"
 #include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 #include "VuoPublishedPort.hh"
@@ -112,6 +113,24 @@ VuoNodeClass * VuoCompilerPublishedNodeClass::newNodeClass(const vector<string> 
 		dispatch_sync(llvmQueue, ^{
 						  nodeClass = singleton->newNodeClassWithImplementation(nodeClassName, portNames, types);
 					  });
+
+		vector<string> typeDependencies;
+		for (VuoType *type : types)
+		{
+			if (type && type->hasCompiler())
+			{
+				string typeDependency = type->getCompiler()->getDependencyPath();
+				if (! typeDependency.empty())
+					typeDependencies.push_back(typeDependency);
+			}
+		}
+
+		std::sort(typeDependencies.begin(), typeDependencies.end());
+		auto endOfUnique = std::unique(typeDependencies.begin(), typeDependencies.end());
+		typeDependencies.erase(endOfUnique, typeDependencies.end());
+
+		VuoCompilerPublishedNodeClass *publishedNodeClass = static_cast<VuoCompilerPublishedNodeClass *>(nodeClass->getCompiler());
+		publishedNodeClass->makeDependencies = VuoMakeDependencies::createFromComponents(VuoMakeDependencies::getPlaceholderCompiledFilePath(), typeDependencies);
 	}
 	else
 	{
@@ -119,6 +138,18 @@ VuoNodeClass * VuoCompilerPublishedNodeClass::newNodeClass(const vector<string> 
 	}
 
 	return nodeClass;
+}
+
+/**
+ * Returns true if the name has the format of a published input or output node class name.
+ * (A node class by that name may or may not exist.)
+ */
+bool VuoCompilerPublishedNodeClass::isPublishedNodeClassName(const string &nodeClassName)
+{
+	return nodeClassName == VuoNodeClass::publishedInputNodeClassName ||
+			nodeClassName == VuoNodeClass::publishedOutputNodeClassName ||
+			VuoStringUtilities::beginsWith(nodeClassName, VuoNodeClass::publishedInputNodeClassName + ".") ||
+			VuoStringUtilities::beginsWith(nodeClassName, VuoNodeClass::publishedOutputNodeClassName + ".");
 }
 
 /**
@@ -157,6 +188,18 @@ bool VuoCompilerPublishedNodeClass::parseNodeClassName(string nodeClassName, vec
  */
 string VuoCompilerPublishedNodeClass::buildNodeClassName(const vector<string> &portNames, const vector<VuoType *> &types)
 {
+	vector<string> typeNames;
+	for (VuoType *type : types)
+		typeNames.push_back(type ? type->getModuleKey() : "event");
+
+	return buildNodeClassName(portNames, typeNames);
+}
+
+/**
+ * Creates a class name for a published input/output node with the given published input/output port names and type names.
+ */
+string VuoCompilerPublishedNodeClass::buildNodeClassName(const vector<string> &portNames, const vector<string> &typeNames)
+{
 	vector<string> nodeClassNameParts;
 	nodeClassNameParts.push_back(getNodeClassNamePrefix());
 
@@ -167,8 +210,8 @@ string VuoCompilerPublishedNodeClass::buildNodeClassName(const vector<string> &p
 	for (string portName : portNames)
 		nodeClassNameParts.push_back(portName);
 
-	for (VuoType *type : types)
-		nodeClassNameParts.push_back(type ? type->getModuleKey() : "event");
+	for (string typeName : typeNames)
+		nodeClassNameParts.push_back(typeName);
 
 	return VuoStringUtilities::join(nodeClassNameParts, '.');
 }
@@ -208,6 +251,56 @@ vector<string> VuoCompilerPublishedNodeClass::formUniquePortNames(const vector<V
 	}
 
 	return portNames;
+}
+
+/**
+ * Constructs the value for the "specializedModule" key to be added to `VuoModuleMetadata`.
+ */
+json_object * VuoCompilerPublishedNodeClass::buildSpecializedModuleDetails(const vector<VuoType *> &types)
+{
+	map<string, string> specializedForGenericTypeName;
+	for (unsigned int i = 0; i < types.size(); ++i)
+		if (types[i])
+			specializedForGenericTypeName[VuoGenericType::createGenericTypeName(i)] = types[i]->getModuleKey();
+
+	return VuoCompilerSpecializedNodeClass::buildSpecializedModuleDetails(specializedForGenericTypeName);
+}
+
+/**
+ * Returns the file name (with extension) that this node class should have when saved to file —
+ * a mangled (shortened) file name so as not to exceed the operating system's limit on file name length.
+ */
+string VuoCompilerPublishedNodeClass::getFileName(void)
+{
+	ostringstream hash;
+	hash << VuoStringUtilities::hash(getBase()->getModuleKey());
+
+	return getNodeClassNamePrefix() + "." + hash.str() + ".vuonode";
+}
+
+/**
+ * Returns the file name (with extension) that a published input/output node class with the given module key
+ * would have when saved to file.
+ */
+string VuoCompilerPublishedNodeClass::getFileNameForModuleKey(const string &moduleKey)
+{
+	string prefix = VuoStringUtilities::beginsWith(moduleKey, VuoNodeClass::publishedInputNodeClassName) ?
+						VuoNodeClass::publishedInputNodeClassName :
+						VuoNodeClass::publishedOutputNodeClassName;
+
+	ostringstream hash;
+	hash << VuoStringUtilities::hash(moduleKey);
+
+	return prefix + "." + hash.str() + ".vuonode";
+}
+
+/**
+ * Returns true — a node class with the given file name (with extension) would have a module key
+ * other than the file name minus extension.
+ */
+bool VuoCompilerPublishedNodeClass::isModuleKeyMangledInFileName(const string &fileName)
+{
+	return true;
 }
 
 /**

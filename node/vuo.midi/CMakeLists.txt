@@ -28,6 +28,16 @@ target_sources(vuo.midi.types PRIVATE
 	VuoNotePriority.h
 )
 
+VuoCompileCompoundTypes(
+	# List types referenced by headers in this node set
+	VuoList_VuoMidiInputDevice.cc
+	VuoList_VuoMidiOutputDevice.cc
+	VuoList_VuoNotePriority.cc
+
+	# Additional list types referenced by node classes in this node set
+	VuoList_VuoMidiNote.cc
+)
+
 VuoCompileNodes(
 	vuo.midi.filter.controller.c
 	vuo.midi.filter.note.c

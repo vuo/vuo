@@ -2,7 +2,7 @@
  * @file
  * VuoModuleManager implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,7 @@
 #include "VuoNodeSet.hh"
 #include "VuoSubcompositionMessageRouter.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoCompilerNode.hh"
@@ -104,7 +105,10 @@ void VuoModuleManager::setNodeLibrary(VuoNodeLibrary *nodeLibrary)
 {
 	this->nodeLibrary = nodeLibrary;
 	if (nodeLibrary)
+	{
 		nodeLibrary->setCompiler(compiler);
+		nodeLibrary->setModuleManager(this);
+	}
 }
 
 /**
@@ -118,30 +122,167 @@ VuoNodeLibrary * VuoModuleManager::getNodeLibrary()
 }
 
 /**
- * Returns the typecast node classes available to convert from @a inType to @a outType.
+ * Returns all singleton (non-compound) types that have been loaded and not subsequently unloaded.
+ *
+ * This excludes the generic `VuoList` type, which is instead returned by VuoModuleManager::getLoadedGenericCompoundTypes().
+ * It does include the `VuoDictionary_*_*` types.
+ *
+ * @param limitToSpecializationTargets If true, excludes the few types to which a generic type
+ *    cannot be specialized due to implementation details.
  */
-vector<string> VuoModuleManager::getCompatibleTypecastClasses(VuoType *inType, VuoType *outType)
+map<string, VuoCompilerType *> VuoModuleManager::getLoadedSingletonTypes(bool limitToSpecializationTargets)
 {
-	map<pair<VuoType *, VuoType *>, vector<string> >::iterator iter = loadedTypecastClasses.find( make_pair(inType, outType) );
-	if (iter != loadedTypecastClasses.end())
-		return iter->second;
+	map<string, VuoCompilerType *> types;
 
-	return vector<string>();
+	auto shouldCopy = [limitToSpecializationTargets] (pair<string, VuoCompilerType *> i)
+	{
+		return ! limitToSpecializationTargets || VuoRendererPort::isSpecializationImplementedForType(i.first);
+	};
+
+	std::copy_if(loadedSingletonTypes.begin(), loadedSingletonTypes.end(),
+				 std::inserter(types, types.end()),
+				 shouldCopy);
+
+	return types;
 }
 
 /**
- * Returns a listing of available types indexed by node set name. Types that are unaffiliated
- * with any particular node set are indexed with a node set name of the empty string.
- *
- * A type is listed in association with a given node set if it is used strictly by that
- * node set *or* if it has been marked as being primarily affiliated with that node set, and has
- * not been included in the set of types explicitly to be included in the "core type" menu.
- *
- * The listing is cached, so this function call is inexpensive.
+ * Returns all unspecialized generic compound types that have been unloaded and subsequently unloaded.
  */
-map<string, set<VuoCompilerType *> > VuoModuleManager::getLoadedTypesForNodeSet(void)
+map<string, VuoCompilerType *> VuoModuleManager::getLoadedGenericCompoundTypes(void)
 {
-	return loadedTypesForNodeSet;
+	return loadedGenericCompoundTypes;
+}
+
+/**
+ * Returns the names of all specializations of the `VuoList` compound type that could be created from the
+ * singleton types that have been loaded. (The returned list types have not necessarily been loaded yet.)
+ */
+set<string> VuoModuleManager::getKnownListTypeNames(bool limitToSpecializationTargets)
+{
+	set<string> listTypes;
+
+	map<string, VuoCompilerType *> singletonTypes = getLoadedSingletonTypes(limitToSpecializationTargets);
+	for (auto i : singletonTypes)
+		listTypes.insert(VuoType::listTypeNamePrefix + i.first);
+
+	return listTypes;
+}
+
+/**
+ * Returns the node sets from which at least one node class or type has been loaded (though is not necessarily
+ * still loaded).
+ */
+set<string> VuoModuleManager::getKnownNodeSets(void)
+{
+	return knownNodeSets;
+}
+
+/**
+ * Returns the name of the node set to which @a typeName belongs for the purpose of display in the editor
+ * (not necessarily its actual node set), or an empty string if it's considered a core type not belonging
+ * to any node set.
+ */
+string VuoModuleManager::getNodeSetForType(const string &typeName)
+{
+	// Treat as a core type (https://b33p.net/kosada/node/9465)
+	if (typeName == "VuoLayer")
+		return "";
+
+	auto typeIter = loadedSingletonTypes.find(typeName);
+	if (typeIter != loadedSingletonTypes.end())
+	{
+		VuoNodeSet *nodeSet = typeIter->second->getBase()->getNodeSet();
+		if (nodeSet)
+			return nodeSet->getName();
+	}
+
+	return getPrimaryAffiliatedNodeSetForType(typeName);
+}
+
+/**
+ * Returns the type-converter node classes that can convert from the given from-type to the given to-type.
+ *
+ * If the from-type and to-type are both concrete types (as opposed to unspecialized generic types), then
+ * only @a fromTypeName and @a toTypeName need to be passed. This function will return all type-converters where
+ * the input port type is or can be specialized to @a fromTypeName and the output port type is or can be
+ * specialized to @a toTypeName.
+ *
+ * If the from-type is an unspecialized generic type, then @a fromType must additionally be provided. This
+ * function will return all type-converters where the input port type is generic and compatible with @a fromType.
+ * Same idea if the to-type is an unspecialized generic type.
+ */
+vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &fromTypeName, VuoType *fromType, const string &toTypeName, VuoType *toType)
+{
+	vector<string> typeConverters;
+
+	for (auto const &i : loadedTypeConverterNodeClasses)
+		if (i.first.first->getModuleKey() == fromTypeName && i.first.second->getModuleKey() == toTypeName)
+			typeConverters.insert(typeConverters.end(), i.second.cbegin(), i.second.cend());
+
+	VuoGenericType *genericInType = dynamic_cast<VuoGenericType *>(fromType);
+	VuoGenericType *genericOutType = dynamic_cast<VuoGenericType *>(toType);
+
+	auto genericTypeCanSpecializeTo = [](VuoGenericType *genericType, const string &otherTypeName, VuoGenericType *otherTypeAsGeneric)
+	{
+		return otherTypeAsGeneric ?
+					genericType->isGenericTypeCompatible(otherTypeAsGeneric) :
+					(genericType->isSpecializedTypeCompatible(otherTypeName) && VuoRendererPort::isSpecializationImplementedForType(otherTypeName));
+	};
+
+	/**
+	 * Returns true if converterInOut matches (or can be specialized to) fromType + toType.
+	 *
+	 * If so, and if the converter requires specialization, outputs the ordered specialized type names in `outSpecializations`.
+	 */
+	auto typeConverterCanSpecializeToQueriedTypes = [=](pair<VuoType *, VuoType *> converterInOut, vector<string> &outSpecializations)
+	{
+		VuoType *converterInType = converterInOut.first;
+		VuoGenericType *converterGenericInType = dynamic_cast<VuoGenericType *>(converterInType);
+		if (converterGenericInType)
+		{
+			if (! genericTypeCanSpecializeTo(converterGenericInType, fromTypeName, genericInType))
+				return false;
+
+			outSpecializations.push_back(fromTypeName);
+		}
+		else if (converterInType->getModuleKey() != fromTypeName)
+			return false;
+
+		VuoType *converterOutType = converterInOut.second;
+		VuoGenericType *converterGenericOutType = dynamic_cast<VuoGenericType *>(converterOutType);
+		if (converterGenericOutType)
+		{
+			if (! genericTypeCanSpecializeTo(converterGenericOutType, toTypeName, genericOutType))
+				return false;
+
+			outSpecializations.push_back(toTypeName);
+		}
+		else if (converterOutType->getModuleKey() != toTypeName)
+			return false;
+
+		if (converterGenericInType && converterGenericOutType &&
+				VuoType::extractInnermostTypeName(converterInType->getModuleKey()) == VuoType::extractInnermostTypeName(converterOutType->getModuleKey()) &&
+				VuoType::extractInnermostTypeName(fromTypeName) != VuoType::extractInnermostTypeName(toTypeName))
+			return false;
+
+		return true;
+	};
+
+	for (auto const &i : loadedTypeConverterNodeClasses)
+	{
+		vector<string> specializations;
+		if (typeConverterCanSpecializeToQueriedTypes(i.first, specializations))
+		{
+			if (specializations.empty())
+				typeConverters.insert(typeConverters.end(), i.second.cbegin(), i.second.cend());
+			else
+				for (string unspecializedTypeConverter : i.second)
+					typeConverters.push_back(VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(unspecializedTypeConverter, specializations));
+		}
+	}
+
+	return typeConverters;
 }
 
 /**
@@ -355,8 +496,8 @@ void VuoModuleManager::update(const vector<string> &nodeClassesToRemove, const v
 {
 	// Update cached info.
 
-	updateLoadedTypecastClasses(nodeClassesToRemove, nodeClassesToAdd, typesToRemove, typesToAdd);
-	updateLoadedTypesByNodeSet(typesToRemove, typesToAdd);
+	updateLoadedNodeClasses(nodeClassesToRemove, nodeClassesToAdd);
+	updateLoadedTypes(typesToRemove, typesToAdd);
 
 	if (composition)
 	{
@@ -723,197 +864,89 @@ void VuoModuleManager::showErrorDialog(VuoCompilerIssues *errors)
 }
 
 /**
- * Updates the listing of available typecast node classes.
+ * Updates internal lists of node classes and node sets.
  */
-void VuoModuleManager::updateLoadedTypecastClasses(const vector<string> &nodeClassesToRemove,
-												   const vector<VuoCompilerNodeClass *> &nodeClassesToAdd,
-												   const vector<string> &typesToRemove,
-												   const vector<VuoCompilerType *> &typesToAdd)
+void VuoModuleManager::updateLoadedNodeClasses(const vector<string> &nodeClassesToRemove,
+											   const vector<VuoCompilerNodeClass *> &nodeClassesToAdd)
 {
-	// Unlist type-converter node classes for which the input or output type has been invalidated.
-	for (map<pair<VuoType *, VuoType *>, vector<string> >::iterator i = loadedTypecastClasses.begin(); i != loadedTypecastClasses.end(); )
+	for (VuoCompilerNodeClass *nodeClassToAdd : nodeClassesToAdd)
 	{
-		if (find(typesToRemove.begin(), typesToRemove.end(), i->first.first->getModuleKey()) != typesToRemove.end() ||
-				find(typesToRemove.begin(), typesToRemove.end(), i->first.second->getModuleKey()) != typesToRemove.end())
-			loadedTypecastClasses.erase(i++);
-		else
-			++i;
+		VuoNodeSet *nodeSet = nodeClassToAdd->getBase()->getNodeSet();
+		if (nodeSet)
+			knownNodeSets.insert(nodeSet->getName());
 	}
 
-	// Unlist type-converter node classes that have been invalidated.
-	for (map<pair<VuoType *, VuoType *>, vector<string> >::iterator i = loadedTypecastClasses.begin(); i != loadedTypecastClasses.end(); ++i)
+	for (auto i = loadedTypeConverterNodeClasses.begin(); i != loadedTypeConverterNodeClasses.end(); ++i)
 	{
-		vector<string> stillLoaded;
+		set<string> stillLoaded;
 		std::set_difference(i->second.begin(), i->second.end(),
 							nodeClassesToRemove.begin(), nodeClassesToRemove.end(),
-							std::back_inserter(stillLoaded));
+							std::inserter(stillLoaded, stillLoaded.end()));
 		i->second = stillLoaded;
 	}
 
-	// Add type-converter node classes that have been (re)loaded.
-	for (vector<VuoCompilerNodeClass *>::const_iterator i = nodeClassesToAdd.begin(); i != nodeClassesToAdd.end(); ++i)
+	for (VuoCompilerNodeClass *compilerNodeClass : nodeClassesToAdd)
 	{
-		VuoNodeClass *nodeClass = (*i)->getBase();
-		if (nodeClass->isTypecastNodeClass() && ! nodeClass->getDeprecated())
-		{
-			VuoPortClass *typecastInPortClass = nodeClass->getInputPortClasses()[VuoNodeClass::unreservedInputPortStartIndex];
-			VuoPortClass *typecastOutPortClass = nodeClass->getOutputPortClasses()[VuoNodeClass::unreservedOutputPortStartIndex];
+		VuoNodeClass *nodeClass = compilerNodeClass->getBase();
 
-			if ((typecastInPortClass->hasCompiler() && typecastOutPortClass->hasCompiler()) &&
-				(static_cast<VuoCompilerPortClass *>(typecastInPortClass->getCompiler())->getDataVuoType() !=
-				 static_cast<VuoCompilerPortClass *>(typecastOutPortClass->getCompiler())->getDataVuoType()))
+		// For type-converter node classes that have generic port types, only add the generic node class
+		// (e.g. vuo.data.summarize), not specializations of the node class (e.g. vuo.data.summarize.VuoLayer).
+		// Each generic node class will have unique VuoGenericTypes for its input port and output port, so it
+		// will have a unique key in loadedTypeConverterNodeClasses.
+		if (nodeClass->isTypecastNodeClass() &&
+				! dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler()) &&
+				! nodeClass->getDeprecated())
+		{
+			VuoPortClass *inPortClass = nodeClass->getInputPortClasses()[VuoNodeClass::unreservedInputPortStartIndex];
+			VuoPortClass *outPortClass = nodeClass->getOutputPortClasses()[VuoNodeClass::unreservedOutputPortStartIndex];
+
+			if (inPortClass->hasCompiler() && outPortClass->hasCompiler())
 			{
-				pair<VuoType *, VuoType *> inTypeOutType = make_pair
-						(
-							static_cast<VuoCompilerPortClass *>(typecastInPortClass->getCompiler())->getDataVuoType(),
-							static_cast<VuoCompilerPortClass *>(typecastOutPortClass->getCompiler())->getDataVuoType()
-						);
+				VuoType *inType = static_cast<VuoCompilerPortClass *>(inPortClass->getCompiler())->getDataVuoType();
+				VuoType *outType = static_cast<VuoCompilerPortClass *>(outPortClass->getCompiler())->getDataVuoType();
 
-				if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClass->getClassName()) ==
-						loadedTypecastClasses[inTypeOutType].end())
-					loadedTypecastClasses[inTypeOutType].push_back(nodeClass->getClassName());
+				if (inType != outType)
+					loadedTypeConverterNodeClasses[{inType, outType}].insert(nodeClass->getClassName());
 			}
-		}
-	}
-
-	// Temporary workaround so that specialized versions of certain generic node classes can be type converters.
-	/// @todo https://b33p.net/kosada/node/7197
-	map<string, VuoCompilerType *> loadedTypes = compiler->getTypes();
-	for (vector<VuoCompilerType *>::const_iterator i = typesToAdd.begin(); i != typesToAdd.end(); ++i)
-	{
-		VuoType *type = (*i)->getBase();
-		string typeName = type->getModuleKey();
-
-		if (!VuoType::isListTypeName(typeName))
-		{
-			map<string, VuoCompilerType *>::iterator listTypeIter = loadedTypes.find("VuoList_" + typeName);
-			if (listTypeIter != loadedTypes.end())
-			{
-				VuoType *listType = listTypeIter->second->getBase();
-
-				string nodeClassNamePrefix[3] = {"vuo.list.get.first.", "vuo.list.get.last.", "vuo.list.get.random."};
-				for (int p = 0; p < 3; ++p)
-				{
-					string nodeClassName = nodeClassNamePrefix[p] + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, type);
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				{
-					string nodeClassName = "vuo.list.count." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, loadedTypes["VuoInteger"]->getBase());
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				{
-					string nodeClassName = "vuo.list.populated." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, loadedTypes["VuoBoolean"]->getBase());
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				{
-					string nodeClassName = "vuo.list.summarize." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(listType, loadedTypes["VuoText"]->getBase());
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				{
-					string nodeClassName = "vuo.data.summarize." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(type, loadedTypes["VuoText"]->getBase());
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end() &&
-							typeName != "VuoData")
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				{
-					string nodeClassName = "vuo.type.tree.value." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(loadedTypes["VuoTree"]->getBase(), type);
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-
-				if (VuoStringUtilities::beginsWith(typeName, "VuoPoint"))
-				{
-					string nodeClassName = "vuo.point.length." + typeName;
-					pair<VuoType *, VuoType *> inTypeOutType = make_pair(type, loadedTypes["VuoReal"]->getBase());
-
-					if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-						loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
-				}
-			}
-		}
-	}
-
-	{
-		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.type.real.enum");
-		VuoPortClass *outputPortClass = nodeClass->getBase()->getOutputPortClasses()[0];
-		VuoGenericType *outputType = static_cast<VuoGenericType *>(static_cast<VuoCompilerPortClass *>(outputPortClass->getCompiler())->getDataVuoType());
-
-		for (vector<VuoCompilerType *>::const_iterator i = typesToAdd.begin(); i != typesToAdd.end(); ++i)
-		{
-			VuoType *type = (*i)->getBase();
-			string typeName = type->getModuleKey();
-			if (!outputType->isSpecializedTypeCompatible(typeName))
-				continue;
-
-			string nodeClassName = "vuo.type.real.enum." + typeName;
-			pair<VuoType *, VuoType *> inTypeOutType = make_pair(loadedTypes["VuoReal"]->getBase(), type);
-
-			if (std::find(loadedTypecastClasses[inTypeOutType].begin(), loadedTypecastClasses[inTypeOutType].end(), nodeClassName) == loadedTypecastClasses[inTypeOutType].end())
-				loadedTypecastClasses[inTypeOutType].push_back(nodeClassName);
 		}
 	}
 }
 
 /**
- * Updates the listing of available types indexed by node set name.
+ * Updates internal lists of types and node sets.
  */
-void VuoModuleManager::updateLoadedTypesByNodeSet(const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd)
+void VuoModuleManager::updateLoadedTypes(const vector<string> &typesToRemove, const vector<VuoCompilerType *> &typesToAdd)
 {
-	set<string> explicitCoreTypes;
-	explicitCoreTypes.insert("VuoLayer"); // Temporary workaround until https://b33p.net/kosada/node/9465
-
-	// Unlist types that have been invalidated.
-	for (map<string, set<VuoCompilerType *> >::iterator i = loadedTypesForNodeSet.begin(); i != loadedTypesForNodeSet.end(); ++i)
+	for (auto i = loadedSingletonTypes.begin(); i != loadedSingletonTypes.end(); )
 	{
-		for (set<VuoCompilerType *>::iterator j = i->second.begin(); j != i->second.end(); )
-		{
-			if (find(typesToRemove.begin(), typesToRemove.end(), (*j)->getBase()->getModuleKey()) != typesToRemove.end())
-				i->second.erase(j++);
-			else
-				++j;
-		}
+		if (std::find(typesToRemove.begin(), typesToRemove.end(), i->first) != typesToRemove.end())
+			i = loadedSingletonTypes.erase(i);
+		else
+			++i;
 	}
 
-	// Add types that have been (re)loaded.
-	map<string, VuoCompilerType *> loadedTypes = compiler->getTypes();
-	for (vector<VuoCompilerType *>::const_iterator i = typesToAdd.begin(); i != typesToAdd.end(); ++i)
+	for (auto i = loadedGenericCompoundTypes.begin(); i != loadedGenericCompoundTypes.end(); )
 	{
-		VuoCompilerType *type = *i;
-		string typeName = type->getBase()->getModuleKey();
-		VuoNodeSet *nodeSet = type->getBase()->getNodeSet();
+		if (std::find(typesToRemove.begin(), typesToRemove.end(), i->first) != typesToRemove.end())
+			i = loadedGenericCompoundTypes.erase(i);
+		else
+			++i;
+	}
 
-		string nodeSetName = (explicitCoreTypes.find(typeName) != explicitCoreTypes.end()? "" :
-																	  (nodeSet? nodeSet->getName() :
-																				getPrimaryAffiliatedNodeSetForType(typeName)));
+	for (VuoCompilerType *typeToAdd : typesToAdd)
+	{
+		string typeName = typeToAdd->getBase()->getModuleKey();
 
-		if (! VuoCompilerType::isListType(type))
+		if (! VuoCompilerType::isListType(typeToAdd))
 		{
-			loadedTypesForNodeSet[nodeSetName].insert(type);
+			if (typeName == "VuoList")
+				loadedGenericCompoundTypes[typeName] = typeToAdd;
+			else
+				loadedSingletonTypes[typeName] = typeToAdd;
 
-			map<string, VuoCompilerType *>::const_iterator listTypeIter = loadedTypes.find(VuoType::listTypeNamePrefix + typeName);
-			if (listTypeIter != loadedTypes.end())
-				loadedTypesForNodeSet[nodeSetName].insert(listTypeIter->second);
+			VuoNodeSet *nodeSet = typeToAdd->getBase()->getNodeSet();
+			if (nodeSet)
+				knownNodeSets.insert(nodeSet->getName());
 		}
 	}
 }

@@ -2,14 +2,12 @@
  * @file
  * VuoDistribution3d implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "type.h"
 #include "VuoDistribution3d.h"
-#include "VuoList_VuoDistribution3d.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -112,4 +110,3 @@ bool VuoDistribution3d_isLessThan(const VuoDistribution3d valueA, const VuoDistr
 {
 	return valueA < valueB;
 }
-

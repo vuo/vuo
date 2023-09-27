@@ -1,11 +1,11 @@
 @addtogroup DevelopingInputEditors
 
-In the Vuo editor, a user can edit the value of certain types of input ports by double-clicking on the port's constant flag, then using the widget that pops up. This widget is called an @term{input editor}. For example, the user can double-click on a @ref VuoText input port to pop up a text box, or a @ref VuoBoolean input port to pop up a menu, or a @ref VuoInteger input port to pop up a spin box or slider. If a port type doesn't already have an input editor, you can create one.
+In the Vuo editor, a user can edit the value of certain types of input ports by double-clicking on the port's constant flag, then using the widget that pops up. This widget is called an @term{input editor}. For example, the user can double-click on a @ref VuoText input port to pop up a text box, or a @ref VuoBoolean input port to pop up a menu, or a @ref VuoInteger input port to pop up a spin box or slider. If a data type doesn't already have an input editor, you can create one.
 
 
 ## Quick start
 
-The easiest way to start developing an input editor is with the example project provided with the Vuo SDK. This example project includes a port type, an input editor for the port type, and a node class that demonstrates the input editor.
+The easiest way to start developing an input editor is with the example project provided with the Vuo SDK. This example project includes a data type, an input editor for the type, and a node class that demonstrates the input editor.
 
 First, be able to build the example project as-is: 
 
@@ -18,10 +18,10 @@ The next time you start Vuo, the @vuoNodeClass{example.customType.greet} node cl
 
 To create your own input editor based on the example project:
 
-   1. Implement your node classes and port types, placing them in the project folder (see @ref DevelopingNodeClasses and @ref DevelopingTypes). 
+   1. Implement your node classes and types, placing them in the project folder (see @ref DevelopingNodeClasses and @ref DevelopingTypes).
    2. Remove `example.customType.greet.c`, `ExampleLanguage.h`, and `ExampleLanguage.c`. 
-   3. In all project file names and contents, replace `ExampleLanguage` with the name of your port type (e.g. `MyType`). 
-   4. In `MyTypeInputEditor.cc`, change the implementation of @c MyTypeInputEditor::setUpMenuTree() to use your port type. 
+   3. In all project file names and contents, replace `ExampleLanguage` with the name of your type (e.g. `MyType`).
+   4. In `MyTypeInputEditor.cc`, change the implementation of @c MyTypeInputEditor::setUpMenuTree() to use your type.
 
 
 ## Writing an input editor
@@ -34,7 +34,7 @@ You can either derive from the @ref VuoInputEditor class directly, or you can de
    - For a text field, use @ref VuoInputEditorWithLineEdit. 
    - For a dialog containing widgets, use @ref VuoInputEditorWithDialog. 
 
-In addition to the derived classes, the input editor needs a JSON-formatted metadata file containing the name of the port type that this input editor can edit. For an example of the correct format, see `ExampleLanguageInputEditor.json` in the example project.
+In addition to the derived classes, the input editor needs a JSON-formatted metadata file containing the name of the type that this input editor can edit. For an example of the correct format, see `ExampleLanguageInputEditor.json` in the example project.
 
 
 ## Building an input editor
@@ -46,13 +46,13 @@ Typically, you'll want to do this by building the input editor with a CMake proj
 
 ## Installing an input editor
 
-Since the Vuo editor looks for input editor plugins in `~/Library/Application Support/Vuo/Modules/` and `/Library/Application Support/Vuo/Modules/`, you need to place your built input editor in one of these folders. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
+Since the Vuo editor looks for input editor plugins in `~/Library/Application Support/Vuo/Modules/` and `/Library/Application Support/Vuo/Modules/`, you need to place your built input editor in one of these folders. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/@vuoVersion/manual/installing-a-node.xhtml).
 
-If you're using the example project, then when you build the project, the compiled port type is automatically placed in `~/Library/Application Support/Vuo/Modules/`.
+If you're using the example project, then when you build the project, the compiled data type is automatically placed in `~/Library/Application Support/Vuo/Modules/`.
 
 Otherwise, you need to manually move the built input editor (`.dylib`) file to one of these folders. 
 
-After that, the next time you start the Vuo editor, your input editor should pop up when you double-click on any input port of that port type.
+After that, the next time you start the Vuo editor, your input editor should pop up when you double-click on any input port of that type.
 
 
 

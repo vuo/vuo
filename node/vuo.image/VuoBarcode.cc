@@ -2,7 +2,7 @@
  * @file
  * VuoBarcode implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -15,8 +15,6 @@
 #include <zxing/common/HybridBinarizer.h>
 #include <zxing/MultiFormatReader.h>
 #include <zxing/ReaderException.h>
-
-#include "module.h"
 
 extern "C"
 {

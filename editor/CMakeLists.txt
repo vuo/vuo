@@ -186,8 +186,6 @@ target_include_directories(VuoEditor
 		../renderer
 
 	PRIVATE
-		${PROJECT_BINARY_DIR}/type/list
-
 		# For VuoNodeClassFrequencyMap.hh
 		${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -218,6 +216,6 @@ if (VuoPro)
 	include(pro/pro.cmake)
 endif()
 
-VuoPCH(VuoEditor LLVMQt)
+VuoPCH(VuoEditor LLVMQtType)
 
 add_subdirectory(VuoEditorApp)

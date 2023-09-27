@@ -1184,12 +1184,7 @@ Appears on node documentation webpages.</extracomment>
         <translation>Contributeurs</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Dependency Licenses</source>
-        <translation>Licences des logiciels associés</translation>
-    </message>
-    <message>
-        <location line="-46"/>
+        <location line="-44"/>
         <source>**Create memorable interactive experiences — without coding.**
 
 Drag, drop, and connect Vuo&apos;s simple building blocks to support your creative work:  
@@ -1210,6 +1205,21 @@ Plus d&apos;informations à %1.</translation>
         <location line="+16"/>
         <source>Built on %2</source>
         <translation>Créé le %2</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Dependencies</source>
+        <translation>Dépendances</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Please see the list of contributors at &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</source>
+        <translation>Veuillez consulter la liste des contributeurs à &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please see the list of dependencies at &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</source>
+        <translation>Veuillez consulter la liste des dépendances à l&apos;adresse &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -2689,6 +2699,29 @@ Appears in the File &gt; Export &gt; Movie dialog&apos;s Motion Blur section.</e
         <source>This node is not installed. You can either remove it from the composition or install it on your computer.</source>
         <extracomment>Appears in the node documentation panel at the bottom of the node library.</extracomment>
         <translation>Ce nœud n&apos;est pas installé. Vous pouvez le supprimer de la composition ou l&apos;installer sur votre ordinateur.</translation>
+    </message>
+    <message>
+        <location line="-262"/>
+        <source>Drag this onto the canvas to add it to your composition.</source>
+        <translation>Faites-le glisser sur le canevas pour l&apos;ajouter à votre composition.</translation>
+    </message>
+</context>
+<context>
+    <name>VuoPanelDocumentation</name>
+    <message>
+        <location filename="../editor/VuoPanelDocumentation.cc" line="+67"/>
+        <source>Opens the &quot;%1&quot; documentation in this panel.</source>
+        <translation>Ouvre la documentation «&#xa0;%1&#xa0;» dans ce panneau.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Opens the &quot;%1&quot; example composition in a new window.</source>
+        <translation>Ouvre l&apos;exemple de composition «&#xa0;%1&#xa0;» dans une nouvelle fenêtre.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Opens the &quot;%1&quot; documentation in a new web browser tab.</source>
+        <translation>Ouvre la documentation «&#xa0;%1&#xa0;» dans un nouvel onglet du navigateur web.</translation>
     </message>
 </context>
 <context>

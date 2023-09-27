@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -649,6 +649,40 @@ void VuoCompilerCodeGenUtilities::generateSetPortContextTriggerFunction(Module *
 }
 
 /**
+ * Generates code that sets the `eventBlocking` field of a PortContext.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param portContextValue A value of type `PortContext *`.
+ * @param eventBlocking The value to set the field to.
+ */
+void VuoCompilerCodeGenUtilities::generateSetPortContextEventBlocking(Module *module, BasicBlock *block, Value *portContextValue, VuoPortClass::EventBlocking eventBlocking)
+{
+	Type *eventBlockingType = getPortContextType(module)->getElementType(6);
+
+	const char *functionName = "vuoSetPortContextEventBlocking";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		StructType *portContextType = getPortContextType(module);
+		PointerType *pointerToPortContext = PointerType::get(portContextType, 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToPortContext);
+		params.push_back(eventBlockingType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	Value *eventBlockingValue = ConstantInt::get(eventBlockingType, eventBlocking);
+
+	vector<Value *> args;
+	args.push_back(portContextValue);
+	args.push_back(eventBlockingValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
  * Generates code that gets the `event` field of a PortContext.
  *
  * @param module The module in which to generate code.
@@ -992,8 +1026,6 @@ void VuoCompilerCodeGenUtilities::generateSetNodeContextOutputEvent(Module *modu
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
-	eventValue = new ZExtInst(eventValue, sizeType, "", block);
-
 	vector<Value *> args;
 	args.push_back(nodeContextValue);
 	args.push_back(ConstantInt::get(sizeType, index));
@@ -1163,6 +1195,55 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeContextOutputEvent(Module *m
 	Value *eventValue = CallInst::Create(function, args, "", block);
 
 	return new TruncInst(eventValue, IntegerType::get(module->getContext(), 1), "", block);
+}
+
+/**
+ * Generates a call to `vuoEventHitAnyInputPort`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateEventHitAnyPort(Module *module, BasicBlock *block, Value *nodeContextValue)
+{
+	const char *functionName = "vuoEventHitAnyInputPort";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
+		Type *boolType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> params;
+		params.push_back(pointerToNodeContext);
+
+		FunctionType *functionType = FunctionType::get(boolType, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(nodeContextValue);
+	Value *resultValue = CallInst::Create(function, args, "", block);
+
+	return new TruncInst(resultValue, IntegerType::get(module->getContext(), 1), "", block);
+}
+
+/**
+ * Generates a call to `vuoSetOutputEventsAfterNodeExecution`.
+ */
+void VuoCompilerCodeGenUtilities::generateSetOutputEventsAfterNodeExecution(Module *module, BasicBlock *block, Value *nodeContextValue)
+{
+	const char *functionName = "vuoSetOutputEventsAfterNodeExecution";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToNodeContext);
+
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(nodeContextValue);
+	CallInst::Create(function, args, "", block);
 }
 
 /**
@@ -3806,6 +3887,7 @@ StructType * VuoCompilerCodeGenUtilities::getPortContextType(Module *module)
 	{
 		Type *boolType = IntegerType::get(module->getContext(), 64);
 		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		Type *eventBlockingType = IntegerType::get(module->getContext(), 64);
 
 		vector<Type *> fields;
 		fields.push_back(boolType);
@@ -3814,6 +3896,7 @@ StructType * VuoCompilerCodeGenUtilities::getPortContextType(Module *module)
 		fields.push_back(getDispatchQueueType(module));
 		fields.push_back(getDispatchSemaphoreType(module));
 		fields.push_back(voidPointerType);
+		fields.push_back(eventBlockingType);
 		portContextType->setBody(fields, false);
 	}
 

@@ -2,12 +2,16 @@
  * @file
  * VuoTime C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoInteger.h"
 #include "VuoReal.h"
@@ -16,10 +20,7 @@
 #include "VuoTimeFormat.h"
 #include "VuoTimeUnit.h"
 
-/// @{ List type.
-typedef void * VuoList_VuoTime;
-#define VuoList_VuoTime_TYPE_DEFINED
-/// @}
+#include <xlocale.h>
 
 /**
  * @ingroup VuoTypes
@@ -44,11 +45,13 @@ typedef void * VuoList_VuoTime;
  */
 typedef double VuoTime;
 
+#define VuoTime_SUPPORTS_COMPARISON
+#include "VuoList_VuoTime.h"
+
 VuoTime VuoTime_makeFromJson(struct json_object *js);
 struct json_object *VuoTime_getJson(const VuoTime value);
 char *VuoTime_getSummary(const VuoTime value);
 
-#define VuoTime_SUPPORTS_COMPARISON
 bool VuoTime_areEqual(const VuoTime valueA, const VuoTime valueB);
 bool VuoTime_isLessThan(const VuoTime valueA, const VuoTime valueB);
 
@@ -64,7 +67,7 @@ VuoTime VuoTime_makeFromUnknownFormat(const char *str);
 bool VuoTime_getComponents(VuoTime time, VuoInteger *year, VuoInteger *dayOfYear, VuoInteger *month, VuoInteger *dayOfMonth, VuoInteger *week, VuoWeekday *dayOfWeek, VuoInteger *hour, VuoInteger *minute, VuoReal *second) VuoWarnUnusedResult;
 VuoTime VuoTime_round(const VuoTime value, const VuoTimeUnit unit, const int roundingMethod);
 VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format);
-VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, const VuoText localeIdentifier);
+VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, locale_t locale);
 
 /**
  * Automatically generated function.
@@ -79,3 +82,6 @@ void VuoTime_release(VuoTime value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

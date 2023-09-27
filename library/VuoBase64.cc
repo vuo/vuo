@@ -25,7 +25,6 @@
  * René Nyffenegger rene.nyffenegger@adp-gmbh.ch
  */
 
-#include "module.h"
 #include "VuoBase64.h"
 #include <iostream>
 

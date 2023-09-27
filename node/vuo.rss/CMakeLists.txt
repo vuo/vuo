@@ -9,6 +9,11 @@ target_include_directories(vuo.rss.types
 	../vuo.time
 )
 
+VuoCompileCompoundTypes(
+	# List types referenced by node classes in this node set
+	VuoList_VuoRssItem.cc
+)
+
 VuoCompileNodes(
 	vuo.rss.fetch.c
 	vuo.rss.find.author.c

@@ -2,12 +2,11 @@
  * @file
  * vuo.image.apply.mask node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoImageRenderer.h"
 
 VuoModuleMetadata({
@@ -15,7 +14,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "transparency", "alpha", "luma", "brightness", "opacity", "negative", "remove", "cut", "magic", "wand" ],
 					  "version" : "1.1.2",
 					  "node": {
-						  "exampleCompositions" : [ "MaskImageWithImage.vuo" ]
+						  "exampleCompositions" : [ "MaskImageWithImage.vuo", "SimulateOldTV.vuo" ]
 					  }
 				 });
 

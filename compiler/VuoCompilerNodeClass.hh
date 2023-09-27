@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeClass interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -40,10 +40,7 @@ private:
 	Function *callbackStopFunction;
 	VuoCompilerInstanceDataClass *instanceDataClass;
 	vector<VuoCompilerTriggerDescription *> triggerDescriptions;
-	map<string, vector<string> > compatibleSpecializedForGenericTypeName;
 	set<VuoCompilerInputEventPortClass *> portsWithExplicitEventBlockingNone;
-	string sourcePath;
-	string sourceCode;
 	set< pair<string, string> > containedNodes;
 
 	static bool isNodeClass(Module *module, string moduleKey);
@@ -82,10 +79,6 @@ protected:
 	VuoPortClass * getInputPortClassWithName(string portName);
 	VuoPortClass * getOutputPortClassWithName(string portName);
 
-	map<string, string> defaultSpecializedForGenericTypeName;  ///< If this node class is generic, use these specialized types when creating an instance.
-
-	static void parseGenericTypes(json_object *moduleDetails, map<string, string> &defaultSpecializedForGenericTypeName, map<std::string, vector<std::string> > &compatibleSpecializedForGenericTypeName);
-
 public:
 	VuoNode * newNode(string title = "", double x = 0, double y = 0);
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
@@ -93,6 +86,9 @@ public:
 	static VuoNodeClass * newNodeClassWithoutImplementation(VuoNodeClass *baseNodeClass);
 	virtual ~VuoCompilerNodeClass(void);
 
+	virtual string getFileName(void);
+	static string getFileNameForModuleKey(const string &moduleKey);
+	static bool isModuleKeyMangledInFileName(const string &fileName);
 	virtual string getClassIdentifier(void);
 	virtual Function * getEventFunction(void);
 	virtual Function * getInitFunction(void);
@@ -116,9 +112,5 @@ public:
 	virtual bool isStateful(void);
 	bool isSubcomposition(void);
 	bool isIsf(void);
-	void setSourcePath(const string &sourcePath);
-	string getSourcePath(void);
-	void setSourceCode(const string &sourceCode);
-	string getSourceCode(void);
 	set< pair<string, string> > getContainedNodes(void);
 };

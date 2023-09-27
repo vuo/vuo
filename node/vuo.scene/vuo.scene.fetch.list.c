@@ -2,16 +2,15 @@
  * @file
  * vuo.scene.fetch.list node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoSceneObjectGet.h"
 
 VuoModuleMetadata({
-					 "title" : "Fetch List of Scenes",
+					 "title" : "Fetch Scenes",
 					 "keywords" : [
 						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
 						 "mesh", "model", "object", "3D", "opengl", "scenegraph", "graphics",

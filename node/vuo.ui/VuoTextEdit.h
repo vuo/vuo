@@ -2,7 +2,7 @@
  * @file
  * Implementation of stb_textedit functions.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -19,9 +19,7 @@
 #endif
 
 #include <stdlib.h>
-#include "VuoHeap.h"
 #include "VuoImageText.h"
-#include "stb_textedit.h"
 #include "VuoClipboard.h"
 #include "VuoModifierKey.h"
 
@@ -40,6 +38,14 @@
 
 /// The character representing a newline. See also VuoTextEdit_isNewLine.
 static char STB_TEXTEDIT_NEWLINE = '\n';
+
+/**
+ * Tests if a UTF32 value is considered a new line character.
+ */
+static bool VuoTextEdit_isNewLine(uint32_t utf32_char)
+{
+	return  utf32_char >= 0xA && utf32_char <= 0xD;
+}
 
 #define STB_TEXTEDIT_K_LEFT            0x0001C                                     ///< Keyboard input to move cursor left
 #define STB_TEXTEDIT_K_RIGHT           0x0001D                                     ///< Keyboard input to move cursor right
@@ -76,6 +82,110 @@ static char STB_TEXTEDIT_NEWLINE = '\n';
 typedef VuoText STB_TEXTEDIT_STRING;
 
 /**
+ * The length of the string.
+ */
+static int STB_TEXTEDIT_STRINGLEN(const STB_TEXTEDIT_STRING* obj)
+{
+	return VuoText_length(*obj);
+}
+
+/**
+ * returns the i'th character of obj, 0-based
+ */
+static STB_TEXTEDIT_CHARTYPE STB_TEXTEDIT_GETCHAR(const STB_TEXTEDIT_STRING* obj, int idx)
+{
+	if(idx < 0)
+		return -1;
+
+	// @todo It's inefficient to keep allocating a full utf32 array for a single char
+	size_t length;
+
+	uint32_t* utf32 = VuoText_getUtf32Values(*obj, &length);
+
+	if(idx >= length)
+		return -1;
+
+	return (STB_TEXTEDIT_CHARTYPE) utf32[idx];
+}
+
+/**
+ * maps a keyboard input to an insertable character (return type is int, 0 means not valid to insert)
+ */
+static uint32_t STB_TEXTEDIT_KEYTOTEXT(STB_TEXTEDIT_CHARTYPE key)
+{
+	// fprintf(stderr, "raw: %llu (%llu) hi: %llu  lo: %u\n", key, (OPTION_HI | 0xd), key & VuoModifierKey_Any, (uint32_t) ((key & ~VuoModifierKey_Any) & 0xFFFF));
+
+	uint32_t lo = (uint32_t) (key & 0xFFFF);
+
+	if (lo == KEYCODE_RETURN)
+		return STB_TEXTEDIT_NEWLINE;
+	else if (lo == KEYCODE_TAB)
+		return '\t';
+
+	return lo > 31 && lo < UINT32_MAX ? lo : 0;
+}
+
+/**
+ *  Delete n characters starting at i
+ */
+static void STB_TEXTEDIT_DELETECHARS(STB_TEXTEDIT_STRING* obj, int pos, int n)
+{
+	VuoText old = *obj;
+	*obj = VuoText_removeAt(old, pos + 1, n);
+	VuoRetain(*obj);
+	VuoRelease(old);
+}
+
+/**
+ * insert n characters at i (pointed to by STB_TEXTEDIT_CHARTYPE*)
+ */
+static bool STB_TEXTEDIT_INSERTCHARS(STB_TEXTEDIT_STRING* obj, int pos, const STB_TEXTEDIT_CHARTYPE* new_text, int new_text_len)
+{
+	uint32_t new_text_32[new_text_len];
+
+	for(int i = 0; i < new_text_len; i++)
+		new_text_32[i] = (uint32_t) (new_text[i] & 0xFFFF);
+
+	VuoText old = *obj;
+	VuoText ascii = VuoText_makeFromUtf32(new_text_32, new_text_len);
+	VuoLocal(ascii);
+	*obj = VuoText_insert(old, pos + 1, ascii);
+	VuoRelease(old);
+	VuoRetain(*obj);
+	return true;
+}
+
+static void VuoTextEdit_layOutRow(void* r, STB_TEXTEDIT_STRING* obj, int line_start_idx, void* state);
+static float VuoTextEdit_getWidth(STB_TEXTEDIT_STRING* obj, int n, int i, void* state);
+static bool VuoTextEdit_isSeparator(uint32_t utf32_char);
+static int VuoTextEdit_locateCoord(void *state, float x, float y);
+static void VuoTextEdit_findCharPos(void* find, STB_TEXTEDIT_STRING *str, int n, void* state);
+static int VuoTextEdit_lineCount(STB_TEXTEDIT_STRING* str);
+
+/// @{
+/**
+ * Provides a definition of the symbol as specified by `stb_textedit.h`.
+ */
+#define STB_TEXTEDIT_LAYOUTROW(r, obj, line_start_idx, state)   VuoTextEdit_layOutRow(r, obj, line_start_idx, state)
+#define STB_TEXTEDIT_GETWIDTH(obj, n, i, state)                 VuoTextEdit_getWidth(obj, n, i, state)
+#define STB_TEXTEDIT_IS_SPACE(x)                                VuoTextEdit_isSeparator(((uint32_t)x))
+#define STB_TEXTEDIT_IS_SEPARATOR(x)                            VuoTextEdit_isSeparator(((uint32_t)x))
+/// @}
+
+/// @{
+/**
+ * Provide an alternative definition of the function. (We've deleted the original from `stb_textedit.h`.)
+ */
+#define stb_text_locate_coord(state, x, y)                      VuoTextEdit_locateCoord(state, x, y)
+#define stb_textedit_find_charpos(find, str, n, single_line)    VuoTextEdit_findCharPos(find, str, n, single_line)
+#define stb_textedit_linecount(str)                             VuoTextEdit_lineCount(str)
+/// @}
+
+/// Specifies the mode in which to use `stb_textedit.h`.
+#define STB_TEXTEDIT_IMPLEMENTATION
+#include "stb_textedit.h"
+
+/**
  * Pack a UTF32 char and VuoModifierKey into a Uint64.
  */
 static STB_TEXTEDIT_CHARTYPE VuoTextEdit_combineKeyAndModifier(uint32_t utf32, VuoModifierKey modifiers)
@@ -95,22 +205,6 @@ static STB_TEXTEDIT_CHARTYPE* VuoTextEdit_makeCharArrayWithVuoText(VuoText text,
 		stbchars[i] = utf32[i];
 	free(utf32);
 	return stbchars;
-}
-
-/**
- * The length of the string.
- */
-static int STB_TEXTEDIT_STRINGLEN(const STB_TEXTEDIT_STRING* obj)
-{
-	return VuoText_length(*obj);
-}
-
-/**
- * Tests if a UTF32 value is considered a new line character.
- */
-static bool VuoTextEdit_isNewLine(uint32_t utf32_char)
-{
-	return  utf32_char >= 0xA && utf32_char <= 0xD;
 }
 
 /**
@@ -152,11 +246,6 @@ static bool VuoTextEdit_isSeparator(uint32_t utf32_char)
 
 	return false;
 }
-
-/**
- *	Forward declaration stb_textedit_prep_selection_at_cursor.
- */
-static void stb_textedit_prep_selection_at_cursor(STB_TexteditState *state);
 
 /**
  *	Selects the all text to the left and right of cursor up to any character
@@ -212,11 +301,6 @@ static void VuoTextEdit_copy(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 }
 
 /**
- * Forward declaration of cut function.
- */
-static int stb_textedit_cut(STB_TEXTEDIT_STRING *str, STB_TexteditState *state);
-
-/**
  * Perform a text cut operation (copy selected characters to clipboard and delete).
  */
 static int VuoTextEdit_cut(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
@@ -231,34 +315,10 @@ static int VuoTextEdit_cut(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 }
 
 /**
- *	Forward declaration of stb_textedit_paste.
- */
-static int stb_textedit_paste(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, STB_TEXTEDIT_CHARTYPE const *ctext, int len);
-
-/**
- * returns the i'th character of obj, 0-based
- */
-static STB_TEXTEDIT_CHARTYPE STB_TEXTEDIT_GETCHAR(const STB_TEXTEDIT_STRING* obj, int idx)
-{
-	if(idx < 0)
-		return -1;
-
-	// @todo It's inefficient to keep allocating a full utf32 array for a single char
-	size_t length;
-
-	uint32_t* utf32 = VuoText_getUtf32Values(*obj, &length);
-
-	if(idx >= length)
-		return -1;
-
-	return (STB_TEXTEDIT_CHARTYPE) utf32[idx];
-}
-
-/**
  * Return the number of new line characters in a string. Note that this may not match textData->lineCount because textData
  * only counts lines that have a non-whitespace character present (or is followed by another line).
  */
-static int stb_textedit_linecount(STB_TEXTEDIT_STRING* str)
+static int VuoTextEdit_lineCount(STB_TEXTEDIT_STRING* str)
 {
 	int count = 1;
 
@@ -315,8 +375,10 @@ static void VuoTextEdit_paste(STB_TEXTEDIT_STRING *str, STB_TexteditState *state
 /**
  * Overrides stb_textedit implementation
  */
-static int stb_text_locate_coord(STB_TexteditState *state, float x, float y)
+static int VuoTextEdit_locateCoord(void *_state, float x, float y)
 {
+	STB_TexteditState *state = (STB_TexteditState *)_state;
+
 	if (!state->textImageData)
 		return 0;
 
@@ -327,8 +389,11 @@ static int stb_text_locate_coord(STB_TexteditState *state, float x, float y)
  * Find the x/y location of a character, and remember info about the previous row in
  * case we get a move-up event (for page up, we'll have to rescan).
  */
-static void stb_textedit_find_charpos(StbFindState* find, STB_TEXTEDIT_STRING *str, int n, STB_TexteditState* state)
+static void VuoTextEdit_findCharPos(void* _find, STB_TEXTEDIT_STRING *str, int n, void* _state)
 {
+	StbFindState* find = (StbFindState*)_find;
+	STB_TexteditState* state = (STB_TexteditState*)_state;
+
 	VuoImageTextData data = (VuoImageTextData)state->textImageData;
 
 	unsigned int lineIndex = 0;
@@ -354,37 +419,15 @@ static int VuoTextEdit_findLineIndex(int charIndex, STB_TexteditState* state)
 }
 
 /**
- * maps a keyboard input to an insertable character (return type is int, 0 means not valid to insert)
- */
-static uint32_t STB_TEXTEDIT_KEYTOTEXT(STB_TEXTEDIT_CHARTYPE key)
-{
-	// fprintf(stderr, "raw: %llu (%llu) hi: %llu  lo: %u\n", key, (OPTION_HI | 0xd), key & VuoModifierKey_Any, (uint32_t) ((key & ~VuoModifierKey_Any) & 0xFFFF));
-
-	uint32_t lo = (uint32_t) (key & 0xFFFF);
-
-	if (lo == KEYCODE_RETURN)
-		return STB_TEXTEDIT_NEWLINE;
-	else if (lo == KEYCODE_TAB)
-		return '\t';
-
-	return lo > 31 && lo < UINT32_MAX ? lo : 0;
-}
-
-/// Tests if a UTF32 value is considered whitespace.
-#define STB_TEXTEDIT_IS_SPACE(x) VuoTextEdit_isSeparator(((uint32_t)x))
-
-/// Tests if a UTF32 value is considered a word separator.
-#define STB_TEXTEDIT_IS_SEPARATOR(x) VuoTextEdit_isSeparator(((uint32_t)x))
-
-/**
  * Returns the pixel delta from the xpos of the i'th character
  * to the xpos of the i+1'th char for a line of characters
  * starting at character `n` (i.e. accounts for kerning
  * with previous char)
-
  */
-static float STB_TEXTEDIT_GETWIDTH(STB_TEXTEDIT_STRING* obj, int n, int i, STB_TexteditState* state)
+static float VuoTextEdit_getWidth(STB_TEXTEDIT_STRING* obj, int n, int i, void* _state)
 {
+	STB_TexteditState* state = (STB_TexteditState*)_state;
+
 	VuoImageTextData data = (VuoImageTextData) state->textImageData;
 	return data->charAdvance[n + i];
 }
@@ -392,8 +435,11 @@ static float STB_TEXTEDIT_GETWIDTH(STB_TEXTEDIT_STRING* obj, int n, int i, STB_T
 /**
  * Lay out the text in rows.
  */
-static void STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, STB_TEXTEDIT_STRING* obj, int line_start_idx, STB_TexteditState* state)
+static void VuoTextEdit_layOutRow(void* _r, STB_TEXTEDIT_STRING* obj, int line_start_idx, void* _state)
 {
+	StbTexteditRow* r = (StbTexteditRow*)_r;
+	STB_TexteditState* state = (STB_TexteditState*)_state;
+
 	unsigned int len = 1;
 	VuoRectangle rect = VuoImageTextData_layoutRowAtIndex((VuoImageTextData) state->textImageData, line_start_idx, &len);
 	r->x0 = rect.center.x - (rect.size.x * .5);
@@ -402,34 +448,4 @@ static void STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, STB_TEXTEDIT_STRING* obj, 
 	r->ymin = rect.center.y - (rect.size.y * .5f);
 	r->ymax = rect.size.y;
 	r->num_chars = len;
-}
-
-/**
- *  Delete n characters starting at i
- */
-static void STB_TEXTEDIT_DELETECHARS(STB_TEXTEDIT_STRING* obj, int pos, int n)
-{
-	VuoText old = *obj;
-	*obj = VuoText_removeAt(old, pos + 1, n);
-	VuoRetain(*obj);
-	VuoRelease(old);
-}
-
-/**
- * insert n characters at i (pointed to by STB_TEXTEDIT_CHARTYPE*)
- */
-static bool STB_TEXTEDIT_INSERTCHARS(STB_TEXTEDIT_STRING* obj, int pos, const STB_TEXTEDIT_CHARTYPE* new_text, int new_text_len)
-{
-	uint32_t new_text_32[new_text_len];
-
-	for(int i = 0; i < new_text_len; i++)
-		new_text_32[i] = (uint32_t) (new_text[i] & 0xFFFF);
-
-	VuoText old = *obj;
-	VuoText ascii = VuoText_makeFromUtf32(new_text_32, new_text_len);
-	VuoLocal(ascii);
-	*obj = VuoText_insert(old, pos + 1, ascii);
-	VuoRelease(old);
-	VuoRetain(*obj);
-	return true;
 }

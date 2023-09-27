@@ -2,7 +2,7 @@
  * @file
  * vuo.file.list node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,23 +10,42 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include "node.h"
 #include "VuoFileType.h"
 #include "VuoUrlFetch.h"
 
 VuoModuleMetadata({
-					  "title" : "List Files",
-					  "keywords" : [ "folder", "directory", "path", "url",
-						  "search", "scanner", "find"
-					  ],
-					  "version" : "1.0.2",
-					  "dependencies" : [
-						  "VuoUrlFetch"
-					  ],
-					  "node": {
-						  "exampleCompositions" : [ ],
-					  }
-				  });
+	"title": "List Files",
+	"keywords": [
+		"folder", "directory", "path", "url",
+		"search", "scanner", "find",
+
+		// File types that this node can find.
+		// Keep in sync with `VuoFileType_extensionsJSON`.
+		"audio", "sounds", "waves",
+			"wav", "aif", "aiff", "mp3", "mp2", "aac", "m4a", "ac3", "3gp", "amr",
+		"images", "photographs", "pictures", "bitmaps", "textures", "icons", "pngs", "jpegs", "jpgs", "gifs",
+			"png", "jpeg", "jpg", "gif", "bmp", "exr", "hdr", "psd", "raw", "cr2",
+			"dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp", "pct", "heic",
+		"meshes", "data",
+		"scenes", "objects", "objs",
+			"3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn",
+			"irr", "irrmesh", "mdl", "md2", "md3", "pk3", "mdc", "md5", "m3", "smd", "ter",
+			"raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo", "fbx", "blend", "stl",
+		"movies",
+			"mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv", "gif", "qt",
+		"feeds", "rss", "atom",
+		"apps",
+		"trees", "json", "xml",
+		"tables", "csv", "tsv",
+	],
+	"version": "1.0.2",
+	"dependencies": [
+		"VuoUrlFetch",
+	],
+	"node": {
+		"exampleCompositions": [ ],
+	}
+});
 
 
 static VuoList_VuoText listFiles(VuoText folderPath, VuoBoolean includeSubfolders, VuoFileType fileType)

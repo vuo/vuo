@@ -2,12 +2,12 @@
  * @file
  * VuoOsc interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "node_header.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -61,7 +61,9 @@ void VuoOscIn_disableTriggers(VuoOscIn oi);
  */
 typedef void *VuoOscOut;
 
-VuoOscOut VuoOscOut_getShared(const VuoOscOutputDevice device);
+VuoOscOut VuoOscOut_useShared(const VuoOscOutputDevice device);
+void VuoOscOut_disuseShared(VuoOscOut oo);
+
 void VuoOscOut_sendMessages(VuoOscOut oo, VuoList_VuoOscMessage messages);
 
 #ifdef __cplusplus

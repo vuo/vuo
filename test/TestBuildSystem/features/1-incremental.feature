@@ -20,13 +20,10 @@ Check that modifying certain source files causes certain build steps to be perfo
       Then  it should update lib/Vuo.framework/Headers/VuoInteger.h
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Headers/VuoInteger.h
 
-      And   it should update type/list/VuoList_VuoInteger.bc
-      And   it should update type/list/VuoList_VuoInteger.o
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.o
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.o
+      And   it should update type/VuoList_VuoInteger.bc
+      And   it should update type/VuoList_VuoInteger.o
 
+      And   it should update the VuoList_VuoInteger module in the built-in cache
       And   it should update the built-in cache
 
       When  I build
@@ -110,17 +107,14 @@ Check that modifying certain source files causes certain build steps to be perfo
 
    Scenario: Editing the list type template implementation
       Given a completed build
-      When  I edit type/list/VuoList.cc
+      When  I edit type/compound/VuoList.cc
       And   I build
 
       # It should update all list types.  This test uses VuoList_VuoInteger as an example.
-      Then  it should update type/list/VuoList_VuoInteger.bc
-      And   it should update type/list/VuoList_VuoInteger.o
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.o
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.o
+      Then  it should update type/VuoList_VuoInteger.bc
+      And   it should update type/VuoList_VuoInteger.o
 
+      And   it should update the VuoList_VuoInteger module in the built-in cache
       And   it should update the built-in cache
 
       When  I build
@@ -128,7 +122,7 @@ Check that modifying certain source files causes certain build steps to be perfo
 
    Scenario: Editing the list type template header
       Given a completed build
-      When  I edit type/list/VuoList.h
+      When  I edit type/compound/VuoList.h
       And   I build
 
       # It should update all list types, and all types that use lists.  This tests just a few examples.
@@ -139,15 +133,12 @@ Check that modifying certain source files causes certain build steps to be perfo
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoShader.bc
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoShader.o
 
-      And   it should update type/list/VuoList_VuoInteger.bc
-      And   it should update type/list/VuoList_VuoInteger.o
+      And   it should update type/VuoList_VuoInteger.bc
+      And   it should update type/VuoList_VuoInteger.o
       And   it should update lib/Vuo.framework/Headers/VuoList_VuoInteger.h
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update lib/Vuo.framework/Modules/VuoList_VuoInteger.o
       And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Headers/VuoList_VuoInteger.h
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.bc
-      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoList_VuoInteger.o
 
+      And   it should update the VuoList_VuoInteger module in the built-in cache
       And   it should update the built-in cache
 
       When  I build
@@ -203,7 +194,32 @@ Check that modifying certain source files causes certain build steps to be perfo
       When  I build
       Then  it shouldn't do anything
 
-   Scenario: Editing a module-compiler
+   Scenario: Editing the C module-compiler
+      Given a completed build
+      When  I edit compiler/c/VuoCModuleCompiler.cc
+      And   I build
+      Then  it should update lib/libVuoCModuleCompiler.dylib
+      And   it should update lib/Vuo.framework/Helpers/ModuleCompiler/libVuoCModuleCompiler.dylib
+      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Helpers/ModuleCompiler/libVuoCModuleCompiler.dylib
+
+      # It should update all node classes, types, and libraries.  This tests just a few examples.
+      And   it should update the vuo.audio node set
+      And   it should update type/VuoImage.bc
+      And   it should update type/VuoImage.o
+      And   it should update lib/Vuo.framework/Modules/VuoImage.bc
+      And   it should update lib/Vuo.framework/Modules/VuoImage.o
+      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoImage.bc
+      And   it should update bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/VuoImage.o
+      And   it should update type/VuoList_VuoBoolean.bc
+      And   it should update type/VuoList_VuoBoolean.o
+
+      And   it should update the VuoList_VuoBoolean module in the built-in cache
+      And   it should update the built-in cache
+
+      When  I build
+      Then  it shouldn't do anything
+
+   Scenario: Editing the ISF module-compiler
       Given a completed build
       When  I edit compiler/isf/VuoIsfModuleCompiler.cc
       And   I build

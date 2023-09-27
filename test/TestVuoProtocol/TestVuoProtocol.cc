@@ -2,7 +2,7 @@
  * @file
  * TestVuoProtocol implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -57,7 +57,7 @@ private slots:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(QTest::currentDataTag(), "");
 		compiler.compileCompositionString(compositionString, compiledCompositionPath, true, &issues);
-		compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuildExistingCache);
+		compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ExistingModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
 		QVERIFY(runner);
@@ -66,9 +66,6 @@ private slots:
 
 		// Test isCompositionCompliant(string)
 		QCOMPARE(protocol->isCompositionCompliant(compositionString), expectedCompliance);
-
-		// Test isCompositionCompliant(VuoRunner*)
-		QCOMPARE(protocol->isCompositionCompliant(runner), expectedCompliance);
 
 		if (expectedCompliance
 		 || compositionPath == "composition/NoProtocol.vuo")

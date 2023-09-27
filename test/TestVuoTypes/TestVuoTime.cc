@@ -2,7 +2,7 @@
  * @file
  * TestVuoTime implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -20,6 +20,7 @@ extern "C" {
 Q_DECLARE_METATYPE(VuoWeekday);
 Q_DECLARE_METATYPE(VuoTimeFormat);
 Q_DECLARE_METATYPE(VuoTimeUnit);
+Q_DECLARE_METATYPE(VuoList_VuoTime);
 
 /**
  * Tests the VuoTime type.
@@ -533,25 +534,41 @@ private slots:
 
 		VuoText actualFormattedTime;
 
-		actualFormattedTime = VuoTime_formatWithLocale(time, format, "en_US");
-		VuoRetain(actualFormattedTime);
-		QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeUS);
-		VuoRelease(actualFormattedTime);
+		{
+			locale_t locale = newlocale(LC_ALL_MASK, "en_US", NULL);
+			actualFormattedTime = VuoTime_formatWithLocale(time, format, locale);
+			VuoRetain(actualFormattedTime);
+			QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeUS);
+			VuoRelease(actualFormattedTime);
+			freelocale(locale);
+		}
 
-		actualFormattedTime = VuoTime_formatWithLocale(time, format, "en_GB");
-		VuoRetain(actualFormattedTime);
-		QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeUK);
-		VuoRelease(actualFormattedTime);
+		{
+			locale_t locale = newlocale(LC_ALL_MASK, "en_GB", NULL);
+			actualFormattedTime = VuoTime_formatWithLocale(time, format, locale);
+			VuoRetain(actualFormattedTime);
+			QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeUK);
+			VuoRelease(actualFormattedTime);
+			freelocale(locale);
+		}
 
-		actualFormattedTime = VuoTime_formatWithLocale(time, format, "de_DE");
-		VuoRetain(actualFormattedTime);
-		QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeDE);
-		VuoRelease(actualFormattedTime);
+		{
+			locale_t locale = newlocale(LC_ALL_MASK, "de_DE", NULL);
+			actualFormattedTime = VuoTime_formatWithLocale(time, format, locale);
+			VuoRetain(actualFormattedTime);
+			QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeDE);
+			VuoRelease(actualFormattedTime);
+			freelocale(locale);
+		}
 
-		actualFormattedTime = VuoTime_formatWithLocale(time, format, "ja_JP");
-		VuoRetain(actualFormattedTime);
-		QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeJP);
-		VuoRelease(actualFormattedTime);
+		{
+			locale_t locale = newlocale(LC_ALL_MASK, "ja_JP", NULL);
+			actualFormattedTime = VuoTime_formatWithLocale(time, format, locale);
+			VuoRetain(actualFormattedTime);
+			QCOMPARE(QString(actualFormattedTime), expectedFormattedTimeJP);
+			VuoRelease(actualFormattedTime);
+			freelocale(locale);
+		}
 	}
 };
 

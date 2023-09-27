@@ -2,7 +2,7 @@
  * @file
  * TestProtocolDrivers interface and implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -88,7 +88,7 @@ private slots:
 		QFETCH(QStringList, expectingFewEvents);
 		QFETCH(QStringList, expectingAllEvents);
 
-		VuoCompiler *compiler = new VuoCompiler();
+		VuoCompiler *compiler = new VuoCompiler(QDir::current().canonicalPath().toStdString());
 
 		VuoCompilerDriver *driver = VuoCompilerDriver::driverForProtocol(compiler, protocolName.toStdString());
 
@@ -102,7 +102,7 @@ private slots:
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(compositionName + "-linked", "");
 		VuoCompilerIssues *issues = new VuoCompilerIssues();
 		compiler->compileComposition(composition, compiledCompositionPath, true, issues);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_ModuleCaches);
 		remove(compiledCompositionPath.c_str());
 		delete issues;
 		delete compiler;

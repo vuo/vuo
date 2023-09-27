@@ -2,21 +2,21 @@
  * @file
  * VuoAnchor C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoAnchor_h
+#define VuoAnchor_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoHorizontalAlignment.h"
 #include "VuoPoint2d.h"
 #include "VuoVerticalAlignment.h"
-
-/// @{ List type.
-typedef const struct VuoList_VuoAnchor_struct { void *l; } * VuoList_VuoAnchor;
-#define VuoList_VuoAnchor_TYPE_DEFINED
-/// @}
 
 /**
  * @ingroup VuoTypes
@@ -32,6 +32,9 @@ typedef const struct VuoList_VuoAnchor_struct { void *l; } * VuoList_VuoAnchor;
  * (VuoVerticalAlignment << 2) + VuoHorizontalAlignment
  */
 typedef int64_t VuoAnchor;
+
+#define VuoAnchor_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoAnchor.h"
 
 VuoAnchor VuoAnchor_makeFromJson(struct json_object * js);
 struct json_object * VuoAnchor_getJson(const VuoAnchor value);
@@ -76,7 +79,6 @@ static inline VuoAnchor VuoAnchor_makeCentered(void)
 
 VuoPoint2d VuoAnchor_getOffset(VuoAnchor anchor);
 
-#define VuoAnchor_SUPPORTS_COMPARISON
 bool VuoAnchor_areEqual(const VuoAnchor value1, const VuoAnchor value2);
 bool VuoAnchor_isLessThan(const VuoAnchor value1, const VuoAnchor value2);
 
@@ -92,3 +94,9 @@ void VuoAnchor_release(VuoAnchor value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

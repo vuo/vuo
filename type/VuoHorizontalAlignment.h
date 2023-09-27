@@ -2,17 +2,17 @@
  * @file
  * VuoHorizontalAlignment C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoHorizontalAlignment_h
+#define VuoHorizontalAlignment_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoHorizontalAlignment_struct { void *l; } * VuoList_VuoHorizontalAlignment;
-#define VuoList_VuoHorizontalAlignment_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,12 +32,14 @@ typedef enum
 	VuoHorizontalAlignment_Right
 } VuoHorizontalAlignment;
 
+#define VuoHorizontalAlignment_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoHorizontalAlignment.h"
+
 VuoHorizontalAlignment VuoHorizontalAlignment_makeFromJson(struct json_object * js);
 struct json_object * VuoHorizontalAlignment_getJson(const VuoHorizontalAlignment value);
 VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_getAllowedValues(void);
 char * VuoHorizontalAlignment_getSummary(const VuoHorizontalAlignment value);
 
-#define VuoHorizontalAlignment_SUPPORTS_COMPARISON
 bool VuoHorizontalAlignment_areEqual(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB);
 bool VuoHorizontalAlignment_isLessThan(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB);
 
@@ -54,4 +56,8 @@ void VuoHorizontalAlignment_release(VuoHorizontalAlignment value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif
 
+#endif

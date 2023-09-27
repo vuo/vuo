@@ -2,17 +2,13 @@
  * @file
  * VuoWindowProperty C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
-
-/// @{ List type.
-typedef const struct VuoList_VuoWindowProperty_struct { void *l; } * VuoList_VuoWindowProperty;
-#define VuoList_VuoWindowProperty_TYPE_DEFINED
-/// @}
+#ifndef VuoWindowProperty_h
+#define VuoWindowProperty_h
 
 /**
  * @ingroup VuoTypes
@@ -21,6 +17,10 @@ typedef const struct VuoList_VuoWindowProperty_struct { void *l; } * VuoList_Vuo
  *
  * @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoBoolean.h"
 #include "VuoCursor.h"
@@ -105,6 +105,8 @@ typedef struct
 	};
 } VuoWindowProperty;
 
+#include "VuoList_VuoWindowProperty.h"
+
 VuoWindowProperty VuoWindowProperty_makeFromJson(struct json_object * js);
 struct json_object * VuoWindowProperty_getJson(const VuoWindowProperty value);
 char * VuoWindowProperty_getSummary(const VuoWindowProperty value);
@@ -123,3 +125,9 @@ void VuoWindowProperty_release(VuoWindowProperty value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

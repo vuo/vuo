@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilitiesCocoa implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -129,32 +129,40 @@ size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path
  */
 void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
 {
-	// On recent macOS versions, `-[NSRunningApplication activateWithOptions:]` fails,
-	// but the older `SetFrontProcess()` API works, so use that instead.
+	if ([NSApp respondsToSelector:@selector(yieldActivationToApplication:)])  // macOS 14+
+	{
+		NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+		[NSApp performSelector:@selector(yieldActivationToApplication:) withObject:compositionApp];
+	}
+	else
+	{
+		// On macOS 13, `-[NSRunningApplication activateWithOptions:]` often fails,
+		// but the older `SetFrontProcess()` API works, so use that instead.
 
-	// NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
-	// BOOL ret = [compositionApp activateWithOptions: NSApplicationActivateAllWindows
-	//     | (force ? NSApplicationActivateIgnoringOtherApps : 0)];
-	// if (!ret)
-	//     VUserLog("-[NSRunningApplication activateWithOptions:] failed for pid %d", pid);
+		// NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+		// BOOL ret = [compositionApp activateWithOptions: NSApplicationActivateAllWindows
+		//     | (force ? NSApplicationActivateIgnoringOtherApps : 0)];
+		// if (!ret)
+		//     VUserLog("-[NSRunningApplication activateWithOptions:] failed for pid %d", pid);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	ProcessSerialNumber psn;
-	OSErr ret = GetProcessForPID(pid, &psn);
-	if (ret != noErr)
-	{
-		VUserLog("GetProcessForPID(%d) failed: %d", pid, ret);
-		return;
-	}
+		ProcessSerialNumber psn;
+		OSErr ret = GetProcessForPID(pid, &psn);
+		if (ret != noErr)
+		{
+			VUserLog("GetProcessForPID(%d) failed: %d", pid, ret);
+			return;
+		}
 
-	ret = SetFrontProcess(&psn);
-	if (ret != noErr)
-	{
-		VUserLog("SetFrontProcess(%d) failed: %d", pid, ret);
-		return;
-	}
+		ret = SetFrontProcess(&psn);
+		if (ret != noErr)
+		{
+			VUserLog("SetFrontProcess(%d) failed: %d", pid, ret);
+			return;
+		}
 #pragma clang diagnostic pop
+	}
 }
 
 /**
@@ -162,7 +170,20 @@ void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
  */
 int VuoFileUtilitiesCocoa_getOSVersionMajor(void)
 {
-    return NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
+	// NSProcessInfo.processInfo.operatingSystemVersion.majorVersion returns 10.16
+	// (instead of the actual version) on macOS versions newer than 10.15,
+	// since Vuo uses an older macOS SDK for compatibility with older macOS versions.
+	// This prevents distinguishing between e.g., macOS 12 and 13.
+	// However, NSProcessInfo.processInfo.operatingSystemVersionString returns the actual version,
+	// so try to extract it from there.
+
+	int majorVersion = -1;
+	sscanf(NSProcessInfo.processInfo.operatingSystemVersionString.UTF8String, "Version %d", &majorVersion);
+
+	if (majorVersion != -1)
+		return majorVersion;
+	else
+		return NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
 }
 
 /**
@@ -170,7 +191,16 @@ int VuoFileUtilitiesCocoa_getOSVersionMajor(void)
  */
 int VuoFileUtilitiesCocoa_getOSVersionMinor(void)
 {
-    return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
+	// See VuoFileUtilitiesCocoa_getOSVersionMajor.
+
+	int majorVersion = -1;
+	int minorVersion = -1;
+	sscanf(NSProcessInfo.processInfo.operatingSystemVersionString.UTF8String, "Version %d.%d", &majorVersion, &minorVersion);
+
+	if (majorVersion != -1 && minorVersion != -1)
+		return minorVersion;
+	else
+		return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
 }
 
 /**

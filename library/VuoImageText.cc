@@ -2,12 +2,11 @@
  * @file
  * VuoImageText implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "module.h"
 #include "VuoImageText.h"
 
 #include <OpenGL/CGLMacro.h>
@@ -595,7 +594,7 @@ unsigned int VuoImageTextData_getLineWithCharIndex(VuoImageTextData textData, un
  */
 VuoPoint2d VuoImageTextData_getPositionForCharIndex(VuoImageTextData textData, unsigned int charIndex, unsigned int* lineIndex)
 {
-	charIndex = MAX(0, MIN(textData->charCount, charIndex));
+	charIndex = MIN(textData->charCount, charIndex);
 
 	// figure out which row of text the char index is on
 	unsigned int lineStart = 0;

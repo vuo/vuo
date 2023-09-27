@@ -1,3 +1,4 @@
+.vscode/
 CMakeLists.txt.user
 build*
 editor/VuoEditorApp/qml/welcome/*.qmlc

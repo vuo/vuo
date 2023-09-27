@@ -2,7 +2,7 @@
  * @file
  * VuoOsc implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -29,8 +29,6 @@
 
 extern "C"
 {
-#include "module.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoOsc",
@@ -707,8 +705,6 @@ static void VuoOscOut_destroy(VuoOscOut_internal ai)
 	for (std::vector<UdpTransmitSocket *>::iterator socket = ai->sockets.begin(); socket != ai->sockets.end(); ++socket)
 		delete *socket;
 
-	VuoOscOut_internalPool->removeSharedInstance(ai->device);
-
 	VuoOscOutputDevice_release(ai->device);
 
 	dispatch_sync(ai->queue, ^{});
@@ -720,11 +716,19 @@ VUOKEYEDPOOL_DEFINE(VuoOscOutputIdentifier, VuoOscOut_internal, VuoOscOut_make);
 /// @}
 
 /**
- * Returns the reference-counted object for the specified OSC output device.
+ * @copydoc VuoKeyedPool<std::string,VuoOscOut_internal>::useSharedInstance
  */
-VuoOscOut VuoOscOut_getShared(const VuoOscOutputDevice device)
+VuoOscOut VuoOscOut_useShared(const VuoOscOutputDevice device)
 {
-	return (VuoOscOut)VuoOscOut_internalPool->getSharedInstance(device);
+	return static_cast<VuoOscOut>(VuoOscOut_internalPool->useSharedInstance(device));
+}
+
+/**
+ * @copydoc VuoKeyedPool<std::string,VuoOscOut_internal>::disuseSharedInstance
+ */
+void VuoOscOut_disuseShared(VuoOscOut device)
+{
+	VuoOscOut_internalPool->disuseSharedInstance(static_cast<VuoOscOut_internal>(device));
 }
 
 /**

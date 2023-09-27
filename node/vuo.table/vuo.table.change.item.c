@@ -2,12 +2,11 @@
  * @file
  * vuo.table.change.item node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoTable.h"
 
 VuoModuleMetadata({
@@ -31,6 +30,8 @@ VuoModuleMetadata({
 						  "exampleCompositions" : [ "ChangeTableDataToMetric.vuo" ]
 					  }
 				 });
+
+extern VuoTable VuoTable_changeItem_VuoGenericType1_VuoGenericType2(VuoTable, VuoGenericType1, VuoGenericType2, VuoText);
 
 void nodeEvent
 (

@@ -2,7 +2,7 @@
  * @file
  * VuoMidiOutputDevice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  * @{
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoInteger.h"
 #include "VuoText.h"
 
@@ -29,11 +33,12 @@ typedef struct
 	VuoText name;	///< If @c id is negative, use the first device whose name contains @c name.
 } VuoMidiOutputDevice;
 
+#define VuoMidiOutputDevice_SUPPORTS_COMPARISON
+
 VuoMidiOutputDevice VuoMidiOutputDevice_makeFromJson(struct json_object * js);
 struct json_object * VuoMidiOutputDevice_getJson(const VuoMidiOutputDevice value);
 char * VuoMidiOutputDevice_getSummary(const VuoMidiOutputDevice value);
 
-#define VuoMidiOutputDevice_SUPPORTS_COMPARISON
 bool VuoMidiOutputDevice_areEqual(const VuoMidiOutputDevice value1, const VuoMidiOutputDevice value2);
 bool VuoMidiOutputDevice_isLessThan(const VuoMidiOutputDevice a, const VuoMidiOutputDevice b);
 
@@ -59,3 +64,7 @@ static inline VuoMidiOutputDevice VuoMidiOutputDevice_make(VuoInteger id, VuoTex
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

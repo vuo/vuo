@@ -2,12 +2,13 @@
  * @file
  * VuoGenericType implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
 
 #include "VuoGenericType.hh"
+#include "VuoStringUtilities.hh"
 #include <sstream>
 
 /// The common beginning of all generic port type names.
@@ -45,23 +46,23 @@ VuoGenericType::VuoGenericType(string typeName, vector<string> compatibleSpecial
 		}
 	}
 	string suffix = extractSuffixStringFromGenericTypeName(typeName);
-	string typeDescription = (VuoType::isListTypeName(typeName) ? "list of " : string()) + "generic #" + suffix;
+	string typeDescription = "Generic #" + suffix + (VuoType::isListTypeName(typeName) ? " List" : "");
 	setDefaultTitle( "(" + typeDescription + " — can connect to " + compatiblesDescription + ")" );
 }
 
 /**
  * Returns true if this generic type is allowed to be specialized with the given type.
  */
-bool VuoGenericType::isSpecializedTypeCompatible(string typeName)
+bool VuoGenericType::isSpecializedTypeCompatible(const string &typeName)
 {
 	Compatibility compatibility;
 	vector<string> compatibles = getCompatibleSpecializedTypes(compatibility);
 
-	if (compatibility == anyType ||
+	if ((compatibility == anyType && ! VuoType::isListTypeName(typeName)) ||
 			(compatibility == anyListType && VuoType::isListTypeName(typeName)))
 		return true;
 
-	return find(compatibles.begin(), compatibles.end(), typeName) != compatibles.end();
+	return find(compatibles.cbegin(), compatibles.cend(), typeName) != compatibles.cend();
 }
 
 /**
@@ -74,7 +75,8 @@ bool VuoGenericType::isGenericTypeCompatible(VuoGenericType *otherType)
 	Compatibility otherCompatibility;
 	vector<string> otherCompatibles = otherType->getCompatibleSpecializedTypes(otherCompatibility);
 
-	if (thisCompatibility == anyType || otherCompatibility == anyType ||
+	if ((thisCompatibility == anyType && ! VuoType::isListTypeName(otherType->getModuleKey())) ||
+			(otherCompatibility == anyType && ! VuoType::isListTypeName(getModuleKey())) ||
 			(thisCompatibility == anyListType && VuoType::isListTypeName(otherType->getModuleKey())) ||
 			(otherCompatibility == anyListType && VuoType::isListTypeName(getModuleKey())))
 		return true;
@@ -117,6 +119,26 @@ bool VuoGenericType::isGenericTypeName(string typeName)
 	string genericTypeName;
 	findGenericTypeName(typeName, 0, genericTypeName);
 	return genericTypeName == typeName;
+}
+
+/**
+ * Finds all unique generic type names in @a stringToSearch.
+ */
+vector<string> VuoGenericType::findGenericTypeNames(const string &stringToSearch)
+{
+	vector<string> genericTypeNames;
+
+	size_t pos = 0;
+	string genericTypeName;
+	while ((pos = VuoGenericType::findGenericTypeName(stringToSearch, pos, genericTypeName)) != string::npos)
+	{
+		pos += genericTypeName.length();
+		genericTypeName = VuoType::extractInnermostTypeName(genericTypeName);
+		if (find(genericTypeNames.begin(), genericTypeNames.end(), genericTypeName) == genericTypeNames.end())
+			genericTypeNames.push_back(genericTypeName);
+	}
+
+	return genericTypeNames;
 }
 
 /**
@@ -189,6 +211,41 @@ string VuoGenericType::replaceInnermostGenericTypeName(string genericTypeName, s
 	size_t innermostTypeNamePos = typeName.find(innermostTypeName);
 	typeName.replace(innermostTypeNamePos, innermostTypeName.length(), replacementTypeName);
 	return typeName;
+}
+
+/**
+ * Finds each generic type name from @a specializedForGenericTypeName in @a stringToSearch and replaces it with the corresponding
+ * specialized type name from @a specializedForGenericTypeName.
+ *
+ * This function searches for the longest matching generic type name. For example, if @a stringToSearch is
+ * `VuoGenericType11_fun` and @a specializedForGenericTypeName contains both `VuoGenericType1` and `VuoGenericType11`, then
+ * the substring `VuoGenericType11` will be replaced.
+ *
+ * For @a orderedGenericTypeNames, pass an empty vector on the first call and the same (modified) vector
+ * on any subsequent calls that use the same @a specializedForGenericTypeName.
+ */
+bool VuoGenericType::replaceGenericTypeNamesInString(string &stringToSearch, const map<string, string> &specializedForGenericTypeName,
+													 vector<string> &orderedGenericTypeNames)
+{
+	if (orderedGenericTypeNames.empty())
+	{
+		std::transform(specializedForGenericTypeName.begin(), specializedForGenericTypeName.end(),
+					   std::inserter(orderedGenericTypeNames, orderedGenericTypeNames.end()),
+					   [](const pair<string, string> &p) { return p.first; });
+
+		std::sort(orderedGenericTypeNames.begin(), orderedGenericTypeNames.end(),
+				  [](const string &name1, const string &name2) { return name1.length() > name2.length(); });
+	}
+
+	size_t replacementCount = 0;
+	for (const string &genericTypeName : orderedGenericTypeNames)
+	{
+		auto specializedTypeNameIter = specializedForGenericTypeName.find(genericTypeName);
+		if (specializedTypeNameIter != specializedForGenericTypeName.end())
+			replacementCount += VuoStringUtilities::replaceAll(stringToSearch, genericTypeName, specializedTypeNameIter->second);
+	}
+
+	return replacementCount > 0;
 }
 
 /**

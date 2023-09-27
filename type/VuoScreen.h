@@ -2,12 +2,13 @@
  * @file
  * VuoScreen C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoScreen_h
+#define VuoScreen_h
 
 /**
  * @ingroup VuoTypes
@@ -17,6 +18,7 @@
  * @{
  */
 
+#include "VuoBoolean.h"
 #include "VuoInteger.h"
 #include "VuoPoint2d.h"
 #include "VuoText.h"
@@ -57,13 +59,16 @@ typedef struct
 
 	VuoInteger dpiHorizontal;	// Pixels per inch horizontally — e.g., 72 for typical displays, 144 for retina
 	VuoInteger dpiVertical;
+
+	VuoBoolean isMirrored;  // True if this screen shows the same content as another screen.
 } VuoScreen;
+
+#define VuoScreen_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
 
 VuoScreen VuoScreen_makeFromJson(struct json_object * js);
 struct json_object * VuoScreen_getJson(const VuoScreen value);
 char *VuoScreen_getSummary(const VuoScreen value);
 
-#define VuoScreen_SUPPORTS_COMPARISON
 bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2);
 bool VuoScreen_isLessThan(const VuoScreen a, const VuoScreen b);
 
@@ -84,7 +89,7 @@ void VuoScreen_release(VuoScreen value);
 static inline VuoScreen VuoScreen_makeFromName(VuoText name) __attribute__((const));
 static inline VuoScreen VuoScreen_makeFromName(VuoText name)
 {
-	VuoScreen s = {VuoScreenType_MatchName,-1,-1,name,false,{0,0},0,0,0,0};
+	VuoScreen s = {VuoScreenType_MatchName, -1, -1, name, false, {0, 0}, 0, 0, 0, 0, false};
 	return s;
 }
 
@@ -137,3 +142,5 @@ static inline VuoScreenType VuoScreen_typeFromCString(const char *typeString)
 /**
  * @}
  */
+
+#endif

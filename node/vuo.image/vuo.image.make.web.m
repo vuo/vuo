@@ -2,7 +2,7 @@
  * @file
  * vuo.image.make.web node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,9 +11,8 @@
 #import <OpenGL/CGLMacro.h>
 #import <WebKit/WebKit.h>
 
-#import "node.h"
-
 #import "VuoApp.h"
+#import "VuoImageCoreGraphics.h"
 
 VuoModuleMetadata({
 	"title" : "Make Image from Web Page",
@@ -24,6 +23,7 @@ VuoModuleMetadata({
 	"version" : "1.0.1",
 	"dependencies" : [
 		"WebKit.framework",
+		"VuoImageCoreGraphics",
 		"VuoUrl",
 	],
 	"node" : {
@@ -201,21 +201,6 @@ struct nodeInstanceData
 	if (!cgi)
 		return;
 
-	size_t bpp = CGImageGetBitsPerPixel(cgi);
-	if (bpp != 32)
-	{
-		VUserLog("Error: WindowServer gave us a CGImage with an unsupported BPP: %zu", bpp);
-		return;
-	}
-
-	CGBitmapInfo bi = CGImageGetBitmapInfo(cgi);
-	if (bi != (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little)
-	 && bi != (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrderDefault))
-	{
-		VUserLog("Error: WindowServer gave us a CGImage with an unsupported alpha/byteorder: 0x%x", bi);
-		return;
-	}
-
 	size_t width       = CGImageGetWidth(cgi);
 	size_t height      = CGImageGetHeight(cgi);
 	if (width <= 1 && height <= 1)
@@ -225,24 +210,7 @@ struct nodeInstanceData
 		return;
 	}
 
-	size_t bytesPerRow = CGImageGetBytesPerRow(cgi);
-	CFDataRef  dataFromImageDataProvider = CGDataProviderCopyData(CGImageGetDataProvider(cgi));
-	CGImageRelease(cgi);
-	if (!dataFromImageDataProvider)
-		return;
-
-	GLubyte *bitmapData = (GLubyte *)CFDataGetBytePtr(dataFromImageDataProvider);
-	if (!bitmapData)
-		return;
-
-	// Flip the image data (CGImage is unflipped, but VuoImage_makeFromBuffer() expects flipped).
-	char *flippedBitmapData = (char *)malloc(bytesPerRow * height);
-	for (unsigned long y = 0; y < height; ++y)
-		memcpy(flippedBitmapData + width * 4 * (height - y - 1), bitmapData + bytesPerRow * y, width * 4);
-
-	CFRelease(dataFromImageDataProvider);
-
-	VuoImage vi = VuoImage_makeFromBuffer(flippedBitmapData, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(flippedBitmapData); });
+	VuoImage vi = VuoImage_makeFromCGImage(cgi);
 	dispatch_sync(nodeContext->callbackQueue, ^{
 		if (self.nodeContext->updatedImage)
 			self.nodeContext->updatedImage(vi);

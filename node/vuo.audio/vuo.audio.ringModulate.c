@@ -7,7 +7,7 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoList_VuoAudioSamples.h"
 
 VuoModuleMetadata({
 					"title" : "Ring Modulate Audio",

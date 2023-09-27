@@ -2,7 +2,7 @@
  * @file
  * VuoNodeClass implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -147,31 +147,35 @@ string VuoNodeClass::getClassName(void)
 }
 
 /**
- * Returns true if this node class is a typecast node class.
+ * Returns true if this node class belongs to the subset of node classes that have exactly 1 data+event input port and
+ * 1 data+event or event-only output port and that (according to our educated guess) are usually used as type converters
+ * rather than serving some less trivial function in a composition.
  *
- * A typecast node class is a node that has exactly 1 data+event input port and 1 data+event or event-only output port.
+ * @see VuoNode::isCollapsed()
  */
 bool VuoNodeClass::isTypecastNodeClass(void)
 {
 	return _isTypecastNodeClass;
 }
 
+/**
+ * Sets whether this node class is considered a type converter.
+ */
 void VuoNodeClass::updateTypecastNodeClassStatus()
 {
-	/// @todo Temporary workaround. Instead use VuoNode::isCollapsed() elsewhere. (https://b33p.net/kosada/node/5477)
 	string nodeClassName = getClassName();
 	_isTypecastNodeClass = (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
 			|| (VuoStringUtilities::beginsWith(nodeClassName, "vuo.data.summarize") && nodeClassName != "vuo.data.summarize.VuoData")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.count.")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.first.")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last.")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.populated.")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random.")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.summarize.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.count")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.first")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.populated")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.summarize")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.point.length")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get")
 			|| nodeClassName == "vuo.audio.mix"
 			|| nodeClassName == "vuo.audio.populated"
 			|| nodeClassName == "vuo.image.get.height"
@@ -186,21 +190,6 @@ void VuoNodeClass::updateTypecastNodeClassStatus()
 			|| nodeClassName == "vuo.scene.populated"
 			|| nodeClassName == "vuo.text.populated"
 			|| nodeClassName == "vuo.window.cursor.populated");
-
-#if 0
-	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)
-		return false;
-	if (inputPortClasses[VuoNodeClass::unreservedInputPortStartIndex]->getPortType() != VuoPortClass::dataAndEventPort)
-		return false;
-
-	if (outputPortClasses.size() != VuoNodeClass::unreservedOutputPortStartIndex+1)
-		return false;
-	VuoPortClass::PortType outputPortType = outputPortClasses[VuoNodeClass::unreservedOutputPortStartIndex]->getPortType();
-	if ( !(outputPortType == VuoPortClass::dataAndEventPort || outputPortType == VuoPortClass::eventOnlyPort) )
-		return false;
-
-	return true;
-#endif
 }
 
 /**
@@ -334,4 +323,21 @@ void VuoNodeClass::print(void)
 	}
 
 	fflush(stdout);
+}
+
+/**
+ * Returns true if @a potentialNodeClassName has the format of a node class name.
+ * (A node class by that name may or may not exist.)
+ */
+bool VuoNodeClass::isNodeClassName(const string &potentialNodeClassName)
+{
+	size_t dotPos = potentialNodeClassName.rfind(".");
+	if (dotPos == string::npos)
+		return false;
+
+	string lastPart = potentialNodeClassName.substr(dotPos + 1);
+	if (lastPart == "framework" || lastPart == "dylib")
+		return false;
+
+	return true;
 }

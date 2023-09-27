@@ -2,19 +2,18 @@
  * @file
  * vuo.audio.receive node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoAudio.h"
 #include "VuoAudioSamples.h"
 
 VuoModuleMetadata({
 					  "title" : "Receive Live Audio",
 					  "keywords" : [ "sound", "microphone", "music", "listen", "device" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "dependencies" : [
 						  "VuoAudio"
 					  ],
@@ -37,9 +36,8 @@ static void updateDevice(struct nodeInstanceData *context, VuoAudioInputDevice n
 	context->device = newDevice;
 	VuoAudioInputDevice_retain(context->device);
 
-	VuoRelease(context->audioManager);
-	context->audioManager = VuoAudioIn_getShared(newDevice);
-	VuoRetain(context->audioManager);
+	VuoAudioIn_disuseShared(context->audioManager);
+	context->audioManager = VuoAudioIn_useShared(newDevice);
 }
 
 
@@ -113,5 +111,5 @@ void nodeInstanceFini
 )
 {
 	VuoAudioInputDevice_release((*context)->device);
-	VuoRelease((*context)->audioManager);
+	VuoAudioIn_disuseShared((*context)->audioManager);
 }

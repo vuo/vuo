@@ -2,7 +2,7 @@
  * @file
  * VuoEditorGraphicsView implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -120,7 +120,7 @@ void VuoEditorGraphicsView::paintEvent(QPaintEvent *event)
 }
 
 /**
- * Handles pinch-zoom gestures.
+ * Handles two-finger-tap (context menu) and pinch-zoom gestures.
  */
 bool VuoEditorGraphicsView::viewportEvent(QEvent *event)
 {
@@ -129,7 +129,7 @@ bool VuoEditorGraphicsView::viewportEvent(QEvent *event)
 
 
 	// See VuoEditorWindow::eventFilter.
-	// https://b33p.net/kosada/node/16688
+	// https://b33p.net/kosada/vuo/vuo/-/issues/16688
 	if (eventType == QEvent::MouseButtonPress)
 	{
 		auto mbp = static_cast<QMouseEvent *>(event);
@@ -159,6 +159,11 @@ bool VuoEditorGraphicsView::viewportEvent(QEvent *event)
 		if (touchPoint0.state() & Qt::TouchPointPressed
 		 || touchPoint1.state() & Qt::TouchPointPressed)
 			latestTouchBeganTime = ((double)touchEvent->timestamp()) / 1000.;
+
+		// System Settings > Trackpad > Scroll & Zoom > Zoom in or out
+		Boolean pinchPreference = CFPreferencesGetAppBooleanValue(CFSTR("TrackpadPinch"), CFSTR("com.apple.driver.AppleBluetoothMultitouch.trackpad"), nullptr);
+		if (!pinchPreference)
+			return false;
 
 		if (static_cast<VuoEditorWindow *>(window())->isScrollInProgress())
 		{

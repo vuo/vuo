@@ -2,17 +2,15 @@
  * @file
  * vuo.image.fetch.list node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
-
 #include "VuoImageGet.h"
 
 VuoModuleMetadata({
-					 "title" : "Fetch List of Images",
+					 "title" : "Fetch Images",
 					 "keywords" : [
 						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
 						 "photograph", "picture", "bitmap", "texture", "icon",
@@ -27,9 +25,10 @@ VuoModuleMetadata({
 						 "raw", "cr2", "dng", "dcr", "nef", "raf", "mos", "kdc",
 						 "tiff",
 						 "Targa", "tga",
-						 "WebP"
+						 "WebP",
+						 "HEIF", "HEIC",
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoImageGet"
 					 ],

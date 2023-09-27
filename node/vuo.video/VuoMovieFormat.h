@@ -2,12 +2,16 @@
  * @file
  * VuoMovieFormat C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "VuoMovieImageEncoding.h"
 #include "VuoAudioEncoding.h"
@@ -33,11 +37,12 @@ typedef struct
 	VuoReal audioQuality;					///< Audio quality.  1 is best, 0 is worst.
 } VuoMovieFormat;
 
+#define VuoMovieFormat_SUPPORTS_COMPARISON
+
 VuoMovieFormat VuoMovieFormat_makeFromJson(struct json_object * js);
 struct json_object * VuoMovieFormat_getJson(const VuoMovieFormat value);
 char * VuoMovieFormat_getSummary(const VuoMovieFormat value);
 
-#define VuoMovieFormat_SUPPORTS_COMPARISON
 bool VuoMovieFormat_areEqual(VuoMovieFormat value1, VuoMovieFormat value2);
 bool VuoMovieFormat_isLessThan(const VuoMovieFormat a, const VuoMovieFormat b);
 
@@ -70,4 +75,6 @@ static inline VuoMovieFormat VuoMovieFormat_make(	VuoMovieImageEncoding imgEncod
  * @}
  */
 
-
+#ifdef __cplusplus
+}
+#endif

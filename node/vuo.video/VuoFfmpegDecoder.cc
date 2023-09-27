@@ -2,14 +2,14 @@
  * @file
  * VuoFfmpegDecoder implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "VuoFfmpegDecoder.h"
+#include "VuoFfmpegDecoder.hh"
 #include <OpenGL/CGLMacro.h>
-#include "VuoFfmpegUtility.h"
+#include "VuoFfmpegUtility.hh"
 
 extern "C"
 {

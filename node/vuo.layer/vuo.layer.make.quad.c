@@ -7,7 +7,6 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include <OpenGL/CGLMacro.h>
 #include "VuoLayer.h"
 #include "VuoEdgeBlend.h"

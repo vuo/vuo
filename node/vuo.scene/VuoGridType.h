@@ -2,18 +2,16 @@
  * @file
  * VuoGridType C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef const struct VuoList_VuoGridType_struct { void *l; } * VuoList_VuoGridType;
-#define VuoList_VuoGridType_TYPE_DEFINED
-/// @}
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,12 +30,14 @@ typedef enum {
 	VuoGridType_HorizontalAndVertical
 } VuoGridType;
 
+#define VuoGridType_SUPPORTS_COMPARISON
+#include "VuoList_VuoGridType.h"
+
 VuoGridType VuoGridType_makeFromJson(struct json_object * js);
 struct json_object * VuoGridType_getJson(const VuoGridType value);
 VuoList_VuoGridType VuoGridType_getAllowedValues(void);
 char * VuoGridType_getSummary(const VuoGridType value);
 
-#define VuoGridType_SUPPORTS_COMPARISON
 bool VuoGridType_areEqual(VuoGridType a, VuoGridType b);
 bool VuoGridType_isLessThan(VuoGridType a, VuoGridType b);
 
@@ -54,3 +54,6 @@ void VuoGridType_release(VuoGridType value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

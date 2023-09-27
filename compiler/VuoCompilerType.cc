@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerType implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #include <sstream>
 #include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerCompoundType.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerIssue.hh"
 #include "VuoCompilerType.hh"
@@ -48,10 +49,18 @@ VuoCompilerType::VuoCompilerType(string typeName, Module *module)
  */
 VuoCompilerType * VuoCompilerType::newType(string typeName, Module *module)
 {
-	if (! isType(typeName, module))
-		return NULL;
+	VuoCompilerType *type = nullptr;
 
-	return new VuoCompilerType(typeName, module);
+	if (isType(typeName, module))
+	{
+		VuoCompilerCompoundType *compoundType = VuoCompilerCompoundType::newType(typeName, module);
+		if (compoundType)
+			type = compoundType;
+		else
+			type = new VuoCompilerType(typeName, module);
+	}
+
+	return type;
 }
 
 /**
@@ -190,14 +199,16 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
 		}
 		CallInst *getJsonReturn = CallInst::Create(chosenJsonFromValueFunction, getJsonArgs, "", block);
 
+		BitCastInst *getJsonReturnCasted = new BitCastInst(getJsonReturn, jsonObjectToJsonStringExtFunction->getFunctionType()->getParamType(0), "", block);
+
 		vector<Value *> jsonObjectToJsonStringExtArgs;
-		jsonObjectToJsonStringExtArgs.push_back(getJsonReturn);
+		jsonObjectToJsonStringExtArgs.push_back(getJsonReturnCasted);
 		jsonObjectToJsonStringExtArgs.push_back(ConstantInt::get(module->getContext(), APInt(32, JSON_C_TO_STRING_PLAIN)));
 		CallInst *jsonObjectToJsonStringExtReturn = CallInst::Create(jsonObjectToJsonStringExtFunction, jsonObjectToJsonStringExtArgs, "", block);
 
 		CallInst *strdupReturn = CallInst::Create(strdupFunction, jsonObjectToJsonStringExtReturn, "", block);
 
-		CallInst::Create(jsonObjectPutFunction, getJsonReturn, "", block);
+		CallInst::Create(jsonObjectPutFunction, getJsonReturnCasted, "", block);
 
 		ReturnInst::Create(module->getContext(), strdupReturn, block);
 	}

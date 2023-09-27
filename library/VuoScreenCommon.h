@@ -2,7 +2,7 @@
  * @file
  * VuoScreenCommon interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
 
-#include "node.h"
+#include "node_header.h"
 
 void *VuoScreen_getNSScreen(VuoScreen screen);
 VuoScreen VuoScreen_makeFromNSScreen(void *screen);

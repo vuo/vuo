@@ -2,6 +2,7 @@ VuoCompileLibraries(
 	VuoBase64.cc
 	VuoCglPixelFormat.c
 	VuoDisplayRefresh.c
+	VuoFreeImage.c
 	VuoGraphicsLayer.m
 	VuoGraphicsView.m
 	VuoGraphicsWindow.m
@@ -11,11 +12,13 @@ VuoCompileLibraries(
 	VuoImageBlend.c
 	VuoImageBlur.c
 	VuoImageConvolve.c
+	VuoImageCoreGraphics.c
 	VuoImageDilate.c
 	VuoImageGet.cc
 	VuoImageMapColors.c
 	VuoImageRenderer.cc
 	VuoImageResize.c
+	VuoImageRotate.c
 	VuoImageText.cc
 	VuoIoReturn.c
 	VuoMathExpressionParser.cc
@@ -40,12 +43,12 @@ VuoCompileLibraries(
 	VuoWindowRecorder.m
 	VuoWindowTextInternal.m
 	csgjs.cc
-	libmodule.c
 )
 target_sources(vuo.core.libraries PRIVATE
 	VuoBase64.h
 	VuoCglPixelFormat.h
 	VuoDisplayRefresh.h
+	VuoFreeImage.h
 	VuoGraphicsLayer.h
 	VuoGraphicsView.h
 	VuoGraphicsWindow.h
@@ -59,6 +62,7 @@ target_sources(vuo.core.libraries PRIVATE
 	VuoImageGet.h
 	VuoImageRenderer.h
 	VuoImageResize.h
+	VuoImageRotate.h
 	VuoImageText.h
 	VuoIoReturn.h
 	VuoMathExpressionParser.h
@@ -86,13 +90,16 @@ target_sources(vuo.core.libraries PRIVATE
 	VuoWindowRecorder.h
 	VuoWindowTextInternal.h
 )
+target_include_directories(vuo.core.libraries SYSTEM
+	PRIVATE
+	${CONAN_INCLUDE_DIRS_CURL}
+	${CONAN_INCLUDE_DIRS_FREEIMAGE}
+	${CONAN_INCLUDE_DIRS_LIBXML2}
+	${CONAN_INCLUDE_DIRS_MUPARSER}
+	${CONAN_INCLUDE_DIRS_OAI}
+)
 target_include_directories(vuo.core.libraries
 	PRIVATE
-		${CONAN_INCLUDE_DIRS_CURL}
-		${CONAN_INCLUDE_DIRS_FREEIMAGE}
-		${CONAN_INCLUDE_DIRS_LIBXML2}
-		${CONAN_INCLUDE_DIRS_MUPARSER}
-		${CONAN_INCLUDE_DIRS_OAI}
 	../node/vuo.image
 	../node/vuo.mouse
 	../node/vuo.noise
@@ -101,7 +108,10 @@ target_include_directories(vuo.core.libraries
 )
 target_link_libraries(vuo.core.libraries
 	PUBLIC
-	"-framework IOKit"
+		"-framework CoreGraphics"
+		"-framework ImageIO"
+		"-framework IOKit"
+		"-framework OpenGL"
 
 	# Don't enforce these dependencies, since they're unnecessary for VuoRunner.framework
 	# and runtime dylibs (VuoApp, etc).
@@ -113,6 +123,11 @@ target_link_libraries(vuo.core.libraries
 
 	PRIVATE
 	vuo.noise.libraries
+)
+
+
+VuoCompileRuntimeLibrariesWithTarget(vuo.core.module.libraries
+	libmodule.c
 )
 
 
@@ -157,6 +172,7 @@ target_link_options(VuoHeap
 	PRIVATE
 	LINKER:-force_load,${PROJECT_BINARY_DIR}/lib/libvuo.core.runtime.libraries.a
 )
+add_custom_command(TARGET VuoHeap POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/lib/libVuoHeap.dylib)
 VuoPCH(VuoHeap)
 
 
@@ -198,7 +214,6 @@ set_target_properties(VuoApp PROPERTIES
 target_include_directories(VuoApp
 	PRIVATE
 		${PROJECT_BINARY_DIR}/library  # For vuo-wordmark-teal-cropped.h
-		${PROJECT_BINARY_DIR}/type/list
 		../node
 		../type
 		../common
@@ -217,7 +232,10 @@ target_link_libraries(VuoApp
 	PRIVATE
 	VuoHeap
 	vuo.core.libraries
+	vuo.core.module.libraries
 )
+add_custom_command(TARGET VuoApp POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/lib/libVuoApp.dylib)
+VuoPCH(VuoApp ModuleOnly)
 
 
 add_library(VuoGlContext SHARED
@@ -232,10 +250,10 @@ set_target_properties(VuoGlContext PROPERTIES
 )
 target_include_directories(VuoGlContext
 	PRIVATE
-		${PROJECT_BINARY_DIR}/type/list
 		../library
 		../node
 		../type
+		${PROJECT_BINARY_DIR}/type
 )
 target_link_libraries(VuoGlContext
 	PUBLIC
@@ -249,7 +267,6 @@ target_link_libraries(VuoGlContext
 
 	# Don't link to vuo.core.types, since it pulls in lots of dependencies…
 #	vuo.core.types
-#	vuo.core.list.types
 	# …whereas we just need a few types.
 	${PROJECT_BINARY_DIR}/library/VuoCglPixelFormat.o
 	${PROJECT_BINARY_DIR}/library/VuoOsStatus.o
@@ -260,17 +277,17 @@ target_link_libraries(VuoGlContext
 	${PROJECT_BINARY_DIR}/type/VuoReal.o
 	${PROJECT_BINARY_DIR}/type/VuoScreen.o
 	${PROJECT_BINARY_DIR}/type/VuoText.o
-	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoInteger.o
-	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoPoint2d.o
-	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoReal.o
-	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoScreen.o
-	${PROJECT_BINARY_DIR}/type/list/VuoList_VuoText.o
+	${PROJECT_BINARY_DIR}/type/VuoList_VuoInteger.o
+	${PROJECT_BINARY_DIR}/type/VuoList_VuoPoint2d.o
+	${PROJECT_BINARY_DIR}/type/VuoList_VuoReal.o
+	${PROJECT_BINARY_DIR}/type/VuoList_VuoScreen.o
+	${PROJECT_BINARY_DIR}/type/VuoList_VuoText.o
 )
 add_dependencies(VuoGlContext
 	vuo.core.types
-	vuo.core.list.types
+	vuo.core.types.compound
 )
-VuoPCH(VuoGlContext)
+VuoPCH(VuoGlContext Module)
 
 
 add_library(VuoGlPool SHARED
@@ -285,11 +302,11 @@ set_target_properties(VuoGlPool PROPERTIES
 )
 target_include_directories(VuoGlPool
 	PRIVATE
-		${PROJECT_BINARY_DIR}/type/list
 		../library
 		../node
 		../runtime
 		../type
+		${PROJECT_BINARY_DIR}/type
 )
 target_link_libraries(VuoGlPool
 	PUBLIC
@@ -300,7 +317,7 @@ target_link_libraries(VuoGlPool
 		VuoBase
 		VuoGlContext
 )
-VuoPCH(VuoGlPool)
+VuoPCH(VuoGlPool Module)
 
 if (VuoPro)
 	include(pro/pro.cmake)

@@ -1,8 +1,8 @@
 @addtogroup PackagingNodeSets
 
-When you distribute node classes to other Vuo users, you'll probably want to package them in a format that's easy to download and install. Along with node classes, you may also want to bundle port types, library modules, and example compositions. You can accomplish this by packaging the files into a @term{node set}. 
+When you distribute node classes to other Vuo users, you'll probably want to package them in a format that's easy to download and install. Along with node classes, you may also want to bundle data types, library modules, and example compositions. You can accomplish this by packaging the files into a @term{node set}.
 
-A node set is a zip file that contains a set of related node classes, their supporting port types and library modules, and optionally a set of example compositions. Like a compiled node class, a node set needs to have the file extension `.vuonode`. 
+A node set is a zip file that contains a set of related node classes, their supporting types and library modules, and optionally a set of example compositions. Like a compiled node class, a node set needs to have the file extension `.vuonode`.
 
 To package files into a node set: 
 
@@ -12,9 +12,9 @@ To package files into a node set:
    - Rename the resulting zip file to consist of your node set name plus the `.vuonode` extension (e.g. `mycompany.speechSynthesis.vuonode`). 
 
 
-## Node classes, port types, and library modules
+## Node classes, types, and library modules
 
-Place the compiled node class (`.vuonode`) files and compiled port type and library module (`.bc`) files in the top level of the node set folder. 
+Place the compiled node class (`.vuonode`) files and compiled type and library module (`.bc`) files in the top level of the node set folder.
 
 If any node class uses generic types, place the node class's source code (`.c`) file and any included header files (except for header files like @c node.h provided in Vuo.framework) in the top level of the node set folder. 
 

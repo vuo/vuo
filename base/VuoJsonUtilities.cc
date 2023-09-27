@@ -2,7 +2,7 @@
  * @file
  * VuoJsonUtilities implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -132,6 +132,29 @@ vector<string> VuoJsonUtilities::parseArrayOfStrings(json_object *o, string key)
 				json_object *item = json_object_array_get_idx(arrayObject, i);
 				if (json_object_get_type(item) == json_type_string)
 					items.push_back( json_object_get_string(item) );
+			}
+		}
+	}
+	return items;
+}
+
+/**
+ * Parses the keys and string values from the object value for `key` in the top level of the JSON object.
+ *
+ * If no such value is found, returns an empty map.
+ */
+map<string, string> VuoJsonUtilities::parseObjectWithStringValues(json_object *o, string key)
+{
+	map<string, string> items;
+	json_object *keysVals = nullptr;
+	if (json_object_object_get_ex(o, key.c_str(), &keysVals))
+	{
+		if (json_object_get_type(keysVals) == json_type_object)
+		{
+			json_object_object_foreach(keysVals, key, val)
+			{
+				if (json_object_get_type(val) == json_type_string)
+					items[key] = json_object_get_string(val);
 			}
 		}
 	}

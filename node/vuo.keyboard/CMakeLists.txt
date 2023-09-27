@@ -17,6 +17,10 @@ target_link_libraries(vuo.keyboard.types
 	VuoApp
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoKey.cc
+)
+
 VuoCompileNodes(
 	vuo.keyboard.button.c
 	vuo.keyboard.button2.c

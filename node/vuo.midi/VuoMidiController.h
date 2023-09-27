@@ -2,12 +2,16 @@
  * @file
  * VuoMidiController C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -27,11 +31,12 @@ typedef struct
 	unsigned char value;	///< Permitted values: 0 through 127
 } VuoMidiController;
 
+#define VuoMidiController_SUPPORTS_COMPARISON
+
 VuoMidiController VuoMidiController_makeFromJson(struct json_object * js);
 struct json_object * VuoMidiController_getJson(const VuoMidiController value);
 char * VuoMidiController_getSummary(const VuoMidiController value);
 
-#define VuoMidiController_SUPPORTS_COMPARISON
 bool VuoMidiController_areEqual(const VuoMidiController value1, const VuoMidiController value2);
 bool VuoMidiController_isLessThan(const VuoMidiController a, const VuoMidiController b);
 
@@ -60,3 +65,7 @@ void VuoMidiController_release(VuoMidiController value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

@@ -2,17 +2,16 @@
  * @file
  * VuoWeekday C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoWeekday;
-#define VuoList_VuoWeekday_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -36,12 +35,14 @@ typedef enum
 	VuoWeekday_Saturday
 } VuoWeekday;
 
+#define VuoWeekday_SUPPORTS_COMPARISON
+#include "VuoList_VuoWeekday.h"
+
 VuoWeekday VuoWeekday_makeFromJson(struct json_object *js);
 struct json_object *VuoWeekday_getJson(const VuoWeekday value);
 VuoList_VuoWeekday VuoWeekday_getAllowedValues(void);
 char *VuoWeekday_getSummary(const VuoWeekday value);
 
-#define VuoWeekday_SUPPORTS_COMPARISON
 bool VuoWeekday_areEqual(const VuoWeekday valueA, const VuoWeekday valueB);
 bool VuoWeekday_isLessThan(const VuoWeekday valueA, const VuoWeekday valueB);
 
@@ -57,3 +58,7 @@ void VuoWeekday_release(VuoWeekday value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

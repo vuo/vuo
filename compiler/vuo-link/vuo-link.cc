@@ -2,7 +2,7 @@
  * @file
  * vuo-link implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -24,7 +24,7 @@ void printHelp(char *argv0)
 		   "  --format <arg>                 Output the given type of binary file. <arg> can be 'executable' or 'dylib'. The default is 'executable'.\n"
 		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 		   "  --framework-search-path <dir>  Search for macOS frameworks in <dir>. This option may be specified more than once.\n"
-		   "  --optimization <arg>           Optimize for a faster build that links against a cache file ('fast-build') or a standalone binary that does not ('small-binary'). The default is 'fast-build'.\n"
+		   "  --optimization <arg>           Whether to link to module cache dylibs (`module-caches`) or not (`no-module-caches`). The default is 'module-caches', which is usually faster.\n"
 		   "  --verbose                      Output diagnostic information.\n",
 		   argv0);
 }
@@ -147,15 +147,15 @@ int main (int argc, char * const argv[])
 
 			compiler.setCompositionPath(inputPath);
 
-			VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild;
+			VuoCompiler::Optimization optimization = VuoCompiler::Optimization_ModuleCaches;
 			if (! optimizationOption.empty())
 			{
-				if (optimizationOption == "fast-build")
-					optimization = VuoCompiler::Optimization_FastBuild;
-				else if (optimizationOption == "fast-build-existing-cache")
-					optimization = VuoCompiler::Optimization_FastBuildExistingCache;
-				else if (optimizationOption == "small-binary")
-					optimization = VuoCompiler::Optimization_SmallBinary;
+				if (optimizationOption == "module-caches")
+					optimization = VuoCompiler::Optimization_ModuleCaches;
+				else if (optimizationOption == "existing-module-caches")
+					optimization = VuoCompiler::Optimization_ExistingModuleCaches;
+				else if (optimizationOption == "no-module-caches")
+					optimization = VuoCompiler::Optimization_NoModuleCaches;
 				else
 					throw VuoException("unrecognized option '" + optimizationOption + "' for --optimization");
 			}

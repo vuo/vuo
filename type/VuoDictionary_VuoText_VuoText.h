@@ -2,12 +2,13 @@
  * @file
  * VuoDictionary_VuoText_VuoText C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoDictionary_VuoText_VuoText_h
+#define VuoDictionary_VuoText_VuoText_h
 
 /**
  * @ingroup VuoTypes
@@ -17,7 +18,6 @@
  * @{
  */
 
-#include "VuoText.h"
 #include "VuoText.h"
 #include "VuoList_VuoText.h"
 
@@ -60,3 +60,5 @@ char * VuoDictionary_VuoText_VuoText_getString(const VuoDictionary_VuoText_VuoTe
 /**
  * @}
  */
+
+#endif

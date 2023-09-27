@@ -2,17 +2,17 @@
  * @file
  * VuoTextComparison C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoTextComparison_h
+#define VuoTextComparison_h
 
-/// @{ List type.
-typedef const struct VuoList_VuoTextComparison_struct { void *l; } * VuoList_VuoTextComparison;
-#define VuoList_VuoTextComparison_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -63,3 +63,9 @@ void VuoTextComparison_release(VuoTextComparison value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

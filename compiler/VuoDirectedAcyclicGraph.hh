@@ -2,7 +2,7 @@
  * @file
  * VuoDirectedAcyclicGraph interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -37,7 +37,10 @@ public:
 	void removeVertex(Vertex *vertex);
 	Vertex * findVertex(const string &key);
 	void addEdge(Vertex *fromVertex, Vertex *toVertex);
+	void removeEdge(Vertex *fromVertex, Vertex *toVertex);
+	vector<Vertex *> getImmediatelyDownstreamVertices(Vertex *vertex);
 	vector<Vertex *> getDownstreamVertices(Vertex *vertex);
+	vector<Vertex *> getImmediatelyUpstreamVertices(Vertex *vertex);
 	vector<Vertex *> getUpstreamVertices(Vertex *vertex);
 	set<Vertex *> getCycleVertices(void);
 	int getLongestDownstreamPath(Vertex *vertex);
@@ -70,12 +73,15 @@ class VuoDirectedAcyclicNetwork
 public:
 	vector<VuoDirectedAcyclicGraph::Vertex *> findVertex(const string &key);
 	void addEdge(VuoDirectedAcyclicGraph *fromGraph, VuoDirectedAcyclicGraph *toGraph);
+	vector<VuoDirectedAcyclicGraph::Vertex *> getImmediatelyDownstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex);
 	vector<VuoDirectedAcyclicGraph::Vertex *> getDownstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex);
+	vector<VuoDirectedAcyclicGraph::Vertex *> getImmediatelyUpstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex);
 	vector<VuoDirectedAcyclicGraph::Vertex *> getUpstreamVertices(VuoDirectedAcyclicGraph::Vertex *vertex);
 	string toString(bool showVertexAddresses=false);
 
 private:
-	static vector<VuoDirectedAcyclicGraph::Vertex *> getReachableVertices(VuoDirectedAcyclicGraph::Vertex *vertex, const map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> > &edges, bool isDownstream);
+	vector<VuoDirectedAcyclicGraph::Vertex *> getUpstreamVerticesInternal(VuoDirectedAcyclicGraph::Vertex *vertex, bool isImmediate);
+	static vector<VuoDirectedAcyclicGraph::Vertex *> getReachableVertices(VuoDirectedAcyclicGraph::Vertex *vertex, const map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> > &edges, bool isDownstream, bool isImmediate);
 
 	map< VuoDirectedAcyclicGraph *, vector<VuoDirectedAcyclicGraph *> > edges;
 };

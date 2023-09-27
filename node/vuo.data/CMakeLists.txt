@@ -9,6 +9,11 @@ target_link_libraries(vuo.data.types
 		${PROJECT_BINARY_DIR}/library/VuoBase64.o
 )
 
+VuoCompileCompoundTypes(
+	# List types referenced by node classes in this node set
+	VuoList_VuoData.cc
+)
+
 VuoCompileGenericNodes(
 	vuo.data.append.c
 	vuo.data.areEqual.c

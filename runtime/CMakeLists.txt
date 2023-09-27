@@ -4,21 +4,24 @@ string(APPEND CMAKE_CXX_FLAGS ${prefixHeader})
 
 # Objects that should be copied into Vuo.framework/Modules
 # (but not linked in to vuo.core.runtime.libraries).
-VuoCompileLibrariesWithTarget(vuo.core.runtime.objects
+VuoCompileRuntimeLibrariesWithTarget(vuo.core.runtime.objects
 	VuoRuntime.cc
 	VuoRuntimeMain.c
 )
 target_sources(vuo.core.runtime.objects PRIVATE
 	VuoRuntime.h
 )
-target_include_directories(vuo.core.runtime.objects
-	PRIVATE
+target_include_directories(vuo.core.runtime.objects PRIVATE
 	../base
+)
+target_include_directories(vuo.core.runtime.objects SYSTEM PRIVATE
+	${CONAN_INCLUDE_DIRS_JSONC}
+	${CONAN_INCLUDE_DIRS_ZEROMQ}
 )
 
 # Objects that should be linked in to vuo.core.runtime.libraries
 # (and eventually VuoHeap).
-VuoCompileLibraries(
+VuoCompileRuntimeLibraries(
 	VuoCompositionDiff.cc
 	VuoCompositionState.c
 	VuoEventLoop.m
@@ -54,12 +57,14 @@ target_compile_definitions(vuo.core.runtime.libraries
 	PUBLIC
 	ZMQ
 )
-target_include_directories(vuo.core.runtime.libraries
-	PRIVATE
+target_include_directories(vuo.core.runtime.libraries PRIVATE
 	../base
 )
-target_link_libraries(vuo.core.runtime.libraries
-	PUBLIC
+target_include_directories(vuo.core.runtime.libraries SYSTEM PUBLIC
+	${CONAN_INCLUDE_DIRS_JSONC}
+	${CONAN_INCLUDE_DIRS_ZEROMQ}
+)
+target_link_libraries(vuo.core.runtime.libraries PUBLIC
 	"-framework AppKit"
 	"-framework IOKit"
 )

@@ -57,6 +57,7 @@ VuoCompileTypes(
 	VuoWindowProperty.c
 	VuoWindowReference.m
 	VuoWrapMode.c
+	compound/VuoList.cc
 )
 target_sources(vuo.core.types PRIVATE
 	VuoAnchor.h
@@ -117,13 +118,15 @@ target_sources(vuo.core.types PRIVATE
 	VuoWindowReference.h
 	VuoWrapMode.h
 	type.h
+	compound/VuoList.h
 )
 target_include_directories(vuo.core.types
 	PRIVATE
-	../node/vuo.data
-	../node/vuo.image
-	../node/vuo.time
-	../node/vuo.ui
+	${PROJECT_SOURCE_DIR}/node/vuo.data
+	${PROJECT_SOURCE_DIR}/node/vuo.image
+	${PROJECT_SOURCE_DIR}/node/vuo.time
+	${PROJECT_SOURCE_DIR}/node/vuo.ui
+	${PROJECT_SOURCE_DIR}/library  # for csgjs.cc
 )
 target_link_libraries(vuo.core.types
 	PUBLIC
@@ -140,7 +143,54 @@ target_link_libraries(vuo.core.types
 	${PROJECT_BINARY_DIR}/library/csgjs.o
 	vuo.noise.libraries
 	vuo.time.types
+	vuo.time.types.compound
+)
+
+VuoCompileCompoundTypes(
+	# List types needed by targets compiled with Clang rather than the Vuo compiler
+	VuoList_VuoAnchor.cc
+	VuoList_VuoBoolean.cc
+	VuoList_VuoColor.cc
+	VuoList_VuoHorizontalAlignment.cc
+	VuoList_VuoImage.cc
+	VuoList_VuoImageColorDepth.cc
+	VuoList_VuoImageWrapMode.cc
+	VuoList_VuoInteger.cc
+	VuoList_VuoPoint2d.cc
+	VuoList_VuoPoint3d.cc
+	VuoList_VuoPoint4d.cc
+	VuoList_VuoScreen.cc
+	VuoList_VuoReal.cc
+	VuoList_VuoText.cc
+	VuoList_VuoTextCase.cc
+	VuoList_VuoVerticalAlignment.cc
+
+	# Additional list types referenced by *_allowedValues() or other functions in vuo.core.types
+	VuoList_VuoBlendMode.cc
+	VuoList_VuoCoordinateUnit.cc
+	VuoList_VuoCursor.cc
+	VuoList_VuoCurve.cc
+	VuoList_VuoCurveEasing.cc
+	VuoList_VuoDiode.cc
+	VuoList_VuoInteraction.cc
+	VuoList_VuoInteractionType.cc
+	VuoList_VuoListPosition.cc
+	VuoList_VuoLoopType.cc
+	VuoList_VuoModifierKey.cc
+	VuoList_VuoOrientation.cc
+	VuoList_VuoSceneObject.cc
+	VuoList_VuoSortOrder.cc
+	VuoList_VuoTextSort.cc
+	VuoList_VuoTree.cc
+	VuoList_VuoWave.cc
+	VuoList_VuoWindowProperty.cc
+	VuoList_VuoWrapMode.cc
+
+	# Additional list types referenced by types, node classes, or libraries
+	VuoList_VuoAudioSamples.cc
+	VuoList_VuoTransform.cc
+	VuoList_VuoTransform2d.cc
+	VuoList_VuoUrl.cc
 )
 
 add_subdirectory(inputEditor)
-add_subdirectory(list)

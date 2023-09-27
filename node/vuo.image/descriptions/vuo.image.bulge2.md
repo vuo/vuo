@@ -7,3 +7,5 @@ Distorts the image by making parts of it appear to move outward or inward.
 ![](mountains.png)
 
 ![](bulge.png)
+
+Thanks to [Mario Epsley](https://community.vuo.org/u/marioepsley) for funding development of this node!

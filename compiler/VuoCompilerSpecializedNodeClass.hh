@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerSpecializedNodeClass interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -42,18 +42,16 @@ class VuoNodeSet;
 class VuoCompilerSpecializedNodeClass : public VuoCompilerNodeClass
 {
 private:
-	VuoCompilerNodeClass *genericNodeClass;
+	string genericNodeClassName;  ///< The name of the generic node class that this node class specializes.
+	VuoCompilerNodeClass *genericNodeClass;  ///< The node class with name `genericNodeClassName`, or null if it hasn't yet been filled in by `updateGenericNodeClass()`.
 	VuoCompilerNodeClass *backingNodeClass;
 
+	void parseSpecializedModuleDetails(void);
 	string createDefaultSpecializedNodeClassName(void);
 	string createFullySpecializedNodeClassName(VuoNode *nodeToBack);
-	static void replaceGenericTypesWithSpecialized(string &nodeClassSource, map<string, string> specializedForGenericTypeName);
 	static vector<string> getGenericTypeNamesFromPorts(VuoCompilerNodeClass *nodeClass);
 	static map<string, string> getBackingTypeNamesFromPorts(VuoNode *node);
-	static string extractGenericNodeClassName(string specializedNodeClassName, size_t genericTypeCount);
-	static string createSpecializedNodeClassName(string genericNodeClassName, vector<string> specializedTypeNames);
 
-	void initialize(void);
 	string getClassIdentifier(void);
 	Function * getEventFunction(void);
 	Function * getInitFunction(void);
@@ -84,6 +82,7 @@ protected:
 	friend class TestVuoCompilerNodeClass;
 
 public:
+	bool updateGenericNodeClass(std::function<VuoCompilerNodeClass *(const string &)> lookUpNodeClass);
 	void updateBackingNodeClass(VuoNode *nodeToBack, VuoCompiler *compiler);
 	virtual VuoCompilerNode * createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler);
 	bool isFullySpecialized(void);
@@ -94,11 +93,14 @@ public:
 	virtual VuoNodeSet * getOriginalGenericNodeSet(void);
 	virtual string createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize);
 	virtual string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
+	static string parseGenericNodeClassName(string specializedNodeClassName, size_t genericTypeCount);
+	static string createSpecializedNodeClassName(string genericNodeClassName, vector<string> specializedTypeNames);
 	set<string> getDependencies(void);
 	string getDependencyName(void);
 
 	static VuoNodeClass * newNodeClass(const string &nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue);
+	static VuoNodeClass * newNodeClass(const string &nodeClassName, Module *module);
+	static json_object * buildSpecializedModuleDetails(const map<string, string> &specializedForGenericTypeName, const string &genericNodeClassName = "");
 	static VuoCompilerNodeClass * getNodeClassForNode(VuoCompilerNodeClass *origNodeClass, VuoCompiler *compiler);
 	static bool isSpecializationOfNodeClass(const string &potentialSpecializedNodeClassName, VuoCompilerNodeClass *potentialGenericNodeClass);
-	static void replaceGenericTypesWithBacking(string &nodeClassSource);
 };

@@ -2,12 +2,11 @@
  * @file
  * vuo.scene.make.random.points node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include <OpenGL/CGLMacro.h>	// GL_NONE
 #include "VuoDistribution3d.h"
 
@@ -16,7 +15,7 @@ VuoModuleMetadata({
 	"keywords": [
 		"3D", "stars", "starfield", "shape",
 	],
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"genericTypes": {
 		"VuoGenericType1": {
 			"compatibleTypes": [ "VuoShader", "VuoColor", "VuoImage" ],
@@ -54,7 +53,8 @@ void nodeInstanceEvent
 )
 {
 	// If the structure hasn't changed, just reuse the existing GPU mesh data.
-	if (distribution == (*context)->distribution
+	if (*object
+	 && distribution == (*context)->distribution
 	 && count == (*context)->count
 	 && seed == (*context)->seed)
 	{

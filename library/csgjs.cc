@@ -1,5 +1,3 @@
-#include "module.h"
-
 #if defined(VUO_COMPILER) && !defined(CSGJS_HEADER_ONLY)
 VuoModuleMetadata({
 	"title" : "CSGJS",

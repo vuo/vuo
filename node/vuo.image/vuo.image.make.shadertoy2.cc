@@ -2,12 +2,11 @@
  * @file
  * vuo.shader.make.shadertoy2 node implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include "VuoImageRenderer.h"
 extern "C" {
 #include "VuoTime.h"
@@ -32,7 +31,7 @@ VuoModuleMetadata({
 	}
 });
 
-static VuoShader makeShader(string fragmentBody)
+static VuoShader makeShader(VuoText fragmentBodyText)
 {
 	VuoShader s = VuoShader_make("Shadertoy Fragment Shader");
 	VuoRetain(s);
@@ -42,65 +41,75 @@ static VuoShader makeShader(string fragmentBody)
 	// so assume that it can.
 	s->isTransparent = true;
 
-	// Remove shader-wide precision specifiers.
-	{
-		regex_t re;
-		if (regcomp(&re, "(precision +)?(lowp|mediump|highp) +(float|int|sampler2D) *;", REG_EXTENDED))
+	__block bool status = true;
+	__block string fragmentBody(fragmentBodyText);
+	VuoText_performWithUTF8Locale(^(locale_t locale){
+		// Remove shader-wide precision specifiers.
 		{
-			VUserLog("Error: Couldn't compile regex.");
-			return nullptr;
+			regex_t re;
+			if (regcomp_l(&re, "(precision +)?(lowp|mediump|highp) +(float|int|sampler2D) *;", REG_EXTENDED, locale))
+			{
+				VUserLog("Error: Couldn't compile regex.");
+				status = false;
+				return;
+			}
+			const size_t nmatch = 1;
+			regmatch_t pmatch[nmatch];
+			while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
+				fragmentBody.replace(pmatch[0].rm_so, pmatch[0].rm_eo - pmatch[0].rm_so, "");
 		}
-		const size_t nmatch = 1;
-		regmatch_t pmatch[nmatch];
-		while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
-			fragmentBody.replace(pmatch[0].rm_so, pmatch[0].rm_eo - pmatch[0].rm_so, "");
-	}
 
-	// Rewrite local precision specifiers to just the underlying type.
-	{
-		regex_t re;
-		if (regcomp(&re, "(lowp|mediump|highp) +(float|int|sampler2D|vec[234])", REG_EXTENDED))
+		// Rewrite local precision specifiers to just the underlying type.
 		{
-			VUserLog("Error: Couldn't compile regex.");
-			return nullptr;
+			regex_t re;
+			if (regcomp_l(&re, "(lowp|mediump|highp) +(float|int|sampler2D|vec[234])", REG_EXTENDED, locale))
+			{
+				VUserLog("Error: Couldn't compile regex.");
+				status = false;
+				return;
+			}
+			const size_t nmatch = 3;
+			regmatch_t pmatch[nmatch];
+			while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
+				fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "");
 		}
-		const size_t nmatch = 3;
-		regmatch_t pmatch[nmatch];
-		while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
-			fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "");
-	}
 
-	// Rewrite uint as int.
-	{
-		regex_t re;
-		if (regcomp(&re, "[^a-z](u)int[^a-z]", REG_EXTENDED))
+		// Rewrite uint as int.
 		{
-			VUserLog("Error: Couldn't compile regex.");
-			return nullptr;
+			regex_t re;
+			if (regcomp_l(&re, "[^a-z](u)int[^a-z]", REG_EXTENDED, locale))
+			{
+				VUserLog("Error: Couldn't compile regex.");
+				status = false;
+				return;
+			}
+			const size_t nmatch = 2;
+			regmatch_t pmatch[nmatch];
+			while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
+				fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "");
 		}
-		const size_t nmatch = 2;
-		regmatch_t pmatch[nmatch];
-		while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
-			fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "");
-	}
 
-	// Shadertoy's `main()` sets fragColor.a before passing it to `out vec4 fragColor`,
-	// but some GPUs ignore the value passed in to an `out`-only argument.
-	// Vuo translates it to `inout`.
-	// Many popular Shadertoy shaders rely on this behavior,
-	// such as https://www.shadertoy.com/view/4tVBDz
-	{
-		regex_t re;
-		if (regcomp(&re, "void[[:space:]]+mainImage[[:space:]]*\\([[:space:]]*(out)[[:space:]]+vec4[[:space:]]+", REG_EXTENDED))
+		// Shadertoy's `main()` sets fragColor.a before passing it to `out vec4 fragColor`,
+		// but some GPUs ignore the value passed in to an `out`-only argument.
+		// Vuo translates it to `inout`.
+		// Many popular Shadertoy shaders rely on this behavior,
+		// such as https://www.shadertoy.com/view/4tVBDz
 		{
-			VUserLog("Error: Couldn't compile regex.");
-			return nullptr;
+			regex_t re;
+			if (regcomp_l(&re, "void[[:space:]]+mainImage[[:space:]]*\\([[:space:]]*(out)[[:space:]]+vec4[[:space:]]+", REG_EXTENDED, locale))
+			{
+				VUserLog("Error: Couldn't compile regex.");
+				status = false;
+				return;
+			}
+			const size_t nmatch = 2;
+			regmatch_t pmatch[nmatch];
+			while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
+				fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "inout");
 		}
-		const size_t nmatch = 2;
-		regmatch_t pmatch[nmatch];
-		while (regexec(&re, fragmentBody.c_str(), nmatch, pmatch, 0) == 0)
-			fragmentBody.replace(pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so, "inout");
-	}
+	});
+	if (!status)
+		return nullptr;
 
 	string fragmentSource =
 		string("#include \"shadertoy-prefix.glsl\"\n")

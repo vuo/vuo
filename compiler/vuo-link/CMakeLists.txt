@@ -11,5 +11,6 @@ set_target_properties(vuo-link PROPERTIES
 target_link_libraries(vuo-link
 	VuoFrameworkDylib
 )
+add_custom_command(TARGET vuo-link POST_BUILD COMMAND ${codesignAdHoc} ${PROJECT_BINARY_DIR}/bin/vuo-link)
 VuoAddInfoPListSection(vuo-link vuo-link-Info.plist)
 VuoPCH(vuo-link QTestVuoFramework)

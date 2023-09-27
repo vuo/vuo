@@ -1,50 +1,68 @@
 @addtogroup DevelopingNodeClasses
 
-A node class is like a function or method. It takes some input, processes it, and produces some output. 
+Vuo comes with many built-in node classes, listed in the Node Library. If you want to create your own node class, there are several ways to do it:
 
-When you write a node class using Vuo's API, the node class consists of: 
+   - Create a [subcomposition](https://doc.vuo.org/@vuoVersion/manual/using-subcompositions-inside-of-other-compositions.xhtml).
+   - Write an [ISF graphics shader](https://doc.vuo.org/@vuoVersion/manual/turning-graphics-shaders-into-nodes.xhtml).
+   - Write a node class in C/C++/Objective-C — the subject of this documentation.
 
-   - A macro call that defines metadata about the node class, such as its title and description. 
-   - One or more function definitions, which define how the node class processes its inputs to produce its outputs. 
+## Getting started
 
-Vuo currently provides an API for the C programming language. (Node classes can also reference code in C++, Objective-C, and any other language that exports C symbols; see @ref DevelopingLibraryModules and @ref ManagingDependencies.) Support for other programming languages is planned. 
+### Option 1: Source file in Modules folder
 
+The quickest way to get started is to grab the source code file from one of the example projects provided in the Vuo SDK:
 
+   1. [Install the Vuo SDK](https://doc.vuo.org/@vuoVersion/manual/the-command-line-tools.xhtml#installing-the-vuo-sdk).
+   2. In Vuo, go to Tools > Open User Library in Finder.
+   3. Copy `/Library/Developer/Vuo/example/node/stateless/example.stateless.vuoize.c` to the Modules folder you just opened.
+   4. Rename the copied file to `me.test.first.c`.
+   5. Open the file in a text editor or IDE.
+   6. In the @ref VuoModuleMetadata call, change "Vuoize Text" to "My Node Class" and save the file.
 
-## Quick start
+Your node class should now be listed in Vuo's Node Library, and you should be able to use it in compositions. (If not, check Tools > Show Console for errors.)
 
-The easiest way to start developing a node class is with one of the example projects for a node class, which are provided with the Vuo SDK.
+### Option 2: Qt Creator project
 
-   1. Install [Qt and Qt Creator](https://www.qt.io/offline-installers).
-   2. Make a copy of the example project for a stateless node class (`example/node/stateless`).
-   3. Open the project in Qt Creator. 
-   4. In `CMakeLists.txt`, change `example.stateless.vuoize.c` to your node class file name.
-   5. In the example project folder, rename `example.stateless.vuoize.c` to your node class file name. 
-   6. In `example.stateless.vuoize.c`, in the @ref VuoModuleMetadata call, change "Vuoize Text" to the title that you want to appear on the node. 
-   7. Build your project (Build > Build All).
-   8. Start the Vuo editor (or restart it if it's already running).
+If you chose Option 1, you might be wondering what the rest of the files in the example project are for. To use them, you have to do a little more setup initially, but it pays off as you develop the node class because you get better IDE support and error reporting.
 
-Your node class should now be listed in your Node Library. You can now add it to a composition and see it perform the task defined 
-in its nodeEvent() function. 
+   1. [Install the Vuo SDK](https://doc.vuo.org/@vuoVersion/manual/the-command-line-tools.xhtml#installing-the-vuo-sdk).
+   2. Install [Qt and Qt Creator](https://www.qt.io/offline-installers).
+   3. Copy `/Library/Developer/Vuo/example/node/stateless` to your Desktop.
+   4. Open the copied project in Qt Creator.
+   5. Rename `example.stateless.vuoize.c` to `me.test.first.c`.
+   6. In `CMakeLists.txt`, change `example.stateless.vuoize.c` to `me.test.first.c`.
+   7. In `me.test.first.c`, in the @ref VuoModuleMetadata call, change "Vuoize Text" to "My Node Class".
+   8. Build your project (Build > Build All).
 
-The next step is to modify the nodeEvent() function so that your node actually does something interesting. To learn how, read on. 
+### Option 3: CMake project
 
+Or if you like the benefits of Option 2 but you'd prefer to use the command line and your own IDE or text editor instead of Qt Creator:
 
+   1. [Install the Vuo SDK](https://doc.vuo.org/@vuoVersion/manual/the-command-line-tools.xhtml#installing-the-vuo-sdk).
+   2. Copy `/Library/Developer/Vuo/example/node/stateless` to your Desktop.
+   3. Rename `example.stateless.vuoize.c` to `me.test.first.c`.
+   4. In `CMakeLists.txt`, change `example.stateless.vuoize.c` to `me.test.first.c`.
+   5. In `me.test.first.c`, in the @ref VuoModuleMetadata call, change "Vuoize Text" to "My Node Class".
+   6. In Terminal:
+      - `cd ~/Desktop/stateless`
+      - `mkdir build`
+      - `cd build`
+      - `cmake ..`
+      - `make`
 
 ## Writing a node class
 
 To implement a node class, you need to: 
 
    - Create the node class source file. 
-   - Add <code>\#include "node.h"</code>. 
-   - Call @ref VuoModuleMetadata to define the node class's metadata. 
-   - Implement Vuo API functions to define the node class's behavior. 
-
+   - Call @ref VuoModuleMetadata to define the node class's metadata.
+   - Implement Vuo API functions to define the node class's behavior.
 
 ### The file name
 
-When you implement a node class, the first thing you have to decide is the class name. Every node class has two names: a class name (like @vuoNodeClass{vuo.math.add}) and a title (like @vuoNode{Add}). In the Vuo editor, you can see the difference between titles and class names by switching between the "Titles" view and the "Class names" view of the Node Library. After a node has been added to a composition, its title can be changed, but its class name always stays the same. When you create a node class, the file name is the node class name. For example, the node class with name @vuoNodeClass{vuo.math.add} is implemented in a file called `vuo.math.add.c`.
+Every node class has two names: [the title and the node class name](https://doc.vuo.org/@vuoVersion/manual/nodes-are-your-building-blocks.xhtml). For example, the node with title @vuoNode{Add} has class name @vuoNodeClass{vuo.math.add}. When you create a node class, the file name is the node class name plus a file extension. For example, @vuoNodeClass{vuo.math.add} node class is implemented in a file called `vuo.math.add.c`.
 
+You should choose a file extension corresponding to the programming language in which the node class is implemented — `.c` for C, `.cc` for C++, `.m` for Objective-C, `.mm` for Objective-C++.
 
 ### The metadata
 
@@ -76,13 +94,13 @@ When deciding which keywords to put in the module metadata, be aware that some a
 
 Multi-word phrases are permitted as keywords, but for purposes of Node Library searches will be treated as if each word were a distinct keyword.
 
-
 ### The functions
 
 When you implement a node class, you have to implement certain functions that define what happens when a node receives an event. You implement different functions depending on whether the node class is stateless or stateful. 
 
 A stateless node class (like @vuoNode{Add}) is simpler. It just has input ports and output ports; given the same input, a stateless node always produces the same output. A stateful node class (like @vuoNode{Count}) additionally keeps track of its state. It can remember its progress, and it can fire events when something happens in the background. 
 
+If using C++, you'll need to enclose the @ref VuoModuleMetadata call and Vuo API functions in `extern "C" { … }` so that the Vuo compiler can recognize them.
 
 #### A stateless node class
 
@@ -101,14 +119,13 @@ void nodeEvent
 }
 @endcode
 
-The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. (The refresh port is added to each node automatically.) Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{value} or @vuoPort{notValue}) is turned into the port name that appears on the node ("Value" or "Not Value").
+The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{value} or @vuoPort{notValue}) is turned into the port name that appears on the node ("Value" or "Not Value").
 
-The first argument of @ref VuoInputData or @ref VuoOutputData is the port type. Vuo comes with many built-in port types (see @ref VuoTypes), and you can also define your own (see @ref DevelopingTypes). 
+The first argument of @ref VuoInputData or @ref VuoOutputData is the data type. Vuo comes with many built-in types (see @ref VuoTypes), and you can also define your own (see @ref DevelopingTypes).
 
 The second argument of @ref VuoInputData defines details about the input port in JSON format. In this case, it specifies the default value for the input port when a node is first added to a composition. 
 
 The body of @ref nodeEvent defines what happens when a node receives an event. In this case, it negates the input port value and sets the output port value. Notice that @c notValue is a *pointer* to the @ref VuoOutputData type (@ref VuoBoolean). 
-
 
 #### A stateful node class
 
@@ -153,7 +170,7 @@ void nodeInstanceEvent
 
 The @ref nodeInstanceInit function sets up the instance data. For this example, the only setup required is to initialize the instance data to the current value of the @vuoPort{setCount} port. The @ref nodeInstanceInit function returns the initial value of the instance data, which Vuo stores and later passes to other functions of the node class. If there are multiple @vuoNode{Count} nodes in a composition, Vuo stores a separate instance data for each one.
 
-The first time an event hits the node, the @ref nodeInstanceEvent function is called, and the instance data that was created by @ref nodeInstanceInit is passed in through the `countState` argument. As you may have guessed, this means that the return type of @ref nodeInstanceInit must match the data type in the @ref VuoInstanceData macro. (Here that data type happens to be a Vuo port type, @ref VuoInteger, but other C data types are also allowed.) The name of the parameter (`countState`) isn't important; you can choose any name you like.
+The first time an event hits the node, the @ref nodeInstanceEvent function is called, and the instance data that was created by @ref nodeInstanceInit is passed in through the `countState` argument. As you may have guessed, this means that the return type of @ref nodeInstanceInit must match the data type in the @ref VuoInstanceData macro. (Here that data type happens to be a Vuo type, @ref VuoInteger, but other C data types are also allowed.) The name of the parameter (`countState`) isn't important; you can choose any name you like.
 
 If the event has hit the @vuoPort{increment} or @vuoPort{decrement} input port, the code in the @ref nodeInstanceEvent function modifies both the @vuoPort{count} output port's value and the instance data's value. As mentioned in the previous section, the @ref VuoOutputData parameter `count` is actually a *pointer* to a @ref VuoInteger. Similarly, the @ref VuoInstanceData parameter `countState` is a *pointer* to a @ref VuoInteger.
 
@@ -162,7 +179,6 @@ The next time an event hits the node, the @ref nodeInstanceEvent function is cal
 This node class doesn't have a @ref nodeInstanceFini function because there's no need for it. The instance data allocated by @ref nodeInstanceInit is a simple data type that Vuo knows how to deallocate, and does so automatically. If the instance data were more complex, then a @ref nodeInstanceFini function might be needed to deallocate it; see @ref ManagingMemory. If the node class opened a file or device handle, started a timer, etc., then @ref nodeInstanceFini would need to close, stop, or otherwise clean up the resources used.
 
 The simplified @vuoNode{Count} example introduces one other new element, which can appear in either stateless or stateful nodes: the @ref VuoInputEvent macro. A function parameter with @ref VuoInputEvent can represent either an event-only port or the event part of a data-and-event port. In this case, it's the latter. We can see this because of the "data" key in the JSON-formatted argument of @ref VuoInputEvent. The value for that key is the name of the corresponding @ref VuoInputData parameter for a data-and-event port. The `incrementEvent` and `decrementEvent` arguments are booleans that are true if the node has just received an event through that input port, and false otherwise.
-
 
 #### Nodes should treat port data as immutable {#DevelopingNodeClassesImmutable}
 
@@ -200,17 +216,15 @@ Also, if a stateful node function sends heap data via an output port, it _should
 
 See @ref ManagingMemory for more information.
 
-
 #### Additional functions and variables
 
-In addition to the Vuo API functions, your node class can define additional functions. Be sure to add a unique prefix to these function names to avoid naming conflicts with other node classes. Although the Vuo compiler renames the @ref nodeEvent function and other API functions to avoid naming conflicts, it doesn't rename your custom functions. 
+In addition to the Vuo API functions, your node class can define additional functions. Be sure to make these functions `static` to avoid naming conflicts with other node classes. Although the Vuo compiler renames the @ref nodeEvent function and other API functions to avoid naming conflicts, it doesn't rename your custom functions.
 
 If you want to share functions between multiple node classes, or use C++ or Objective-C functions in a node class, see @ref DevelopingLibraryModules. 
 
 A node class *should not* define any global variables. 
 
-
-#### Generic port types
+#### Generic data types
 
 If a node class can work with multiple different types of data, then rather than implementing a version of the node class for each data type, you can use @term{generic types} as placeholders for the actual data types. When a node with generic types is added to a composition, each of its generic types has the potential to be specialized (replaced) with an actual data type. Some examples of node classes that use generic types are @vuoNode{Hold Value}, @vuoNode{Select Latest}, and @vuoNode{Add}. 
 
@@ -218,12 +232,11 @@ To use a generic type in a node class, use @c VuoGenericType1 in place of the da
 
 To use more than one generic type in a node class, you can use @c VuoGenericType2, @c VuoGenericType3, and so on. 
 
-To specify the default value for a generic input port, you can use the "defaults" key (as opposed to the the singular "default" key for non-generic input ports) in the JSON-formatted port details. For example, a port that can be specialized to either a @ref VuoReal defaulting to 1 or a @ref VuoPoint2d defaulting to (1,1) would be declared with this parameter: `VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":0.0, "VuoPoint2d":{"x":1,"y":1}}}) portName`. 
+To specify the default value for a generic input port, you can use the "defaults" key (as opposed to the the singular "default" key for non-generic input ports) in the JSON-formatted port details. For example, a port that can be specialized to either a @ref VuoReal defaulting to 1 or a @ref VuoPoint2d defaulting to (1,1) would be declared with this parameter: `VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":1, "VuoPoint2d":{"x":1,"y":1}}}) portName`.
 
 For a node class to use generic types, it must be part of a node set. The source code for the node class and its included header files must be packaged into the node set. See @ref PackagingNodeSets. 
 
-For more information about using generic port types in a node class — including how to restrict the types that a generic type can be specialized with — see @ref VuoModuleMetadata. 
-
+For more information about using generic types in a node class — including how to restrict the types that a generic type can be specialized with — see @ref VuoModuleMetadata.
 
 ### Advanced topics
 
@@ -233,42 +246,23 @@ For more information about the node class functions, see @ref VuoNodeMethodsStat
 
 Also see the source code for Vuo's built-in node classes, which can serve as examples to help you write your own node classes. 
 
+## Compiling and installing a node class
 
+The quickest way to compile and install a node class is to place its source file in one of Vuo's [Modules folders](https://doc.vuo.org/@vuoVersion/manual/installing-a-node.xhtml). Vuo automatically compiles the source file and adds the node class to the Node Library. Any errors or warnings are reported in Vuo's console.
 
-## Compiling a node class
-
-Before you can install your node class, you need to use the Vuo Compiler to compile it to a `.vuonode` file. 
-
-If you're using the example project for creating a node class, then you can just build the project (Build > Build All).
-
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](https://doc.vuo.org/latest/manual/the-command-line-tools.xhtml), run `vuo-compile --help`, or look at the `vuo-compile` command in the example project.
-
-
-
-## Installing a node class
-
-The final step is to place your compiled node class in the correct folder, so that it will show up in the Vuo editor's Node Library and be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](https://doc.vuo.org/latest/manual/installing-a-node.xhtml).
-
-If you're using the example project for creating a node class, then when you build the project, the compiled node class is automatically placed  in `~/Library/Application Support/Vuo/Modules/`.
-
-Otherwise, you need to manually move the compiled node class (`.vuonode`) file to one of these folders. 
-
-After that, the next time you start the Vuo editor, the node class should show up in the Vuo editor's Node Library. You can also see a list of all installed node classes by running `vuo-compile --list-node-classes`.
-
-
+You may prefer to compile the node class as a separate step, so that you can easily spot errors or warnings in your IDE or Terminal. You can start with one of the example projects for node classes provided in the Vuo SDK; see the Getting Started section above. When you build any of those projects, it will use the `vuo-compile` command-line tool to compile the node class, then copy the resulting `.vuonode` file to the User Modules folder. (Run `vuo-compile --help` to see a list of options.)
 
 ## Troubleshooting
 
-If you're having trouble compiling or installing a node class, try running `vuo-compile --verbose`. This lists the paths that Vuo is using to compile a node class and find installed node classes. 
+If you're having trouble compiling or installing a node class, try running `vuo-compile` with the `--verbose` flag. This lists the paths that Vuo is using to compile a node class and find installed node classes.
 
 If your node class is not showing up in the Vuo editor's Node Library:
 
    - Try restarting the Vuo editor.
-   - Try changing the Node Library to "Class names" view and searching for your node class file name. 
-   - Make sure the compiled node class (`.vuonode`) file is in `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. 
-   - Make sure there are no warnings when you compile the node class. 
-   - Make sure the node class has @ref VuoModuleMetadata. 
-
+   - Try changing the Node Library to the "Display by class" view and searching for your node class name.
+   - Make sure the node class is installed in a [Modules folder](https://doc.vuo.org/@vuoVersion/manual/installing-a-node.xhtml) where Vuo can find it. If it's in a composition-local Modules folder, try moving it to System or User Modules.
+   - Make sure there are no errors or warnings when you compile the node class.
+   - Make sure the node class has VuoModuleMetadata.
 
 ## Naming node classes and ports
 
@@ -317,7 +311,6 @@ In addition to these general rules, there are some special kinds of node classes
    - A "Find" node reduces its first input port (a list) by removing some of its items based on parameters specified by other ports.
       - Its node class name should have the form @vuoNodeClass{[creator].[node set].find.[optional thing found].[parameter]} (example: @vuoNodeClass{vuo.leap.find.hand.confidence}, @vuoNodeClass{vuo.syphon.find.server.app}). 
       - Its title should have the form @vuoNodeClass{Find [thing found] by [parameter]} (example: @vuoNodeClass{Find Hands by Confidence}, @vuoNodeClass{Find Servers by App}). 
-
 
 ## Type-converter nodes
 

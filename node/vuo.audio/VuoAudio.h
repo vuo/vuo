@@ -2,12 +2,12 @@
  * @file
  * VuoAudio interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
+#include "node_header.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -36,7 +36,9 @@ bool VuoAudioOutputDevice_realize(VuoAudioOutputDevice device, VuoAudioOutputDev
  */
 typedef void * VuoAudioOut;
 
-VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod);
+VuoAudioOut VuoAudioOut_useShared(VuoAudioOutputDevice aod);
+void VuoAudioOut_disuseShared(VuoAudioOut ao);
+
 void VuoAudioOut_sendChannels(VuoAudioOut ao, VuoList_VuoAudioSamples channels, void *id);
 void VuoAudioOut_addTrigger
 (
@@ -55,7 +57,9 @@ void VuoAudioOut_removeTrigger
  */
 typedef void *VuoAudioIn;
 
-VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid);
+VuoAudioIn VuoAudioIn_useShared(VuoAudioInputDevice aid);
+void VuoAudioIn_disuseShared(VuoAudioIn ai);
+
 void VuoAudioIn_addTrigger
 (
 		VuoAudioIn ai,

@@ -2,17 +2,16 @@
  * @file
  * VuoMultisample C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoMultisample;
-#define VuoList_VuoMultisample_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -33,12 +32,14 @@ typedef enum
 	VuoMultisample_8 = 8,
 } VuoMultisample;
 
+#define VuoMultisample_SUPPORTS_COMPARISON
+#include "VuoList_VuoMultisample.h"
+
 VuoMultisample VuoMultisample_makeFromJson(struct json_object *js);
 struct json_object *VuoMultisample_getJson(const VuoMultisample value);
 VuoList_VuoMultisample VuoMultisample_getAllowedValues(void);
 char *VuoMultisample_getSummary(const VuoMultisample value);
 
-#define VuoMultisample_SUPPORTS_COMPARISON
 bool VuoMultisample_areEqual(const VuoMultisample valueA, const VuoMultisample valueB);
 bool VuoMultisample_isLessThan(const VuoMultisample valueA, const VuoMultisample valueB);
 
@@ -55,3 +56,6 @@ void VuoMultisample_release(VuoMultisample value);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif

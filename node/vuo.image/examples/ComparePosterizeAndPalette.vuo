@@ -1,0 +1,48 @@
+/**
+ * @file
+ * @brief Compare Posterize and Palette
+ * Shows how the `Posterize Image` node's predefined, static palette compares to the `Make Palette from Image` node's custom palette.
+ *
+ * Image by Ashim D’Silva on [Unsplash](https://unsplash.com/photos/WeYamle9fDM).
+ *
+ * @lastSavedInVuoVersion 2.4.2
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+FetchImage [type="vuo.image.fetch" version="2.1.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="180,-195" _url="\"Canyon.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,-225" fillcolor="lime" _started_eventThrottling="enqueue"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="675,-195" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.25\}" _rotation="0.0" _width="0.59999999999999998" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="675,165" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.32499998807907104,\"y\":-0.25\}" _rotation="0.0" _width="0.59999999999999998" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer3 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="675,525" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.32499998807907104,\"y\":-0.25\}" _rotation="0.0" _width="0.59999999999999998" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList2 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="951,146"];
+MakePaletteFromImage [type="vuo.color.palette.make.image" version="1.0.0" label="Make Palette from Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<palette>palette\r" pos="165,540" fillcolor="orange" _colors="27"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="690,-45" _text="\"Original\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.55000001192092896\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="690,315" _text="\"Posterized\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.32499998807907104,\"y\":-0.55000001192092896\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="690,675" _text="\"Palettized\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.32499998807907104,\"y\":-0.55000001192092896\}" _wrapWidth="Infinity" _opacity="1.0"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.0.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="405,525" fillcolor="orange" _dithering="20" _ditheringIntensity="0.0"];
+PosterizeImage [type="vuo.image.posterize" version="1.0.1" label="Posterize Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<posterizedImage>posterizedImage\r" pos="420,165" fillcolor="orange" _colors="3"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1005,135" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+FetchImage:image -> MakeImageLayer:image;
+FetchImage:image -> MakePaletteFromImage:image;
+FetchImage:image -> MapImageToPalette:image;
+FetchImage:image -> PosterizeImage:image;
+FireOnStart:started -> FetchImage:url;
+MakeImageLayer2:layer -> MakeList2:3;
+MakeImageLayer3:layer -> MakeList2:5;
+MakeImageLayer:layer -> MakeList2:1;
+MakeImageLayer:layer -> MakeTextLayer:text [event=true];
+MakeList2:list -> RenderLayersToWindow:layers;
+MakePaletteFromImage:palette -> MapImageToPalette:palette;
+MakeTextLayer2:layer -> MakeList2:4;
+MakeTextLayer3:layer -> MakeList2:6;
+MakeTextLayer:layer -> MakeList2:2;
+MapImageToPalette:quantizedImage -> MakeImageLayer3:image;
+MapImageToPalette:quantizedImage -> MakeTextLayer3:text [event=true];
+PosterizeImage:posterizedImage -> MakeImageLayer2:image;
+PosterizeImage:posterizedImage -> MakeTextLayer2:text [event=true];
+}

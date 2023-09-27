@@ -2,7 +2,7 @@
  * @file
  * VuoMidiPitchBend C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,10 @@
  * @{
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "VuoInteger.h"
 
 /**
@@ -28,11 +32,12 @@ typedef struct
 	unsigned short value;	///< Permitted values: 0 through 16383; center=8192
 } VuoMidiPitchBend;
 
+#define VuoMidiPitchBend_SUPPORTS_COMPARISON
+
 VuoMidiPitchBend VuoMidiPitchBend_makeFromJson(struct json_object *js);
 struct json_object *VuoMidiPitchBend_getJson(const VuoMidiPitchBend value);
 char *VuoMidiPitchBend_getSummary(const VuoMidiPitchBend value);
 
-#define VuoMidiPitchBend_SUPPORTS_COMPARISON
 bool VuoMidiPitchBend_areEqual(const VuoMidiPitchBend valueA, const VuoMidiPitchBend valueB);
 bool VuoMidiPitchBend_isLessThan(const VuoMidiPitchBend valueA, const VuoMidiPitchBend valueB);
 
@@ -50,3 +55,7 @@ void VuoMidiPitchBend_release(VuoMidiPitchBend value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

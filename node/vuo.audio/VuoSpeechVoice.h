@@ -2,17 +2,18 @@
  * @file
  * VuoSpeechVoice C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #pragma once
 
-/// @{ List type.
-typedef void * VuoList_VuoSpeechVoice;
-#define VuoList_VuoSpeechVoice_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "VuoText.h"
 
 /**
  * @ingroup VuoTypes
@@ -27,12 +28,14 @@ typedef void * VuoList_VuoSpeechVoice;
  */
 typedef VuoText VuoSpeechVoice;
 
+#define VuoSpeechVoice_SUPPORTS_COMPARISON
+#include "VuoList_VuoSpeechVoice.h"
+
 VuoSpeechVoice VuoSpeechVoice_makeFromJson(struct json_object *js);
 struct json_object *VuoSpeechVoice_getJson(const VuoSpeechVoice value);
 VuoList_VuoSpeechVoice VuoSpeechVoice_getAllowedValues(void);
 char *VuoSpeechVoice_getSummary(const VuoSpeechVoice value);
 
-#define VuoSpeechVoice_SUPPORTS_COMPARISON
 bool VuoSpeechVoice_areEqual(const VuoSpeechVoice valueA, const VuoSpeechVoice valueB);
 bool VuoSpeechVoice_isLessThan(const VuoSpeechVoice valueA, const VuoSpeechVoice valueB);
 
@@ -48,3 +51,7 @@ void VuoSpeechVoice_release(VuoSpeechVoice value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif

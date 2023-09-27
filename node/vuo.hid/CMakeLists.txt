@@ -28,6 +28,11 @@ target_link_libraries(vuo.hid.types
 	vuo.hid.libraries
 )
 
+VuoCompileCompoundTypes(
+	VuoList_VuoHidControl.cc
+	VuoList_VuoHidDevice.cc
+)
+
 VuoCompileNodes(
 	vuo.hid.filter.control.c
 	vuo.hid.filter.control2.c

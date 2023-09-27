@@ -2,7 +2,7 @@
  * @file
  * VuoUrlFetch implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -11,7 +11,8 @@
 #include <sys/errno.h>
 #include <unistd.h>
 
-#include "module.h"
+#include "VuoText.h"
+#include "VuoUrl.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 

@@ -2,7 +2,7 @@
  * @file
  * VuoImage implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "type.h"
-#include "node.h"
 #include "VuoImage.h"
 #include "VuoImageRenderer.h"
 #include "VuoGlContext.h"
@@ -593,6 +591,29 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
 }
 
 /**
+ * Changes the image's sampling mode.
+ */
+void VuoImage_setSamplingMode(VuoImage image, VuoImageSamplingMode samplingMode)
+{
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		glBindTexture(image->glTextureTarget, image->glTextureName);
+
+		GLint samplingModeGL = GL_LINEAR;
+		if (samplingMode == VuoImageSampling_Nearest)
+			samplingModeGL = GL_NEAREST;
+
+		glTexParameteri(image->glTextureTarget, GL_TEXTURE_MIN_FILTER, samplingModeGL);
+		glTexParameteri(image->glTextureTarget, GL_TEXTURE_MAG_FILTER, samplingModeGL);
+
+		glBindTexture(image->glTextureTarget, 0);
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+	});
+}
+
+/**
  * Makes a solid-color image.
  */
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh)
@@ -1058,7 +1079,7 @@ VuoImage VuoImage_makeFromJsonWithDimensions(struct json_object *js, unsigned in
  *
  * @return If `js` contains valid data, returns the OpenGL texture name.  If not, returns 0.
  *
- * @param js An interprocess JSON object (from, e.g., @ref VuoRunner::getPublishedOutputPortValue)
+ * @param js An interprocess JSON object (from, e.g., VuoRunner::getPublishedOutputPortValue)
  *           containing an `ioSurface`.
  * @param provider A block that returns an OpenGL texture name with the requested width and height.
  *                 The host app must not call `glTexImage2D()` on the texture,
@@ -1127,7 +1148,7 @@ static bool VuoImage_resolveInterprocessJsonOntoFramebufferInternal(IOSurfaceRef
  *
  * @return True if the texture was successfully attached.
  *
- * @param js An interprocess JSON object (from, e.g., @ref VuoRunner::getPublishedOutputPortValue)
+ * @param js An interprocess JSON object (from, e.g., VuoRunner::getPublishedOutputPortValue)
  *           containing an `ioSurface`.
  * @param clientTextureName The OpenGL texture name that the image should be attached to.
  *                 The host app must not call `glTexImage2D()` on the texture,
@@ -1223,7 +1244,7 @@ bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, 
 /**
  * Decodes the JSON object `js` onto the framebuffer of a host-provided OpenGL context.
  *
- * @param js An interprocess JSON object (from, e.g., @ref VuoRunner::getPublishedOutputPortValue)
+ * @param js An interprocess JSON object (from, e.g., VuoRunner::getPublishedOutputPortValue)
  *           containing an `ioSurface`.
  * @param context A CGLContextObj.  This must be part of the same share group
  *                as the context passed to @ref VuoGlContext_setGlobalRootContext.

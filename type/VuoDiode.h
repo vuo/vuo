@@ -2,17 +2,17 @@
  * @file
  * VuoDiode C type definition.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef VuoDiode_h
+#define VuoDiode_h
 
-/// @{ List type.
-typedef void * VuoList_VuoDiode;
-#define VuoList_VuoDiode_TYPE_DEFINED
-/// @}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @ingroup VuoTypes
@@ -32,12 +32,14 @@ typedef enum
 	VuoDiode_Absolute,
 } VuoDiode;
 
+#define VuoDiode_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
+#include "VuoList_VuoDiode.h"
+
 VuoDiode VuoDiode_makeFromJson(struct json_object *js);
 struct json_object *VuoDiode_getJson(const VuoDiode value);
 VuoList_VuoDiode VuoDiode_getAllowedValues(void);
 char *VuoDiode_getSummary(const VuoDiode value);
 
-#define VuoDiode_SUPPORTS_COMPARISON
 bool VuoDiode_areEqual(const VuoDiode valueA, const VuoDiode valueB);
 bool VuoDiode_isLessThan(const VuoDiode valueA, const VuoDiode valueB);
 
@@ -53,3 +55,9 @@ void VuoDiode_release(VuoDiode value);
 /**
  * @}
  */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

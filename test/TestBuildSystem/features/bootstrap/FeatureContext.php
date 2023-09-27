@@ -5,6 +5,9 @@ use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 
 class FeatureContext implements Context {
+  private $testDir = '';
+  private $arch = '';
+
   public function __construct($sourceDir = '../..', $testDir = '../../build/test/TestBuildSystem') {
     $this->testDir = $testDir;
 
@@ -34,6 +37,10 @@ class FeatureContext implements Context {
 
       $updatedSourceTree = true;
     }
+
+    $this->arch = trim(shell_exec('/usr/bin/uname -m'));
+    if (!in_array($this->arch, ['x86_64', 'arm64']))
+      throw new Exception("uname failed: {$this->arch}");
   }
 
   private $lastBuildStarted = INF;
@@ -177,28 +184,36 @@ class FeatureContext implements Context {
    * @Then it should update the built-in cache
    */
   public function itShouldUpdateTheBuiltInCache() {
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
-    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
-    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache.dylib');
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/manifest.txt');
+    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache.dylib');
+    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/manifest.txt');
   }
 
   /**
    * @Then it shouldn't update the built-in cache
    */
   public function itShouldntUpdateTheBuiltInCache() {
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
-    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.dylib');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.dylib');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-generated.txt');
-    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache-installed.txt');
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/libVuoModuleCache.dylib');
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/manifest.txt');
+    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/libVuoModuleCache.dylib');
+    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/manifest.txt');
+  }
+
+  /**
+   * @Then /it should update the ([^ ]*) module in the built-in cache$/
+   */
+  public function itShouldUpdateAModuleInTheBuiltInCache($module) {
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
+    $this->itShouldUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
+  }
+
+  /**
+   * @Then /it shouldn't update the ([^ ]*) module in the built-in cache$/
+   */
+  public function itShouldntUpdateAModuleInTheBuiltInCache($module) {
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
+    $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
   }
 
   /**

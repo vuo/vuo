@@ -2,7 +2,7 @@
  * @file
  * VuoCodeWindow interface.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -59,7 +59,7 @@ public:
 
 	VuoCodeEditorStages *stages;  ///< The code editor widgets for this window.
 	VuoCodeIssueList *issueList;  ///< The widget that renders this window's issues.
-	VuoShaderIssues *issues;      ///< The issues for this window's shader.
+	shared_ptr<VuoShaderIssues> issues;  ///< The issues for this window's shader.
 
 public slots:
 	void on_runComposition_triggered();

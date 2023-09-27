@@ -7,7 +7,7 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "module.h"
+#include "VuoReal.h"
 #include <AppKit/AppKit.h>
 
 #ifdef VUO_COMPILER

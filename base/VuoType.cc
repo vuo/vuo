@@ -2,7 +2,7 @@
  * @file
  * VuoType implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -34,9 +34,18 @@ VuoType::~VuoType(void)
 }
 
 /**
+ * Returns true if @a potentialTypeName has the format of a type's module key.
+ * (A type by that name may or may not exist.)
+ */
+bool VuoType::isTypeName(const string &potentialTypeName)
+{
+	return potentialTypeName.find(".") == string::npos;
+}
+
+/**
  * Returns true if the type name is for a list type.
  */
-bool VuoType::isListTypeName(string typeName)
+bool VuoType::isListTypeName(const string &typeName)
 {
 	return VuoStringUtilities::beginsWith(typeName, listTypeNamePrefix);
 }
@@ -44,7 +53,7 @@ bool VuoType::isListTypeName(string typeName)
 /**
  * Returns true if the type name is for a dictionary type.
  */
-bool VuoType::isDictionaryTypeName(string typeName)
+bool VuoType::isDictionaryTypeName(const string &typeName)
 {
 	return VuoStringUtilities::beginsWith(typeName, dictionaryTypeNamePrefix);
 }
@@ -53,10 +62,11 @@ bool VuoType::isDictionaryTypeName(string typeName)
  * If the type name is a list (or list of lists, etc.), returns the innermost item type name.
  * Otherwise, returns the type name itself.
  */
-string VuoType::extractInnermostTypeName(string typeName)
+string VuoType::extractInnermostTypeName(const string &typeName)
 {
-	while (VuoStringUtilities::beginsWith(typeName, listTypeNamePrefix))
-		typeName = VuoStringUtilities::substrAfter(typeName, listTypeNamePrefix);
+	string t{typeName};
+	while (VuoStringUtilities::beginsWith(t, listTypeNamePrefix))
+		t = VuoStringUtilities::substrAfter(t, listTypeNamePrefix);
 
-	return typeName;
+	return t;
 }

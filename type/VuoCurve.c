@@ -2,13 +2,13 @@
  * @file
  * VuoCurve implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
 #include <string.h>
-#include "type.h"
+#include "VuoCurve.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -110,6 +110,9 @@ char * VuoCurve_getSummary(const VuoCurve value)
  */
 VuoReal VuoReal_curve(VuoReal time, VuoReal startPosition, VuoReal endPosition, VuoReal duration, VuoCurve curve, VuoCurveEasing easing, VuoLoopType loop)
 {
+	if (duration == 0)
+		return startPosition;
+
 	VuoReal normalizedTime = MIN(MAX(time/duration,0.),1.);
 	if (loop == VuoLoopType_Loop)
 	{

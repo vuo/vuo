@@ -2,12 +2,13 @@
  * @file
  * Prototypes for type implementations.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
 
-#pragma once
+#ifndef TYPE_H
+#define TYPE_H
 
 #include "module.h"
 
@@ -130,6 +131,12 @@ json_object * MyType_getJson(const MyType value);
 struct json_object * MyType_getInterprocessJson(const MyType value);
 
 /**
+ * Tells the Vuo compiler that @ref MyType_getInterprocessJson is defined, so that it can in turn define
+ * `VuoList_MyType_getInterprocessJson`.
+ */
+#define MyType_OVERRIDES_INTERPROCESS_SERIALIZATION
+
+/**
  * Returns a list of values that instances of this type can have.
  *
  * The values returned by this function are shown in input editor menus, in the order specified.
@@ -153,6 +160,26 @@ VuoList_MyType MyType_getAllowedValues(void);
  * @return The summary. It should be heap-allocated; the caller is responsible for freeing it.
  */
 char * MyType_getSummary(const MyType value);
+
+/**
+ * Returns true if @a a and @a b are equivalent.
+ *
+ * This function is optional, and only makes sense if the type's values are comparable.
+ */
+bool MyType_areEqual(const MyType a, const MyType b);
+
+/**
+ * Returns true if @a a should come before @a b when putting types in order from least to greatest.
+ *
+ * This function is optional, and only makes sense if the type's values are comparable.
+ */
+bool MyType_isLessThan(const MyType a, const MyType b);
+
+/**
+ * Tells the Vuo compiler that @ref MyType_areEqual and @ref MyType_isLessThan are defined, so that it can enable functionality
+ * in `VuoList_MyType` that depends on those functions.
+ */
+#define MyType_SUPPORTS_COMPARISON
 
 /**
  * Serializes a @c MyType value to a JSON-formatted string. Calls MyType_getJson().
@@ -214,4 +241,6 @@ void MyType_release(const MyType value);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

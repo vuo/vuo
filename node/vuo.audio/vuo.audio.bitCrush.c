@@ -7,14 +7,13 @@
  * For more information, see https://vuo.org/license.
  */
 
-#include "node.h"
 #include <math.h>
 
 VuoModuleMetadata({
 					 "title" : "Bit Crush Audio",
 					 "keywords" : [
 						 "sound", "music", "filter",
-						 "distortion", "bits", "quantize", "lo-fi", "lofi", "8-bit", "8bit",
+						 "distortion", "bits", "quantize", "lo-fi", "lofi", "8-bit", "8bit", "retro",
 					 ],
 					 "version" : "1.0.0",
 					 "node": {

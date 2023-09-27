@@ -36,6 +36,22 @@ target_sources(vuo.image.types PRIVATE
 	VuoVerticalReflection.h
 )
 
+VuoCompileCompoundTypes(
+	# List types needed by targets compiled with Clang rather than the Vuo compiler
+	VuoList_VuoSizingMode.cc
+
+	# Additional list types referenced by headers in this node set
+	VuoList_VuoBlurShape.cc
+	VuoList_VuoColorSample.cc
+	VuoList_VuoHorizontalReflection.cc
+	VuoList_VuoImageFormat.cc
+	VuoList_VuoImageNoise.cc
+	VuoList_VuoImageStereoType.cc
+	VuoList_VuoPixelShape.cc
+	VuoList_VuoThresholdType.cc
+	VuoList_VuoVerticalReflection.cc
+)
+
 VuoCompileNodes(
 	vuo.image.analogDistortion.fs
 	vuo.image.apply.mask.c
@@ -56,6 +72,7 @@ VuoCompileNodes(
 	vuo.image.color.mask.brightness.c
 	vuo.image.color.offset.radial.rgb.c
 	vuo.image.color.offset.rgb.c
+	vuo.image.color.palette.c
 	vuo.image.color.sepia.c
 	vuo.image.color.solarize.c
 	vuo.image.color.split.hsl.c
@@ -117,6 +134,7 @@ VuoCompileNodes(
 	vuo.image.ripple.c
 	vuo.image.ripple.radial.c
 	vuo.image.rotate.c
+	vuo.image.samplingMode.c
 	vuo.image.save.c
 	vuo.image.scramble.c
 	vuo.image.sharpen.c
