@@ -7,4 +7,4 @@ This node outputs the positions and normals of the 3D object itself and all of i
 
 For 3D objects that don't have a mesh (cameras, lights), this node outputs empty lists.
 
-Thanks to [Karl Henkel](https://vuo.org/user/32) for developing the node this is based on.
+Thanks to [Karl Henkel](https://community.vuo.org/u/khenkel) for developing the node this is based on.

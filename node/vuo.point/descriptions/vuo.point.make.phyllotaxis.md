@@ -6,4 +6,4 @@ Calculates a list of points in a phyllotaxis pattern, like the scales in a pinec
    - `Start Point` — Whether to start at the center point (when `Start Point` is 1) or a point further out on the spiral.
    - `Angle` — The amount each new point is moved relative to the previous point, in degrees.  The default value, 137.5°, is approximately the [golden angle](https://mathworld.wolfram.com/GoldenAngle.html).
 
-Thanks to [Martinus Magneson](https://vuo.org/user/3272) for developing the node this is based on.
+Thanks to [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) for developing the node this is based on.

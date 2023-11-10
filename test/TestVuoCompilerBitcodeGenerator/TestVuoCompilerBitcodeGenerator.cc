@@ -15,6 +15,7 @@ typedef map<string, set<string> > nodesMap;  ///< Typedef needed for Q_DECLARE_M
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(nodesMap);
 Q_DECLARE_METATYPE(set<string>);
+Q_DECLARE_METATYPE(VuoPortClass::EventBlocking);
 
 
 /**
@@ -929,7 +930,7 @@ private slots:
 		QString publishedInputNodeIdentifier = QString::fromStdString(VuoNodeClass::publishedInputNodeIdentifier);
 
 		QTest::newRow("Node can't transmit data only") << "Recur_Count_2Count.vuo" << "Count1" << false << QStringList();
-		QTest::newRow("Node can transmit data only but no outgoing cables") << "PublishedInputNotConnected.vuo" << publishedInputNodeIdentifier << false << QStringList();
+		QTest::newRow("Node can transmit data only but no outgoing cables") << "PublishedInputNotConnectedPublishedOutputTrigger.vuo" << publishedInputNodeIdentifier << false << QStringList();
 		QTest::newRow("Drawer without incoming cable") << "PublishedOutputGather.vuo" << "MakeList" << true << QStringList("HoldList");
 		QTest::newRow("Drawer with incoming cable") << "Recur_Hold_Add_Write_loop.vuo" << "MakeList1" << true << QStringList("Add1");
 		QTest::newRow("Published input transmits events only") << "PublishedOutputGather.vuo" << publishedInputNodeIdentifier << false << QStringList();
@@ -988,6 +989,57 @@ private slots:
 		delete parser;
 	}
 
+	void testPublishedInputEventBlocking_data()
+	{
+		QTest::addColumn<QString>("compositionFile");
+		QTest::addColumn<int>("publishedInputPortIndex");
+		QTest::addColumn<VuoPortClass::EventBlocking>("expectedEventBlocking");
+
+		QTest::newRow("No published outputs") << "PublishedInputsNoOutputs.vuo" << 0 << VuoPortClass::EventBlocking_None;
+		QTest::newRow("No cable from published input port") << "PublishedInputNoCablesToOutput.vuo" << 0 << VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("Event reaches published output via unblocked path") << "Subtract_published.vuo" << 1 << VuoPortClass::EventBlocking_None;
+		QTest::newRow("Event hits door immediately") << "PublishedEventDirectlyToDoor.vuo" << 0 << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("Event hits door after passing through unblocked ports") << "PublishedEventIndirectlyToDoor.vuo" << 0 << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("Event hits wall immediately") << "PublishedEventDirectlyToWall.vuo" << 0 << VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("Event hits wall after passing through unblocked ports") << "PublishedEventIndirectlyToWall.vuo" << 0 << VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("Event stops at leaf node and doesn't reach any published outputs") << "PublishedInputNoCablesToOutput.vuo" << 1 << VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("Event reaches one published output via unblocked path and another published output via path with door") << "PublishedEventToUnblockedOutputAndDooredOutput.vuo" << 0 << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("Event reaches published output via path with one branch unblocked and the other branch having a door") << "PublishedEventToUnblockedBranchAndDooredBranch.vuo" << 0 << VuoPortClass::EventBlocking_None;
+		QTest::newRow("Event reaches one published output via unblocked path and is blocked from another published output by a wall") << "PublishedEventToUnblockedOutputAndWalledOutput.vuo" << 0 << VuoPortClass::EventBlocking_Door;
+		QTest::newRow("Event reaches published output via path with one branch unblocked and the other branch blocked by a wall") << "PublishedEventToUnblockedBranchAndWalledBranch.vuo" << 0 << VuoPortClass::EventBlocking_None;
+		QTest::newRow("Event overlaps trigger event along unblocked path") << "TriggerOverlappingPublishedInputDownstream.vuo" << 0 << VuoPortClass::EventBlocking_None;
+		QTest::newRow("Event and trigger event each hit separate published outputs") << "TriggerSeparateFromPublishedInput.vuo" << 0 << VuoPortClass::EventBlocking_None;
+	}
+	void testPublishedInputEventBlocking()
+	{
+		QFETCH(QString, compositionFile);
+		QFETCH(int, publishedInputPortIndex);
+		QFETCH(VuoPortClass::EventBlocking, expectedEventBlocking);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		compiler->setCompositionPath(compositionPath);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		VuoCompilerGraph graph(&composition);
+
+		VuoPortClass::EventBlocking actualEventBlocking = graph.getPublishedInputEventBlocking(publishedInputPortIndex);
+
+		auto eventBlockingToString = [](VuoPortClass::EventBlocking eventBlocking)
+		{
+			if (eventBlocking == VuoPortClass::EventBlocking_None)
+				return "none";
+			else if (eventBlocking == VuoPortClass::EventBlocking_Door)
+				return "door";
+			else if (eventBlocking == VuoPortClass::EventBlocking_Wall)
+				return "wall";
+			return "unknown";
+		};
+
+		QCOMPARE(eventBlockingToString(actualEventBlocking), eventBlockingToString(expectedEventBlocking));
+
+		delete parser;
+	}
+
 	void testPublishedOutputTriggers_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
@@ -997,7 +1049,7 @@ private slots:
 		QTest::newRow("Internal trigger overlapping published input trigger immediately") << "TriggerOverlappingPublishedInputImmediately.vuo" << "Remainder" << false;
 		QTest::newRow("Internal trigger overlapping published input trigger downstream") << "TriggerOverlappingPublishedInputDownstream.vuo" << "Remainder" << false;
 		QTest::newRow("Internal trigger overlapping published input trigger at published output port") << "TriggerOverlappingPublishedInputAtOutput.vuo" << "SameValue" << false;
-		QTest::newRow("No cables connected to published inputs") << "PublishedInputNotConnected.vuo" << "Remainder" << true;
+		QTest::newRow("No cables connected to published inputs") << "PublishedInputNotConnectedPublishedOutputTrigger.vuo" << "Remainder" << true;
 		QTest::newRow("Internal trigger not overlapping published input trigger") << "TriggerSeparateFromPublishedInput.vuo" << "Quotient" << true;
 		QTest::newRow("Published input trigger not overlapping internal trigger") << "TriggerSeparateFromPublishedInput.vuo" << "Remainder" << false;
 		QTest::newRow("Overlap but published input events don't reach published outputs") << "TriggerOverlappingBlockedPublishedInput.vuo" << "BuiltList" << true;

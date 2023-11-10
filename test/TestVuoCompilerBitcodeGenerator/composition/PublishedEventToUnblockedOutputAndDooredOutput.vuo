@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+AllowChanges [type="vuo.event.allowChanges2.VuoInteger" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="210,150"];
+SelectLatest [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="225,75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<In1>In1\r" _In1_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out1>Out1\l|<Out2>Out2\l" _Out1_type="VuoInteger" _Out2_type="VuoInteger"];
+
+AllowChanges:changedValue -> PublishedOutputs:Out2;
+PublishedInputs:In1 -> AllowChanges:value;
+PublishedInputs:In1 -> SelectLatest:option1;
+SelectLatest:latest -> PublishedOutputs:Out1;
+}

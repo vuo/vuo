@@ -2113,7 +2113,7 @@ void VuoCompilerBitcodeGenerator::generateFunctionReturningStringArray(string fu
  * Assumes the trigger function has been set for each trigger port.
  *
  * @eg{
- * void firePublishedInputPortEvent(const char *const *names, unsigned int count);
+ * void firePublishedInputPortEvent(const char *const *portNames, unsigned int portNameCount);
  * }
  */
 void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(void)

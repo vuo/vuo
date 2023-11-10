@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						  "VuoUrlFetch",
 					  ],
 					  "node" : {
-						  "exampleCompositions" : [ "ListCountries.vuo", "LookUpCountry.vuo", "LookUpSisterCities.vuo" ]
+						  "exampleCompositions" : [ "LookUpSisterCities.vuo" ]
 					  }
 				 });
 

@@ -117,7 +117,7 @@ static VuoText VuoScreen_getName(CGDirectDisplayID displayID)
 
 	if (!manufacturerName && !modelName)
 	{
-		// If we're running on Apple Silicon (M1/ARM64),
+		// If we're running on Apple Silicon (ARM64),
 		// or on x86_64 and `IODisplayCreateInfoDictionary` didn't provide any information,
 		// see if there's any information on this display in the IORegistry.
 

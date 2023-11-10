@@ -564,14 +564,22 @@ void VuoEditorComposition::replaceNode(VuoRendererNode *oldNode, VuoNode *newNod
 	if (getTriggerPortToRefire() && (getTriggerPortToRefire()->getRenderer()->getUnderlyingParentNode() == oldNode))
 		setTriggerPortToRefire(NULL);
 
-	newNode->setRawGraphvizDeclaration(oldNode->getBase()->getRawGraphvizDeclaration());
-	if (newNode->hasCompiler())
+	string graphvizIdentifier;
+	string graphvizDeclaration;
+	if (oldNode->getBase()->hasCompiler())
 	{
-		string graphvizIdentifier = (oldNode->getBase()->hasCompiler() ?
-										 oldNode->getBase()->getCompiler()->getGraphvizIdentifier() :
-										 oldNode->getBase()->getRawGraphvizIdentifier());
-		newNode->getCompiler()->setGraphvizIdentifier(graphvizIdentifier);
+		graphvizIdentifier = oldNode->getBase()->getCompiler()->getGraphvizIdentifier();
+		graphvizDeclaration = oldNode->getBase()->getCompiler()->getGraphvizDeclaration();
 	}
+	else
+	{
+		graphvizIdentifier = oldNode->getBase()->getRawGraphvizIdentifier();
+		graphvizDeclaration = oldNode->getBase()->getRawGraphvizDeclaration();
+	}
+
+	newNode->setRawGraphvizDeclaration(graphvizDeclaration);
+	if (newNode->hasCompiler())
+		newNode->getCompiler()->setGraphvizIdentifier(graphvizIdentifier);
 
 	removeNode(oldNode);
 	addNode(newNode, true, false);

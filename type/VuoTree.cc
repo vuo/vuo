@@ -388,12 +388,12 @@ static VuoTree VuoTree_parseJson(const char *jsonString)
 
 		xmlNode *parentNode = parents[currentJson];
 
-		// Translate {"key1":value1,"key2":value2,...} to <key1>value1</key1><key2>value2</key2>...
-		// Translate {"key1":[value1,value2,...],...} to <key1>value1</key1><key1>value2</key1>... — special case for arrays
-
 		json_type type = json_object_get_type(currentJson);
 		if (type == json_type_object)
 		{
+			// Translate {"key1":value1,"key2":value2,...} to <key1>value1</key1><key2>value2</key2>...
+			// Translate {"key1":[value1,value2,...],...} to <key1>value1</key1><key1>value2</key1>... — special case for arrays
+
 			json_object_object_foreach(currentJson, key, value)
 			{
 				const char *nodeName = (currentJson == renamedRootObject || currentJson == renamedArrayObject ? "" : key);
@@ -424,6 +424,24 @@ static VuoTree VuoTree_parseJson(const char *jsonString)
 					parents[value] = currentNode;
 					jsonsToVisit.push_back(value);
 				}
+			}
+		}
+		else if (type == json_type_array)
+		{
+			// Translate [value1,value2,...] to <item><item>value1</item><item>value2</item></item>...
+			// We only encounter this case when the array is a value in another array. If the array is a value in an object,
+			// then it's handled by the json_type_object case above.
+
+			int length = json_object_array_length(currentJson);
+			for (int i = 0; i < length; ++i)
+			{
+				json_object *arrayValue = json_object_array_get_idx(currentJson, i);
+
+				xmlNode *currentNode = createXmlNode("item");
+				xmlAddChild(parentNode, currentNode);
+
+				parents[arrayValue] = currentNode;
+				jsonsToVisit.push_back(arrayValue);
 			}
 		}
 		else

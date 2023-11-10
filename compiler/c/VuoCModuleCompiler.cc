@@ -334,7 +334,6 @@ unique_ptr<CompilerInstance> VuoCModuleCompiler::createCompilerInstance(const st
 		args.push_back("-xobjective-c++");
 		args.push_back("-std=c++14");
 		args.push_back("-stdlib=libc++");
-		args.push_back("-fexceptions");
 		args.push_back("-fcxx-exceptions");
 	}
 	else
@@ -343,6 +342,7 @@ unique_ptr<CompilerInstance> VuoCModuleCompiler::createCompilerInstance(const st
 		args.push_back("-std=c99");
 	}
 
+	args.push_back("-fexceptions");
 	args.push_back("-fobjc-exceptions");
 
 	// Since the PCH is relocatable, we pass the same sysroot and resource dir used when compiling the PCH

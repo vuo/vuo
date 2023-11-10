@@ -17,7 +17,7 @@ VuoModuleMetadata({
 		"parse", "convert", "read",
 		"string",
 	],
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"node": {
 		"exampleCompositions": [ "ListCountries.vuo", "LookUpCountry.vuo", "LookUpSisterCities.vuo" ],
 	},

@@ -17,4 +17,4 @@ Or the following 32-color palette:
 
 All output colors are opaque; transparent colors in the input image are treated as though they are composited onto an opaque black background.
 
-Thanks to [Gisle Martens Meyer](https://uncannyplanet.com) for funding development of this node!
+Thanks to [Gisle Martens Meyer](https://community.vuo.org/u/gmm) for funding development of this node!

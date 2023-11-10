@@ -207,7 +207,7 @@ function (VuoGenerateModulePCH target)
 				endif()
 			endforeach()
 
-			set(flags "-fobjc-exceptions")
+			set(flags "-fexceptions" "-fobjc-exceptions")
 			if (${language} STREQUAL "OBJC")
 				list(APPEND flags
 					-xobjective-c
@@ -219,7 +219,6 @@ function (VuoGenerateModulePCH target)
 					-xobjective-c++
 					-std=c++14
 					-stdlib=libc++
-					-fexceptions
 					-fcxx-exceptions
 				)
 			endif()

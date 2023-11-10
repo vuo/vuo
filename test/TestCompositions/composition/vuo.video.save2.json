@@ -8,39 +8,39 @@
  */
 
 {"portConfiguration": {
-	"video-only":{"firingPort":"SaveVideoFrame"},
-	"finalize-v":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"video-only":{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-only.mov"}},
+	"finalize-v":{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"audio-only":{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":1}},
-	"finalize-a":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"audio-only":{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":1,"URL":"file:///tmp/TestCompositions-vuo.video.save2-audio-1-channel.mov"}},
+	"finalize-a":{"firingPort":"Finalize", "outputPortValues":{"Exists":false}},  // This node only creates a movie file upon receiving the first _video_ frame.
 
-	"video0"    :{"firingPort":"SaveVideoFrame"},
+	"video0"    :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-and-audio-0-channels.mov"}},
 	"audio0"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":0}},
-	"finalize0" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"finalize0" :{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"video1"    :{"firingPort":"SaveVideoFrame"},
+	"video1"    :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-and-audio-1-channel.mov"}},
 	"audio1"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":1}},
-	"finalize1" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"finalize1" :{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"video2"    :{"firingPort":"SaveVideoFrame"},
+	"video2"    :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-and-audio-2-channels.mov"}},
 	"audio2"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":2}},
-	"finalize2" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"finalize2" :{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"video3"    :{"firingPort":"SaveVideoFrame"},
+	"video3"    :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-and-audio-3-channels.mov"}},
 	"audio3"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":3}},
-	"finalize3" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"finalize3" :{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"video5"    :{"firingPort":"SaveVideoFrame"},
+	"video5"    :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-video-and-audio-5-channels.mov"}},
 	"audio5"    :{"firingPort":"SaveAudioFrame", "inputPortValues":{"SaveAudioFrame":5}},
-	"finalize5" :{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"finalize5" :{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"url-schema1"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:/tmp/foo.mov"}},
-	"url-schema1-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"url-schema1"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:/tmp/TestCompositions-vuo.video.save2-url-schema1.mov"}},
+	"url-schema1-finalize":{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
-	"url-schema3"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/foo.mov"}},
-	"url-schema3-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"url-schema3"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"file:///tmp/TestCompositions-vuo.video.save2-url-schema3.mov"}},
+	"url-schema3-finalize":{"firingPort":"Finalize", "outputPortValues":{"Exists":true}},
 
 	// `http` URLs should fail but not crash.
 	"url-http"         :{"firingPort":"SaveVideoFrame", "inputPortValues":{"URL":"https://example.com/something"}},
-	"url-http-finalize":{"firingPort":"Finalize", "outputPortValues":{"Finalized":null}},
+	"url-http-finalize":{"firingPort":"Finalize", "outputPortValues":{"Exists":false}},
 }}

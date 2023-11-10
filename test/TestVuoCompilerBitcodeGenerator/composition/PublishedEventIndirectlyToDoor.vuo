@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+Negate [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<notValue>notValue\r" pos="180,120"];
+SelectOutput [type="vuo.select.out.boolean.VuoInteger" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="360,120" _in="100"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="600,105" _b="1"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="600,195" _b="10"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<NotWhich>NotWhich\r" _NotWhich_type="VuoBoolean" _NotWhich="false"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Difference1>Difference1\l|<Difference2>Difference2\l" _Difference1_type="VuoInteger" _Difference2_type="VuoInteger"];
+
+Negate:notValue -> SelectOutput:which;
+PublishedInputs:NotWhich -> Negate:value;
+SelectOutput:falseOption -> Subtract:a;
+SelectOutput:trueOption -> Subtract2:a;
+Subtract2:difference -> PublishedOutputs:Difference2;
+Subtract:difference -> PublishedOutputs:Difference1;
+}

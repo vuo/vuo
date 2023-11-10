@@ -6,4 +6,4 @@ Calculates a list of points along the edge of a circle or ellipse.
    - `Start Angle` — The first angle to output, in degrees starting from the positive X axis (the rightmost tip of the oval).
    - `End Position` — The last angle to output.
 
-Thanks to [Martinus Magneson](https://vuo.org/user/3272) and [Bodysoulspirit](https://vuo.org/user/2475) for developing the nodes this is based on.
+Thanks to [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) and [Bodysoulspirit](https://community.vuo.org/u/Bodysoulspirit) for developing the nodes this is based on.

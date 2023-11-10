@@ -4,4 +4,4 @@ The `Bit Depth` input port specifies, in bits, the resolution of the output samp
 
 By default, Vuo processes audio at 64-bit floating point resolution.  Typical computer audio hardware inputs and outputs audio at 16-bit or 24-bit resolution.  Older digital audio hardware typically used lower resolutions — for example, the EMU SP-12 sampler (released in 1985) had 12-bit resolution, the Linn 9000 drum machine used 8-bit samples, and the Roland TR-909 drum machine used 6-bit samples.
 
-Thanks to [alexmitchellmus](https://vuo.org/user/2682) for contributing this node.
+Thanks to [alexmitchellmus](https://community.vuo.org/u/alexmitchellmus) for contributing this node.

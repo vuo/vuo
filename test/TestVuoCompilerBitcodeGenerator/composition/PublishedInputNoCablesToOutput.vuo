@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.3
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+DivideWithRemainder [type="vuo.math.divide.VuoInteger" version="2.0.1" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="90,105" _a="0"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="330,90" _b="0"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="330,195" _b="0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<A>A\r|<B>B\r" _A_type="VuoInteger" _A="0" _B_type="VuoInteger" _B="1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out>Out\l" _Out_type="VuoInteger"];
+
+DivideWithRemainder:quotient -> Subtract:a;
+DivideWithRemainder:remainder -> Subtract2:a;
+PublishedInputs:B -> DivideWithRemainder:b;
+}

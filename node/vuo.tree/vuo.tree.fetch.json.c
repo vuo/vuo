@@ -18,12 +18,12 @@ VuoModuleMetadata({
 						"xml", "json", "html", "dom", "element", "tag", "object",
 						"parse", "convert", "read"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoUrlFetch",
 					  ],
 					  "node" : {
-						  "exampleCompositions" : [ "ListCountries.vuo", "LookUpCountry.vuo", "LookUpSisterCities.vuo" ]
+						  "exampleCompositions" : [ "ListCountries.vuo", "LookUpCountry.vuo" ]
 					  }
 				 });
 

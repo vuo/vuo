@@ -995,6 +995,7 @@ Below is an alphabetical list of the people who have contributed to Vuo:
    - [thomas.capogreco](https://community.vuo.org/u/thomas.capogreco)
    - [thomas.krautscheid](https://community.vuo.org/u/thomas.krautscheid)
    - [thomasebartley](https://community.vuo.org/u/thomasebartley)
+   - [ThoughtDifferent](https://community.vuo.org/u/ThoughtDifferent)
    - [thruvik](https://community.vuo.org/u/thruvik)
    - [tiffle](https://community.vuo.org/u/tiffle)
    - [timara55](https://community.vuo.org/u/timara55)

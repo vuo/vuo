@@ -11,4 +11,4 @@ Alters an image's colors to use only colors from a given palette.
 
 ![](dither.png)
 
-Thanks to [Gisle Martens Meyer](https://uncannyplanet.com) for funding development of this node!
+Thanks to [Gisle Martens Meyer](https://community.vuo.org/u/gmm) for funding development of this node!

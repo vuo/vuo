@@ -1471,8 +1471,11 @@ bool VuoCompilerGraph::compareTriggers(const pair<VuoCompilerTriggerPort *, size
 
 /**
  * Returns the type of event blocking for the published input port, based on whether an event through
- * that port always (none), never (wall), or sometimes (door) reaches at least one published output port.
- * If there are no event-only or data-and-event published output ports to reach, returns "none".
+ * that port always reaches all non-trigger published output ports (none), never reaches any non-trigger
+ * published output ports (wall), or behaves somewhere in between (door).
+ *
+ * If there are no non-trigger published output ports to reach, returns "none" (consistent with our policy for C
+ * node classes of not designating input ports as walled if all output ports are triggers, for visual simplicity).
  *
  * For certain compositions that contain nodes with door input ports, the analysis is imprecise.
  * For example, if both the False Option and True Option outputs of a `Select Output` node have cables
@@ -1500,12 +1503,15 @@ VuoPortClass::EventBlocking VuoCompilerGraph::getPublishedInputEventBlocking(siz
 		if (vertex.fromNode == publishedInputNode)
 			verticesFromPublishedInputNode.insert(vertex);
 
-	// Find the vertices downstream of the published input node with no intervening doors or walls.
+	// Find the vertices downstream of the published input node with no intervening doors or walls,
+	// excluding vertices to the published output node's gather port.
 
-	auto includeNonBlocking = [this] (Edge edge)
+	VuoPort *gatherPort = getGatherPortOnPublishedOutputNode();
+
+	auto includeNonBlocking = [this, gatherPort] (Edge edge)
 	{
-		return (edge.fromVertex.fromTrigger == publishedInputTrigger ||
-				mustTransmit(edge.fromVertex.cableBundle, edge.toVertex.cableBundle));
+		return mustTransmit(edge.fromVertex.cableBundle, edge.toVertex.cableBundle) &&
+				! (edge.toVertex.cableBundle.size() == 1 && (*edge.toVertex.cableBundle.begin())->getBase()->getToPort() == gatherPort);
 	};
 
 	if (downstreamVerticesNonBlocking.empty())
@@ -1514,12 +1520,13 @@ VuoPortClass::EventBlocking VuoCompilerGraph::getPublishedInputEventBlocking(siz
 		makeDownstreamVerticesWithInclusionRule(publishedInputTrigger, includeNonBlocking, downstreamVerticesNonBlocking, unused);
 	}
 
-	// Find the vertices downstream of the published input node with no intervening walls.
+	// Find the vertices downstream of the published input node with no intervening walls,
+	// excluding vertices going into the published output node's gather port.
 
-	auto includeNonBlockingAndDoor = [this] (Edge edge)
+	auto includeNonBlockingAndDoor = [this, gatherPort] (Edge edge)
 	{
-		return (edge.fromVertex.fromTrigger == publishedInputTrigger ||
-				mayTransmit(edge.fromVertex.cableBundle, edge.toVertex.cableBundle));
+		return mayTransmit(edge.fromVertex.cableBundle, edge.toVertex.cableBundle) &&
+				! (edge.toVertex.cableBundle.size() == 1 && (*edge.toVertex.cableBundle.begin())->getBase()->getToPort() == gatherPort);
 	};
 
 	if (downstreamVerticesNonBlockingOrDoor.empty())

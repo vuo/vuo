@@ -1,5 +1,6 @@
 VuoTest(NAME TestCompositions
 	SOURCE TestCompositions.cc
+	FIXTURE TestCompositions
 )
 target_sources(TestCompositions
 	PRIVATE
@@ -21,4 +22,12 @@ VuoCompileNodes(
 add_dependencies(TestCompositions
 	TestCompositions.nodes
 	VuoEditorApp
+)
+
+# Delete files created by these tests.
+add_test(NAME TestCompositionsCleanup
+	COMMAND bash -c "rm -f /tmp/TestCompositions*.mov || true"
+)
+set_tests_properties(TestCompositionsCleanup PROPERTIES
+	FIXTURES_CLEANUP TestCompositions
 )

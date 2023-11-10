@@ -216,10 +216,6 @@ vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &from
 {
 	vector<string> typeConverters;
 
-	for (auto const &i : loadedTypeConverterNodeClasses)
-		if (i.first.first->getModuleKey() == fromTypeName && i.first.second->getModuleKey() == toTypeName)
-			typeConverters.insert(typeConverters.end(), i.second.cbegin(), i.second.cend());
-
 	VuoGenericType *genericInType = dynamic_cast<VuoGenericType *>(fromType);
 	VuoGenericType *genericOutType = dynamic_cast<VuoGenericType *>(toType);
 
@@ -233,9 +229,10 @@ vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &from
 	/**
 	 * Returns true if converterInOut matches (or can be specialized to) fromType + toType.
 	 *
-	 * If so, and if the converter requires specialization, outputs the ordered specialized type names in `outSpecializations`.
+	 * If so, and if the converter requires specialization, outputs the specialized type name in `outSpecializations`.
+	 * (Currently all type-converter node classes have at most one generic type, and that seems unlikely to change.)
 	 */
-	auto typeConverterCanSpecializeToQueriedTypes = [=](pair<VuoType *, VuoType *> converterInOut, vector<string> &outSpecializations)
+	auto typeConverterCanSpecializeToQueriedTypes = [=](pair<VuoType *, VuoType *> converterInOut, string &outSpecialization)
 	{
 		VuoType *converterInType = converterInOut.first;
 		VuoGenericType *converterGenericInType = dynamic_cast<VuoGenericType *>(converterInType);
@@ -244,7 +241,7 @@ vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &from
 			if (! genericTypeCanSpecializeTo(converterGenericInType, fromTypeName, genericInType))
 				return false;
 
-			outSpecializations.push_back(fromTypeName);
+			outSpecialization = VuoType::extractInnermostTypeName(fromTypeName);
 		}
 		else if (converterInType->getModuleKey() != fromTypeName)
 			return false;
@@ -256,7 +253,7 @@ vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &from
 			if (! genericTypeCanSpecializeTo(converterGenericOutType, toTypeName, genericOutType))
 				return false;
 
-			outSpecializations.push_back(toTypeName);
+			outSpecialization = VuoType::extractInnermostTypeName(toTypeName);
 		}
 		else if (converterOutType->getModuleKey() != toTypeName)
 			return false;
@@ -271,14 +268,14 @@ vector<string> VuoModuleManager::getCompatibleTypecastClasses(const string &from
 
 	for (auto const &i : loadedTypeConverterNodeClasses)
 	{
-		vector<string> specializations;
-		if (typeConverterCanSpecializeToQueriedTypes(i.first, specializations))
+		string specialization;
+		if (typeConverterCanSpecializeToQueriedTypes(i.first, specialization))
 		{
-			if (specializations.empty())
+			if (specialization.empty())
 				typeConverters.insert(typeConverters.end(), i.second.cbegin(), i.second.cend());
 			else
 				for (string unspecializedTypeConverter : i.second)
-					typeConverters.push_back(VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(unspecializedTypeConverter, specializations));
+					typeConverters.push_back(VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(unspecializedTypeConverter, { specialization }));
 		}
 	}
 

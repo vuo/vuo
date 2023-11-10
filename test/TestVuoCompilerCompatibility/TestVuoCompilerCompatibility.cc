@@ -87,7 +87,7 @@ private slots:
 
 		QTest::newRow("any")                      << "null"                                                      << "any system that Vuo supports";
 		QTest::newRow("single architecture")      << VUO_QSTRINGIFY({"macos":{"arch":["x86_64"]}})               << "macOS on an Intel (X86-64) CPU";
-		QTest::newRow("multiple architectures")   << VUO_QSTRINGIFY({"macos":{"arch":["x86_64","arm64"]}})       << "macOS on an Intel (X86-64) CPU or an Apple Silicon (M1/ARM64) CPU";
+		QTest::newRow("multiple architectures")   << VUO_QSTRINGIFY({"macos":{"arch":["x86_64","arm64"]}})       << "macOS on an Intel (X86-64) CPU or an Apple Silicon (ARM64/M1/M2/M3) CPU";
 		QTest::newRow("single version")           << VUO_QSTRINGIFY({"macos":{"min":"10.14","max":"10.14"}})     << "macOS 10.14";
 		QTest::newRow("range of versions")        << VUO_QSTRINGIFY({"macos":{"min":"10.13","max":"10.15"}})     << "macOS 10.13 through 10.15";
 		QTest::newRow("min version")              << VUO_QSTRINGIFY({"macos":{"min":"10.12"}})                   << "macOS 10.12 and above";
@@ -112,9 +112,9 @@ private slots:
 		QTest::addColumn<QString>("expected");
 
 		QTest::newRow("x86_64-apple-macosx10.15.4") << "x86_64-apple-macosx10.15.4" << "macOS 10.15 on an Intel (X86-64) CPU";
-		QTest::newRow("arm64-apple-macosx11.3.1") << "arm64-apple-macosx11.3.1" << "macOS 11.3 on an Apple Silicon (M1/ARM64) CPU";
-		QTest::newRow("arm64-apple-macosx10.16.0") << "arm64-apple-macosx10.16.0" << "macOS 11 on an Apple Silicon (M1/ARM64) CPU";
-		QTest::newRow("arm64-apple-macosx10.17.0") << "arm64-apple-macosx10.17.0" << "macOS 12 on an Apple Silicon (M1/ARM64) CPU";
+		QTest::newRow("arm64-apple-macosx11.3.1") << "arm64-apple-macosx11.3.1" << "macOS 11.3 on an Apple Silicon (ARM64/M1/M2/M3) CPU";
+		QTest::newRow("arm64-apple-macosx10.16.0") << "arm64-apple-macosx10.16.0" << "macOS 11 on an Apple Silicon (ARM64/M1/M2/M3) CPU";
+		QTest::newRow("arm64-apple-macosx10.17.0") << "arm64-apple-macosx10.17.0" << "macOS 12 on an Apple Silicon (ARM64/M1/M2/M3) CPU";
 	}
 	void testCreateFromTargetTriple()
 	{

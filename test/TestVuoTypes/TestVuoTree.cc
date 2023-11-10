@@ -263,6 +263,10 @@ private slots:
 													<< "" << noAttributes << "solitary" << "solitary" << 0;
 		}
 		{
+			QTest::newRow("array of arrays, JSON")  << VuoTree_makeFromJsonText(QUOTE([["a","b"],["c","d"]])) << noJson
+													<< "" << noAttributes << "" << "abcd" << 2;
+		}
+		{
 			QTest::newRow("file with indentation, exclude whitespace, XML")	<< makeTreeFromXmlFile("resources/TestVuoTree.html", false) << noJson
 																			<< "html" << noAttributes << "" << "My blog" << 1;
 		}
@@ -442,6 +446,11 @@ private slots:
 			const char *json = QUOTE([1,2]);
 			const char *xml = "<document><item>1</item><item>2</item></document>";
 			QTest::newRow("JSON array of integers") << VuoTree_makeFromJsonText(json) << xml << json << false;
+		}
+		{
+			const char *json = QUOTE([[1,2],[3,4]]);
+			const char *xml = "<document><item><item>1</item><item>2</item></item><item><item>3</item><item>4</item></item></document>";
+			QTest::newRow("JSON array of arrays") << VuoTree_makeFromJsonText(json) << xml << json << false;
 		}
 		{
 			const char *xml = "<P><Q>q1</Q><R>r1</R><Q>q2</Q><R>r2</R></P>";

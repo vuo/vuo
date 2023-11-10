@@ -4,4 +4,4 @@ Connect two or more audio sources to this node — a **carrier** channel and one
 
 The name "ring modulation" comes from the analog circuit implementation of this effect, which uses 4 diodes connected in a ring.  See [this article](http://synthesizeracademy.com/ring-modulator/) for more information.
 
-Thanks to [alexmitchellmus](https://vuo.org/user/2682) for contributing this node.
+Thanks to [alexmitchellmus](https://community.vuo.org/u/alexmitchellmus) for contributing this node.

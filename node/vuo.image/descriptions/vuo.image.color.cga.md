@@ -7,4 +7,4 @@ Changes the image's colors to the closest colors in the 1981 IBM PC's 4-color CG
 
 ![](cga.png)
 
-Thanks to [Brad Larson](https://github.com/BradLarson/GPUImage) and [Martinus Magneson](https://vuo.org/user/3272) for the GLSL implementation this node is based on.
+Thanks to [Brad Larson](https://github.com/BradLarson/GPUImage) and [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) for the GLSL implementation this node is based on.

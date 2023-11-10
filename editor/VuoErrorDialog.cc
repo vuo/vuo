@@ -13,8 +13,42 @@
 #include "VuoRendererFonts.hh"
 #include "VuoStringUtilities.hh"
 
+QDialog *VuoDialogQueue_activeDialog = nullptr;  ///< The dialog currently being shown, if any.
+
+QVector<QDialog *> VuoDialogQueue;  ///< Dialogs to be shown after the current dialog.
+
+/**
+ * Shows a dialog.
+ * If another dialog is currently being shown,
+ * this method enqueues the new dialog to be shown
+ * after all other existing dialogs have been dismissed.
+ */
+void VuoDialogQueue_push(QDialog *dialog)
+{
+	QObject::connect(dialog, &QDialog::finished, [=]() {
+		if (VuoDialogQueue.isEmpty())
+			VuoDialogQueue_activeDialog = nullptr;
+		else
+		{
+			VuoDialogQueue_activeDialog = VuoDialogQueue.takeFirst();
+			VuoDialogQueue_activeDialog->show();
+		}
+	});
+
+	if (!VuoDialogQueue_activeDialog)
+	{
+		VuoDialogQueue_activeDialog = dialog;
+		VuoDialogQueue_activeDialog->show();
+	}
+	else
+		VuoDialogQueue.append(dialog);
+}
+
 /**
  * Displays a modal dialog.
+ *
+ * This method creates and shows the dialog, then returns
+ * (before the user responds to the dialog).
  *
  * `summary` and `details` may be formatted using Markdown.
  *
@@ -26,23 +60,23 @@ void VuoErrorDialog::show(QWidget *parent, QString summary, QString details, QSt
 
 	VuoRendererFonts *fonts = VuoRendererFonts::getSharedFonts();
 
-	QMessageBox messageBox(parent);
-	messageBox.setWindowFlags(Qt::Sheet);
-	messageBox.setWindowModality(Qt::WindowModal);
-	messageBox.setFont(fonts->dialogHeadingFont());
-	messageBox.setTextFormat(Qt::RichText);
-	messageBox.setText(QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(summary.toStdString())));
+	auto messageBox = new QMessageBox(parent);
+	messageBox->setWindowFlags(Qt::Sheet);
+	messageBox->setWindowModality(Qt::WindowModal);
+	messageBox->setFont(fonts->dialogHeadingFont());
+	messageBox->setTextFormat(Qt::RichText);
+	messageBox->setText(QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(summary.toStdString())));
 
 	// Capitalize, so VuoCompiler exceptions (which typically start with a lowercase letter) look better.
 	details[0] = details[0].toUpper();
-	messageBox.setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style>"
+	messageBox->setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style>"
 		+ QString::fromStdString(VuoStringUtilities::generateHtmlFromMarkdown(details.toStdString())));
 
-	messageBox.setDetailedText(disclosureDetails);
-	messageBox.setStandardButtons(QMessageBox::Ok);
-	messageBox.setIconPixmap(VuoEditorUtilities::vuoLogoForDialogs());
+	messageBox->setDetailedText(disclosureDetails);
+	messageBox->setStandardButtons(QMessageBox::Ok);
+	messageBox->setIconPixmap(VuoEditorUtilities::vuoLogoForDialogs());
 
-	foreach (QObject *child, messageBox.children())
+	foreach (QObject *child, messageBox->children())
 	{
 		// Customize the style of the disclosure details text.
 		if (QString(child->metaObject()->className()) == "QMessageBoxDetailsText")
@@ -60,5 +94,5 @@ void VuoErrorDialog::show(QWidget *parent, QString summary, QString details, QSt
 		}
 	}
 
-	messageBox.exec();
+	VuoDialogQueue_push(messageBox);
 }

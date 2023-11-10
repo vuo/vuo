@@ -3791,6 +3791,36 @@ void VuoCompilerCodeGenUtilities::generatePrint(Module *module, BasicBlock *bloc
 	CallInst::Create(fprintfFunction, fprintfArgs, "", block);
 }
 
+/**
+ * Generates code that calls `VuoLog()` with either a string literal or a formatted string with a value. (Useful for debugging when stderr isn't available, such as in FFGL or FxPlug plugins.)
+ */
+void VuoCompilerCodeGenUtilities::generateVuoLog(Module *module, BasicBlock *block, string formatString, Value *value)
+{
+	vector<Value *> values;
+	if (value)
+		values.push_back(value);
+	generateVuoLog(module, block, formatString, values);
+}
+
+/**
+ * Generates code that calls `VuoLog()` with either a string literal or a formatted string with a value. (Useful for debugging when stderr isn't available, such as in FFGL or FxPlug plugins.)
+ */
+void VuoCompilerCodeGenUtilities::generateVuoLog(Module *module, BasicBlock *block, string formatString, const vector<Value *> &values)
+{
+	Function *vuoLogFunction = getVuoLogFunction(module);
+
+	// void VuoLog(const char *moduleName, const char *file, const unsigned int linenumber, const char *function, const char *format, ...);
+	vector<Value *> vuoLogArgs;
+	vuoLogArgs.push_back(generatePointerToConstantString(module, module->getModuleIdentifier()));
+	vuoLogArgs.push_back(generatePointerToConstantString(module, module->getSourceFileName()));
+	vuoLogArgs.push_back(ConstantInt::get(module->getContext(), APInt(32, 0, false)));
+	vuoLogArgs.push_back(generatePointerToConstantString(module, block->getParent()->getName().str() + ":" + block->getName().str()));
+	vuoLogArgs.push_back(generatePointerToConstantString(module, formatString));
+	for (vector<Value *>::const_iterator i = values.begin(); i != values.end(); ++i)
+		vuoLogArgs.push_back(*i);
+	CallInst::Create(vuoLogFunction, vuoLogArgs, "", block);
+}
+
 ///@{
 /**
  * Returns a Type reference, generating code for the declaration if needed.
@@ -4094,6 +4124,28 @@ Function * VuoCompilerCodeGenUtilities::getFprintfFunction(Module *module)
 
 		vector<Type *> functionParams;
 		functionParams.push_back( getPointerToFileType(module) );
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(IntegerType::get(module->getContext(), 32), functionParams, true);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getVuoLogFunction(Module *module)
+{
+	const char *functionName = "VuoLog";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		// void VuoLog(const char *moduleName, const char *file, const unsigned int linenumber, const char *function, const char *format, ...);
+
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(IntegerType::get(module->getContext(), 32));
+		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(IntegerType::get(module->getContext(), 32), functionParams, true);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);

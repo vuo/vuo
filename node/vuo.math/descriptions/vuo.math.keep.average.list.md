@@ -15,4 +15,4 @@ If you increase `Lookback` from *A* to *B* while the composition is running, the
 
 For point types, this node averages each component (X, Y, Z, W) of the points separately.
 
-Thanks to [Karl Henkel](https://vuo.org/user/32) for developing the node this is based on.
+Thanks to [Karl Henkel](https://community.vuo.org/u/khenkel) for developing the node this is based on.

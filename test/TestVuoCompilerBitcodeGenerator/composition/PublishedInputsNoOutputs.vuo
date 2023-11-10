@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+Subtract [type="vuo.math.subtract.VuoReal" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="210,75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<A>A\r|<B>B\r" _A_type="VuoReal" _A="0.0" _B_type="VuoReal" _B="0.0"];
+
+PublishedInputs:A -> Subtract:a;
+PublishedInputs:B -> Subtract:b;
+}

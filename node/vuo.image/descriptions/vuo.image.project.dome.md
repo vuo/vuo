@@ -1,8 +1,8 @@
-Stretches an image across a mesh imported from a mesh data file. 
+Stretches an image across a mesh imported from a mesh data file.
 
 If you drag a mesh data file from your computer onto the composition, an instance of this node will be created with the `URL` port set up.
 
-This is commonly used for projecting onto a dome with a spherical mirror, an inexpensive alternative to traditional planetarium projection systems. Besides warping images for dome projection, it can be used for any kind of image warping — for example: keystone correction, stereo image alignment, conversion between image perspectives, and projection mapping. 
+This is commonly used for projecting onto a dome with a spherical mirror, an inexpensive alternative to traditional planetarium projection systems. Besides warping images for dome projection, it can be used for any kind of image warping — for example: keystone correction, stereo image alignment, conversion between image perspectives, and projection mapping.
 
 [“Domes, Planetariums, Fisheye, Spherical mirror”](http://paulbourke.net/dome/) describes the image warping technique. It provides mesh data files for warping [fisheye](http://paulbourke.net/dome/warppatch/fisheye.data) or [spherical](http://paulbourke.net/dome/warppatch/spherical.data) images for spherical mirror projection onto a dome, and for warping [cylindrical](http://paulbourke.net/dome/warppatch/cylindrical.data) or [planar](http://paulbourke.net/dome/warppatch/planar.data) images to a perspective projection. It also provides the [meshmapper](http://paulbourke.net/dome/meshmapper/) software for creating custom mesh data files to fit your projector and spherical mirror.
 
@@ -15,4 +15,4 @@ This is commonly used for projecting onto a dome with a spherical mirror, an ine
 
 See [vuo.url](vuo-nodeset://vuo.url) for info on how Vuo handles URLs.
 
-Thanks to [Paul Bourke](http://paulbourke.net/) for developing the image warping technique used by this node and for offering guidance for implementing it in Vuo.
+Thanks to [Paul Bourke](https://community.vuo.org/u/pbourke) for developing the image warping technique used by this node and for offering guidance for implementing it in Vuo.

@@ -8,4 +8,4 @@ If there are no input values, the node outputs an empty list.
 
 For point types, the node averages each component of the value.
 
-Thanks to [Martinus Magneson](https://vuo.org/user/3272) for developing the node this is based on.
+Thanks to [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) for developing the node this is based on.

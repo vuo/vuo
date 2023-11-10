@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+digraph G
+{
+CompareTexts [type="vuo.text.compare" version="1.1.0" label="Compare Texts|<refresh>refresh\l|<a>a\l|<comparison>comparison\l|<b>b\l|<result>result\r" pos="405,105" fillcolor="green" _comparison="\{\"type\":\"equals\",\"isCaseSensitive\":false\}"];
+CutText2 [type="vuo.text.cut" version="2.0.0" label="Cut Text|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="165,105" fillcolor="green" _startPosition="1" _characterCount="1"];
+HoldValue3 [type="vuo.data.hold2.VuoText" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="165,195" fillcolor="green"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<In1>In1\r" _In1_type="VuoText" _In1="\"\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out1>Out1\l" _Out1_type="VuoBoolean"];
+
+CompareTexts:result -> PublishedOutputs:Out1;
+CutText2:partialText -> CompareTexts:a;
+HoldValue3:heldValue -> CompareTexts:b;
+PublishedInputs:In1 -> CutText2:text;
+PublishedInputs:In1 -> HoldValue3:value;
+}

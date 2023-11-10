@@ -16,7 +16,7 @@ const map<string, string> VuoCompilerCompatibility::knownPlatforms = {
 
 const map<string, string> VuoCompilerCompatibility::knownArchitectures = {
 	{"x86_64", "an Intel (X86-64) CPU"},
-	{"arm64", "an Apple Silicon (M1/ARM64) CPU"}
+	{"arm64", "an Apple Silicon (ARM64/M1/M2/M3) CPU"}
 };
 
 /**

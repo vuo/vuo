@@ -8,4 +8,4 @@ Calculates a list of points along the edges of a cube.
 
 This node outputs points for cube faces in the order front, left, right, back, top, bottom.  It individually creates points for each edge of each cube face; each shared edge is included twice (for example, the top-front edge is included for both the front face and the top face).
 
-Thanks to [Martinus Magneson](https://vuo.org/user/3272) for developing the node this is based on.
+Thanks to [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) for developing the node this is based on.

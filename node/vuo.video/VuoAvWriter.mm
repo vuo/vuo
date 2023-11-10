@@ -76,21 +76,6 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 
 		NSURL *file_url = [NSURL URLWithString:[NSString stringWithUTF8String:urlWithExtension]];
 
-		// Make sure file_url is really a writable file so that AVAssetWriter doesn't throw an exception later.
-		// (This avoids a bug where the exception fails to be caught — https://b33p.net/kosada/vuo/vuo/-/issues/19557)
-
-		if (! file_url.fileURL)
-		{
-			VUserLog("Error: \"%s\" is not a file URL", urlWithExtension);
-			return NO;
-		}
-
-		if (! [[NSFileManager defaultManager] isWritableFileAtPath:file_url.path])
-		{
-			VUserLog("Error: \"%s\" is not writable", urlWithExtension);
-			return NO;
-		}
-
 		// check if a file already exists at this location
 		if ([[NSFileManager defaultManager] fileExistsAtPath:[file_url path]])
 		{
@@ -110,11 +95,20 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 			}
 		}
 
-		bool success = [av setupAssetWriterWithUrl:file_url
-										imageWidth:width
-									   imageHeight:height
-									  channelCount:channels
-									   movieFormat:format];
+		bool success = NO;
+		@try
+		{
+			success = [av setupAssetWriterWithUrl:file_url
+									   imageWidth:width
+									  imageHeight:height
+									 channelCount:channels
+									  movieFormat:format];
+		}
+		@catch (NSException *e)
+		{
+			VUserLog("Error initializing AVAssetWriter: %s", e.reason.UTF8String);
+		}
+
 		if (!success)
 			return false;
 	}

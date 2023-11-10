@@ -212,6 +212,8 @@ public:
 	static void generateRemoveCompositionStateFromThreadLocalStorage(Module *module, BasicBlock *block);
 	static void generatePrint(Module *module, BasicBlock *block, string formatString, Value *value=NULL);
 	static void generatePrint(Module *module, BasicBlock *block, string formatString, const vector<Value *> &values);
+	static void generateVuoLog(Module *module, BasicBlock *block, string formatString, Value *value=NULL);
+	static void generateVuoLog(Module *module, BasicBlock *block, string formatString, const vector<Value *> &values);
 
 	static Function * getStrcatFunction(Module *module);
 	static Function * getStrcmpFunction(Module *module);
@@ -220,6 +222,7 @@ public:
 	static Function * getSnprintfFunction(Module *module);
 	static Function * getSscanfFunction(Module *module);
 	static Function * getFprintfFunction(Module *module);
+	static Function * getVuoLogFunction(Module *module);
 	static Function * getPutsFunction(Module *module);
 	static Function * getMallocFunction(Module *module);
 	static Function * getMemcpyFunction(Module *module);

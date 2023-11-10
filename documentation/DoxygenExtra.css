@@ -4,6 +4,11 @@ code {
   border-radius: 0.3em;
   padding: 0 4px;
 }
+@media (prefers-color-scheme: dark) {
+  code {
+    background: #202020;
+  }
+}
 /* …but not the default argument values (such as newNode() on class_vuo_node_class.html). */
 .paramname code {
   background: inherit;

@@ -71,8 +71,8 @@ void VuoInfoDialog::show()
 	setInformativeText("<style>p{" + fonts->getCSS(fonts->dialogBodyFont()) + "}</style>" + details);
 	setIcon(QMessageBox::Information);
 
-	// Make the dialog wide enough to show "⚠️ The app requires macOS on an Apple Silicon (M1/ARM64) CPU." without wrapping.
-	setStyleSheet("QLabel{min-width: 350px;}");
+	// Make the dialog wide enough to show "⚠️ The app requires macOS on an Apple Silicon (ARM64/M1/M2/M3) CPU." without wrapping.
+	setStyleSheet("QLabel{min-width: 410px;}");
 
 	QCheckBox *cb = nullptr;
 	if (hasCheckbox)

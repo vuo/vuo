@@ -3,7 +3,7 @@
  * Creates a 3D warped rotating icosphere with a particle cloud and outputs it as an image.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2017 [mixfilet](https://vuo.org/user/1202767), used with permission.
+ * @copyright Copyright © 2017 [mixfilet](https://community.vuo.org/u/mixfilet), used with permission.
  * @license This composition may be modified and distributed under the terms of the Creative Commons: Attribution (CC BY) License. For more information, see https://creativecommons.org/licenses/by/4.0/ .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */

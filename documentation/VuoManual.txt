@@ -1689,7 +1689,7 @@ Alternatively, the person installing the screen saver can navigate to the \direc
 
 You can turn your Vuo compositions into custom effects, transitions, and generators for Final Cut Pro X and Motion.
 
-\changedInVersion{2.4}{Vuo now exports FxPlug version 4 plugins.  These plugins work on both X86-64 and Apple Silicon (M1/ARM64), and require Motion or Final Cut Pro version 10.5 or later.}
+\changedInVersion{2.4}{Vuo now exports FxPlug version 4 plugins.  These plugins work on both X86-64 and Apple Silicon (ARM64/M1/M2/M3), and require Motion or Final Cut Pro version 10.5 or later.}
 
 ### Video effects
 

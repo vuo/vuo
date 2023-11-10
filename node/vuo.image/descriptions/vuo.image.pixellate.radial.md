@@ -8,4 +8,4 @@ Distorts the image by splitting it into radial slices.
 
 ![](pixellateradial.png)
 
-Thanks to [Brad Larson](https://github.com/BradLarson/GPUImage) and [Martinus Magneson](https://vuo.org/user/3272) for implementing parts of the GLSL code used in this node.
+Thanks to [Brad Larson](https://github.com/BradLarson/GPUImage) and [Martinus Magneson](https://community.vuo.org/u/MartinusMagneson) for implementing parts of the GLSL code used in this node.

@@ -11,4 +11,4 @@ Warps an image from equirectangular (spherical) format to circular fisheye forma
 
 [“Fisheye projections from spherical maps”](http://paulbourke.net/dome/2fish/) has more information on this image warping technique.
 
-Thanks to [Paul Bourke](https://vuo.org/user/2025) for contributing this node.
+Thanks to [Paul Bourke](https://community.vuo.org/u/pbourke) for contributing this node.

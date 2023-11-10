@@ -11,4 +11,4 @@ By default, when Vuo enlarges the image, it will use bilinear interpolation:
 Using this node, you can tell it to pick the nearest pixel, without interpolation:  
 ![](simon-nearestneighbor.png)
 
-Thanks to [Gisle Martens Meyer](https://uncannyplanet.com) for funding development of this node!
+Thanks to [Gisle Martens Meyer](https://community.vuo.org/u/gmm) for funding development of this node!
