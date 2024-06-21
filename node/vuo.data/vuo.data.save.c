@@ -2,7 +2,7 @@
  * @file
  * vuo.data.save node implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -43,6 +43,12 @@ void nodeEvent
 		VuoText absolute_path = VuoUrl_getPosixPath(normalized_url);
 		VuoLocal(absolute_path);
 
+		if (! absolute_path)
+		{
+			VUserLog("Error: \"%s\" is not a file URL", url);
+			return;
+		}
+
 		FILE* file = NULL;
 
 		if (overwriteUrl == 0) // Don't Save
@@ -62,11 +68,13 @@ void nodeEvent
 
 		file = fopen(absolute_path, mode);
 
-		if(file != NULL)
+		if (file != NULL)
 		{
 			if (saveData.data != NULL)
 				fwrite(saveData.data, sizeof(char), (size_t)saveData.size, file);
 			fclose(file);
 		}
+		else
+			VUserLog("Error: Could not write to file \"%s\"", absolute_path);
 	}
 }

@@ -219,6 +219,8 @@
 	<string>org.vuo.Editor.help.@VUO_VERSION_AND_BUILD@</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This Vuo composition would like to use your Mac&apos;s camera for live video processing or recording.</string>
+	<key>NSCameraUseContinuityCameraDeviceType</key>
+	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This Vuo composition would like to use your Mac&apos;s microphone for live audio processing or recording.</string>
 </dict>

@@ -3,7 +3,7 @@
  * Shows an image and a button.  When you click the button, a file selection window pops up, allowing you to save the image.
  *
  * @lastSavedInVuoVersion 2.1.1
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
  */
@@ -18,7 +18,7 @@ MakeActionButton [type="vuo.ui.make.button" version="1.0.0" label="Make Action B
 MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-45,225" _upperLeftColor="\{\"r\":0.33734646439552307,\"g\":0.38431373238563538,\"b\":0.28902113437652588,\"a\":1\}" _upperRightColor="\{\"r\":0.096864268183708191,\"g\":0.13075456023216248,\"b\":0.062012664973735809,\"a\":1\}" _squareSize="0.1" _sharpness="1.0" _angle="10" _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1024" _height="768"];
 MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="351,236" fillcolor="blue"];
 RenderImageToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="405,225" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
-SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="585,465" _overwriteUrl="true" _format="\"PNG\""];
+SaveImage [type="vuo.image.save2" version="2.0.0" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<ifExists>ifExists\l|<format>format\l|<done>done\r" pos="585,465" _ifExists="2" _format="\"PNG\""];
 
 ConvertImageToLayer:layer -> MakeList:1;
 DisplaySaveWindow:selectedURL -> HoldValue:update;

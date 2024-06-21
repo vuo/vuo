@@ -1034,7 +1034,7 @@ To replace a deprecated node, the first thing to try is to right-click on the no
 
 If the \menu{Change To} menu doesn't list an obvious replacement, try searching the Node Library for a node with the same title. If you find one, add it to your composition in place of the deprecated node. As above, consult the node documentation to understand the differences between the new version and the deprecated version. Be sure to run your composition and adjust it as needed.
 
-If you still haven't found the new node(s) to replace the deprecated node with, [check the release notes](https://vuo.org/download) or [ask the community](https://community.vuo.org).
+If you still haven't found the new node(s) to replace the deprecated node with, [check the release notes](https://vuo.org/releases) or [ask the community](https://community.vuo.org).
 
 
 ## The built-in nodes
@@ -1754,7 +1754,8 @@ When Final Cut Pro provides images to your composition via the Image Filter's `i
 
 Vuo creates Motion Templates with resolution 5120x2700.  If, for example, your Final Cut Pro project is 1920x1080, the input image's Scale Factor will be 0.375 (1920/5120) in Better Quality Mode, or 0.1875 (1920/5120/2) in Better Performance Mode.  If you use a `Blur Image` node with radius 100 points, it will be scaled to 37.5 pixels in Better Quality Mode, or 18.75 pixels in Better Performance mode, resulting in the same effective blur amount in both modes.
 
-### Sharing plugins
+### Sharing plugins {#sharing-plugins-fxplug}
+<!-- #sharing-plugins gets hidden by AdBlocker Plus -->
 
 You can share FxPlug plugins you've created in Vuo with other people, even if they don't have Vuo. There are two files associated with a plugin. To find them:
 
@@ -1838,7 +1839,8 @@ Since FFGL limits numeric values to the range 0 to 1, Vuo automatically scales p
 
 Since FFGL limits parameter names to 16 characters, Vuo shortens names if needed. For 2D, 3D, and 4D Point published input ports, Vuo creates a separate parameter for each coordinate (X, Y, Z, or W) and appends a space and the coordinate name to the parameter name. To fit in these 2 extra characters, Vuo shortens the rest of the name to 14 characters. Similarly, for Color published input ports, Vuo creates a separate parameter for each channel (R, G, B, or A).
 
-### Sharing plugins
+### Sharing plugins {#sharing-plugins-ffgl}
+<!-- #sharing-plugins gets hidden by AdBlocker Plus -->
 
 You can share FFGL plugins you've created in Vuo with other people, even if they don't have Vuo. To find an FFGL plugin that you've exported:
 

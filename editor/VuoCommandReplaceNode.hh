@@ -2,7 +2,7 @@
  * @file
  * VuoCommandReplaceNode interface.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -20,6 +20,10 @@ class VuoRendererNode;
 
 /**
  * An undoable action for replacing a set of nodes with a provided set of replacements.
+ *
+ * Use this for replacing a node with a very similar node — changing the number of input ports, specializing, unspecializing.
+ *
+ * @see VuoCommandChangeNode for replacing a node with a dissimilar node
  */
 class VuoCommandReplaceNode : public VuoCommandCommon
 {

@@ -2,7 +2,7 @@
  * @file
  * VuoCModuleCompiler implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -91,11 +91,12 @@ VuoModuleCompilerResults VuoCModuleCompiler::compile(dispatch_queue_t llvmQueue,
 	headerSearchPaths = {};
 
 	// Add the module PCH files' sysroot as the first header search path.
-	sysroot = settings.vuoFrameworkPath + "/Headers";
+	string frameworkVersionPath = settings.vuoFrameworkPath + "/Versions/" + VUO_FRAMEWORK_VERSION_STRING;
+	sysroot = frameworkVersionPath + "/Headers";
 	headerSearchPaths.push_back(sysroot);
 
 	// Add the directory containing the generic header and source files for compound types as the next header search path.
-	headerSearchPaths.push_back(settings.vuoFrameworkPath + "/Modules");
+	headerSearchPaths.push_back(frameworkVersionPath + "/Modules");
 
 	// Since we'll be feeding the module source file to Clang through a virtual file path, add the original source directory
 	// back in as the next header search path.
@@ -291,6 +292,10 @@ unique_ptr<CompilerInstance> VuoCModuleCompiler::createCompilerInstance(const st
 
 	args.push_back("-DVUO_COMPILER");
 	args.push_back("-fblocks");
+
+#ifdef VUO_PRO
+	args.push_back("-DVUO_PRO");
+#endif
 
 	// Provide full backtraces, for easier debugging using Instruments and `VuoLog_backtrace()`.
 	// The Clang driver translates `-fno-omit-frame-pointer` to `clang -cc1`'s `-mdisable-fp-elim`.

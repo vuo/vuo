@@ -12,7 +12,7 @@ An image consists of a grid of **[pixels](https://simple.wikipedia.org/wiki/Pixe
 
 Most of the nodes in this node set do their image processing on the GPU for faster performance. This includes nodes that filter images and nodes that generate images.
 
-A few nodes do their work entirely on the CPU. This includes nodes that deal with image files (such as [Fetch Image](vuo-node://vuo.image.fetch) and [Save Image](vuo-node://vuo.image.save)), nodes that deal with image metadata (such as [Get Image Size](vuo-node://vuo.image.get.size)), the [Sample Color from Image](vuo-node://vuo.image.sample.color) node, the [Are Equal](vuo-node://vuo.image.areEqual) node, and the [Find Barcode](vuo-node://vuo.image.findBarcode2) node.
+A few nodes do their work entirely on the CPU. This includes nodes that deal with image files (such as [Fetch Image](vuo-node://vuo.image.fetch) and [Save Image](vuo-node://vuo.image.save2)), nodes that deal with image metadata (such as [Get Image Size](vuo-node://vuo.image.get.size)), the [Sample Color from Image](vuo-node://vuo.image.sample.color) node, the [Are Equal](vuo-node://vuo.image.areEqual) node, and the [Find Barcode](vuo-node://vuo.image.findBarcode2) node.
 
 Image data may be stored in GPU RAM only or in both GPU and CPU RAM, depending on where the image came from. Images loaded from files (such as the output of the [Fetch Image](vuo-node://vuo.image.fetch) node) are stored in both GPU and CPU RAM. Images generated on the GPU (such as the output of an image filter node) are initially stored in GPU RAM only. But if they're sent to a node that processes image data on the CPU (such as [Sample Color from Image](vuo-node://vuo.image.sample.color)), they're additionally stored in CPU RAM.
 

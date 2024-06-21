@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="674,176" fillcolor="blue"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.1.1" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="330,165" _rows="16" _columns="16"];
+MakeUnlitColorShader [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="60,180" _color="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}" _color_manuallyFirable="yes"];
+RenderSceneToWindow [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="735,165" fillcolor="blue" _width="640" _height="640" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="975,165" _center="\{\"x\":0,\"y\":0\}" _width="0.5" _sampleType="\"average\""];
+SpikeObject [type="vuo.scene.spike" version="1.0.1" label="Spike 3D Object|<refresh>refresh\l|<object>object\l|<distance>distance\l|<spikedObject>spikedObject\r" pos="525,165" fillcolor="orange" _distance="0.10000000000000001"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Event>Event\r" _Event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Color>Color\l" _Color_type="VuoColor"];
+
+MakeList:list -> RenderSceneToWindow:objects;
+MakeSphere2:object -> SpikeObject:object;
+MakeUnlitColorShader:shader -> MakeSphere2:material;
+PublishedInputs:Event -> MakeUnlitColorShader:color;
+RenderSceneToWindow:image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> PublishedOutputs:Color;
+SpikeObject:spikedObject -> MakeList:1;
+}

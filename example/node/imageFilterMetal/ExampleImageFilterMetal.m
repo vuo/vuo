@@ -2,7 +2,7 @@
  * @file
  * ExampleImageFilterMetal implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -34,7 +34,6 @@ typedef struct
 	{
 		_device = MTLCreateSystemDefaultDevice();
 		_commandQueue = [_device newCommandQueue];
-		NSError *e = nil;
 		id<MTLLibrary> library;
 
 		NSString *lib = STRING(
@@ -60,6 +59,7 @@ typedef struct
 			}
 		);
 
+		NSError *error = nil;
 		library = [_device newLibraryWithSource:[lib stringByAppendingString:STRING(
 			typedef struct
 			{
@@ -73,12 +73,14 @@ typedef struct
 				constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
 				return colorTexture.sample(textureSampler, in.textureCoordinate + float2(0, sin(in.textureCoordinate.x * 3.14*2 + u.phase)/10));
 			}
-		)] options:nil error:&e];
-		if (e)
+		)] options:nil error:&error];
+		if (!library)
 		{
-			NSLog(@"%@",e);
+			NSLog(@"%@", error);
 			return 0;
 		}
+		if (error)
+			NSLog(@"%@", error);
 
 		MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
 		pipelineStateDescriptor.vertexFunction = [[library newFunctionWithName:@"vertexShader"] autorelease];
@@ -86,7 +88,6 @@ typedef struct
 		pipelineStateDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
 		[library release];
 
-		NSError *error = nil;
 		_pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
 		[pipelineStateDescriptor release];
 		if (!_pipelineState)
@@ -135,6 +136,7 @@ typedef struct
 		[renderEncoder endEncoding];
 
 		[commandBuffer commit];
+		[commandBuffer waitUntilCompleted];
 		[outputTexture release];
 		[inputTexture release];
 		return surf;

@@ -4,7 +4,7 @@ set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
 find_library(VUO_FRAMEWORK Vuo)
 
 foreach (arch "x86_64" "arm64")
-	if (EXISTS "${VUO_FRAMEWORK}/Headers/OBJC-${arch}.h.pch")
+	if (EXISTS "${VUO_FRAMEWORK}/Modules/OBJC-${arch}.h.pch")
 		list(APPEND supportedTargets ${arch})
 	endif()
 endforeach()
@@ -103,7 +103,7 @@ add_custom_command(
 	COMMAND mkdir -p ${nodeSetName}/examples
 	COMMAND cp ${compiledNodeClasses} ${compiledTypes} ${compiledListTypes} ${headers} ${nodeSetName}
 	COMMAND cp ${examples} ${nodeSetName}/examples
-	COMMAND cd ${nodeSetName} && zip -r --quiet "${PROJECT_BINARY_DIR}/${nodeSetFile}" .
+	COMMAND cd ${nodeSetName} && zip -r --quiet "${PROJECT_BINARY_DIR}/${nodeSetFile}" . && cd -
 	COMMAND cp ${nodeSetFile} ${userModules}
 	OUTPUT ${nodeSetFile}
 )

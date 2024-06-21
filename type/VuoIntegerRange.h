@@ -2,7 +2,7 @@
  * @file
  * VuoIntegerRange C type definition.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -16,20 +16,26 @@ extern "C" {
 
 #include "VuoInteger.h"
 
+/**
+ * @ingroup VuoTypes
+ * @defgroup VuoIntegerRange VuoIntegerRange
+ * Defines an integer range with an optionally bound/unbound min/max.
+ *
+ * @{
+ */
+
 /// VuoIntegerRange.minimum's value when the range has no minimum.
 #define VuoIntegerRange_NoMinimum INT64_MIN
 /// VuoIntegerRange.maximum's value when the range has no maximum.
 #define VuoIntegerRange_NoMaximum INT64_MAX
 
 /**
- * Defines an int range with an optionally bound/unbound min/max.
+ * Defines an integer range with an optionally bound/unbound min/max.
  */
 typedef struct
 {
-	// The minimum value of a range.  (VuoIntegerRange_min >= minimum >= maximum)
-	VuoInteger minimum;
-	// The maximum value of a range.  (minimum >= maximum >= VuoIntegerRange_max)
-	VuoInteger maximum;
+	VuoInteger minimum;  ///< The minimum value of a range, or VuoIntegerRange_NoMinimum if no limit.
+	VuoInteger maximum;  ///< The maximum value of a range, or VuoIntegerRange_NoMaximum if no limit.
 } VuoIntegerRange;
 
 VuoIntegerRange VuoIntegerRange_makeFromJson(struct json_object * js);
@@ -74,6 +80,10 @@ static inline VuoIntegerRange VuoIntegerRange_getOrderedRange(VuoIntegerRange ra
 	else
 		return range;
 }
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.color.palette-dithering-palette composition.
+ *
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+  // When we render a gradient using a specified palette, then dither it using the same specified palette, the only colors in the output image should be those in the specified palette.
+  // Caveat:
+  //    - `Make Palette from Image` only supports opaque colors, so we can't test transparency.
+  //    - `Make Palette from Image` pads the output list (exactly 8 entries in this composition) with solid black.
+  //      Check these extra values, too, to ensure that `Map Image to Palette` isn't introducing unexpected colors.
+  "bw-glsl"       :{"firingPort":"palette","inputPortValues":{"palette":["#000","#fff"                                          ],"dithering":23 /* Bayer 16×16 (GLSL)      */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#000","#000","#000","#fff"]}},
+  "bw-metal"      :{"firingPort":"palette","inputPortValues":{"palette":["#000","#fff"                                          ],"dithering":34 /* Floyd-Steinberg (Metal) */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#000","#000","#000","#fff"]}},
+  "grey-glsl"     :{"firingPort":"palette","inputPortValues":{"palette":["#000","#888","#fff"                                   ],"dithering":23 /* Bayer 16×16 (GLSL)      */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#000","#000","#888","#fff"]}},
+  "grey-metal"    :{"firingPort":"palette","inputPortValues":{"palette":["#000","#888","#fff"                                   ],"dithering":34 /* Floyd-Steinberg (Metal) */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#000","#000","#888","#fff"]}},
+  "kbgrw-glsl"    :{"firingPort":"palette","inputPortValues":{"palette":["#000","#00f","#0f0","#f00","#fff"                     ],"dithering":23 /* Bayer 16×16 (GLSL)      */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#00f","#0f0","#f00","#fff"]}},
+  "kbgrw-metal"   :{"firingPort":"palette","inputPortValues":{"palette":["#000","#00f","#0f0","#f00","#fff"                     ],"dithering":34 /* Floyd-Steinberg (Metal) */},"outputPortValues":{"paletteAfterDithering":["#000","#000","#000","#000","#0005ff","#0f0","#ff0500","#fff"]}},  // imprecise YUV conversion?
+  "kbgcrmyw-glsl" :{"firingPort":"palette","inputPortValues":{"palette":["#000","#00f","#0f0","#0ff","#f00","#f0f","#ff0","#fff"],"dithering":23 /* Bayer 16×16 (GLSL)      */},"outputPortValues":{"paletteAfterDithering":["#000","#00f","#0f0","#0ff","#f00","#f0f","#ff0","#fff"]}},
+  "kbgcrmyw-metal":{"firingPort":"palette","inputPortValues":{"palette":["#000","#00f","#0f0","#0ff","#f00","#f0f","#ff0","#fff"],"dithering":34 /* Floyd-Steinberg (Metal) */},"outputPortValues":{"paletteAfterDithering":["#000","#0005ff","#0f0","#0ff","#ff0500","#ff05ff","#ff0","#fff"]}},  // imprecise YUV conversion?
+}}

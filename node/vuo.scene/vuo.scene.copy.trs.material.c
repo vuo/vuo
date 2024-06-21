@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.copy.trs.material node implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					 ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "DisplayRowOfSpheres.vuo" ]
+						 "exampleCompositions" : [ "DisplayGradientOfSpheres.vuo" ]
 					 },
 					 "genericTypes" : {
 						 "VuoGenericType1" : {

@@ -2,7 +2,7 @@
  * @file
  * VuoEdgeBlend C type definition.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -14,13 +14,21 @@ extern "C" {
 #endif
 
 /**
- * Apply a crop, fade and gamma curve to an edge.
+ * @ingroup VuoTypes
+ * @defgroup VuoEdgeBlend VuoEdgeBlend
+ * Apply a crop, fade, and gamma curve to an edge.
+ *
+ * @{
+ */
+
+/**
+ * Apply a crop, fade, and gamma curve to an edge.
  */
 typedef struct
 {
-	float cutoff;
-	float gamma;
-	float crop;
+	float cutoff;  ///< The proportion of the image (typically 0 to 0.5) that should be blended from transparent to the image's full opacity.
+	float gamma;   ///< Controls the gradient of the blending. As gamma increases, the change from transparent to full opacity becomes more gradual.
+	float crop;    ///< The proportion of the image (typically 0 to 0.5) that should be cropped out. When cropped, the image is stretched so that it still reaches the corner points.
 } VuoEdgeBlend;
 
 /**
@@ -45,6 +53,10 @@ char * VuoEdgeBlend_getString(const VuoEdgeBlend value);
 void VuoEdgeBlend_retain(VuoEdgeBlend value);
 void VuoEdgeBlend_release(VuoEdgeBlend value);
 ///@}
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

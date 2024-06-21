@@ -14,7 +14,7 @@ execute_process(
 	OUTPUT_VARIABLE supportedTargetsXcode
 )
 foreach (arch "x86_64" "arm64")
-	if (supportedTargetsXcode MATCHES ${arch} AND EXISTS "${VUO_FRAMEWORK}/Headers/OBJC-${arch}.h.pch")
+	if (supportedTargetsXcode MATCHES ${arch} AND EXISTS "${VUO_FRAMEWORK}/Modules/OBJC-${arch}.h.pch")
 		list(APPEND supportedTargets ${arch})
 	endif()
 endforeach()
@@ -67,6 +67,7 @@ foreach (arch ${CMAKE_OSX_ARCHITECTURES})
 		COMMAND xcrun clang
 			-isysroot ${CMAKE_OSX_SYSROOT}
 			-target ${arch}-apple-macosx10.10.0
+			-fno-objc-msgsend-selector-stubs
 			-I ${VUO_FRAMEWORK}/Headers
 			-c ${librarySource}
 			-o ${object}

@@ -11,12 +11,14 @@
 	<key>CFBundleShortVersionString</key>
 	<string>@SHORT_VERSION@</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012–2023 Kosada Incorporated.  This executable may be used and distributed according to the terms described on https://vuo.org/license.</string>
+	<string>Copyright © 2012–2024 Kosada Incorporated.  This executable may be used and distributed according to the terms described on https://vuo.org/license.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSRequiresAquaSystemAppearance</key>
 	<false/>
 	<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
+	<true/>
+	<key>NSCameraUseContinuityCameraDeviceType</key>
 	<true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>

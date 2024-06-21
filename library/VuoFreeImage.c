@@ -2,7 +2,7 @@
  * @file
  * VuoFreeImage implementation.
  *
- * @copyright Copyright © 2012–2022 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -76,6 +76,7 @@ FIBITMAP *VuoFreeImage_convertVuoImageToFreeImage(VuoImage image, bool allowFloa
 	if (image->glInternalFormat == GL_DEPTH_COMPONENT)
 		bufferFormat = GL_DEPTH_COMPONENT16;
 	else if (image->glInternalFormat == GL_LUMINANCE
+		  || image->glInternalFormat == GL_LUMINANCE8
 		  || image->glInternalFormat == GL_LUMINANCE16F_ARB
 		  || image->glInternalFormat == GL_LUMINANCE32F_ARB)
 		bufferFormat = GL_R16;  // 1 channel, 16bit integer (just like depth)

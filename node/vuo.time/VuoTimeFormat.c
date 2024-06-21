@@ -2,7 +2,7 @@
  * @file
  * VuoTimeFormat implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -40,7 +40,9 @@ VuoTimeFormat VuoTimeFormat_makeFromJson(json_object *js)
 
 	VuoTimeFormat value = VuoTimeFormat_DateTimeSortable;
 
-	if (strcmp(valueAsString, "datetime-short-24") == 0)
+	if (strcmp(valueAsString, "datetime-sortable-milliseconds") == 0)
+		value = VuoTimeFormat_DateTimeSortableMilliseconds;
+	else if (strcmp(valueAsString, "datetime-short-24") == 0)
 		value = VuoTimeFormat_DateTimeShort24;
 	else if (strcmp(valueAsString, "datetime-short-12") == 0)
 		value = VuoTimeFormat_DateTimeShort12;
@@ -73,7 +75,9 @@ json_object *VuoTimeFormat_getJson(const VuoTimeFormat value)
 {
 	char *valueAsString = "datetime-sortable";
 
-	if (value == VuoTimeFormat_DateTimeShort12)
+	if (value == VuoTimeFormat_DateTimeSortableMilliseconds)
+		valueAsString = "datetime-sortable-milliseconds";
+	else if (value == VuoTimeFormat_DateTimeShort12)
 		valueAsString = "datetime-short-12";
 	else if (value == VuoTimeFormat_DateTimeShort24)
 		valueAsString = "datetime-short-24";
@@ -106,6 +110,7 @@ VuoList_VuoTimeFormat VuoTimeFormat_getAllowedValues(void)
 {
 	VuoList_VuoTimeFormat l = VuoListCreate_VuoTimeFormat();
 	VuoListAppendValue_VuoTimeFormat(l, VuoTimeFormat_DateTimeSortable);
+	VuoListAppendValue_VuoTimeFormat(l, VuoTimeFormat_DateTimeSortableMilliseconds);
 	VuoListAppendValue_VuoTimeFormat(l, VuoTimeFormat_DateTimeShort12);
 	VuoListAppendValue_VuoTimeFormat(l, VuoTimeFormat_DateTimeShort24);
 	VuoListAppendValue_VuoTimeFormat(l, VuoTimeFormat_DateTimeMedium12);
@@ -129,6 +134,8 @@ char *VuoTimeFormat_getSummary(const VuoTimeFormat value)
 	VuoLocal(formatted);
 	if (value == VuoTimeFormat_DateTimeSortable)
 		return VuoText_format("Date & Time — Sortable, UTC (%s)", formatted);
+	else if (value == VuoTimeFormat_DateTimeSortableMilliseconds)
+		return VuoText_format("Date & Time — Sortable with Milliseconds, UTC (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeShort12)
 		return VuoText_format("Date & Time — Short — 12-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeShort24)

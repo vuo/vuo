@@ -2,7 +2,7 @@
  * @file
  * TestVuoTime implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -509,19 +509,20 @@ private slots:
 
 		VuoTime t = VuoTime_make(2015, 6, 1, 20, 19, 32.6);
 
-		//                                                                            en_US                                  en_GB                                  de_DE                                  ja_JP
-		QTest::newRow("datetime-sortable")  << t << VuoTimeFormat_DateTimeSortable << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"				;
-		QTest::newRow("datetime-short-12")  << t << VuoTimeFormat_DateTimeShort12  << "06/01/2015 08:19:32 PM"            << "01/06/2015 08:19:32 pm"            << "01.06.2015 08:19:32 pm"            << "2015/06/01 08:19:32 PM"				;
-		QTest::newRow("datetime-short-24")  << t << VuoTimeFormat_DateTimeShort24  << "06/01/2015 20:19:32"               << "01/06/2015 20:19:32"               << "01.06.2015 20:19:32"               << "2015/06/01 20時19分32秒"				;
-		QTest::newRow("datetime-medium-12") << t << VuoTimeFormat_DateTimeMedium12 << "Jun  1, 2015 08:19:32 PM"          << "Jun  1, 2015 08:19:32 pm"          << "Jun  1, 2015 08:19:32 pm"          << " 6  1, 2015 08:19:32 PM"			;
-		QTest::newRow("datetime-medium-24") << t << VuoTimeFormat_DateTimeMedium24 << "Jun  1, 2015 20:19:32"             << "Jun  1, 2015 20:19:32"             << "Jun  1, 2015 20:19:32"             << " 6  1, 2015 20時19分32秒"			;
-		QTest::newRow("datetime-long-12")   << t << VuoTimeFormat_DateTimeLong12   << "Monday, June  1, 2015 08:19:32 PM" << "Monday, June  1, 2015 08:19:32 pm" << "Montag, Juni  1, 2015 08:19:32 pm" << "月曜日, 6月  1, 2015 08:19:32 PM"	;
-		QTest::newRow("datetime-long-24")   << t << VuoTimeFormat_DateTimeLong24   << "Monday, June  1, 2015 20:19:32"    << "Monday, June  1, 2015 20:19:32"    << "Montag, Juni  1, 2015 20:19:32"    << "月曜日, 6月  1, 2015 20時19分32秒"	;
-		QTest::newRow("date-short")         << t << VuoTimeFormat_DateShort        << "06/01/2015"                        << "01/06/2015"                        << "01.06.2015"                        << "2015/06/01"							;
-		QTest::newRow("date-medium")        << t << VuoTimeFormat_DateMedium       << "Jun  1, 2015"                      << "Jun  1, 2015"                      << "Jun  1, 2015"                      << " 6  1, 2015"						;
-		QTest::newRow("date-long")          << t << VuoTimeFormat_DateLong         << "Monday, June  1, 2015"             << "Monday, June  1, 2015"             << "Montag, Juni  1, 2015"             << "月曜日, 6月  1, 2015"				;
-		QTest::newRow("time-12")            << t << VuoTimeFormat_Time12           << "08:19:32 PM"                       << "08:19:32 pm"                       << "08:19:32 pm"                       << "08:19:32 PM"						;
-		QTest::newRow("time-24")            << t << VuoTimeFormat_Time24           << "20:19:32"                          << "20:19:32"                          << "20:19:32"                          << "20時19分32秒"						;
+		//                                                                                                    en_US                                  en_GB                                  de_DE                                  ja_JP
+		QTest::newRow("datetime-sortable")              << t << VuoTimeFormat_DateTimeSortable             << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z";
+		QTest::newRow("datetime-sortable-milliseconds") << t << VuoTimeFormat_DateTimeSortableMilliseconds << "2015-06-02 01:19:32.600Z"          << "2015-06-02 01:19:32.600Z"          << "2015-06-02 01:19:32.600Z"          << "2015-06-02 01:19:32.600Z";
+		QTest::newRow("datetime-short-12")              << t << VuoTimeFormat_DateTimeShort12              << "06/01/2015 08:19:32 PM"            << "01/06/2015 08:19:32 pm"            << "01.06.2015 08:19:32 pm"            << "2015/06/01 08:19:32 PM";
+		QTest::newRow("datetime-short-24")              << t << VuoTimeFormat_DateTimeShort24              << "06/01/2015 20:19:32"               << "01/06/2015 20:19:32"               << "01.06.2015 20:19:32"               << "2015/06/01 20時19分32秒";
+		QTest::newRow("datetime-medium-12")             << t << VuoTimeFormat_DateTimeMedium12             << "Jun  1, 2015 08:19:32 PM"          << "Jun  1, 2015 08:19:32 pm"          << "Jun  1, 2015 08:19:32 pm"          << " 6  1, 2015 08:19:32 PM";
+		QTest::newRow("datetime-medium-24")             << t << VuoTimeFormat_DateTimeMedium24             << "Jun  1, 2015 20:19:32"             << "Jun  1, 2015 20:19:32"             << "Jun  1, 2015 20:19:32"             << " 6  1, 2015 20時19分32秒";
+		QTest::newRow("datetime-long-12")               << t << VuoTimeFormat_DateTimeLong12               << "Monday, June  1, 2015 08:19:32 PM" << "Monday, June  1, 2015 08:19:32 pm" << "Montag, Juni  1, 2015 08:19:32 pm" << "月曜日, 6月  1, 2015 08:19:32 PM";
+		QTest::newRow("datetime-long-24")               << t << VuoTimeFormat_DateTimeLong24               << "Monday, June  1, 2015 20:19:32"    << "Monday, June  1, 2015 20:19:32"    << "Montag, Juni  1, 2015 20:19:32"    << "月曜日, 6月  1, 2015 20時19分32秒";
+		QTest::newRow("date-short")                     << t << VuoTimeFormat_DateShort                    << "06/01/2015"                        << "01/06/2015"                        << "01.06.2015"                        << "2015/06/01";
+		QTest::newRow("date-medium")                    << t << VuoTimeFormat_DateMedium                   << "Jun  1, 2015"                      << "Jun  1, 2015"                      << "Jun  1, 2015"                      << " 6  1, 2015";
+		QTest::newRow("date-long")                      << t << VuoTimeFormat_DateLong                     << "Monday, June  1, 2015"             << "Monday, June  1, 2015"             << "Montag, Juni  1, 2015"             << "月曜日, 6月  1, 2015";
+		QTest::newRow("time-12")                        << t << VuoTimeFormat_Time12                       << "08:19:32 PM"                       << "08:19:32 pm"                       << "08:19:32 pm"                       << "08:19:32 PM";
+		QTest::newRow("time-24")                        << t << VuoTimeFormat_Time24                       << "20:19:32"                          << "20:19:32"                          << "20:19:32"                          << "20時19分32秒";
 	}
 	void testFormat()
 	{

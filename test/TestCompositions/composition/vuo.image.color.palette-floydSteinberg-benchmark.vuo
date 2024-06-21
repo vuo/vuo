@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+HoldValue [type="vuo.data.hold.list2.VuoColor" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="105,210"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="120,135"];
+MakeList5 [type="vuo.list.make.7.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<list>list\r" pos="-108,-34" _1="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _2="\{\"r\":0.97647058963775635,\"g\":0.92941176891326904,\"b\":0.51764708757400513,\"a\":1.0\}" _3="\{\"r\":0.85490196943283081,\"g\":0.61568629741668701,\"b\":0.3333333432674408,\"a\":1.0\}" _4="\{\"r\":0.51764708757400513,\"g\":0.27058824896812439,\"b\":0.098039217293262482,\"a\":1.0\}" _5="\{\"r\":0.36078432202339172,\"g\":0.15686275064945221,\"b\":0.070588238537311554,\"a\":1.0\}" _6="\{\"r\":0.35115587711334229,\"g\":0.35877013206481934,\"b\":0.49480429291725159,\"a\":1.0\}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="120,-45" _center="\{\"x\":0.0,\"y\":0.0\}" _radius="1" _noiseAmount="0.2" _width="1280" _height="720"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="285,195" _paletteMatchingAccuracy="1" _dithering="34" _ditheringIntensity="1"];
+ShareList [type="vuo.data.share.list.VuoColor" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-75,-45"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Init>Init\r|<Test>Test\r" _Init_type="event" _Test_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<InitDone>InitDone\l|<TestDone>TestDone\l" _InitDone_type="event" _TestDone_type="event"];
+
+HoldValue2:heldValue -> MapImageToPalette:image;
+HoldValue:heldValue -> MapImageToPalette:palette;
+MakeList5:list -> ShareList:value;
+MakeRadialGradientImage:image -> HoldValue2:value;
+MakeRadialGradientImage:image -> PublishedOutputs:InitDone;
+MapImageToPalette:quantizedImage -> PublishedOutputs:TestDone;
+PublishedInputs:Init -> MakeList5:1;
+PublishedInputs:Test -> HoldValue2:update;
+PublishedInputs:Test -> HoldValue:update;
+ShareList:sameValue -> HoldValue:value;
+ShareList:sameValue -> MakeRadialGradientImage:colors;
+}

@@ -75,12 +75,62 @@ Check that modifying certain source files causes certain build steps to be perfo
       When  I build
       Then  it shouldn't do anything
 
+   Scenario: Editing a type header in a node set
+      Given a completed build
+      When  I edit node/vuo.color/VuoDmxColorMap.h
+      And   I build
+      Then  it should update the vuo.color node set
+      And   it should update the built-in cache
+      And   it should update lib/VuoRunner.framework/Versions/2/VuoRunner
+      And   it should update lib/Vuo.framework/Versions/2/Vuo
+      But   it shouldn't update lib/libVuoIsfModuleCompiler.dylib
+      And   it shouldn't update the precompiled module headers
+      And   it shouldn't update bin/vuo-compile-for-framework
+      And   it shouldn't update bin/vuo-link
+
+      When  I build
+      Then  it shouldn't do anything
+
    Scenario: Editing a type in a node set
       Given a completed build
       When  I edit node/vuo.color/VuoDmxColorMap.c
       And   I build
       Then  it should update the vuo.color node set
       And   it should update the built-in cache
+      And   it should update lib/VuoRunner.framework/Versions/2/VuoRunner
+      And   it should update lib/Vuo.framework/Versions/2/Vuo
+      But   it shouldn't update lib/libVuoIsfModuleCompiler.dylib
+      And   it shouldn't update the precompiled module headers
+      And   it shouldn't update bin/vuo-compile-for-framework
+      And   it shouldn't update bin/vuo-link
+
+      When  I build
+      Then  it shouldn't do anything
+
+   Scenario: Editing a library header in a node set
+      Given a completed build
+      When  I edit node/vuo.color/VuoColorspace.h
+      And   I build
+      Then  it should update the vuo.color node set
+      And   it should update the built-in cache
+      But   it shouldn't update lib/libVuoIsfModuleCompiler.dylib
+      And   it shouldn't update the precompiled module headers
+      And   it shouldn't update bin/vuo-compile-for-framework
+      And   it shouldn't update bin/vuo-link
+
+      When  I build
+      Then  it shouldn't do anything
+
+   Scenario: Editing a library in a node set
+      Given a completed build
+      When  I edit node/vuo.color/VuoColorspace.m
+      And   I build
+      Then  it should update the vuo.color node set
+      And   it should update the built-in cache
+      But   it shouldn't update lib/libVuoIsfModuleCompiler.dylib
+      And   it shouldn't update the precompiled module headers
+      And   it shouldn't update bin/vuo-compile-for-framework
+      And   it shouldn't update bin/vuo-link
 
       When  I build
       Then  it shouldn't do anything
@@ -116,6 +166,7 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the VuoList_VuoInteger module in the built-in cache
       And   it should update the built-in cache
+      And   it should update the precompiled module headers
 
       When  I build
       Then  it shouldn't do anything
@@ -140,6 +191,7 @@ Check that modifying certain source files causes certain build steps to be perfo
 
       And   it should update the VuoList_VuoInteger module in the built-in cache
       And   it should update the built-in cache
+      And   it should update the precompiled module headers
 
       When  I build
       Then  it shouldn't do anything

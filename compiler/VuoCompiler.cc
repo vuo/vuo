@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -205,31 +205,27 @@ VuoCompilerEnvironment * VuoCompiler::generatedEnvironmentAtSameScopeAs(VuoCompi
  *     pass the path so the compiler can locate composition-local modules. If the path is not yet known,
  *     it can be set later with VuoCompiler::setCompositionPath() or VuoCompiler::compileComposition().
  *     If not compiling a composition, pass an empty string.
- * @param target The LLVM Target Triple to use for this compiler instance.
- *               Affects which slice of multi-archtecture binaries is loaded,
- *               and affects the bitcode that's generated.
- *               If no target is specified, the current process's architecture is used.
+ * @param target If this compiler will be used to cross-compile a composition for a platform/architecture different
+ *     from the current process's, pass the target triple for the minimum OS version on that platform/architecture
+ *     that the composition should be able to run on. This compiler will make sure the composition is compatible with
+ *     @a target (or, if unspecified, with the current process's target) before compiling it. The actual target that the
+ *     composition gets compiled for will have the same platform and architecture as @a target (or, if unspecified,
+ *     the current process's target), though may have an earlier OS version.
  * @version200Changed{Added `compositionPath` argument.}
  */
 VuoCompiler::VuoCompiler(const string &compositionPath, string target)
 {
+	requestedTarget = target;
 	if (target.empty())
-	{
 		target = getProcessTarget();
 
-		// Match the target macOS version of the built-in modules and precompiled headers.
-		llvm::Triple triple(target);
-		triple.setOSName("macosx10.10.0");
-		target = triple.str();
+	// Match the target macOS version of the built-in modules and precompiled headers.
+	llvm::Triple triple(target);
+	triple.setOSName("macosx10.10.0");
+	target = triple.str();
 
-		VDebugLog("%p  target=%s (from current process)", this, target.c_str());
-	}
-	else
-	{
-		requestedTarget = target;
-		VDebugLog("%p  target=%s", this, target.c_str());
-	}
 	this->target = target;
+	VDebugLog("%p  target=%s", this, target.c_str());
 
 #if VUO_PRO
 	init_Pro();

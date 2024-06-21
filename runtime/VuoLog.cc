@@ -2,7 +2,7 @@
  * @file
  * VuoLog implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -504,6 +504,7 @@ void VuoLog(const char *moduleName, const char *file, const unsigned int linenum
 		formattedFunction ? formattedFunction : function,
 		mainColor,
 		formattedString);
+	fflush(stderr);
 
 
 	// Also send it to the macOS Console.

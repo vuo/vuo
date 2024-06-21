@@ -42,6 +42,7 @@ VuoCompileNodes(
 	vuo.color.make.hsl.c
 	vuo.color.make.cmyk.c
 	vuo.color.make.rgb.c
+	vuo.color.palette.make.gradient.c
 	vuo.color.palette.make.image.c
 )
 target_include_directories(vuo.color.nodes

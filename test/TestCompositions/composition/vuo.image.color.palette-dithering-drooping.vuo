@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+MakeList [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="386,101" _1="\"#000\"" _2="\"#fff\"" _3="\{\"r\":0.1591821163892746,\"g\":0.058136872947216034,\"b\":0.61834132671356201,\"a\":1.0\}"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="119,86"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="-75,255" _color="\{\"r\":0.0,\"g\":0.63157093524932861,\"b\":1.0,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":-0.5,\"y\":0.5\}" _rotation="0.0" _width="1.0" _height="1.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="-75,75" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="480,75" _paletteMatchingAccuracy="1" _dithering="32" _ditheringIntensity="1"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="180,75" _width="32" _height="32" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SampleColorFromImage2 [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="765,75" _center="\{\"x\":0.25,\"y\":-0.25\}" _width="0.5" _sampleType="\"average\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<go>go\r" _go_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<bottomRightColor>bottomRightColor\l" _bottomRightColor_type="VuoColor"];
+
+MakeList2:list -> RenderLayersToImage:layers;
+MakeList:list -> MapImageToPalette:palette;
+MakeRectangleLayer2:layer -> MakeList2:1;
+MakeRectangleLayer:layer -> MakeList2:2;
+MapImageToPalette:quantizedImage -> SampleColorFromImage2:image;
+PublishedInputs:go -> MakeRectangleLayer2:color;
+PublishedInputs:go -> MakeRectangleLayer:color;
+RenderLayersToImage:image -> MapImageToPalette:image;
+SampleColorFromImage2:color -> PublishedOutputs:bottomRightColor;
+}

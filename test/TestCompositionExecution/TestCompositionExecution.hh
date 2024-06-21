@@ -2,7 +2,7 @@
  * @file
  * TestCompositionExecution interface.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -42,6 +42,7 @@ protected:
 	static VuoCompiler * initCompiler(const string &compositionPath);
 	static const char *getJsonTypeDescription(enum json_type);
 	VuoPortClass *getFirstPortOfType(vector<VuoPortClass *> ports, string type);
+	vector<VuoPortClass *> getPortsOfType(vector<VuoPortClass *> ports, string type);
 	VuoRunner *createAndStartRunnerFromNode(VuoCompilerNodeClass *nodeClass);
 };
 

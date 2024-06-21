@@ -2,7 +2,7 @@
  * @file
  * VuoCommandChangeNode implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -133,7 +133,11 @@ void VuoCommandChangeNode::swapNodes()
 			VuoPort *oldInputPort = (*i).first;
 			VuoPort *newInputPort = updatedPortForOriginalPort[oldInputPort];
 			if (newInputPort)
-				composition->updatePortConstant(static_cast<VuoCompilerInputEventPort *>(newInputPort->getCompiler()), constantValueForOriginalPort[oldInputPort], false);
+			{
+				auto compilerInputEventPort = static_cast<VuoCompilerInputEventPort *>(newInputPort->getCompiler());
+				if (compilerInputEventPort->getData())
+					composition->updatePortConstant(compilerInputEventPort, constantValueForOriginalPort[oldInputPort], false);
+			}
 		}
 
 		// Re-route cables.
@@ -347,6 +351,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			if ((!oldDataType) ||
 					((oldDataType && newDataType) && (oldDataType->getModuleKey() == newDataType->getModuleKey())))
 			{
+				VDebugLog("mapping input port \"%s\" to \"%s\" (exact match on name and type)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort;
 
 				if (oldDataType)
@@ -370,6 +375,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			if ((!oldDataType) ||
 					((oldDataType && newDataType) && (oldDataType->getModuleKey() == newDataType->getModuleKey())))
 			{
+				VDebugLog("mapping output port \"%s\" to \"%s\" (exact match on name and type)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort;
 
 				if (oldDataType)
@@ -399,6 +405,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			VuoType *newDataType = newPort->getDataType();
 			if ((oldDataType && newDataType) && (oldDataType->getModuleKey() == newDataType->getModuleKey()))
 			{
+				VDebugLog("mapping input port \"%s\" to \"%s\" (data-and-event, matched on type)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
 				newPortsClaimed.insert(newPort->getBase());
 				break;
@@ -426,6 +433,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			VuoType *newDataType = newPort->getDataType();
 			if ((oldDataType && newDataType) && (oldDataType->getModuleKey() == newDataType->getModuleKey()))
 			{
+				VDebugLog("mapping output port \"%s\" to \"%s\" (data-and-event, matched on type)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
 				newPortsClaimed.insert(newPort->getBase());
 				break;
@@ -448,7 +456,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			// Find exact match-by-name.
 			VuoPort *newPort = newNode->getBase()->getInputPortWithName(oldPortName);
 			if (newPort)
+			{
+				VDebugLog("mapping input port \"%s\" to \"%s\" (data-and-event, matched on name)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort;
+			}
 		}
 	}
 
@@ -465,7 +476,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			// Find exact match-by-name.
 			VuoPort *newPort = newNode->getBase()->getOutputPortWithName(oldPortName);
 			if (newPort)
+			{
+				VDebugLog("mapping output port \"%s\" to \"%s\" (data-and-event, matched on name)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort;
+			}
 		}
 	}
 
@@ -481,7 +495,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 		{
 			VuoRendererPort *newPort = composition->findDefaultPortForEventOnlyConnection(newNode, true);
 			if (newPort)
+			{
+				VDebugLog("mapping input port \"%s\" to \"%s\" (event-only cable to data-and-event port, mapped to default port)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
+			}
 		}
 	}
 
@@ -495,7 +512,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 		{
 			VuoRendererPort *newPort = composition->findDefaultPortForEventOnlyConnection(newNode, false);
 			if (newPort)
+			{
+				VDebugLog("mapping output port \"%s\" to \"%s\" (event-only cable to data-and-event port, mapped to default port)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
+			}
 		}
 	}
 
@@ -519,6 +539,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			VuoType *newDataType = newPort->getDataType();
 			if (!newDataType)
 			{
+				VDebugLog("mapping input port \"%s\" to \"%s\" (event-only to event-only)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
 				break;
 			}
@@ -544,6 +565,7 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 			VuoType *newDataType = newPort->getDataType();
 			if (!newDataType)
 			{
+				VDebugLog("mapping output port \"%s\" to \"%s\" (event-only to event-only)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 				updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
 				break;
 			}
@@ -564,7 +586,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 
 		VuoRendererPort *newPort = composition->findDefaultPortForEventOnlyConnection(newNode, true);
 		if (newPort)
+		{
+			VDebugLog("mapping input port \"%s\" to \"%s\" (event-only to default port)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 			updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
+		}
 	}
 
 	// Output ports
@@ -579,7 +604,10 @@ void VuoCommandChangeNode::createSwappedNodePortMappings()
 
 		VuoRendererPort *newPort = composition->findDefaultPortForEventOnlyConnection(newNode, false);
 		if (newPort)
+		{
+			VDebugLog("mapping output port \"%s\" to \"%s\" (event-only to default port)", oldPort->getBase()->getClass()->getName().c_str(), newPort->getBase()->getClass()->getName().c_str());
 			updatedPortForOriginalPort[oldPort->getBase()] = newPort->getBase();
+		}
 	}
 }
 

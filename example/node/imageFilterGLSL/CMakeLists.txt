@@ -5,7 +5,7 @@ set(CMAKE_FRAMEWORK_PATH /Library/Developer/Vuo/framework CACHE STRING "")
 find_library(VUO_FRAMEWORK Vuo)
 
 foreach (arch "x86_64" "arm64")
-	if (EXISTS "${VUO_FRAMEWORK}/Headers/OBJC-${arch}.h.pch")
+	if (EXISTS "${VUO_FRAMEWORK}/Modules/OBJC-${arch}.h.pch")
 		list(APPEND supportedTargets ${arch})
 	endif()
 endforeach()

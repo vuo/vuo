@@ -2,7 +2,7 @@
  * @file
  * VuoEdgeBlend implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -15,7 +15,7 @@
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "Edge Blend",
-					 "description" : "Apply a fade and gamma curve to an edge.",
+					 "description" : "Apply a crop, fade, and gamma curve to an edge.",
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [

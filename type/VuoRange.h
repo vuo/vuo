@@ -2,7 +2,7 @@
  * @file
  * VuoRange C type definition.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -17,6 +17,14 @@ extern "C" {
 #include "VuoReal.h"
 #include <float.h>
 
+/**
+ * @ingroup VuoTypes
+ * @defgroup VuoRange VuoRange
+ * Defines a range with an optionally bound/unbound min/max.
+ *
+ * @{
+ */
+
 /// VuoRange.minimum's value when the range has no minimum.
 #define VuoRange_NoMinimum -INFINITY
 
@@ -28,11 +36,8 @@ extern "C" {
  */
 typedef struct
 {
-	// The minimum value of a range.  (VuoRange_NoMinimum >= minimum >= maximum)
-	VuoReal minimum;
-
-	// The maximum value of a range.  (minimum >= maximum >= VuoRange_NoMaximum)
-	VuoReal maximum;
+	VuoReal minimum;  ///< The minimum value of a range, or VuoRange_NoMinimum if no limit.
+	VuoReal maximum;  ///< The maximum value of a range, or VuoRange_NoMaximum if no limit.
 } VuoRange;
 
 #define VuoRange_SUPPORTS_COMPARISON  ///< Instances of this type can be compared and sorted.
@@ -133,6 +138,10 @@ static inline VuoReal VuoRange_scale(VuoRange from, VuoRange to, VuoReal value)
 
 	return to_lower + (n * to_range);
 }
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

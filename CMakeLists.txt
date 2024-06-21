@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 
 # Configuration ==============================================================
-project(Vuo VERSION 2.4.4 LANGUAGES NONE)
+project(Vuo VERSION 2.4.5 LANGUAGES NONE)
 
 # The major-version component of ${Vuo_VERSION}.
 # Used in framework paths (e.g., `Vuo.framework/Versions/2/Vuo`).
@@ -187,6 +187,7 @@ string(JOIN " " CMAKE_SHARED_LINKER_FLAGS
 )
 
 set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+set(CMAKE_MACOSX_FRAMEWORK_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 set(CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
 # If we modify a source file (e.g. VuoHeap.cc),

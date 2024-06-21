@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+MakeList [type="vuo.list.make.8.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="386,101" _1="\"#000\"" _2="\"#fff\"" _3="\{\"r\":1.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _4="\{\"r\":0.0,\"g\":1.0,\"b\":0.0,\"a\":1.0\}" _5="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}" _6="\{\"r\":0.50000762939453125,\"g\":0.50000762939453125,\"b\":0.50000762939453125,\"a\":1.0\}" _7="\{\"r\":0.74999618530273438,\"g\":0.74999618530273438,\"b\":0.74999618530273438,\"a\":1.0\}" _8="\{\"r\":0.25000381469726562,\"g\":0.25000381469726562,\"b\":0.25000381469726562,\"a\":1.0\}"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="119,86"];
+MakePaletteFromImage [type="vuo.color.palette.make.image" version="1.0.0" label="Make Palette from Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<palette>palette\r" pos="705,330" _colors="8"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="-60,75" _color="\{\"r\":0.50000762939453125,\"g\":0.50000762939453125,\"b\":0.50000762939453125,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":-0.5\}" _rotation="0.0" _width="2.0" _height="1.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="480,75" _paletteMatchingAccuracy="1" _dithering="32" _ditheringIntensity="1"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="180,75" _width="32" _height="32" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="750,75" _center="\{\"x\":0.0,\"y\":0.5\}" _width="0.98999999999999999" _sampleType="\"lightest-components\""];
+SampleColorFromImage2 [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="750,195" _center="\{\"x\":0.0,\"y\":-0.5\}" _width="0.98999999999999999" _sampleType="\"darkest-components\""];
+SortList [type="vuo.list.sort.VuoColor" version="1.0.0" label="Sort List|<refresh>refresh\l|<list>list\l|<sortOrder>sortOrder\l|<sortedList>sortedList\r" pos="945,330" _sortOrder="\"ascending\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<go>go\r" _go_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<topColor>topColor\l|<bottomColor>bottomColor\l|<ditheredPalette>ditheredPalette\l" _topColor_type="VuoColor" _bottomColor_type="VuoColor" _ditheredPalette_type="VuoList_VuoColor"];
+
+MakeList2:list -> RenderLayersToImage:layers;
+MakeList:list -> MapImageToPalette:palette;
+MakePaletteFromImage:palette -> SortList:list;
+MakeRectangleLayer:layer -> MakeList2:1;
+MapImageToPalette:quantizedImage -> MakePaletteFromImage:image;
+MapImageToPalette:quantizedImage -> SampleColorFromImage2:image;
+MapImageToPalette:quantizedImage -> SampleColorFromImage:image;
+PublishedInputs:go -> MakeRectangleLayer:color;
+RenderLayersToImage:image -> MapImageToPalette:image;
+SampleColorFromImage2:color -> PublishedOutputs:bottomColor;
+SampleColorFromImage:color -> PublishedOutputs:topColor;
+SortList:sortedList -> PublishedOutputs:ditheredPalette;
+}

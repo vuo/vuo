@@ -1,0 +1,102 @@
+/**
+ * @file
+ * Maps a color gradient to a palette of a few colors, demonstrating different levels for the `Map Image to Palette` node's Palette Matching Accuracy port and different orderings of the palette colors.
+ *
+ * @createdInVuoVersion 2.4.4
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendLists [type="vuo.list.append.VuoLayer" version="1.0.1" label="Append Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<combinedList>combinedList\r" pos="990,225"];
+AppendLists2 [type="vuo.list.append.VuoLayer" version="1.0.1" label="Append Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<combinedList>combinedList\r" pos="990,585"];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="1170,225" _horizontalAlignment="\"right\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":-0.41999998688697815,\"y\":0.0\}" _spacing="0"];
+ArrangeLayersInColumn2 [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="1065,-135" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.0,\"y\":-0.045000001788139343\}" _spacing="0.023"];
+ArrangeLayersInColumn3 [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="1170,585" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0.41999998688697815,\"y\":0.0\}" _spacing="0"];
+ChangeSamplingMode2 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="495,90" _samplingMode="0"];
+ChangeSamplingMode3 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="480,420" _samplingMode="0"];
+ChangeSamplingMode4 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="480,780" _samplingMode="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-705,-30" fillcolor="lime" _started_eventThrottling="enqueue"];
+FormatNumber2 [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="360,-75" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="2" _decimalPlaces="2" _showThousandSeparator="true"];
+HoldList [type="vuo.data.hold.list2.VuoColor" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-60,540"];
+HoldList2 [type="vuo.data.hold.list2.VuoColor" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-60,900"];
+HoldValue [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-45,420"];
+HoldValue2 [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="-45,780"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="720,420" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.75" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="735,90" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.75" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer3 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="720,780" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="0.75" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeLinearGradientImage [type="vuo.image.make.gradient.linear2" version="2.0.0" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="-315,90" _start="\{\"x\":-1.0,\"y\":0.0\}" _end="\{\"x\":1.0,\"y\":0.0\}" _noiseAmount="0.0" _width="192" _height="14"];
+MakeList2 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1386,221" fillcolor="blue"];
+MakeList3 [type="vuo.list.make.5.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="-543,101" _2="\{\"r\":0.35115587711334229,\"g\":0.35877013206481934,\"b\":0.49480429291725159,\"a\":1.0\}" _3="\{\"r\":0.51764708757400513,\"g\":0.27058824896812439,\"b\":0.098039217293262482,\"a\":1.0\}" _4="\{\"r\":0.90588235855102539,\"g\":0.75686275959014893,\"b\":0.34117648005485535,\"a\":1.0\}" _5="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="938,596"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="938,236"];
+MakePointsAlongLine [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="75,-105" _startPosition="1.0" _endPosition="0.0" _curve="\"linear\"" _easing="\"in+out\"" _numberOfPoints="21"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1125,-360" _color="\{\"r\":0.13179217278957367,\"g\":0.19768062233924866,\"b\":0.42008087038993835,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="630,-75" _font="\{\"fontName\":\"GillSans-Light\",\"pointSize\":14.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-center\"" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="735,240" _text="\"dark-to-light palette\"" _font="\{\"fontName\":\"GillSans-Light\",\"pointSize\":14.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"center-center\"" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="735,570" _text="\"light-to-dark palette\"" _font="\{\"fontName\":\"GillSans-Light\",\"pointSize\":14.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"center-center\"" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="210,420" fillcolor="orange" _dithering="34" _ditheringIntensity="0.0"];
+MapImageToPalette2 [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="210,780" fillcolor="orange" _dithering="34" _ditheringIntensity="0.0"];
+ProcessList [type="vuo.list.process.VuoReal.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="330,240" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList2 [type="vuo.list.process.VuoReal.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="435,-195" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList3 [type="vuo.list.process.VuoReal.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="330,600" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1440,210" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ReverseList [type="vuo.list.reverse.VuoColor" version="1.0.0" label="Reverse List|<refresh>refresh\l|<list>list\l|<reversedList>reversedList\r" pos="-195,915"];
+ShareList [type="vuo.data.share.list.VuoColor" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-510,90"];
+
+AppendLists2:combinedList -> ArrangeLayersInColumn3:layers;
+AppendLists:combinedList -> ArrangeLayersInColumn:layers;
+ArrangeLayersInColumn2:arrangedLayer -> MakeList2:2;
+ArrangeLayersInColumn3:arrangedLayer -> MakeList2:4;
+ArrangeLayersInColumn:arrangedLayer -> MakeList2:3;
+ChangeSamplingMode2:outputImage -> MakeImageLayer2:image;
+ChangeSamplingMode3:outputImage -> MakeImageLayer:image;
+ChangeSamplingMode4:outputImage -> MakeImageLayer3:image;
+FireOnStart:started -> MakeList3:1;
+FireOnStart:started -> MakeRectangleLayer:color;
+FormatNumber2:text -> MakeTextLayer2:text;
+HoldList2:heldValue -> MapImageToPalette2:palette;
+HoldList:heldValue -> MapImageToPalette:palette;
+HoldValue2:heldValue -> MapImageToPalette2:image;
+HoldValue:heldValue -> MapImageToPalette:image;
+MakeImageLayer2:layer -> MakeList6:2;
+MakeImageLayer2:layer -> MakeList7:2;
+MakeImageLayer3:layer -> ProcessList3:processedItem;
+MakeImageLayer:layer -> ProcessList:processedItem;
+MakeLinearGradientImage:image -> ChangeSamplingMode2:image;
+MakeLinearGradientImage:image -> HoldValue2:value;
+MakeLinearGradientImage:image -> HoldValue:value;
+MakeLinearGradientImage:image -> MakePointsAlongLine:startPosition [event=true];
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> ShareList:value;
+MakeList6:list -> AppendLists2:list1;
+MakeList7:list -> AppendLists:list1;
+MakePointsAlongLine:points -> ProcessList2:fire;
+MakePointsAlongLine:points -> ProcessList3:fire;
+MakePointsAlongLine:points -> ProcessList:fire;
+MakeRectangleLayer:layer -> MakeList2:1;
+MakeTextLayer2:layer -> ProcessList2:processedItem;
+MakeTextLayer3:layer -> MakeList7:1;
+MakeTextLayer4:layer -> MakeList6:1;
+MapImageToPalette2:quantizedImage -> ChangeSamplingMode4:image;
+MapImageToPalette:quantizedImage -> ChangeSamplingMode3:image;
+ProcessList2:processItem -> FormatNumber2:value;
+ProcessList2:processedList -> ArrangeLayersInColumn2:layers;
+ProcessList3:processItem -> HoldList2:update;
+ProcessList3:processItem -> HoldValue2:update;
+ProcessList3:processItem -> MapImageToPalette2:paletteMatchingAccuracy;
+ProcessList3:processedList -> AppendLists2:list2;
+ProcessList3:processedList -> MakeTextLayer4:text [event=true];
+ProcessList:processItem -> HoldList:update;
+ProcessList:processItem -> HoldValue:update;
+ProcessList:processItem -> MapImageToPalette:paletteMatchingAccuracy;
+ProcessList:processedList -> AppendLists:list2;
+ProcessList:processedList -> MakeTextLayer3:text [event=true];
+ReverseList:reversedList -> HoldList2:value;
+ShareList:sameValue -> HoldList:value;
+ShareList:sameValue -> MakeLinearGradientImage:colors;
+ShareList:sameValue -> ReverseList:list;
+}

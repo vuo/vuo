@@ -2,7 +2,7 @@
  * @file
  * VuoEditor implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -2872,6 +2872,16 @@ string VuoEditor::removeVuoLinks(string markdownText)
 	filteredText.replace(vuoNodeSetLink, "`\\1`");
 
 	return filteredText.toUtf8().constData();
+}
+
+/**
+ * Activates the "vuo-example" URL handler to handle the input @c url.
+ *
+ * @see VuoEditor::openExampleCompositionFromUrl(const QString&)
+ */
+void VuoEditor::openExampleCompositionFromUrl(const QUrl &url)
+{
+	openExampleCompositionFromUrl(url.toString(QUrl::None));
 }
 
 /**

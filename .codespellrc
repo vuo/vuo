@@ -2,4 +2,4 @@
 check-hidden =
 check-filenames =
 builtin = clear,rare,informal,code,names,en-GB_to_en-US
-ignore-words-list = endcode,inout,lod,sur,uint
+ignore-words-list = endcode,greyscale,inout,lite,lod,sur,uint

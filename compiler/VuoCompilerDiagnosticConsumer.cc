@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerDiagnosticConsumer implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -47,7 +47,8 @@ void VuoCompilerDiagnosticConsumer::HandleDiagnostic(clang::DiagnosticsEngine::L
 		// Ignore warnings in other people's code.
 		if ((level == clang::DiagnosticsEngine::Note || level == clang::DiagnosticsEngine::Warning)
 		 && (filename.find("/Vuo.framework/Frameworks/llvm.framework/") != llvm::StringRef::npos
-		  || filename.find("/Vuo.framework/Headers/macos/") != llvm::StringRef::npos
+		  || filename.find("/Vuo.framework/Headers/clang/") != llvm::StringRef::npos
+		  || filename.find("/Vuo.framework/Headers/usr/") != llvm::StringRef::npos
 		  || filename.find("/.conan/data/") != llvm::StringRef::npos
 		  || filename.find("/Applications/Xcode.app/") != llvm::StringRef::npos))
 			return;

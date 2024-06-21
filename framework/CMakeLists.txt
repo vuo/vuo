@@ -92,6 +92,7 @@ target_link_libraries(VuoFrameworkDylib
 	# that run in the same process as Vuo.framework.
 )
 add_custom_command(TARGET VuoFrameworkDylib POST_BUILD
+	COMMENT "Updating Vuo.framework install names"
 	COMMAND install_name_tool -change @rpath/libc++.dylib /usr/lib/libc++.1.dylib ${frameworkVersionPath}/Vuo
 	COMMAND install_name_tool -change @loader_path/../Frameworks/Syphon.framework/Versions/A/Syphon @rpath/../Frameworks/Syphon.framework/Syphon ${frameworkVersionPath}/Vuo
 	COMMAND ${codesignAdHoc} ${frameworkVersionPath}/Vuo
@@ -541,11 +542,11 @@ file(COPY ${CONAN_ZEROMQ_ROOT}/include/zmq         DESTINATION "${frameworkVersi
 
 
 # Copy macOS system headers into Vuo.framework.
-set(macosHeadersDestination "${frameworkVersionPath}/Headers/macos")
+set(macosHeadersDestination "${frameworkVersionPath}/Headers/usr/include")
+file(MAKE_DIRECTORY "${macosHeadersDestination}")
 set(rsyncHeaders /usr/bin/rsync --recursive --links --perms --include '*.h' --exclude '*')
 add_custom_command(
 	COMMENT "Copying macOS headers into Vuo.framework"
-	COMMAND mkdir -p ${macosHeadersDestination}
 	COMMAND /usr/bin/rsync --recursive --links --perms
 		--exclude '*curses*'
 		--exclude '/sched.h'
@@ -653,27 +654,59 @@ add_dependencies(VuoFrameworkDylib VuoFrameworkMacOSSDK)
 
 
 # Copy source-tree and generated headers into Vuo.framework.
-file(GLOB frameworkHeaders
-	../base/*.h
-	../base/*.hh
-	../common/*.h
-	../compiler/*.h
-	../compiler/*.hh
-	../library/*.h
-	../library/*.hh
-	../node/*.h
-	../node/*/*.h
-	../node/*/*.hh
-	../runner/*.h
-	../runner/*.hh
-	../runtime/*.h
-	../runtime/*.hh
+
+add_custom_command(
+	DEPENDS ${PROJECT_BINARY_DIR}/base/VuoConfig-for-framework.h
+	COMMENT "Copying VuoConfig.h into Vuo.framework"
+	COMMAND cp ${PROJECT_BINARY_DIR}/base/VuoConfig-for-framework.h ${frameworkVersionPath}/Headers/VuoConfig.h
+	OUTPUT ${frameworkVersionPath}/Headers/VuoConfig.h
 )
+list(APPEND allFrameworkHeadersOutputs ${frameworkVersionPath}/Headers/VuoConfig.h)
+
+add_custom_command(
+	DEPENDS
+		${PROJECT_BINARY_DIR}/base/config/coreTypes.h
+		VuoCoreTypesHeader
+	COMMENT "Copying coreTypes.h into Vuo.framework"
+	COMMAND cp ${PROJECT_BINARY_DIR}/base/config/coreTypes.h ${frameworkVersionPath}/Headers
+	OUTPUT ${frameworkVersionPath}/Headers/coreTypes.h
+)
+list(APPEND allFrameworkHeadersOutputs ${frameworkVersionPath}/Headers/coreTypes.h)
+
+add_custom_command(
+	DEPENDS ${PROJECT_SOURCE_DIR}/type/type.h
+	COMMENT "Copying type.h into Vuo.framework"
+	COMMAND cp ${PROJECT_SOURCE_DIR}/type/type.h ${frameworkVersionPath}/Headers
+	OUTPUT ${frameworkVersionPath}/Headers/type.h
+)
+list(APPEND allFrameworkHeadersOutputs ${frameworkVersionPath}/Headers/type.h)
+
+set(nodeHeaders
+	module.h
+	node_header.h
+	node.h
+)
+foreach (nodeHeader ${nodeHeaders})
+	add_custom_command(
+		DEPENDS ${PROJECT_SOURCE_DIR}/node/${nodeHeader}
+		COMMENT "Copying ${nodeHeader} into Vuo.framework"
+		COMMAND cp ${PROJECT_SOURCE_DIR}/node/${nodeHeader} ${frameworkVersionPath}/Headers
+		OUTPUT ${frameworkVersionPath}/Headers/${nodeHeader}
+	)
+	list(APPEND allFrameworkHeadersOutputs ${frameworkVersionPath}/Headers/${nodeHeader})
+endforeach()
 
 get_directory_property(coreTypeHeaders DIRECTORY ../type DEFINITION VuoCoreTypeHeaders)
 list(TRANSFORM coreTypeHeaders PREPEND "${PROJECT_SOURCE_DIR}/type/")
 get_directory_property(coreTypeHeadersDest DIRECTORY ../type DEFINITION VuoCoreTypeHeaders)
 list(TRANSFORM coreTypeHeadersDest PREPEND "${frameworkVersionPath}/Headers/")
+add_custom_command(
+	DEPENDS ${coreTypeHeaders}
+	COMMENT "Copying core type headers into Vuo.framework"
+	COMMAND cp ${coreTypeHeaders} ${frameworkVersionPath}/Headers
+	OUTPUT ${coreTypeHeadersDest}
+)
+list(APPEND allFrameworkHeadersOutputs ${coreTypeHeadersDest})
 
 list(APPEND generatedTypeHeaderTargets vuo.core.types.compound.headers)
 get_target_property(generatedTypeHeadersInTarget vuo.core.types.compound.headers VuoGeneratedFiles)
@@ -685,47 +718,60 @@ foreach (nodeSet ${VuoNodeSets})
 		list(APPEND generatedTypeHeaders ${generatedTypeHeadersInTarget})
 	endif()
 endforeach()
-
-set(frameworkHeadersOutputs
-	${frameworkVersionPath}/Headers/VuoConfig.h
-	${frameworkVersionPath}/Headers/coreTypes.h
-	${frameworkVersionPath}/Headers/module.h
-	${frameworkVersionPath}/Headers/node.h
-	${frameworkVersionPath}/Headers/type.h
-	${coreTypeHeadersDest}
-)
+foreach (generatedTypeHeader ${generatedTypeHeaders})
+	get_filename_component(headerFilename "${generatedTypeHeader}" NAME)
+	list(APPEND generatedTypeHeaderOutputs "${frameworkVersionPath}/Headers/${headerFilename}")
+endforeach()
 add_custom_command(
-	DEPENDS
-		${PROJECT_BINARY_DIR}/base/VuoConfig-for-framework.h
-		VuoCoreTypesHeader
-		${PROJECT_SOURCE_DIR}/type/type.h
-		${coreTypeHeaders}
-		${generatedTypeHeaders}
-		${frameworkHeaders}
-	COMMENT "Copying Vuo headers into Vuo.framework"
-	COMMAND cp ${PROJECT_BINARY_DIR}/base/VuoConfig-for-framework.h ${frameworkVersionPath}/Headers/VuoConfig.h
-	COMMAND cp
-		${PROJECT_BINARY_DIR}/base/config/coreTypes.h
-		${PROJECT_SOURCE_DIR}/type/type.h
-		${coreTypeHeaders}
-		${generatedTypeHeaders}
-		${frameworkHeaders}
-		${frameworkVersionPath}/Headers
-	OUTPUT ${frameworkHeadersOutputs}
+	DEPENDS ${generatedTypeHeaders}
+	COMMENT "Copying generated type headers into Vuo.framework"
+	COMMAND cp ${generatedTypeHeaders} ${frameworkVersionPath}/Headers
+	OUTPUT ${generatedTypeHeaderOutputs}
 )
+list(APPEND allFrameworkHeadersOutputs ${generatedTypeHeaderOutputs})
+
+set(nodeSetFolders ${VuoNodeSets})
+list(TRANSFORM nodeSetFolders PREPEND "../node/")
+set(headerSubdirectories
+	../base
+	../common
+	../compiler
+	../library
+	../runner
+	../runtime
+	${nodeSetFolders}
+)
+foreach (headerSubdirectory ${headerSubdirectories})
+	get_filename_component(name "${headerSubdirectory}" NAME)
+	file(GLOB headers
+		${headerSubdirectory}/*.h
+		${headerSubdirectory}/*.hh
+	)
+	if (headers)
+		set(headerOutputs)
+		foreach (header ${headers})
+			get_filename_component(headerFilename "${header}" NAME)
+			list(APPEND headerOutputs "${frameworkVersionPath}/Headers/${headerFilename}")
+		endforeach()
+		add_custom_command(
+			DEPENDS ${headers}
+			COMMENT "Copying ${name} headers into Vuo.framework"
+			COMMAND cp ${headers} ${frameworkVersionPath}/Headers
+			OUTPUT ${headerOutputs}
+		)
+		list(APPEND allFrameworkHeadersOutputs ${headerOutputs})
+	endif()
+endforeach()
+
 add_custom_target(VuoFrameworkHeaders
 	DEPENDS
-		${frameworkHeadersOutputs}
+		${allFrameworkHeadersOutputs}
 		${coreTypeHeaders}
 		${frameworkHeaders}
 		${generatedTypeHeaderTargets}
 )
 add_dependencies(VuoFrameworkDylib VuoFrameworkHeaders)
-list(APPEND generatedFiles
-	${frameworkHeadersOutputs}
-	${coreTypeHeaders}
-	${frameworkHeaders}
-)
+list(APPEND generatedFiles ${allFrameworkHeadersOutputs})
 
 
 # Copy generic compound type headers and sources into Vuo.framework.
@@ -740,6 +786,7 @@ list(TRANSFORM compoundTypeSourcesIn PREPEND "${PROJECT_SOURCE_DIR}/type/compoun
 list(TRANSFORM compoundTypeSourcesOut PREPEND "${frameworkVersionPath}/Modules/")
 add_custom_command(
 	DEPENDS ${compoundTypeSourcesIn}
+	COMMENT "Copying generic compound type headers and sources into Vuo.framework"
 	COMMAND /usr/bin/rsync ${compoundTypeSourcesIn} "${frameworkVersionPath}/Modules"
 
 	# Update timestamps, to help `make` believe this target was successfully rebuilt.
@@ -801,18 +848,14 @@ add_custom_command(
 		VuoFrameworkMacOSHeaders
 		VuoFrameworkHeaders
 	COMMENT "Creating symlinks for headers"
-	COMMAND mkdir -p "${frameworkVersionPath}/Headers/usr"
-	COMMAND rm -f "${frameworkVersionPath}/Headers/usr/include"
-				  "${frameworkVersionPath}/Headers/macos/c++"
+	COMMAND rm -f "${frameworkVersionPath}/Headers/usr/include/c++"
 				  "${frameworkVersionPath}/Headers/clang"
 				  "${frameworkVersionPath}/Headers/llvm"
-	COMMAND ln -s "../macos" "${frameworkVersionPath}/Headers/usr/include"
-	COMMAND ln -s "../../Frameworks/llvm.framework/Versions/A/Headers/lib/c++" "${frameworkVersionPath}/Headers/macos/c++"
+	COMMAND ln -s "../../../../../Frameworks/llvm.framework/Versions/A/Headers/lib/c++" "${frameworkVersionPath}/Headers/usr/include/c++"
 	COMMAND ln -s "../Frameworks/llvm.framework/Versions/Current/lib/clang/5.0.2" "${frameworkVersionPath}/Headers/clang"
-	COMMAND ln -s "../Frameworks/llvm.framework/Versions/Current/Headers/lib" "${frameworkVersionPath}/Headers/llvm"
-	OUTPUT "${frameworkVersionPath}/Headers/usr/include"
+	OUTPUT "${frameworkVersionPath}/Headers/usr/include/c++"
 )
-add_custom_target(ModulePCHSysroot DEPENDS "${frameworkVersionPath}/Headers/usr/include")
+add_custom_target(ModulePCHSysroot DEPENDS "${frameworkVersionPath}/Headers/usr/include/c++")
 
 
 # Generate the built-in module caches in the Modules directory.
@@ -879,6 +922,7 @@ endforeach()
 if (VUO_NODE_DEVELOPER)
 	add_custom_command(
 		DEPENDS ${frameworkCacheParts}
+		COMMENT "Marking framework cache as updated"
 		COMMAND rm -f ${frameworkCache}
 		COMMAND touch ${frameworkCache}
 		OUTPUT ${frameworkCache}

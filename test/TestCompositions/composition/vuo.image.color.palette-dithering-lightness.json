@@ -1,0 +1,70 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.color.palette-dithering-lightness composition.
+ *
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ */
+
+{"portConfiguration": {
+  // When we render a solid-color greyscale image, dither it to black and white, then average the colors in the dithered image, we should get the same color that we started with.
+  // (Prior to https://b33p.net/kosada/vuo/vuo/-/merge_requests/450 (6d29e615aaf092ca9b825b5e1303090e47983416), when dithering solid white, the result was darker than expected.)
+
+  // Solid black and solid white give exact results.
+  "black-whitenoise"         :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":0  /* White Noise         */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-gradnoise-0.05"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":10 /* Gradient Noise 0.05 */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-gradnoise-0.02"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":11 /* Gradient Noise 0.02 */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-gradnoise-0.01"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":12 /* Gradient Noise 0.01 */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-bayer-2x2"          :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":20 /* Bayer 2×2           */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-bayer-3x3"          :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":24 /* Bayer 3×3           */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-bayer-4x4"          :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":21 /* Bayer 4×4           */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-bayer-8x8"          :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":22 /* Bayer 8×8           */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-bayer-16x16"        :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":23 /* Bayer 16×16         */},"outputPortValues":{"ditheredLightness":0.0}},
+  "black-errordiffusion"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.0,"dithering":34 /* Floyd-Steinberg     */},"outputPortValues":{"ditheredLightness":0.0}},
+
+  "white-whitenoise"         :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":0  /* White Noise         */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-gradnoise-0.05"     :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":10 /* Gradient Noise 0.05 */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-gradnoise-0.02"     :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":11 /* Gradient Noise 0.02 */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-gradnoise-0.01"     :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":12 /* Gradient Noise 0.01 */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-bayer-2x2"          :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":20 /* Bayer 2×2           */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-bayer-3x3"          :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":24 /* Bayer 3×3           */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-bayer-4x4"          :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":21 /* Bayer 4×4           */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-bayer-8x8"          :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":22 /* Bayer 8×8           */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-bayer-16x16"        :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":23 /* Bayer 16×16         */},"outputPortValues":{"ditheredLightness":1.0}},
+  "white-errordiffusion"     :{"firingPort":"lightness","inputPortValues":{"lightness":1.0,"dithering":34 /* Floyd-Steinberg     */},"outputPortValues":{"ditheredLightness":1.0}},
+
+  // Grey _should_ give an exact result too, but it doesn't yet since `Sample Color from Image` is inaccurate — https://b33p.net/kosada/vuo/vuo/-/issues/20122
+  "grey-mid-whitenoise"      :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":0  /* White Noise         */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-gradnoise-0.05"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":10 /* Gradient Noise 0.05 */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-gradnoise-0.02"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":11 /* Gradient Noise 0.02 */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-gradnoise-0.01"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":12 /* Gradient Noise 0.01 */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-bayer-2x2"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":20 /* Bayer 2×2           */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-bayer-3x3"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":24 /* Bayer 3×3           */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-bayer-4x4"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":21 /* Bayer 4×4           */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-bayer-8x8"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":22 /* Bayer 8×8           */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-mid-bayer-16x16"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":23 /* Bayer 16×16         */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.4
+  "grey-dark-errordiffusion" :{"firingPort":"lightness","inputPortValues":{"lightness":0.4,"dithering":34 /* Floyd-Steinberg     */},"outputPortValues":{"ditheredLightness":0.1}},  // @@@ should output 0.4
+
+  "grey-mid-whitenoise"      :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":0  /* White Noise         */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-gradnoise-0.05"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":10 /* Gradient Noise 0.05 */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-gradnoise-0.02"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":11 /* Gradient Noise 0.02 */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-gradnoise-0.01"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":12 /* Gradient Noise 0.01 */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-bayer-2x2"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":20 /* Bayer 2×2           */},"outputPortValues":{"ditheredLightness":0.5}},
+  "grey-mid-bayer-3x3"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":24 /* Bayer 3×3           */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-bayer-4x4"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":21 /* Bayer 4×4           */},"outputPortValues":{"ditheredLightness":0.4}},  // @@@ should output 0.5
+  "grey-mid-bayer-8x8"       :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":22 /* Bayer 8×8           */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-bayer-16x16"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":23 /* Bayer 16×16         */},"outputPortValues":{"ditheredLightness":0.3}},  // @@@ should output 0.5
+  "grey-mid-errordiffusion"  :{"firingPort":"lightness","inputPortValues":{"lightness":0.5,"dithering":34 /* Floyd-Steinberg     */},"outputPortValues":{"ditheredLightness":0.2}},  // @@@ should output 0.5
+
+  "grey-light-whitenoise"    :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":0  /* White Noise         */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-gradnoise-0.05":{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":10 /* Gradient Noise 0.05 */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-gradnoise-0.02":{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":11 /* Gradient Noise 0.02 */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-gradnoise-0.01":{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":12 /* Gradient Noise 0.01 */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-bayer-2x2"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":20 /* Bayer 2×2           */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-bayer-3x3"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":24 /* Bayer 3×3           */},"outputPortValues":{"ditheredLightness":0.4}},  // @@@ should output 0.6
+  "grey-light-bayer-4x4"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":21 /* Bayer 4×4           */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-bayer-8x8"     :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":22 /* Bayer 8×8           */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-bayer-16x16"   :{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":23 /* Bayer 16×16         */},"outputPortValues":{"ditheredLightness":0.5}},  // @@@ should output 0.6
+  "grey-light-errordiffusion":{"firingPort":"lightness","inputPortValues":{"lightness":0.6,"dithering":34 /* Floyd-Steinberg     */},"outputPortValues":{"ditheredLightness":0.4}},  // @@@ should output 0.6
+}}

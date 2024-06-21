@@ -2,7 +2,7 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -462,73 +462,73 @@ static void VuoGlContext_renderers(void)
 
 
 
-	/**
-	 * Executes code using the global OpenGL context.
-	 *
-	 * \eg{
-	 * VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-	 *     glClear(…);
-	 *     …
-	 * });
-	 * }
-	 *
-	 * @threadAny
-	 */
-	void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx))
-	{
+/**
+ * Executes code using the global OpenGL context.
+ *
+ * \eg{
+ * VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+ *     glClear(…);
+ *     …
+ * });
+ * }
+ *
+ * @threadAny
+ */
+void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx))
+{
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		if (!function)
-			return;
+	if (!function)
+		return;
 
-		VuoGlContext_init();
+	VuoGlContext_init();
 
-		bool alreadyLockedOnThisThread = (bool)pthread_getspecific(VuoGlContextPerformKey);
+	bool alreadyLockedOnThisThread = (bool)pthread_getspecific(VuoGlContextPerformKey);
 
-		if (!alreadyLockedOnThisThread)
-		{
-			pthread_setspecific(VuoGlContextPerformKey, (void *)true);
-			CGLLockContext(VuoGlContext_root);
-		}
-
-		function(VuoGlContext_root);
-
-		// Ensure that `function` restored the standard OpenGL state.
-		if (!alreadyLockedOnThisThread && VuoIsDebugEnabled())
-		{
-			CGLContextObj cgl_ctx = VuoGlContext_root;
-
-			VGL();
-
-			VuoGlContext_checkGLInt(GL_DEPTH_WRITEMASK,      true);
-			VuoGlContext_checkGL   (GL_DEPTH_TEST,           false);
-
-			VuoGlContext_checkGL   (GL_CULL_FACE,            true);
-			VuoGlContext_checkGLInt(GL_CULL_FACE_MODE,       GL_BACK);
-
-			VuoGlContext_checkGL   (GL_BLEND,                true);
-
-			VuoGlContext_checkGLInt(GL_BLEND_SRC_RGB,        GL_ONE);
-			VuoGlContext_checkGLInt(GL_BLEND_DST_RGB,        GL_ONE_MINUS_SRC_ALPHA);
-			VuoGlContext_checkGLInt(GL_BLEND_SRC_ALPHA,      GL_ONE);
-			VuoGlContext_checkGLInt(GL_BLEND_DST_ALPHA,      GL_ONE_MINUS_SRC_ALPHA);
-
-			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_RGB,   GL_FUNC_ADD);
-			VuoGlContext_checkGLInt(GL_BLEND_EQUATION_ALPHA, GL_FUNC_ADD);
-
-			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_COVERAGE, false);
-			VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_ONE,      false);
-
-			/// @todo check other changes Vuo makes
-		}
-
-		if (!alreadyLockedOnThisThread)
-		{
-			CGLUnlockContext(VuoGlContext_root);
-			pthread_setspecific(VuoGlContextPerformKey, (void *)false);
-		}
-#pragma clang diagnostic pop
+	if (!alreadyLockedOnThisThread)
+	{
+		pthread_setspecific(VuoGlContextPerformKey, (void *)true);
+		CGLLockContext(VuoGlContext_root);
 	}
+
+	function(VuoGlContext_root);
+
+	// Ensure that `function` restored the standard OpenGL state.
+	if (!alreadyLockedOnThisThread && VuoIsDebugEnabled())
+	{
+		CGLContextObj cgl_ctx = VuoGlContext_root;
+
+		VGL();
+
+		VuoGlContext_checkGLInt(GL_DEPTH_WRITEMASK,      true);
+		VuoGlContext_checkGL   (GL_DEPTH_TEST,           false);
+
+		VuoGlContext_checkGL   (GL_CULL_FACE,            true);
+		VuoGlContext_checkGLInt(GL_CULL_FACE_MODE,       GL_BACK);
+
+		VuoGlContext_checkGL   (GL_BLEND,                true);
+
+		VuoGlContext_checkGLInt(GL_BLEND_SRC_RGB,        GL_ONE);
+		VuoGlContext_checkGLInt(GL_BLEND_DST_RGB,        GL_ONE_MINUS_SRC_ALPHA);
+		VuoGlContext_checkGLInt(GL_BLEND_SRC_ALPHA,      GL_ONE);
+		VuoGlContext_checkGLInt(GL_BLEND_DST_ALPHA,      GL_ONE_MINUS_SRC_ALPHA);
+
+		VuoGlContext_checkGLInt(GL_BLEND_EQUATION_RGB,   GL_FUNC_ADD);
+		VuoGlContext_checkGLInt(GL_BLEND_EQUATION_ALPHA, GL_FUNC_ADD);
+
+		VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_COVERAGE, false);
+		VuoGlContext_checkGL(GL_SAMPLE_ALPHA_TO_ONE,      false);
+
+		/// @todo check other changes Vuo makes
+	}
+
+	if (!alreadyLockedOnThisThread)
+	{
+		CGLUnlockContext(VuoGlContext_root);
+		pthread_setspecific(VuoGlContextPerformKey, (void *)false);
+	}
+#pragma clang diagnostic pop
+}
 
 	/**
 	 * Creates a new OpenGL context, optionally shared with `rootContext`.

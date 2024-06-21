@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.spike node implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Spike 3D Object",
 					 "keywords" : [ "star", "stellate", "extend", "poke", "divide", "tessellate", "face", "edge", "side", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoSceneObjectRenderer"
 					 ],
@@ -134,27 +134,31 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	return instance;
 }
 
-static inline void vuo_scene_spike_emitTriangle(int *vertexCount, float *positions, float *normals, float *textureCoordinates,
+static inline void vuo_scene_spike_emitTriangle(int *vertexCount, float *positions, float *normals, float *textureCoordinates, float *colors,
 	VuoPoint3d p0, VuoPoint3d p1, VuoPoint3d p2,
 	VuoPoint2d t0, VuoPoint2d t1, VuoPoint2d t2)
 {
 	VuoPoint3d ab     = p1 - p0;
 	VuoPoint3d ac     = p2 - p0;
 	VuoPoint3d normal = VuoPoint3d_normalize(VuoPoint3d_crossProduct(ab, ac));
+	VuoPoint4d color  = VuoPoint4d_make(1,1,1,1);
 
 	VuoPoint3d_setArray(&positions         [*vertexCount * 3], p0);
 	VuoPoint3d_setArray(&normals           [*vertexCount * 3], normal);
 	VuoPoint2d_setArray(&textureCoordinates[*vertexCount * 2], t0);
+	VuoPoint4d_setArray(&colors            [*vertexCount * 4], color);
 	++*vertexCount;
 
 	VuoPoint3d_setArray(&positions         [*vertexCount * 3], p1);
 	VuoPoint3d_setArray(&normals           [*vertexCount * 3], normal);
 	VuoPoint2d_setArray(&textureCoordinates[*vertexCount * 2], t1);
+	VuoPoint4d_setArray(&colors            [*vertexCount * 4], color);
 	++*vertexCount;
 
 	VuoPoint3d_setArray(&positions         [*vertexCount * 3], p2);
 	VuoPoint3d_setArray(&normals           [*vertexCount * 3], normal);
 	VuoPoint2d_setArray(&textureCoordinates[*vertexCount * 2], t2);
+	VuoPoint4d_setArray(&colors            [*vertexCount * 4], color);
 	++*vertexCount;
 }
 
@@ -178,9 +182,9 @@ void nodeInstanceEvent
 			VuoPoint3d p0 = VuoPoint3d_makeFromArray(&positions[0 * 3]);
 			VuoPoint3d p1 = VuoPoint3d_makeFromArray(&positions[1 * 3]);
 			VuoPoint3d p2 = VuoPoint3d_makeFromArray(&positions[2 * 3]);
-			VuoPoint2d t0 = VuoPoint2d_makeFromArray(&textureCoordinates[0 * 3]);
-			VuoPoint2d t1 = VuoPoint2d_makeFromArray(&textureCoordinates[1 * 3]);
-			VuoPoint2d t2 = VuoPoint2d_makeFromArray(&textureCoordinates[2 * 3]);
+			VuoPoint2d t0 = VuoPoint2d_makeFromArray(&textureCoordinates[0 * 2]);
+			VuoPoint2d t1 = VuoPoint2d_makeFromArray(&textureCoordinates[1 * 2]);
+			VuoPoint2d t2 = VuoPoint2d_makeFromArray(&textureCoordinates[2 * 2]);
 
 			// Find the position and textureCoordinate in the center of the 3 vertices.
 			VuoPoint3d fourthVertex            = (p0 + p1 + p2) / 3.f;
@@ -195,15 +199,15 @@ void nodeInstanceEvent
 			// Emit three triangles, each touching fourthVertex.
 			*vertexCount = 0;
 
-			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates,
+			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates, colors,
 										 p0, p1, fourthVertex,
 										 t0, t1, fourthTextureCoordinate);
 
-			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates,
+			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates, colors,
 										 p0, fourthVertex, p2,
 										 t0, fourthTextureCoordinate, t2);
 
-			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates,
+			vuo_scene_spike_emitTriangle(vertexCount, positions, normals, textureCoordinates, colors,
 										 fourthVertex, p1, p2,
 										 fourthTextureCoordinate, t1, t2);
 		});

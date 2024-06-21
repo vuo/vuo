@@ -2,7 +2,7 @@
  * @file
  * TestEditorCommands implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -130,7 +130,49 @@ private slots:
 	}
 
 	/// @todo VuoCommandAddPublishedPort
-	/// @todo VuoCommandChangeNode
+
+	void testVuoCommandChangeNode_data()
+	{
+		QTest::addColumn<QList<QGraphicsItem *>>("itemsToAdd");
+		QTest::addColumn<VuoRendererNode *>("nodeToChange");
+		QTest::addColumn<QString>("targetNodeClass");
+
+		{
+			auto shareData = editorWindow->getComposition()->createNode("vuo.data.share");
+			QTest::newRow("standalone node") << QList<QGraphicsItem *>{ shareData } << shareData << "vuo.data.share.list";
+		}
+
+		{
+			// https://b33p.net/kosada/vuo/vuo/-/issues/20137
+			auto fireOnStart = editorWindow->getComposition()->createNode("vuo.event.fireOnStart");
+			auto decodeMovieImage = editorWindow->getComposition()->createNode("vuo.video.decodeImage");
+			QTest::newRow("node with event-only cable to data-and-event port, mapped to event-only port") << QList<QGraphicsItem *>{
+				fireOnStart,
+				decodeMovieImage,
+				new VuoRendererCable((new VuoCompilerCable(
+					fireOnStart->getBase()->getCompiler(),
+					static_cast<VuoCompilerPort *>(fireOnStart->getBase()->getOutputPortWithName("started")->getCompiler()),
+					decodeMovieImage->getBase()->getCompiler(),
+					static_cast<VuoCompilerPort *>(decodeMovieImage->getBase()->getInputPortWithName("frameTime")->getCompiler()))
+				)->getBase())
+			} << decodeMovieImage << "vuo.video.play";
+		}
+	}
+	void testVuoCommandChangeNode()
+	{
+		QFETCH(QList<QGraphicsItem *>, itemsToAdd);
+		QFETCH(VuoRendererNode *, nodeToChange);
+		QFETCH(QString, targetNodeClass);
+
+		QUndoCommand *command = new VuoCommandAdd(itemsToAdd, editorWindow);
+		editorWindow->undoStack->push(command);
+
+		// swapNodes calls VuoCommandChangeNode.
+		editorWindow->swapNodes(nodeToChange, targetNodeClass.toStdString());
+
+		// For now, just check that it doesn't crash.
+	}
+
 	/// @todo VuoCommandConnect
 	/// @todo VuoCommandMove
 	/// @todo VuoCommandPublishPort

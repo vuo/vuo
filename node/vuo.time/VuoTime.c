@@ -2,7 +2,7 @@
  * @file
  * VuoTime implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -280,6 +280,8 @@ static char * VuoTime_stringForFormat(VuoTimeFormat format, locale_t locale)
 		return VuoText_format("%%A, %%B %%e, %%Y %s", time24FormatString);
 	else if (format == VuoTimeFormat_DateTimeSortable)
 		return strdup("%Y-%m-%d %H:%M:%SZ");
+	else if (format == VuoTimeFormat_DateTimeSortableMilliseconds)
+		return strdup("%Y-%m-%d %H:%M:%S.@@@Z");
 	else if (format == VuoTimeFormat_DateShort)
 		return strdup(dateFormatString);
 	else if (format == VuoTimeFormat_DateMedium)
@@ -387,9 +389,10 @@ VuoTime VuoTime_makeFromUnknownFormat(const char *str)
 {
 	__block VuoTime time;
 	VuoText_performWithSystemLocale(^(locale_t locale){
-		const int numFormats = 15;
-		char *formats[15] = {
+		const int numFormats = 16;
+		char *formats[16] = {
 			VuoTime_stringForFormat(VuoTimeFormat_DateTimeSortable, locale),
+			VuoTime_stringForFormat(VuoTimeFormat_DateTimeSortableMilliseconds, locale),
 			VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale)),
 			VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale),
 			VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale)),
@@ -623,7 +626,7 @@ VuoTime VuoTime_round(const VuoTime value, const VuoTimeUnit unit, const int rou
 /**
  * Outputs text containing a date and/or time, in the system's current locale.
  *
- * Uses the current local timezone (except VuoTimeFormat_DateTimeSortable, which is always UTC).
+ * Uses the current local timezone (except VuoTimeFormat_DateTimeSortable*, which are always UTC).
  *
  * Fractional seconds are rounded down.
  */
@@ -640,7 +643,7 @@ VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format)
 /**
  * Outputs text containing a date and/or time.
  *
- * Uses the current local timezone (except VuoTimeFormat_DateTimeSortable, which is always UTC).
+ * Uses the current local timezone (except VuoTimeFormat_DateTimeSortable*, which are always UTC).
  *
  * Fractional seconds are rounded down.
  */
@@ -654,7 +657,7 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
 
 	time_t t = time + VuoUnixTimeOffset;
 	struct tm *tm;
-	if (format == VuoTimeFormat_DateTimeSortable)
+	if (format == VuoTimeFormat_DateTimeSortable || format == VuoTimeFormat_DateTimeSortableMilliseconds)
 		tm = gmtime(&t);
 	else
 		tm = localtime(&t);
@@ -663,6 +666,15 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
 
 	char formattedTime[1024];
 	strftime_l(formattedTime, 1024, formatString, tm, locale);
+
+	if (format == VuoTimeFormat_DateTimeSortableMilliseconds)
+	{
+		double milliseconds = fmax(0, time - trunc(time));
+		char *msec = VuoText_format("%0.3f", milliseconds);
+		// Copy the fractional digits into the `@@@` in `YYYY-MM-DD HH:MM:SS.@@@Z`:
+		strncpy(formattedTime + 20, msec + 2, 3);
+		free(msec);
+	}
 
 	output = VuoText_make(formattedTime);
 

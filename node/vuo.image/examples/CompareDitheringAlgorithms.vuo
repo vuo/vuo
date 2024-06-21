@@ -1,0 +1,107 @@
+/**
+ * @file
+ * Demonstrates each of the `Map Image to Palette` node's Dithering options applied to a grayscale color gradient.
+ *
+ * @createdInVuoVersion 2.4.4
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendLists [type="vuo.list.append.VuoLayer" version="1.0.1" label="Append Lists|<refresh>refresh\l|<list1>list1\l|<list2>list2\l|<combinedList>combinedList\r" pos="855,-30"];
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="-60,315"];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.1.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="1005,-30" _horizontalAlignment="\"left\"" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0\}" _spacing="0"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="90,315"];
+BuildList [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="405,225" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+ChangeSamplingMode2 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="375,-30" _samplingMode="0"];
+ChangeSamplingMode3 [type="vuo.image.samplingMode" version="1.0.0" label="Change Sampling Mode|<refresh>refresh\l|<image>image\l|<samplingMode>samplingMode\l|<outputImage>outputImage\r" pos="975,405" _samplingMode="0"];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1425,405"];
+ConvertTreeToValue3 [type="vuo.type.tree.value.VuoInteger" version="1.0.0" label="Convert Tree to Value|<refresh>refresh\l|<tree>tree\l|<value>value\r" pos="-255,525"];
+ConvertTreeToValue4 [type="vuo.type.tree.value.VuoText" version="1.0.0" label="Convert Tree to Value|<refresh>refresh\l|<tree>tree\l|<value>value\r" pos="30,420"];
+CountItemsInList [type="vuo.list.count.VuoInteger" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="315,735"];
+FindSubtreesUsingXPath2 [type="vuo.tree.find.xpath" version="1.0.0" label="Find Subtrees using XPath|<refresh>refresh\l|<tree>tree\l|<expression>expression\l|<foundTrees>foundTrees\r" pos="-780,240" _expression="\"\\/\\/value\""];
+FindSubtreesUsingXPath3 [type="vuo.tree.find.xpath" version="1.0.0" label="Find Subtrees using XPath|<refresh>refresh\l|<tree>tree\l|<expression>expression\l|<foundTrees>foundTrees\r" pos="-780,330" _expression="\"\\/\\/name\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-240,-150" fillcolor="lime" _started_eventThrottling="enqueue"];
+GetItemFromList [type="vuo.list.get.VuoInteger" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="525,495"];
+GetItemFromList2 [type="vuo.list.get.VuoText" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="525,570"];
+HoldList [type="vuo.data.hold.list2.VuoInteger" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="375,495"];
+HoldList2 [type="vuo.data.hold.list2.VuoText" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="375,570"];
+HoldList3 [type="vuo.data.hold.list2.VuoInteger" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="105,225"];
+HoldValue [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="375,405"];
+IsListPopulated [type="vuo.list.populated.VuoInteger" version="1.0.0" label="Is List Populated|<refresh>refresh\l|<list>list\l|<populated>populated\r" pos="-60,480"];
+IsListPopulated2 [type="vuo.list.populated.VuoText" version="1.0.0" label="Is List Populated|<refresh>refresh\l|<list>list\l|<populated>populated\r" pos="-60,570"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1215,405" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1.0" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="600,-30" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1.0" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeLinearGradientImage [type="vuo.image.make.gradient.linear2" version="2.0.0" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="60,-30" _start="\{\"x\":-1.0,\"y\":0.0\}" _end="\{\"x\":1.0,\"y\":0.0\}" _noiseAmount="0.0" _width="256" _height="12"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="668,431" fillcolor="violet" _1="\"#000\"" _2="\"#fff\""];
+MakeList11 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-93,326"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1206,-34" fillcolor="blue"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1392,416"];
+MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-4,-19" _1="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _2="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}"];
+MakeList7 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="803,-19"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1020,-210" _color="\{\"r\":0.13179217278957367,\"g\":0.19768062233924866,\"b\":0.42008087038993835,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1230,570" _font="\{\"fontName\":\"GillSans-Light\",\"pointSize\":14.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-center\"" _center="\{\"x\":0.50999999046325684,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTreeFromJSON2 [type="vuo.tree.make.json" version="1.0.1" label="Make Tree from JSON|<refresh>refresh\l|<json>json\l|<tree>tree\r" pos="-1005,240" _json="\"[\\n\\t\{\\\"value\\\": \ 0, \\\"name\\\":\\\"White Noise\\\"\},\\n\\t\{\\\"value\\\": 10, \\\"name\\\":\\\"Gradient Noise 0.05\\\"\},\\n\\t\{\\\"value\\\": 11, \\\"name\\\":\\\"Gradient Noise 0.02\\\"\},\\n\\t\{\\\"value\\\": 12, \\\"name\\\":\\\"Gradient Noise 0.01\\\"\},\\n\\t\{\\\"value\\\": 20, \\\"name\\\":\\\"Bayer 2×2\\\"\},\\n\\t\{\\\"value\\\": 24, \\\"name\\\":\\\"Bayer 3×3\\\"\},\\n\\t\{\\\"value\\\": 21, \\\"name\\\":\\\"Bayer 4×4\\\"\},\\n\\t\{\\\"value\\\": 22, \\\"name\\\":\\\"Bayer 8×8\\\"\},\\n\\t\{\\\"value\\\": 23, \\\"name\\\":\\\"Bayer 16×16\\\"\},\\n\\t\{\\\"value\\\": 30, \\\"name\\\":\\\"South\\\"\},\\n\\t\{\\\"value\\\": 31, \\\"name\\\":\\\"East\\\"\},\\n\\t\{\\\"value\\\": 32, \\\"name\\\":\\\"South + East\\\"\},\\n\\t\{\\\"value\\\": 33, \\\"name\\\":\\\"South + East + Southeast\\\"\},\\n\\t\{\\\"value\\\": 34, \\\"name\\\":\\\"Floyd-Steinberg (1975)\\\"\},\\n\\t\{\\\"value\\\": 35, \\\"name\\\":\\\"False Floyd-Steinberg\\\"\},\\n\\t\{\\\"value\\\": 36, \\\"name\\\":\\\"Jarvis-Judice-Ninke (1976)\\\"\},\\n\\t\{\\\"value\\\": 37, \\\"name\\\":\\\"Stucki (1981)\\\"\},\\n\\t\{\\\"value\\\": 38, \\\"name\\\":\\\"Burkes (1988)\\\"\},\\n\\t\{\\\"value\\\": 39, \\\"name\\\":\\\"Atkinson (1988)\\\"\},\\n\\t\{\\\"value\\\": 40, \\\"name\\\":\\\"Sierra \\\\\\\"Three-Line\\\\\\\" 5×3 (1989)\\\"\},\\n\\t\{\\\"value\\\": 41, \\\"name\\\":\\\"Sierra \\\\\\\"Two-Line\\\\\\\" 5×2 (1990)\\\"\},\\n\\t\{\\\"value\\\": 42, \\\"name\\\":\\\"Sierra \\\\\\\"Filter Lite\\\\\\\" 3×2 (1990)\\\"\},\\n\\t\{\\\"value\\\": 43, \\\"name\\\":\\\"Shiau-Fan 4×2 (1994)\\\"\},\\n\\t\{\\\"value\\\": 44, \\\"name\\\":\\\"Shiau-Fan 5×2 (1994)\\\"\},\\n\\t\{\\\"value\\\": 45, \\\"name\\\":\\\"Pigeon (2013)\\\"\}\\n]\""];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="720,405" fillcolor="orange" _paletteMatchingAccuracy="1" _ditheringIntensity="1.0"];
+ProcessList2 [type="vuo.list.process.VuoTree.VuoInteger" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="-495,240" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList3 [type="vuo.list.process.VuoTree.VuoText" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="-495,330" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1260,-45" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+
+Comment [type="vuo.comment" label="\"### Make lists of all dithering options\"" pos="-1200,165" width="1440" height="242" fillcolor="tangerine"];
+Comment2 [type="vuo.comment" label="\"### Process the image with each dithering option\"" pos="285,150" width="1320" height="553" fillcolor="violet"];
+
+AppendLists:combinedList -> ArrangeLayersInColumn:layers;
+AreAllTrue:allTrue -> BecameTrue:value;
+ArrangeLayersInColumn:arrangedLayer -> MakeList2:2;
+BecameTrue:becameTrue -> HoldList3:update;
+BuildList:buildItem -> GetItemFromList2:which;
+BuildList:buildItem -> GetItemFromList:which;
+BuildList:buildItem -> HoldList2:update;
+BuildList:buildItem -> HoldList:update;
+BuildList:buildItem -> HoldValue:update;
+BuildList:builtList -> AppendLists:list2;
+ChangeSamplingMode2:outputImage -> MakeImageLayer2:image;
+ChangeSamplingMode3:outputImage -> MakeImageLayer:image;
+CombineLayers:combinedLayer -> BuildList:builtItem;
+ConvertTreeToValue3:value -> ProcessList2:processedItem;
+ConvertTreeToValue4:value -> ProcessList3:processedItem;
+CountItemsInList:itemCount -> BuildList:fire;
+FindSubtreesUsingXPath2:foundTrees -> ProcessList2:fire;
+FindSubtreesUsingXPath3:foundTrees -> ProcessList3:fire;
+FireOnStart:started -> MakeList4:1;
+FireOnStart:started -> MakeRectangleLayer:color;
+FireOnStart:started -> MakeTreeFromJSON2:json;
+GetItemFromList2:item -> MakeTextLayer:text;
+GetItemFromList:item -> MapImageToPalette:dithering;
+HoldList2:heldValue -> GetItemFromList2:list;
+HoldList3:heldValue -> CountItemsInList:list;
+HoldList3:heldValue -> HoldList:value;
+HoldList:heldValue -> GetItemFromList:list;
+HoldValue:heldValue -> MapImageToPalette:image;
+IsListPopulated2:populated -> MakeList11:2;
+IsListPopulated:populated -> MakeList11:1;
+MakeImageLayer2:layer -> MakeList7:1;
+MakeImageLayer:layer -> MakeList3:1;
+MakeLinearGradientImage:image -> ChangeSamplingMode2:image;
+MakeLinearGradientImage:image -> HoldValue:value;
+MakeList11:list -> AreAllTrue:values;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> CombineLayers:layers;
+MakeList4:list -> MakeLinearGradientImage:colors;
+MakeList7:list -> AppendLists:list1;
+MakeList:list -> MapImageToPalette:palette;
+MakeRectangleLayer:layer -> MakeList2:1;
+MakeTextLayer:layer -> MakeList3:2;
+MakeTreeFromJSON2:tree -> FindSubtreesUsingXPath2:tree;
+MakeTreeFromJSON2:tree -> FindSubtreesUsingXPath3:tree;
+MapImageToPalette:quantizedImage -> ChangeSamplingMode3:image;
+ProcessList2:processItem -> ConvertTreeToValue3:tree;
+ProcessList2:processedList -> HoldList3:value;
+ProcessList2:processedList -> IsListPopulated:list;
+ProcessList3:processItem -> ConvertTreeToValue4:tree;
+ProcessList3:processedList -> HoldList2:value;
+ProcessList3:processedList -> IsListPopulated2:list;
+}

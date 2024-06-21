@@ -2,7 +2,7 @@
  * @file
  * VuoTimeFormat C type definition.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -27,6 +27,7 @@ extern "C" {
 typedef enum
 {
 	VuoTimeFormat_DateTimeSortable,	// ISO 8601 / RFC 3339.  Always in UTC.  Locale-independent.
+	VuoTimeFormat_DateTimeSortableMilliseconds,  // Like above, but includes milliseconds.
 	VuoTimeFormat_DateTimeShort12,	// Others use the current local timezone and locale.
 	VuoTimeFormat_DateTimeShort24,
 	VuoTimeFormat_DateTimeMedium12,

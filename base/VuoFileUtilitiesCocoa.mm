@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilitiesCocoa implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -13,6 +13,7 @@
 #include "VuoStringUtilities.hh"
 
 #include <AppKit/AppKit.h>
+#include <sys/sysctl.h>
 #include <sys/utsname.h>
 
 /**
@@ -170,20 +171,29 @@ void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
  */
 int VuoFileUtilitiesCocoa_getOSVersionMajor(void)
 {
-	// NSProcessInfo.processInfo.operatingSystemVersion.majorVersion returns 10.16
-	// (instead of the actual version) on macOS versions newer than 10.15,
-	// since Vuo uses an older macOS SDK for compatibility with older macOS versions.
-	// This prevents distinguishing between e.g., macOS 12 and 13.
-	// However, NSProcessInfo.processInfo.operatingSystemVersionString returns the actual version,
-	// so try to extract it from there.
+	if (NSProcessInfo.processInfo.operatingSystemVersion.majorVersion == 10
+	 && NSProcessInfo.processInfo.operatingSystemVersion.minorVersion == 16)
+	{
+		// NSProcessInfo.processInfo.operatingSystemVersion.majorVersion and
+		// NSProcessInfo.processInfo.operatingSystemVersionString sometimes return 10.16
+		// (instead of the actual version) on macOS versions newer than 10.15,
+		// since Vuo uses an older macOS SDK for compatibility with older macOS versions.
+		// This prevents distinguishing between e.g., macOS 12 and 13.
+		// Instead, we can calculate the actual version number based on the kernel version.
 
-	int majorVersion = -1;
-	sscanf(NSProcessInfo.processInfo.operatingSystemVersionString.UTF8String, "Version %d", &majorVersion);
+		size_t len = 32;
+		char osrelease[len];
+		sysctlbyname("kern.osrelease", osrelease, &len, NULL, 0);
 
-	if (majorVersion != -1)
-		return majorVersion;
-	else
-		return NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
+		int kernelMajorVersion = -1;
+		sscanf(osrelease, "%d", &kernelMajorVersion);
+
+		if (kernelMajorVersion != -1)
+			// Subtract 9 since kernel version e.g. 23.x corresponds to macOS release 14.x.
+			return kernelMajorVersion - 9;
+	}
+
+	return NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
 }
 
 /**
@@ -191,16 +201,27 @@ int VuoFileUtilitiesCocoa_getOSVersionMajor(void)
  */
 int VuoFileUtilitiesCocoa_getOSVersionMinor(void)
 {
-	// See VuoFileUtilitiesCocoa_getOSVersionMajor.
+	if (NSProcessInfo.processInfo.operatingSystemVersion.majorVersion == 10
+	 && NSProcessInfo.processInfo.operatingSystemVersion.minorVersion == 16)
+	{
+		// See VuoFileUtilitiesCocoa_getOSVersionMajor.
 
-	int majorVersion = -1;
-	int minorVersion = -1;
-	sscanf(NSProcessInfo.processInfo.operatingSystemVersionString.UTF8String, "Version %d.%d", &majorVersion, &minorVersion);
+		// The kernel minor version doesn't always match the macOS release minor version,
+		// but it doesn't really matter since, after 10.15, the macOS release _major_ version
+		// is when deprecations happen.
 
-	if (majorVersion != -1 && minorVersion != -1)
-		return minorVersion;
-	else
-		return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
+		size_t len = 32;
+		char osrelease[len];
+		sysctlbyname("kern.osrelease", osrelease, &len, NULL, 0);
+
+		int kernelMinorVersion = -1;
+		sscanf(osrelease, "%*d.%d", &kernelMinorVersion);
+
+		if (kernelMinorVersion != -1)
+			return kernelMinorVersion;
+	}
+
+	return NSProcessInfo.processInfo.operatingSystemVersion.minorVersion;
 }
 
 /**

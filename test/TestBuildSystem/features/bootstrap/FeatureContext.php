@@ -27,7 +27,7 @@ class FeatureContext implements Context {
       }
 
       # `--inplace` keeps rsync from breaking the hardlink between the source tree and `Vuo.framework/Headers/*`.
-      exec('rsync -a --inplace --delete --exclude build ' . escapeshellarg($sourceDir . '/') . ' ' . escapeshellarg($testDir . '/src'), $output, $returnCode);
+      exec('rsync -a --inplace --delete --exclude .git --exclude build ' . escapeshellarg($sourceDir . '/') . ' ' . escapeshellarg($testDir . '/src'), $output, $returnCode);
       if ($returnCode != 0)
         throw new Exception("rsync failed");
 
@@ -214,6 +214,22 @@ class FeatureContext implements Context {
   public function itShouldntUpdateAModuleInTheBuiltInCache($module) {
     $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
     $this->itShouldntUpdateAFile('bin/Vuo.app/Contents/Frameworks/Vuo.framework/Modules/Builtin/Generated/Modules/' . $this->arch . '/' . $module . '.bc');
+  }
+
+  /**
+   * @Then /it should update the precompiled module headers$/
+   */
+  public function itShouldUpdateThePrecompiledModuleHeaders() {
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/OBJC-' . $this->arch . '.h.pch');
+    $this->itShouldUpdateAFile('lib/Vuo.framework/Modules/OBJCXX-' . $this->arch . '.h.pch');
+  }
+
+  /**
+   * @Then /it shouldn't update the precompiled module headers$/
+   */
+  public function itShouldntUpdateThePrecompiledModuleHeaders() {
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/OBJC-' . $this->arch . '.h.pch');
+    $this->itShouldntUpdateAFile('lib/Vuo.framework/Modules/OBJCXX-' . $this->arch . '.h.pch');
   }
 
   /**

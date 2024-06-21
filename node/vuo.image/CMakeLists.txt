@@ -1,5 +1,6 @@
 VuoCompileLibraries(
 	VuoBarcode.cc
+	VuoErrorDiffusionDither.m
 )
 target_link_libraries(vuo.image.libraries
 	PRIVATE
@@ -7,6 +8,7 @@ target_link_libraries(vuo.image.libraries
 )
 target_sources(vuo.image.libraries PRIVATE
 	VuoBarcode.h
+	VuoErrorDiffusionDither.h
 )
 
 VuoCompileTypes(
@@ -136,6 +138,7 @@ VuoCompileNodes(
 	vuo.image.rotate.c
 	vuo.image.samplingMode.c
 	vuo.image.save.c
+	vuo.image.save2.c
 	vuo.image.scramble.c
 	vuo.image.sharpen.c
 	vuo.image.stainedGlass.c

@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+MakePaletteFromImage [type="vuo.color.palette.make.image" version="1.0.0" label="Make Palette from Image|<refresh>refresh\l|<image>image\l|<colors>colors\l|<palette>palette\r" pos="585,315" _colors="8"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial2" version="2.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="150,225" _center="\{\"x\":0.0,\"y\":0.0\}" _radius="1" _noiseAmount="0.0" _width="256" _height="256"];
+MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="375,315" _paletteMatchingAccuracy="1.0" _ditheringIntensity="1.0"];
+ShareList [type="vuo.data.share.list.VuoColor" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-30,330"];
+SortList [type="vuo.list.sort.VuoColor" version="1.0.0" label="Sort List|<refresh>refresh\l|<list>list\l|<sortOrder>sortOrder\l|<sortedList>sortedList\r" pos="825,315" _sortOrder="\"ascending\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<palette>palette\r|<dithering>dithering\r" _palette_type="VuoList_VuoColor" _dithering_type="VuoInteger" _dithering_menuItems="[\"Noise\",\{\"value\":0,\"name\":\" \  \ White Noise\"\},\{\"value\":10,\"name\":\" \  \ Gradient Noise 0.05\"\},\{\"value\":11,\"name\":\" \  \ Gradient Noise 0.02\"\},\{\"value\":12,\"name\":\" \  \ Gradient Noise 0.01\"\},\"Ordered\",\{\"value\":20,\"name\":\" \  \ Bayer 2×2\"\},\{\"value\":24,\"name\":\" \  \ Bayer 3×3\"\},\{\"value\":21,\"name\":\" \  \ Bayer 4×4\"\},\{\"value\":22,\"name\":\" \  \ Bayer 8×8\"\},\{\"value\":23,\"name\":\" \  \ Bayer 16×16\"\},\"Error Diffusion\",\{\"value\":30,\"name\":\" \  \ South\"\},\{\"value\":31,\"name\":\" \  \ East\"\},\{\"value\":32,\"name\":\" \  \ South + East\"\},\{\"value\":33,\"name\":\" \  \ South + East + Southeast\"\},\{\"value\":34,\"name\":\" \  \ Floyd-Steinberg (1975)\"\},\{\"value\":35,\"name\":\" \  \ False Floyd-Steinberg\"\},\{\"value\":36,\"name\":\" \  \ Jarvis-Judice-Ninke (1976)\"\},\{\"value\":37,\"name\":\" \  \ Stucki (1981)\"\},\{\"value\":38,\"name\":\" \  \ Burkes (1988)\"\},\{\"value\":39,\"name\":\" \  \ Atkinson (1988)\"\},\{\"value\":40,\"name\":\" \  \ Sierra \\\"Three-Line\\\" 5×3 (1989)\"\},\{\"value\":41,\"name\":\" \  \ Sierra \\\"Two-Line\\\" 5×2 (1990)\"\},\{\"value\":42,\"name\":\" \  \ Sierra \\\"Filter Lite\\\" 3×2 (1990)\"\},\{\"value\":43,\"name\":\" \  \ Shiau-Fan 4×2 (1994)\"\},\{\"value\":44,\"name\":\" \  \ Shiau-Fan 5×2 (1994)\"\},\{\"value\":45,\"name\":\" \  \ Pigeon (2013)\"\}]" _dithering="34"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<paletteAfterDithering>paletteAfterDithering\l" _paletteAfterDithering_type="VuoList_VuoColor"];
+
+MakePaletteFromImage:palette -> SortList:list;
+MakeRadialGradientImage:image -> MapImageToPalette:image;
+MapImageToPalette:quantizedImage -> MakePaletteFromImage:image;
+PublishedInputs:dithering -> MapImageToPalette:dithering;
+PublishedInputs:palette -> ShareList:value;
+ShareList:sameValue -> MakeRadialGradientImage:colors;
+ShareList:sameValue -> MapImageToPalette:palette;
+SortList:sortedList -> PublishedOutputs:paletteAfterDithering;
+}

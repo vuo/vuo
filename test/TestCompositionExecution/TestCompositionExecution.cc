@@ -2,7 +2,7 @@
  * @file
  * TestCompositionExecution implementation.
  *
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -157,16 +157,27 @@ const char *TestCompositionExecution::getJsonTypeDescription(enum json_type type
  */
 VuoPortClass *TestCompositionExecution::getFirstPortOfType(vector<VuoPortClass *> ports, string type)
 {
+	vector<VuoPortClass *> portsOfType = getPortsOfType(ports, type);
+	return portsOfType.empty() ? nullptr : portsOfType.front();
+}
+
+/**
+ * Returns all ports in the specified list (in the order they appear in the list) whose type matches the specified type.
+ */
+vector<VuoPortClass *> TestCompositionExecution::getPortsOfType(vector<VuoPortClass *> ports, string type)
+{
+	vector<VuoPortClass *> portsOfType;
 	for (VuoPortClass *p : ports)
 	{
 		VuoCompilerPortClass *cpc = dynamic_cast<VuoCompilerPortClass *>(p->getCompiler());
-		VuoType *dataType = cpc->getDataVuoType();
-		if (!dataType)
-			continue;
-		if (cpc->getDataVuoType()->getModuleKey() == type)
-			return p;
+		if (cpc)
+		{
+			VuoType *dataType = cpc->getDataVuoType();
+			if (dataType && dataType->getModuleKey() == type)
+				portsOfType.push_back(p);
+		}
 	}
-	return nullptr;
+	return portsOfType;
 }
 
 class TestCompositionExecutionDelegate : public VuoRunnerDelegateAdapter

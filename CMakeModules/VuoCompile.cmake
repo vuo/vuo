@@ -186,8 +186,9 @@ function (VuoGenerateModulePCH target)
 		foreach (arch ${CMAKE_OSX_ARCHITECTURES})
 			set(pch "${language}-${arch}.h.pch")
 
-			set(sysroot "${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}/Headers")
-			set(pchInSysroot "${sysroot}/${pch}")
+			set(frameworkVersionPath "${PROJECT_BINARY_DIR}/lib/Vuo.framework/Versions/${VuoFrameworkVersion}")
+			set(sysroot "${frameworkVersionPath}/Headers")
+			set(pchInFramework "${frameworkVersionPath}/Modules/${pch}")
 
 			set(sourceFilenames)
 			set(sourcesInSysroot)
@@ -242,11 +243,14 @@ function (VuoGenerateModulePCH target)
 					-isysroot "${sysroot}"
 					-resource-dir "${sysroot}/clang"
 					${flags}
-					-o "${pchInSysroot}"
+					-o "${pchInFramework}"
+					-MT "${pchInFramework}"
+					-dependency-file ${pch}.d
 					${sourceIncludesInSysroot}
-				OUTPUT ${pchInSysroot}
+				DEPFILE ${pch}.d
+				OUTPUT ${pchInFramework}
 			)
-			list(APPEND pchs "${pchInSysroot}")
+			list(APPEND pchs "${pchInFramework}")
 		endforeach()
 	endforeach()
 

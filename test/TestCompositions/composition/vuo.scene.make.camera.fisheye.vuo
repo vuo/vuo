@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.4
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Make3DSquare [type="vuo.scene.make.square.VuoShader" version="1.1.1" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="210,90" _transform="\{\"translation\":[0.0,0.0,0.0],\"eulerRotation\":[0.0,0.0,0.0],\"scale\":[2.0,2.0,1.0]\}" _rows="2" _columns="2"];
+MakeFisheyeCamera [type="vuo.scene.make.camera.fisheye" version="1.1.0" label="Make Fisheye Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<vignetteWidth>vignetteWidth\l|<vignetteSharpness>vignetteSharpness\l|<object>object\r" pos="180,210" _name="\"camera\"" _position="\{\"x\":0.0,\"y\":0.0,\"z\":1.0\}" _rotation="\{\"x\":0.0,\"y\":0.0,\"z\":0.0\}" _fieldOfView="180.0" _distanceMin="0." _distanceMax="1000." _vignetteWidth="0.8" _vignetteSharpness="0.6"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="389,206"];
+MakeUnlitColorShader [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="-105,105" _color="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="450,195" _width="100" _height="100" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.1.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<sampleType>sampleType\l|<color>color\r" pos="735,195" _center="\{\"x\":0,\"y\":0\}" _width="0" _sampleType="\"lightest-components\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Go>Go\r" _Go_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Color>Color\l" _Color_type="VuoColor"];
+
+Make3DSquare:object -> MakeList:1;
+MakeFisheyeCamera:object -> MakeList:2;
+MakeList:list -> RenderSceneToImage:objects;
+MakeUnlitColorShader:shader -> Make3DSquare:material;
+PublishedInputs:Go -> MakeFisheyeCamera:name;
+PublishedInputs:Go -> MakeUnlitColorShader:color;
+RenderSceneToImage:image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> PublishedOutputs:Color;
+}

@@ -3,7 +3,7 @@
  * Used to generate example images for node descriptions.
  *
  * @lastSavedInVuoVersion 2.0.0
- * @copyright Copyright © 2012–2023 Kosada Incorporated.
+ * @copyright Copyright © 2012–2024 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -29,7 +29,7 @@ MakeWaveformImage2 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make
 RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1020,270" _width="512" _height="256" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1140,165" fillcolor="blue" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 RingModulateAudio [type="vuo.audio.ringModulate" version="1.0.0" label="Ring Modulate Audio|<refresh>refresh\l|<channels>channels\l|<modulatedSamples>modulatedSamples\r" pos="615,180"];
-SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="960,480" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
+SaveImage [type="vuo.image.save2" version="2.0.0" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<ifExists>ifExists\l|<format>format\l|<done>done\r" pos="960,480" _url="\"~\\/Desktop\\/MyImage\"" _ifExists="1" _format="\"PNG\""];
 SendLiveAudio2 [type="vuo.audio.send2" version="2.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l" pos="810,15" fillcolor="blue"];
 
 AdjustLoudness:adjustedSamples -> SendLiveAudio2:sendChannels;

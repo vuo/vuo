@@ -1,5 +1,5 @@
 Outputs text containing a date and/or time.
 
-Uses the current local timezone, except for "Date & Time — Sortable" which always uses UTC.
+Uses the current local timezone, except for "Date & Time — Sortable" and "Date & Time — Sortable with Milliseconds", which always use UTC.
 
-Fractional seconds are rounded down.
+For time formats without milliseconds, fractional seconds are rounded down.
