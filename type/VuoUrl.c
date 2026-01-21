@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -274,14 +274,31 @@ bool VuoUrl_isLessThan(const VuoText a, const VuoText b)
  */
 static bool VuoUrl_urlContainsScheme(const char *url)
 {
-	__block bool matchFound;
+	__block bool matchFound = false;
 	VuoText_performWithUTF8Locale(^(locale_t locale){
-		const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+-\\.]+:";
+		const char *urlWithSchemePattern = "^[a-zA-Z][a-zA-Z0-9+\\.-]+:";
 		regex_t    urlWithSchemeRegExp;
 		size_t     nmatch = 0;
 		regmatch_t pmatch[0];
-		regcomp_l(&urlWithSchemeRegExp, urlWithSchemePattern, REG_EXTENDED, locale);
-		matchFound = !regexec(&urlWithSchemeRegExp, url, nmatch, pmatch, 0);
+		char regerrorbuf[256];
+		int ret = regcomp_l(&urlWithSchemeRegExp, urlWithSchemePattern, REG_EXTENDED, locale);
+		if (ret != 0)
+		{
+			regerror(ret, &urlWithSchemeRegExp, regerrorbuf, 256);
+			VUserLog("error: compilation failed for regex '%s': %s (%d)", urlWithSchemePattern, regerrorbuf, ret);
+			return;
+		}
+
+		ret = regexec(&urlWithSchemeRegExp, url, nmatch, pmatch, 0);
+		if (ret != 0 && ret != REG_NOMATCH)
+		{
+			regerror(ret, &urlWithSchemeRegExp, regerrorbuf, 256);
+			VUserLog("error: execution failed for regex '%s': %s (%d)", urlWithSchemePattern, regerrorbuf, ret);
+			return;
+		}
+
+		matchFound = (ret != REG_NOMATCH);
+
 		regfree(&urlWithSchemeRegExp);
 	});
 

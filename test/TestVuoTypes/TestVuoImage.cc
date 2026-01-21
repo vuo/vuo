@@ -2,7 +2,7 @@
  * @file
  * TestVuoImage implementation.
  *
- * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see https://vuo.org/license.
  */
@@ -259,6 +259,8 @@ private slots:
 		QTest::newRow("heic-grey-5120") << "resources/noise-grey.heic"                 << 5120 << 2880;
 		QTest::newRow("heic-rgb-5120")  << "resources/noise-rgb.heic"                  << 5120 << 2880;
 		QTest::newRow("mov")            << "../../node/vuo.video/examples/Kalimba.mov" <<    0 <<    0;
+		QTest::newRow("pdf")            << "../../editor/VuoEditorApp/Icons/showEvents.pdf" <<    0 <<    0;
+		QTest::newRow("nonexistent")    << "some-nonexistent-image"                         <<    0 <<    0;
 	}
 	void testFetchImagePerformance()
 	{

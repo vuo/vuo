@@ -2,7 +2,7 @@
  * @file
  * VuoMacOSSDKWorkaround header.
  *
- * @copyright Copyright © 2012–2024 Kosada Incorporated.
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see https://vuo.org/license.
  */
@@ -18,6 +18,8 @@
 #define API_UNAVAILABLE_END                                                                                                    ///< @copydoc API_AVAILABLE
 #define API_DEPRECATED(message, ...) __attribute__((deprecated(message)))                                                      ///< @copydoc API_AVAILABLE
 #define API_DEPRECATED_WITH_REPLACEMENT(replacement, ...) __attribute__((deprecated("Deprecated; replaced by " replacement)))  ///< @copydoc API_AVAILABLE
+#define API_DEPRECATED_BEGIN(...)                                                                                              ///< @copydoc API_AVAILABLE
+#define API_DEPRECATED_END                                                                                                     ///< @copydoc API_AVAILABLE
 #define __OS_AVAILABILITY__                                                                                                    ///< @copydoc API_AVAILABLE
 #define API_TO_BE_DEPRECATED 100000                                                                                            ///< @copydoc API_AVAILABLE
 #define UT_AVAILABLE_BEGIN                                                                                                     ///< @copydoc API_AVAILABLE

@@ -6,6 +6,6 @@ Sends OSC messages to the network.
 
 To send messages to a separate Vuo composition, start the sender composition, then, in the receiver composition, use the input editor to select the `Vuo OSC Client` device.
 
-The node advertises itself via Bonjour, so OSC servers can easily find it.
+The node advertises itself via [Zeroconf](http://www.zeroconf.org)/<a href="https://en.wikipedia.org/wiki/Bonjour_(software)">Bonjour</a>/mDNS, so OSC servers can easily find it.
 
 If multiple "Send OSC Messages" nodes in the same composition are set to `Auto`, they will share a single automatically chosen port.

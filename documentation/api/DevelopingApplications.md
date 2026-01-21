@@ -19,7 +19,7 @@ To learn how to develop an application that uses Vuo, see:
 To use Vuo, your application needs to link to Vuo.framework, which comes with the Vuo SDK.
 
 
-### Xcode 13
+### Xcode 15
 
    - Create a new project:
       - Choose template macOS > Application > App.
@@ -29,22 +29,24 @@ To use Vuo, your application needs to link to Vuo.framework, which comes with th
       - Select `Vuo.framework` from the `/Library/Developer/Vuo/framework` folder.
       - Uncheck the "Copy items if needed" checkbox.
       - Vuo.framework should now appear under Build Phases > Link Binary With Libraries.
-   - Modify the target's Build Phases:
-      - Editor > Add Build Phase > Add Copy Files Build Phase
+   - In the Build Phases tab:
+      - Click the + button and select "New Copy Files Phase".
          - Destination: Frameworks
          - Add Vuo.framework here. (You can drag and drop it from the Project Navigator.)
          - Uncheck the "Code Sign On Copy" checkbox. (Vuo.framework is already code-signed and notarized; you should not re-sign it.)
-   - Modify the target's Build Settings:
-      - Editor > Add Build Setting > Add User-Defined Setting
+   - In the Build Settings tab:
+      - Click the + button and select "Add User-Defined Setting".
          - Add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
+      - Set "C++ Language Dialect" to `C++14`.
       - Set "Quoted Include In Framework Header" to `NO`.
       - Under "Framework Search Paths", add the `/Library/Developer/Vuo/framework` folder.
    - In the Signing & Capabilities tab:
-      - In the top-right of the App Sandbox pane, click the ✕ to disable the Sandbox. (Vuo includes a compiler, which is not permitted by Apple's App Sandbox.)
+      - Click the "+ Capability" button and select "Hardened Runtime".
       - In the Hardened Runtime pane, check the following checkboxes:
          - Disable Library Validation — This enables Vuo to run compositions in the current process
          - Audio Input — If you would like to allow Vuo compositions to use `Receive Live Audio`
          - Camera — If you would like to allow Vuo compositions to use `Receive Live Video`
+      - In the top-right of the App Sandbox pane, click the trash button to disable the Sandbox. (Vuo includes a compiler, which is not permitted by Apple's App Sandbox.)
    - Set up one or more of your project's source files to be able to call Vuo API functions:
       - Name the source file with extension ".mm" (for Objective-C++) in order to use Vuo's C++ API.
       - Add @code{cpp} #import <Vuo/Vuo.h> @endcode

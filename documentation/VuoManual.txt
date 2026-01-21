@@ -1787,7 +1787,7 @@ Then, say, you want to release version 2.0 of your plugin, which differs signifi
 
 \newInVersion{2.0}
 
-You can turn your Vuo compositions into FFGL (FreeFrame 1.6+) plugins that can be loaded by many VJ apps on macOS, including Resolume Avenue, Resolume Arena, Magic Music Visuals, VDMX, and Isadora 3.
+You can turn your Vuo compositions into FFGL (FreeFrame 1.6+) plugins that can be loaded by many VJ apps on macOS, including Resolume Avenue, Resolume Arena, Magic Music Visuals, and Isadora 3.
 
 FFGL plugins exported from Vuo can run only in 64-bit apps. Most macOS apps these days are 64-bit, although some older VJ apps are still 32-bit. You can check your app's documentation to see if it's 64-bit or 32-bit.
 

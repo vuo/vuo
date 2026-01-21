@@ -4,13 +4,13 @@ These nodes allow your composition to send messages to and receive messages from
 
 To use a device or application to remote-control your composition, do one of the following: 
 
-   - If the device or application supports <a href="https://en.wikipedia.org/wiki/Bonjour_(software)">Bonjour</a>, run the composition, then, in the device or application, select the Vuo composition from its list of available hosts.
+   - If the device or application supports [Zeroconf](http://www.zeroconf.org)/<a href="https://en.wikipedia.org/wiki/Bonjour_(software)">Bonjour</a>/mDNS, run the composition, then, in the device or application, select the Vuo composition from its list of available hosts.
    - In the device or application, find the UDP port that it's sending on. In the composition, create a [Specify OSC Input](vuo-node://vuo.osc.make.input) node with that port number, and connect it to the [Receive OSC Messages](vuo-node://vuo.osc.receive2) node.
    - In the composition, create a [Specify OSC Input](vuo-node://vuo.osc.make.input) node and set it to use a UDP port of your choice (typically 1024 or higher), then connect it to the [Receive OSC Messages](vuo-node://vuo.osc.receive2) node. In the device or application, set it to send on that UDP port.
 
 To use your composition to control a device or application, do one of the following:
 
-   - If the device or application supports <a href="https://en.wikipedia.org/wiki/Bonjour_(software)">Bonjour</a>, run the composition, then, in the device or application, select the Vuo composition from its list of available hosts.
+   - If the device or application supports [Zeroconf](http://www.zeroconf.org)/<a href="https://en.wikipedia.org/wiki/Bonjour_(software)">Bonjour</a>/mDNS, run the composition, then, in the device or application, select the Vuo composition from its list of available hosts.
    - In the device or application, find the UDP port that it's listening on. In the composition, create a [Specify OSC Output](vuo-node://vuo.osc.make.output) node with that port number, and connect it to the [Send OSC Messages](vuo-node://vuo.osc.send) node.
    - To send to just a single device or application, find the IP address and UDP port that it's listening on. In the composition, create a [Specify OSC IP Output](vuo-node://vuo.osc.make.output.ip) node with that IP address and port number, and connect it to the [Send OSC Messages](vuo-node://vuo.osc.send) node.
    - In the composition, create a [Specify OSC Output](vuo-node://vuo.osc.make.output) node and set it to use a UDP port of your choice (typically 1024 or higher), then connect it to the [Send OSC Messages](vuo-node://vuo.osc.send) node. In the device or application, set it to listen on that UDP port.

@@ -70,66 +70,26 @@ To build the user manual (PDF, HTML, or MacHelp variants), install TeX from http
 
 To be able to run `TestBuildSystem`, install Behat following the instructions on <https://docs.behat.org/en/latest/quick_start.html#installation>. Add its directory to your shell's `PATH` variable.
 
-## Build Vuo using Qt Creator
-
-Install [Qt Creator](https://download.qt.io/official_releases/qtcreator/).
-
-Launch Qt Creator.
-
-   - In Preferences:
-      - In Kits:
-         - In the Kits tab, select the default kit and remove the content of "CMake Configuration"
-         - In the Qt Versions tab:
-            - Delete all the existing versions
-            - Click Add, press Command-Shift-G and enter `~/.conan`, then navigate to `data/qt/<latest version>/vuo/stable/package/<package id>/bin/qmake`
-            - (You'll see "Qt version is not properly installed" in the dialog, and "Cannot read …/qmake.conf" in the General Messages tab — those errors are safe to ignore.)
-      - In Environment > Locator:
-         - Uncheck the Default checkboxes for:
-            - All Included C/C++ Files
-            - Files in Any Project
-         - Add a new directory filter:
-            - Name: `Vuo trunk`
-            - Directories: pick your working copy folder
-            - File pattern: `*.h,*.hh,*.c,*.cc,*.m,*.mm,*.md,*.glsl,*.vs,*.fs,*.qml,*.ui,*.qrc,*.txt,*.cmake,*.feature,*.php`
-            - Exclusion pattern: `*/.git/*,*/build/*`
-      - In C++, select the File Naming tab:
-         - Change Header suffix to "hh"
-         - Change Source suffix to "cc"
-         - Uncheck the "Lower case file names" checkbox
-      - In Build & Run:
-         - In General, change "Default build directory" to `build`
-   - Open `CMakeLists.txt`
-      - In the list of kits, click Details, and uncheck all the targets except "Default"
-      - Click Configure Project
-   - In Projects (the wrench near the top left):
-      - Build > Build Steps > Build, click Details, then set Tool Arguments to `-j8` (or however many cores your processor has)
-      - Run > Run, uncheck "Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH"
-      - (optional, to colorize build steps) Build > Build Environment, click Details, click Add, and set `CLICOLOR_FORCE` to `1`
-   - In the target selector (the computer icon near the bottom left), select VuoEditorApp
-   - In the Search Results panel at the bottom of the window, set Exclusion Pattern to `**/build/**`
-
-## Build Vuo from the command line
-
-As an alternative to using Qt Creator (above), you can build from the command line.
+## Build Vuo
 
 First, generate the makefiles:
 
 ```sh
 mkdir build
 cd build
-cmake ..
+cmake -G Ninja ..
 ```
 
 Build:
 
 ```sh
-make -j8
+ninja
 ```
 
 Run Vuo Editor:
 
 ```sh
-make go
+ninja go
 ```
 
 …or open the `build/bin` folder in Finder and double-click `Vuo.app`.
@@ -145,10 +105,10 @@ bin/vuo-debug --help
 Optionally, build and run the tests:
 
 ```sh
-make -j8 VuoTest
+ninja VuoTest
 
 # Consider adding this alias to your ~/.bashrc :
-alias ctest='ctest -j8 --output-on-failure --progress'
+alias ctest='ctest --parallel --output-on-failure --progress'
 
 ctest                                    # Run all tests (takes a few hours)
 ctest -N                                 # List the names of all tests
@@ -162,11 +122,11 @@ ctest -R TestModules.testType:VuoAnchor  # Run a single test datum
 Optionally, build the documentation:
 
 ```sh
-cmake .. -DVUO_DOCUMENTATION=ON
-make -j8 VuoManualPDF_en_highContrast    # Build the manual as a PDF
-make -j8 VuoManualHTML                   # Build the manual as HTML
-make -j8 VuoManualMacHelp                # Build the manual as a MacHelp Book
-make -j8 VuoDoxygen                      # Build the SDK documentation
+cmake -G Ninja .. -DVUO_DOCUMENTATION=ON
+ninja VuoManualPDF_en_highContrast    # Build the manual as a PDF
+ninja VuoManualHTML                   # Build the manual as HTML
+ninja VuoManualMacHelp                # Build the manual as a MacHelp Book
+ninja VuoDoxygen                      # Build the SDK documentation
 ```
 
 ## Developer shortcuts
@@ -176,14 +136,14 @@ Vuo's build system includes some shortcuts to make development more efficient.
 Allows you to make changes to VuoBase and VuoCompiler without rebuilding all nodes and types (but you're responsible for keeping track of whether nodes and types need to be rebuilt).  Saves several minutes per edit-compile-test cycle.
 
 ```sh
-cmake .. -DVUO_COMPILER_DEVELOPER=ON
-cmake .. -DVUO_COMPILER_DEVELOPER=OFF
+cmake -G Ninja .. -DVUO_COMPILER_DEVELOPER=ON
+cmake -G Ninja .. -DVUO_COMPILER_DEVELOPER=OFF
 ```
 
 ### Node development mode
 Allows you to make changes to nodes, types, and libraries without rebuilding the Vuo.framework cache.  Saves about 30 seconds per edit-compile-test cycle (but compositions take longer to start up initially).
 
 ```sh
-cmake .. -DVUO_NODE_DEVELOPER=ON
-cmake .. -DVUO_NODE_DEVELOPER=OFF
+cmake -G Ninja .. -DVUO_NODE_DEVELOPER=ON
+cmake -G Ninja .. -DVUO_NODE_DEVELOPER=OFF
 ```
