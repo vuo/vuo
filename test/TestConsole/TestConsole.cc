@@ -32,6 +32,16 @@ public:
 	}
 
 private:
+	/**
+	 * Executes some tasks on the libdispatch event loop,
+	 * to ensure that the log data makes it through VuoConsole's libdispatch file descriptor source.
+	 */
+	static void runDispatchEventLoop(void)
+	{
+		for (int i = 0; i < 16; ++i)
+			VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
+	}
+
 	QString lastLinesInClipboard(void)
 	{
 		QString separator = "\n";
@@ -51,6 +61,7 @@ private slots:
 		const char *log0 = "VUserLog before the console has been shown";
 		VUserLog("%s", log0);
 		VuoConsole::show(w);
+		runDispatchEventLoop();
 		qApp->processEvents();  // Let VuoConsole use the main thread to display the window and update its stored logs.
 
 		VuoConsole::singleton->copy();
@@ -58,6 +69,7 @@ private slots:
 
 		const char *log1 = "VUserLog after the console has been shown";
 		VUserLog("%s", log1);
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		VuoConsole::singleton->copy();
@@ -72,6 +84,7 @@ private slots:
 
 		const char *log2 = "VUserLog before the console is closed and reopened";
 		VUserLog("%s", log2);
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		VuoConsole::singleton->window->close();
@@ -96,6 +109,7 @@ private slots:
 		VUserLog("%s", vuserlog0);
 		const char *vuserlog1 = "Another VUserLog from the editor process, for good measure";
 		VUserLog("%s", vuserlog1);
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		VuoConsole::singleton->copy();
@@ -107,6 +121,7 @@ private slots:
 
 		const char *stderr0 = "stderr from the editor process\n";
 		fprintf(stderr, "%s", stderr0);
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		VuoConsole::singleton->copy();
@@ -124,6 +139,7 @@ private slots:
 		runner->firePublishedInputPortEvent(port);
 		runner->waitForFiredPublishedInputPortEvent();
 		runner->stop();
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		VuoConsole::singleton->copy();
@@ -146,6 +162,7 @@ private slots:
 		int i = 1;
 		while (i <= VuoConsole::maxLogs)
 			VUserLog("%s", logMessage(i++).toUtf8().constData());
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		QCOMPARE(VuoConsole::singleton->logs.size(), VuoConsole::maxLogs);
@@ -153,6 +170,7 @@ private slots:
 		QVERIFY2(clipboard->text().contains(logMessage(VuoConsole::maxLogs)), lastLinesInClipboard().toUtf8().constData());
 
 		VUserLog("%s", logMessage(i++).toUtf8().constData());
+		runDispatchEventLoop();
 		qApp->processEvents();
 
 		QCOMPARE(VuoConsole::singleton->logs.size(), VuoConsole::maxLogs);

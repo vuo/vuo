@@ -10,6 +10,7 @@ VuoCompileGenericNodes(
 	vuo.list.cycle2.c
 	vuo.list.deinterleave.c
 	vuo.list.enqueue.c
+	vuo.list.filter.c
 	vuo.list.get.c
 	vuo.list.get.first.c
 	vuo.list.get.last.c

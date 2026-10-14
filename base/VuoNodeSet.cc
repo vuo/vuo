@@ -10,6 +10,8 @@
 #include "VuoModule.hh"
 #include "VuoNodeSet.hh"
 
+#include "VuoStringUtilities.hh"
+
 /**
  * Creates a VuoNodeSet for the given node set archive file.
  */
@@ -151,7 +153,8 @@ vector<string> VuoNodeSet::getExampleCompositionFileNames(void)
 		VuoFileUtilities::File *f = *i;
 		string dir, file, ext;
 		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
-		fileNames.push_back(file + "." + ext);
+		if (!VuoStringUtilities::beginsWith(file, "._"))
+			fileNames.push_back(file + "." + ext);
 		delete f;
 	}
 

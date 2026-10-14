@@ -2,7 +2,7 @@
  * @file
  * Gradually unscrambles a sequence of letters to reveal words.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -11,25 +11,22 @@
 digraph G
 {
 AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="0,180" fillcolor="lime"];
-Append [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="525,180"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="240,330" _startPosition="-0.5" _endPosition="1." _duration="1." _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
+Append [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="525,180" _includeEmptyParts="true"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.1" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="240,330" _startPosition="-0.5" _endPosition="1." _duration="1." _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\"" _phase="0.0"];
 FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-195,330" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
-MakeList29 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="929,176" fillcolor="blue"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="705,-75" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList29 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="906,191" fillcolor="blue"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="735,180" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":48,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="975,165" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="960,180" fillcolor="blue" _background="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 ShuffleList2 [type="vuo.list.shuffle.VuoText" version="1.0.0" label="Shuffle List|<refresh>refresh\l|<list>list\l|<chaos>chaos\l|<shuffledList>shuffledList\r" pos="390,180" fillcolor="orange"];
 SplitText [type="vuo.text.split.VuoText" version="1.0.0" label="Split Text|<refresh>refresh\l|<text>text\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<splitTexts>splitTexts\r" pos="225,180" _text="\"Shuffle list.\"" _separator="\"\"" _includeEmptyParts="false"];
 
-AllowFirstEvent:firstEvent -> MakeRectangleLayer:color;
 AllowFirstEvent:firstEvent -> SplitText:text;
 Append:compositeText -> MakeTextLayer:text;
 Curve2:value -> ShuffleList2:chaos;
 FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
 FireOnDisplayRefresh:requestedFrame -> Curve2:time;
 MakeList29:list -> RenderLayersToWindow:layers;
-MakeRectangleLayer:layer -> MakeList29:1;
-MakeTextLayer:layer -> MakeList29:2;
+MakeTextLayer:layer -> MakeList29:1;
 ShuffleList2:shuffledList -> Append:texts;
 SplitText:splitTexts -> ShuffleList2:list;
 }

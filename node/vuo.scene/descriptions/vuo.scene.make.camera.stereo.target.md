@@ -1,6 +1,6 @@
 Creates a stereoscopic perspective camera that can be added to a 3D scene. 
 
-The camera uses an [asymmetric frustum](http://paulbourke.net/stereographics/stereorender/) [perspective projection](https://en.wikipedia.org/wiki/Graphical_projection). Like a human eye or a typical camera lens, the perspective projection makes near objects seem larger than distant objects. The camera produces two images: one for the left eye, and one for the right eye.
+The camera uses an [asymmetric frustum](https://paulbourke.net/stereoscopy/stereorender/) [perspective projection](https://en.wikipedia.org/wiki/Graphical_projection). Like a human eye or a typical camera lens, the perspective projection makes near objects seem larger than distant objects. The camera produces two images: one for the left eye, and one for the right eye.
 
 Use this in conjunction with the [Render Scene to Stereo Images](vuo-node://vuo.scene.render.image.stereo2) node.
 

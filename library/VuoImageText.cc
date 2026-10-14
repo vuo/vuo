@@ -280,6 +280,14 @@ static CFArrayRef VuoImageText_createCTLines(
 
 	// Split the user's text into lines, both on manually-added linebreaks and automatically word-wrapped at `wrapWidth`.
 	CFStringRef cfText = CFStringCreateWithCStringNoCopy(NULL, text, kCFStringEncodingUTF8, kCFAllocatorNull);
+	if (!cfText)
+	{
+		// VuoText is supposed to be a Unicode UTF-8 byte array.
+		// Maybe CFStringCreateWithCStringNoCopy failed because it wasn't UTF-8.
+		// Fall back to macOS's default encoding.
+		cfText = CFStringCreateWithCStringNoCopy(NULL, text, CFStringGetSystemEncoding(), kCFAllocatorNull);
+	}
+
 	CFIndex characterCount = CFStringGetLength(cfText);
 	CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName, kCTUnderlineStyleAttributeName, kCTKernAttributeName };
 	CFTypeRef values[] = { *ctFont, *cgColor, underlineNumber, kernNumber };

@@ -25,7 +25,7 @@ VuoModuleMetadata({
 						 "3D", "object", "opengl", "scenegraph",
 						 "display", "view", "screen", "full screen", "fullscreen",
 					 ],
-					 "version" : "3.0.0",
+					 "version" : "3.1.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer",
 						 "VuoWindow"
@@ -40,7 +40,11 @@ struct nodeInstanceData
 {
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
+
+	// State to preserve when the backing is updated:
+	VuoColor background;
 	VuoMultisample multisampling;
+
 	dispatch_queue_t sceneRendererQueue;
 };
 
@@ -68,6 +72,7 @@ static void vuo_scene_render_window_updateBacking(void *ctx, float backingScaleF
 	VuoRetain(context->sceneRenderer);
 	if (valid)
 	{
+		VuoSceneRenderer_setBackgroundColor(context->sceneRenderer, context->background);
 		VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, so);
 		VuoSceneObject_release(so);
 	}
@@ -125,6 +130,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoList_VuoSceneObject) objects,
+		VuoInputData(VuoColor, {"default": "#000f"}) background,
 		VuoInputData(VuoText) cameraName,
 		VuoInputData(VuoMultisample, {"default":"4"}) multisampling,
 		VuoInputData(VuoWindowDescription) setWindowDescription,
@@ -132,6 +138,7 @@ void nodeInstanceEvent
 		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
 )
 {
+	(*context)->background = background;
 	(*context)->multisampling = multisampling;
 
 	if (setWindowDescriptionEvent)
@@ -142,7 +149,11 @@ void nodeInstanceEvent
 
 	VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
 
+	VuoWindowOpenGl_setOpaque((*context)->window, VuoColor_isOpaque(background));
+
 	dispatch_sync((*context)->sceneRendererQueue, ^{
+		VuoSceneRenderer_setBackgroundColor((*context)->sceneRenderer, background);
+
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName, true);

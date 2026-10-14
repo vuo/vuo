@@ -228,11 +228,11 @@ VuoModuleCompilerResults VuoCModuleCompiler::compile(dispatch_queue_t llvmQueue,
 }
 
 /**
- * Returns header file contents for the specialized-generic module described by `sourcePath`, the path of the
- * generic module's implementation file with the specialized type(s) appended to the file name.
+ * For compound types only — Generates a header for the specialized compound type without compiling it.
  *
  * Example: If `sourcePath` is `vuo/type/compound/VuoList_VuoInteger.cc`, this function locates the gemeric header
- * file at `vuo/type/compound/VuoList.h` and specializes it by replacing `VuoGenericType1` with `VuoInteger`.
+ * file at `vuo/type/compound/VuoList.h`, specializes it by replacing `VuoGenericType1` with `VuoInteger`, and
+ * returns the resulting source code, which the caller can save to a file called `VuoList_VuoInteger.h`.
  */
 string VuoCModuleCompiler::generateHeader(VuoCompilerIssues *issues)
 {
@@ -276,6 +276,14 @@ string VuoCModuleCompiler::getVirtualSourcePath(void)
 /**
  * Constructs a compiler instance that is ready to execute an action with @a inputSourceCode as the input.
  *
+ * @param inputSourceCode The source code to compile.
+ * @param shouldInsertExternDeclarations If true, adds extern declarations for certain functions to the virtual preface header file
+ *    to avoid errors building the AST before generic types have been replaced.
+ * @param shouldEnableAllWarnings If true, enables the full set of warnings desired when compiling modules. If false, disables
+ *    certain warnings to avoid issues before generic types have been replaced.
+ * @param shouldGenerateDependencyFile If true, tells Clang to output a .d file in addition to compiling the source code.
+ * @param[out] dependencyFilePath The path where the .d file will be written.
+ * @param[out] inMemoryFileSystem An in-memory file system populated with some header files; the caller can add more.
  * @throw VuoCompilerException Diagnostics could not be set up for the compiler.
  */
 unique_ptr<CompilerInstance> VuoCModuleCompiler::createCompilerInstance(const string &inputSourceCode,
@@ -775,7 +783,16 @@ void VuoCModuleCompiler::replaceVirtualPathsInDependencyFile(shared_ptr<VuoMakeD
 }
 
 /**
- * Expands macros in the source code (and does some other preprocessing).
+ * Preprocesses the source code, going beyond Clang's default preprocessing, in order to to transform code involving
+ * generic types enough that the subsequent Clang pass in replaceGenericTypes() will be able to parse the AST.
+ *
+ * - Replaces macros containing generic type names (e.g. `VuoGenericType1_SUPPORTS_COMPARISON`) with their specialized
+ *   name (e.g. `VuoAnchor_SUPPORTS_COMPARISON`), then further replaces them with their definition (e.g. `1`).
+ * - Generates virtual header files for any compound types `#include`d in the source code whose header file is not found
+ *   in the header search paths (e.g. `VuoList_VuoGenericType1.h`, `VuoList_VuoLeapFrame.h`).
+ * - Generates virtual header files for generic compound types not `#include`d but referenced in the source code (e.g.
+ *   `VuoList_VuoGenericType1.h` if the code contains `VuoGenericType1`), so that the module developer doesn't have to
+ *   `#include` them.
  *
  * @throw VuoCompilerException The source code could not be parsed.
  */
@@ -806,6 +823,10 @@ string VuoCModuleCompiler::preprocess(const string &inputSourceCode)
 	// Run the module source code through Clang's preprocessor.
 	// In the output source code, macros have been expanded, #line directives have been added,
 	// and #included file contents have been inserted, while the #include directives have also been preserved.
+	//
+	// On this Clang pass:
+	// - Certain warnings are disabled to avoid issues that will be fixed when generic types are replaced in the next pass.
+	// - When virtual header files are generated for e.g. `#include VuoList_VuoGenericType1.h`, generic types are not replaced in them.
 
 	IntrusiveRefCntPtr<vfs::InMemoryFileSystem> inMemoryFileSystem;
 	string unused;
@@ -869,6 +890,12 @@ string VuoCModuleCompiler::replaceGenericTypes(const string &inputSourceCode)
 {
 	// Replaces generic type names within function names and annotations.
 	// Adds the specialized module's additional metadata to the metadata already in the generic module.
+	//
+	// On this Clang pass:
+	// - Certain extern declarations are added and certain warnings are disabled to avoid issues that will be fixed once generic types
+	//   have been replaced.
+	// - When virtual header files are generated for e.g. `#include VuoList_VuoGenericType1.h`, generic type names in the file are replaced
+	//   with their specializations.
 
 	IntrusiveRefCntPtr<vfs::InMemoryFileSystem> inMemoryFileSystem;
 	string unused;
@@ -936,6 +963,10 @@ llvm::Module * VuoCModuleCompiler::compileTransformedSourceCode(const string &in
 	__block llvm::Module *module = nullptr;
 
 	dispatch_sync(llvmQueue, ^{
+		// On this Clang pass:
+		// - All desired warnings for compiling modules are enabled.
+		// - Virtual header files generated in the previous pass are reused. (@todo https://b33p.net/kosada/vuo/vuo/-/issues/19903)
+
 		IntrusiveRefCntPtr<vfs::InMemoryFileSystem> inMemoryFileSystem;
 		string dependencyFilePath;
 		unique_ptr<CompilerInstance> compilerInstance = createCompilerInstance(inputSourceCode, false, true, true, dependencyFilePath, inMemoryFileSystem);

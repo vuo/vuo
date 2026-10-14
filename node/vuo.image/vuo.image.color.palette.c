@@ -573,29 +573,17 @@ void nodeInstanceEvent(
 
 	else if (dithering >= 30 && dithering <= 45)  // Metal/MSL
 	{
-		json_object *imageJson = VuoImage_getInterprocessJson(image);
-		json_object *imageId;
-		json_object_object_get_ex(imageJson, "ioSurface", &imageId);
-		IOSurfaceRef imageSurf = IOSurfaceLookup(json_object_get_int(imageId));
-
-		IOSurfaceRef outputImageSurf = VuoErrorDiffusionDither_processImage((*instance)->errorDiffusion, imageSurf, palette, colorDistanceThreshold, VuoDitherDiffusionMatrixes[dithering], ditheringIntensity);
-
-		VuoIoSurfacePool_signal(imageSurf);
-		CFRelease(imageSurf);
-		json_object_put(imageJson);
-
+		__block IOSurfaceRef outputImageSurf;
+		VuoImage_performWithIOSurface(image, false, ^(IOSurfaceRef ioSurface){
+			outputImageSurf = VuoErrorDiffusionDither_processImage((*instance)->errorDiffusion, ioSurface, palette, colorDistanceThreshold, VuoDitherDiffusionMatrixes[dithering], ditheringIntensity);
+		});
 		if (!outputImageSurf)
 		{
 			*quantizedImage = NULL;
 			return;
 		}
 
-		json_object *outputImageJson = json_object_new_object();
-		json_object_object_add(outputImageJson, "ioSurface", json_object_new_int(IOSurfaceGetID(outputImageSurf)));
-		json_object_object_add(outputImageJson, "pixelsWide", json_object_new_int64(IOSurfaceGetWidth(outputImageSurf)));
-		json_object_object_add(outputImageJson, "pixelsHigh", json_object_new_int64(IOSurfaceGetHeight(outputImageSurf)));
-		*quantizedImage = VuoImage_makeFromJson(outputImageJson);
-		json_object_put(outputImageJson);
+		*quantizedImage = VuoImage_makeFromIOSurface(outputImageSurf);
 		CFRelease(outputImageSurf);
 	}
 }

@@ -301,6 +301,25 @@ void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty 
 }
 
 /**
+ * Specifies whether the window's background should be opaque.
+ *
+ * When true (default), the window has an opaque background, regardless of what is rendered to it.
+ * When false, if the image rendered to the window has transparent regions,
+ * other windows or the desktop will be visible behind the image.
+ *
+ * @threadAny
+ */
+void VuoWindowOpenGl_setOpaque(VuoWindowOpenGl w, bool opaque)
+{
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
+	VUOLOG_PROFILE_BEGIN(mainQueue);
+	dispatch_sync(dispatch_get_main_queue(), ^{
+					  VUOLOG_PROFILE_END(mainQueue);
+					  window.opaque = opaque;
+				  });
+}
+
+/**
  * Sets the window's current and preferred aspect ratio.
  *
  * If necessary, the window is resized to match the specified aspect ratio.

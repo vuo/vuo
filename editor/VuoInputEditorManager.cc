@@ -16,12 +16,10 @@
 #include <dlfcn.h>
 
 /**
- * Loads all input editor plugins (built-in and third-party).
+ * Loads metadata for all input editor plugins (built-in and third-party).
  */
 VuoInputEditorManager::VuoInputEditorManager(QList<QDir> extraPluginDirectories)
 {
-	initialization.lock();
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 	QList<QDir> pluginDirectories;
 	pluginDirectories += QCoreApplication::applicationDirPath() + "/../Resources/InputEditors";
 	pluginDirectories += QString::fromUtf8(VuoFileUtilities::getSystemModulesPath().c_str());
@@ -32,30 +30,20 @@ VuoInputEditorManager::VuoInputEditorManager(QList<QDir> extraPluginDirectories)
 	{
 		foreach (QString pluginFileName, pluginDirectory.entryList(QDir::Files))
 		{
-			QPluginLoader loader(pluginDirectory.absoluteFilePath(pluginFileName));
-			QObject *plugin = loader.instance();
-			if (plugin)
-			{
-				VuoInputEditorFactory *inputEditorFactory = qobject_cast<VuoInputEditorFactory *>(plugin);
-				plugins[loader.metaData().value("MetaData").toObject().value("type").toString()] = inputEditorFactory;
-			}
+			auto loader = new QPluginLoader(pluginDirectory.absoluteFilePath(pluginFileName));
+			if (loader)
+				plugins[loader->metaData().value("MetaData").toObject().value("type").toString()] = loader;
 		}
 	}
-		initialization.unlock();
-	});
 }
 
 /**
- * Waits until all the plugins have finished initializing.
+ * Cleans up input editor plugins.
  */
-void VuoInputEditorManager::waitForInitiailization()
+VuoInputEditorManager::~VuoInputEditorManager()
 {
-	while (!initialization.try_lock())
-	{
-		// Allow plugins to execute code on the main thread.
-		QApplication::processEvents();
-		usleep(USEC_PER_SEC/10);
-	}
+	for (auto plugin : plugins)
+		delete plugin.second;
 }
 
 /**
@@ -72,19 +60,24 @@ VuoInputEditor * VuoInputEditorManager::newInputEditor(VuoType *type, json_objec
 	if (type->getModuleKey() == "VuoInteger" && details && json_object_object_get_ex(details, "menuItems", &menuItemsValue))
 		return new VuoInputEditorNamedEnum();
 
-	VuoInputEditorFactory *inputEditorFactory = plugins[type->getModuleKey().c_str()];
-
-	if (!inputEditorFactory)
+	auto loader = plugins[type->getModuleKey().c_str()];
+	if (loader)
 	{
-		// There's no explicitly-defined input editor for this type — but if it's an enum type, we can provide the standard enum input editor.
-		string allowedValuesFunctionName = type->getModuleKey() + "_getAllowedValues";
-		if (dlsym(RTLD_SELF, allowedValuesFunctionName.c_str()))
-			return new VuoInputEditorWithEnumMenu(type->getModuleKey().c_str());
-
-		return NULL;
+		QObject *plugin = loader->instance();
+		if (plugin)
+		{
+			VuoInputEditorFactory *inputEditorFactory = qobject_cast<VuoInputEditorFactory *>(plugin);
+			if (inputEditorFactory)
+				return inputEditorFactory->newInputEditor();
+		}
 	}
 
-	return inputEditorFactory->newInputEditor();
+	// There's no explicitly-defined input editor for this type (or loading failed) — but if it's an enum type, we can provide the standard enum input editor.
+	string allowedValuesFunctionName = type->getModuleKey() + "_getAllowedValues";
+	if (dlsym(RTLD_SELF, allowedValuesFunctionName.c_str()))
+		return new VuoInputEditorWithEnumMenu(type->getModuleKey().c_str());
+
+	return NULL;
 }
 
 /**

@@ -55,10 +55,28 @@ VuoRuntimePersistentState::~VuoRuntimePersistentState(void)
  */
 string VuoRuntimePersistentState::getCurrentWorkingDirectory(void)
 {
-	// Keep consistent with VuoGetWorkingDirectory().
-	char currentWorkingDirectory[PATH_MAX+1];
-	getcwd(currentWorkingDirectory, PATH_MAX+1);
-	return currentWorkingDirectory;
+	// See explanation in VuoFileUtilities::getWorkingDirectory().
+	// Keep consistent with VuoGetWorkingDirectory() and VuoFileUtilities::getWorkingDirectory().
+
+	const int oexec = 0x40000000;
+	int fd = open(".", oexec | O_DIRECTORY);
+	if (fd > 0)
+	{
+		char filePath[PATH_MAX] = "(unset)";
+		int ret = fcntl(fd, F_GETPATH, filePath);
+		if (ret == 0 && strcmp(filePath, "(unset)") != 0)
+			return filePath;
+		else
+		{
+			VUserLog("Error: Couldn't get the process's current directory name.  Relative pathnames may not be resolved correctly.");
+			return "/";
+		}
+	}
+	else
+	{
+		VUserLog("Error: Couldn't get the process's current directory.  Relative pathnames may not be resolved correctly.");
+		return "/";
+	}
 }
 
 /**

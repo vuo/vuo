@@ -3,6 +3,7 @@ Displays a window containing a composite image.
 When the composition starts or this node is added to a running composition, it displays a window that contains a graphics area. The window provides a menu option to toggle between windowed and full-screen mode.
 
    - `Layers` — The layers that make up the composite image. The layers are placed in the order listed, with the first layer in back and the last layer in front.
+   - `Background` — The color to render behind all layers.  If the background color is transparent or semi-transparent, other windows or the desktop may be visible behind the window.
    - `Multisampling` — How smooth edges of layers are.
       - A value of 1 means each pixel is evaluated once — no smoothing.
       - A value of 2, 4, or 8 means each pixel that lies on the edge of a layer is sampled multiple times and averaged together, to provide a smoother appearance.

@@ -20,12 +20,11 @@ class VuoInputEditorManager
 {
 public:
 	VuoInputEditorManager(QList<QDir> extraPluginDirectories = QList<QDir>());
-	void waitForInitiailization();
+	~VuoInputEditorManager();
 	VuoInputEditor * newInputEditor(VuoType *type, json_object *details = NULL);
 
 	bool doesTypeAllowOfflineSerialization(VuoType *type);
 
 private:
-	std::mutex initialization;
-	map<QString, VuoInputEditorFactory *> plugins;
+	map<QString, QPluginLoader *> plugins;
 };

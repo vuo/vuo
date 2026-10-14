@@ -3,6 +3,7 @@ Displays a window containing a 3D scene.
 When the composition starts or this node is added to a running composition, it displays a window that contains a graphics area. The window provides a menu option to toggle between windowed and full-screen mode.
 
    - `Objects` — The 3D objects to place in the scene.
+   - `Background` — The color to render behind the scene.  If the background color is transparent or semi-transparent, other windows or the desktop may be visible behind the window.
    - `Set Window Description` — A specification of the appearance of the window or the way the user can interact with it.
    - `Camera Name` — The name of the camera through which the scene is viewed. The camera is selected from any in `Objects`. If no matching camera is found, then a camera from `Objects` is arbitrarily chosen. If there is no camera, the default camera is used. 
    - `Multisampling` — How smooth edges of 3D objects are.

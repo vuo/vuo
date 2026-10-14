@@ -1,0 +1,96 @@
+/**
+ * @file
+ * Detects a human body in the camera image, and displays colorful streamers eminating from the wrists.
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.1.1" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="960,675"];
+AllowChanges [type="vuo.event.allowChanges2.VuoReal" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="825,540"];
+AllowChanges2 [type="vuo.event.allowChanges2.VuoReal" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="840,855"];
+BlendImageWithFeedback2 [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="945,90" _feedbackTransform="\{\"translation\":[0.0,-0.0020000000949949026],\"rotation\":0.0,\"scale\":[1.0019999742507935,1.0019999742507935]\}" _feedbackOpacity="0.80000000000000004" _feedbackBlendMode="\"linear-dodge\"" _pixelAligned="false" _imageInForeground="true" _width="0" _height="0" _colorDepth="\"16bpc\""];
+ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="1260,180" _blendMode="\"linear-dodge\""];
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="630,225" _speed="0.10000000000000001"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="120,135"];
+ConvertImageToLayer3 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="1875,255"];
+FindBodiesInImage [type="vuo.image.findBodies" version="1.0.0" label="Find Bodies in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<rectangles>rectangles\r|<points>points\r|<lineSegments>lineSegments\r|<bodies>bodies\r" pos="15,180" fillcolor="orange" _minimumConfidence="0.5"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="45,-135" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.2" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="30,30"];
+GetBodyLandmarks [type="vuo.image.get.body" version="1.0.0" label="Get Body Landmarks|<refresh>refresh\l|<body>body\l|<rectangle>rectangle\r|<leftEye>leftEye\r|<rightEye>rightEye\r|<nose>nose\r|<leftEar>leftEar\r|<rightEar>rightEar\r|<neck>neck\r|<leftShoulder>leftShoulder\r|<rightShoulder>rightShoulder\r|<leftElbow>leftElbow\r|<rightElbow>rightElbow\r|<leftWrist>leftWrist\r|<rightWrist>rightWrist\r|<leftHip>leftHip\r|<rightHip>rightHip\r|<leftKnee>leftKnee\r|<rightKnee>rightKnee\r|<leftAnkle>leftAnkle\r|<rightAnkle>rightAnkle\r" pos="45,300"];
+GetFirstItemInList [type="vuo.list.get.first.VuoHumanBody" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="-60,885"];
+HoldValue4 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="945,360"];
+HoldValue5 [type="vuo.data.hold2.VuoReal" version="3.0.0" label="Hold Value|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="795,675"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="1080,360" _saturation="1.0" _lightness="0.75" _opacity="1.000000"];
+MakeHSLColor2 [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="1080,675" _saturation="1.0" _lightness="0.75" _opacity="1.000000"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1275,30" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="0.29999999999999999"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1446,41" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="927,686" _2="0.5"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1439,416"];
+MakeOvalLayer2 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1245,405" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.000000" _width="0.10000000000000001" _height="0.10000000000000001" _sharpness="0.0"];
+MakeOvalLayer3 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1245,720" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.000000" _width="0.10000000000000001" _height="0.10000000000000001" _sharpness="0.0"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="45,-75" fillcolor="lime" _width="640" _height="480" _receivedFrame_eventThrottling="drop"];
+RenderLayersToImage2 [type="vuo.layer.render.image2" version="2.1.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="1500,405" _width="640" _height="480" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1500,30" fillcolor="blue" _background="\"#000f\"" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="675,540" _option1="1.0"];
+SelectLatest3 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="690,855" _option1="1.0"];
+SmoothWithInertia [type="vuo.motion.smooth.inertia.VuoPoint2d" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="405,435" _setPosition="\{\"x\":0.,\"y\":0.\}" _duration="0.20000000000000001"];
+SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="1005,510" _setPosition="0." _duration="1.0"];
+SmoothWithInertia4 [type="vuo.motion.smooth.inertia.VuoPoint2d" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="405,750" _setPosition="\{\"x\":0.,\"y\":0.\}" _duration="0.20000000000000001"];
+SmoothWithInertia5 [type="vuo.motion.smooth.inertia.VuoReal" version="1.1.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="1020,825" _setPosition="0." _duration="1.0"];
+SpinOffValue [type="vuo.event.spinOffValue.VuoImage" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="75,105" _spunOff_eventThrottling="enqueue"];
+
+Comment [type="vuo.comment" label="\"Right Hand\"" pos="285,630" width="1109" height="283"];
+Comment2 [type="vuo.comment" label="\"Left Hand\"" pos="285,300" width="1108" height="303"];
+
+Add:sum -> MakeHSLColor2:hue;
+AllowChanges2:changedValue -> SmoothWithInertia5:setTarget;
+AllowChanges:changedValue -> SmoothWithInertia2:setTarget;
+BlendImageWithFeedback2:feedbackImage -> ConvertImageToLayer3:image;
+ChangeLayerBlending:blendedLayer -> MakeList:2;
+ChangeSpeed:changedTime -> HoldValue4:value;
+ChangeSpeed:changedTime -> HoldValue5:value;
+ConvertFrameToImage:image -> FlipImageHorizontally:image;
+ConvertImageToLayer3:layer -> ChangeLayerBlending:layer;
+FindBodiesInImage:bodies -> GetFirstItemInList:list;
+FireOnDisplayRefresh:requestedFrame -> BlendImageWithFeedback2:image [event=true style=invis];
+FireOnDisplayRefresh:requestedFrame -> ChangeSpeed:time [style=invis];
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia2:time [style=invis];
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia4:time [style=invis];
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia5:time [style=invis];
+FireOnDisplayRefresh:requestedFrame -> SmoothWithInertia:time [style=invis];
+FlipImageHorizontally:flippedImage -> MakeImageLayer:image;
+FlipImageHorizontally:flippedImage -> SpinOffValue:value;
+GetBodyLandmarks:leftWrist -> SmoothWithInertia:setTarget;
+GetBodyLandmarks:rightWrist -> SmoothWithInertia4:setTarget;
+GetFirstItemInList:firstItem -> GetBodyLandmarks:body;
+HoldValue4:heldValue -> MakeHSLColor:hue;
+HoldValue5:heldValue -> MakeList2:1;
+MakeHSLColor2:color -> MakeOvalLayer3:color;
+MakeHSLColor:color -> MakeOvalLayer2:color;
+MakeImageLayer:layer -> MakeList:1;
+MakeList2:list -> Add:values;
+MakeList5:list -> RenderLayersToImage2:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeOvalLayer2:layer -> MakeList5:1;
+MakeOvalLayer3:layer -> MakeList5:2;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage:frame;
+RenderLayersToImage2:image -> BlendImageWithFeedback2:image;
+SelectLatest3:latest -> AllowChanges2:value;
+SelectLatest:latest -> AllowChanges:value;
+SmoothWithInertia2:position -> MakeOvalLayer2:opacity;
+SmoothWithInertia4:position -> HoldValue5:update;
+SmoothWithInertia4:position -> MakeOvalLayer3:center;
+SmoothWithInertia4:position -> SelectLatest3:option1 [event=true];
+SmoothWithInertia4:reachedTarget -> SelectLatest3:option2;
+SmoothWithInertia5:position -> MakeOvalLayer3:opacity;
+SmoothWithInertia:position -> HoldValue4:update;
+SmoothWithInertia:position -> MakeOvalLayer2:center;
+SmoothWithInertia:position -> SelectLatest:option1 [event=true];
+SmoothWithInertia:reachedTarget -> SelectLatest:option2;
+SpinOffValue:spunOff -> FindBodiesInImage:image;
+}

@@ -3,6 +3,7 @@ Displays a window containing an image.
 When the composition starts or this node is added to a running composition, it displays a window that contains a graphics area. The window provides a menu option to toggle between windowed and full-screen mode.
 
    - `Image` — The image to draw in the graphics area. The window is resized to fit the image (unless the input to `Set Window Description` says otherwise).
+   - `Background` — The color to render behind the image.  If the image has transparent or semi-transparent regions, the background color will be visible through the image.  If the background color itself is transparent or semi-transparent, and the image has transparent or semi-transparent regions, other windows or the desktop will be visible behind the window.
    - `Set Window Description` — A specification of the appearance of the window or the way the user can interact with it.
    - `Updated Window` — Fires an event with information about the window whenever the state of the window changes. You can send this information to [vuo.mouse](vuo-nodeset://vuo.mouse), [vuo.ui](vuo-nodeset://vuo.ui), and other nodes so they can respond to changes in window status and user interactions.
 

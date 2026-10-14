@@ -3,7 +3,7 @@
  * Demonstrates different levels of the `Map Image to Palette` node's Dithering Intensity port applied to a grayscale color gradient.
  *
  * @createdInVuoVersion 2.4.4
- * @lastSavedInVuoVersion 2.4.4
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -22,25 +22,23 @@ HoldValue [type="vuo.data.hold2.VuoImage" version="3.0.0" label="Hold Value|<ref
 MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="780,480" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1.0" _fixed="\"horizontal\"" _opacity="1.0"];
 MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="735,90" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="1.0" _fixed="\"horizontal\"" _opacity="1.0"];
 MakeLinearGradientImage [type="vuo.image.make.gradient.linear2" version="2.0.0" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="-225,90" _start="\{\"x\":-1.0,\"y\":0.0\}" _end="\{\"x\":1.0,\"y\":0.0\}" _noiseAmount="0.0" _width="256" _height="28"];
-MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="132,506" _1="\"#000\"" _2="\"#fff\""];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1386,221"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="132,506" fillcolor="orange" _1="\"#000\"" _2="\"#fff\""];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1386,236" fillcolor="blue"];
 MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-289,101" _1="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _2="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}"];
 MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="957,491"];
 MakeList7 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="938,236"];
 MakePointsAlongLine [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="90,240" _startPosition="1.0" _endPosition="0.0" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="11"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1185,45" _color="\{\"r\":0.13179217278957367,\"g\":0.19768062233924866,\"b\":0.42008087038993835,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="795,645" _font="\{\"fontName\":\"GillSans-Light\",\"pointSize\":14.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-center\"" _center="\{\"x\":0.50999999046325684,\"y\":0.0\}" _wrapWidth="Infinity" _opacity="1.0"];
 MapImageToPalette [type="vuo.image.color.palette" version="1.1.0" label="Map Image to Palette|<refresh>refresh\l|<image>image\l|<palette>palette\l|<paletteMatchingAccuracy>paletteMatchingAccuracy\l|<dithering>dithering\l|<ditheringIntensity>ditheringIntensity\l|<quantizedImage>quantizedImage\r" pos="270,480" fillcolor="orange" _paletteMatchingAccuracy="1" _dithering="34"];
 ProcessList [type="vuo.list.process.VuoReal.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="330,240" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1440,210" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1440,225" fillcolor="blue" _background="\{\"r\":0.13200579583644867,\"g\":0.19800107181072235,\"b\":0.42000457644462585,\"a\":1.0\}" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
 
 AppendLists:combinedList -> ArrangeLayersInColumn:layers;
-ArrangeLayersInColumn:arrangedLayer -> MakeList2:2;
+ArrangeLayersInColumn:arrangedLayer -> MakeList2:1;
 ChangeSamplingMode2:outputImage -> MakeImageLayer2:image;
 ChangeSamplingMode3:outputImage -> MakeImageLayer:image;
 CombineLayers:combinedLayer -> ProcessList:processedItem;
 FireOnStart:started -> MakeList4:1;
-FireOnStart:started -> MakeRectangleLayer:color;
 FormatNumber:text -> MakeTextLayer:text;
 HoldValue:heldValue -> MapImageToPalette:image;
 MakeImageLayer2:layer -> MakeList7:1;
@@ -54,7 +52,6 @@ MakeList5:list -> CombineLayers:layers;
 MakeList7:list -> AppendLists:list1;
 MakeList:list -> MapImageToPalette:palette;
 MakePointsAlongLine:points -> ProcessList:fire;
-MakeRectangleLayer:layer -> MakeList2:1;
 MakeTextLayer:layer -> MakeList5:2;
 MapImageToPalette:quantizedImage -> ChangeSamplingMode3:image;
 ProcessList:processItem -> FormatNumber:value;

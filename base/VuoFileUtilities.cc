@@ -109,15 +109,7 @@ string VuoFileUtilities::getAbsolutePath(const string &path)
 	if (isAbsolutePath(path))
 		return path;
 
-	char *cwd = getcwd(NULL, 0);
-	if (! cwd)
-	{
-		VUserLog("Couldn't get current working directory: %s", strerror(errno));
-		return path;
-	}
-
-	string absolutePath = string(cwd) + "/" + path;
-	free(cwd);
+	string absolutePath = getWorkingDirectory() + "/" + path;
 	return absolutePath;
 }
 
@@ -200,21 +192,15 @@ string VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(string path)
  */
 string VuoFileUtilities::getTmpDir(void)
 {
-	char *cwd = getcwd(NULL, 0);
-	if (!cwd)
-		VUserLog("Error in getcwd(): %s", strerror(errno));
-
-	if (cwd && strstr(cwd, "/Library/Containers/"))  // We're in a sandbox.
+	string cwd = getWorkingDirectory();
+	if (cwd.find("/Library/Containers/") != string::npos)  // We're in a sandbox.
 	{
 		// https://b33p.net/kosada/node/16374
 		// In the macOS 10.15 screen saver sandbox, at least,
 		// we're not allowed to use the system or user temporary directories for socket-files,
 		// but we are allowed to use the sandbox container directory.
-		string cwdS(cwd);
-		free(cwd);
-		return VuoStringUtilities::endsWith(cwdS, "/") ? VuoStringUtilities::substrBefore(cwdS, "/") : cwdS;
+		return VuoStringUtilities::endsWith(cwd, "/") ? VuoStringUtilities::substrBefore(cwd, "/") : cwd;
 	}
-	free(cwd);
 
 	char userTempDir[PATH_MAX];
 	if (confstr(_CS_DARWIN_USER_TEMP_DIR, userTempDir, PATH_MAX) > 0)
@@ -418,6 +404,48 @@ string VuoFileUtilities::getCachePath(void)
 }
 
 /**
+ * Returns the process's current working directory,
+ * or "/" on error.
+ */
+string VuoFileUtilities::getWorkingDirectory(void)
+{
+	// Keep consistent with VuoRuntimePersistentState::getCurrentWorkingDirectory() and VuoFileUtilities::getWorkingDirectory().
+
+	// Don't use `getcwd()` here since it causes macOS to show a scary
+	// "Vuo.app would like to access files in your Desktop folder" warning.
+	// char currentWorkingDirectory[PATH_MAX+1];
+	// getcwd(currentWorkingDirectory, PATH_MAX+1);
+
+	// Instead, open the current directory for searching only
+	// (O_SEARCH = O_EXEC | O_DIRECTORY),
+	// and get the name from the file descriptor.
+
+	// The O_EXEC constant is defined in macOS SDK 27.0 (and possibly earlier),
+	// but it isn't defined in macOS SDK 11.0 (which Vuo bundles).
+	// This value does, however, seem to work at least as far back as macOS 10.12.
+	const int oexec = 0x40000000;
+
+	int fd = open(".", oexec | O_DIRECTORY);
+	if (fd > 0)
+	{
+		char filePath[PATH_MAX] = "(unset)";
+		int ret = fcntl(fd, F_GETPATH, filePath);
+		if (ret == 0 && strcmp(filePath, "(unset)") != 0)
+			return filePath;
+		else
+		{
+			VUserLog("Error: Couldn't get the process's current directory name.  Relative pathnames may not be resolved correctly.");
+			return "/";
+		}
+	}
+	else
+	{
+		VUserLog("Error: Couldn't get the process's current directory.  Relative pathnames may not be resolved correctly.");
+		return "/";
+	}
+}
+
+/**
  * Returns true if @a path (a source file or compiled module) is located in a Modules folder.
  */
 bool VuoFileUtilities::isInstalledAsModule(const string &path)
@@ -561,7 +589,7 @@ void VuoFileUtilities::writeStringToFileSafely(string s, string path)
 }
 
 /**
- * Returns true if the file exists.
+ * Returns true if `path` (which can be a file or directory) exists.
  *
  * If `path` is a symlink or macOS Alias, it is dereferenced.
  */

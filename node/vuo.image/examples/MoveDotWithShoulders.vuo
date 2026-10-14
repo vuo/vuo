@@ -1,0 +1,74 @@
+/**
+ * @file
+ * Detects a simple gesture (raising a shoulder) and uses it to control the position of a dot.
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+BecameGreaterThan [type="vuo.data.becameGreaterThan.VuoReal" version="1.0.0" label="Became Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<becameGreaterThan>becameGreaterThan\r" pos="570,360"];
+BecameGreaterThan2 [type="vuo.data.becameLessThan.VuoReal" version="1.0.0" label="Became Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<becameLessThan>becameLessThan\r" pos="570,435"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="330,720"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="330,735"];
+ConvertFrameToImage5 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="150,225"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="705,390"];
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="225,450" _b="6.0"];
+FindFacesInImage [type="vuo.image.findBodies" version="1.0.0" label="Find Bodies in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<rectangles>rectangles\r|<points>points\r|<lineSegments>lineSegments\r|<bodies>bodies\r" pos="-270,135" fillcolor="orange" _minimumConfidence="0.5"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-240,645" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-210,585" fillcolor="lime" _started_eventThrottling="enqueue"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.2" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="45,-45"];
+GetBodyLandmarks [type="vuo.image.get.body" version="1.0.0" label="Get Body Landmarks|<refresh>refresh\l|<body>body\l|<rectangle>rectangle\r|<leftEye>leftEye\r|<rightEye>rightEye\r|<nose>nose\r|<leftEar>leftEar\r|<rightEar>rightEar\r|<neck>neck\r|<leftShoulder>leftShoulder\r|<rightShoulder>rightShoulder\r|<leftElbow>leftElbow\r|<rightElbow>rightElbow\r|<leftWrist>leftWrist\r|<rightWrist>rightWrist\r|<leftHip>leftHip\r|<rightHip>rightHip\r|<leftKnee>leftKnee\r|<rightKnee>rightKnee\r|<leftAnkle>leftAnkle\r|<rightAnkle>rightAnkle\r" pos="-240,255"];
+GetFirstItemInList [type="vuo.list.get.first.VuoHumanBody" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="195,555"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="345,-45" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="0.20000000000000001"];
+MakeList12 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="402,491" _2="-1.0"];
+MakeList5 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="681,101" fillcolor="blue"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="465,615" _color="\{\"r\":0.70308995246887207,\"g\":0.42890059947967529,\"b\":0.86575114727020264,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.40000000000000002" _height="0.40000000000000002" _sharpness="1.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="360,105" _text="\"Raise your left or right shoulder to move the dot.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":-0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MeasureDistance3 [type="vuo.point.distance.VuoPoint2d" version="1.0.0" label="Measure Distance|<refresh>refresh\l|<a>a\l|<b>b\l|<distance>distance\r" pos="60,450"];
+Multiply2 [type="vuo.math.multiply.VuoReal" version="2.1.1" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="435,480"];
+ReceiveLiveVideo2 [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="-240,-45" fillcolor="lime" _width="640" _height="480" _receivedFrame_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="735,90" fillcolor="blue" _background="\"#000f\"" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectLatest [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="780,420" _option1="0.5" _option2="-0.5"];
+SmoothWithSpring [type="vuo.motion.smooth.spring.VuoReal" version="2.1.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="165,645" _setPosition="0.0" _period="0.5" _damping="0.5"];
+SpinOffValue [type="vuo.event.spinOffValue.VuoImage" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="-210,60" _spunOff_eventThrottling="enqueue"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.2.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="165,360"];
+
+Comment [type="vuo.comment" label="\"If one shoulder is significantly higher than the other, update the dot's target position.\\n\\nUse the distance between the shoulders to scale the threshold, so that it works whether you're close to or far away from the camera.\"" pos="30,240" width="892" height="306"];
+
+BecameGreaterThan2:becameLessThan -> SelectLatest:option2;
+BecameGreaterThan:becameGreaterThan -> SelectLatest:option1;
+Convert2DPointToReal2:y -> Subtract:b;
+Convert2DPointToReal:y -> Subtract:a;
+ConvertFrameToImage5:image -> FlipImageHorizontally:image;
+ConvertRealTo2DPoint:point2d -> MakeOvalLayer:center;
+Divide:quotient -> BecameGreaterThan:b;
+Divide:quotient -> MakeList12:1;
+FindFacesInImage:bodies -> GetFirstItemInList:list;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithSpring:time;
+FireOnStart:started -> MakeOvalLayer:color [style=invis];
+FireOnStart:started -> MakeTextLayer:text [style=invis];
+FlipImageHorizontally:flippedImage -> MakeImageLayer2:image;
+FlipImageHorizontally:flippedImage -> SpinOffValue:value;
+GetBodyLandmarks:leftShoulder -> Convert2DPointToReal:xy;
+GetBodyLandmarks:leftShoulder -> MeasureDistance3:a;
+GetBodyLandmarks:rightShoulder -> Convert2DPointToReal2:xy;
+GetBodyLandmarks:rightShoulder -> MeasureDistance3:b;
+GetFirstItemInList:firstItem -> GetBodyLandmarks:body;
+MakeImageLayer2:layer -> MakeList5:1;
+MakeList12:list -> Multiply2:values;
+MakeList5:list -> RenderLayersToWindow2:layers;
+MakeOvalLayer:layer -> MakeList5:5;
+MakeTextLayer:layer -> MakeList5:2;
+MeasureDistance3:distance -> Divide:a;
+Multiply2:product -> BecameGreaterThan2:b;
+ReceiveLiveVideo2:receivedFrame -> ConvertFrameToImage5:frame;
+SelectLatest:latest -> SmoothWithSpring:setTarget;
+SmoothWithSpring:position -> ConvertRealTo2DPoint:x;
+SpinOffValue:spunOff -> FindFacesInImage:image;
+Subtract:difference -> BecameGreaterThan2:a;
+Subtract:difference -> BecameGreaterThan:a;
+}

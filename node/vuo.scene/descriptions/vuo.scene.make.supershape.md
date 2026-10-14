@@ -11,4 +11,4 @@ The "supershape" formula ("superformula") is a way to create natural-looking obj
 - `Radius` — The radius to use at the beginning and ending angle.
 - `Rows` and `Columns` — The number of vertices along the shape's latitude/longitude. With more vertices, the shape will be smoother but may take longer to render.
 
-[Paul Bourke's page](http://paulbourke.net/geometry/supershape/) provides additional information and example parameters for generating a variety of shapes.
+[Paul Bourke's page](https://paulbourke.net/geometry/supershape/) provides additional information and example parameters for generating a variety of shapes.

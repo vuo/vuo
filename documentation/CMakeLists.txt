@@ -23,7 +23,7 @@ VuoRender(VuoDocumentationNodesAndCompositions
 	${PROJECT_SOURCE_DIR}/documentation/composition/CalculateBoxVolume.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/CalculateVolume.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/CaptionVideo.vuo
-	${PROJECT_SOURCE_DIR}/documentation/composition/ChangeBackgroundColor.vuo
+	${PROJECT_SOURCE_DIR}/documentation/composition/ChangeCircleColor.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/ChangeTilingPeriodically.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/Count.vuo
 	${PROJECT_SOURCE_DIR}/documentation/composition/CountAndHoldMousePresses.vuo

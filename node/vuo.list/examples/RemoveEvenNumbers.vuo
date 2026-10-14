@@ -1,0 +1,55 @@
+/**
+ * @file
+ * Generates a list of random numbers, then uses `Filter List` to remove the even numbers (those which, when divided by 2, have a remainder of 0).
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="1050,165" _separator="\"\\n\"" _includeEmptyParts="true"];
+AppendTexts3 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="1050,45" _separator="\"\\n\"" _includeEmptyParts="true"];
+AppendTexts4 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="1050,315" _separator="\"\\n\"" _includeEmptyParts="true"];
+AppendTexts5 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="1050,435" _separator="\"\\n\"" _includeEmptyParts="true"];
+DivideWithRemainder [type="vuo.math.divide.VuoInteger" version="2.0.1" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="495,375" _b="2"];
+FilterList [type="vuo.list.filter.VuoInteger" version="1.0.0" label="Filter List|<refresh>refresh\l|<fire>fire\l|<keepItem>keepItem\l|<filteredList>filteredList\r|<filterItem>filterItem\r" pos="495,285" fillcolor="orange" _filteredList_eventThrottling="enqueue" _filterItem_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="120,165" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+IsIntegerNonzero [type="vuo.type.integer.boolean" version="1.0.1" label="Is Integer Nonzero|<refresh>refresh\l|<integer>integer\l|<boolean>boolean\r" pos="525,390"];
+MakeList5 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="991,56" _1="\"Random numbers\\nfrom 0 to 100:\""];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1446,56" fillcolor="blue"];
+MakeList7 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="991,326" _1="\"Filtered to only\\nodd numbers:\""];
+MakeRandomList [type="vuo.noise.random.list.VuoInteger" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="315,165" _minimum="0" _maximum="100" _count="20"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1290,45" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\"center-top\"" _center="\{\"x\":-0.25,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1290,315" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\"center-top\"" _center="\{\"x\":0.25,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
+ProcessList [type="vuo.list.process.VuoInteger.VuoText" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="750,165" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+ProcessList2 [type="vuo.list.process.VuoInteger.VuoText" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="750,435" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1500,45" fillcolor="blue" _background="\"#000f\"" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="705,285"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="645,675"];
+
+AppendTexts3:compositeText -> MakeTextLayer:text;
+AppendTexts4:compositeText -> MakeTextLayer2:text;
+AppendTexts5:compositeText -> MakeList7:2;
+AppendTexts:compositeText -> MakeList5:2;
+DivideWithRemainder:remainder -> IsIntegerNonzero:integer;
+FilterList:filterItem -> DivideWithRemainder:a;
+FilterList:filteredList -> ProcessList2:fire;
+FirePeriodically:fired -> MakeRandomList:minimum [event=true];
+IsIntegerNonzero:boolean -> FilterList:keepItem;
+MakeList5:list -> AppendTexts3:texts;
+MakeList6:list -> RenderLayersToWindow:layers;
+MakeList7:list -> AppendTexts4:texts;
+MakeRandomList:list -> FilterList:fire;
+MakeRandomList:list -> ProcessList:fire;
+MakeTextLayer2:layer -> MakeList6:2;
+MakeTextLayer:layer -> MakeList6:1;
+ProcessList2:processItem -> SummarizeValue2:value;
+ProcessList2:processedList -> AppendTexts5:texts;
+ProcessList:processItem -> SummarizeValue:value;
+ProcessList:processedList -> AppendTexts:texts;
+SummarizeValue2:summary -> ProcessList2:processedItem;
+SummarizeValue:summary -> ProcessList:processedItem;
+}

@@ -17,7 +17,7 @@ VuoModuleMetadata({
 		"foreground", "raise", "floating", "topmost", "overlay", "above", "front",
 		"properties", "settings",
 	],
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"node": {
 		"exampleCompositions": [ "ShowWindowLevels.vuo" ],
 	},
@@ -26,6 +26,7 @@ VuoModuleMetadata({
 void nodeEvent(
 	VuoInputData(VuoWindowDescription) windowDescription,
 	VuoInputData(VuoInteger, {"menuItems":[
+		{"value":-10,"name":"Desktop"},
 		{"value": 0, "name":"Background"},
 		{"value":10, "name":"Normal"},
 		{"value":20, "name":"Floating"},
@@ -36,8 +37,9 @@ void nodeEvent(
 	*changedWindowDescription = VuoWindowDescription_copy(windowDescription);
 	VuoWindowDescription_setProperty(*changedWindowDescription, (VuoWindowProperty){
 		.type = VuoWindowProperty_Level,
-		.level = level ==  0 ? VuoWindowLevel_Background :
-				(level == 10 ? VuoWindowLevel_Normal :
-							   VuoWindowLevel_Floating),
+		.level = level == -10 ? VuoWindowLevel_Desktop :
+				(level ==   0 ? VuoWindowLevel_Background :
+				(level ==  10 ? VuoWindowLevel_Normal :
+								VuoWindowLevel_Floating)),
 	});
 }

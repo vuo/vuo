@@ -17,6 +17,7 @@ VuoModuleMetadata({
 						  "edge detection", "convolution",
 						  "Laplacian of Gaussian", "LoG", "Marr",
 						  "emboss", "relief",
+						  "contour",
 					  ],
 					  "version" : "1.1.0",
 					  "dependencies" : [

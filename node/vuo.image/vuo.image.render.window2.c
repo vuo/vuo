@@ -22,13 +22,13 @@
 VuoModuleMetadata({
 					 "title" : "Render Image to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "4.0.0",
+					 "version" : "4.1.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer",
 						 "VuoWindow"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "SimulateFilmProjector.vuo" ]
+						 "exampleCompositions" : [ "BulgeCheckerboard.vuo" ]
 					 }
 				 });
 
@@ -37,6 +37,10 @@ struct nodeInstanceData
 {
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
+
+	// State to preserve when the backing is updated:
+	VuoColor background;
+
 	bool aspectRatioOverridden;
 
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to @c rootSceneObject.
@@ -69,6 +73,7 @@ static void vuo_image_render_window_updateBacking(void *ctx, float backingScaleF
 	VuoRelease(context->sceneRenderer);
 	context->sceneRenderer = VuoSceneRenderer_make(backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
+	VuoSceneRenderer_setBackgroundColor(context->sceneRenderer, context->background);
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
 	dispatch_semaphore_signal(context->scenegraphSemaphore);
 }
@@ -126,11 +131,14 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoImage) image,
+		VuoInputData(VuoColor, {"default": "#000f"}) background,
 		VuoInputData(VuoWindowDescription) setWindowDescription,
 		VuoInputEvent({"eventBlocking":"none","data":"setWindowDescription"}) setWindowDescriptionEvent,
 		VuoOutputTrigger(updatedWindow, VuoRenderedLayers)
 )
 {
+	(*context)->background = background;
+
 	if (setWindowDescriptionEvent)
 	{
 		VuoList_VuoWindowProperty windowProperties = VuoWindowDescription_getWindowProperties(setWindowDescription);
@@ -148,8 +156,12 @@ void nodeInstanceEvent
 		VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
 	}
 
+	VuoWindowOpenGl_setOpaque((*context)->window, VuoColor_isOpaque(background));
+
 	dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	{
+		VuoSceneRenderer_setBackgroundColor((*context)->sceneRenderer, background);
+
 		VuoShader_setUniform_VuoImage(VuoSceneObject_getShader((*context)->rootSceneObject), "texture", image);
 
 		if (image && image->pixelsWide && image->pixelsHigh)

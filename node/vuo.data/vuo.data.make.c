@@ -14,7 +14,7 @@ VuoModuleMetadata({
 	"keywords": [ "binary" ],
 	"version": "1.0.0",
 	"node": {
-		"exampleCompositions": [ ],
+		"exampleCompositions": [ "vuo-example://vuo.image/ShowNumbersAsImages.vuo" ],
 	},
 });
 

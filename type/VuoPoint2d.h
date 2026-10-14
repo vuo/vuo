@@ -286,6 +286,14 @@ static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoi
 }
 
 /**
+ * Returns false if any component is infinite or NaN.
+ */
+static inline VuoReal VuoPoint2d_isFinite(VuoPoint2d value)
+{
+	return isfinite(value.x) && isfinite(value.y);
+}
+
+/**
  * @}
  */
 

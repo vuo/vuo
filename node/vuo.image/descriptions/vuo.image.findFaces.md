@@ -6,3 +6,5 @@ Tries to find human faces in an image, including eye, nose, and mouth positions.
    - `Landmarks` — The location of each feature of the face (eyes, nose, mouth), in Vuo Coordinates.  Use [Get Face Landmarks](vuo-node://vuo.image.get.face) to get individual values.
 
 Since finding faces is a computationally intensive operation, you'll probably want to set the Event Throttling mode of the trigger port driving this node to "Drop Events".
+
+To track additional points on human bodies (e.g. arms, legs), see [Find Bodies in Image](vuo-node://vuo.image.findBodies).

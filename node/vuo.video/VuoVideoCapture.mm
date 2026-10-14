@@ -49,7 +49,7 @@ static void VuoVideoCapture_enableTethering()
 {
 	static dispatch_once_t enableOnce = 0;
 	dispatch_once(&enableOnce, ^{
-		VuoApp_executeOnMainThread(^{
+		dispatch_async(dispatch_get_main_queue(), ^{
 			CMIOObjectPropertyAddress property = { kCMIOHardwarePropertyAllowScreenCaptureDevices, kCMIOObjectPropertyScopeGlobal, kCMIOObjectPropertyElementMaster };
 			double t0 = VuoLogGetTime();
 			bool hasProperty = CMIOObjectHasProperty(kCMIOObjectSystemObject, &property);

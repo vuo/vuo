@@ -11,6 +11,7 @@
 
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
+#include "VuoCompilerNode.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoComposition.hh"
 #include "VuoEditor.hh"
@@ -18,6 +19,7 @@
 #include "VuoEditorUtilities.hh"
 #include "VuoInputEditor.hh"
 #include "VuoInputEditorManager.hh"
+#include "VuoMainWindow.hh"
 #include "VuoPublishedPortSidebar.hh"
 #include "VuoRendererInputListDrawer.hh"
 #include "VuoRendererPublishedPort.hh"
@@ -28,7 +30,7 @@
  * Creates a session that is ready to @ref execute.
  */
 VuoInputEditorSession::VuoInputEditorSession(VuoInputEditorManager *inputEditorManager, VuoEditorComposition *composition,
-											 VuoPublishedPortSidebar *sidebar, QMainWindow *window)
+											 VuoPublishedPortSidebar *sidebar, VuoMainWindow *window)
 {
 	this->inputEditorManager = inputEditorManager;
 	this->composition = composition;
@@ -199,6 +201,16 @@ void VuoInputEditorSession::showInputEditor(VuoRendererPort *port, bool forwardT
 	VuoEditor *editor = static_cast<VuoEditor *>(qApp);
 	json_object_object_add(details, "isDark", json_object_new_boolean(editor->isInterfaceDark()));
 	json_object_object_add(details, "forwardTabTraversal", json_object_new_boolean(forwardTabTraversal));
+
+	VUserLog("%s:      Open   editor  for %s%s%s (%s) @ %dx%d with details %s",
+		window->getWindowTitleWithoutPlaceholder().toUtf8().data(),
+		parentNode ? parentNode->getBase()->getCompiler()->getIdentifier().c_str() : "",
+		parentNode ? ":" : "",
+		port->getBase()->getClass()->getName().c_str(),
+		type->getModuleKey().c_str(),
+		portLeftCenterGlobal.x(),
+		portLeftCenterGlobal.y(),
+		json_object_to_json_string(details));
 
 	map<QString, json_object *> portNameToConstantValueMap(portConstants.begin(), portConstants.end());
 	json_object *newValue = inputEditor->show(portLeftCenterGlobal, originalValue, details, portNameToConstantValueMap);

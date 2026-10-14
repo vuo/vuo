@@ -55,6 +55,10 @@ json_object * VuoDetailsEditorNumeric::show(QPoint portLeftCenter, json_object *
 	dialog.move(dialogTopLeft);
 
 	dialog.show();  // Needed to position the dialog. (https://bugreports.qt-project.org/browse/QTBUG-31406)
+
+	// Even though we already called move() above, macOS 26 and/or Qt don't quite get the position correct unless we call it again after showing the dialog.
+	dialog.move(dialogTopLeft);
+
 	dialog.exec();
 
 	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : json_object_get(originalDetails));

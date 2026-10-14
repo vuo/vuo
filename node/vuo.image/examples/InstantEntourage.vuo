@@ -1,0 +1,59 @@
+/**
+ * @file
+ * Receives live video from the default camera, extracts the people from it, and shows them (along with replicas) in a minimalist discotheque.
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="270,420"];
+Convert3DPointListTo2DPointList [type="vuo.type.list.point3d.point2d.xy" version="1.0.2" label="Convert 3D Point List to 2D Point List|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="705,765"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="285,345"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.1.0" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="840,615"];
+ExtractPeopleFromImage [type="vuo.image.mask.people" version="1.0.0" label="Extract People from Image|<refresh>refresh\l|<image>image\l|<quality>quality\l|<people>people\r" pos="-90,660" fillcolor="orange" _quality="0.5"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,120" fillcolor="lime" _started_eventThrottling="enqueue"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.2" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="-90,600"];
+InvertImageColors [type="vuo.image.color.invert" version="1.1.2" label="Invert Image Colors|<refresh>refresh\l|<image>image\l|<invertedImage>invertedImage\r" pos="165,615"];
+MakeCartoonImage2 [type="vuo.image.toon" version="1.1.2" label="Make Cartoon Image|<refresh>refresh\l|<image>image\l|<blurRadius>blurRadius\l|<edgeColor>edgeColor\l|<edgeWidth>edgeWidth\l|<edgeThreshold>edgeThreshold\l|<imageColors>imageColors\l|<showImage>showImage\l|<cartoonImage>cartoonImage\r" pos="345,615" _blurRadius="6.0" _edgeColor="\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\}" _edgeWidth="0.69999999999999996" _edgeThreshold="0.10000000000000001" _imageColors="32" _showImage="true"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="210,120" _upperLeftColor="\{\"r\":0.35115587711334229,\"g\":0.35877013206481934,\"b\":0.49480429291725159,\"a\":1.0\}" _upperRightColor="\{\"r\":0.18039216101169586,\"g\":0.18823529779911041,\"b\":0.25490197539329529,\"a\":1.0\}" _squareSize="0.10000000000000001" _sharpness="1.0" _angle="0." _coverage="\{\"x\":0.5,\"y\":0.5\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1024" _height="1024"];
+MakeImageLayer2 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="570,615" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeImageLayer3 [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="210,840" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":-0.20000000298023224\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="1.0"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="996,611" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="807,671" _1="\{\"x\":0.60000002384185791,\"y\":0.60000002384185791\}"];
+MakeList4 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="738,656" _1="0"];
+MakeParametricGridPoints [type="vuo.point.make.parametric.grid" version="1.0.2" label="Make Parametric Grid Points|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uMin>uMin\l|<uMax>uMax\l|<vMin>vMin\l|<vMax>vMax\l|<points>points\r" pos="525,420" _time="0.0" _xExpression="\"J \> I ? 99 : U - (J - 1)\\/6\"" _yExpression="\"V\"" _zExpression="\"0\"" _rows="3" _columns="4" _uMin="-0.5" _uMax="0.5" _vMin="0.29999999999999999" _vMax="-0.10000000000000001"];
+MakeQuadLayer [type="vuo.layer.make.quad" version="1.1.1" label="Make Quad Layer|<refresh>refresh\l|<image>image\l|<projection>projection\l|<gamma>gamma\l|<topLeft>topLeft\l|<topRight>topRight\l|<bottomLeft>bottomLeft\l|<bottomRight>bottomRight\l|<leftEdge>leftEdge\l|<rightEdge>rightEdge\l|<topEdge>topEdge\l|<bottomEdge>bottomEdge\l|<opacity>opacity\l|<quad>quad\r" pos="480,120" _projection="\"perspective\"" _gamma="1" _topLeft="\{\"x\":-0.5,\"y\":0.0\}" _topRight="\{\"x\":0.5,\"y\":0.0\}" _bottomLeft="\{\"x\":-2.0,\"y\":-1.0\}" _bottomRight="\{\"x\":2.0,\"y\":-1.0\}" _leftEdge="\{\"cutoff\":0,\"gamma\":1,\"crop\":0\}" _rightEdge="\{\"cutoff\":0,\"gamma\":1,\"crop\":0\}" _topEdge="\{\"cutoff\":0,\"gamma\":1,\"crop\":0\}" _bottomEdge="\{\"cutoff\":0,\"gamma\":1,\"crop\":0\}" _opacity="1.0"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="-90,510" fillcolor="lime" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1050,600" fillcolor="blue" _background="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+VignetteImage [type="vuo.image.vignette2" version="2.0.0" label="Vignette Image|<refresh>refresh\l|<image>image\l|<color>color\l|<center>center\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<replaceOpacity>replaceOpacity\l|<vignettedImage>vignettedImage\r" pos="-90,735" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":0.0\}" _center="\{\"x\":0.0,\"y\":0.0\}" _width="1.5" _height="1.5" _sharpness="0.0" _replaceOpacity="true"];
+
+Comment [type="vuo.comment" label="\"Entourage\"" pos="135,360" width="814" height="388"];
+Comment2 [type="vuo.comment" label="\"Diva\"" pos="135,780" width="823" height="197"];
+Comment3 [type="vuo.comment" label="\"Dancefloor\"" pos="135,60" width="815" height="275"];
+
+AllowFirstEvent:firstEvent -> MakeParametricGridPoints:time;
+Convert3DPointListTo2DPointList:xy -> CopyLayer:translations;
+ConvertFrameToImage2:image -> FlipImageHorizontally:image;
+CopyLayer:copies -> MakeList:2;
+ExtractPeopleFromImage:people -> VignetteImage:image;
+FireOnStart:started -> MakeCheckerboardImage:upperLeftColor;
+FlipImageHorizontally:flippedImage -> ExtractPeopleFromImage:image;
+InvertImageColors:invertedImage -> AllowFirstEvent:event;
+InvertImageColors:invertedImage -> MakeCartoonImage2:image;
+MakeCartoonImage2:cartoonImage -> MakeImageLayer2:image;
+MakeCheckerboardImage:image -> MakeQuadLayer:image;
+MakeImageLayer2:layer -> CopyLayer:layer;
+MakeImageLayer3:layer -> MakeList:3;
+MakeList2:list -> CopyLayer:scales;
+MakeList4:list -> CopyLayer:rotations;
+MakeList:list -> RenderLayersToWindow2:layers;
+MakeParametricGridPoints:points -> Convert3DPointListTo2DPointList:xyz;
+MakeQuadLayer:quad -> MakeList:1;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage2:frame;
+VignetteImage:vignettedImage -> InvertImageColors:image;
+VignetteImage:vignettedImage -> MakeImageLayer3:image;
+}

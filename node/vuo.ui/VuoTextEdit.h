@@ -221,7 +221,7 @@ static bool VuoTextEdit_isWhiteSpace(uint32_t utf32_char)
 
 /**
  * 	Tests if a UTF32 value is considered a word separator.  Used to calculate movement stops (ex: alt+left).
- *	Separators: /\()"'-:,.;<>~!@#$%^&*|+=[]{}`~?
+ * Separators: /\()"'-:,.;<>~!@#$%^&*|+=[]{}~? and backtick
  */
 static bool VuoTextEdit_isSeparator(uint32_t utf32_char)
 {

@@ -97,8 +97,6 @@ private slots:
 		p = malloc(1024*1024*1024);
 		QTest::newRow("malloc 1GB")          << p << true;
 
-		QTest::newRow("Magic Music Visuals") << (void *)0x3f80000000fe1e70 << false;
-
 		QTest::newRow("64bit max")           << (void *)0xffffffffffffffff << false;
 	}
 	void testIsPointerReadable()

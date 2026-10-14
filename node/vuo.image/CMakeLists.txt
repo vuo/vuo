@@ -1,6 +1,7 @@
 VuoCompileLibraries(
 	VuoBarcode.cc
 	VuoErrorDiffusionDither.m
+	VuoPeopleMask.m
 )
 target_link_libraries(vuo.image.libraries
 	PRIVATE
@@ -9,6 +10,7 @@ target_link_libraries(vuo.image.libraries
 target_sources(vuo.image.libraries PRIVATE
 	VuoBarcode.h
 	VuoErrorDiffusionDither.h
+	VuoPeopleMask.h
 )
 
 VuoCompileTypes(
@@ -16,6 +18,8 @@ VuoCompileTypes(
 	VuoColorSample.c
 	VuoFace.c
 	VuoHorizontalReflection.c
+	VuoHumanBody.c
+	VuoHumanHand.c
 	VuoImageFormat.c
 	VuoImageNoise.c
 	VuoImageStereoType.c
@@ -29,6 +33,8 @@ target_sources(vuo.image.types PRIVATE
 	VuoColorSample.h
 	VuoFace.h
 	VuoHorizontalReflection.h
+	VuoHumanBody.h
+	VuoHumanHand.h
 	VuoImageFormat.h
 	VuoImageNoise.h
 	VuoImageStereoType.h
@@ -93,8 +99,10 @@ VuoCompileNodes(
 	vuo.image.flip.vertical.c
 	vuo.image.frost.c
 	vuo.image.sample.color.c
+	vuo.image.get.body.c
 	vuo.image.get.cube.c
 	vuo.image.get.face.c
+	vuo.image.get.hand.c
 	vuo.image.get.height.c
 	vuo.image.get.size.c
 	vuo.image.get.width.c
@@ -119,6 +127,7 @@ VuoCompileNodes(
 #	vuo.image.make.triangle.c
 	vuo.image.make.web.m
 	vuo.image.mask.brightness.c
+	vuo.image.mask.people.c
 	vuo.image.mipmap.c
 	vuo.image.mirror.c
 	vuo.image.outline.c

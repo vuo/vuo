@@ -93,6 +93,7 @@ public:
 	static string getUserModulesPath(void);
 	static string getSystemModulesPath(void);
 	static string getCachePath(void);
+	static string getWorkingDirectory(void);
 	static bool isInstalledAsModule(const string &path);
 	static void preserveOriginalFileName(string &fileContents, string originalFileName);
 	static size_t getFirstInsertionIndex(string s);

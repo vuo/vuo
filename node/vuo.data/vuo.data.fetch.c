@@ -22,7 +22,7 @@ VuoModuleMetadata({
 		"VuoUrlFetch"
 	],
 	"node": {
-		"exampleCompositions": [ "ShowBarChart.vuo" ],
+		"exampleCompositions": [ "ShowBarChart.vuo", "vuo-example://vuo.image/ShowFileDataAsImages.vuo" ],
 	},
 });
 

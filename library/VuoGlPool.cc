@@ -219,6 +219,7 @@ GLuint VuoGlTexture_getType(GLuint format)
 	else if (format == GL_RGB
 		|| format == GL_LUMINANCE
 		|| format == GL_LUMINANCE_ALPHA
+		|| format == GL_RED
 		|| format == GL_BGR_EXT)
 		return GL_UNSIGNED_BYTE;
 	else if (format == GL_RGBA
@@ -246,6 +247,7 @@ unsigned char VuoGlTexture_getChannelCount(GLuint format)
 	 || format == GL_LUMINANCE8
 	 || format == GL_LUMINANCE16F_ARB
 	 || format == GL_LUMINANCE32F_ARB
+	 || format == GL_RED
 	 || format == GL_DEPTH_COMPONENT)
 		return 1;
 	else if (format == GL_YCBCR_422_APPLE
@@ -287,6 +289,7 @@ unsigned char VuoGlTexture_getBytesPerPixel(GLuint internalformat, GLuint format
 	if (internalformat == GL_RGB
 	 || internalformat == GL_RGBA
 	 || internalformat == GL_RGBA8
+	 || internalformat == GL_RED
 	 || internalformat == GL_LUMINANCE8
 	 || internalformat == GL_LUMINANCE8_ALPHA8)
 		return bytes;
@@ -318,6 +321,7 @@ unsigned char VuoGlTexture_getBytesPerPixelForInternalFormat(GLuint internalform
 		return 1;  // Actually 0.5
 	if (internalformat == GL_LUMINANCE8
 	 || internalformat == GL_LUMINANCE
+	 || internalformat == GL_RED
 	 || internalformat == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
 		return 1;
 	if (internalformat == GL_LUMINANCE8_ALPHA8

@@ -19,12 +19,28 @@
 #include <sstream>
 
 /**
- * Creates a type from the generic type definition and specialized types indicated by @a typeName (e.g. `VuoDictionary_VuoText_VuoReal`).
+ * Creates a type from the generic compound type definition and specialized types indicated by @a typeName (e.g. `VuoDictionary_VuoText_VuoReal`).
  *
- * The beginning of @a typeName (e.g. `VuoDictionary`) is the generic type whose source code will be used.
+ * The beginning of @a typeName (e.g. `VuoDictionary`) is the generic compound type whose source code will be used.
  *
  * The remaining parts of @a typeName (e.g. `VuoText`, `VuoReal`) are the types that will replace the generic types in the source code.
  * The first specialized type replaces `VuoGenericType1`, the second replaces `VuoGenericType2`, etc.
+ *
+ * This function requests that @a compiler load the generic compound type (e.g. `VuoList`, `VuoDictionary`) if it hasn't already been loaded.
+ * The compiler loads the generic compound type as a `VuoCompilerType` — not a `VuoCompilerCompoundType` — that is based on a simplified version
+ * of the generic type's source code (see VuoCModuleCompiler::abridgeUnspecializedGenericType()). The generic compound type serves as a template
+ * for generating specializations, providing metadata and the location of the full source code. This function then compiles the specialized
+ * compound type by replacing placeholders in the generic template with the specialized types.
+ *
+ * When this function is used:
+ *    - The compiler uses this function when it needs to generate a module with a certain module key that turns out to be a specialized
+ *      compound type name, for example when someone calls `compiler->getType("VuoList_VuoText")` or when the compiler sees `VuoList_VuoReal`
+ *      listed as a dependency of a module that it is in the process of loading.
+ *    - The compiler does NOT call this function if a compiled module for the specialized compound type already exists in one of the
+ *      compiler's module search paths. Instead, it calls `VuoCompilerCompoundType::newType(const string &typeName, Module *module)`
+ *      at the point when it loads the type from its compiled module file.
+ *    - The compiler does NOT call this function when asked to compile a path representing a specialized compound type, e.g. with the command
+ *      `vuo-compile /PATH/TO/VUO/type/compound/VuoList_VuoText.cc`. Instead, it calls `VuoCompiler::compileModule()`.
  */
 VuoCompilerCompoundType * VuoCompilerCompoundType::newType(const string &typeName, VuoCompiler *compiler, dispatch_queue_t llvmQueue)
 {

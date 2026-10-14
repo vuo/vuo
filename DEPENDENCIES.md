@@ -34,6 +34,7 @@
 - [liblqr](https://github.com/carlobaldassi/liblqr)
 - [libusb](https://libusb.info)
 - [libxml2](https://gitlab.gnome.org/GNOME/libxml2)
+- [Link](https://ableton.com/link)
 - [LLVM](https://llvm.org)
 - [muParser](https://github.com/beltoforion/muparser)
 - [NewTek NDI®](https://ndi.video)

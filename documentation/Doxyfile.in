@@ -51,6 +51,7 @@ DISTRIBUTE_GROUP_DOC   = YES
 #---------------------------------------------------------------------------
 
 QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
 
 #---------------------------------------------------------------------------
 # configuration options related to the input files
@@ -100,7 +101,6 @@ EXCLUDE_PATTERNS      += */base/VuoCompositionStub.c
 EXCLUDE_PATTERNS      += */base/miniz.*
 EXCLUDE_PATTERNS      += */base/shared_mutex.*
 EXCLUDE_PATTERNS      += */vuo-compile/vuo-compile.cc
-EXCLUDE_PATTERNS      += */vuo-debug/vuo-debug.cc
 EXCLUDE_PATTERNS      += */vuo-export/vuo-export.cc
 EXCLUDE_PATTERNS      += */vuo-link/vuo-link.cc
 RECURSIVE              = YES

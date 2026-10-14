@@ -3,7 +3,7 @@
  * Compares different x- and y-axis scaling for an amplitude-by-frequency analysis of white noise.
  *
  * @createdInVuoVersion 2.3.2
- * @lastSavedInVuoVersion 2.3.2
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -90,7 +90,7 @@ MakeList15 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<re
 MakeList16 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2202,656"];
 MakeList18 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1155,570" _1="\"Max\""];
 MakeList19 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1289,566"];
-MakeList2 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="2843,-79" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="2843,-79" fillcolor="blue"];
 MakeList22 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1170,870" _1="\"Max\""];
 MakeList23 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1289,866"];
 MakeList26 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1290,1275" _1="\"Max\"" _2="\"Min\""];
@@ -128,8 +128,7 @@ MakePointsAlongLine4 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label=
 MakePointsAlongLine5 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="1260,1395" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"linear\"" _easing="\"out\""];
 MakePointsAlongLine6 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="1260,1755" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"linear\"" _easing="\"out\""];
 MakeRandomList [type="vuo.noise.random.list.VuoReal" version="1.0.0" label="Make Random List|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="465,285" _minimum="-1.0" _maximum="1." _count="512"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="2625,-225" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
-MakeSlider [type="vuo.ui.make.slider" version="1.0.0" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="105,-60" fillcolor="lime" _setValue="0.80000000000000004" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0.0,\"y\":0.05000000074505806\}" _trackLength="0.5" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="drop" _setValue_manuallyFirable="yes"];
+MakeSlider [type="vuo.ui.make.slider" version="1.0.1" label="Make Slider|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<range>range\l|<orientation>orientation\l|<position>position\l|<trackLength>trackLength\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r" pos="105,-60" fillcolor="lime" _setValue="0.80000000000000004" _range="\{\"minimum\":0.0,\"maximum\":1.0\}" _orientation="\"horizontal\"" _position="\{\"x\":0.0,\"y\":0.05000000074505806\}" _trackLength="0.5" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="drop" _setValue_manuallyFirable="yes"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1950,150" _text="\"x = linear, y = linear\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":48.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"center-center\"" _center="\{\"x\":0.0,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
 MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1950,465" _text="\"x = quadratic, y = linear\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":48.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"center-center\"" _center="\{\"x\":0.0,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
 MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1950,780" _text="\"x = logarithmic, y = linear\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":48.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"center-center\"" _center="\{\"x\":0.0,\"y\":0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
@@ -142,17 +141,16 @@ MergeXYLists3 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<
 MergeXYLists4 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1680,1080"];
 MergeXYLists5 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1665,1440"];
 MergeXYLists6 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="1665,1800"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2895,-90" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
-RenderSceneToImage [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,15" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage2 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,330" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage3 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,645" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage4 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2100,1020" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage5 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2085,1380" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
-RenderSceneToImage6 [type="vuo.scene.render.image2" version="2.0.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2085,1740" _width="1000" _height="1000" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="2895,-90" fillcolor="blue" _background="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderSceneToImage [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,15" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage2 [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,330" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage3 [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="1920,645" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage4 [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2100,1020" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage5 [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2085,1380" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+RenderSceneToImage6 [type="vuo.scene.render.image2" version="2.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="2085,1740" _width="1000" _height="1000" _background="\"#0000\"" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
 SummarizeValue [type="vuo.data.summarize.VuoAudioBins" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="390,795"];
 
 AllowFirstEvent:firstEvent -> LockWindowAspectRatio:windowDescription [style=invis];
-AllowFirstEvent:firstEvent -> MakeRectangleLayer:color [style=invis];
 AllowFirstEvent:firstEvent -> MakeTextLayer2:text [style=invis];
 AllowFirstEvent:firstEvent -> MakeTextLayer3:text [style=invis];
 AllowFirstEvent:firstEvent -> MakeTextLayer4:text [style=invis];
@@ -160,7 +158,7 @@ AllowFirstEvent:firstEvent -> MakeTextLayer5:text [style=invis];
 AllowFirstEvent:firstEvent -> MakeTextLayer6:text [style=invis];
 AllowFirstEvent:firstEvent -> MakeTextLayer:text [style=invis];
 AppendTexts:compositeText -> MakeSlider:label;
-ArrangeLayersInGrid:griddedLayer -> MakeList2:2;
+ArrangeLayersInGrid:griddedLayer -> MakeList2:1;
 CalculateAmplitudeForFrequencies2:amplitudes -> CalculateList2:xValues;
 CalculateAmplitudeForFrequencies2:amplitudes -> CountItemsInList:list;
 CalculateAmplitudeForFrequencies2:amplitudes -> FindMaximum2:values;
@@ -303,9 +301,8 @@ MakeRandomList:list -> ConvertRealListToAudio4:reals;
 MakeRandomList:list -> ConvertRealListToAudio5:reals;
 MakeRandomList:list -> ConvertRealListToAudio6:reals;
 MakeRandomList:list -> ConvertRealListToAudio:reals;
-MakeRectangleLayer:layer -> MakeList2:1;
 MakeSlider:changed -> ConvertRealToOptions2:real;
-MakeSlider:updatedLayer -> MakeList2:3;
+MakeSlider:updatedLayer -> MakeList2:2;
 MakeTextLayer2:layer -> MakeList15:2;
 MakeTextLayer3:layer -> MakeList16:2;
 MakeTextLayer4:layer -> MakeList29:2;

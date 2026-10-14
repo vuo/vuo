@@ -19,6 +19,7 @@ VuoCompileNodes(
 	vuo.window.resizable2.c
 	vuo.window.size.c
 	vuo.window.size2.c
+	vuo.window.style.c
 	vuo.window.title.c
 	vuo.window.title2.c
 )

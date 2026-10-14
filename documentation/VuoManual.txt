@@ -1689,7 +1689,7 @@ Alternatively, the person installing the screen saver can navigate to the \direc
 
 You can turn your Vuo compositions into custom effects, transitions, and generators for Final Cut Pro X and Motion.
 
-\changedInVersion{2.4}{Vuo now exports FxPlug version 4 plugins.  These plugins work on both X86-64 and Apple Silicon (ARM64/M1/M2/M3), and require Motion or Final Cut Pro version 10.5 or later.}
+\changedInVersion{2.4}{Vuo now exports FxPlug version 4 plugins.  These plugins work on both X86-64 and Apple Silicon (ARM64/M-series), and require Motion or Final Cut Pro version 10.5 or later.}
 
 ### Video effects
 
@@ -2877,7 +2877,7 @@ A simple way to do that is with a \vuoNode{Fire on Start} node. In the \vuoNode{
 
 Using \vuoNode{Fire on Start} to set up data is pretty simple, but it has one weakness: the \vuoNode{Fire on Start} node's trigger isn't coordinated with other triggers in the composition. If you're trying to use \vuoNode{Fire on Start} together with the \vuoPort{Refreshed at Time} port of \vuoNode{Fire on Display Refresh}, you might see a momentary flicker or adjustment in graphics as the composition starts. That's because the \vuoNode{Fire on Start} event and the first \vuoPort{Refreshed at Time} event are setting up different parts of the graphics at slightly different times. So how can you avoid the flicker? Instead of \vuoNode{Fire on Start}, which fires its own event, use \vuoNode{Allow First Event}, which can borrow the event fired from \vuoPort{Refreshed at Time}. Here's an example.
 
-\vuoCompositionImage{ChangeBackgroundColor}
+\vuoCompositionImage{ChangeCircleColor}
 
 ## Send the same data to multiple input ports
 <abstract>How to share the same value among more than one input port</abstract>

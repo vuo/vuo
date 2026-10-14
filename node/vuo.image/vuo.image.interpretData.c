@@ -25,7 +25,7 @@ VuoModuleMetadata({
 	"dependencies": [
 	],
 	"node": {
-		"exampleCompositions": [ ],
+		"exampleCompositions": [ "ShowFileDataAsImages.vuo", "ShowNumbersAsImages.vuo" ],
 	},
 });
 

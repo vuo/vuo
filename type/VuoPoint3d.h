@@ -407,6 +407,14 @@ static inline VuoBoolean VuoBox_intersects(VuoBox a, VuoBox b)
 }
 
 /**
+ * Returns false if any component is infinite or NaN.
+ */
+static inline VuoReal VuoPoint3d_isFinite(VuoPoint3d value)
+{
+	return isfinite(value.x) && isfinite(value.y) && isfinite(value.z);
+}
+
+/**
  * @}
  */
 

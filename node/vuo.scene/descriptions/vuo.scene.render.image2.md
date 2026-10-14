@@ -3,6 +3,7 @@ Creates an image that is a snapshot of a 3D scene.
    - `Objects` — The 3D objects to place in the scene.
    - `Camera Name` — The name of the camera through which the scene is viewed. The camera is selected from any in `Objects`. If no matching camera is found, then a camera from `Objects` is arbitrarily chosen. If there is no camera, the default camera is used.
    - `Width`, `Height` — The width and height of the resulting image, in pixels.
+   - `Background` — The color to render behind the scene.
    - `Color Depth` — The number of bits to use to represent each color channel in `Image`; higher values are more precise but use more graphics storage space.  Images are typically 8 bits per channel ("8bpc"), though if you're working with image feedback, you may want to use higher precision.
    - `Multisampling` — How smooth edges of 3D objects are.
       - A value of 1 means each pixel is evaluated once — no smoothing.

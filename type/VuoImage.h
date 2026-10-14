@@ -122,8 +122,9 @@ GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *
 bool VuoImage_resolveInterprocessJsonUsingClientTexture(struct json_object *js, GLuint textureName, unsigned int pixelsWide, unsigned int pixelsHigh, void *outputIOSurface) VuoWarnUnusedResult;
 bool VuoImage_resolveInterprocessJsonOntoFramebuffer(struct json_object *js, VuoGlContext context, bool flip, bool stretch) VuoWarnUnusedResult;
 struct json_object * VuoImage_getJson(const VuoImage value);
-
 struct json_object * VuoImage_getInterprocessJson(const VuoImage value);
+VuoImage VuoImage_makeFromIOSurface(IOSurfaceRef ioSurface);
+void VuoImage_performWithIOSurface(VuoImage image, bool flip, void (^block)(IOSurfaceRef ioSurface));
 
 char * VuoImage_getSummary(const VuoImage value);
 

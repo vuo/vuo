@@ -64,6 +64,7 @@ void VuoWindowOpenGl_enableTriggers_deprecated
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
 void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties);
+void VuoWindowOpenGl_setOpaque(VuoWindowOpenGl w, bool opaque);
 void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, unsigned int pixelsHigh);
 void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w);
 void VuoWindowOpenGl_close(VuoWindowOpenGl w, void (^closedHandler)(void));

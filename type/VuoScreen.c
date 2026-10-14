@@ -143,7 +143,7 @@ bool VuoScreen_isLessThan(const VuoScreen a, const VuoScreen b)
 /**
  * Given any VuoScreen structure:
  *
- *    - If `screen` is already realized, copies it into `realizedScreen, and returns true.
+ *    - If `screen` is already realized, copies it into `realizedScreen`, and returns true.
  *    - If a matching screen is found, sets `realizedScreen` to match it by ID, fills in all the details, and returns true.
  *    - If no matching screen is found, returns false, leaving `realizedDevice` unset.
  */

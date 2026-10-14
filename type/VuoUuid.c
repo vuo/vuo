@@ -19,8 +19,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "guid", "unique", "tag" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"VuoText",
-						"VuoList_VuoUuid"
+						"VuoText"
 					 ]
 				 });
 #endif

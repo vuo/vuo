@@ -2,7 +2,7 @@
 	<!-- Navigation index tabs for HTML output -->
 	<navindex>
 		<tab type="mainpage" visible="yes" title=""/>
-		<tab type="modules" visible="yes" title="" intro=""/>
+		<tab type="topics" visible="yes" title="" intro=""/>
 		<tab type="classes" visible="yes" title="">
 			<tab type="classlist" visible="yes" title="" intro=""/>
 			<tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/> 

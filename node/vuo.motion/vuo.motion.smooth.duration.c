@@ -69,7 +69,7 @@ void nodeInstanceEvent
 		VuoOutputEvent() reachedTarget
 )
 {
-	if ((*ctx)->first || setPositionEvent)
+	if ((*ctx)->first || (setPositionEvent && VuoGenericType1_isFinite(setPosition)))
 	{
 		(*ctx)->currentPosition = setPosition;
 		(*ctx)->moving = false;
@@ -78,7 +78,7 @@ void nodeInstanceEvent
 		(*ctx)->first = false;
 	}
 
-	if (setTargetEvent)
+	if (setTargetEvent && VuoGenericType1_isFinite(setTarget))
 	{
 		(*ctx)->startPosition = (*ctx)->currentPosition;
 		(*ctx)->timeMotionStarted = time;

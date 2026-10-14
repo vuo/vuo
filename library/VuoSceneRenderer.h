@@ -25,6 +25,8 @@ typedef void * VuoSceneRenderer;
 VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
 
+void VuoSceneRenderer_setBackgroundColor(VuoSceneRenderer sr, VuoColor backgroundColor);
+
 void VuoSceneRenderer_renderToImage(VuoSceneRenderer sceneRenderer, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage, bool invertDepthImage);
 VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sceneRenderer, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, bool includeDepthBuffer);
 

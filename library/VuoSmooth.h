@@ -1,6 +1,6 @@
 /**
  * @file
- * VuoImageSmooth interface.  Header-only, to support generic types.
+ * VuoSmooth interface.  Header-only, to support generic types.
  *
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -50,7 +50,7 @@ static void VuoSmoothInertia_setPosition(VuoSmoothInertia s, VuoGenericType1 pos
 }
 
 /**
- * Changes the end value of the smooth movement to `target, and initiates/continues motion.
+ * Changes the end value of the smooth movement to `target`, and initiates/continues motion.
  */
 static void VuoSmoothInertia_setTarget(VuoSmoothInertia s, VuoReal time, VuoGenericType1 target)
 {

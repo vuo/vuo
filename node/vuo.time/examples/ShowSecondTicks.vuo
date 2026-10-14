@@ -2,7 +2,7 @@
  * @file
  * Shows the current date and time, and a visualization of ticking seconds.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -16,31 +16,29 @@ CopyLayer [type="vuo.layer.copy.trs" version="2.1.0" label="Copy Layer|<refresh>
 FetchDateTime [type="vuo.time.fetch" version="1.1.0" label="Fetch Date-Time|<refresh>refresh\l|<fetch>fetch\l|<time>time\r" pos="-120,330" fillcolor="orange"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="195,-75" fillcolor="lime" _started_eventThrottling="enqueue"];
 FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-330,330" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
-FormatDateTime [type="vuo.time.format" version="1.0.0" label="Format Date-Time|<refresh>refresh\l|<time>time\l|<format>format\l|<formattedTime>formattedTime\r" pos="135,330" fillcolor="orange" _format="\"datetime-long-12\""];
+FormatDateTime [type="vuo.time.format" version="1.0.1" label="Format Date-Time|<refresh>refresh\l|<time>time\l|<format>format\l|<formattedTime>formattedTime\r" pos="135,330" fillcolor="orange" _format="\"datetime-long-12\""];
 GetDateTimeValues [type="vuo.time.get" version="1.0.1" label="Get Date-Time Values|<refresh>refresh\l|<time>time\l|<year>year\r|<dayOfYear>dayOfYear\r|<month>month\r|<dayOfMonth>dayOfMonth\r|<week>week\r|<dayOfWeek>dayOfWeek\r|<hour>hour\r|<minute>minute\r|<second>second\r" pos="-180,435" fillcolor="orange"];
 Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="390,540"];
 MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="405,120" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="0.02" _height="0.14999999999999999" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeList12 [type="vuo.list.make.4.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="678,161" _1="0" _2="90" _4="90"];
 MakeList14 [type="vuo.list.make.4.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="633,146" _1="\{\"x\":0,\"y\":0.40000000596046448\}" _2="\{\"x\":0.40000000596046448,\"y\":0\}" _3="\{\"x\":0,\"y\":-0.40000000596046448\}" _4="\{\"x\":-0.40000000596046448,\"y\":0\}"];
-MakeList2 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="944,281" fillcolor="blue"];
+MakeList2 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="944,116" fillcolor="blue"];
 MakeList5 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="732,176" _1="\{\"x\":1,\"y\":1\}"];
 MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="750,-75" _color="\{\"r\":0.60000002384185791,\"g\":0.60000002384185791,\"b\":0.60000002384185791,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="1" _height="1" _sharpness="1" _opacity="1.0"];
 MakeOvalLayer2 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="780,510" _color="\{\"r\":0,\"g\":0,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _width="0.10000000000000001" _height="0.10000000000000001" _sharpness="1.0" _opacity="1.0"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="735,-255" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _height="2.0" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="435,330" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":32,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":-0.60000002384185791\}" _wrapWidth="Infinity" _opacity="1.0"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="990,270" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="990,105" fillcolor="blue" _background="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 RoundDateTime [type="vuo.time.round" version="1.0.0" label="Round Date-Time|<refresh>refresh\l|<time>time\l|<unit>unit\l|<roundingMethod>roundingMethod\l|<roundedTime>roundedTime\r" pos="-330,435" fillcolor="orange" _unit="\"second\"" _roundingMethod="\"down\""];
 Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="30,555" _start="0." _end="60" _scaledStart="0" _scaledEnd="360" _limitToRange="false"];
 ScalePoint2 [type="vuo.point.multiply.scalar.VuoPoint2d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="585,540" _scaleFactor="0.5"];
 
 CalculateCosine:cosine -> Make2DPoint2:y;
 CalculateSine:sine -> Make2DPoint2:x;
-CopyLayer:copies -> MakeList2:4;
+CopyLayer:copies -> MakeList2:2;
 FetchDateTime:time -> FormatDateTime:time;
 FetchDateTime:time -> RoundDateTime:time;
 FireOnStart2:started -> MakeColorLayer:color;
 FireOnStart2:started -> MakeOvalLayer:color;
-FireOnStart2:started -> MakeRectangleLayer:color;
 FirePeriodically:fired -> FetchDateTime:fetch;
 FormatDateTime:formattedTime -> MakeTextLayer:text;
 GetDateTimeValues:second -> Scale2:value;
@@ -50,10 +48,9 @@ MakeList12:list -> CopyLayer:rotations;
 MakeList14:list -> CopyLayer:translations;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList5:list -> CopyLayer:scales;
-MakeOvalLayer2:layer -> MakeList2:6;
-MakeOvalLayer:layer -> MakeList2:3;
-MakeRectangleLayer:layer -> MakeList2:1;
-MakeTextLayer:layer -> MakeList2:5;
+MakeOvalLayer2:layer -> MakeList2:4;
+MakeOvalLayer:layer -> MakeList2:1;
+MakeTextLayer:layer -> MakeList2:3;
 RoundDateTime:roundedTime -> GetDateTimeValues:time;
 Scale2:scaledValue -> CalculateCosine:angle;
 Scale2:scaledValue -> CalculateSine:angle;

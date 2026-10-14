@@ -426,10 +426,11 @@ static void VuoGraphicsLayer_drawOnIOSurface(VuoGraphicsLayer *l)
 //			glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glUniform1i(_receiveTextureUniform, 0);
 
-			CGLError err = CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, GL_RGB, ioSurfaceWidth, ioSurfaceHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, VuoIoSurfacePool_getIOSurfaceRef(_ioSurface), 0);
+			GLint internalFormat = self.window.isOpaque ? GL_RGB : GL_RGBA;
+			CGLError err = CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, internalFormat, ioSurfaceWidth, ioSurfaceHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, VuoIoSurfacePool_getIOSurfaceRef(_ioSurface), 0);
 			if(err != kCGLNoError)
 			{
-				VUserLog("Error in CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, GL_RGB, %zu, %zu, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, %d, 0) 2: %s", ioSurfaceWidth, ioSurfaceHeight, VuoIoSurfacePool_getId(_ioSurface), CGLErrorString(err));
+				VUserLog("Error in CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_EXT, %s, %zu, %zu, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, %d, 0) 2: %s", VuoGl_stringForConstant(internalFormat), ioSurfaceWidth, ioSurfaceHeight, VuoIoSurfacePool_getId(_ioSurface), CGLErrorString(err));
 				return;
 			}
 

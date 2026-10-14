@@ -22,7 +22,7 @@ VuoModuleMetadata({
 						 "3D", "object", "opengl", "scenegraph",
 						 "convert",
 					 ],
-					 "version" : "2.0.0",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer"
 					 ],
@@ -54,6 +54,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoList_VuoSceneObject) objects,
 		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) width,
 		VuoInputData(VuoInteger, {"default":768, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) height,
+		VuoInputData(VuoColor, {"default": "#0000"}) background,
 		VuoInputData(VuoImageColorDepth, {"default":"8bpc"}) colorDepth,
 		VuoInputData(VuoMultisample, {"default":"4"}) multisampling,
 		VuoInputData(VuoText) cameraName,
@@ -63,6 +64,7 @@ void nodeInstanceEvent
 {
 	VuoSceneObject rootSceneObject = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
 
+	VuoSceneRenderer_setBackgroundColor((*context)->sceneRenderer, background);
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName, true);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);

@@ -12,6 +12,7 @@
 class VuoEditorComposition;
 class VuoEditorWindow;
 class VuoInputEditorManager;
+class VuoMainWindow;
 class VuoPublishedPortSidebar;
 class VuoRendererPort;
 
@@ -26,7 +27,7 @@ class VuoInputEditorSession : public QObject
 	Q_OBJECT
 
 public:
-	VuoInputEditorSession(VuoInputEditorManager *inputEditorManager, VuoEditorComposition *composition, VuoPublishedPortSidebar *sidebar, QMainWindow *window);
+	VuoInputEditorSession(VuoInputEditorManager *inputEditorManager, VuoEditorComposition *composition, VuoPublishedPortSidebar *sidebar, VuoMainWindow *window);
 	map<VuoRendererPort *, pair<string, string> > execute(VuoRendererPort *port, bool forwardTabTraversal);
 
 protected:
@@ -43,7 +44,7 @@ private:
 	VuoInputEditorManager *inputEditorManager;
 	VuoEditorComposition *composition;
 	VuoPublishedPortSidebar *sidebar;
-	QMainWindow *window;
+	VuoMainWindow *window;
 	VuoRendererPort *portWithOpenInputEditor;
 	QPoint firstPortLeftCenterGlobal;
 	map<VuoRendererPort *, string> startValueForPort;

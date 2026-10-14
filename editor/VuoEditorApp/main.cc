@@ -23,6 +23,32 @@
 #include "VuoRendererCommon.hh"
 #include "VuoUrl.h"
 
+/**
+ * Removes the owner/group/other write bits from the specified file or directory.
+ */
+static void VuoEditorApp_makePathReadonly(const char *path)
+{
+	struct stat pathStat;
+	if (stat(path, &pathStat) == -1)
+	{
+		VUserLog("Error: Couldn't get file status for '%s': %s", path, strerror(errno));
+		return;
+	}
+
+	// Check whether the file mode's write bits (mask 222 octal) are set.
+	// (To avoid having macOS show a scary warning unless it's really necessary,
+	// first check whether we actually need to change them.)
+	if (pathStat.st_mode & 0222)
+	{
+		// One or more write bits are set.  Try to unset them.
+		if (chmod(path, pathStat.st_mode & ~0222) == -1)
+		{
+			VUserLog("Error: Couldn't make '%s' readonly: %s", path, strerror(errno));
+			return;
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	// The content view of `VuoEditorWindow`s needs to be layer-backed instead of surface-backed to avoid glitchy
@@ -46,14 +72,14 @@ int main(int argc, char *argv[])
 	{
 		auto qmlDir = QFileInfo(argv[0]).absoluteDir();
 		qmlDir.cd("../qml");
-		chmod(qmlDir.absolutePath().toUtf8().data(), 0555);
+		VuoEditorApp_makePathReadonly(qmlDir.absolutePath().toUtf8().data());
 		QDirIterator qdi(qmlDir, QDirIterator::Subdirectories);
 		while (qdi.hasNext())
 		{
 			QFileInfo f(qdi.next());
 			if (!f.isDir() || f.fileName() == "." || f.fileName() == "..")
 				continue;
-			chmod(f.absoluteFilePath().toUtf8().data(), 0555);
+			VuoEditorApp_makePathReadonly(f.absoluteFilePath().toUtf8().data());
 		}
 	}
 

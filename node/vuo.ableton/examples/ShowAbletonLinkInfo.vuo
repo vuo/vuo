@@ -1,0 +1,133 @@
+/**
+ * @file
+ * @brief Show Ableton Link Info
+ * Joins a local Ableton Link session, and visualizes its beats and measures.
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoPoint2d" version="2.1.1" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="1020,555"];
+Add2 [type="vuo.math.add.VuoPoint2d" version="2.1.1" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="1020,1125"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="75,240"];
+AppendTexts [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="930,-450" _separator="\"\\n\"" _includeEmptyParts="true"];
+AppendTexts2 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="900,375" _separator="\"\\n\"" _includeEmptyParts="true"];
+AppendTexts3 [type="vuo.text.append" version="1.2.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<includeEmptyParts>includeEmptyParts\l|<compositeText>compositeText\r" pos="900,945" _separator="\"\\n\"" _includeEmptyParts="true"];
+CombineLayers [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1365,375"];
+CombineLayers2 [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1365,945"];
+CombineLayers3 [type="vuo.layer.combine.group" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<layers>layers\l|<combinedLayer>combinedLayer\r" pos="1365,90"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="1050,780"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="1050,1275"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-120,315" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
+FormatNumber [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="570,-435" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="0" _decimalPlaces="0" _showThousandSeparator="true"];
+FormatNumber3 [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="405,390" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="2" _decimalPlaces="2" _showThousandSeparator="true"];
+FormatNumber6 [type="vuo.text.format.number" version="1.1.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<minimumIntegerDigits>minimumIntegerDigits\l|<minimumDecimalPlaces>minimumDecimalPlaces\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="405,960" _format="\"decimal\"" _minimumIntegerDigits="1" _minimumDecimalPlaces="2" _decimalPlaces="2" _showThousandSeparator="true"];
+JoinAbletonLinkSession [type="vuo.ableton.link" version="1.0.0" label="Join Ableton Link Session|<refresh>refresh\l|<time>time\l|<setTempo>setTempo\l|<startTransport>startTransport\l|<stopTransport>stopTransport\l|<allowEvents>allowEvents\l|<beatsPerMeasure>beatsPerMeasure\l|<timeOffset>timeOffset\l|<peers>peers\r|<tempo>tempo\r|<started>started\r|<stopped>stopped\r|<beat>beat\r|<beats>beats\r|<measure>measure\r|<measures>measures\r" pos="75,315" fillcolor="orange" _setTempo="80.0" _allowEvents="0" _beatsPerMeasure="4.0" _timeOffset="-0.050000000000000003"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1559,371" fillcolor="blue"];
+MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="867,1316" _2="-360.0"];
+MakeList11 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="867,746" _2="-360.0"];
+MakeList2 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="871,-439"];
+MakeList3 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="841,386" _1="\"\""];
+MakeList4 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="841,956" _1="\"\""];
+MakeList5 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,1136" _2="\{\"x\":0.02500000037252903,\"y\":-0.12999999523162842\}"];
+MakeList6 [type="vuo.list.make.2.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="987,566" _2="\{\"x\":0.02500000037252903,\"y\":0.070000000298023224\}"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1332,386"];
+MakeList8 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1332,956"];
+MakeList9 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1332,101"];
+MakeOvalLayer [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1155,525" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\"center-center\"" _rotation="0.0" _width="0.040000000000000001" _height="0.040000000000000001" _sharpness="1.0" _opacity="1.0"];
+MakeOvalLayer2 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1155,1095" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\"center-center\"" _rotation="0.0" _width="0.040000000000000001" _height="0.040000000000000001" _sharpness="1.0" _opacity="1.0"];
+MakeOvalLayer3 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1155,165" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.25,\"y\":-0.20000000298023224\}" _rotation="0.0" _width="0.080000000000000002" _height="0.080000000000000002" _sharpness="1.0" _opacity="0.20000000000000001"];
+MakeOvalLayer4 [type="vuo.layer.make.oval2" version="2.0.0" label="Make Oval Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<opacity>opacity\l|<layer>layer\r" pos="1155,0" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.25,\"y\":0.0\}" _rotation="0.0" _width="0.080000000000000002" _height="0.080000000000000002" _sharpness="1.0" _opacity="0.20000000000000001"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1125,1260" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\"center-bottom\"" _center="\{\"x\":0.25,\"y\":-0.20000000298023224\}" _width="0.0050000000000000001" _height="0.040000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1125,690" _color="\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\}" _anchor="\"center-bottom\"" _center="\{\"x\":0.25,\"y\":0.0\}" _width="0.0050000000000000001" _height="0.040000000000000001" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,-450" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-top\"" _center="\{\"x\":0.0099999997764825821,\"y\":0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,375" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-top\"" _center="\{\"x\":0.0099999997764825821,\"y\":0.10000000149011612\}" _rotation="0.0" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer3 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,945" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"left-top\"" _center="\{\"x\":0.0099999997764825821,\"y\":-0.10000000149011612\}" _rotation="0.0" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer4 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,-600" _text="\"peers:\\ntempo (BPM):\\ntransport:\"" _font="\{\"fontName\":\"Avenir-Light\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"right\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"right-top\"" _center="\{\"x\":-0.014999999664723873,\"y\":0.40000000596046448\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer5 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,-300" _text="\"beat:\"" _font="\{\"fontName\":\"Avenir-Light\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"right\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"right-top\"" _center="\{\"x\":-0.014999999664723873,\"y\":0.10000000149011612\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer6 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1155,-150" _text="\"measure:\"" _font="\{\"fontName\":\"Avenir-Light\",\"pointSize\":24.0,\"underline\":false,\"color\":\{\"r\":0.0,\"g\":0.0,\"b\":0.0,\"a\":1.0\},\"alignment\":\"right\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\"right-top\"" _center="\{\"x\":-0.014999999664723873,\"y\":-0.10000000149011612\}" _wrapWidth="Infinity" _opacity="1.0"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.1.1" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="900,1305"];
+Multiply2 [type="vuo.math.multiply.VuoReal" version="2.1.1" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="900,735"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1605,360" fillcolor="blue" _background="\{\"r\":0.7936827540397644,\"g\":1.0,\"b\":0.7936827540397644,\"a\":1.0\}" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput2 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="540,585" _falseOption="0.0" _trueOption="0.25"];
+SelectInput3 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="540,1155" _falseOption="0.0" _trueOption="0.25"];
+SelectLatest [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="615,-300" _option1="\"running\"" _option2="\"paused\""];
+SmoothWithSpring [type="vuo.motion.smooth.spring.VuoReal" version="2.1.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="720,555" _setPosition="0.0" _period="0.10000000000000001" _damping="0.59999999999999998"];
+SmoothWithSpring2 [type="vuo.motion.smooth.spring.VuoReal" version="2.1.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="720,1125" _setPosition="0.0" _period="0.10000000000000001" _damping="0.59999999999999998"];
+SummarizeValue [type="vuo.data.summarize.VuoInteger" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="810,150"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="405,585"];
+Toggle2 [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="405,1155"];
+
+Comment [type="vuo.comment" label="\"## ✽ Beat ✽\"" pos="345,315" width="953" height="542"];
+Comment2 [type="vuo.comment" label="\"## ✽ Measure ✽\"" pos="345,885" width="949" height="541"];
+
+Add2:sum -> MakeOvalLayer2:center;
+Add:sum -> MakeOvalLayer:center;
+AllowFirstEvent:firstEvent -> MakeOvalLayer3:color [style=invis];
+AllowFirstEvent:firstEvent -> MakeOvalLayer4:color [style=invis];
+AllowFirstEvent:firstEvent -> MakeTextLayer4:text [style=invis];
+AllowFirstEvent:firstEvent -> MakeTextLayer5:text [style=invis];
+AllowFirstEvent:firstEvent -> MakeTextLayer6:text [style=invis];
+AppendTexts2:compositeText -> MakeTextLayer2:text;
+AppendTexts3:compositeText -> MakeTextLayer3:text;
+AppendTexts:compositeText -> MakeTextLayer:text;
+CombineLayers2:combinedLayer -> MakeList:3;
+CombineLayers3:combinedLayer -> MakeList:1;
+CombineLayers:combinedLayer -> MakeList:2;
+ConvertRealTo2DPoint2:point2d -> MakeList5:1;
+ConvertRealTo2DPoint:point2d -> MakeList6:1;
+FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
+FireOnDisplayRefresh:requestedFrame -> JoinAbletonLinkSession:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithSpring2:time;
+FireOnDisplayRefresh:requestedFrame -> SmoothWithSpring:time;
+FormatNumber3:text -> MakeList3:2;
+FormatNumber6:text -> MakeList4:2;
+FormatNumber:text -> MakeList2:2;
+JoinAbletonLinkSession:beat -> Toggle:toggle;
+JoinAbletonLinkSession:beats -> FormatNumber3:value;
+JoinAbletonLinkSession:beats -> MakeList11:1;
+JoinAbletonLinkSession:measure -> Toggle2:toggle;
+JoinAbletonLinkSession:measures -> FormatNumber6:value;
+JoinAbletonLinkSession:measures -> MakeList10:1;
+JoinAbletonLinkSession:peers -> SummarizeValue:value;
+JoinAbletonLinkSession:started -> SelectLatest:option1;
+JoinAbletonLinkSession:stopped -> SelectLatest:option2;
+JoinAbletonLinkSession:tempo -> FormatNumber:value;
+MakeList10:list -> Multiply:values;
+MakeList11:list -> Multiply2:values;
+MakeList2:list -> AppendTexts:texts;
+MakeList3:list -> AppendTexts2:texts;
+MakeList4:list -> AppendTexts3:texts;
+MakeList5:list -> Add2:values;
+MakeList6:list -> Add:values;
+MakeList7:list -> CombineLayers:layers;
+MakeList8:list -> CombineLayers2:layers;
+MakeList9:list -> CombineLayers3:layers;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeOvalLayer2:layer -> MakeList8:2;
+MakeOvalLayer3:layer -> MakeList9:6;
+MakeOvalLayer4:layer -> MakeList9:5;
+MakeOvalLayer:layer -> MakeList7:2;
+MakeRectangleLayer2:layer -> MakeList7:3;
+MakeRectangleLayer:layer -> MakeList8:3;
+MakeTextLayer2:layer -> MakeList7:1;
+MakeTextLayer3:layer -> MakeList8:1;
+MakeTextLayer4:layer -> MakeList9:1;
+MakeTextLayer5:layer -> MakeList9:3;
+MakeTextLayer6:layer -> MakeList9:4;
+MakeTextLayer:layer -> MakeList9:2;
+Multiply2:product -> MakeRectangleLayer2:rotation;
+Multiply:product -> MakeRectangleLayer:rotation;
+SelectInput2:out -> SmoothWithSpring:setTarget;
+SelectInput3:out -> SmoothWithSpring2:setTarget;
+SelectLatest:latest -> MakeList2:3;
+SmoothWithSpring2:position -> ConvertRealTo2DPoint2:x;
+SmoothWithSpring:position -> ConvertRealTo2DPoint:x;
+SummarizeValue:summary -> MakeList2:1;
+Toggle2:value -> SelectInput3:which;
+Toggle:value -> SelectInput2:which;
+}

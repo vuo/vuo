@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://json.schemastore.org/clangd.json
+CompileFlags:
+    Add:
+        - '-I../vuo-build/lib/Vuo.framework/Versions/2/Headers'
+        - '--include=node.h'
+        - '--include=type.h'
+        - '-Irenderer'
+        - '-Ieditor'
+Completion:
+    HeaderInsertion: Never
+Diagnostics:
+    MissingIncludes: None
+    UnusedIncludes: None

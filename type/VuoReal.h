@@ -214,6 +214,14 @@ bool VuoReal_isLessThan(const VuoReal a, const VuoReal b);
 bool VuoReal_isWithinRange(VuoReal value, VuoReal minimum, VuoReal maximum);
 
 /**
+ * Returns false if the value is infinite or NaN.
+ */
+static inline VuoReal VuoReal_isFinite(VuoReal value)
+{
+	return isfinite(value);
+}
+
+/**
  * @}
  */
 

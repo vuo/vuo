@@ -223,5 +223,7 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This Vuo composition would like to use your Mac&apos;s microphone for live audio processing or recording.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This Vuo composition would like to use your Mac&apos;s local network.</string>
 </dict>
 </plist>

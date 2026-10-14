@@ -36,6 +36,7 @@
 #include "VuoComposition.hh"
 #include "VuoDependencyGraphVertex.hh"
 #include "VuoException.hh"
+#include "VuoFileUtilitiesCocoa.hh"
 #include "VuoGenericType.hh"
 #include "VuoMakeDependencies.hh"
 #include "VuoModuleCache.hh"
@@ -3037,7 +3038,7 @@ string VuoCompiler::getLibraryPath(const string &dependency, vector<string> libr
 		variations.push_back(path + "/lib" + dependency + ".dylib");
 		variations.push_back(path + "/lib" + dependency + ".a");
 		for (auto &variation : variations)
-			if (VuoFileUtilities::fileExists(variation))
+			if (VuoFileUtilities::fileContainsReadableData(variation))
 				return variation;
 	}
 
@@ -3739,13 +3740,9 @@ string VuoCompiler::getProcessTarget(void)
 	// Replace darwin with macosx, e.g. x86_64-apple-darwin18.7.0 -> x86_64-apple-macosx10.14.6
 	if (triple.isMacOSX())
 	{
-		unsigned int major, minor, micro;
-		if (triple.getMacOSXVersion(major, minor, micro))
-		{
-			ostringstream osVersion;
-			osVersion << "macosx" << major << "." << minor << "." << micro;
-			triple.setOSName(osVersion.str());
-		}
+		ostringstream osVersion;
+		osVersion << "macosx" << VuoFileUtilitiesCocoa_getOSVersionMajor() << "." << VuoFileUtilitiesCocoa_getOSVersionMinor() << ".0";
+		triple.setOSName(osVersion.str());
 	}
 
 	return triple.str();

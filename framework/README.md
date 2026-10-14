@@ -12,7 +12,6 @@ In the `/Library/Developer/Vuo/framework` folder:
 
    - The Vuo command-line tools:
       - `vuo-compile`
-      - `vuo-debug`
       - `vuo-export`
       - `vuo-link`
       - Run each command from Terminal (e.g., `./vuo-compile`) for information on what it does and how to use it

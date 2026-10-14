@@ -97,7 +97,7 @@ function (VuoTest)
 	# Use macOS's built-in crash reporter, which provides platform-specific info that QTestLib doesn't.
 	list(APPEND testEnvironment QTEST_DISABLE_STACK_DUMP=1)
 
-	if (VUO_TEST_WITH_GMALLOC)
+	if (VUO_TEST_WITH_GMALLOC AND NOT arg_NAME STREQUAL TestReferenceCounting)
 		list(APPEND testEnvironment VUO_RUNTIME_CHECKING=/usr/lib/libgmalloc.dylib)
 	endif()
 

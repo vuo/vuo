@@ -3,7 +3,7 @@
  * @brief Change Color with Button
  * This composition uses a toggle button to change a color.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -11,19 +11,17 @@
 
 digraph G
 {
-MakeList2 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="591,-64" fillcolor="blue"];
-MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="375,-75" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0" _width="2" _height="2" _sharpness="1" _roundness="0" _opacity="1.0"];
-MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="375,120" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="0.29999999999999999" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.5" _opacity="1.0"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="531,-64" fillcolor="blue"];
+MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="285,-75" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0,\"y\":0\}" _rotation="0.0" _width="0.29999999999999999" _height="0.10000000000000001" _sharpness="1.0" _roundness="0.5" _opacity="1.0"];
 MakeToggleButton [type="vuo.ui.make.toggle" version="1.0.0" label="Make Toggle Button|<refresh>refresh\l|<window>window\l|<label>label\l|<setValue>setValue\l|<anchor>anchor\l|<position>position\l|<theme>theme\l|<updatedLayer>updatedLayer\r|<changed>changed\r|<turnedOn>turnedOn\r|<turnedOff>turnedOff\r" pos="-15,15" fillcolor="orange" _label="\"Bright\"" _setValue="true" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _position="\{\"x\":0,\"y\":0\}" _updatedLayer_eventThrottling="enqueue" _changed_eventThrottling="enqueue" _turnedOn_eventThrottling="enqueue" _turnedOff_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="645,-75" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
-SelectInput2 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="195,-75" _falseOption="\{\"r\":0.20033569633960724,\"g\":0.80743116140365601,\"b\":0.037750821560621262,\"a\":1\}" _trueOption="\{\"r\":0.621500,\"g\":1.000000,\"b\":0.587381,\"a\":1.000000\}"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="585,-75" fillcolor="blue" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+SelectInput2 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="285,105" _falseOption="\{\"r\":0.20033569633960724,\"g\":0.80743116140365601,\"b\":0.037750821560621262,\"a\":1\}" _trueOption="\{\"r\":0.621500,\"g\":1.000000,\"b\":0.587381,\"a\":1.000000\}"];
 
 MakeList2:list -> RenderLayersToWindow:layers;
-MakeRectangleLayer2:layer -> MakeList2:2;
-MakeRectangleLayer:layer -> MakeList2:1;
+MakeRectangleLayer2:layer -> MakeList2:1;
 MakeToggleButton:changed -> SelectInput2:which;
-MakeToggleButton:updatedLayer -> MakeList2:3;
+MakeToggleButton:updatedLayer -> MakeList2:2;
 MakeToggleButton:updatedLayer -> MakeRectangleLayer2:color [event=true];
 RenderLayersToWindow:updatedWindow -> MakeToggleButton:window [style=invis];
-SelectInput2:out -> MakeRectangleLayer:color;
+SelectInput2:out -> RenderLayersToWindow:background;
 }

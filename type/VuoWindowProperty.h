@@ -48,19 +48,30 @@ typedef enum
 	VuoWindowProperty_Cursor,
 	VuoWindowProperty_Interaction,
 	VuoWindowProperty_Level,
+	VuoWindowProperty_Style,
 } VuoWindowPropertyType;
 
 /**
- * The type of window property.
- *
- * @version200Changed{Added `VuoWindowProperty_Interaction`.}
+ * How the window is stacked relative to other windows.
  */
 typedef enum
 {
 	VuoWindowLevel_Background,
 	VuoWindowLevel_Normal,
 	VuoWindowLevel_Floating,
+	VuoWindowLevel_Desktop,
 } VuoWindowLevel;
+
+/**
+ * Properties describing a window's visual appearance.
+ */
+typedef struct
+{
+	VuoInteger appearance;
+	VuoBoolean showTitlebar;
+	VuoBoolean transparentTitlebar;
+	VuoBoolean showShadow;
+} VuoWindowStyle;
 
 /**
  * A window setting, such as its title, or whether it is full-screen.
@@ -102,6 +113,8 @@ typedef struct
 		VuoInteraction interaction;
 
 		VuoWindowLevel level;
+
+		VuoWindowStyle style;
 	};
 } VuoWindowProperty;
 

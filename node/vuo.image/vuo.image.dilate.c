@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 	"title" : "Dilate Image",
 	"keywords" : [
-		"bolden", "lighten", "grow", "expand", "enlarge", "maximum", "patch holes", "fill gaps", "open",
+		"bolden", "lighten", "grow", "expand", "enlarge", "maximum", "patch holes", "fill gaps", "open", "bloom",
 		"erode", "darken", "shrink", "contract", "minimum", "close", "reduce",
 		"noise reduction", "simplify", "smooth",
 		"morphological", "morphology",

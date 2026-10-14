@@ -129,23 +129,17 @@ static inline bool VuoHeap_isPointerValid(const void *pointer)
  */
 bool VuoHeap_isPointerReadable(const void *pointer)
 {
+	if (!pointer)
+		return false;
+
 	// Round down to the beginning of `pointer`'s heap page.
 	// Assume getpagesize() returns a power-of-two; subtracting 1 turns it into a bitmask.
 	int pageSize = getpagesize();
 	long heapPageMask = ~((long)pageSize-1);
 	long heapPage = (long)pointer & heapPageMask;
 
-	// Try to load the page into core.
-	mlock((void *)heapPage, pageSize);
-	munlock((void *)heapPage, pageSize);
-
-	// Check whether the page was successfully loaded into core.
 	char pageStatus[1];
-	if (mincore((void *)heapPage, pageSize, pageStatus) == 0)
-		return pageStatus[0] & MINCORE_INCORE;
-
-	else
-		return false;
+	return mincore((void *)heapPage, pageSize, pageStatus) == 0;
 }
 
 /**

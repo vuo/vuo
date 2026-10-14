@@ -87,6 +87,9 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	{
 		self.colorSpace = NSColorSpace.sRGBColorSpace;
 
+		// Only matters when self.opaque is false (see `VuoWindowOpenGl_setOpaque`).
+		self.backgroundColor = NSColor.clearColor;
+
 		self.privateDelegate = [[[VuoGraphicsWindowDelegate alloc] initWithWindow:self] autorelease];
 		self.delegate = self.privateDelegate;
 		self.releasedWhenClosed = NO;
@@ -166,6 +169,9 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 	VuoApp_executeOnMainThread(^{
 		NSView *v = self.contentView;
 		l = (VuoGraphicsLayer *)v.layer;
+
+		if (!self.isOpaque)
+			[self invalidateShadow];
 	});
 	[l draw];
 }
@@ -502,12 +508,35 @@ static void __attribute__((constructor)) VuoGraphicsWindow_init()
 		}
 		else if (property.type == VuoWindowProperty_Level)
 		{
-			if (property.level == VuoWindowLevel_Background)
+			if (property.level == VuoWindowLevel_Desktop)
+				self.level = CGWindowLevelForKey(kCGDesktopWindowLevelKey) - 1;
+			else if (property.level == VuoWindowLevel_Background)
 				self.level = CGWindowLevelForKey(kCGBackstopMenuLevelKey);
 			else if (property.level == VuoWindowLevel_Normal)
 				self.level = CGWindowLevelForKey(kCGNormalWindowLevelKey);
 			else if (property.level == VuoWindowLevel_Floating)
 				self.level = CGWindowLevelForKey(kCGFloatingWindowLevelKey);
+		}
+		else if (property.type == VuoWindowProperty_Style)
+		{
+			if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,14,0}])
+			{
+				if (property.style.appearance == 1)
+					self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+				else if (property.style.appearance == 2)
+					self.appearance = [NSAppearance appearanceNamed:@"NSAppearanceNameDarkAqua"];  // The constant NSAppearanceNameDarkAqua is only available in macOS 10.14 and later.
+				else
+					self.appearance = nil;  // automatic
+			}
+
+			if ([self isFullScreen]) _styleMaskWhenWindowed = property.style.showTitlebar ? (_styleMaskWhenWindowed | NSWindowStyleMaskTitled) : (_styleMaskWhenWindowed & ~NSWindowStyleMaskTitled);
+			else                     self.styleMask         = property.style.showTitlebar ? (self.styleMask         | NSWindowStyleMaskTitled) : (self.styleMask         & ~NSWindowStyleMaskTitled);
+
+			self.titlebarAppearsTransparent = property.style.transparentTitlebar;
+			if ([self isFullScreen]) _styleMaskWhenWindowed = property.style.transparentTitlebar ? (_styleMaskWhenWindowed | NSWindowStyleMaskFullSizeContentView) : (_styleMaskWhenWindowed & ~NSWindowStyleMaskFullSizeContentView);
+			else                     self.styleMask         = property.style.transparentTitlebar ? (self.styleMask         | NSWindowStyleMaskFullSizeContentView) : (self.styleMask         & ~NSWindowStyleMaskFullSizeContentView);
+
+			self.hasShadow = property.style.showShadow;
 		}
 	}
 }

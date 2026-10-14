@@ -116,6 +116,21 @@ VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 		value.level = VuoInteger_makeFromJson(o);
 		return value;
 	}
+	else if (json_object_object_get_ex(js, "style", &o))
+	{
+		value.type = VuoWindowProperty_Style;
+		value.style = (VuoWindowStyle){0, true, false, true};
+		struct json_object *b;
+		if (json_object_object_get_ex(o, "appearance", &b))
+			value.style.appearance = VuoInteger_makeFromJson(b);
+		if (json_object_object_get_ex(o, "showTitlebar", &b))
+			value.style.showTitlebar = VuoBoolean_makeFromJson(b);
+		if (json_object_object_get_ex(o, "transparentTitlebar", &b))
+			value.style.transparentTitlebar = VuoBoolean_makeFromJson(b);
+		if (json_object_object_get_ex(o, "showShadow", &b))
+			value.style.showShadow = VuoBoolean_makeFromJson(b);
+		return value;
+	}
 
 	return value;
 }
@@ -158,6 +173,15 @@ json_object * VuoWindowProperty_getJson(const VuoWindowProperty value)
 		json_object_object_add(js, "interaction", VuoInteraction_getJson(value.interaction));
 	else if (value.type == VuoWindowProperty_Level)
 		json_object_object_add(js, "level", VuoInteger_getJson(value.level));
+	else if (value.type == VuoWindowProperty_Style)
+	{
+		struct json_object *style = json_object_new_object();
+		json_object_object_add(style, "appearance", VuoInteger_getJson(value.style.appearance));
+		json_object_object_add(style, "showTitlebar", VuoBoolean_getJson(value.style.showTitlebar));
+		json_object_object_add(style, "transparentTitlebar", VuoBoolean_getJson(value.style.transparentTitlebar));
+		json_object_object_add(style, "showShadow", VuoBoolean_getJson(value.style.showShadow));
+		json_object_object_add(js, "style", style);
+	}
 
 	return js;
 }
@@ -173,6 +197,8 @@ const char *VuoWindowLevel_getLabel(VuoWindowLevel level)
 		return "Normal";
 	else if (level == VuoWindowLevel_Floating)
 		return "Floating";
+	else if (level == VuoWindowLevel_Desktop)
+		return "Desktop";
 
 	return "Unknown";
 }
@@ -224,6 +250,12 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 		return VuoInteraction_getSummary(value.interaction);
 	else if (value.type == VuoWindowProperty_Level)
 		return VuoText_format("Change Window Level: %s", VuoWindowLevel_getLabel(value.level));
+	else if (value.type == VuoWindowProperty_Style)
+		return VuoText_format("Appearance: %s\nShow Titlebar: %s\nTransparent Titlebar: %s\nShow Shadow: %s",
+			value.style.appearance   ? (value.style.appearance == 1 ? "light" : "dark") : "automatic",
+			value.style.showTitlebar ? "true" : "false",
+			value.style.transparentTitlebar ? "true" : "false",
+			value.style.showShadow   ? "true" : "false");
 
 	return strdup("Unknown window property");
 }

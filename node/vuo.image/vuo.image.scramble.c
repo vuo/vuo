@@ -13,7 +13,7 @@ VuoModuleMetadata({
 					 "title" : "Scramble Image",
 					 "keywords" : [
 						 "filter",
-						 "rearrange", "shuffle", "mosaic", "censor", "glitch",
+						 "rearrange", "shuffle", "mosaic", "censor", "glitch", "randomize", "shifter",
 					 ],
 					 "version" : "1.0.0",
 					 "dependencies" : [

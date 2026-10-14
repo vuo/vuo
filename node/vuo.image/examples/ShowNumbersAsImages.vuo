@@ -1,0 +1,53 @@
+/**
+ * @file
+ * Displays patterned images formed by using arithmetic to calculate a color for each pixel.
+ *
+ * @createdInVuoVersion 2.4.2
+ * @lastSavedInVuoVersion 2.4.5
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+BuildList2 [type="vuo.list.build.VuoInteger" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="270,165" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="0,285"];
+CycleThroughList [type="vuo.list.cycle2.VuoInteger" version="2.0.1" label="Cycle through List|<refresh>refresh\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<list>list\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="-510,270" _wrapMode="\"wrap\""];
+DivideWithRemainder [type="vuo.math.divide.VuoInteger" version="2.0.1" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="30,345" _b="3"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-690,165" fillcolor="lime" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-720,240" fillcolor="lime" _seconds="1.0" _fired_eventThrottling="drop"];
+GetItemFromList [type="vuo.list.get.VuoReal" version="1.0.1" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="240,450"];
+HoldList [type="vuo.data.hold.list2.VuoReal" version="2.0.0" label="Hold List|<refresh>refresh\l|<update>update\l|<value>value\l|<heldValue>heldValue\r" pos="15,450"];
+InterpretDataAsImage [type="vuo.image.interpretData" version="1.0.0" label="Interpret Data as Image|<refresh>refresh\l|<data>data\l|<width>width\l|<height>height\l|<format>format\l|<depth>depth\l|<repeat>repeat\l|<image>image\r" pos="825,165" fillcolor="orange" _width="512" _height="512" _format="1" _depth="\"8bpc\"" _repeat="true"];
+MakeDataFromBytes2 [type="vuo.data.make" version="1.0.0" label="Make Data from Bytes|<refresh>refresh\l|<bytes>bytes\l|<data>data\r" pos="570,165" fillcolor="orange"];
+MakeList3 [type="vuo.list.make.4.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="-572,326" _1="256" _2="257" _3="384" _4="400"];
+MakeList5 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="72,161" _2="3"];
+MakePointsAlongLine [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="-255,180" _endPosition="255.0" _curve="\"linear\"" _easing="\"in\""];
+Multiply [type="vuo.math.multiply.VuoInteger" version="2.1.1" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="105,150"];
+RenderImageToWindow [type="vuo.image.render.window2" version="4.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1050,165" fillcolor="blue" _updatedWindow_eventThrottling="enqueue"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="630,435"];
+SelectInput2 [type="vuo.select.in.2.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="480,435"];
+
+BuildList2:buildItem -> DivideWithRemainder:a;
+BuildList2:buildItem -> HoldList:update;
+BuildList2:builtList -> MakeDataFromBytes2:bytes;
+CountItemsInList2:itemCount -> MakeList5:1;
+CycleThroughList:item -> MakePointsAlongLine:numberOfPoints;
+DivideWithRemainder:quotient -> GetItemFromList:which;
+DivideWithRemainder:remainder -> SelectInput2:which;
+FireOnStart:started -> CycleThroughList:goForward;
+FireOnStart:started -> MakePointsAlongLine:startPosition;
+FirePeriodically:fired -> CycleThroughList:goForward;
+GetItemFromList:item -> SelectInput2:option1;
+HoldList:heldValue -> GetItemFromList:list;
+InterpretDataAsImage:image -> RenderImageToWindow:image;
+MakeDataFromBytes2:data -> InterpretDataAsImage:data;
+MakeList3:list -> CycleThroughList:list;
+MakeList5:list -> Multiply:values;
+MakePointsAlongLine:points -> CountItemsInList2:list;
+MakePointsAlongLine:points -> HoldList:value;
+Multiply:product -> BuildList2:fire;
+Round:rounded -> BuildList2:builtItem;
+SelectInput2:out -> Round:real;
+}

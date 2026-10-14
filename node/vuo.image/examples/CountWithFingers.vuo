@@ -1,0 +1,134 @@
+/**
+ * @file
+ * Recognizes human hands in a camera image, and detects pinching between the thumb and each finger.
+ *
+ * @lastSavedInVuoVersion 2.4.7
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+AllowFirstEvent3 [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="1020,270"];
+BecameFalse [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="825,525"];
+BecameFalse2 [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="825,720"];
+BecameFalse3 [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="825,915"];
+BecameFalse4 [type="vuo.event.becameFalse2" version="2.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="825,1110"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="825,465"];
+BecameTrue2 [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="825,660"];
+BecameTrue3 [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="825,855"];
+BecameTrue4 [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="825,1050"];
+ConvertRectangleTo2DPoint [type="vuo.type.rectangle.center" version="1.0.0" label="Convert Rectangle to 2D Point|<refresh>refresh\l|<rectangle>rectangle\l|<center>center\r" pos="525,390"];
+ConvertRectangleToReal [type="vuo.type.rectangle.width" version="1.0.0" label="Convert Rectangle to Real|<refresh>refresh\l|<rectangle>rectangle\l|<width>width\r" pos="525,420"];
+ConvertRectangleToReal2 [type="vuo.type.rectangle.height" version="1.0.0" label="Convert Rectangle to Real|<refresh>refresh\l|<rectangle>rectangle\l|<height>height\r" pos="525,435"];
+ConvertRectangleToReal3 [type="vuo.type.rectangle.width" version="1.0.0" label="Convert Rectangle to Real|<refresh>refresh\l|<rectangle>rectangle\l|<width>width\r" pos="510,315"];
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="435,360" _b="8.0"];
+FindFacesInImage [type="vuo.image.findHands" version="1.0.0" label="Find Hands in Image|<refresh>refresh\l|<image>image\l|<minimumConfidence>minimumConfidence\l|<rectangles>rectangles\r|<points>points\r|<lineSegments>lineSegments\r|<hands>hands\r" pos="0,150" fillcolor="orange" _minimumConfidence="0.5"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.1.2" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<flippedImage>flippedImage\r" pos="15,-15"];
+GetFirstItemInList [type="vuo.list.get.first.VuoHumanHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="165,585"];
+GetFirstItemInList2 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,765"];
+GetFirstItemInList3 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="420,435"];
+GetFirstItemInList4 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="420,450"];
+GetFirstItemInList5 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,780"];
+GetFirstItemInList6 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,975"];
+GetFirstItemInList7 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,1170"];
+GetFirstItemInList8 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,960"];
+GetFirstItemInList9 [type="vuo.list.get.first.VuoPoint2d" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,1155"];
+GetFrameValues [type="vuo.video.get.videoframe" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<videoFrame>videoFrame\l|<image>image\r|<timestamp>timestamp\r" pos="45,-90"];
+GetHandLandmarks [type="vuo.image.get.hand" version="1.0.0" label="Get Hand Landmarks|<refresh>refresh\l|<hand>hand\l|<rectangle>rectangle\r|<wrist>wrist\r|<thumb>thumb\r|<indexFinger>indexFinger\r|<middleFinger>middleFinger\r|<ringFinger>ringFinger\r|<littleFinger>littleFinger\r" pos="30,255"];
+IsWithinRange [type="vuo.math.isWithinRange.VuoReal" version="1.1.0" label="Is within Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<withinRange>withinRange\r" pos="645,465" _minimum="0.001"];
+IsWithinRange2 [type="vuo.math.isWithinRange.VuoReal" version="1.1.0" label="Is within Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<withinRange>withinRange\r" pos="645,660" _minimum="0.01"];
+IsWithinRange3 [type="vuo.math.isWithinRange.VuoReal" version="1.1.0" label="Is within Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<withinRange>withinRange\r" pos="645,855" _minimum="0.01"];
+IsWithinRange4 [type="vuo.math.isWithinRange.VuoReal" version="1.1.0" label="Is within Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<withinRange>withinRange\r" pos="645,1050" _minimum="0.01"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="1245,-15" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2.0" _fixed="\"horizontal\"" _opacity="0.69999999999999996"];
+MakeList3 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1461,86" fillcolor="blue"];
+MakeRectangleLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="1230,135" _color="\{\"r\":0.2695353627204895,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _rotation="0.0" _sharpness="1.0" _roundness="0.0" _opacity="0.5"];
+MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1260,315" _text="\"Hold up one of your hands with your palm facing the screen.\\nTouch your thumb to each of your fingertips.\"" _font="\{\"fontName\":\"Avenir-Medium\",\"pointSize\":24\}" _anchor="\"left-top\"" _center="\{\"x\":-0.75,\"y\":0.5\}" _wrapWidth="Infinity" _opacity="1.0"];
+MakeTextLayer2 [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="1260,465" _font="\{\"fontName\":\"Avenir-Black\",\"pointSize\":144.0,\"underline\":false,\"color\":\{\"r\":1.0,\"g\":0.99999994039535522,\"b\":1.0,\"a\":1.0\},\"alignment\":\"left\",\"characterSpacing\":1.0,\"lineSpacing\":1.0\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _wrapWidth="Infinity"];
+MeasureDistance [type="vuo.point.distance.VuoPoint2d" version="1.0.0" label="Measure Distance|<refresh>refresh\l|<a>a\l|<b>b\l|<distance>distance\r" pos="465,465"];
+MeasureDistance2 [type="vuo.point.distance.VuoPoint2d" version="1.0.0" label="Measure Distance|<refresh>refresh\l|<a>a\l|<b>b\l|<distance>distance\r" pos="465,660"];
+MeasureDistance3 [type="vuo.point.distance.VuoPoint2d" version="1.0.0" label="Measure Distance|<refresh>refresh\l|<a>a\l|<b>b\l|<distance>distance\r" pos="465,855"];
+MeasureDistance4 [type="vuo.point.distance.VuoPoint2d" version="1.0.0" label="Measure Distance|<refresh>refresh\l|<a>a\l|<b>b\l|<distance>distance\r" pos="465,1050"];
+ReceiveLiveVideo [type="vuo.video.receive2" version="2.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<width>width\l|<height>height\l|<receivedFrame>receivedFrame\r" pos="30,-180" fillcolor="lime" _device="null" _width="0" _height="0" _receivedFrame_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="1515,75" fillcolor="blue" _background="\"#000f\"" _multisampling="\"off\"" _updatedWindow_eventThrottling="enqueue"];
+ResizeImage [type="vuo.image.resize" version="1.1.3" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="75,45" _sizingMode="\"fit\"" _width="640" _height="480"];
+SelectLatest [type="vuo.select.latest.8.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="1035,465" _option1="\"1\"" _option2="\"2\"" _option3="\"3\"" _option4="\"4\"" _option5="\"\""];
+SmoothWithSpring [type="vuo.motion.smooth.spring.VuoReal" version="2.1.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<position>position\r|<reachedTarget>reachedTarget\r" pos="1035,630" _setPosition="1." _setTarget="0." _period="1.0" _damping="1.0"];
+
+Comment [type="vuo.comment" label="\"Detect index finger pinch\"" pos="345,405" width="634" height="165"];
+Comment2 [type="vuo.comment" label="\"Detect middle finger pinch\"" pos="345,600" width="645" height="165"];
+Comment3 [type="vuo.comment" label="\"Detect ring finger pinch\"" pos="345,795" width="645" height="165"];
+Comment4 [type="vuo.comment" label="\"Detect little finger pinch\"" pos="345,990" width="645" height="165"];
+
+AllowFirstEvent3:firstEvent -> MakeTextLayer:text;
+AllowFirstEvent3:firstEvent -> SelectLatest:option8;
+BecameFalse2:becameFalse -> SmoothWithSpring:setTarget;
+BecameFalse3:becameFalse -> SmoothWithSpring:setTarget;
+BecameFalse4:becameFalse -> SmoothWithSpring:setTarget;
+BecameFalse:becameFalse -> SmoothWithSpring:setTarget;
+BecameTrue2:becameTrue -> SelectLatest:option2;
+BecameTrue2:becameTrue -> SmoothWithSpring:setPosition;
+BecameTrue3:becameTrue -> SelectLatest:option3;
+BecameTrue3:becameTrue -> SmoothWithSpring:setPosition;
+BecameTrue4:becameTrue -> SelectLatest:option4;
+BecameTrue4:becameTrue -> SmoothWithSpring:setPosition;
+BecameTrue:becameTrue -> SelectLatest:option1;
+BecameTrue:becameTrue -> SmoothWithSpring:setPosition;
+ConvertRectangleTo2DPoint:center -> MakeRectangleLayer:center;
+ConvertRectangleToReal2:height -> MakeRectangleLayer:height;
+ConvertRectangleToReal3:width -> Divide:a;
+ConvertRectangleToReal:width -> MakeRectangleLayer:width;
+Divide:quotient -> IsWithinRange2:maximum;
+Divide:quotient -> IsWithinRange3:maximum;
+Divide:quotient -> IsWithinRange4:maximum;
+Divide:quotient -> IsWithinRange:maximum;
+FindFacesInImage:hands -> GetFirstItemInList:list;
+FlipImageHorizontally:flippedImage -> AllowFirstEvent3:event;
+FlipImageHorizontally:flippedImage -> MakeImageLayer:image;
+FlipImageHorizontally:flippedImage -> ResizeImage:image;
+GetFirstItemInList2:firstItem -> MeasureDistance2:a;
+GetFirstItemInList3:firstItem -> MeasureDistance:a;
+GetFirstItemInList4:firstItem -> MeasureDistance:b;
+GetFirstItemInList5:firstItem -> MeasureDistance2:b;
+GetFirstItemInList6:firstItem -> MeasureDistance3:b;
+GetFirstItemInList7:firstItem -> MeasureDistance4:b;
+GetFirstItemInList8:firstItem -> MeasureDistance3:a;
+GetFirstItemInList9:firstItem -> MeasureDistance4:a;
+GetFirstItemInList:firstItem -> GetHandLandmarks:hand;
+GetFrameValues:image -> FlipImageHorizontally:image;
+GetFrameValues:timestamp -> SmoothWithSpring:time;
+GetHandLandmarks:indexFinger -> GetFirstItemInList4:list;
+GetHandLandmarks:littleFinger -> GetFirstItemInList7:list;
+GetHandLandmarks:middleFinger -> GetFirstItemInList5:list;
+GetHandLandmarks:rectangle -> ConvertRectangleTo2DPoint:rectangle;
+GetHandLandmarks:rectangle -> ConvertRectangleToReal2:rectangle;
+GetHandLandmarks:rectangle -> ConvertRectangleToReal3:rectangle;
+GetHandLandmarks:rectangle -> ConvertRectangleToReal:rectangle;
+GetHandLandmarks:ringFinger -> GetFirstItemInList6:list;
+GetHandLandmarks:thumb -> GetFirstItemInList2:list;
+GetHandLandmarks:thumb -> GetFirstItemInList3:list;
+GetHandLandmarks:thumb -> GetFirstItemInList8:list;
+GetHandLandmarks:thumb -> GetFirstItemInList9:list;
+IsWithinRange2:withinRange -> BecameFalse2:value;
+IsWithinRange2:withinRange -> BecameTrue2:value;
+IsWithinRange3:withinRange -> BecameFalse3:value;
+IsWithinRange3:withinRange -> BecameTrue3:value;
+IsWithinRange4:withinRange -> BecameFalse4:value;
+IsWithinRange4:withinRange -> BecameTrue4:value;
+IsWithinRange:withinRange -> BecameFalse:value;
+IsWithinRange:withinRange -> BecameTrue:value;
+MakeImageLayer:layer -> MakeList3:1;
+MakeList3:list -> RenderLayersToWindow2:layers;
+MakeRectangleLayer:layer -> MakeList3:2;
+MakeTextLayer2:layer -> MakeList3:4;
+MakeTextLayer:layer -> MakeList3:3;
+MeasureDistance2:distance -> IsWithinRange2:value;
+MeasureDistance3:distance -> IsWithinRange3:value;
+MeasureDistance4:distance -> IsWithinRange4:value;
+MeasureDistance:distance -> IsWithinRange:value;
+ReceiveLiveVideo:receivedFrame -> GetFrameValues:videoFrame;
+ResizeImage:resizedImage -> FindFacesInImage:image;
+SelectLatest:latest -> MakeTextLayer2:text;
+SmoothWithSpring:position -> MakeTextLayer2:opacity;
+}

@@ -1,0 +1,2 @@
+# This is a placeholder file so that relative paths in `.clangd` work.
+# https://github.com/clangd/clangd/issues/1038#issuecomment-2614169354

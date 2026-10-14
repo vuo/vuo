@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @lastSavedInVuoVersion 2.4.6
+ * @copyright Copyright © 2012–2026 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see https://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
+ */
+
+digraph G
+{
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="315,210" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _width="1" _height="1"];
+MakeImageLayer [type="vuo.layer.make.scaled" version="3.1.0" label="Make Image Layer|<refresh>refresh\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<fixed>fixed\l|<opacity>opacity\l|<layer>layer\r" pos="495,210" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.0,\"y\":0.0\}" _rotation="0.0" _width="2" _fixed="\"horizontal\""];
+MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="599,71"];
+RenderLayersToImage [type="vuo.layer.render.image2" version="2.1.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<background>background\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r" pos="660,60" _width="1" _height="1" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Background>Background\r|<Opacity>Opacity\r" _Background_type="VuoColor" _Background="\{\"r\":0.0,\"g\":0.0,\"b\":1.0,\"a\":1.0\}" _Opacity_type="VuoReal" _Opacity_suggestedMin="0.0" _Opacity_suggestedMax="1.0" _Opacity_suggestedStep="0.1" _Opacity="0.17000000000000001"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Image>Image\l" _Image_type="VuoImage"];
+
+MakeColorImage:image -> MakeImageLayer:image;
+MakeImageLayer:layer -> MakeList5:1;
+MakeList5:list -> RenderLayersToImage:layers;
+PublishedInputs:Background -> RenderLayersToImage:background;
+PublishedInputs:Opacity -> MakeColorImage:refresh;
+PublishedInputs:Opacity -> MakeImageLayer:opacity;
+RenderLayersToImage:image -> PublishedOutputs:Image;
+}

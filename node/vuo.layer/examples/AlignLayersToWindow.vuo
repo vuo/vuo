@@ -3,7 +3,7 @@
  * @brief Align Layers to Window
  * Renders two layers and aligns them to the edge of the window.
  *
- * @lastSavedInVuoVersion 2.0.0
+ * @lastSavedInVuoVersion 2.4.6
  * @copyright Copyright © 2012–2026 Kosada Incorporated.
  * @license This composition may be modified and distributed under the terms of the MIT License. For more information, see https://opensource.org/licenses/MIT .
  * @see This is a Vuo Composition source code file.  See https://vuo.org for further information.
@@ -17,15 +17,13 @@ AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First 
 FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-495,585" fillcolor="lime" _requestedFrame_eventThrottling="drop"];
 MakeColorLayer [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="-45,540" _color="\{\"r\":0,\"g\":0.50196081399917603,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _width="0.29999999999999999" _height="0.5" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
 MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-288,596" _2="100.000000"];
-MakeList2 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="569,221" fillcolor="blue"];
-MakeRectangleLayer2 [type="vuo.layer.make.rect" version="1.0.0" label="Make Rectangle Layer|<refresh>refresh\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<opacity>opacity\l|<layer>layer\r" pos="300,105" _color="\{\"r\":1,\"g\":1,\"b\":1,\"a\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _rotation="0.0" _width="2" _height="12" _sharpness="1.0" _roundness="0.0" _opacity="1.0"];
+MakeList2 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="569,236" fillcolor="blue"];
 MakeTextLayer [type="vuo.layer.make.text2" version="2.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<wrapWidth>wrapWidth\l|<opacity>opacity\l|<layer>layer\r" pos="330,705" _text="\"Both layers stay close to the edge,\\neven if you resize the window.\"" _font="\{\"fontName\":\"Avenir-Heavy\",\"pointSize\":36,\"underline\":false,\"color\":\{\"r\":0,\"g\":0,\"b\":0,\"a\":1\},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1\}" _anchor="\{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"\}" _center="\{\"x\":0.000000,\"y\":0.000000\}" _wrapWidth="Infinity" _opacity="1.0"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-255,585"];
-RenderLayersToWindow [type="vuo.layer.render.window2" version="3.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="615,210" fillcolor="blue" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.1.1" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-255,585"];
+RenderLayersToWindow [type="vuo.layer.render.window2" version="3.1.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<background>background\l|<multisampling>multisampling\l|<setWindowDescription>setWindowDescription\l|<updatedWindow>updatedWindow\r" pos="615,225" fillcolor="blue" _background="\{\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0\}" _multisampling="\"4\"" _updatedWindow_eventThrottling="enqueue"];
 
-AlignLayerToWindow2:alignedLayer -> MakeList2:2;
-AlignLayerToWindow3:alignedLayer -> MakeList2:3;
-AllowFirstEvent:firstEvent -> MakeRectangleLayer2:color;
+AlignLayerToWindow2:alignedLayer -> MakeList2:1;
+AlignLayerToWindow3:alignedLayer -> MakeList2:2;
 AllowFirstEvent:firstEvent -> MakeTextLayer:text;
 FireOnDisplayRefresh:requestedFrame -> AllowFirstEvent:event;
 FireOnDisplayRefresh:requestedFrame -> MakeList:1;
@@ -33,8 +31,7 @@ MakeColorLayer:layer -> AlignLayerToWindow2:layer;
 MakeColorLayer:layer -> AlignLayerToWindow3:layer;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList:list -> Multiply:values;
-MakeRectangleLayer2:layer -> MakeList2:1;
-MakeTextLayer:layer -> MakeList2:4;
+MakeTextLayer:layer -> MakeList2:3;
 Multiply:product -> MakeColorLayer:rotation;
 RenderLayersToWindow:updatedWindow -> AlignLayerToWindow2:window;
 RenderLayersToWindow:updatedWindow -> AlignLayerToWindow3:window;

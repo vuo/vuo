@@ -192,6 +192,11 @@ private slots:
 		VuoDefer(^{ delete compiler; });
 
 		checkLinks(trimmedDescription, compiler);
+
+		// https://b33p.net/kosada/vuo/vuo/-/work_items/20123
+		for (auto file : nodeSet->getExampleCompositionFileNames())
+			if (VuoStringUtilities::beginsWith(file, "._"))
+				QFAIL(("Extended attribute/resource fork file exists for an example composition: " + file).c_str());
 	}
 
 	/**

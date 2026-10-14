@@ -9,6 +9,6 @@ Warps an image from equirectangular (spherical) format to circular fisheye forma
    - `Width` — The size of the output image, in pixels.  The output image is a square — equal width and height.  When set to `Auto`, the smaller dimension (height) of the input image is used.
    - `Fisheye Image` — The resulting circular fisheye image.
 
-[“Fisheye projections from spherical maps”](http://paulbourke.net/dome/2fish/) has more information on this image warping technique.
+[“Fisheye projections from spherical maps”](https://paulbourke.net/dome/2fish/) has more information on this image warping technique.
 
 Thanks to [Paul Bourke](https://community.vuo.org/u/pbourke) for contributing this node.

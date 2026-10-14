@@ -53,12 +53,19 @@ VuoExampleMenu::VuoExampleMenu(QWidget *parent, VuoCompiler *compiler) :
 
 	// Example compositions to be marked as containing pro nodes for non-pro users
 	this->proExampleCompositionsAndNodeSets["CompareStereoTypes.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["CountWithFingers.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["HighlightEyesInVideo.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["MarkFacesInImage.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["MoveDotWithShoulders.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["MoveSeagullsCloserTogether.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["ObscureFacesInVideo.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["RemovePartsOfPhoto.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["ShowHandSkeletons.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["ShowSkeletalContours.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["ShowSkeletons.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["WarpImageForFisheyeProjection.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["ObscureBodiesInVideo.vuo"] = "vuo.image";
+	this->proExampleCompositionsAndNodeSets["StreamColorsFromWrists.vuo"] = "vuo.image";
 	this->proExampleCompositionsAndNodeSets["DisplayNDIVideo.vuo"] = "vuo.ndi";
 	this->proExampleCompositionsAndNodeSets["SendLiveVideoWithNewsfeed.vuo"] = "vuo.ndi";
 	this->proExampleCompositionsAndNodeSets["SendNDICheckerboard.vuo"] = "vuo.ndi";

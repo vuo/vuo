@@ -864,6 +864,7 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
 
 	if (image->glInternalFormat == GL_LUMINANCE8
 	 || image->glInternalFormat == GL_LUMINANCE8_ALPHA8
+	 || image->glInternalFormat == GL_RED
 	 || image->glInternalFormat == GL_RGB
 	 || image->glInternalFormat == GL_RGBA
 	 || image->glInternalFormat == GL_RGBA8
@@ -1030,19 +1031,37 @@ VuoImage VuoImage_makeFromJsonWithDimensions(struct json_object *js, unsigned in
 
 			// Read the IOSurface into a GL_TEXTURE_RECTANGLE_ARB (the only texture type IOSurface supports).
 			__block IOSurfaceRef surf = NULL;
-			__block GLuint textureRect;
+			__block GLuint textureRect = 0;
 			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
-				glInternalFormat = GL_RGBA;
 				surf = IOSurfaceLookup(surfID);
 				if (!surf)
 				{
 					VUserLog("Error: IOSurfaceLookup(%d) failed.", surfID);
 					return;
 				}
-				textureRect = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_AllocateIOSurface, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, pixelsWide, pixelsHigh, GL_BGRA, surf);
+
+				OSType surfPixelFormat = IOSurfaceGetPixelFormat(surf);
+				GLuint glFormat;
+				if (surfPixelFormat == 'BGRA' || surfPixelFormat == 0)
+				{
+					glInternalFormat = GL_RGBA;
+					glFormat = GL_BGRA;
+				}
+				else if (surfPixelFormat == 'L008') // kCVPixelFormatType_OneComponent8
+				{
+					glInternalFormat = GL_RED;
+					glFormat = GL_RED;
+				}
+				else
+				{
+					VUserLog("Error: IOSurface has unknown pixelformat 0x%x.", surfPixelFormat);
+					return;
+				}
+
+				textureRect = VuoGlTexturePool_use(cgl_ctx, VuoGlTexturePool_AllocateIOSurface, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, pixelsWide, pixelsHigh, glFormat, surf);
 				glFlushRenderAPPLE();
 			});
-			if (!surf)
+			if (!surf || !textureRect)
 				return NULL;
 
 			// Convert the GL_TEXTURE_RECTANGLE_ARB into GL_TEXTURE_2D.
@@ -1551,6 +1570,64 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 	VuoRelease(shader);
 
 	return js;
+}
+
+/**
+ * @ingroup VuoImage
+ * Copies the specified `image` to an IOSurface,
+ * invokes the specified block, then cleans up the IOSurface.
+ *
+ * If the image is not populated (see @c VuoImage_isPopulated),
+ * the block is not invoked.
+ *
+ * @threadAny
+ */
+void VuoImage_performWithIOSurface(VuoImage image, bool flip, void (^block)(IOSurfaceRef ioSurface))
+{
+	if (!VuoImage_isPopulated(image))
+		return;
+
+	__block VuoShader shader = NULL;
+	__block IOSurfaceID surfID = 0;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		shader = VuoShader_makeUnlitAlphaPassthruImageShader(image, flip);
+		VuoRetain(shader);
+		surfID = VuoImageRenderer_draw_internal(shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image), true, true, 0, NULL);
+
+		// Ensure the command queue gets executed before we return,
+		// since the IOSurface might immediately be used on another context.
+		glFlushRenderAPPLE();
+	});
+	if (!surfID)
+		return;
+
+	IOSurfaceRef ioSurface = IOSurfaceLookup(surfID);
+
+	block(ioSurface);
+
+	VuoIoSurfacePool_signal(ioSurface);
+	CFRelease(ioSurface);
+	// VuoShader_makeUnlitImageShader retains the image; VuoRelease(shader) then releases it.
+	// So don't release the shader until we're done with the image, in case this release is its last.
+	VuoRelease(shader);
+}
+
+/**
+ * @ingroup VuoImage
+ * Copies the specified `ioSurface`
+ * to a Vuo-compatible OpenGL texture-backed image.
+ *
+ * @threadAny
+ */
+VuoImage VuoImage_makeFromIOSurface(IOSurfaceRef ioSurface)
+{
+	json_object *vuoImageJson = json_object_new_object();
+	json_object_object_add(vuoImageJson, "ioSurface", json_object_new_int(IOSurfaceGetID(ioSurface)));
+	json_object_object_add(vuoImageJson, "pixelsWide", json_object_new_int64(IOSurfaceGetWidth(ioSurface)));
+	json_object_object_add(vuoImageJson, "pixelsHigh", json_object_new_int64(IOSurfaceGetHeight(ioSurface)));
+	VuoImage vuoImage = VuoImage_makeFromJsonWithDimensions(vuoImageJson, 0, 0);
+	json_object_put(vuoImageJson);
+	return vuoImage;
 }
 
 /**

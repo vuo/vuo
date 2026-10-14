@@ -176,6 +176,7 @@ add_custom_command(
 	# Use `--times` to preserve the timestamps from the source files so that the Vuo editor is able to compile
 	# modules without getting errors about header files being newer than the module PCH files.
 	COMMAND /usr/bin/rsync --recursive --links --update --delete --extended-attributes --times
+		--rsync-path /usr/bin/rsync
 		--exclude '**/Vuo.framework/Versions/${VuoFrameworkVersion}/Modules/Builtin/Generated/Modules/*/*.d'
 		${PROJECT_BINARY_DIR}/lib/Vuo.framework
 		${PROJECT_BINARY_DIR}/lib/VuoRunner.framework

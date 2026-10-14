@@ -99,7 +99,6 @@ Run the command-line tools:
 ```sh
 bin/vuo-compile --help
 bin/vuo-link --help
-bin/vuo-debug --help
 ```
 
 Optionally, build and run the tests:

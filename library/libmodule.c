@@ -59,10 +59,28 @@ const char *VuoGetWorkingDirectory(void)
 		}
 		else
 		{
-			// Keep consistent with VuoRuntimePersistentState::getCurrentWorkingDirectory().
-			char currentWorkingDirectory[PATH_MAX+1];
-			getcwd(currentWorkingDirectory, PATH_MAX+1);
-			workingDirectoryResult = strdup(currentWorkingDirectory);
+			// See explanation in VuoFileUtilities::getWorkingDirectory().
+			// Keep consistent with VuoRuntimePersistentState::getCurrentWorkingDirectory() and VuoFileUtilities::getWorkingDirectory().
+
+			const int oexec = 0x40000000;
+			int fd = open(".", oexec | O_DIRECTORY);
+			if (fd > 0)
+			{
+				char filePath[PATH_MAX] = "(unset)";
+				int ret = fcntl(fd, F_GETPATH, filePath);
+				if (ret == 0 && strcmp(filePath, "(unset)") != 0)
+					workingDirectoryResult = strdup(filePath);
+				else
+				{
+					VUserLog("Error: Couldn't get the process's current directory name.  Relative pathnames may not be resolved correctly.");
+					workingDirectoryResult = strdup("/");
+				}
+			}
+			else
+			{
+				VUserLog("Error: Couldn't get the process's current directory.  Relative pathnames may not be resolved correctly.");
+				workingDirectoryResult = strdup("/");
+			}
 		}
 	});
 	return workingDirectoryResult;

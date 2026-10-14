@@ -410,6 +410,7 @@ add_custom_command(
 	# in macOS extended attributes (a.k.a. xattr, resource forks),
 	# and those code signatures are required for Notarization.
 	COMMAND /usr/bin/rsync --extended-attributes
+		--rsync-path /usr/bin/rsync
 		${coreTypeObjects}
 		${coreListTypeObjects}
 		${coreLibraryObjects}
@@ -581,6 +582,7 @@ add_custom_command(
 	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/IOKit.framework/Versions/A/Headers/          ${macosHeadersDestination}/IOKit
 	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/IOSurface.framework/Versions/A/Headers/      ${macosHeadersDestination}/IOSurface
 	COMMAND ${rsyncHeaders} ${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/         ${macosHeadersDestination}/OpenGL
+	COMMAND chmod -R u+w ${macosHeadersDestination}
 	OUTPUT ${macosHeadersDestination}/AvailabilityMacros.h
 )
 add_custom_target(VuoFrameworkMacOSHeaders DEPENDS ${macosHeadersDestination}/AvailabilityMacros.h)
@@ -636,6 +638,7 @@ add_custom_command(
 		System/Library/Frameworks/QuartzCore.framework
 		System/Library/Frameworks/QuickLook.framework
 		System/Library/Frameworks/VideoToolbox.framework
+		System/Library/Frameworks/Vision.framework
 		System/Library/Frameworks/WebKit.framework
 		System/Library/PrivateFrameworks/UIFoundation.framework
 		usr/lib/libSystem.tbd
@@ -891,6 +894,9 @@ foreach (arch ${CMAKE_OSX_ARCHITECTURES})
 		${VuoCacheableObjects}
 	)
 	if (VUO_NODE_DEVELOPER)
+		# This option loads all built-in modules, generates all VuoList types that those modules depend on, and writes the VuoList types
+		# to the built-in module cache. This ignores the existing VuoList types in `${PROJECT_BINARY_DIR}/type/`
+		# (see VuoCompilerEnvironment::getBuiltInModuleSearchPaths()) and generates them anew.
 		add_custom_command(
 			DEPENDS ${dependsOn}
 			COMMENT "Generating built-in module caches (${arch})"
@@ -900,6 +906,8 @@ foreach (arch ${CMAKE_OSX_ARCHITECTURES})
 			OUTPUT ${frameworkCachePartBuild}
 		)
 	else()
+		# This option additionally creates a dylib that contains the built-in node classes, types, and library modules
+		# (with exceptions noted in VuoCompilerEnvironment::getCacheableModulesAndDependencies) and the generated VuoList types.
 		add_custom_command(
 			DEPENDS ${dependsOn}
 			COMMENT "Generating built-in module caches (${arch})"

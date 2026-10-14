@@ -70,14 +70,14 @@ void nodeInstanceEvent
 		VuoOutputEvent() reachedTarget
 )
 {
-	if (setPositionEvent)
+	if (setPositionEvent && VuoGenericType1_isFinite(setPosition))
 	{
 		VuoSmoothInertia_setPosition((*ctx)->smooth, setPosition);
 		*position = setPosition;
 		(*ctx)->moving = true;
 	}
 
-	if (setTargetEvent)
+	if (setTargetEvent && VuoGenericType1_isFinite(setTarget))
 	{
 		VuoSmoothInertia_setTarget((*ctx)->smooth, time, setTarget);
 		(*ctx)->moving = true;

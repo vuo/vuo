@@ -94,6 +94,7 @@ public:
 	unsigned int viewportWidth;
 	unsigned int viewportHeight;
 	float backingScaleFactor;
+	VuoColor backgroundColor;
 
 	VuoSceneObject rootSceneObjectPending;			///< The latest scene from VuoSceneRenderer_setRootSceneObject().
 	bool           rootSceneObjectPendingValid;		///< Whether rootSceneObjectPending has already been initialized.
@@ -266,6 +267,7 @@ VuoSceneRenderer VuoSceneRenderer_make(float backingScaleFactor)
 	sceneRenderer->camera = VuoSceneObject_makeDefaultCamera();
 	VuoSceneObject_retain(sceneRenderer->camera);
 	sceneRenderer->backingScaleFactor = backingScaleFactor;
+	sceneRenderer->backgroundColor = VuoColor_makeWithRGBA(0, 0, 0, 0);
 	sceneRenderer->viewportWidth = 0;
 	sceneRenderer->viewportHeight = 0;
 
@@ -1538,6 +1540,15 @@ static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sc
 }
 
 /**
+ * Specifies the background color for subsequent renders.
+ */
+void VuoSceneRenderer_setBackgroundColor(VuoSceneRenderer sr, VuoColor backgroundColor)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+	sceneRenderer->backgroundColor = backgroundColor;
+}
+
+/**
  * Changes the scenegraph to be rendered.
  *
  * This function retains the scene, but it isn't uploaded to the GPU until you call @ref VuoSceneRenderer_draw.
@@ -1774,7 +1785,12 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 		}
 
 		glViewport(0, 0, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
-		glClearColor(0,0,0,0);
+
+		VuoColor backgroundColor = VuoColor_premultiply(sceneRenderer->backgroundColor);
+		VuoReal r, g, b, a;
+		VuoColor_getRGBA(backgroundColor, &r, &g, &b, &a);
+		glClearColor(r, g, b, a);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		VuoSceneRenderer_draw(sceneRenderer, cgl_ctx);
@@ -1837,7 +1853,12 @@ extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, VuoGlContex
 void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage, bool invertDepthImage)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
-	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
+
+	unsigned int glBaseFormat = GL_BGRA;
+	if (VuoColor_isOpaque(sceneRenderer->backgroundColor))
+		glBaseFormat = GL_BGR;
+
+	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(glBaseFormat, imageColorDepth);
 	__block GLuint texture = 0;
 	__block GLuint depthTexture = 0;
 	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
